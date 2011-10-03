@@ -1,0 +1,2 @@
+import desres
+desres.build()

@@ -1,0 +1,8 @@
+Import('env')
+
+env=env.Clone()
+env.Prepend(CPPPATH=['../src'], LIBS=['msys', 'boost_filesystem', 'boost_system'])
+
+env.AddProgram('mae2dms', 'converters/mae2dms.cxx')
+env.AddProgram('dms2mae', 'converters/dms2mae.cxx')
+

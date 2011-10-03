@@ -1,0 +1,22 @@
+Import('env')
+Import('libmsys')
+
+env=env.Clone()
+env.Append( 
+        CPPPATH=['../src'],
+        LIBS=['msys', 'boost_python$BOOST_SUFFIX'] )
+
+pymodfiles='''
+atom.cxx
+bond.cxx
+residue.cxx
+chain.cxx
+param.cxx
+system.cxx
+term.cxx
+vector.cxx
+pymod.cxx
+'''.split()
+
+env.AddPythonExtension('_msys', pymodfiles, prefix='msys')
+env.AddPythonModule('__init__.py', prefix='msys')

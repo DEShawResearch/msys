@@ -1,0 +1,12 @@
+Import('env')
+Import('libmsys')
+
+env=env.Clone()
+env.Prepend(CPPPATH=['../src'], LIBS=[libmsys])
+
+env.AddUnitTest('test_params', 'test_params.cxx')
+env.AddUnitTest('test_dms', 'test_dms.cxx')
+env.AddUnitTest('test_atomsel', 'test_atomsel.cxx')
+env.AddUnitTest('test_schema', 'test_schema.cxx')
+env.AddUnitTest('test_mae', 'test_mae.cxx')
+
