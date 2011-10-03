@@ -1,0 +1,64 @@
+#!/usr/bin/env desres-exec
+# -*- python -*-
+#{
+# desres-cleanenv $MSYS_CLEANENV -- python $0 "$@"
+#}
+
+'''
+dms-solvate input.dms output.dms [ options ]
+
+Add water molecules to a structure.
+'''
+
+import os, sys
+import msys
+from msys import solvate
+
+def main():
+    import optparse
+    parser = optparse.OptionParser(__doc__)
+
+    parser.add_option('-t', '--thickness', default=0, type='float',
+        help='Minimum distance from edge of water box to input structure')
+    parser.add_option('-m', '--minmax', default=None,
+        help='Specify solvent bounding box as xmin,ymin,zmin,xmax,ymax,zmax')
+    parser.add_option('-x', '--xpad', default=None,type='float',
+        help='Minimum water box thickness along x direction')
+    parser.add_option('-y', '--ypad', default=None,type='float',
+        help='Minimum water box thickness along y direction')
+    parser.add_option('-z', '--zpad', default=None,type='float',
+        help='Minimum water box thickness along z direction')
+    parser.add_option('-c', '--chain', default='WT',
+        help='Chain name of constructed water box')
+    parser.add_option(      '--cubic', default=False, action='store_true',
+        help='Ensure the resulting box is cubic')
+    parser.add_option('-v', '--verbose', default=False, action='store_true')
+
+    opts, args = parser.parse_args()
+    if len(args)!=2:
+        parser.error("incorrect number of arguments")
+
+    input, output = args
+
+    if opts.verbose: print "Loading input file <%s>" % input
+    if opts.minmax:
+      try:
+        opts.minmax=[float(x) for x in opts.minmax.split(',')]
+        assert len(opts.minmax) == 6
+      except:
+        parser.error("minmax must have 6 comma-separated values")
+      opts.minmax=[opts.minmax[:3], opts.minmax[3:]]
+
+    if input=='-':
+        mol=msys.CreateSystem()
+    else:
+        mol=msys.ImportDMS(input,structure_only=True)
+    
+    solvate.Solvate(mol, **opts.__dict__)
+
+    if opts.verbose: print "Writing DMS file <%s>" % output
+    msys.ExportDMS(mol,output)
+
+if __name__=="__main__": main()
+
+# vim: filetype=python
