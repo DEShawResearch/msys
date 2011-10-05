@@ -8,17 +8,17 @@ using namespace desres::msys;
 Int ValueRef::asInt() const {
     if (_type==IntType) return _val.i;
     if (_type==FloatType) return (Int)_val.f;
-    throw std::runtime_error("Cannot convert Params value to int");
+    throw std::runtime_error("Cannot convert ValueRef to int");
 }
 
 Float ValueRef::asFloat() const {
     if (_type==IntType) return _val.i;
     if (_type==FloatType) return _val.f;
-    throw std::runtime_error("Cannot convert Params value to float");
+    throw std::runtime_error("Cannot convert ValueRef to float");
 }
 String ValueRef::asString() const {
     if (_type==StringType) return _val.s ? _val.s : "";
-    throw std::runtime_error("Cannot convert Params value to string");
+    throw std::runtime_error("Cannot convert ValueRef to string");
 }
 
 void ValueRef::fromInt(const Int& i) {
@@ -45,12 +45,19 @@ void ValueRef::fromString(const String& i) {
 }
 
 bool ValueRef::operator==(const ValueRef& rhs) const {
-    switch (rhs._type) {
-        case IntType:   return rhs==asInt(); break;
-        case FloatType: return rhs==asFloat(); break;
-        case StringType:
+    switch (_type) {
+        case IntType:
+            if (rhs._type==IntType) return _val.i==rhs._val.i;
+            if (rhs._type==FloatType) return _val.i==rhs._val.f;
+            break;
+        case FloatType: 
+            if (rhs._type==IntType) return _val.f==rhs._val.i;
+            if (rhs._type==FloatType) return _val.f==rhs._val.f;
+            break;
         default:
-                        return rhs==asString(); break;
+        case StringType:
+            if (rhs._type==StringType) return !strcmp(_val.s, rhs._val.s);
+            break;
     }
     return false;
 }

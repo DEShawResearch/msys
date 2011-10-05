@@ -66,13 +66,17 @@ namespace desres { namespace msys {
         /* string conversions allowed from StringType values */
         operator std::string() const { return asString(); }
     
-        /* comparision */
+        /* comparision to a concrete type is performed by converting this
+         * to the type of the argument. */
         template <typename T>
         bool operator==(const T& rhs) const {
             T lhs = *this;
             return lhs==rhs;
         }
-        /* specialization to comparison to other ValueRef */
+
+        /* comparison between IntType and FloatType invokes the 
+         * underlying C comparison of Int and Float.  Comparison of strings
+         * uses strcmp.  Any other comparison returns false. */
         bool operator==(const ValueRef& rhs) const;
 
         template <typename T>
