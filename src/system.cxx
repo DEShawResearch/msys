@@ -178,13 +178,13 @@ Id System::update_fragids(MultiIdList* fragments) {
 
     std::stack<Id> S;
     Id fragid=0;
-    for (Id aid=0, n=_atoms.size(); aid<n; aid++) {
-        if (!bad(assignments[aid])) continue;   /* already assigned */
-        if (_deadatoms.count(aid)) continue;  /* ignore removed atoms */
-        S.push(aid);
-        assignments[aid] = fragid;
+    for (Id idx=0, n=_atoms.size(); idx<n; idx++) {
+        if (!bad(assignments[idx])) continue;   /* already assigned */
+        if (_deadatoms.count(idx)) continue;  /* ignore removed atoms */
+        S.push(idx);
+        assignments[idx] = fragid;
         do {
-            aid=S.top();
+            Id aid=S.top();
             S.pop();
             IdList& bonds = _bondindex[aid];
             for (IdList::iterator j=bonds.begin(), e=bonds.end(); j!=e; ++j) {
