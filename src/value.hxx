@@ -72,6 +72,9 @@ namespace desres { namespace msys {
             T lhs = *this;
             return lhs==rhs;
         }
+        /* specialization to comparison to other ValueRef */
+        bool operator==(const ValueRef& rhs) const;
+
         template <typename T>
         bool operator!=(const T& rhs) const {
             return ! operator==(rhs);

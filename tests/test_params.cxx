@@ -35,6 +35,8 @@ int main(int argc, char *argv[]) {
     assert(p->value(param,2).asFloat()==0.0);
     assert(p->value(param,2).asInt()==0.0);
 
+    assert(p->value(param,0)==p->value(param,0));
+
     p->value(param,0).fromFloat(435.5);
     assert(p->value(param,0).asFloat()==435.5);
 

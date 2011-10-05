@@ -43,3 +43,14 @@ void ValueRef::fromString(const String& i) {
         _val.s = strdup(i.c_str());
     }
 }
+
+bool ValueRef::operator==(const ValueRef& rhs) const {
+    switch (rhs._type) {
+        case IntType:   return rhs==asInt(); break;
+        case FloatType: return rhs==asFloat(); break;
+        case StringType:
+        default:
+                        return rhs==asString(); break;
+    }
+    return false;
+}
