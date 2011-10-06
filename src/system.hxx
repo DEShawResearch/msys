@@ -295,7 +295,7 @@ namespace desres { namespace msys {
         /* update the fragid of each atom according to its bond topology:
         * bonded atoms share the same fragid.  Return the number of
         * frags found, and atomid to fragment partitioning if requested */
-        Id update_fragids(MultiIdList* fragments=NULL);
+        Id updateFragids(MultiIdList* fragments=NULL);
 
         /* renumber gids of atoms, starting with starting_gid.  Return next
          * available gid. */

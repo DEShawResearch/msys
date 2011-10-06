@@ -170,7 +170,7 @@ void System::delChain(Id id) {
     }
 }
 
-Id System::update_fragids(MultiIdList* fragments) {
+Id System::updateFragids(MultiIdList* fragments) {
 
     /* Create local storage for all atoms (even deleted)
      * this simplifies and speeds up the code below. */

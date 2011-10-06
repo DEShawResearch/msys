@@ -431,6 +431,22 @@ class System(object):
         ids=p.append(system._ptr)
         return [Atom(p,i) for i in ids]
 
+    def renumberGids(self):
+        ''' assign 0-based gids to all atoms based on a depth traversal
+        of the structure hierarchy. '''
+        self._ptr.renumberGids(0)
+
+    def updateFragids(self):
+        ''' assign 0-based fragment ids to atoms based on the current
+        bond structure.  Return list of fragments as list of lists of atoms.
+        '''
+        p = self._ptr
+        frags = p.updateFragids()
+        result=[]
+        for f in frags:
+            result.append( [Atom(p,i) for i in f] )
+        return result
+
 def CreateSystem():
     return System(_msys.SystemPtr.create())
 

@@ -79,6 +79,15 @@ namespace {
         to_value_ref(newval, p.atomPropValue(row,col));
     }
 
+    list update_fragids(System& p) {
+        MultiIdList fragments;
+        p.updateFragids(&fragments);
+        list result;
+        for (unsigned i=0; i<fragments.size(); i++) {
+            result.append(object(fragments[i]));
+        }
+        return result;
+    }
 }
 
 namespace desres { namespace msys { 
@@ -204,6 +213,10 @@ namespace desres { namespace msys {
 
             /* append */
             .def("append", AppendSystem)
+
+            /* miscellaneous */
+            .def("renumberGids", &System::renumberGids)
+            .def("updateFragids", update_fragids)
             ;
     }
 

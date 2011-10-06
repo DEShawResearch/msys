@@ -323,6 +323,28 @@ class TestMain(unittest.TestCase):
         m.append(m)
         self.assertEqual( [a.name for a in m.atoms], ['a', 'b', 'a', 'b'])
 
+    def testRenumberGids(self):
+        m=msys.CreateSystem()
+        m.addAtom().gid=32
+        m.addAtom().gid=64
+        m.renumberGids()
+        self.assertEqual( [a.gid for a in m.atoms], [0,1] )
+
+    def testUpdateFragids(self):
+        m=msys.CreateSystem()
+        a1=m.addAtom()
+        a2=m.addAtom()
+        a3=m.addAtom()
+        def fragids(m): return [a.fragid for a in m.atoms]
+
+        frags=m.updateFragids()
+        self.assertEqual(fragids(m), [0,1,2])
+        self.assertEqual(frags, [[m.atom(i)] for i in range(3)])
+
+        a1.addBond(a3)
+        frags=m.updateFragids()
+        self.assertEqual(fragids(m), [0,1,0])
+        self.assertEqual(frags, [[m.atom(0), m.atom(2)], [m.atom(1)]])
 
 
 if __name__=="__main__":

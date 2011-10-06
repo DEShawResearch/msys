@@ -386,6 +386,8 @@ namespace desres { namespace msys {
                 }
             }
         }
+        h->renumberGids();
+        h->updateFragids();
         return h;
     }
 

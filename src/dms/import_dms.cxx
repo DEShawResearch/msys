@@ -501,7 +501,7 @@ SystemPtr desres::msys::ImportDMS( const std::string& path,
         }
     }
 
-    sys.update_fragids();
+    sys.updateFragids();
 
     //printf("got %d chains, %d residues, %d atoms, %d fragments.\n",
             //sys.chainCount(), sys.residueCount(), sys.atomCount(), frags);

@@ -115,7 +115,7 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms ) {
     }
 
     dst->renumberGids();
-    dst->update_fragids();
+    dst->updateFragids();
     return dst;
 }
 
