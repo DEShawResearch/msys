@@ -6,6 +6,7 @@
 #include <boost/enable_shared_from_this.hpp>
 
 #include "types.hxx"
+#include "term_table.hxx"
 #include "param_table.hxx"
 
 namespace desres { namespace msys {
