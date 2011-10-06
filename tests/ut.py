@@ -316,5 +316,14 @@ class TestMain(unittest.TestCase):
         c=msys.CloneSystem(m.atoms[::-1])
         self.assertEqual( [a.name for a in c.atoms], ['c', 'b', 'a'])
 
+    def testAppend(self):
+        m=msys.CreateSystem()
+        m.addAtom().name='a'
+        m.addAtom().name='b'
+        m.append(m)
+        self.assertEqual( [a.name for a in m.atoms], ['a', 'b', 'a', 'b'])
+
+
+
 if __name__=="__main__":
     unittest.main()

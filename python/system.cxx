@@ -201,6 +201,9 @@ namespace desres { namespace msys {
 
             /* atom selection */
             .def("atomselect", Atomselect)
+
+            /* append */
+            .def("append", AppendSystem)
             ;
     }
 

@@ -424,6 +424,13 @@ class System(object):
         ids=p.atomselect(seltext)
         return [Atom(p,i) for i in ids]
 
+    def append(self, system):
+        ''' Appends atoms and forcefield from system to self.  Returns
+        a list of of the new created atoms in self. '''
+        p=self._ptr
+        ids=p.append(system._ptr)
+        return [Atom(p,i) for i in ids]
+
 def CreateSystem():
     return System(_msys.SystemPtr.create())
 
