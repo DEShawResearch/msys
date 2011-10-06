@@ -60,6 +60,7 @@ namespace desres { namespace msys {
         class_<TermTable, TermTablePtr>("TermTablePtr", no_init)
             .def("__eq__",      list_eq<TermTablePtr>)
             .def("__ne__",      list_ne<TermTablePtr>)
+            .def("__hash__",    obj_hash<TermTablePtr>)
             .def("system",      &TermTable::system)
             .def("atomCount",   &TermTable::atomCount)
             .def("termCount",   &TermTable::termCount)

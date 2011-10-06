@@ -9,6 +9,7 @@ class Handle(object):
 
     def __eq__(self, x): return self._id==x._id and self._ptr==x._ptr
     def __ne__(self, x): return self._id!=x._id or  self._ptr!=x._ptr
+    def __hash__(self): return hash((self._ptr, self._id))
 
     @property
     def id(self): return self._id
@@ -152,6 +153,7 @@ class ParamTable(object):
 
     def __eq__(self, x): return self._ptr==x._ptr
     def __ne__(self, x): return self._ptr!=x._ptr
+    def __hash__(self): return self._ptr.__hash__()
 
     def addParam(self):
         ''' add and return a new entry in the parameter table '''
@@ -244,6 +246,7 @@ class TermTable(object):
 
     def __eq__(self, x): return self._ptr==x._ptr
     def __ne__(self, x): return self._ptr!=x._ptr
+    def __hash__(self): return self._ptr.__hash__()
 
     @property
     def param_table(self): return ParamTable(self._ptr.paramTable())

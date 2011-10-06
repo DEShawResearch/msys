@@ -33,6 +33,7 @@ namespace desres { namespace msys {
         class_<ParamTable, ParamTablePtr>("ParamTablePtr", no_init)
             .def("__eq__",      list_eq<ParamTablePtr>)
             .def("__ne__",      list_ne<ParamTablePtr>)
+            .def("__hash__",   obj_hash<ParamTablePtr>)
             .def("create",     &ParamTable::create).staticmethod("create")
             .def("paramCount", &ParamTable::paramCount)
             .def("addParam",   &ParamTable::addParam)
