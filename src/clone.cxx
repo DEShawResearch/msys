@@ -1,6 +1,8 @@
 #include "clone.hxx"
 #include "append.hxx"
 #include <algorithm>
+#include <stdexcept>
+#include <sstream>
 
 using namespace desres::msys;
 
@@ -24,6 +26,15 @@ namespace {
 
 SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms ) {
 
+    /* check for duplicates */
+    {
+        IdList tmp(atoms);
+        std::sort(tmp.begin(), tmp.end());
+        if (std::unique(tmp.begin(), tmp.end())!=tmp.end()) {
+            throw std::runtime_error(
+                    "Clone: atoms argument contains duplicates");
+        }
+    }
     SystemPtr dst = System::create();
 
     /* Mappings from src ids to dst ids */
@@ -44,6 +55,13 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms ) {
         Id srcatm = atoms[i];
         Id srcres = src->atom(srcatm).residue;
         Id srcchn = src->residue(srcres).chain;
+
+        if (!src->hasAtom(srcatm)) {
+            std::stringstream ss;
+            ss << "Clone: atoms argument contains deleted atom id " 
+               << srcatm;
+            throw std::runtime_error(ss.str());
+        }
 
         Id dstchn = chnmap[srcchn];
         Id dstres = resmap[srcres];
