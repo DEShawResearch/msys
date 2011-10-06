@@ -60,10 +60,22 @@ namespace {
     Id add_atom_prop( System& sys, String const& name, object type ) {
         return sys.addAtomProp(name, as_value_type(type));
     }
-    object get_atom_prop(System& p, Id row, Id col) {
+    object get_atom_prop(System& p, Id row, String const& name) {
+        Id col = p.atomPropIndex(name);
+        if (bad(col)) {
+            PyErr_Format(PyExc_KeyError, 
+                    "No such atom property '%s", name.c_str());
+            throw_error_already_set();
+        }
         return from_value_ref(p.atomPropValue(row,col));
     }
-    void set_atom_prop(System& p, Id row, Id col, object newval) {
+    void set_atom_prop(System& p, Id row, String const& name, object newval) {
+        Id col = p.atomPropIndex(name);
+        if (bad(col)) {
+            PyErr_Format(PyExc_KeyError, 
+                    "No such atom property '%s", name.c_str());
+            throw_error_already_set();
+        }
         to_value_ref(newval, p.atomPropValue(row,col));
     }
 

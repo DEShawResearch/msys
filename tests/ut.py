@@ -37,7 +37,8 @@ class TestMain(unittest.TestCase):
     def testAtomProps(self):
         m=msys.CreateSystem()
         a1=m.addAtom()
-        for p,t in zip(('F', 'I', 'S'), (float, int, str)):
+        F, I, S = 'F', 'I', 'S'
+        for p,t in zip((F, I, S), (float, int, str)):
             m.addAtomProp(p,t)
             self.assertTrue(p in m.atom_props)
             self.assertEqual(m.atomPropType(p), t)
@@ -48,23 +49,23 @@ class TestMain(unittest.TestCase):
         a1.charge = 3.5
         self.assertEqual(a1.charge, 3.5)
         self.assertEqual(m.atom(a1.id).charge, a1.charge)
-        self.assertEqual(a1.F, 0)
-        self.assertEqual(a1.I, 0)
-        self.assertEqual(a1.S, "")
+        self.assertEqual(a1[F], 0)
+        self.assertEqual(a1[I], 0)
+        self.assertEqual(a1[S], "")
 
-        a1.F=32.5
-        a1.I=42
-        a1.S="justinrocks"
-        self.assertEqual(a1.F, 32.5)
-        self.assertEqual(a1.I, 42)
-        self.assertEqual(a1.S, "justinrocks")
+        a1[F]=32.5
+        a1[I]=42
+        a1[S]="justinrocks"
+        self.assertEqual(a1[F], 32.5)
+        self.assertEqual(a1[I], 42)
+        self.assertEqual(a1[S], "justinrocks")
 
-        with self.assertRaises(AttributeError):
-            a1.foobar = 32
+        with self.assertRaises(KeyError):
+            a1['foobar'] = 32
 
         self.assertTrue(hasattr(a2, 'charge'))
-        self.assertTrue(hasattr(a2, 'F'))
-        self.assertFalse(hasattr(a2, 'foobar'))
+        self.assertTrue('F'in a2)
+        self.assertFalse('foobar' in a2)
 
     def testBond(self):
         m=msys.CreateSystem()

@@ -1,20 +1,14 @@
 import _msys
 
 class Handle(object):
+    __slots__ = ('_ptr', '_id')
+
     def __init__(self, _ptr, _id):
-        self.__dict__['_ptr'] = _ptr
-        self.__dict__['_id']  = _id
+        self._ptr = _ptr
+        self._id = _id
 
     def __eq__(self, x): return self._id==x._id and self._ptr==x._ptr
     def __ne__(self, x): return self._id!=x._id or  self._ptr!=x._ptr
-
-    def __setattr__(self, attr, val):
-        ''' strict setattr so that users don't accidentally assign properties
-        to objects that haven't been declared as custom properties. '''
-        if attr in self.__class__.__dict__:
-            object.__setattr__(self,attr,val)
-        else:
-            self.setProp(attr,val)
 
     @property
     def id(self): return self._id
@@ -47,22 +41,21 @@ class Bond(Handle):
 
 
 class Atom(Handle):
+    __slots__ = ()
 
     def destroy(self):
         self._ptr.delAtom(self.id)
 
-    def __getattr__(self, attr):
-        col=self._ptr.atomPropIndex(attr)
-        if _msys.bad(col):
-            raise AttributeError, "'Atom' object has no attribute '%s'" % attr
-        return self._ptr.getAtomProp(self.id, col)
+    def __setitem__(self, key, val):
+        p=self._ptr
+        p.setAtomProp(self.id, key, val)
 
-    def setProp(self, prop, val):
-        ''' Set a custom atom property to the given value '''
-        col=self._ptr.atomPropIndex(prop)
-        if _msys.bad(col):
-            raise AttributeError, "'Atom' object has no attribute '%s'" % prop 
-        self._ptr.setAtomProp(self.id, col, val)
+    def __getitem__(self, key):
+        p=self._ptr
+        return p.getAtomProp(self.id, key)
+    
+    def __contains__(self, key):
+        return not _msys.bad(self._ptr.atomPropIndex(key))
 
     def addBond(self, other):
         assert self._ptr == other._ptr
@@ -85,12 +78,16 @@ class Atom(Handle):
         return [Atom(self._ptr, i) for i in self._ptr.bondedAtoms(self.id)]
 
 
-    @property
-    def charge(self): return self.atom.charge
-    @charge.setter
-    def charge(self, val): self.atom.charge = val
+    charge = property( lambda self: self.atom.charge,
+                       lambda self, val: setattr(self.atom, 'charge', val))
+#for attr in (
+    #'gid', 'fragid', 'x', 'y', 'z', 'charge', 'vx', 'vy', 'vz',
+    #'mass', 'chargeB', 'atomic_number', 'formal_charge',
+    #'moiety', 'alchemical', 'name'):
+    #Atom.__dict__[attr]=property( 
+            #lambda self: getattr(self.atom, attr),
+            #lambda self, val: setattr(self.atom, attr, val))
     
-
 class Residue(Handle):
 
     def destroy(self):
