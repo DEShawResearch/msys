@@ -130,10 +130,10 @@ static void export_particles(const System& sys, const IdList& map, dms_t* dms) {
         "  mass float,\n"
         "  charge float,\n";
 
-    const Id nprops = sys.atomProps()->propCount();
+    const Id nprops = sys.atomPropCount();
     for (Id i=0; i<nprops; i++) {
-        sql += "  '" + sys.atomProps()->propName(i) + "' ";
-        sql += str(sys.atomProps()->propType(i));
+        sql += "  '" + sys.atomPropName(i) + "' ";
+        sql += str(sys.atomPropType(i));
         sql += ",\n";
     }
     sql += "  nbtype integer\n);";
@@ -170,7 +170,7 @@ static void export_particles(const System& sys, const IdList& map, dms_t* dms) {
             /* *sigh* - the ParamTable::value() method is non-const,
              * and I don't feel like making a const version; thus this
              * hack. */
-            ValueRef ref = const_cast<System&>(sys).atomProps()->value(atm,j);
+            ValueRef ref = const_cast<System&>(sys).atomPropValue(atm,j);
             write(ref, col, w);
         }
         NbMap::const_iterator nbiter=nbtypes.find(atm);

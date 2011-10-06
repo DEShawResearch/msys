@@ -416,7 +416,7 @@ SystemPtr desres::msys::ImportDMS( const std::string& path,
     for (int i=0, n=dms_reader_column_count(r); i<n; i++) {
         if (handled.count(i)) continue;
         extra[i]=dms_reader_column_type(r,i);
-        sys.atomProps()->addProp(dms_reader_column_name(r,i), extra[i]);
+        sys.addAtomProp(dms_reader_column_name(r,i), extra[i]);
     }
 
     /* read the particle table */
@@ -474,7 +474,7 @@ SystemPtr desres::msys::ImportDMS( const std::string& path,
                 iter!=extra.end(); ++iter, ++propcol) {
             int col = iter->first;
             ValueType type = iter->second;
-            ValueRef ref = sys.atomProps()->value(atmid, propcol);
+            ValueRef ref = sys.atomPropValue(atmid, propcol);
             if (type==IntType) 
                 ref=dms_reader_get_int(r,col);
             else if (type==FloatType)

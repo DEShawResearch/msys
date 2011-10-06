@@ -32,13 +32,11 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms ) {
     IdList chnmap(src->maxChainId(), BadId);
 
     /* copy atom properties */
-    ParamTable& dstprops = *dst->atomProps();
-    ParamTable& srcprops = *src->atomProps();
-    Id nprops = srcprops.propCount();
+    Id nprops = src->atomPropCount();
     IdList propmap(nprops);
     for (Id i=0; i<nprops; i++) {
-        propmap[i] = dstprops.addProp(
-                srcprops.propName(i), srcprops.propType(i));
+        propmap[i] = dst->addAtomProp(
+                src->atomPropName(i), src->atomPropType(i));
     }
 
     /* Build structure for subset of atoms */
@@ -67,7 +65,8 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms ) {
         dst->atom(dstatm).residue = dstres;
         /* Copy additional atom properties */
         for (Id j=0; j<nprops; j++) {
-            dstprops.value(dstatm,propmap[j]) = srcprops.value(srcatm, j);
+            dst->atomPropValue(dstatm,propmap[j]) = 
+            src->atomPropValue(srcatm, j);
         }
     }
 

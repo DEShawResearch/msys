@@ -22,8 +22,7 @@ namespace desres { namespace msys {
         static Atom create( SystemPtr sys );
 
         ValueRef prop(const String& key) {
-            Id col = sys()->atomProps()->propIndex(key);
-            return sys()->atomProps()->value(id(), col);
+            return sys()->atomPropValue(id(), key);
         }
     
         Id bondCount() const { return sys()->bondCountForAtom(id()); }

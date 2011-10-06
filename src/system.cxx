@@ -330,3 +330,37 @@ Id System::maxChainId() const {
     return _chains.size();
 }
 
+Id System::atomPropCount() const {
+    return _atomprops->propCount();
+}
+
+String System::atomPropName(Id i) const {
+    return _atomprops->propName(i);
+}
+
+ValueType System::atomPropType(Id i) const {
+    return _atomprops->propType(i);
+}
+
+Id System::atomPropIndex(String const& name) const {
+    return _atomprops->propIndex(name);
+}
+
+bool System::findAtomProp(String const& name, Id* indexptr) const {
+    Id id = _atomprops->propIndex(name);
+    if (indexptr) *indexptr = id;
+    return !bad(id);
+}
+
+Id System::addAtomProp(String const& name, ValueType type) {
+    return _atomprops->addProp(name,type);
+}
+
+ValueRef System::atomPropValue(Id term, Id index) {
+    return _atomprops->value(term, index);
+}
+
+ValueRef System::atomPropValue(Id term, String const& name) {
+    return _atomprops->value(term, atomPropIndex(name));
+}
+

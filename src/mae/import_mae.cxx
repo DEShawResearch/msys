@@ -106,11 +106,11 @@ namespace {
         const Json& formals = m_atom.get(FORMAL_CHG);
         Id gtmp=BadId, gene=BadId, glig=BadId, gbias=BadId, gfrz=BadId;
 
-        if (!!temp) gtmp=h->atomProps()->addProp("grp_temperature", IntType);
-        if (!!nrg)  gene=h->atomProps()->addProp("grp_energy", IntType);
-        if (!!lig)  glig=h->atomProps()->addProp("grp_ligand", IntType);
-        if (!!bias) gbias=h->atomProps()->addProp("grp_bias", IntType);
-        if (!!frz)  gfrz=h->atomProps()->addProp("grp_frozen", IntType);
+        if (!!temp) gtmp=h->addAtomProp("grp_temperature", IntType);
+        if (!!nrg)  gene=h->addAtomProp("grp_energy", IntType);
+        if (!!lig)  glig=h->addAtomProp("grp_ligand", IntType);
+        if (!!bias) gbias=h->addAtomProp("grp_bias", IntType);
+        if (!!frz)  gfrz=h->addAtomProp("grp_frozen", IntType);
 
         int j,n = m_atom.get("__size__").as_int();
         for (j=0; j<n; j++) {
@@ -154,12 +154,11 @@ namespace {
             atm.vy = vy.elem(j).as_float(0);
             atm.vz = vz.elem(j).as_float(0);
             if (!!formals) atm.formal_charge = formals.elem(j).as_int(0);
-            ParamTablePtr aprops = h->atomProps();
-            if (!!temp) aprops->value(id,gtmp)=temp.elem(j).as_int(0);
-            if (!!nrg)  aprops->value(id,gene)=nrg.elem(j).as_int(0);
-            if (!!lig)  aprops->value(id,glig)=lig.elem(j).as_int(0);
-            if (!!bias) aprops->value(id,gbias)=bias.elem(j).as_int(0);
-            if (!!frz)  aprops->value(id,gfrz)=frz.elem(j).as_int(0);
+            if (!!temp) h->atomPropValue(id,gtmp)=temp.elem(j).as_int(0);
+            if (!!nrg)  h->atomPropValue(id,gene)=nrg.elem(j).as_int(0);
+            if (!!lig)  h->atomPropValue(id,glig)=lig.elem(j).as_int(0);
+            if (!!bias) h->atomPropValue(id,gbias)=bias.elem(j).as_int(0);
+            if (!!frz)  h->atomPropValue(id,gfrz)=frz.elem(j).as_int(0);
             atoms.push_back(id);
             *natoms += 1;
         }

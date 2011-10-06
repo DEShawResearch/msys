@@ -54,6 +54,19 @@ namespace {
         sys.delChains(ids);
     }
 
+    PyObject* atom_prop_type(System& sys, Id col) {
+        return from_value_type(sys.atomPropType(col));
+    }
+    Id add_atom_prop( System& sys, String const& name, object type ) {
+        return sys.addAtomProp(name, as_value_type(type));
+    }
+    object get_atom_prop(System& p, Id row, Id col) {
+        return from_value_ref(p.atomPropValue(row,col));
+    }
+    void set_atom_prop(System& p, Id row, Id col, object newval) {
+        to_value_ref(newval, p.atomPropValue(row,col));
+    }
+
 }
 
 namespace desres { namespace msys { 
@@ -145,9 +158,17 @@ namespace desres { namespace msys {
             .def("removeTable", &System::removeTable)
 
             /* atom props */
-            .def("atomProps",   &System::atomProps)
             .def("setResidue",  &System::setResidue)
             .def("bondedAtoms", &System::bondedAtoms)
+
+            /* extended atom props */
+            .def("atomPropCount",&System::atomPropCount)
+            .def("atomPropName", &System::atomPropName)
+            .def("atomPropIndex",&System::atomPropIndex)
+            .def("atomPropType", atom_prop_type)
+            .def("addAtomProp",  add_atom_prop)
+            .def("getAtomProp",  get_atom_prop)
+            .def("setAtomProp",  set_atom_prop)
 
             /* bond props */
             .def("bondProps",   &System::bondProps)

@@ -274,8 +274,17 @@ namespace desres { namespace msys {
         /* assign the atom to the given residue */
         void setResidue(Id atom, Id residue);
 
-        /* extended element properties */
-        ParamTablePtr atomProps() const { return _atomprops; }
+        /* extended atom properties */
+        Id atomPropCount() const;
+        String atomPropName(Id i) const;
+        ValueType atomPropType(Id i) const;
+        Id atomPropIndex(String const& name) const;
+        bool findAtomProp(String const& name, Id* indexptr=NULL) const;
+        Id addAtomProp(String const& name, ValueType type);
+        ValueRef atomPropValue(Id term, Id index);
+        ValueRef atomPropValue(Id term, String const& name);
+
+        /* extended bond properties */
         ParamTablePtr bondProps() const { return _bondprops; }
 
         bool findBond( Id i, Id j, Id * id = NULL) const;

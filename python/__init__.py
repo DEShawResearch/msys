@@ -52,19 +52,17 @@ class Atom(Handle):
         self._ptr.delAtom(self.id)
 
     def __getattr__(self, attr):
-        props=self._ptr.atomProps()
-        col=props.propIndex(attr)
+        col=self._ptr.atomPropIndex(attr)
         if _msys.bad(col):
             raise AttributeError, "'Atom' object has no attribute '%s'" % attr
-        return props.getProp(self.id, col)
+        return self._ptr.getAtomProp(self.id, col)
 
     def setProp(self, prop, val):
         ''' Set a custom atom property to the given value '''
-        props=self._ptr.atomProps()
-        col=props.propIndex(prop)
+        col=self._ptr.atomPropIndex(prop)
         if _msys.bad(col):
             raise AttributeError, "'Atom' object has no attribute '%s'" % prop 
-        props.setProp(self.id, col, val)
+        self._ptr.setAtomProp(self.id, col, val)
 
     def addBond(self, other):
         assert self._ptr == other._ptr
@@ -386,23 +384,22 @@ class System(object):
         ''' add a custom atom property with the given name and type.
         type should be int, float, or str.
         '''
-        return self._ptr.atomProps().addProp(name, type)
+        return self._ptr.addAtomProp(name, type)
 
     @property
     def atom_props(self):
         ''' return the list of custom atom properties. '''
-        p=self._ptr.atomProps()
-        return [p.propName(i) for i in range(p.propCount())]
+        p=self._ptr
+        return [p.atomPropName(i) for i in range(p.atomPropCount())]
 
     def atomPropType(self, name):
-        p=self._ptr.atomProps()
-        return p.propType(p.propIndex(name))
+        return self._ptr.atomPropType(self._ptr.atomPropIndex(name))
 
     @property
     def atom_prop_types(self):
         ''' return the types of the custom atom properties '''
-        p=self._ptr.atomProps()
-        return [p.propType(i) for i in range(p.propCount())]
+        p=self._ptr
+        return [p.atomPropType(i) for i in range(p.atomPropCount())]
 
     def addTable(self, name, natoms, params = None):
         if params is None: params = CreateParamTable()

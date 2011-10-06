@@ -67,25 +67,25 @@ namespace desres { namespace msys {
 
         /* atom properties */
         Id addAtomProp(const String& name, ValueType type) {
-            return _system->atomProps()->addProp(name, type);
+            return _system->addAtomProp(name, type);
         }
         Id atomPropIndex(const String& name) const {
-            return _system->atomProps()->propIndex(name);
+            return _system->atomPropIndex(name);
         }
         bool hasAtomProp(const String& name) const {
             return atomPropIndex(name)!=BadId;
         }
         Id atomPropCount() const {
-            return _system->atomProps()->propCount();
+            return _system->atomPropCount();
         }
         String atomPropName(Id i) const {
-            return _system->atomProps()->propName(i);
+            return _system->atomPropName(i);
         }
         ValueType atomPropType(Id i) const {
-            return _system->atomProps()->propType(i);
+            return _system->atomPropType(i);
         }
         ValueRef atomProp(Id id, Id col) const {
-            return _system->atomProps()->value(id,col);
+            return _system->atomPropValue(id,col);
         }
         /* The const-ness of this method is a big lie. */
         ValueRef atomProp(Id id, const String& name) const {

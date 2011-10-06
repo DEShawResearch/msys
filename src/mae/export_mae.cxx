@@ -136,10 +136,10 @@ static void build_m_atom( SystemPtr mol, Destro& M ) {
             "ffio_grp_cm_moi",
             "ffio_grp_ligand" };
         for (unsigned j=0; j<sizeof(entprops)/sizeof(entprops[0]); j++) {
-            Id col = mol->atomProps()->propIndex(entprops[j]);
+            Id col = mol->atomPropIndex(entprops[j]);
             if (!bad(col)) {
                 rec.add_schema('i', maeprops[j]);
-                rec[maeprops[j]]=mol->atomProps()->value(id,col).asInt();
+                rec[maeprops[j]]=mol->atomPropValue(id,col).asInt();
             }
         }
     }
