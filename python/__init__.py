@@ -16,101 +16,107 @@ class Handle(object):
     @property
     def system(self): return System(self._ptr)
 
+def __add_properties(cls, *names):
+    for attr in names:
+        setattr(cls, attr, property(
+            lambda self, x=attr: getattr(self.data(), x),
+            lambda self, val, x=attr: setattr(self.data(), x, val)))
 
 class Bond(Handle):
-    def destroy(self):
-        self._ptr.delBond(self.id)
+    __slots__ = ()
+
+    def data(self): return self._ptr.bond(self._id)
+
+    def destroy(self): self._ptr.delBond(self._id)
 
     @property
-    def bond(self): return self._ptr.bond(self.id)
+    def first(self): return Atom(self._ptr, self.data().i)
 
     @property
-    def first(self): return Atom(self._ptr, self.bond.i)
-
-    @property
-    def second(self): return Atom(self._ptr, self.bond.j)
-
-    @property
-    def order(self): return self.bond.order
-    @order.setter
-    def order(self, val): self.bond.order = val
+    def second(self): return Atom(self._ptr, self.data().j)
 
     @property
     def atoms(self): return self.first, self.second
 
-
+__add_properties(Bond, 'order')
 
 class Atom(Handle):
     __slots__ = ()
 
+    def data(self): return self._ptr.atom(self._id)
+
     def destroy(self):
-        self._ptr.delAtom(self.id)
+        self._ptr.delAtom(self._id)
 
     def __setitem__(self, key, val):
-        p=self._ptr
-        p.setAtomProp(self.id, key, val)
+        self._ptr.setAtomProp(self._id, key, val)
 
     def __getitem__(self, key):
-        p=self._ptr
-        return p.getAtomProp(self.id, key)
+        return self._ptr.getAtomProp(self._id, key)
     
     def __contains__(self, key):
         return not _msys.bad(self._ptr.atomPropIndex(key))
 
     def addBond(self, other):
         assert self._ptr == other._ptr
-        return Bond(self._ptr, self._ptr.addBond(self.id, other.id))
+        return Bond(self._ptr, self._ptr.addBond(self._id, other.id))
 
     @property
-    def atom(self): return self._ptr.atom(self.id)
-
-    @property
-    def residue(self): return Residue(self._ptr, self.atom.residue)
+    def residue(self): return Residue(self._ptr, self.data().residue)
     @residue.setter
-    def residue(self, res): self._ptr.setResidue(self.id, res.id)
+    def residue(self, res): self._ptr.setResidue(self._id, res.id)
 
     @property
     def bonds(self):
-        return [Bond(self._ptr, i) for i in self._ptr.bondsForAtom(self.id)]
+        return [Bond(self._ptr, i) for i in self._ptr.bondsForAtom(self._id)]
 
     @property
     def bonded_atoms(self):
-        return [Atom(self._ptr, i) for i in self._ptr.bondedAtoms(self.id)]
+        return [Atom(self._ptr, i) for i in self._ptr.bondedAtoms(self._id)]
 
+__add_properties(Atom, 
+        'gid', 'fragid', 'x', 'y', 'z', 'charge',
+        'vx', 'vy', 'vz', 'mass',
+        'chargeB',
+        'atomic_number', 'formal_charge',
+        'moiety', 'alchemical',
+        'name')
 
-    charge = property( lambda self: self.atom.charge,
-                       lambda self, val: setattr(self.atom, 'charge', val))
-#for attr in (
-    #'gid', 'fragid', 'x', 'y', 'z', 'charge', 'vx', 'vy', 'vz',
-    #'mass', 'chargeB', 'atomic_number', 'formal_charge',
-    #'moiety', 'alchemical', 'name'):
-    #Atom.__dict__[attr]=property( 
-            #lambda self: getattr(self.atom, attr),
-            #lambda self, val: setattr(self.atom, attr, val))
-    
 class Residue(Handle):
+    __slots__ = ()
+
+    def data(self): 
+        return self._ptr.residue(self._id)
 
     def destroy(self):
-        self._ptr.delResidue(self.id)
+        self._ptr.delResidue(self._id)
 
     def addAtom(self):
-        return Atom(self._ptr, self._ptr.addAtom(self.id))
+        return Atom(self._ptr, self._ptr.addAtom(self._id))
 
     @property
     def atoms(self):
-        return [Atom(self._ptr, i) for i in self._ptr.atomsForResidue(self.id)]
+        return [Atom(self._ptr, i) for i in self._ptr.atomsForResidue(self._id)]
+
+__add_properties(Residue, 'name', 'num')
 
 class Chain(Handle):
+    __slots__ = ()
+
+    def raw_chain(self): return self._ptr.chain(self._id)
 
     def destroy(self):
-        self._ptr.delChain(self.id)
+        self._ptr.delChain(self._id)
 
     def addResidue(self):
-        return Residue(self._ptr, self._ptr.addResidue(self.id))
+        return Residue(self._ptr, self._ptr.addResidue(self._id))
 
     @property
     def residues(self):
-        return [Residue(self._ptr, i) for i in self._ptr.residuesForChain(self.id)]
+        return [Residue(self._ptr, i) for i in self._ptr.residuesForChain(self._id)]
+
+__add_properties(Chain, 'name')
+
 
 class Param(object):
     __slots__=('_ptr', '_id')
@@ -130,11 +136,11 @@ class Param(object):
 
     def __setitem__(self, key, val):
         p=self._ptr
-        p.setProp(self.id, p.propIndex(key), val)
+        p.setProp(self._id, p.propIndex(key), val)
 
     def __getitem__(self, key):
         p=self._ptr
-        return p.getProp(self.id, p.propIndex(key))
+        return p.getProp(self._id, p.propIndex(key))
 
 class ParamTable(object):
     __slots__=('_ptr',)
@@ -191,18 +197,18 @@ class Term(object):
 
     @property
     def param(self): 
-        id=self._ptr.param(self.id)
+        id=self._ptr.param(self._id)
         if _msys.bad(id): return None
         return Param(self._ptr.paramTable(), id)
     @param.setter
     def param(self, val):
         if val is None: id = None
         else: id = val.id
-        self._ptr.setParam(self.id, id)
+        self._ptr.setParam(self._id, id)
 
     @property
     def atoms(self):
-        return [Atom(self._ptr.system(), i) for i in self._ptr.atoms(self.id)]
+        return [Atom(self._ptr.system(), i) for i in self._ptr.atoms(self._id)]
 
     @property
     def table(self): return TermTable(self._ptr)
@@ -213,8 +219,8 @@ class Term(object):
             col = self._ptr.termPropIndex(attr)
             if _msys.bad(col):
                 raise ValueError, "No such property '%s'" % attr
-            return self._ptr.getTermProp(self.id, col)
-        return self._ptr.getProp(self.id, col)
+            return self._ptr.getTermProp(self._id, col)
+        return self._ptr.getProp(self._id, col)
 
     def __setitem__(self, attr, val):
         col = self._ptr.propIndex(attr)
@@ -222,9 +228,9 @@ class Term(object):
             col = self._ptr.termPropIndex(attr)
             if _msys.bad(col):
                 raise ValueError, "No such property '%s'" % attr
-            self._ptr.setTermProp(self.id, col, val)
+            self._ptr.setTermProp(self._id, col, val)
         else:
-            self._ptr.setProp(self.id, col, val)
+            self._ptr.setProp(self._id, col, val)
 
 
 
