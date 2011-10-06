@@ -307,5 +307,14 @@ class TestMain(unittest.TestCase):
         with self.assertRaises(IndexError): m.cell[3]
         with self.assertRaises(IndexError): m.cell[-4]
 
+    def testClone(self):
+        m=msys.CreateSystem()
+        m.addAtom().name='a'
+        m.addAtom().name='b'
+        m.addAtom().name='c'
+
+        c=msys.CloneSystem(m.atoms[::-1])
+        self.assertEqual( [a.name for a in c.atoms], ['c', 'b', 'a'])
+
 if __name__=="__main__":
     unittest.main()

@@ -18,6 +18,11 @@ namespace {
     template <class List>
     bool list_ne(const List& self, const List& other) { return self!=other; }
 
+    template <class Obj>
+    unsigned long obj_hash( Obj const& obj ) { 
+        return reinterpret_cast<unsigned long>(obj.get());
+    }
+
     template <class List>
     class_<List> declare_list( const char * name ) {
         return class_<List>(name)

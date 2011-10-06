@@ -320,6 +320,7 @@ class System(object):
 
     def __eq__(self, x): return self._ptr == x._ptr
     def __ne__(self, x): return self._ptr != x._ptr
+    def __hash__(self): return self._ptr.__hash__()
 
     def addAtom(self):
         ''' add and return a new Atom in its own residue '''
@@ -422,6 +423,22 @@ class System(object):
 
 def CreateSystem():
     return System(_msys.SystemPtr.create())
+
+def CloneSystem(atoms):
+    ''' create a new system from the given list of atoms, which must all
+    be from the same System and have different ids.  The order of the atoms
+    in the new system will be that of the input atoms.  '''
+    if not atoms: 
+        raise ValueError, "Cannot clone an empty list of atoms"
+    ids = _msys.IdList()
+    sys = set()
+    for a in atoms:
+        ids.append(a.id)
+        sys.add(a.system)
+    if len(sys) > 1:
+        raise ValueError, "Input atoms come from multiple systems"
+    ptr = sys.pop()._ptr
+    return System( _msys.Clone(ptr, ids))
 
 def CreateParamTable():
     return ParamTable(_msys.ParamTablePtr.create())

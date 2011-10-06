@@ -96,9 +96,12 @@ namespace desres { namespace msys {
         def("ExportDMS", ExportDMS);
         def("ImportMAE", ImportMAE);
 
+        def("Clone", Clone);
+
         class_<System,SystemPtr>("SystemPtr", no_init)
             .def("__eq__",      list_eq<SystemPtr>)
             .def("__ne__",      list_ne<SystemPtr>)
+            .def("__hash__",    obj_hash<SystemPtr>)
             .def("create",  &System::create).staticmethod("create")
             .def_readwrite("name", &System::name)
             .def_readwrite("global_cell", &System::global_cell)
