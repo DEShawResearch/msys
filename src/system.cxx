@@ -297,14 +297,6 @@ void System::removeExtra(ParamTablePtr extra) {
     }
 }
 
-Id System::renumberGids(Id starting_gid) {
-    IdList ids=atoms();
-    for (IdList::const_iterator i=ids.begin(), e=ids.end(); i!=e; ++i) {
-        atom(*i).gid = starting_gid++;
-    }
-    return starting_gid;
-}
-
 boost::shared_ptr<System> System::create() {
     return boost::shared_ptr<System>(new System);
 }

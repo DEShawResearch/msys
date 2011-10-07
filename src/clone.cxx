@@ -131,8 +131,6 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms ) {
         AppendParams( p, src->extra(name), p->params() );
         dst->addExtra( name, p );
     }
-
-    dst->renumberGids();
     dst->updateFragids();
     return dst;
 }

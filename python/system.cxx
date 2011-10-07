@@ -215,7 +215,6 @@ namespace desres { namespace msys {
             .def("append", AppendSystem)
 
             /* miscellaneous */
-            .def("renumberGids", &System::renumberGids)
             .def("updateFragids", update_fragids)
             ;
     }

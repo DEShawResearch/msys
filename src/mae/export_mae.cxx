@@ -3,6 +3,7 @@
 #include "../mae.hxx"
 #include "../schema.hxx"
 #include "../term_table.hxx"
+#include "../clone.hxx"
 #include "destro/destro/Destro.hxx"
 
 #include <fstream>
@@ -556,6 +557,9 @@ namespace desres { namespace msys {
 
         /* create a single ct for the entire dms file */
         Destro& ct = M.new_block("f_m_ct");
+
+        /* Get rid of any gaps in the atom list */
+        if (mol->atomCount() != mol->maxAtomId()) mol=Clone(mol, mol->atoms());
 
         /* fill in the top-level ct stuff */
         build_ct_fields( mol, ct );

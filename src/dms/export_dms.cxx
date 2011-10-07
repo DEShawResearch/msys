@@ -9,17 +9,6 @@
 
 using namespace desres::msys;
 
-/* construct map from possibly noncontiguous ids to 0-based ids */
-static IdList map_ids(const IdList& ids) {
-    IdList idmap;
-    for (Id i=0, n=ids.size(); i<n; i++) {
-        Id id = ids[i];
-        while (idmap.size()<id) idmap.push_back(BadId);
-        idmap.push_back(id);
-    }
-    return idmap;
-}
-
 static const char* str(const ValueType& t) {
     return t==IntType   ? "integer" :
            t==FloatType ? "float" :
@@ -150,7 +139,7 @@ static void export_particles(const System& sys, const IdList& map, dms_t* dms) {
         Id chn = residue.chain;
         const chain_t& chain = sys.chain(chn);
 
-        dms_writer_bind_int(w,    0, i);
+        dms_writer_bind_int(w,    0, map[i]);
         dms_writer_bind_int(w,    1, atom.atomic_number);
         dms_writer_bind_string(w, 2, atom.name.c_str());
         dms_writer_bind_double(w, 3, atom.x);
@@ -490,9 +479,26 @@ static void export_cell(const System& sys, dms_t* dms) {
     dms_exec(dms, "commit");
 }
 
+static IdList map_gids(System const& sys) {
+    IdList gids, ids = sys.atoms();
+    IdList idmap(sys.maxAtomId());
+    for (Id i=0, n=ids.size(); i<n; i++) {
+        Id id = ids[i];
+        Id gid = sys.atom(id).gid;
+        idmap[id] = gid;
+        gids.push_back(gid);
+    }
+    /* Ensure that the set of gids has no repeats. */
+    std::sort(gids.begin(), gids.end());
+    if (std::unique(gids.begin(), gids.end()) != gids.end()) {
+        throw std::runtime_error("atom gids are not unique");
+    }
+    return idmap;
+}
+
 void desres::msys::ExportDMS(SystemPtr h, const std::string& path) {
     System& sys = *h;
-    IdList atomidmap = map_ids(sys.atoms());
+    IdList atomidmap = map_gids(sys);
     unlink(path.c_str());
     dms_t* dms = dms_write(path.c_str());
     export_particles(sys, atomidmap, dms);

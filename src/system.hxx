@@ -56,7 +56,7 @@ namespace desres { namespace msys {
     };
 
     struct atom_t {
-        Id  gid;
+        Id  gid;        /* For dms, the primary key of the particle */
         Id  fragid;
         Id  residue;
     
@@ -74,7 +74,7 @@ namespace desres { namespace msys {
         String name;
     
         atom_t() 
-        : gid(0), fragid(BadId), residue(BadId),
+        : gid(BadId), fragid(BadId), residue(BadId),
           x(0), y(0), z(0), charge(0), vx(0), vy(0), vz(0), mass(0), chargeB(0),
           atomic_number(0), formal_charge(0), moiety(0), alchemical(false)
         {}
@@ -294,13 +294,9 @@ namespace desres { namespace msys {
         IdList bondedAtoms(Id id) const;
     
         /* update the fragid of each atom according to its bond topology:
-        * bonded atoms share the same fragid.  Return the number of
-        * frags found, and atomid to fragment partitioning if requested */
+         * bonded atoms share the same fragid.  Return the number of
+         * frags found, and atomid to fragment partitioning if requested */
         Id updateFragids(MultiIdList* fragments=NULL);
-
-        /* renumber gids of atoms, starting with starting_gid.  Return next
-         * available gid. */
-        Id renumberGids(Id starting_gid=0);
     };
 
     typedef boost::shared_ptr<System> SystemPtr;

@@ -323,22 +323,12 @@ class TestMain(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             msys.CloneSystem([m.atom(0), m.atom(1), m.atom(2)])
 
-
-
-
     def testAppend(self):
         m=msys.CreateSystem()
         m.addAtom().name='a'
         m.addAtom().name='b'
         m.append(m)
         self.assertEqual( [a.name for a in m.atoms], ['a', 'b', 'a', 'b'])
-
-    def testRenumberGids(self):
-        m=msys.CreateSystem()
-        m.addAtom().gid=32
-        m.addAtom().gid=64
-        m.renumberGids()
-        self.assertEqual( [a.gid for a in m.atoms], [0,1] )
 
     def testUpdateFragids(self):
         m=msys.CreateSystem()

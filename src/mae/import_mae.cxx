@@ -145,6 +145,7 @@ namespace {
             }
             Id id = h->addAtom(res);
             atom_t& atm = h->atom(id);
+            atm.gid = id;
             atm.atomic_number = anum;
             atm.name = name;
             atm.x = x.elem(j).as_float(0);
@@ -246,6 +247,7 @@ namespace {
 
                 Id id = h->addAtom(res);
                 atom_t& atom = h->atom(id);
+                atom.gid = id;
                 atom.name = name;
                 atom.x = x.elem(j).as_float(0);
                 atom.y = y.elem(j).as_float(0);
@@ -386,7 +388,6 @@ namespace desres { namespace msys {
                 }
             }
         }
-        h->renumberGids();
         h->updateFragids();
         return h;
     }
