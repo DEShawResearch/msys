@@ -2,7 +2,6 @@
 #include "atomsel.hxx"
 #include "append.hxx"
 #include "clone.hxx"
-#include "schema.hxx"
 #include "dms.hxx"
 #include "mae.hxx"
 
@@ -119,12 +118,3 @@ SystemHandle desres::msys::CloneSystem( AtomList const& atoms ) {
     return desres::msys::Clone(p, ids);
 }
 
-TermTableHandle SystemHandle::addTableFromSchema( String const& type, 
-                                                  String const& name) {
-    return AddTable(ptr(), type, name);
-}
-
-TermTableHandle SystemHandle::addNonbondedFromSchema( String const& funct,
-                                                      String const& rule ) {
-    return AddNonbonded(ptr(), funct, rule);
-}

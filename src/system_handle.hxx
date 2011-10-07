@@ -5,8 +5,7 @@
 #include "bond.hxx"
 #include "residue.hxx"
 #include "chain.hxx"
-#include "param_handle.hxx"
-#include "term_handle.hxx"
+#include "system.hxx"
 
 namespace desres { namespace msys {
 
@@ -124,15 +123,8 @@ namespace desres { namespace msys {
             return bondProp(id, bondPropIndex(name));
         }
 
-        TermTableHandle addTable(const String& name, Id natoms,
-                              ParamTableHandle params = ParamTableHandle()) {
-            return _system->addTable(name,natoms,params.ptr());
-        }
         std::vector<String> tableNames() const {
             return _system->tableNames();
-        }
-        TermTableHandle table(const String& name) const {
-            return _system->table(name);
         }
         bool hasTable(const String& name) const {
             return _system->table(name);
@@ -140,20 +132,10 @@ namespace desres { namespace msys {
         void delTable(const String& name) {
             _system->delTable(name);
         }
-        void removeTable(TermTableHandle table) {
-            _system->removeTable(table.ptr());
-        }
 
         AtomList atomselect( String const& seltext ) const;
 
         AtomList appendSystem( SystemHandle src );
-
-        TermTableHandle addTableFromSchema( String const& type,
-                                            String const& name="");
-
-        TermTableHandle addNonbondedFromSchema( String const& funct,
-                                                String const& rule );
-
     };
 
     SystemHandle CreateSystem();

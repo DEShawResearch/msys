@@ -50,7 +50,6 @@ ref.cxx
 system.cxx
 system_handle.cxx
 term_table.cxx
-term_handle.cxx
 value.cxx
 
 atomsel.cxx
