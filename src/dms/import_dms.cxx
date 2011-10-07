@@ -8,6 +8,7 @@
 #include <stdexcept>
 
 #include <boost/algorithm/string.hpp> /* for boost::trim */
+#include <boost/scoped_ptr.hpp>
 
 using namespace desres::msys;
 
@@ -351,14 +352,10 @@ read_alchemical_particle( dms_t* dms, System& sys,
     }
 }
                                        
-
-SystemPtr desres::msys::ImportDMS( const std::string& path,
-                                   bool structure_only ) {
+static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
 
     SystemPtr h = System::create();
     System& sys = *h;
-
-    dms_t * dms = dms_read(path.c_str());
     dms_reader_t * r;
 
     Id chnid = BadId;
@@ -372,9 +369,7 @@ SystemPtr desres::msys::ImportDMS( const std::string& path,
     
     dms_fetch(dms, "particle", &r);
     if (!r) {
-        std::stringstream ss;
-        ss << "Could not find particle table in file '" << path << "'";
-        throw std::runtime_error(ss.str());
+        throw std::runtime_error("Missing particle table");
     }
 
     int CHAIN = dms_reader_column(r,"chain");
@@ -521,8 +516,31 @@ SystemPtr desres::msys::ImportDMS( const std::string& path,
         read_extra(dms, sys, known);
     }
 
-    dms_close(dms);
-    
     return h;
+}
+
+SystemPtr desres::msys::ImportDMS(const std::string& path, 
+                                  bool structure_only) {
+    dms_t * dms = NULL;
+    SystemPtr sys;
+    try {
+        dms = dms_read(path.c_str());
+        sys = import_dms(dms, structure_only);
+    }
+    catch (std::exception& e) {
+        if (dms) dms_close(dms);
+        std::stringstream ss;
+        ss << "Error opening dms file at '" << path << "': " << e.what();
+        throw std::runtime_error(ss.str());
+    }
+    dms_close(dms);
+    return sys;
+}
+
+SystemPtr desres::msys::sqlite::ImportDMS(sqlite3* db,
+                                  bool structure_only) {
+    boost::scoped_ptr<dms_t> p(new dms_t(db));
+    SystemPtr sys = import_dms(p.get(), structure_only);
+    return sys;
 }
 

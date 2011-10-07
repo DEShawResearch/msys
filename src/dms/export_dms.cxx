@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdexcept>
+#include <boost/scoped_ptr.hpp>
 
 using namespace desres::msys;
 
@@ -496,17 +497,35 @@ static IdList map_gids(System const& sys) {
     return idmap;
 }
 
-void desres::msys::ExportDMS(SystemPtr h, const std::string& path) {
+static void export_dms(SystemPtr h, dms_t* dms) {
     System& sys = *h;
     IdList atomidmap = map_gids(sys);
-    unlink(path.c_str());
-    dms_t* dms = dms_write(path.c_str());
     export_particles(sys, atomidmap, dms);
     export_bonds(    sys, atomidmap, dms);
     export_tables(   sys, atomidmap, dms);
     export_extra(    sys,            dms);
     export_nbinfo(   sys,            dms);
     export_cell(     sys,            dms);
+}
+
+void desres::msys::ExportDMS(SystemPtr h, const std::string& path) {
+    unlink(path.c_str());
+    dms_t* dms = NULL;
+    try {
+        dms = dms_write(path.c_str());
+        export_dms(h, dms);
+    }
+    catch(std::exception& e) {
+        if (dms) dms_close(dms);
+        std::stringstream ss;
+        ss << "Error writing dms file at '" << path << "': " << e.what();
+        throw std::runtime_error(ss.str());
+    }
     dms_close(dms);
+}
+
+void desres::msys::sqlite::ExportDMS(SystemPtr h, sqlite3* db) {
+    boost::scoped_ptr<dms_t> p(new dms_t(db));
+    export_dms(h, p.get());
 }
 
