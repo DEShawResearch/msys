@@ -286,7 +286,14 @@ namespace desres { namespace msys {
         ValueRef atomPropValue(Id term, String const& name);
 
         /* extended bond properties */
-        ParamTablePtr bondProps() const { return _bondprops; }
+        Id bondPropCount() const;
+        String bondPropName(Id i) const;
+        ValueType bondPropType(Id i) const;
+        Id bondPropIndex(String const& name) const;
+        bool findBondProp(String const& name, Id* indexptr=NULL) const;
+        Id addBondProp(String const& name, ValueType type);
+        ValueRef bondPropValue(Id term, Id index);
+        ValueRef bondPropValue(Id term, String const& name);
 
         bool findBond( Id i, Id j, Id * id = NULL) const;
 

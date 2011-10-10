@@ -79,6 +79,32 @@ namespace {
         to_value_ref(newval, p.atomPropValue(row,col));
     }
 
+    PyObject* bond_prop_type(System& sys, Id col) {
+        return from_value_type(sys.bondPropType(col));
+    }
+    Id add_bond_prop( System& sys, String const& name, object type ) {
+        return sys.addBondProp(name, as_value_type(type));
+    }
+    object get_bond_prop(System& p, Id row, String const& name) {
+        Id col = p.bondPropIndex(name);
+        if (bad(col)) {
+            PyErr_Format(PyExc_KeyError, 
+                    "No such bond property '%s", name.c_str());
+            throw_error_already_set();
+        }
+        return from_value_ref(p.bondPropValue(row,col));
+    }
+    void set_bond_prop(System& p, Id row, String const& name, object newval) {
+        Id col = p.bondPropIndex(name);
+        if (bad(col)) {
+            PyErr_Format(PyExc_KeyError, 
+                    "No such bond property '%s", name.c_str());
+            throw_error_already_set();
+        }
+        to_value_ref(newval, p.bondPropValue(row,col));
+    }
+
+
     list update_fragids(System& p) {
         MultiIdList fragments;
         p.updateFragids(&fragments);
@@ -194,8 +220,14 @@ namespace desres { namespace msys {
             .def("getAtomProp",  get_atom_prop)
             .def("setAtomProp",  set_atom_prop)
 
-            /* bond props */
-            .def("bondProps",   &System::bondProps)
+            /* extended bond props */
+            .def("bondPropCount",&System::bondPropCount)
+            .def("bondPropName", &System::bondPropName)
+            .def("bondPropIndex",&System::bondPropIndex)
+            .def("bondPropType", bond_prop_type)
+            .def("addBondProp",  add_bond_prop)
+            .def("getBondProp",  get_bond_prop)
+            .def("setBondProp",  set_bond_prop)
 
             /* extras */
             .def("extraNames",  &System::extraNames)

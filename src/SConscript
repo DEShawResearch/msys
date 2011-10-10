@@ -46,9 +46,7 @@ schema/schema.cxx
 append.cxx
 clone.cxx
 param_table.cxx
-ref.cxx
 system.cxx
-system_handle.cxx
 term_table.cxx
 value.cxx
 

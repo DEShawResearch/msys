@@ -356,3 +356,37 @@ ValueRef System::atomPropValue(Id term, String const& name) {
     return _atomprops->value(term, atomPropIndex(name));
 }
 
+Id System::bondPropCount() const {
+    return _bondprops->propCount();
+}
+
+String System::bondPropName(Id i) const {
+    return _bondprops->propName(i);
+}
+
+ValueType System::bondPropType(Id i) const {
+    return _bondprops->propType(i);
+}
+
+Id System::bondPropIndex(String const& name) const {
+    return _bondprops->propIndex(name);
+}
+
+bool System::findBondProp(String const& name, Id* indexptr) const {
+    Id id = _bondprops->propIndex(name);
+    if (indexptr) *indexptr = id;
+    return !bad(id);
+}
+
+Id System::addBondProp(String const& name, ValueType type) {
+    return _bondprops->addProp(name,type);
+}
+
+ValueRef System::bondPropValue(Id term, Id index) {
+    return _bondprops->value(term, index);
+}
+
+ValueRef System::bondPropValue(Id term, String const& name) {
+    return _bondprops->value(term, atomPropIndex(name));
+}
+
