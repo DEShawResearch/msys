@@ -39,6 +39,16 @@ class Bond(Handle):
     @property
     def atoms(self): return self.first, self.second
 
+    def __setitem__(self, key, val):
+        self._ptr.setBondProp(self._id, key, val)
+
+    def __getitem__(self, key):
+        return self._ptr.getBondProp(self._id, key)
+    
+    def __contains__(self, key):
+        return not _msys.bad(self._ptr.bondPropIndex(key))
+
+
 __add_properties(Bond, 'order')
 
 class Atom(Handle):
