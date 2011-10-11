@@ -387,6 +387,6 @@ ValueRef System::bondPropValue(Id term, Id index) {
 }
 
 ValueRef System::bondPropValue(Id term, String const& name) {
-    return _bondprops->value(term, atomPropIndex(name));
+    return _bondprops->value(term, bondPropIndex(name));
 }
 
