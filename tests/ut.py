@@ -312,9 +312,15 @@ class TestMain(unittest.TestCase):
         m.addAtom().name='a'
         m.addAtom().name='b'
         m.addAtom().name='c'
+        b1=m.atom(0).addBond(m.atom(1))
+        with self.assertRaises(KeyError):
+            b1['res_order']=3.5
+        m.addBondProp('res_order', float)
+        b1['res_order']=3.5
 
         c=msys.CloneSystem(m.atoms[::-1])
         self.assertEqual( [a.name for a in c.atoms], ['c', 'b', 'a'])
+        self.assertEqual(c.bond(0)['res_order'], 3.5)
 
         with self.assertRaises(RuntimeError):
             msys.CloneSystem([m.atoms[0], m.atoms[1], m.atoms[0]])

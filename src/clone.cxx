@@ -50,6 +50,14 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms ) {
                 src->atomPropName(i), src->atomPropType(i));
     }
 
+    /* copy bond properties */
+    Id nbprops = src->bondPropCount();
+    IdList bpropmap(nbprops);
+    for (Id i=0; i<nbprops; i++) {
+        bpropmap[i] = dst->addBondProp(
+                src->bondPropName(i), src->bondPropType(i));
+    }
+
     /* Build structure for subset of atoms */
     for (Id i=0; i<atoms.size(); i++) {
         Id srcatm = atoms[i];
@@ -100,6 +108,12 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms ) {
                 Id dstatm = atmmap[srcatm];
                 Id dstbnd = dst->addBond(dstatm, dstother);
                 dst->bond(dstbnd).order = srcbond.order;
+
+                /* Copy additional bond properties */
+                for (Id k=0; k<nbprops; k++) {
+                    dst->bondPropValue(dstbnd,bpropmap[k]) = 
+                    src->bondPropValue(bonds[j], k);
+                }
             }
         }
     }

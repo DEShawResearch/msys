@@ -363,6 +363,10 @@ class System(object):
         ''' return the atom with the specified id '''
         return Atom(self._ptr, id)
 
+    def bond(self, id):
+        ''' return the bond with the specified id '''
+        return Bond(self._ptr, id)
+
     @property
     def cell(self):
         return self._ptr.global_cell
@@ -418,7 +422,40 @@ class System(object):
         p=self._ptr
         return [p.atomPropType(i) for i in range(p.atomPropCount())]
 
+    ###
+    ### bond properties
+    ###
+
+    def addBondProp(self, name, type):
+        ''' add a custom bond property with the given name and type.
+        type should be int, float, or str.
+        '''
+        return self._ptr.addBondProp(name, type)
+
+    @property
+    def bond_props(self):
+        ''' return the list of custom bond properties. '''
+        p=self._ptr
+        return [p.bondPropName(i) for i in range(p.bondPropCount())]
+
+    def bondPropType(self, name):
+        return self._ptr.bondPropType(self._ptr.bondPropIndex(name))
+
+    @property
+    def bond_prop_types(self):
+        ''' return the types of the custom bond properties '''
+        p=self._ptr
+        return [p.bondPropType(i) for i in range(p.bondPropCount())]
+
+    ###
+    ### operations on custom term tables
+    ###
+
     def addTable(self, name, natoms, params = None):
+        ''' add a table with the given name and number of atoms.
+        If a table with the same name already exists, it is returned,
+        otherwise the newly created table is returned.  If no ParamTable
+        params is supplied, a new one is created.  '''
         if params is None: params = CreateParamTable()
         return TermTable(self._ptr.addTable(name, natoms, params._ptr))
 
