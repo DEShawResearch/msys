@@ -126,6 +126,9 @@ void System::delAtom(Id id) {
     }
     _deadatoms.insert(id);
     find_and_remove(_residueatoms.at(_atoms[id].residue), id);
+    for (TableMap::iterator t=_tables.begin(); t!=_tables.end(); ++t) {
+        t->second->delTermsWithAtom(id);
+    }
 }
 
 void System::setResidue(Id atm, Id res) {

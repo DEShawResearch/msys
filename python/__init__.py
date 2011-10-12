@@ -204,6 +204,9 @@ class Term(object):
     def __eq__(self, x): return self._id==x._id and self._ptr==x._ptr
     def __ne__(self, x): return self._id!=x._id or  self._ptr!=x._ptr
 
+    def destroy(self):
+        self._ptr.delTerm(self._id)
+
     @property
     def id(self): return self._id
 
@@ -293,8 +296,18 @@ class TermTable(object):
     def category(self, val): self._ptr.category=val
 
     @property
+    def term_count(self): return self._ptr.termCount()
+
+    def delTermsWithAtom(self, atom):
+        assert atom.system == self.system
+        self._ptr.delTermsWithAtom(atom.id)
+
+    @property
     def terms(self):
         return [Term(self._ptr, i) for i in self._ptr.terms()]
+
+    def term(self, id):
+        return Term(self._ptr, id)
 
     def addProp(self, name, type):
         return self._ptr.addProp(name, type)

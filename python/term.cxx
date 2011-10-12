@@ -94,6 +94,9 @@ namespace desres { namespace msys {
             .def("addProp",  add_prop)
             .def("getProp",  get_prop)
             .def("setProp",  set_prop)
+
+            /* lookup terms based on atom */
+            .def("delTermsWithAtom",    &TermTable::delTermsWithAtom)
             ;
     }
 

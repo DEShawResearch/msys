@@ -195,6 +195,29 @@ class TestMain(unittest.TestCase):
         t1.param=None
         self.assertEqual(t1.param, None)
 
+    def testDelTerm(self):
+        m=msys.CreateSystem()
+        a1=m.addAtom()
+        a2=m.addAtom()
+        a3=m.addAtom()
+        a4=m.addAtom()
+        table=m.addTable("foo", 2)
+        table.addTerm((a1,a2))
+        table.addTerm((a1,a3))
+        table.addTerm((a1,a4))
+        table.addTerm((a2,a3))
+        table.addTerm((a4,a2))
+        table.addTerm((a4,a3))
+        self.assertEqual(table.term_count, 6)
+        table.term(2).destroy()     # removes term 2
+        self.assertEqual(table.term_count, 5)
+
+        table.delTermsWithAtom(a3)  # removes term 1,3,5
+        self.assertEqual(table.term_count, 2)
+        a4.destroy()
+        self.assertEqual(table.term_count, 1)
+
+
     def testParamProps(self):
         params=msys.CreateParamTable()
         self.assertEqual(len(params.props), 0)

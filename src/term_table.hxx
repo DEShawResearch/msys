@@ -60,6 +60,11 @@ namespace desres { namespace msys {
         bool hasTerm(Id term) const;
         Id addTerm(const IdList& atoms, Id param);
         void delTerm(Id id);
+
+        /* delete all terms t containing atom id atm i the atoms list. 
+         * This operation requires a full scan of the entire set of
+         * terms, so use with care.  */
+        void delTermsWithAtom(Id atm);
     
         /* Operations on individual terms */
         Id param(Id term) const;

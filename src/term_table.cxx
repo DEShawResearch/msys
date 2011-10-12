@@ -42,6 +42,17 @@ void TermTable::delTerm(Id id) {
     _paramB.erase(id);
 }
 
+void TermTable::delTermsWithAtom(Id atm) {
+    Id stride = 1+_natoms;
+    Id i,n = _terms.size()/stride;
+    for (i=0; i<n; i++) {
+        if (_deadterms.count(i)) continue;
+        TermList::const_iterator t=_terms.begin() + i*stride;
+        TermList::const_iterator e=t+_natoms;
+        if (std::find(t, e, atm)!=e) delTerm(i);
+    }
+}
+
 Id TermTable::param(Id term) const { 
     return  _terms.at((1+term)*(1+_natoms)-1);
 }
