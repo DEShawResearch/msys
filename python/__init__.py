@@ -86,6 +86,16 @@ class Atom(Handle):
         ''' Find the bond between self and Atom other '''
         return self.system.findBond(self, other)
 
+    def getPos(self):
+        ''' return a copy of the position of this atom. '''
+        return (self.x, self.y, self.z)
+
+    def setPos(self, xyz):
+        ''' set the position of the atom to values x, y, z '''
+        self.x, self.y, self.z = xyz
+
+    pos = property(getPos, setPos)
+
     @property
     def residue(self): return Residue(self._ptr, self.data().residue)
     @residue.setter
