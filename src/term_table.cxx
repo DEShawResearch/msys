@@ -113,12 +113,6 @@ Id TermTable::termPropIndex(String const& name) const {
     return _props->propIndex(name);
 }
 
-bool TermTable::findTermProp(String const& name, Id* indexptr) const {
-    Id id = _props->propIndex(name);
-    if (indexptr) *indexptr = id;
-    return !bad(id);
-}
-
 Id TermTable::addTermProp(String const& name, ValueType type) {
     return _props->addProp(name,type);
 }
@@ -153,12 +147,6 @@ ValueType TermTable::propType(Id i) const {
 
 Id TermTable::propIndex(String const& name) const {
     return _params->propIndex(name);
-}
-
-bool TermTable::findProp(String const& name, Id* indexptr) const {
-    Id id = _params->propIndex(name);
-    if (indexptr) *indexptr = id;
-    return !bad(id);
 }
 
 Id TermTable::addProp(String const& name, ValueType type) {

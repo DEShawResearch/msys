@@ -345,12 +345,6 @@ Id System::atomPropIndex(String const& name) const {
     return _atomprops->propIndex(name);
 }
 
-bool System::findAtomProp(String const& name, Id* indexptr) const {
-    Id id = _atomprops->propIndex(name);
-    if (indexptr) *indexptr = id;
-    return !bad(id);
-}
-
 Id System::addAtomProp(String const& name, ValueType type) {
     return _atomprops->addProp(name,type);
 }
@@ -380,12 +374,6 @@ ValueType System::bondPropType(Id i) const {
 
 Id System::bondPropIndex(String const& name) const {
     return _bondprops->propIndex(name);
-}
-
-bool System::findBondProp(String const& name, Id* indexptr) const {
-    Id id = _bondprops->propIndex(name);
-    if (indexptr) *indexptr = id;
-    return !bad(id);
 }
 
 Id System::addBondProp(String const& name, ValueType type) {

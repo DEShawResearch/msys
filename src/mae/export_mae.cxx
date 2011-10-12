@@ -240,9 +240,8 @@ struct dms_to_mae {
 
 
 static void constrained_apply(TermTablePtr table, Id term, Destro& row) {
-    Id col;
-    if (table->findTermProp("constrained", &col) &&
-        table->termPropValue(term, col).asInt()) {
+    Id col=table->termPropIndex("constrained");
+    if ((!bad(col)) && table->termPropValue(term, col).asInt()) {
         row["ffio_funct"]=std::string(row["ffio_funct"])+"_constrained";
     }
 }
@@ -347,7 +346,8 @@ static void posre_apply( TermTablePtr table, Id term, Destro& row) {
     for (int i=0; i<3; i++) {
         const char * prop = props[i];
         const char * col = cols[i];
-        if (table->findTermProp(prop)) {
+        Id propcol = table->termPropIndex(prop);
+        if (!bad(propcol)) {
             row[col]=table->termPropValue(term,prop).asFloat();
         } else {
             row[col]=table->propValue(term,prop).asFloat();

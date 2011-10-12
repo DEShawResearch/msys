@@ -78,7 +78,6 @@ namespace desres { namespace msys {
         String termPropName(Id i) const;
         ValueType termPropType(Id i) const;
         Id termPropIndex(String const& name) const;
-        bool findTermProp(String const& name, Id* indexptr=NULL) const;
         Id addTermProp(String const& name, ValueType type);
         void delTermProp(Id index);
         ValueRef termPropValue(Id term, Id index);
@@ -90,7 +89,6 @@ namespace desres { namespace msys {
         String propName(Id i) const;
         ValueType propType(Id i) const;
         Id propIndex(String const& name) const;
-        bool findProp(String const& name, Id* indexptr=NULL) const;
         Id addProp(String const& name, ValueType type);
         void delProp(Id index);
         ValueRef propValue(Id term, Id index);
