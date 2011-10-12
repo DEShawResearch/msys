@@ -45,7 +45,7 @@ namespace desres { namespace msys {
         TermTable( SystemPtr system, Id natoms, 
                    ParamTablePtr ptr = ParamTablePtr() );
         SystemPtr system() const { return _system.lock(); }
-        ParamTablePtr paramTable() { return _params; }
+        ParamTablePtr params() { return _params; }
         Id atomCount() const { return _natoms; }
 
         /* true if there are any alchemical terms */
@@ -85,19 +85,6 @@ namespace desres { namespace msys {
         void delTermProp(Id index);
         ValueRef termPropValue(Id term, Id index);
         ValueRef termPropValue(Id term, String const& name);
-
-        /* Operations on the parameter properties */
-        Id paramCount() const;
-        Id propCount() const;
-        String propName(Id i) const;
-        ValueType propType(Id i) const;
-        Id propIndex(String const& name) const;
-        Id addProp(String const& name, ValueType type);
-        void delProp(Id index);
-        ValueRef propValue(Id term, Id index);
-        ValueRef propValueB(Id term, Id index);
-        ValueRef propValue(Id term, String const& name);
-        ValueRef propValueB(Id term, String const& name);
     };
 
     typedef boost::shared_ptr<TermTable> TermTablePtr;

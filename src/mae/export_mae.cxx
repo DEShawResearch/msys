@@ -255,15 +255,15 @@ static const char * improper_harm_params[] = { "fc", NULL };
 
 static void dihedral_trig_apply(TermTablePtr table, Id term, Destro& row) {
     row.add_schema('r', "ffio_c0");
-    row["ffio_c0"] = table->propValue(term,"phi0").asFloat();
+    row["ffio_c0"] = table->params()->value(term,"phi0").asFloat();
 }
 
 static const char * pair_charge_params[] = { "qij", NULL };
 static void pair_lj12_6_apply( TermTablePtr table, Id term, Destro& row) {
     row.add_schema('r', "ffio_c1");
     row.add_schema('r', "ffio_c2");
-    double aij = table->propValue(term,"aij").asFloat();
-    double bij = table->propValue(term,"bij").asFloat();
+    double aij = table->params()->value(term,"aij").asFloat();
+    double bij = table->params()->value(term,"bij").asFloat();
     double sij=1, eij=0;
     if (aij!=0 && bij!=0) {
         sij = pow(aij/bij, 1./6.);
@@ -275,7 +275,7 @@ static void pair_lj12_6_apply( TermTablePtr table, Id term, Destro& row) {
 
 static void cmap_apply( TermTablePtr table, Id term, Destro& row) {
     row.add_schema( 'i', "ffio_c1");
-    std::string cmapid = table->propValue(term, "cmapid").asString();
+    std::string cmapid = table->params()->value(term, "cmapid").asString();
     int id;
     if (sscanf(cmapid.c_str(), "cmap%d", &id)!=1) {
         std::stringstream ss;
@@ -350,7 +350,7 @@ static void posre_apply( TermTablePtr table, Id term, Destro& row) {
         if (!bad(propcol)) {
             row[col]=table->termPropValue(term,prop).asFloat();
         } else {
-            row[col]=table->propValue(term,prop).asFloat();
+            row[col]=table->params()->value(term,prop).asFloat();
         }
     }
 }
@@ -439,10 +439,10 @@ void build_tuple_table( SystemPtr mol, TermTablePtr table,
             if (dtm.params) {
                 Id param = table->param(term);
                 for (int j=0; dtm.params[j]; j++) {
-                    Id col = table->propIndex(dtm.params[j]);
+                    Id col = table->params()->propIndex(dtm.params[j]);
                     char to[32];
                     sprintf(to, "ffio_c%d", j+1);
-                    row[to]=table->propValue(param,col).asFloat();
+                    row[to]=table->params()->value(param,col).asFloat();
                 }
             }
             if (dtm.apply) dtm.apply( table, term, row );
@@ -502,14 +502,14 @@ static void build_nonbonded(SystemPtr mol, TermTablePtr table, Destro& ffio_ff) 
         ss << "ffio_c" << i+1;
         vdw.add_schema('r', ss.str());
         maecols[i]=ss.str();
-        propcols[i] = table->propIndex(vdwprops[i]);
+        propcols[i] = table->params()->propIndex(vdwprops[i]);
     }
 
     /* construct string keys for params */
     std::vector<std::string> vdwtypes;
 
     /* write the vdwtypes using its 1-based index as its name */
-    for (unsigned i=0; i<table->paramCount(); i++) {
+    for (unsigned i=0; i<table->params()->paramCount(); i++) {
         std::stringstream ss;
         ss << i+1;
         std::string key = ss.str();
@@ -519,7 +519,7 @@ static void build_nonbonded(SystemPtr mol, TermTablePtr table, Destro& ffio_ff) 
         row["ffio_name"]=key;
         row["ffio_funct"]=funct;
         for (int j=0; j<nprops; j++) {
-            row[maecols[j]] = table->paramTable()->value(i,propcols[j]).asFloat();
+            row[maecols[j]] = table->params()->value(i,propcols[j]).asFloat();
         }
     }
 

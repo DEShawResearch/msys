@@ -31,7 +31,7 @@ namespace {
             }
 
             TermTablePtr table = AddNonbonded(h,funct, vdwmap.rule());
-            ParamTablePtr params = table->paramTable();
+            ParamTablePtr params = table->params();
 
             typedef std::map<VdwType, Id> TypeMap;
             TypeMap map;

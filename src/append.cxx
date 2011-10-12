@@ -50,10 +50,10 @@ IdList desres::msys::AppendTerms( TermTablePtr dst, TermTablePtr src,
             std::unique(srcparams.begin(), srcparams.end())-srcparams.begin());
 
     /* append the necessary parameters */
-    IdList dstparams = AppendParams( dst->paramTable(), src->paramTable(), srcparams );
+    IdList dstparams = AppendParams( dst->params(), src->params(), srcparams );
 
     /* construct a mapping from srcparams to dstparams */
-    IdList pmap(src->paramCount(), BadId);
+    IdList pmap(src->params()->paramCount(), BadId);
     for (Id i=0; i<srcparams.size(); i++) pmap[srcparams[i]] = dstparams[i];
 
     IdList ids;

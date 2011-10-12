@@ -322,8 +322,8 @@ static void export_view(TermTablePtr table, const std::string& name, dms_t *dms)
     std::string termname = name + "_term";
     std::string paramname = name + "_param";
     std::vector<String> props, tprops;
-    for (Id i=0; i<table->propCount(); i++) {
-        const std::string& prop = table->propName(i);
+    for (Id i=0; i<table->params()->propCount(); i++) {
+        const std::string& prop = table->params()->propName(i);
         if (prop!="id") props.push_back(prop);
     }
     for (Id i=0; i<table->termPropCount(); i++) {
@@ -395,7 +395,7 @@ static void export_nonbonded( TermTablePtr table, dms_t* dms) {
     if (table->atomCount()!=1) {
         throw std::runtime_error("table with category nonbonded has atomCount!=1");
     }
-    export_params(table->paramTable(), "nonbonded_param", dms);
+    export_params(table->params(), "nonbonded_param", dms);
 }
 
 static void export_meta( TermTablePtr table, const std::string& name, 
@@ -436,7 +436,7 @@ static void export_tables( const System& sys, const IdList& map, dms_t* dms) {
             export_nonbonded(table, dms);
         } else {
             export_terms(table, map, name+"_term", dms);
-            export_params(table->paramTable(), name+"_param", dms);
+            export_params(table->params(), name+"_param", dms);
             export_view(table, name, dms);
             export_meta(table, name, dms);
         }

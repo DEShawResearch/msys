@@ -55,7 +55,7 @@ namespace {
                     if (!dihedrals) {
                         dihedrals = AddTable(h,"dihedral_trig");
                         dmap.reset( 
-                           new ParamMap(dihedrals->paramTable(), blk, 8, maecols));
+                           new ParamMap(dihedrals->params(), blk, 8, maecols));
                     }
                     table=dihedrals;
                     A=dmap->add(i);
@@ -65,7 +65,7 @@ namespace {
                     if (!impropers) {
                         impropers = AddTable(h,"improper_harm");
                         imap.reset(
-                            new ParamMap(impropers->paramTable(), blk, 2, maecols));
+                            new ParamMap(impropers->params(), blk, 2, maecols));
                     }
                     table=impropers;
                     A=imap->add(i);
@@ -75,7 +75,7 @@ namespace {
                     if (!anharms) {
                         anharms = AddTable(h,"improper_anharm");
                         amap.reset(
-                            new ParamMap(anharms->paramTable(),   blk, 2, maecols));
+                            new ParamMap(anharms->params(),   blk, 2, maecols));
                     }
                     table=anharms;
                     A=amap->add(i);
@@ -85,7 +85,7 @@ namespace {
                     if (!opls) {
                         opls = AddTable(h,"dihedral_trig");
                         omap.reset(
-                            new ParamMap(opls->paramTable(),      blk, 5, maecols));
+                            new ParamMap(opls->params(),      blk, 5, maecols));
                     }
                     table=opls;
                     A=omap->add(i, convert_opls);

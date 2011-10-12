@@ -15,7 +15,7 @@ namespace {
                     const VdwMap&, bool alchemical ) const {
 
             TermTablePtr table = AddTable(h, "stretch_harm");
-            ParamMap map(table->paramTable(), blk);
+            ParamMap map(table->params(), blk);
 
             const Json& ai = blk.get("ffio_ai");
             const Json& aj = blk.get("ffio_aj");

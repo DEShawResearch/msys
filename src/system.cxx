@@ -236,7 +236,7 @@ TermTablePtr System::addTable(const String& name, Id natoms,
            << " atoms because a table with the same name and " 
            << terms->atomCount() << " already exists.";
         throw std::runtime_error(ss.str());
-    } else if ((params && (terms->paramTable()!= params))) {
+    } else if ((params && (terms->params()!= params))) {
         ss << "Could not add table '" << name 
            << "' with explicit param table because a table with the same name"
            << " already exists.";

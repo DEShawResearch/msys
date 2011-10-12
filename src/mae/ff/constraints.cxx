@@ -25,7 +25,7 @@ namespace {
                 if (!type.first) {
                     std::string name = std::string("constraint_")+f.substr(0,3);
                     type.first = AddTable(h, name);
-                    ParamTablePtr params = type.first->paramTable();
+                    ParamTablePtr params = type.first->params();
                     type.second = ParamMapPtr(new ParamMap(
                                 params, blk, params->propCount()));
                     typemap[f] = type;

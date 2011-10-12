@@ -146,13 +146,13 @@ static void read_table( dms_t* dms,
     {
         dms_reader_t* rp;
         dms_fetch(dms,param_table.c_str(),&rp);
-        if (terms->paramCount()) {
+        if (terms->params()->paramCount()) {
             /* must have already been filled by the alchemical or 
              * non-alchemical version of this table.  Make a dummy 
              * ParamTablePtr so that we can get the idmap. */
             idmap = read_params(rp, ParamTable::create());
         } else {
-            idmap = read_params(rp, terms->paramTable());
+            idmap = read_params(rp, terms->params());
         }
     }
     //printf("created %s with %d params, %d props\n",
@@ -213,7 +213,7 @@ read_nonbonded( dms_t* dms, System& sys, const std::vector<Id>& nbtypes,
     IdList idmap;
     known.insert("nonbonded_param");
     if (dms_fetch(dms,"nonbonded_param",&r)) {
-        idmap = read_params(r, terms->paramTable());
+        idmap = read_params(r, terms->params());
         //printf("created %s with %d params, %d props\n",
                 //"nonbonded_param", params->paramCount(), params->propCount());
     }

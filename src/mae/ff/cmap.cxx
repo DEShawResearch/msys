@@ -44,7 +44,7 @@ namespace {
                     "ffio_torsion_torsion missing ffio_c1");
 
             TermTablePtr table = AddTable(h,"torsiontorsion_cmap");
-            ParamTablePtr params = table->paramTable();
+            ParamTablePtr params = table->params();
             MaeAtoms atoms(blk);
             std::map<int,Id> pmap;
 

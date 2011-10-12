@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
         printf("got table %s with %d atoms, %d term props, %d params\n",
                 argv[i], table->atomCount(),
                 table->termPropCount(),
-                table->propCount());
+                table->params()->propCount());
     }
     return 0;
 }

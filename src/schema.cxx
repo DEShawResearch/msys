@@ -19,7 +19,7 @@ static void configure_table(const schema_t* schema,
     for (int i=0; i<DMS_MAX_PARAM_PROPS; i++) {
         if (!props[i].name) break;
         ValueType type = ValueType(props[i].type);
-        table->addProp(props[i].name, type);
+        table->params()->addProp(props[i].name, type);
     }
     props = schema->term_props;
     for (int i=0; i<DMS_MAX_TERM_PROPS; i++) {

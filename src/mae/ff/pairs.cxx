@@ -97,8 +97,8 @@ namespace {
             }
 
             TermTablePtr table = AddTable(h,pname);
-            ParamMap map(table->paramTable(), blk);
-            Id nprops = table->propCount();
+            ParamMap map(table->params(), blk);
+            Id nprops = table->params()->propCount();
 
             const Json& ai = blk.get("ffio_ai");
             const Json& aj = blk.get("ffio_aj");

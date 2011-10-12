@@ -60,6 +60,10 @@ namespace desres { namespace msys {
         ValueRef value(Id row, Id col)  { 
             return ValueRef(propType(col), _props.at(col).vals.at(row)); 
         }
+        ValueRef value(Id row, String const& name)  { 
+            Id col = propIndex(name);
+            return ValueRef(propType(col), _props.at(col).vals.at(row)); 
+        }
         IdList params() const {
             IdList p(_nrows);
             for (Id i=0; i<_nrows; i++) p[i]=i;

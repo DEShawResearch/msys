@@ -208,7 +208,7 @@ class ParamTable(object):
         return self._ptr.addProp(name,type)
 
     @property
-    def props(self):
+    def prop_names(self):
         p=self._ptr
         return [p.propName(i) for i in range(p.propCount())]
 
@@ -252,7 +252,7 @@ class Term(object):
     def param(self): 
         id=self._ptr.param(self._id)
         if _msys.bad(id): return None
-        return Param(self._ptr.paramTable(), id)
+        return Param(self._ptr.params(), id)
     @param.setter
     def param(self, val):
         if val is None: id = None
@@ -267,23 +267,16 @@ class Term(object):
     def table(self): return TermTable(self._ptr)
 
     def __getitem__(self, attr):
-        col = self._ptr.propIndex(attr)
+        col = self._ptr.termPropIndex(attr)
         if _msys.bad(col):
-            col = self._ptr.termPropIndex(attr)
-            if _msys.bad(col):
-                raise KeyError, "No such property '%s'" % attr
-            return self._ptr.getTermProp(self._id, col)
-        return self._ptr.getProp(self._id, col)
+            raise KeyError, "No such property '%s'" % attr
+        return self._ptr.getTermProp(self._id, col)
 
     def __setitem__(self, attr, val):
-        col = self._ptr.propIndex(attr)
+        col = self._ptr.termPropIndex(attr)
         if _msys.bad(col):
-            col = self._ptr.termPropIndex(attr)
-            if _msys.bad(col):
-                raise KeyError, "No such property '%s'" % attr
-            self._ptr.setTermProp(self._id, col, val)
-        else:
-            self._ptr.setProp(self._id, col, val)
+            raise KeyError, "No such property '%s'" % attr
+        self._ptr.setTermProp(self._id, col, val)
 
 
 
@@ -318,9 +311,9 @@ class TermTable(object):
         return "<TermTable '%s'>" % self.name
 
     @property
-    def param_table(self): 
+    def params(self): 
         ''' The ParamTable for terms in this table. '''
-        return ParamTable(self._ptr.paramTable())
+        return ParamTable(self._ptr.params())
 
     @property
     def system(self): 
@@ -328,19 +321,7 @@ class TermTable(object):
         return System(self._ptr.system())
 
     @property
-    def props(self): 
-        ''' names of the properties in param_table. '''
-        p=self._ptr
-        return [p.propName(i) for i in range(p.propCount())]
-
-    @property
-    def prop_types(self): 
-        ''' types of the properties in param_table. '''
-        p=self._ptr
-        return [p.propType(i) for i in range(p.propCount())]
-
-    @property
-    def term_props(self): 
+    def term_prop_names(self): 
         ''' names of the custom properties '''
         p=self._ptr
         return [p.termPropName(i) for i in range(p.termPropCount())]
@@ -510,7 +491,7 @@ class System(object):
 
 
     @property
-    def atom_props(self):
+    def atom_prop_names(self):
         ''' return the list of custom atom properties. '''
         p=self._ptr
         return [p.atomPropName(i) for i in range(p.atomPropCount())]
@@ -539,7 +520,7 @@ class System(object):
 
 
     @property
-    def bond_props(self):
+    def bond_prop_names(self):
         ''' return the list of custom bond properties. '''
         p=self._ptr
         return [p.bondPropName(i) for i in range(p.bondPropCount())]

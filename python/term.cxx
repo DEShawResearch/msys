@@ -38,19 +38,6 @@ namespace {
     void set_term_prop(TermTable& p, Id row, Id col, object newval) {
         to_value_ref(newval, p.termPropValue(row,col));
     }
-    PyObject* prop_type(TermTable& table, Id col) {
-        return from_value_type(table.propType(col));
-    }
-    Id add_prop( TermTable& table, String const& name, object type ) {
-        return table.addProp(name, as_value_type(type));
-    }
-    object get_prop(TermTable& p, Id row, Id col) {
-        return from_value_ref(p.propValue(row,col));
-    }
-    void set_prop(TermTable& p, Id row, Id col, object newval) {
-        to_value_ref(newval, p.propValue(row,col));
-    }
-
 }
 
 namespace desres { namespace msys { 
@@ -71,7 +58,7 @@ namespace desres { namespace msys {
             .def("hasTerm",     &TermTable::hasTerm)
             .def("delTerm",     &TermTable::delTerm)
             .def("atoms",       &TermTable::atoms)
-            .def("paramTable",  &TermTable::paramTable)
+            .def("params",      &TermTable::params)
             .def("param",       &TermTable::param)
             .def("setParam",    set_param)
             .def("paramB",      &TermTable::paramB)
@@ -87,16 +74,6 @@ namespace desres { namespace msys {
             .def("delTermProp",  &TermTable::delTermProp)
             .def("getTermProp",  get_term_prop)
             .def("setTermProp",  set_term_prop)
-
-            /* parameter properties */
-            .def("propCount",   &TermTable::propCount)
-            .def("propName",    &TermTable::propName)
-            .def("propIndex",   &TermTable::propIndex)
-            .def("propType",    prop_type)
-            .def("addProp",     add_prop)
-            .def("delProp",     &TermTable::delProp)
-            .def("getProp",     get_prop)
-            .def("setProp",     set_prop)
 
             /* lookup terms based on atom */
             .def("delTermsWithAtom",    &TermTable::delTermsWithAtom)

@@ -15,8 +15,8 @@ namespace {
 
             TermTablePtr bonds = AddTable(h,"stretch_harm");
             TermTablePtr angles= AddTable(h,"angle_harm");
-            ParamMap bmap(bonds->paramTable(), blk);
-            ParamMap amap(angles->paramTable(), blk);
+            ParamMap bmap(bonds->params(), blk);
+            ParamMap amap(angles->params(), blk);
 
             const Json& ai = blk.get("ffio_ai");
             const Json& aj = blk.get("ffio_aj");
