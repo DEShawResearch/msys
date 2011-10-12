@@ -186,6 +186,9 @@ class ParamTable(object):
         p=self._ptr
         return p.propType(p.propIndex(name))
 
+    def delProp(self, name):
+        self._ptr.delProp(self._ptr.propIndex(name))
+
     def __getitem__(self, id):
         ''' fetch the Param with the given id '''
         return Param(self._ptr, id)
@@ -233,7 +236,7 @@ class Term(object):
         if _msys.bad(col):
             col = self._ptr.termPropIndex(attr)
             if _msys.bad(col):
-                raise ValueError, "No such property '%s'" % attr
+                raise KeyError, "No such property '%s'" % attr
             return self._ptr.getTermProp(self._id, col)
         return self._ptr.getProp(self._id, col)
 
@@ -242,7 +245,7 @@ class Term(object):
         if _msys.bad(col):
             col = self._ptr.termPropIndex(attr)
             if _msys.bad(col):
-                raise ValueError, "No such property '%s'" % attr
+                raise KeyError, "No such property '%s'" % attr
             self._ptr.setTermProp(self._id, col, val)
         else:
             self._ptr.setProp(self._id, col, val)
@@ -324,6 +327,8 @@ class TermTable(object):
     def addTermProp(self, name, type):
         return self._ptr.addTermProp(name, type)
 
+    def delTermProp(self, name):
+        self._ptr.delTermProp(self._ptr.termPropIndex(name))
 
     def addTerm(self, atoms, param = None):
         if param is not None:
@@ -420,6 +425,10 @@ class System(object):
         '''
         return self._ptr.addAtomProp(name, type)
 
+    def delAtomProp(self, name):
+        self._ptr.delAtomProp(self._ptr.atomPropIndex(name))
+
+
     @property
     def atom_props(self):
         ''' return the list of custom atom properties. '''
@@ -444,6 +453,10 @@ class System(object):
         type should be int, float, or str.
         '''
         return self._ptr.addBondProp(name, type)
+
+    def delBondProp(self, name):
+        self._ptr.delBondProp(self._ptr.bondPropIndex(name))
+
 
     @property
     def bond_props(self):

@@ -43,6 +43,7 @@ namespace desres { namespace msys {
             .def("propType",   param_prop_type)
             .def("propIndex",  &ParamTable::propIndex)
             .def("addProp",    param_add_prop)
+            .def("delProp",    &ParamTable::delProp)
             .def("ids",        &ParamTable::params)
             .def("getProp",    param_get_value)
             .def("setProp",    param_set_value)

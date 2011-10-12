@@ -282,6 +282,7 @@ namespace desres { namespace msys {
         Id atomPropIndex(String const& name) const;
         bool findAtomProp(String const& name, Id* indexptr=NULL) const;
         Id addAtomProp(String const& name, ValueType type);
+        void delAtomProp(Id index);
         ValueRef atomPropValue(Id term, Id index);
         ValueRef atomPropValue(Id term, String const& name);
 
@@ -292,6 +293,7 @@ namespace desres { namespace msys {
         Id bondPropIndex(String const& name) const;
         bool findBondProp(String const& name, Id* indexptr=NULL) const;
         Id addBondProp(String const& name, ValueType type);
+        void delBondProp(Id index);
         ValueRef bondPropValue(Id term, Id index);
         ValueRef bondPropValue(Id term, String const& name);
 

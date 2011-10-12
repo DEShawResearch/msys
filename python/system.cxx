@@ -217,6 +217,7 @@ namespace desres { namespace msys {
             .def("atomPropIndex",&System::atomPropIndex)
             .def("atomPropType", atom_prop_type)
             .def("addAtomProp",  add_atom_prop)
+            .def("delAtomProp",  &System::delAtomProp)
             .def("getAtomProp",  get_atom_prop)
             .def("setAtomProp",  set_atom_prop)
 
@@ -226,6 +227,7 @@ namespace desres { namespace msys {
             .def("bondPropIndex",&System::bondPropIndex)
             .def("bondPropType", bond_prop_type)
             .def("addBondProp",  add_bond_prop)
+            .def("delBondProp",  &System::delBondProp)
             .def("getBondProp",  get_bond_prop)
             .def("setBondProp",  set_bond_prop)
 

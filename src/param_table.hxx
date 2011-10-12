@@ -46,6 +46,12 @@ namespace desres { namespace msys {
         ValueType propType(Id i) const  { return _props.at(i).type; }
         Id propIndex(const String& name) const;
         Id addProp(const String& name, ValueType type);
+
+        /* delete the property with the given index.  If index is BadId,
+         * no action is taken; otherwise it is an error if the index is
+         * invalid. */
+        void delProp(Id index);
+
         ValueRef value(Id row, Id col)  { 
             return ValueRef(propType(col), _props.at(col).vals.at(row)); 
         }

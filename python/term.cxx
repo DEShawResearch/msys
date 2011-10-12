@@ -83,6 +83,7 @@ namespace desres { namespace msys {
             .def("termPropIndex",&TermTable::termPropIndex)
             .def("termPropType", term_prop_type)
             .def("addTermProp",  add_term_prop)
+            .def("delTermProp",  &TermTable::delTermProp)
             .def("getTermProp",  get_term_prop)
             .def("setTermProp",  set_term_prop)
 
@@ -91,9 +92,10 @@ namespace desres { namespace msys {
             .def("propName",    &TermTable::propName)
             .def("propIndex",   &TermTable::propIndex)
             .def("propType",    prop_type)
-            .def("addProp",  add_prop)
-            .def("getProp",  get_prop)
-            .def("setProp",  set_prop)
+            .def("addProp",     add_prop)
+            .def("delProp",     &TermTable::delProp)
+            .def("getProp",     get_prop)
+            .def("setProp",     set_prop)
 
             /* lookup terms based on atom */
             .def("delTermsWithAtom",    &TermTable::delTermsWithAtom)

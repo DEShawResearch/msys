@@ -1,5 +1,6 @@
 #include "param_table.hxx"
 #include <stdexcept>
+#include <sstream>
 #include <string.h>
 
 using namespace desres::msys;
@@ -58,3 +59,12 @@ Id ParamTable::addParam() {
     return _nrows++;
 }
 
+void ParamTable::delProp(Id index) {
+    if (bad(index)) return;
+    if (index>=_props.size()) {
+        std::stringstream ss;
+        ss << "delProp: no such index " << index;
+        throw std::runtime_error(ss.str());
+    }
+    _props.erase(_props.begin()+index);
+}

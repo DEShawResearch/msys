@@ -123,6 +123,10 @@ Id TermTable::addTermProp(String const& name, ValueType type) {
     return _props->addProp(name,type);
 }
 
+void TermTable::delTermProp(Id index) {
+    _props->delProp(index);
+}
+
 ValueRef TermTable::termPropValue(Id term, Id index) {
     return _props->value(term, index);
 }
@@ -159,6 +163,10 @@ bool TermTable::findProp(String const& name, Id* indexptr) const {
 
 Id TermTable::addProp(String const& name, ValueType type) {
     return _params->addProp(name,type);
+}
+
+void TermTable::delProp(Id index) {
+    _params->delProp(index);
 }
 
 ValueRef TermTable::propValue(Id term, Id index) {

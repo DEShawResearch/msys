@@ -350,6 +350,9 @@ bool System::findAtomProp(String const& name, Id* indexptr) const {
 Id System::addAtomProp(String const& name, ValueType type) {
     return _atomprops->addProp(name,type);
 }
+void System::delAtomProp(Id index) {
+    _atomprops->delProp(index);
+}
 
 ValueRef System::atomPropValue(Id term, Id index) {
     return _atomprops->value(term, index);
@@ -383,6 +386,9 @@ bool System::findBondProp(String const& name, Id* indexptr) const {
 
 Id System::addBondProp(String const& name, ValueType type) {
     return _bondprops->addProp(name,type);
+}
+void System::delBondProp(Id index) {
+    _bondprops->delProp(index);
 }
 
 ValueRef System::bondPropValue(Id term, Id index) {

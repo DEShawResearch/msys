@@ -67,6 +67,11 @@ class TestMain(unittest.TestCase):
         self.assertTrue('F'in a2)
         self.assertFalse('foobar' in a2)
 
+        m.delAtomProp('F')
+        self.assertFalse('F'in a2)
+        self.assertEqual(m.atom_prop_types, [int, str])
+
+
     def testBond(self):
         m=msys.CreateSystem()
         a1=m.addAtom()
@@ -230,6 +235,12 @@ class TestMain(unittest.TestCase):
             params.addProp(n,t)
             self.assertTrue(n in params.props)
             self.assertEqual(params.propType(n), t)
+        self.assertEqual(params.props, ['F', 'I', 'S'])
+        self.assertEqual(params.prop_types, [float, int, str])
+
+        params.delProp('I')
+        self.assertEqual(params.props, ['F', 'S'])
+        self.assertEqual(params.prop_types, [float, str])
 
     def testDirectParamProps(self):
         ''' just like testParamProps, but operate directly on the TermTable
@@ -305,6 +316,12 @@ class TestMain(unittest.TestCase):
             table.addTerm(alist)
         alist[0]=m.atoms[0]
         table.addTerm(alist)
+
+        table.delTermProp(I)
+        with self.assertRaises(KeyError):
+            t1[I]
+
+
 
     def testTableDMS(self):
         m=msys.CreateSystem()
