@@ -247,6 +247,14 @@ class TestMain(unittest.TestCase):
         self.assertEqual(params.props, ['F', 'S'])
         self.assertEqual(params.prop_types, [float, str])
 
+        p1=params.addParam()
+        p1['F']=1.5
+        p2=p1.duplicate()
+        self.assertEqual(p1['F'], p2['F'])
+        p2['F']=2.5
+        self.assertNotEqual(p1['F'], p2['F'])
+
+
     def testDirectParamProps(self):
         ''' just like testParamProps, but operate directly on the TermTable
         instead of its ParamTable '''

@@ -47,6 +47,7 @@ namespace desres { namespace msys {
             .def("ids",        &ParamTable::params)
             .def("getProp",    param_get_value)
             .def("setProp",    param_set_value)
+            .def("duplicate",  &ParamTable::duplicate)
             ;
     }
 

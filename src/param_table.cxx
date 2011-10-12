@@ -59,6 +59,20 @@ Id ParamTable::addParam() {
     return _nrows++;
 }
 
+Id ParamTable::duplicate(Id param) {
+    if (bad(param)) return addParam();
+    if (!hasParam(param)) {
+        std::stringstream ss;
+        ss << "ParamTable::duplicate: no such param " << param;
+        throw std::runtime_error(ss.str());
+    }
+    Id dst = addParam();
+    for (unsigned i=0; i<_props.size(); i++) {
+        _props[i].vals[dst] = _props[i].vals[param];
+    }
+    return dst;
+}
+
 void ParamTable::delProp(Id index) {
     if (bad(index)) return;
     if (index>=_props.size()) {

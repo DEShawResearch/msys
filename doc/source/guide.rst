@@ -115,4 +115,31 @@ of the original, using the ``CloneSystem`` function::
   pro_atoms[0].charge += 3
   assert pro_atoms[0].charge != protein.atoms[0].charge
 
-  
+You can append the structure and associated forcefield from one `System`
+onto another using System's ``append`` method::
+
+  # duplicate the protein by appending to itself
+  protein.append(protein)
+
+  # load a water system and append it to the protein system.  Just as for
+  # CloneSystem, after appending water to protein, modifications to water
+  # will not affect any atoms in protein.
+  water = msy.LoadDMS('water.dms')
+  protein.append(water)
+
+Terms in a system's forcefield can be accessed and modified by going 
+through the corresponding `TermTable`::
+
+  stretch = protein.table('stretch_harm')
+  props = stretch.props # ['fc', 'r0']
+  terms = stretch.terms
+  params = stretch.param
+  print "%d stretch terms, %d stretch params" % (len(terms), len(params))
+
+Note that, because parameters can be and often are shared, modifications
+to the properties of one `Term` can affect the properties of many others.
+In the previous code snippet, it is likely that there will be many fewer
+params than terms, indicating that some terms share params.  
+
+
+

@@ -40,6 +40,11 @@ namespace desres { namespace msys {
         bool hasParam(Id param) const {
             return param<paramCount();
         }
+        /* create a duplicate of the given parameter set, returning
+         * its id.  If param is BadId, default parameters are used;
+         * this is identical to addParam(). */
+        Id duplicate(Id param);
+
     
         Id propCount() const            { return _props.size();     }
         String propName(Id i) const     { return _props.at(i).name; }

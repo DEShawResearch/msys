@@ -183,6 +183,11 @@ class Param(object):
         p=self._ptr
         return p.getProp(self._id, p.propIndex(key))
 
+    def duplicate(self):
+        ''' create a new entry in the parent parameter table with the
+        same values as this one, returning it. '''
+        return Param(self._ptr, self._ptr.duplicate(self._id))
+
 class ParamTable(object):
     __slots__=('_ptr',)
 
