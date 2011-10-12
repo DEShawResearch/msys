@@ -98,6 +98,11 @@ class TestMain(unittest.TestCase):
 
         b1=a1.addBond(a2)
         self.assertEqual(len(a2.bonds),1)
+        self.assertEqual(b1, m.findBond(a1,a2))
+        self.assertEqual(b1, a1.findBond(a2))
+        self.assertEqual(b1, a2.findBond(a1))
+        self.assertEqual(None, m.findBond(a1,a3))
+
         b.destroy()
         b.destroy()
         b.destroy()

@@ -65,27 +65,31 @@ IdList System::chains() const {
     return get_ids(_chains, _deadchains);
 }
 
-bool System::findBond( Id i, Id j, Id * id ) const {
+Id System::findBond( Id i, Id j) const {
     Id n = _bondindex.size();
-    if (i>=n || j>=n) return false;
+    if (i>=n || j>=n) return BadId;
     if (i>j) std::swap(i,j);
     const IdList& s = _bondindex[i].size() < _bondindex[j].size() ?
                       _bondindex[i] : _bondindex[j];
     for (IdList::const_iterator b=s.begin(), e=s.end(); b!=e; ++b) {
         const bond_t& bond = _bonds[*b];
-        if (bond.i==i && bond.j==j) {
-            if (id) *id = *b;
-            return true;
-        }
+        if (bond.i==i && bond.j==j) return *b;
     }
-    return false;
+    return BadId;
 }
 
 Id System::addBond(Id i, Id j) { 
-    Id id = _bonds.size();
     if (i>j) std::swap(i,j);
-    if (findBond(i,j,&id)) return id;
-    if (i==j || j>=_bondindex.size()) return BadId;
+    Id id = findBond(i,j);
+    if (!bad(id)) return id;
+
+    if (i==j || j>=_bondindex.size()) {
+        std::stringstream ss;
+        ss << "addBond: invalid atom ids " << i << ", " << j;
+        throw std::runtime_error(ss.str());
+    }
+
+    id = _bonds.size();
     _bonds.push_back(bond_t(i,j));
     _bondindex[i].push_back(id);
     _bondindex[j].push_back(id);

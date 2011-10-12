@@ -7,8 +7,18 @@ class Handle(object):
         self._ptr = _ptr
         self._id = _id
 
-    def __eq__(self, x): return self._id==x._id and self._ptr==x._ptr
-    def __ne__(self, x): return self._id!=x._id or  self._ptr!=x._ptr
+    def __eq__(self, x): 
+        try:
+            return self._id==x._id and self._ptr==x._ptr
+        except AttributeError:
+            return False
+
+    def __ne__(self, x): 
+        try:
+            return self._id!=x._id or  self._ptr!=x._ptr
+        except AttributeError:
+            return False
+
     def __hash__(self): return hash((self._ptr, self._id))
 
     @property
@@ -71,6 +81,10 @@ class Atom(Handle):
     def addBond(self, other):
         assert self._ptr == other._ptr
         return Bond(self._ptr, self._ptr.addBond(self._id, other.id))
+
+    def findBond(self, other):
+        ''' Find the bond between self and Atom other '''
+        return self.system.findBond(self, other)
 
     @property
     def residue(self): return Residue(self._ptr, self.data().residue)
@@ -383,6 +397,15 @@ class System(object):
 
     def bond(self, id):
         ''' return the bond with the specified id '''
+        return Bond(self._ptr, id)
+
+    def findBond(self, a1, a2):
+        ''' return the bond between the specified atoms, or None if not found
+        '''
+        assert a1.system == self
+        assert a2.system == self
+        id=self._ptr.findBond(a1.id, a2.id)
+        if _msys.bad(id): return None
         return Bond(self._ptr, id)
 
     @property

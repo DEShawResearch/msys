@@ -250,6 +250,7 @@ namespace desres { namespace msys {
 
             /* miscellaneous */
             .def("updateFragids", update_fragids)
+            .def("findBond",    &System::findBond)
             ;
     }
 

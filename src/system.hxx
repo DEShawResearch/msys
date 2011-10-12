@@ -297,7 +297,9 @@ namespace desres { namespace msys {
         ValueRef bondPropValue(Id term, Id index);
         ValueRef bondPropValue(Id term, String const& name);
 
-        bool findBond( Id i, Id j, Id * id = NULL) const;
+        /* find a bond between i and j (order independent), returning
+         * its id or BadId if such a bond does not exist. */
+        Id findBond( Id i, Id j) const;
 
         /* ids of atoms bonded to given atom */
         IdList bondedAtoms(Id id) const;
