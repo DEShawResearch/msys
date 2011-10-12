@@ -1,3 +1,9 @@
+
+'''
+This is the high-level Python interface for msys, intended for use
+by chemists.
+'''
+
 import _msys
 
 class Handle(object):
@@ -277,6 +283,16 @@ class Term(object):
 
 
 class TermTable(object):
+    ''' The TermTable class holds components of a molecular forcefield.
+    A given TermTable instance belongs to a single System, and holds
+    terms that are all of the same type.  
+
+    Each Term in the TermTable contains three sorts of attributes:
+    (1) a fixed number of atoms, (2) properties which are given by its
+    row in the ParamTable, and (3) custom properties which are specific
+    to the Term and not held by the ParamTable.
+
+    '''
     __slots__=('_ptr',)
 
     def __init__(self, _ptr):
@@ -289,36 +305,50 @@ class TermTable(object):
     def __hash__(self): return self._ptr.__hash__()
 
     @property
-    def param_table(self): return ParamTable(self._ptr.paramTable())
+    def param_table(self): 
+        ''' The ParamTable for terms in this table. '''
+        return ParamTable(self._ptr.paramTable())
 
     @property
-    def system(self): return System(self._ptr.system())
+    def system(self): 
+        ''' The System whose atoms are referenced by this table. '''
+        return System(self._ptr.system())
 
     @property
     def props(self): 
+        ''' names of the properties in param_table. '''
         p=self._ptr
         return [p.propName(i) for i in range(p.propCount())]
 
     @property
     def prop_types(self): 
+        ''' types of the properties in param_table. '''
         p=self._ptr
         return [p.propType(i) for i in range(p.propCount())]
 
     @property
     def term_props(self): 
+        ''' names of the custom properties '''
         p=self._ptr
         return [p.termPropName(i) for i in range(p.termPropCount())]
 
     @property
     def term_prop_types(self): 
+        ''' types of the custom properties '''
         p=self._ptr
         return [p.termPropType(i) for i in range(p.termPropCount())]
 
     @property
-    def natoms(self): return self._ptr.atomCount()
+    def natoms(self): 
+        ''' number of atoms in each term '''
+        return self._ptr.atomCount()
 
     @property
-    def category(self): return self._ptr.category
+    def category(self): 
+        ''' A string describing what kind of TermTable this is.  
+        Possibilities are: *bond*, *constraint*, *virtual*, *polar*, 
+        *nonbonded*, and *exclusion*.'''
+        return self._ptr.category
     @category.setter
     def category(self, val): self._ptr.category=val
 
@@ -367,6 +397,10 @@ class TermTable(object):
         return Term(self._ptr, self._ptr.addTerm(ids, param))
 
 class System(object):
+    ''' The System class holds all structure and forcefield data
+    for a single chemical system.  Create a new System using
+    msys.CreateSystem(), or from a file using LoadDMS or LoadMAE.  '''
+
     def __init__(self, _ptr):
         ''' Construct from SystemPtr.
         Do not invoke directly; use CreateSystem() instead.
