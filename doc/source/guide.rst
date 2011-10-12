@@ -85,4 +85,34 @@ in a chain in a similar way::
   # fetch the stretch_harm table
   stretch = mol.table('stretch_harm')
 
+Atom selections let you fetch a list of atoms using the VMD atom selection
+language.  The ``atomselect`` method returns a list of `Atoms`, which is
+just a subset of the list that would be returned by the ``atoms`` property::
 
+  # fetch the backbone atoms.  Note that bb is just a Python list
+  bb = mol.atomselect('backbone')
+
+
+Once you have the atoms, if you actually want to work with
+the residues or chains, it's easy to do::
+
+  # get the set of distinct residues in the backbone
+  bb_residues = set(a.residue for a in bb)
+
+Note that the atoms returned by ``atomselect`` refer back to the original
+system.  Msys also provides the means to create a new `System` independent
+of the original, using the ``CloneSystem`` function::
+
+  # get the list of protein atoms
+  pro_atoms = mol.atomselect('protein')
+
+  # construct a new system containing just the protein
+  protein = msys.CloneSystem(pro_atoms)
+
+  # Atoms in the cloned system have the same attributes as the originals,
+  # but modifications to one do not affect the other
+  assert pro_atoms[0].charge == protein.atoms[0].charge
+  pro_atoms[0].charge += 3
+  assert pro_atoms[0].charge != protein.atoms[0].charge
+
+  
