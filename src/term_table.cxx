@@ -10,6 +10,10 @@ TermTable::TermTable( SystemPtr system, Id natoms, ParamTablePtr ptr )
     _params = ptr ? ptr : ParamTable::create();
 }
 
+String TermTable::name() const {
+    return system()->tableName(shared_from_this());
+}
+
 IdList TermTable::terms() const {
     IdList ids(termCount());
     unsigned i,j=0,n=termCount() + _deadterms.size();

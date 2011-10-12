@@ -259,7 +259,10 @@ namespace desres { namespace msys {
 
         /* operations on term tables */
         std::vector<String> tableNames() const;
+        /* fetch the table with the given name; return NULL if not present */
         TermTablePtr table(const String& name) const;
+        /* get the name of the table; throw if table doesn't belong to this */
+        String tableName(boost::shared_ptr<TermTable const> table) const;
         TermTablePtr addTable(const String& name, Id natoms,
                               ParamTablePtr ptr = ParamTablePtr() );
         void delTable(const String& name);

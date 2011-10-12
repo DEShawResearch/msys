@@ -223,14 +223,14 @@ class TestMain(unittest.TestCase):
         table.addTerm((a2,a3))
         table.addTerm((a4,a2))
         table.addTerm((a4,a3))
-        self.assertEqual(table.term_count, 6)
+        self.assertEqual(table.nterms, 6)
         table.term(2).destroy()     # removes term 2
-        self.assertEqual(table.term_count, 5)
+        self.assertEqual(table.nterms, 5)
 
         table.delTermsWithAtom(a3)  # removes term 1,3,5
-        self.assertEqual(table.term_count, 2)
+        self.assertEqual(table.nterms, 2)
         a4.destroy()
-        self.assertEqual(table.term_count, 1)
+        self.assertEqual(table.nterms, 1)
 
 
     def testParamProps(self):

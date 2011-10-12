@@ -202,6 +202,7 @@ namespace desres { namespace msys {
 
             /* tables */
             .def("tableNames",  &System::tableNames)
+            .def("tableName",   &System::tableName)
             .def("table",       &System::table)
             .def("addTable",    &System::addTable)
             .def("delTable",    &System::delTable)

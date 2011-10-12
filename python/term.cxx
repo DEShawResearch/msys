@@ -65,6 +65,7 @@ namespace desres { namespace msys {
             .def("atomCount",   &TermTable::atomCount)
             .def("termCount",   &TermTable::termCount)
             .def_readwrite("category", &TermTable::category)
+            .def("name",        &TermTable::name)
             .def("terms",       &TermTable::terms)
             .def("addTerm",     add_term)
             .def("hasTerm",     &TermTable::hasTerm)

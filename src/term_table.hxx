@@ -44,7 +44,7 @@ namespace desres { namespace msys {
     public:
         TermTable( SystemPtr system, Id natoms, 
                    ParamTablePtr ptr = ParamTablePtr() );
-        SystemPtr system() { return _system.lock(); }
+        SystemPtr system() const { return _system.lock(); }
         ParamTablePtr paramTable() { return _params; }
         Id atomCount() const { return _natoms; }
 
@@ -53,6 +53,9 @@ namespace desres { namespace msys {
 
         /* category describing what sort of TermTable we have */
         String category;
+
+        /* name of this table in the parent system */
+        String name() const;
     
         /* Operations on the set of terms */
         IdList terms() const;

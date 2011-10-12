@@ -254,6 +254,19 @@ std::vector<String> System::tableNames() const {
     return s;
 }
 
+String System::tableName(boost::shared_ptr<TermTable const> table) const {
+    if (table->system() != shared_from_this()) {
+        throw std::runtime_error(
+                "tableName: table does not belong to this System");
+    }
+    for (TableMap::const_iterator i=_tables.begin(), e=_tables.end(); i!=e; ++i) {
+        if (i->second==table) return i->first;
+    }
+    /* um, that's bad. */
+    assert(false);
+    return "";
+}
+
 TermTablePtr System::table(const String& name) const {
     TableMap::const_iterator i=_tables.find(name);
     if (i==_tables.end()) return TermTablePtr();

@@ -305,6 +305,14 @@ class TermTable(object):
     def __hash__(self): return self._ptr.__hash__()
 
     @property
+    def name(self):
+        ''' name of this table '''
+        return self._ptr.name()
+
+    def __repr__(self):
+        return "<TermTable '%s'>" % self.name
+
+    @property
     def param_table(self): 
         ''' The ParamTable for terms in this table. '''
         return ParamTable(self._ptr.paramTable())
@@ -353,7 +361,7 @@ class TermTable(object):
     def category(self, val): self._ptr.category=val
 
     @property
-    def term_count(self): return self._ptr.termCount()
+    def nterms(self): return self._ptr.termCount()
 
     def delTermsWithAtom(self, atom):
         assert atom.system == self.system
@@ -543,6 +551,23 @@ class System(object):
     ###
     ### operations on custom term tables
     ###
+
+    @property
+    def table_names(self):
+        ''' names of the tables in the System '''
+        return [x for x in self._ptr.tableNames()]
+
+    @property
+    def tables(self):
+        ''' all the tables in the System '''
+        return [TermTable(self._ptr.table(x)) for x in self._ptr.tableNames()]
+
+    def table(self, name):
+        ''' Get the TermTable with the given name '''
+        ptr=self._ptr.table(name)
+        if ptr is None:
+            raise ValueError, "No such table '%s'" % name
+        return TermTable(ptr)
 
     def addTable(self, name, natoms, params = None):
         ''' add a table with the given name and number of atoms.

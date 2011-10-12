@@ -51,4 +51,38 @@ which is based on the Python bindings.
 Getting started
 ===============
 
+Once you have your Python environment by loading the appropriate
+modules, fire up Python, import the msys module, and load a dms
+or mae file::
+
+
+  import msys
+  dms=msys.LoadDMS('system.dms')
+  mae=msys.LoadMAE('system.mae')
+
+The full set of `Atoms`, `Bonds`, `Residues`, `Chains`, and `TermTables`
+are available by fetching them from the system.   You can also fetch
+the bonds involving a particular atom, the atoms in a residue, or the bonds
+in a chain in a similar way::
+
+  # get the number of atoms, and the total charge
+  atoms = dms.atoms
+  natoms = len(atoms)
+  total_charge = sum(a.charge for a in atoms)
+
+  # iterate over chains, then residues, then atoms:
+  for chn in mol.chains:
+    for res in chn.residues:
+      for atm in res.atoms:
+        for bnd in atm.bonds:
+          a1, a2 = bnd.atoms
+          bond_order = bnd.order
+
+  # iterate over tables, print atoms per term and number of terms
+  for t in mol.tables:
+    print "table %s: %d atoms, %d terms" % (t.name, t.natoms, t.nterms)
+
+  # fetch the stretch_harm table
+  stretch = mol.table('stretch_harm')
+
 
