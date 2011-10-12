@@ -1,5 +1,7 @@
 #include "term_table.hxx"
+#include "system.hxx"
 #include <stdexcept>
+#include <sstream>
 
 using namespace desres::msys;
 
@@ -28,6 +30,14 @@ Id TermTable::termCount() const {
 Id TermTable::addTerm(const IdList& atoms, Id param) {
     if (atoms.size() != _natoms) {
         throw std::runtime_error("addTerm: incorrect atom count");
+    }
+    System const& sys = *system();
+    for (IdList::const_iterator atm=atoms.begin(); atm!=atoms.end(); ++atm) {
+        if (!sys.hasAtom(*atm)) {
+            std::stringstream ss;
+            ss << "addTerm: no such atom " << *atm;
+            throw std::runtime_error(ss.str());
+        }
     }
     Id id=_terms.size()/(1+_natoms);
     _terms.insert(_terms.end(), atoms.begin(), atoms.end());

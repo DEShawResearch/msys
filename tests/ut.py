@@ -195,6 +195,11 @@ class TestMain(unittest.TestCase):
         t1.param=None
         self.assertEqual(t1.param, None)
 
+        with self.assertRaises(RuntimeError):
+            angle.addTerm((m.atom(2),))
+        with self.assertRaises(RuntimeError):
+            angle.addTerm((m.atom(1),m.atom(1), m.atom(5)))
+
     def testDelTerm(self):
         m=msys.CreateSystem()
         a1=m.addAtom()
