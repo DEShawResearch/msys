@@ -20,6 +20,9 @@ import sys, os
 
 sys.path.insert(0, os.path.abspath('../../objs/Linux/x86_64/lib/python'))
 
+PREFIX=os.getenv('PREFIX')
+sys.path.insert(0, os.path.abspath(os.path.join(PREFIX, 'lib', 'python')))
+
 # -- General configuration -----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
