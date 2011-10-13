@@ -127,6 +127,13 @@ namespace desres { namespace msys {
             .def("__getitem__", cell_getitem, return_ptr())
             ;
 
+        class_<NonbondedInfo>("NonbondedInfo", no_init)
+            .def_readwrite("vdw_funct", &NonbondedInfo::vdw_funct,
+                    "Name of the nonbonded functional form; e.g., vdw_12_6")
+            .def_readwrite("vdw_rule", &NonbondedInfo::vdw_rule,
+                    "Nonbonded combining rule; e.g., arithmetic/geometric")
+            ;
+
         def("ImportDMS", ImportDMS);
         def("ExportDMS", ExportDMS);
         def("ImportMAE", ImportMAE);
@@ -140,7 +147,7 @@ namespace desres { namespace msys {
             .def("create",  &System::create).staticmethod("create")
             .def_readwrite("name", &System::name)
             .def_readwrite("global_cell", &System::global_cell)
-            /* TODO nonbonded_info */
+            .def_readwrite("nonbonded_info", &System::nonbonded_info)
 
             /* accessor */
             .def("atom",        system_atom, return_ptr())

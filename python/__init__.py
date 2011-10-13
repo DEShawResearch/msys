@@ -6,7 +6,7 @@ by chemists.
 
 import _msys
 
-from _msys import GlobalCell
+from _msys import GlobalCell, NonbondedInfo
 
 class Handle(object):
     __slots__ = ('_ptr', '_id')
@@ -525,6 +525,11 @@ class System(object):
     def cell(self):
         ''' The GlobalCell for this System '''
         return self._ptr.global_cell
+
+    @property
+    def nonbonded_info(self):
+        ''' NonbondedInfo for this System '''
+        return self._ptr.nonbonded_info
 
     @property
     def atoms(self):

@@ -365,6 +365,14 @@ class TestMain(unittest.TestCase):
         with self.assertRaises(IndexError): m.cell[3]
         with self.assertRaises(IndexError): m.cell[-4]
 
+    def testNonbondedInfo(self):
+        m=msys.CreateSystem()
+        nb=m.nonbonded_info
+        nb.vdw_funct = "justinrocks"
+        nb.vdw_rule = "yep"
+        self.assertEqual(nb.vdw_funct , "justinrocks")
+        self.assertEqual(nb.vdw_rule , "yep")
+
     def testClone(self):
         m=msys.CreateSystem()
         m.addAtom().name='a'

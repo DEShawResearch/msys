@@ -83,4 +83,10 @@ Example::
   m.cell[1][:] = [1,2,3]    # B is now [1,2,3]
   m.cell[2][1] = 5          # C is now [0,5,0]
 
+NonbondedInfo
+=============
+
+.. autoclass:: msys.NonbondedInfo
+   :members:
+
 
