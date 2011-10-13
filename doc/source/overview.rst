@@ -1,6 +1,6 @@
-````````````
-User's Guide
-````````````
+````````
+Overview
+````````
 
 Introduction
 ============
@@ -155,4 +155,33 @@ the duplicated `Param` to the term::
   # we can now make changes to t.param without affecting any other term
   t.param['fc'] = 42
 
+Gids, ids, and all that
+=======================
+
+In Msys, instances of the `Atom`, `Bond`, `Residue`, and `Chain` classes
+are all `Handles`, in the sense that they refer to a piece of data held
+by the parent `System`.  All Msys handles have an immutable ``id``
+property that uniquely identifies them within their parent `System`.
+Two handles of the same type will compare equal to each other if and
+only if they belong the same `System` and possess the same ``id``.
+
+When you load a system from a file, or create one from scratch, these
+``ids`` will be numbered consecutively, starting at zero.  Deleting
+`Atoms`, `Bonds`, etc. from the `System` can introduce gaps in the set of
+``ids``, but, once created, the ``id`` of an object never changes.
+
+`Atom` instances also have a mutable property called `gid`.  In a dms
+file, this property corresponds to the primary key of the corresponding
+particle.  If you wish to write your `System` to a dms file and reorder
+the particles according to some permutation, it is the `gid` property
+that you need to set.  You can change this value by hand, as you would
+any other `Atom` property; or, if you simply wish to let Msys assign a
+'nice' set of 0-based contiguous gids, use the ``reassignGids()`` method
+of `System`.  Writing a `System` out to a dms file using ``SaveDMS``
+will fail if the gids are not all unique.  
+
+You may also wish to use ``reassignGids()`` on the `System` returned
+by `CloneSystem`, because the ``gids`` in the cloned `System` are not
+changed by the clone operation, and will be nonconsective if the gids
+in the cloned atoms are nonconsecutive.
 
