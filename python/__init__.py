@@ -6,6 +6,8 @@ by chemists.
 
 import _msys
 
+from _msys import GlobalCell
+
 class Handle(object):
     __slots__ = ('_ptr', '_id')
 
@@ -463,9 +465,6 @@ class TermTable(object):
         return Term(self._ptr, self._ptr.addTerm(ids, param))
 
 class System(object):
-    ''' The System class holds all structure and forcefield data
-    for a single chemical system.  Create a new System using
-    msys.CreateSystem(), or from a file using LoadDMS or LoadMAE.  '''
 
     def __init__(self, _ptr):
         ''' Construct from SystemPtr.
@@ -490,15 +489,19 @@ class System(object):
         return Chain(self._ptr, self._ptr.addChain())
 
     def delAtoms(self, elems):
+        ''' remove all Atoms in elems from the System '''
         self._ptr.delAtoms(e.id for e in elems)
 
     def delBonds(self, elems):
+        ''' remove all Bonds in elems from the System '''
         self._ptr.delBonds(e.id for e in elems)
 
     def delResidues(self, elems):
+        ''' remove all Residues in elems from the System '''
         self._ptr.delResidues(e.id for e in elems)
 
     def delChains(self, elems):
+        ''' remove all Chains in elems from the System '''
         self._ptr.delChains(e.id for e in elems)
 
     def atom(self, id):
@@ -520,6 +523,7 @@ class System(object):
 
     @property
     def cell(self):
+        ''' The GlobalCell for this System '''
         return self._ptr.global_cell
 
     @property
@@ -559,6 +563,7 @@ class System(object):
         return self._ptr.addAtomProp(name, type)
 
     def delAtomProp(self, name):
+        ''' remove the given custom atom property '''
         self._ptr.delAtomProp(self._ptr.atomPropIndex(name))
 
 
@@ -569,6 +574,7 @@ class System(object):
         return [p.atomPropName(i) for i in range(p.atomPropCount())]
 
     def atomPropType(self, name):
+        ''' type of the given atom property '''
         return self._ptr.atomPropType(self._ptr.atomPropIndex(name))
 
     @property
@@ -588,6 +594,7 @@ class System(object):
         return self._ptr.addBondProp(name, type)
 
     def delBondProp(self, name):
+        ''' remove the given custom bond property '''
         self._ptr.delBondProp(self._ptr.bondPropIndex(name))
 
 
@@ -598,6 +605,7 @@ class System(object):
         return [p.bondPropName(i) for i in range(p.bondPropCount())]
 
     def bondPropType(self, name):
+        ''' type of the given bond property '''
         return self._ptr.bondPropType(self._ptr.bondPropIndex(name))
 
     @property
@@ -643,6 +651,7 @@ class System(object):
         return TermTable(self._ptr.addNonbondedFromSchema(funct,rule))
 
     def atomselect(self, seltext):
+        ''' return a list of Atoms satisfying the given VMD atom selection. '''
         p=self._ptr
         ids=p.atomselect(seltext)
         return [Atom(p,i) for i in ids]
@@ -672,6 +681,7 @@ class System(object):
         return result
 
 def CreateSystem():
+    ''' Create a new, empty System '''
     return System(_msys.SystemPtr.create())
 
 def CloneSystem(atoms):
@@ -691,15 +701,25 @@ def CloneSystem(atoms):
     return System( _msys.Clone(ptr, ids))
 
 def CreateParamTable():
+    ''' Create a new, empty ParamTable '''
     return ParamTable(_msys.ParamTablePtr.create())
 
 def LoadDMS(path, structure_only = False):
+    ''' Load the DMS file at the given path and return a System containing it.
+    If structure_only is True, only Atoms, Bonds, Residues and Chains will
+    be loaded, along with the GlobalCell. '''
     return System(_msys.ImportDMS(path, structure_only ))
 
 def LoadMAE(path, ignore_unrecognized = False):
+    ''' load the MAE file at the given path and return a System containing it.
+    Forcefield tables will be created that attempt to match as closely as
+    possible the force terms in the MAE file; numerical differences are bound
+    to exist.  If ignore_unrecognized is True, ignore unrecognized force
+    tables. '''
     return System(_msys.ImportMAE(path, ignore_unrecognized ))
 
 def SaveDMS(system, path):
+    ''' Export the System to a DMS file at the given path. '''
     _msys.ExportDMS(system._ptr, path)
 
 
