@@ -1,6 +1,6 @@
-``````
+````````````
 User's Guide
-``````
+````````````
 
 Introduction
 ============
@@ -50,6 +50,9 @@ which is based on the Python bindings.
 
 Getting started
 ===============
+
+This section will guide you through some of the main features of Msys
+in order to give you a feeling for how the Python interface works.
 
 Once you have your Python environment by loading the appropriate
 modules, fire up Python, import the msys module, and load a dms
@@ -139,7 +142,17 @@ through the corresponding `TermTable`::
 Note that, because parameters can be and often are shared, modifications
 to the properties of one `Term` can affect the properties of many others.
 In the previous code snippet, it is likely that there will be many fewer
-params than terms, indicating that some terms share params.  
+params than terms, indicating that some terms share parameters.  
 
+Suppose we wish to change the parameters for just a single term.  This
+can be accomplished by duplicating the `Param` of the term, and assigning
+the duplicated `Param` to the term::
+
+  # select the first stretch term
+  t = stretch.terms[0]
+  # make sure this term doesn't share parameters with any other term
+  t.param = t.param.duplicate()
+  # we can now make changes to t.param without affecting any other term
+  t.param['fc'] = 42
 
 
