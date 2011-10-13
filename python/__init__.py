@@ -28,16 +28,21 @@ class Handle(object):
     def __hash__(self): return hash((self._ptr, self._id))
 
     @property
-    def id(self): return self._id
+    def id(self): 
+        ''' id of this object in the parent System '''
+        return self._id
     
     @property
-    def system(self): return System(self._ptr)
+    def system(self): 
+        ''' parent System '''
+        return System(self._ptr)
 
 def __add_properties(cls, *names):
     for attr in names:
         setattr(cls, attr, property(
             lambda self, x=attr: getattr(self.data(), x),
-            lambda self, val, x=attr: setattr(self.data(), x, val)))
+            lambda self, val, x=attr: setattr(self.data(), x, val),
+            doc=attr))
 
 class Bond(Handle):
     __slots__ = ()
@@ -46,24 +51,35 @@ class Bond(Handle):
 
     def data(self): return self._ptr.bond(self._id)
 
-    def destroy(self): self._ptr.delBond(self._id)
+    def destroy(self): 
+        ''' remove this Bond from the System '''
+        self._ptr.delBond(self._id)
 
     @property
-    def first(self): return Atom(self._ptr, self.data().i)
+    def first(self): 
+        ''' first Atom in the bond (the one with lower id) '''
+        return Atom(self._ptr, self.data().i)
 
     @property
-    def second(self): return Atom(self._ptr, self.data().j)
+    def second(self): 
+        ''' second Atom in the bond (the one with higher id) '''
+        return Atom(self._ptr, self.data().j)
 
     @property
-    def atoms(self): return self.first, self.second
+    def atoms(self): 
+        ''' Atoms in this Bond '''
+        return self.first, self.second
 
     def __setitem__(self, key, val):
+        ''' set custom Bond property '''
         self._ptr.setBondProp(self._id, key, val)
 
     def __getitem__(self, key):
+        ''' get custom Bond property '''
         return self._ptr.getBondProp(self._id, key)
     
     def __contains__(self, key):
+        ''' does custom Bond property exist? '''
         return not _msys.bad(self._ptr.bondPropIndex(key))
 
 
@@ -77,34 +93,37 @@ class Atom(Handle):
     def data(self): return self._ptr.atom(self._id)
 
     def destroy(self):
+        ''' remove this Atom from the System '''
         self._ptr.delAtom(self._id)
 
     def __setitem__(self, key, val):
+        ''' set atom property key to val '''
         self._ptr.setAtomProp(self._id, key, val)
 
     def __getitem__(self, key):
+        ''' get atom property key '''
         return self._ptr.getAtomProp(self._id, key)
     
     def __contains__(self, key):
+        ''' does atom property key exist? '''
         return not _msys.bad(self._ptr.atomPropIndex(key))
 
     def addBond(self, other):
+        ''' create and return a Bond from self to other '''
         assert self._ptr == other._ptr
         return Bond(self._ptr, self._ptr.addBond(self._id, other.id))
 
     def findBond(self, other):
-        ''' Find the bond between self and Atom other '''
+        ''' Find the bond between self and Atom other; None if not found '''
         return self.system.findBond(self, other)
 
-    def getPos(self):
-        ''' return a copy of the position of this atom. '''
+    @property
+    def pos(self):
+        ''' position '''
         return (self.x, self.y, self.z)
-
-    def setPos(self, xyz):
-        ''' set the position of the atom to values x, y, z '''
+    @pos.setter
+    def pos(self, xyz):
         self.x, self.y, self.z = xyz
-
-    pos = property(getPos, setPos)
 
     @property
     def residue(self): return Residue(self._ptr, self.data().residue)
@@ -134,13 +153,16 @@ class Residue(Handle):
         return self._ptr.residue(self._id)
 
     def destroy(self):
+        ''' remove this Residue from the System '''
         self._ptr.delResidue(self._id)
 
     def addAtom(self):
+        ''' append a new Atom to this Residue and return it '''
         return Atom(self._ptr, self._ptr.addAtom(self._id))
 
     @property
     def atoms(self):
+        ''' list of Atoms in this Residue '''
         return [Atom(self._ptr, i) for i in self._ptr.atomsForResidue(self._id)]
 
 __add_properties(Residue, 'name', 'num')
@@ -151,13 +173,16 @@ class Chain(Handle):
     def raw_chain(self): return self._ptr.chain(self._id)
 
     def destroy(self):
+        ''' remove this Chain from the System '''
         self._ptr.delChain(self._id)
 
     def addResidue(self):
+        ''' append a new Residue to this Chain and return it '''
         return Residue(self._ptr, self._ptr.addResidue(self._id))
 
     @property
     def residues(self):
+        ''' list of Residues in this Chain '''
         return [Residue(self._ptr, i) for i in self._ptr.residuesForChain(self._id)]
 
 __add_properties(Chain, 'name')
