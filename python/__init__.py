@@ -582,6 +582,12 @@ class System(object):
         ids=p.append(system._ptr)
         return [Atom(p,i) for i in ids]
 
+    def reassignGids(self):
+        ''' Assign gids to atoms based on their order of appearance in
+        a depth-first traversal of the structure hierarchy. 
+        '''
+        self._ptr.reassignGids()
+
     def updateFragids(self):
         ''' assign 0-based fragment ids to atoms based on the current
         bond structure.  Return list of fragments as list of lists of atoms.

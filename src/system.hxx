@@ -309,6 +309,10 @@ namespace desres { namespace msys {
          * bonded atoms share the same fragid.  Return the number of
          * frags found, and atomid to fragment partitioning if requested */
         Id updateFragids(MultiIdList* fragments=NULL);
+
+        /* Assign gids to atoms based on their order of appearance in
+         * a depth-first traversal of the structure hierarchy. */
+        void reassignGids();
     };
 
     typedef boost::shared_ptr<System> SystemPtr;
