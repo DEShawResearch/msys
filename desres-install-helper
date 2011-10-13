@@ -22,6 +22,7 @@ SQLITE=sqlite/3.6.22-01
 PCRE=pcre/7.4-01
 ANTLR=antlr/3.1.3-06
 JSON=fastjson/1.4.0
+SPHINX=Sphinx/1.1-01A
 
 loadmodules() {
     module load \
@@ -35,6 +36,7 @@ loadmodules() {
         $PCRE/lib-shared \
         $ANTLR/lib \
         $JSON/lib \
+        $SPHINX/bin 
     
 
    desres_module_stripcolons
@@ -68,6 +70,7 @@ EOF
 $hdr
 module-whatis {$NAME - $DESCRIPTION}
 prepend-path PATH $PREFIX/bin
+prepend-path MANPATH $PREFIX/doc/man
 setenv MSYS_PREFIX "$PREFIX"
 setenv MSYS_CLEANENV "-eMSYS_PREFIX -m $PYTHON/bin -m $NAME/$VERSION/lib-python"
 EOF
@@ -76,8 +79,18 @@ EOF
 genhelp() {
     cat <<EOF >> $PREFIX/ModulesHelp
 
+See documentation in 
+$PREFIX/doc/html/index.html
+
 This is a pre-release version of msys.
 EOF
+}
+
+gendocs() {
+    (cd doc && make man html)
+    mkdir -p $PREFIX/doc/man/man1
+    cp -r doc/build/html $PREFIX/doc/
+    cp doc/build/man/*.1 $PREFIX/doc/man/man1
 }
 
 case $1 in
@@ -101,6 +114,8 @@ case $1 in
 
 	genhelp
 	genmodules
+        gendocs
+
         ;;
     --help)
         desres_install_helper_usage
