@@ -69,6 +69,10 @@ Id ParamTable::duplicate(Id param) {
     Id dst = addParam();
     for (unsigned i=0; i<_props.size(); i++) {
         _props[i].vals[dst] = _props[i].vals[param];
+        if (_props[i].type == StringType) {
+            _props[i].vals[dst].s = strdup(_props[i].vals[dst].s);
+        }
+
     }
     return dst;
 }
