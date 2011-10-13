@@ -279,36 +279,49 @@ class Term(object):
     def __repr__(self): return '<Term %d>' % self._id
 
     def destroy(self):
+        ''' remove the given Term from its TermTable '''
         self._ptr.delTerm(self._id)
 
     @property
-    def id(self): return self._id
+    def id(self): 
+        ''' id of this term in its TermTable '''
+        return self._id
 
     @property
     def param(self): 
+        ''' The Param corresponding to this Terms parameters '''
         id=self._ptr.param(self._id)
         if _msys.bad(id): return None
         return Param(self._ptr.params(), id)
     @param.setter
     def param(self, val):
-        if val is None: id = None
-        else: id = val.id
+        if val is None: 
+            id = None
+        else: 
+            if val.table != self.table.params:
+                raise RuntimeError, "param comes from a different ParamTable"
+            id = val.id
         self._ptr.setParam(self._id, id)
 
     @property
     def atoms(self):
+        ''' list of Atoms for this Term '''
         return [Atom(self._ptr.system(), i) for i in self._ptr.atoms(self._id)]
 
     @property
-    def table(self): return TermTable(self._ptr)
+    def table(self): 
+        ''' parent TermTable '''
+        return TermTable(self._ptr)
 
     def __getitem__(self, attr):
+        ''' get the value of term property attr '''
         col = self._ptr.termPropIndex(attr)
         if _msys.bad(col):
             raise KeyError, "No such property '%s'" % attr
         return self._ptr.getTermProp(self._id, col)
 
     def __setitem__(self, attr, val):
+        ''' set the value of term property attr '''
         col = self._ptr.termPropIndex(attr)
         if _msys.bad(col):
             raise KeyError, "No such property '%s'" % attr
@@ -317,16 +330,7 @@ class Term(object):
 
 
 class TermTable(object):
-    ''' The TermTable class holds components of a molecular forcefield.
-    A given TermTable instance belongs to a single System, and holds
-    terms that are all of the same type.  
 
-    Each Term in the TermTable contains three sorts of attributes:
-    (1) a fixed number of atoms, (2) properties which are given by its
-    row in the ParamTable, and (3) custom properties which are specific
-    to the Term and not held by the ParamTable.
-
-    '''
     __slots__=('_ptr',)
 
     def __init__(self, _ptr):
@@ -383,39 +387,46 @@ class TermTable(object):
     def category(self, val): self._ptr.category=val
 
     @property
-    def nterms(self): return self._ptr.termCount()
+    def nterms(self): 
+        ''' number of terms '''
+        return self._ptr.termCount()
 
     def delTermsWithAtom(self, atom):
+        ''' remove all terms whose atoms list contains the given Atom '''
         assert atom.system == self.system
         self._ptr.delTermsWithAtom(atom.id)
 
     @property
     def terms(self):
+        ''' returns a list of all the Terms in the table '''
         return [Term(self._ptr, i) for i in self._ptr.terms()]
 
     def term(self, id):
+        ''' returns the Term in the table with the given id '''
         return Term(self._ptr, id)
 
-    def addProp(self, name, type):
-        return self._ptr.addProp(name, type)
-
-    def propType(self, name):
-        p=self._ptr
-        return self._ptr.propType(p.propIndex(name))
-
-    def termPropType(self, name):
-        p=self._ptr
-        return p.termPropType(p.termPropIndex(name))
-
-
     def addTermProp(self, name, type):
+        ''' add a custom Term property of the given type '''
         return self._ptr.addTermProp(name, type)
 
     def delTermProp(self, name):
+        ''' remove the custom Term property '''
         self._ptr.delTermProp(self._ptr.termPropIndex(name))
 
+    def termPropType(self, name):
+        ''' type of the given Term property '''
+        p=self._ptr
+        return p.termPropType(p.termPropIndex(name))
+
     def addTerm(self, atoms, param = None):
+        ''' Add a Term to the table, with given initial param.  The atoms
+        list must have natoms elements, and each Atom must belong to the 
+        same System as the TermTable.  If param is not None, it must
+        belong to the ParamTable held by the TermTable.
+        '''
         if param is not None:
+            if param.table != self.params:
+                raise RuntimeError, "param comes from a different ParamTable"
             param = param.id
         n=len(atoms)
         ids=[None]*n
