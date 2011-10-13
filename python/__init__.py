@@ -42,6 +42,8 @@ def __add_properties(cls, *names):
 class Bond(Handle):
     __slots__ = ()
 
+    def __repr__(self): return '<Bond %d>' % self._id
+
     def data(self): return self._ptr.bond(self._id)
 
     def destroy(self): self._ptr.delBond(self._id)
@@ -69,6 +71,8 @@ __add_properties(Bond, 'order')
 
 class Atom(Handle):
     __slots__ = ()
+
+    def __repr__(self): return '<Atom %d>' % self._id
 
     def data(self): return self._ptr.atom(self._id)
 
@@ -170,16 +174,22 @@ class Param(object):
     def __ne__(self, x): return self._id!=x._id or  self._ptr!=x._ptr
 
     @property
-    def id(self): return self._id
+    def id(self): 
+        ''' id in parent table '''
+        return self._id
     
     @property
-    def table(self): return ParamTable(self._ptr)
+    def table(self): 
+        ''' parent ParamTable '''
+        return ParamTable(self._ptr)
 
-    def __setitem__(self, key, val):
+    def __setitem__(self, prop, val):
+        ''' update the value of prop with val '''
         p=self._ptr
-        p.setProp(self._id, p.propIndex(key), val)
+        p.setProp(self._id, p.propIndex(prop), val)
 
     def __getitem__(self, key):
+        ''' get the value of prop '''
         p=self._ptr
         return p.getProp(self._id, p.propIndex(key))
 
@@ -192,43 +202,67 @@ class ParamTable(object):
     __slots__=('_ptr',)
 
     def __init__(self, _ptr):
+        self._ptr = _ptr
         ''' Construct from ParamTablePtr.
         Do not invoke directly; use CreateParamTable() instead.  '''
-        self._ptr = _ptr
 
     def __eq__(self, x): return self._ptr==x._ptr
     def __ne__(self, x): return self._ptr!=x._ptr
     def __hash__(self): return self._ptr.__hash__()
 
     def addParam(self):
-        ''' add and return a new entry in the parameter table '''
+        ''' add and return a new Param() '''
         return Param(self._ptr, self._ptr.addParam())
 
     def addProp(self, name, type):
-        return self._ptr.addProp(name,type)
+        ''' add a new property of the given type, which must be int,
+        float, or str.  If a property with that name already exists,
+        its index is returned.  If a property with the same name but
+        a different type already exists, an exception is raised.  
+        '''
+        self._ptr.addProp(name,type)
 
     @property
     def prop_names(self):
+        ''' names of the properties '''
         p=self._ptr
         return [p.propName(i) for i in range(p.propCount())]
 
     @property
     def prop_types(self):
+        ''' types of the properties '''
         p=self._ptr
         return [p.propType(i) for i in range(p.propCount())]
 
+    @property
+    def nprops(self):
+        ''' number of properties '''
+        return self._ptr.propCount()
+
     def propType(self, name):
+        ''' type of the property with the given name '''
         p=self._ptr
         return p.propType(p.propIndex(name))
 
     def delProp(self, name):
+        ''' removes the property with the given name. ''' 
         self._ptr.delProp(self._ptr.propIndex(name))
 
     def __getitem__(self, id):
         ''' fetch the Param with the given id '''
         return Param(self._ptr, id)
 
+    def param(self, id):
+        ''' fetch the Param with the given id '''
+        return Param(self._ptr, id)
+
+    @property
+    def nparams(self):
+        ''' number of Params '''
+        return self._ptr.paramCount()
+
     def __len__(self):
+        ''' number of Params in the table. '''
         return self._ptr.paramCount()
 
 
@@ -241,6 +275,8 @@ class Term(object):
 
     def __eq__(self, x): return self._id==x._id and self._ptr==x._ptr
     def __ne__(self, x): return self._id!=x._id or  self._ptr!=x._ptr
+
+    def __repr__(self): return '<Term %d>' % self._id
 
     def destroy(self):
         self._ptr.delTerm(self._id)
