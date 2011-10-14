@@ -60,6 +60,7 @@ namespace desres { namespace msys {
         /* Operations on the set of terms */
         IdList terms() const;
         Id termCount() const;
+        Id maxTermId() const;
         bool hasTerm(Id term) const;
         Id addTerm(const IdList& atoms, Id param);
         void delTerm(Id id);
@@ -74,7 +75,8 @@ namespace desres { namespace msys {
         Id paramB(Id term) const;
         void setParam(Id term, Id param);
         void setParamB(Id term, Id param);
-        IdList atoms(Id i) const;
+        IdList atoms(Id term) const;
+        Id atom(Id term, Id index) const;
 
         /* Operations on term properties */
         Id termPropCount() const;

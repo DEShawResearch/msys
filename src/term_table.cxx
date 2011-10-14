@@ -96,9 +96,18 @@ bool TermTable::hasTerm(Id term) const {
     return term<_terms.size() && !_deadterms.count(term);
 }
 
+Id TermTable::maxTermId() const {
+    return _terms.size()/(1+_natoms);
+}
+
 IdList TermTable::atoms(Id i) const { 
     TermList::const_iterator b=_terms.begin()+i*(1+_natoms);
     return IdList(b, b+_natoms);
+}
+
+Id TermTable::atom(Id term, Id index) const {
+    TermList::const_iterator b=_terms.begin()+term*(1+_natoms);
+    return *(b+index);
 }
 
 Id TermTable::termPropCount() const {
