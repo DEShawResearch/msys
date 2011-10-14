@@ -86,6 +86,50 @@ static IdList read_params( dms_reader_t* r, ParamTablePtr p ) {
     return idmap;
 }
 
+/* some people hack up their own dms file and put the terms and params into
+ * one table instead of splitting into two plus a view.  Handle that case,
+ * but refuse to deal with alchemical systems. */
+static void read_view_table( dms_t* dms, 
+                             const IdList& gidmap,
+                             System& sys, 
+                             const std::string& category,
+                             const std::string& table,
+                             KnownSet& known ) {
+
+    dms_reader_t* r;
+
+    /* find the terms table */
+    known.insert(table);
+    dms_fetch(dms,table.c_str(),&r);
+    if (!r) return;
+
+    std::vector<int> acols, pcols;
+    ParamTablePtr params = ParamTable::create();
+    int i,n = dms_reader_column_count(r);
+    for (i=0; i<n; i++) {
+        const char* prop = dms_reader_column_name(r,i);
+        if (is_pN(prop)) acols.push_back(i);
+        else {
+            params->addProp(prop, dms_reader_column_type(r,i));
+            pcols.push_back(i);
+        }
+    }
+
+    TermTablePtr terms = sys.addTable(table, acols.size(), params);
+    terms->category = category;
+    IdList atoms(acols.size());
+    for (; r; dms_reader_next(&r)) {
+        for (unsigned i=0; i<acols.size(); i++) {
+            atoms[i] = gidmap.at(dms_reader_get_int(r,acols[i]));
+        }
+        Id param = params->addParam();
+        for (unsigned i=0; i<pcols.size(); i++) {
+            read(r,pcols[i],params->value(param,i));
+        }
+        terms->addTerm(atoms, param);
+    }
+}
+
 static void read_table( dms_t* dms, 
                         const IdList& gidmap,
                         System& sys, 
@@ -100,6 +144,16 @@ static void read_table( dms_t* dms,
         param_table = param_table.substr(11);
         alchemical = true;
     }
+    if (!(dms_has_table(dms, term_table.c_str()) &&
+          dms_has_table(dms, param_table.c_str()))) {
+        if (alchemical) {
+            std::stringstream ss;
+            ss << category << " table '" << table << "' is not well formatted.";
+            throw std::runtime_error(ss.str());
+        }
+        return read_view_table(dms, gidmap, sys, category, table, known);
+    }
+
     dms_reader_t* r;
 
     /* find the terms table */
