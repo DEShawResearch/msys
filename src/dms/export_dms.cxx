@@ -334,7 +334,7 @@ static void export_view(TermTablePtr table, const std::string& name, dms_t *dms)
         if (tprops.size() || i!=props.size()-1) ss << ", ";
     }
     for (Id i=0; i<tprops.size(); i++) {
-        ss << tprops[i];
+        ss << "'" << tprops[i] << "'";
         if (i!=tprops.size()-1) ss << ", ";
     }
     ss << "  from " << paramname << "\n"
