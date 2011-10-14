@@ -90,6 +90,99 @@ namespace {
         node.append("rows", vals);
         js.append("bonds", node);
     }
+    void process_tables(SystemPtr sys, Json& js) {
+        Json node, tmp;
+        node.to_object();
+
+        std::vector<String> names = sys->tableNames();
+        for (unsigned i=0; i<names.size(); i++) {
+            Json tnode;
+            tnode.to_object();
+            TermTablePtr table = sys->table(names[i]);
+            tnode.append("category", tmp.to_string(table->category.c_str()));
+            tnode.append("natoms", tmp.to_int(table->atomCount()));
+
+            /* term properties */
+            Json termprops;
+            termprops.to_array();
+            for (unsigned j=0; j<table->termPropCount(); j++) {
+                termprops.append(tmp.to_string(table->termPropName(j).c_str()));
+            }
+            tnode.append("termprops", termprops);
+
+            /* param properties */
+            ParamTablePtr params = table->params();
+            Json props;
+            props.to_array();
+            for (unsigned j=0; j<params->propCount(); j++) {
+                props.append(tmp.to_string(params->propName(j).c_str()));
+            }
+            tnode.append("props", props);
+
+            Json terms;
+            terms.to_array();
+            for (Id j=0; j<table->maxTermId(); j++) {
+                if (!table->hasTerm(j)) continue;
+                Json term;
+                term.to_array();
+                /* atoms in term */
+                Json atoms;
+                atoms.to_array();
+                for (Id k=0; k<table->atomCount(); k++) {
+                    atoms.append(tmp.to_int(table->atom(j,k)));
+                }
+                term.append(atoms);
+
+                /* term properties */
+                termprops.to_array();
+                for (unsigned k=0; k<table->termPropCount(); k++) {
+                    ValueRef v = table->termPropValue(j,k);
+                    switch (v.type()) {
+                        case IntType:
+                            termprops.append(tmp.to_int(v.asInt()));
+                            break;
+                        case FloatType:
+                            termprops.append(tmp.to_float(v.asFloat()));
+                            break;
+                        case StringType:
+                        default:
+                            termprops.append(tmp.to_string(v.asString().c_str()));
+                    }
+                }
+                term.append(termprops);
+
+                /* param properties */
+                props.to_array();
+                Id param = table->param(j);
+                for (unsigned k=0; k<params->propCount(); k++) {
+                    ValueRef v = params->value(param,k);
+                    switch (v.type()) {
+                        case IntType:
+                            props.append(tmp.to_int(v.asInt()));
+                            break;
+                        case FloatType:
+                            props.append(tmp.to_float(v.asFloat()));
+                            break;
+                        case StringType:
+                        default:
+                            props.append(tmp.to_string(v.asString().c_str()));
+                    }
+                }
+                term.append(props);
+
+                /* alchemical param properties */
+                Id paramB = table->paramB(j);
+                if (bad(paramB)) {
+                    term.append(props.to_null());
+                } else {
+                }
+                terms.append(term);
+            }
+            tnode.append("terms", terms);
+            node.append(names[i].c_str(), tnode);
+        }
+        js.append("tables", node);
+    }
 }
 
 void desres::msys::ExportJSON( SystemPtr sys, std::ostream& out ) {
@@ -97,5 +190,6 @@ void desres::msys::ExportJSON( SystemPtr sys, std::ostream& out ) {
     js.to_object();
     process_particles(sys,js);
     process_bonds(sys,js);
+    process_tables(sys,js);
     print_json(out, js);
 }
