@@ -225,7 +225,7 @@ static void export_terms(TermTablePtr table, const IdList& map,
             ss << "'" << table->termPropName(i) << "' " 
                << str(table->termPropType(i)) << ", ";
         }
-        ss << "paramA integer, paramB integer, moiety integer)";
+        ss << "paramA integer, paramB integer)";
         dms_exec(dms, ss.str().c_str());
     }
 
