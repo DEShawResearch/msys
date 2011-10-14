@@ -229,8 +229,8 @@ static void export_terms(TermTablePtr table, const IdList& map,
         dms_exec(dms, ss.str().c_str());
     }
 
-    dms_writer_t* w, *alcw=NULL;
-    dms_insert(dms,tablename.c_str(),&w);
+    dms_writer_t* regw, *alcw=NULL;
+    dms_insert(dms,tablename.c_str(),&regw);
     if (table->alchemical()) {
         dms_insert(dms,alcname.c_str(),&alcw);
     }
@@ -239,6 +239,12 @@ static void export_terms(TermTablePtr table, const IdList& map,
     IdList ids = table->terms();
     for (Id i=0,n=ids.size(); i<n; i++) {
         Id id=ids[i];
+        Id paramB = table->paramB(id);
+
+        /* see if this term is alchemical or not */
+        dms_writer_t* w = regw;
+        if (!bad(paramB)) w = alcw;
+
         /* write atom columns */
         IdList atoms = table->atoms(id);
         for (Id j=0; j<natoms; j++) dms_writer_bind_int(w,j,map[atoms[j]]);
@@ -254,27 +260,11 @@ static void export_terms(TermTablePtr table, const IdList& map,
         } else {
             dms_writer_bind_int(w,nprops+natoms,param);
         }
+        if (w==alcw) dms_writer_bind_int(w,nprops+natoms+1,paramB);
         dms_writer_next(w);
-
-        /* alchemical terms */
-        if (!alcw) continue;
-        Id paramB = table->paramB(id);
-        if (bad(paramB)) continue;
-        for (Id j=0; j<natoms; j++) dms_writer_bind_int(alcw,j,map[atoms[j]]);
-        for (Id j=0; j<nprops; j++) {
-            ValueRef val = table->termPropValue(id, j);
-            write(val, j+natoms, alcw);
-        }
-        if (bad(param)) {
-            dms_writer_bind_null(alcw,nprops+natoms);
-        } else {
-            dms_writer_bind_int(alcw,nprops+natoms,param);
-        }
-        dms_writer_bind_int(alcw,nprops+natoms+1,paramB);
-        dms_writer_next(alcw);
     }
-    dms_writer_free(w);
-    dms_writer_free(alcw);
+    if (regw) dms_writer_free(regw);
+    if (alcw) dms_writer_free(alcw);
     dms_exec(dms,"commit");
 }
 
