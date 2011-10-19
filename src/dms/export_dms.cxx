@@ -140,7 +140,7 @@ static void export_particles(const System& sys, const IdList& map, dms_t* dms) {
         Id chn = residue.chain;
         const chain_t& chain = sys.chain(chn);
 
-        dms_writer_bind_int(w,    0, map[i]);
+        dms_writer_bind_int(w,    0, map[atm]);
         dms_writer_bind_int(w,    1, atom.atomic_number);
         dms_writer_bind_string(w, 2, atom.name.c_str());
         dms_writer_bind_double(w, 3, atom.x);
@@ -169,7 +169,15 @@ static void export_particles(const System& sys, const IdList& map, dms_t* dms) {
         } else {
             dms_writer_bind_null(w,14+nprops);
         }
-        dms_writer_next(w);
+        try {
+            dms_writer_next(w);
+        }
+        catch (std::exception& e) {
+            std::stringstream ss;
+            ss << "Error writing particle table for atom id " << atm 
+               << " gid " << map[atm] << ": " << e.what();
+            throw std::runtime_error(ss.str());
+        }
     }
     dms_writer_free(w);
     export_alchemical_particles(sys, alchemical_ids, nbtypes, dms);
