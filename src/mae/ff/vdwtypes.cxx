@@ -1,5 +1,6 @@
 #include "../ff.hxx"
-#include <cstdio>
+//#include <cstdio>
+#include <boost/foreach.hpp>
 
 namespace {
 
@@ -59,44 +60,32 @@ namespace {
                 sitemap.addUnrolledTerms(table, p[0], ids, false, p[1] );
             }
 
-#if 0
             if (vdwmap.combined().size()) {
                 /* create nonbonded_combined_param extra table with columns
                  * param1, param2, properties... */
-                ent::DictPtr d;
-                static const char table_name[] = "nonbonded_combined_param";
-                if (h.hasExtraTable(table_name)) {
-                    d=h.getExtraTable(table_name);
-                } else {
-                    d.reset(new ent::Dict);
-                    h.addExtraTable(table_name, d);
-                    d->addColumn( "param1", ent::DICT_VALUE_INT );
-                    d->addColumn( "param2", ent::DICT_VALUE_INT );
-
-                    for (int i=0; i<info->nprops; i++) {
-                        d->addColumn(info->propnames[i], ent::DICT_VALUE_FLOAT);
-                    }
+                ParamTablePtr p = ParamTable::create();
+                h->addExtra("nonbonded_combined_param", p);
+                p->addProp("param1", IntType);
+                p->addProp("param2", IntType);
+                for (Id i=0; i<params->propCount(); i++) {
+                    p->addProp(params->propName(i), params->propType(i));
                 }
-                EntryMap::const_iterator i, j, e=emap.end();
-                for (i=emap.begin(); i!=e; ++i) {
-                    const VdwType& itype = i->first;
-                    int iid = nb.getEntryId(i->second);
-                    for (j=emap.begin(); j!=e; ++j) {
-                        const VdwType& jtype = j->first;
-                        int jid = nb.getEntryId(j->second);
-                        if (vdwmap.has_combined(itype,jtype)) {
-                            const VdwParam& p = vdwmap.param(itype,jtype);
-                            ent::DictEntry& row = *(d->addRow());
-                            row[0] = ent::DictValue(iid);
-                            row[1] = ent::DictValue(jid);
-                            for (int iprop=0; iprop<info->nprops; iprop++) {
-                                row[2+iprop]=ent::DictValue(p.at(iprop));
+                BOOST_FOREACH(TypeMap::value_type ti, map) {
+                    VdwType const& itype = ti.first;
+                    BOOST_FOREACH(TypeMap::value_type tj, map) {
+                        VdwType const& jtype = tj.first;
+                        if (vdwmap.has_combined(itype, jtype)) {
+                            Id row = p->addParam();
+                            p->value(row,0)=ti.second;
+                            p->value(row,1)=tj.second;
+                            VdwParam const& props = vdwmap.param(itype, jtype);
+                            for (Id i=0; i<props.size(); i++) {
+                                p->value(row,2+i)=props[i];
                             }
                         }
                     }
                 }
             }
-#endif
         }
     };
     RegisterFfio<VdwTypes> _("ffio_vdwtypes");
