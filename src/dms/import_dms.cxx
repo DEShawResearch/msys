@@ -539,8 +539,6 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
         int p0=dms_reader_column(r,"p0");
         int p1=dms_reader_column(r,"p1");
         int o = dms_reader_column(r,"order");
-        int g = dms_reader_column(r,"glue");
-        if (g!=-1) sys.addBondProp("glue", IntType);
 
         /* read the bond table */
         for (; r; dms_reader_next(&r)) {
@@ -549,11 +547,13 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
             double order = o<0 ? 1 : dms_reader_get_double(r, o);
             Id id = sys.addBond(gidmap.at(ai),gidmap.at(aj));
             sys.bond(id).order = order;
-            if (g!=-1) sys.bondPropValue(id,0)=dms_reader_get_int(r,g);
         }
     }
 
     sys.updateFragids();
+
+    //printf("got %d chains, %d residues, %d atoms, %d fragments.\n",
+            //sys.chainCount(), sys.residueCount(), sys.atomCount(), frags);
 
     KnownSet known;
     known.insert("particle");
