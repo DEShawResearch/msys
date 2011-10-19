@@ -17,4 +17,6 @@ env.AddPythonModule('neutralize/neutralize.py', prefix='msys')
 env.AddScript('neutralize/dms-neutralize')
 
 # scripts
+env.AddScript('scripts/dms-diff')
+env.AddScript('scripts/dms-dump')
 env.AddScript('scripts/dms-select')
