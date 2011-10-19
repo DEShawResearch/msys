@@ -11,3 +11,8 @@ env.AddProgram('dms2mae', 'converters/dms2mae.cxx')
 env.AddPythonModule('solvate/solvate.py', prefix='msys')
 env.AddScript('solvate/dms-solvate')
 env.AddShare('solvate/h2o.dms')
+
+## neutralize
+env.AddPythonModule('neutralize/neutralize.py', prefix='msys')
+env.AddScript('neutralize/dms-neutralize')
+
