@@ -16,3 +16,5 @@ env.AddShare('solvate/h2o.dms')
 env.AddPythonModule('neutralize/neutralize.py', prefix='msys')
 env.AddScript('neutralize/dms-neutralize')
 
+# scripts
+env.AddScript('scripts/dms-select')

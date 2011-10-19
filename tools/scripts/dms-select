@@ -1,0 +1,59 @@
+#!/usr/bin/env desres-exec
+# -*- python -*-
+#{
+# desres-cleanenv $MSYS_CLEANENV -- python $0 "$@"
+#}
+
+'''
+dms-select file.dms [-s | --selection seltext] [-o | --output dstfile]
+                                               [-a | --append dstfile]
+
+Write or append a selection from file.dms to an output dms file.
+'''
+
+import sys
+import msys
+
+def main():
+    import optparse
+    parser = optparse.OptionParser(__doc__)
+
+    parser.add_option('-s', '--selection', default=None)
+    parser.add_option('-a', '--append', default=None)
+    parser.add_option('-o', '--output', default=None)
+    parser.add_option('-v', '--verbose', action='store_true', default=False)
+    parser.add_option('--preserve-gids', default=False, action='store_true',
+            help='preserve gids from the input file')
+
+    opts, args = parser.parse_args()
+    if len(args)!=1:
+        parser.error("incorrect number of arguments")
+
+    if opts.output and opts.append:
+        raise ValueError, "Cannot specify both --append and --output"
+
+    mol=msys.LoadDMS(args[0])
+    if opts.selection:
+        mol=msys.CloneSystem(mol.atomselect(opts.selection))
+
+
+    if opts.verbose:
+        print "dms-select: %d chain(s), %d residue(s), %d atom(s)" % (
+                len(mol.chains), len(mol.residues), len(mol.atoms))
+
+    if not opts.preserve_gids:
+        mol.reassignGids()
+
+    if opts.output:
+        msys.SaveDMS(mol, opts.output)
+
+    elif opts.append:
+        old=msys.LoadDMS(opts.append)
+        old.append(mol)
+        msys.SaveDMS(old, opts.append)
+
+    return 0
+
+if __name__=="__main__": exit(main())
+
+# vim: filetype=python
