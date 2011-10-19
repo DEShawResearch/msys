@@ -22,7 +22,7 @@ def main():
             help='Species of anion.  Supported option is CL')
     parser.add_option('-c', '--chain', default='ION',
             help='Chain name for counterions')
-    parser.add_option('-C', '--counterchain', default='ION2',
+    parser.add_option('-C', '--chain2', default='ION2',
             help='Chain name for counter-counterions')
     parser.add_option('-s', '--solute-pad', default=5.0, type='float',
             help='minimum distance between placed ions and solute')

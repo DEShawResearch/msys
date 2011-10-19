@@ -1,6 +1,7 @@
 
 import os, msys, math
 from collections import namedtuple
+import random
 
 def parse_ion(name):
     ion=namedtuple('Ion', 'name anum mass charge')
@@ -25,8 +26,32 @@ def parse_ion(name):
 
     return ion
 
+def compute_center(residue):
+    tm=0.0
+    tx=0.0
+    ty=0.0
+    tz=0.0
+    for a in residue.atoms:
+        m = a.mass
+        tm += m
+        tx += m*a.x
+        ty += m*a.y
+        tz += m*a.z
+    if tm:
+        tx /= tm
+        ty /= tm
+        tz /= tm
+    return (tx,ty,tz)
+
+def dist2(pi, pj):
+    d=0.0
+    for i,j in zip(pi, pj):
+        d += (i-j)**2
+    return math.sqrt(d)
+
+
 def Neutralize(mol, cation='NA', anion='CL', 
-        chain='ION', counterchain='ION2',
+        chain='ION', chain2='ION2',
         solute_pad=5.0,
         ion_pad=3.0,
         concentration=0.0,
@@ -77,7 +102,7 @@ def Neutralize(mol, cation='NA', anion='CL',
     water = mol.atomselect(
             'water and (not hydrogen) and (not within %f of (not water))' 
             % solute_pad)
-    residues = set(a.residue for a in water)
+    residues = list(set(a.residue for a in water))
     nwat = len(residues)
     print "waters available to be replaced by ions:", nwat
 
@@ -99,7 +124,8 @@ def Neutralize(mol, cation='NA', anion='CL',
     # subtract off the ions already present in solution
     nions -= nions_prev
     nother -= nother_prev
-
+    if nions < 0 or nother < 0:
+        raise RuntimeError, "Too many ions already in solution"
 
     if nwat < nions:
         raise RuntimeError, "Only %d waters found; not enough to neutralize" % nwat
@@ -109,16 +135,8 @@ def Neutralize(mol, cation='NA', anion='CL',
     if nions > 0:
         print "Adding %d %s ions" % (nions, iontype.name)
 
-    return
-
-    # Import the structure into psfgen
-    s = psfgen.structure()
-    s.import_structure(psf)
-    s.import_coordinates(pdb)
-
     # Shuffle the residues
-    residues = numpy.random.permutation(residues).tolist()
-    mass = atomsel('residue %d' % residues[0]).get('mass')
+    random.shuffle(residues)
 
     # Remove overly close residues among the first nions + nother waters
     # Cache the centers to save time
@@ -126,99 +144,59 @@ def Neutralize(mol, cation='NA', anion='CL',
     ionpad2 = ion_pad * ion_pad
     for i in range(nions + nother):
         ri = residues[i]
-        try: pi = centers[ri]
+        try: pi = centers[ri.id]
         except KeyError:
-            pi = centers[ri] = numpy.array(atomsel('residue %d' % ri).center(mass))
+            pi = centers[ri.id] = compute_center(ri)
         j = i+1
         while j < nions+nother:
           rj = residues[j]
-          try: pj = centers[rj]
+          try: pj = centers[rj.id]
           except KeyError:
-              pj = centers[rj] = numpy.array(atomsel('residue %d' % rj).center(mass))
-
-          d2 = sum((pi-pj)**2)
+              pj = centers[rj] = compute_center(rj)
+          d2 = dist2(pi,pj)
           if d2 < ionpad2:
-              try: del residues[j]
-              except: raise RuntimeError, "Not enough waters or too large ion_pad."
+              try: 
+                  del residues[j]
+              except: 
+                  raise RuntimeError, "Not enough waters or too large ion_pad."
           else:
             j += 1
 
     if nions > 0:
-      # Delete the first nions of them, after fetching their positions
-      pos = vmdnumpy.positions()
-      positions = []
-      for i in range(nions):
-        wat = atomsel('residue %d' % residues[i])
-        segid = wat.get('segid')[0]
-        resid = wat.get('resid')[0]
-        avgpos = wat.center(wat.get('mass'))
+        ionchain = mol.addChain() 
+        ionchain.name = chain 
+        for i in range(nions):
+            res=residues[i]
 
-        # store the position and delete the water
-        positions.append(avgpos)
-        s.delatom(segid, resid)
+            ionres=ionchain.addResidue()
+            ionres.num=i+1
 
-      # Create a new segment for the counterions
-      s.build( prefix, residues = [(resid, iontype) for resid in range(nions)] )
+            ionatm=ionres.addAtom()
+            ionatm.pos=compute_center(res)
+            ionatm.name=iontype.name
+            ionatm.atomic_number = iontype.anum
+            ionatm.charge = iontype.charge
+            ionatm.mass = iontype.mass
 
-      # Set positions for the ions
-      for resid in range(nions):
-          s.set_coordinates( prefix, resid, iontype, list(positions[resid]) )
+            res.destroy()
 
-    # Create a segment for the counter-counterions
     if nother > 0:
-        positions = []
+        otherchain = mol.addChain()
+        otherchain.name = chain2
         for i in range(nions, nions+nother):
-          wat = atomsel('residue %d' % residues[i])
-          segid = wat.get('segid')[0]
-          resid = wat.get('resid')[0]
-          avgpos = wat.center(wat.get('mass'))
+            res=residues[i]
 
-          # store the position and delete the water
-          positions.append(avgpos)
-          s.delatom(segid, resid)
+            ionres=ionchain.addResidue()
+            ionres.num=i+1-nions
 
-        prefix2 = '%s2' % prefix
-        s.build(prefix2, residues=[(resid, othertype) for resid in range(nother)])
-        for resid in range(nother):
-          s.set_coordinates(prefix2, resid, othertype, list(positions[resid]) )
+            ionatm=ionres.addAtom()
+            ionatm.pos=compute_center(res)
+            ionatm.name=othertype.name
+            ionatm.atomic_number = othertype.anum
+            ionatm.charge = othertype.charge
+            ionatm.mass = othertype.mass
 
-    if nions < 0 or nother < 0:
-        # delete ions and replace them with waters.  Don't bother shuffling the
-      # list of ion positions.
-      pos = vmdnumpy.positions()
-      sel=atomsel('resname %s' % iontype)
-      if len(sel) < -nions:
-          raise RuntimeError, "Cannot decrease concentration - not enough ions to delete!"
-      ion_inds=sel.get('index')[:-nions]
-      ion_segs=sel.get('segid')[:-nions]
-      ion_resids=sel.get('resid')[:-nions]
-      sel=atomsel('resname %s' % othertype)
-      if len(sel) < -nother:
-          raise RuntimeError, "Cannot decrease concentration - not enough ions to delete!"
-      other_inds=sel.get('index')[:-nother]
-      other_segs=sel.get('segid')[:-nother]
-      other_resids=sel.get('resid')[:-nother]
-      inds=ion_inds + other_inds
-      segs=ion_segs + other_segs
-      resids=ion_resids + other_resids
+            res.destroy()
 
-      print "Replacing %d %s ions and %d %s ions with TIP3" % (
-              -nions, iontype, -nother, othertype)
-
-      positions=vmdnumpy.positions()[inds]
-      for segid, resid in zip(segs, resids):
-          s.delatom(segid, resid)
-
-      # create a segment for the new waters
-      prefix3 = '%s3' % prefix
-      s.build(prefix3, residues=[(resid, 'TIP3') for resid in range(len(inds))])
-      for resid in range(len(inds)):
-          s.set_coordinates(prefix3, resid, 'OH2', list(positions[resid]) )
-      s.guess_coordinates()
-
-    # Write out the new version
-    s.writepsf('%s.psf' % output, cmap=False)
-    s.writepdb('%s.pdb' % output )
-
-    print "neutralize finished normally."
+    mol.reassignGids()
 
