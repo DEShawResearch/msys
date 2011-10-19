@@ -184,13 +184,20 @@ static void export_particles(const System& sys, const IdList& map, dms_t* dms) {
     dms_exec(dms, "commit");
 }
 
-static void export_bonds(const System& sys, const IdList& map, dms_t* dms) {
+static void export_bonds(System& sys, const IdList& map, dms_t* dms) {
     std::string sql =
         "create table bond (\n"
         "  p0 integer,\n"
-        "  p1 integer,\n"
-        "  'order' float\n"
-        ");";
+        "  p1 integer,\n";
+
+    Id gluecol = sys.bondPropIndex("glue");
+    if (bad(gluecol)) {
+        sql += "  'order' float\n";
+    } else {
+        sql += "  'order' float,\n"
+               "  glue integer\n";
+    }
+    sql += ");";
     dms_exec(dms, sql.c_str());
 
     dms_writer_t* w;
@@ -203,6 +210,9 @@ static void export_bonds(const System& sys, const IdList& map, dms_t* dms) {
         dms_writer_bind_int(w,0,map[bond.i]);
         dms_writer_bind_int(w,1,map[bond.j]);
         dms_writer_bind_double(w,2,bond.order);
+        if (!bad(gluecol)) {
+            dms_writer_bind_int(w,3,sys.bondPropValue(bnd,gluecol).asInt());
+        }
         dms_writer_next(w);
     }
     dms_writer_free(w);
