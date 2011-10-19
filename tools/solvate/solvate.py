@@ -9,18 +9,33 @@ def Solvate(mol, thickness=0, minmax=None,
             chain='WT', verbose=False,
             cubic=False):
     '''
-    Build a solvent shell around the given solute.  If no solute is provided,
-    the solute is treated as a point at the origin.  thickness specifies the
-    amount of solute added along each coordinate axis; this can be overridden
-    by xpad, ypad, zpad.  The extent of the solvent can also be given 
-    explicitly with minmax.  If cubic is true, the box size will be expanded
-    to the size of the longest dimension.
+    Build and return a new system consisting of mol plus solvent.
+
+    If no solute is provided, the solute is treated as a point at
+    the origin.  thickness specifies the amount of solute added along
+    each coordinate axis; this can be overridden by xpad, ypad, zpad.
+    The extent of the solvent can also be given explicitly with minmax.
+    If cubic is true, the box size will be expanded to the size of the
+    longest dimension.
+
+    Return the solvated system; no modifications are made to the input system.
     '''
+
+    mol=msys.CloneSystem(mol.atoms)
 
     wat=msys.LoadDMS(WAT)
     watsize=[wat.cell[i][i] for i in range(3)]
 
-    print "finding bounding box..."
+    # find a chain name for the waters that doesn't overlap with the 
+    # input structure.
+    chains = set(c.name for c in mol.chains)
+    watchain = 'X'
+    while watchain in chains:
+        watchain += 'X'
+    for c in wat.chains:
+        c.name = watchain
+
+    if verbose: print "finding bounding box..."
     if len(mol.atoms):
         first=mol.atoms[0].pos
         xmin, ymin, zmin = first
@@ -75,50 +90,41 @@ def Solvate(mol, thickness=0, minmax=None,
     ny = int(dy/watsize[1]) + 1
     nz = int(dz/watsize[2]) + 1
 
+    # replicate the template water box
     if verbose: print "replicating %d x %d x %d" % (nx,ny,nz)
-    return
-    wat=cPickle.load(file(WAT))
-    watchain=mol.addChain(chain)
-    # construct the template water
-    res=watchain.appendResidue()
-    res.name='H2O'
-    o, h1, h2 = res.appendAtoms(3)
-    o.name="O"
-    h1.name="H1"
-    h2.name="H2"
-    o.num=8
-    h1.num=1
-    h2.num=1
-    mol.addBond(o,h1)
-    mol.addBond(o,h2)
-    # replicate the template water
-    nwat = len(wat)/3 * nx * ny * nz - 1
-    if verbose: print "appending %d residues..." % nwat
-    watchain.appendResidues( nwat, res )
-    # map the coordinates to the waters
-    iter=watchain.atoms.__iter__()
     for i in range(nx):
+        xdelta = xmin + i*watsize[0]
         for j in range(ny):
+            ydelta = ymin + j*watsize[1]
             for k in range(nz):
-                shift=[xmin+i*watsize[0],ymin+j*watsize[1],zmin+k*watsize[2]]
-                coords = wat + shift
-                for pos in coords:
-                  a = iter.next()
-                  a.pos = pos
+                zdelta = zmin + k*watsize[2]
 
+                newatoms = mol.append(wat)
+                for a in newatoms:
+                    a.x += xdelta
+                    a.y += ydelta
+                    a.z += zdelta
 
-    view = mol.select('chain %s and same residue as (x<%f or y<%f or z<%f or x>%f or y>%f or z>%f or within %f of (not chain %s))' % (
-        chain,xmin,ymin,zmin,xmax,ymax,zmax,WATRAD, chain))
-    if verbose: 
-      print "removing %d atoms, %d residues" % (
-            len(view.atoms), len(view.residues) )
-    mol.removeAtoms(view.atomList())
-    mol.prune()
+    if verbose: print "removing overlaps"
+    # FIXME: use the low-level interface for speed
+    mol = msys.CloneSystem(mol.atomselect(
+        'not (chain %s and same residue as (x<%f or y<%f or z<%f or x>%f or y>%f or z>%f or within %f of (not chain %s)))' % (
+            watchain,xmin,ymin,zmin,xmax,ymax,zmax,WATRAD, watchain)))
+
+    # assign the water chain name
+    for c in mol.chains:
+        if c.name == watchain:
+            c.name = chain
+
+    mol.reassignGids()
+
     if verbose: print "updating global cell to (%g %g %g)" % (
         xmax-xmin, ymax-ymin, zmax-zmin)
 
     # update the cell
-    mol.cell[0]=geom.Vec3(xmax-xmin,0,0)
-    mol.cell[1]=geom.Vec3(0,ymax-ymin,0)
-    mol.cell[2]=geom.Vec3(0,0,zmax-zmin)
+    mol.cell[0][:]=[xmax-xmin,0,0]
+    mol.cell[1][:]=[0,ymax-ymin,0]
+    mol.cell[2][:]=[0,0,zmax-zmin]
+
+    return mol
 

@@ -172,7 +172,7 @@ __add_properties(Residue, 'name', 'num')
 class Chain(Handle):
     __slots__ = ()
 
-    def raw_chain(self): return self._ptr.chain(self._id)
+    def data(self): return self._ptr.chain(self._id)
 
     def destroy(self):
         ''' remove this Chain from the System '''

@@ -54,7 +54,7 @@ def main():
     else:
         mol=msys.LoadDMS(input,structure_only=True)
     
-    solvate.Solvate(mol, **opts.__dict__)
+    mol = solvate.Solvate(mol, **opts.__dict__)
 
     if opts.verbose: print "Writing DMS file <%s>" % output
     msys.SaveDMS(mol,output)
