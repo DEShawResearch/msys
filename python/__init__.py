@@ -652,6 +652,32 @@ class System(object):
         if name is None: name=type
         return TermTable(self._ptr.addTableFromSchema(type,name))
 
+    ###
+    ### extra tables
+    ###
+
+    @property
+    def extra_names(self):
+        ''' names of the extra tables '''
+        return [x for x in self._ptr.extraNames()]
+
+    @property
+    def extra_tables(self):
+        ''' of all the extra tables '''
+        return [ParamTable(self._ptr.extra(x)) for x in self._ptr.extraNames()]
+
+    def extra(self, name):
+        ''' extra table with the given name '''
+        ptr=self._ptr.extra(name)
+        if ptr is None:
+            raise ValueError, "No such extra table '%s'" % name
+        return ParamTable(ptr)
+
+    def addExtra(self, name, table):
+        ''' add or replace extra table with the given name. '''
+        self._ptr.addExtra(name, table._ptr)
+
+
     def addNonbondedFromSchema(self, funct, rule):
         return TermTable(self._ptr.addNonbondedFromSchema(funct,rule))
 

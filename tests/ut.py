@@ -334,7 +334,13 @@ class TestMain(unittest.TestCase):
         with self.assertRaises(KeyError):
             t1[I]
 
-
+    def testExtra(self):
+        m=msys.CreateSystem()
+        e=msys.CreateParamTable()
+        m.addExtra("cmap", e)
+        self.assertTrue('cmap' in m.extra_names)
+        self.assertEqual(e, m.extra('cmap'))
+        self.assertTrue(e in m.extra_tables)
 
     def testTableDMS(self):
         m=msys.CreateSystem()
