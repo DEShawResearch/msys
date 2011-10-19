@@ -1,12 +1,7 @@
 
 import os, msys
 
-def __cell_getitem(self,i):
-    return getattr(self, ('A', 'B', 'C')[i])
-msys.GlobalCell.__getitem__ = __cell_getitem
-
-WAT=os.path.join(os.getenv('MSYS_PREFIX'), 'share', 'h2o.dms')
-print WAT
+WAT=os.path.join(os.getenv('MSYS_PREFIX'), 'share', 'solvate', 'h2o.dms')
 WATRAD = 2.4
 
 def Solvate(mol, thickness=0, minmax=None,
@@ -22,8 +17,10 @@ def Solvate(mol, thickness=0, minmax=None,
     to the size of the longest dimension.
     '''
 
-    wat=msys.ImportDMS(WAT)
+    wat=msys.LoadDMS(WAT)
+    watsize=[wat.cell[i][i] for i in range(3)]
 
+    print "finding bounding box..."
     if len(mol.atoms):
         first=mol.atoms[0].pos
         xmin, ymin, zmin = first
@@ -74,9 +71,9 @@ def Solvate(mol, thickness=0, minmax=None,
     xmin, ymin, zmin = smin
     xmax, ymax, zmax = smax
     dx, dy, dz = [a-b for a,b in zip(smax,smin)]
-    nx = int(dx/WATSIZE) + 1
-    ny = int(dy/WATSIZE) + 1
-    nz = int(dz/WATSIZE) + 1
+    nx = int(dx/watsize[0]) + 1
+    ny = int(dy/watsize[1]) + 1
+    nz = int(dz/watsize[2]) + 1
 
     if verbose: print "replicating %d x %d x %d" % (nx,ny,nz)
     return
@@ -103,7 +100,7 @@ def Solvate(mol, thickness=0, minmax=None,
     for i in range(nx):
         for j in range(ny):
             for k in range(nz):
-                shift=[xmin+i*WATSIZE,ymin+j*WATSIZE,zmin+k*WATSIZE]
+                shift=[xmin+i*watsize[0],ymin+j*watsize[1],zmin+k*watsize[2]]
                 coords = wat + shift
                 for pos in coords:
                   a = iter.next()

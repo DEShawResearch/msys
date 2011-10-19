@@ -52,12 +52,12 @@ def main():
     if input=='-':
         mol=msys.CreateSystem()
     else:
-        mol=msys.ImportDMS(input,structure_only=True)
+        mol=msys.LoadDMS(input,structure_only=True)
     
     solvate.Solvate(mol, **opts.__dict__)
 
     if opts.verbose: print "Writing DMS file <%s>" % output
-    msys.ExportDMS(mol,output)
+    msys.SaveDMS(mol,output)
 
 if __name__=="__main__": main()
 
