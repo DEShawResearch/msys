@@ -1,0 +1,31 @@
+#!/usr/bin/env desres-exec
+# -*- python -*-
+#{
+# desres-cleanenv $MSYS_CLEANENV -- python $0 "$@"
+#}
+
+'''
+dms-validate system.dms [ options ]
+
+Performs various sanity checks on your dms file.
+
+'''
+
+import sys
+import msys
+from msys import validate
+
+def main():
+    import optparse
+    parser = optparse.OptionParser(__doc__)
+
+    opts, args = parser.parse_args()
+    if len(args)!=1:
+        parser.error("incorrect number of arguments")
+
+    mol=msys.LoadDMS(args[0])
+    return validate.Validate(mol, **opts.__dict__)
+
+if __name__=="__main__": exit(main())
+
+# vim: filetype=python
