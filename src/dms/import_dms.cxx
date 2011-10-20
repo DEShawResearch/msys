@@ -545,7 +545,15 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
             int ai = dms_reader_get_int(r, p0);
             int aj = dms_reader_get_int(r, p1);
             double order = o<0 ? 1 : dms_reader_get_double(r, o);
-            Id id = sys.addBond(gidmap.at(ai),gidmap.at(aj));
+            Id id = BadId;
+            try {
+                id = sys.addBond(gidmap.at(ai),gidmap.at(aj));
+            }
+            catch (std::exception& e) {
+                std::stringstream ss;
+                ss << "Failed adding bond (" << ai << ", " << aj << ")";
+                throw std::runtime_error(ss.str());
+            }
             sys.bond(id).order = order;
         }
     }
