@@ -335,6 +335,10 @@ class Term(object):
         ''' list of Atoms for this Term '''
         return [Atom(self._ptr.system(), i) for i in self._ptr.atoms(self._id)]
 
+    def atom(self, n):
+        ''' the nth atom in the Term '''
+        return Atom(self._ptr.system(), self._ptr.atom(self._id, n))
+
     @property
     def table(self): 
         ''' parent TermTable '''

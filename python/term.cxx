@@ -58,6 +58,7 @@ namespace desres { namespace msys {
             .def("hasTerm",     &TermTable::hasTerm)
             .def("delTerm",     &TermTable::delTerm)
             .def("atoms",       &TermTable::atoms)
+            .def("atom",        &TermTable::atom)
             .def("params",      &TermTable::params)
             .def("param",       &TermTable::param)
             .def("setParam",    set_param)
