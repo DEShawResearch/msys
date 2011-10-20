@@ -26,6 +26,16 @@ Contents:
    termtable
    system
 
+Command line tools
+==================
+
+Msys is packaged with a set of command line tools that wrap functionality
+present in the Python interface.
+
+.. toctree::
+
+   tools
+
 
 Indices and tables
 ==================
