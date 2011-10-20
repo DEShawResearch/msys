@@ -715,12 +715,13 @@ def CreateSystem():
     ''' Create a new, empty System '''
     return System(_msys.SystemPtr.create())
 
-def CloneSystem(atoms):
-    ''' create a new system from the given list of atoms, which must all
-    be from the same System and have different ids.  The order of the atoms
-    in the new system will be that of the input atoms.  '''
-    if not atoms: 
-        raise ValueError, "Cannot clone an empty list of atoms"
+def _find_ids(atoms):
+    ''' return the SystemPtr and IdList for the given set of atoms.
+    Raise ValueError if atoms come from multiple systems.  Return
+    None, [] if the input list is empty.
+    '''
+    if not atoms:
+        return None, []
     ids = _msys.IdList()
     sys = set()
     for a in atoms:
@@ -729,6 +730,15 @@ def CloneSystem(atoms):
     if len(sys) > 1:
         raise ValueError, "Input atoms come from multiple systems"
     ptr = sys.pop()._ptr
+    return ptr, ids
+
+def CloneSystem(atoms):
+    ''' create a new system from the given list of atoms, which must all
+    be from the same System and have different ids.  The order of the atoms
+    in the new system will be that of the input atoms.  '''
+    ptr, ids = _find_ids(atoms)
+    if ptr is None:
+        raise ValueError, "Cannot clone an empty list of atoms"
     return System( _msys.Clone(ptr, ids))
 
 def CreateParamTable():
