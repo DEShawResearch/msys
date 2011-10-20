@@ -532,6 +532,11 @@ class System(object):
         return self._ptr.nonbonded_info
 
     @property
+    def natoms(self):
+        ''' number of atoms '''
+        return self._ptr.atomCount()
+
+    @property
     def atoms(self):
         ''' return list of all atoms in the system '''
         ptr=self._ptr

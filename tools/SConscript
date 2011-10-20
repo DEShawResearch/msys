@@ -21,6 +21,7 @@ env.AddScript('neutralize/dms-neutralize')
 
 # validate
 env.AddPythonModule('validate/validate.py', prefix='msys')
+env.AddPythonModule('validate/compat.py', prefix='msys')
 env.AddScript('validate/dms-validate')
 
 # other scripts
