@@ -18,6 +18,8 @@ from msys import validate
 def main():
     import optparse
     parser = optparse.OptionParser(__doc__)
+    parser.add_option('--strict', action='store_true', default=False)
+    parser.add_option('--verbose', action='store_true', default=False)
 
     opts, args = parser.parse_args()
     if len(args)!=1:

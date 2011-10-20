@@ -42,10 +42,18 @@ class TestBasic(UT.TestCase):
 
 
 
-def Validate(mol):
+def Validate(mol, strict=False, verbose=False):
     global _mol
     _mol=mol
-    prg=UT.main(exit=False, argv=[sys.argv[0],'validate'])
-    return prg.result
 
+    verbosity = 2 if verbose else 1
+
+    suite=UT.TestLoader().loadTestsFromTestCase(TestBasic)
+
+    if strict:
+        suite=UT.TestSuite([suite, 
+                UT.TestLoader().loadTestsFromTestCase(TestStrict)])
+
+    result=UT.TextTestRunner(verbosity=verbosity).run(suite)
+    return result
 
