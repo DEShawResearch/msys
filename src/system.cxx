@@ -308,6 +308,24 @@ std::vector<String> System::tableNames() const {
     return s;
 }
 
+void System::renameTable(String const& oldname, String const& newname) {
+    TableMap::iterator i=_tables.find(oldname);
+    if (i==_tables.end()) {
+        std::stringstream ss;
+        ss << "renameTable: No such table '" << oldname << "'";
+        throw std::runtime_error(ss.str());
+    }
+    if (_tables.find(newname)!=_tables.end()) {
+        std::stringstream ss;
+        ss << "renameTable: table named '" << oldname << "' already exists";
+        throw std::runtime_error(ss.str());
+    }
+    TermTablePtr t = i->second;
+    _tables.erase(i);
+    _tables[newname] = t;
+}
+
+
 String System::tableName(boost::shared_ptr<TermTable const> table) const {
     if (table->system() != shared_from_this()) {
         throw std::runtime_error(

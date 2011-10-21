@@ -263,6 +263,10 @@ namespace desres { namespace msys {
         TermTablePtr table(const String& name) const;
         /* get the name of the table; throw if table doesn't belong to this */
         String tableName(boost::shared_ptr<TermTable const> table) const;
+        /* rename the table with the given name; throw if no such table,
+         * or if a table named newname already exists.  */
+        void renameTable(String const& oldname, String const& newname);
+
         TermTablePtr addTable(const String& name, Id natoms,
                               ParamTablePtr ptr = ParamTablePtr() );
         void delTable(const String& name);

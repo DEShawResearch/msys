@@ -377,6 +377,9 @@ class TermTable(object):
     def name(self):
         ''' name of this table '''
         return self._ptr.name()
+    @name.setter
+    def name(self, newname):
+        self._ptr.system().renameTable(self._ptr.name(), newname)
 
     def __repr__(self):
         return "<TermTable '%s'>" % self.name

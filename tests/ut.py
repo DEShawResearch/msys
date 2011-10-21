@@ -192,6 +192,15 @@ class TestMain(unittest.TestCase):
         self.assertTrue(t2.param is None)
         self.assertEqual(len(angle.terms), 2)
 
+        angle.name = 'angle2'
+        self.assertEqual(angle.name, 'angle2')
+        self.assertTrue('angle2' in m.table_names)
+        self.assertFalse('angle' in m.table_names)
+        angle.name = 'angle'
+        self.assertEqual(angle.name, 'angle')
+        self.assertTrue('angle' in m.table_names)
+        self.assertFalse('angle2' in m.table_names)
+
         params=angle.params
         self.assertEqual(params, angle.params)
         p0=params.addParam()
@@ -426,4 +435,4 @@ class TestMain(unittest.TestCase):
 
 
 if __name__=="__main__":
-    unittest.main(verbosity=2)
+    unittest.main()

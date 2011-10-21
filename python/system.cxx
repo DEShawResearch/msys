@@ -214,6 +214,7 @@ namespace desres { namespace msys {
             .def("addTable",    &System::addTable)
             .def("delTable",    &System::delTable)
             .def("removeTable", &System::removeTable)
+            .def("renameTable", &System::renameTable)
 
             /* atom props */
             .def("setResidue",  &System::setResidue)
