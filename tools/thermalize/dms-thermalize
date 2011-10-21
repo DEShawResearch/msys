@@ -1,0 +1,40 @@
+#!/usr/bin/env desres-exec
+# -*- python -*-
+#{
+# desres-cleanenv $MSYS_CLEANENV -- python $0 "$@"
+#}
+
+'''
+dms-thermalize input.dms output.dms [ options ]
+
+Assign Boltzmann-sampled velocities to the atoms.  Atoms with zero mass
+will get zero velocity.
+
+'''
+
+import sys
+import msys
+from msys import thermalize
+
+def main():
+    import optparse
+    parser = optparse.OptionParser(__doc__)
+    parser.add_option('-t', '--temperature', type='float', default='300')
+    parser.add_option('--verbose', action='store_true', default=False)
+
+    opts, args = parser.parse_args()
+    if len(args)!=2:
+        parser.error("incorrect number of arguments")
+
+    if opts.verbose: print "Loading input file <%s>" % args[0]
+    mol=msys.LoadDMS(args[0])
+
+    if opts.verbose: print "Thermalizing to %sK" % opts.temperature
+    thermalize.apply(mol, opts.temperature)
+
+    if opts.verbose: print "Writing DMS file <%s>" % args[1]
+    msys.SaveDMS(mol,args[1])
+
+if __name__=="__main__": exit(main())
+
+# vim: filetype=python

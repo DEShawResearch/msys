@@ -19,6 +19,10 @@ env.AddShare('solvate/h2o.dms')
 env.AddPythonModule('neutralize/neutralize.py', prefix='msys')
 env.AddScript('neutralize/dms-neutralize')
 
+# thermalize
+env.AddPythonModule('thermalize/thermalize.py', prefix='msys')
+env.AddScript('thermalize/dms-thermalize')
+
 # validate
 env.AddPythonModule('validate/validate.py', prefix='msys')
 env.AddScript('validate/dms-validate')
