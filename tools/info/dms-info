@@ -1,0 +1,50 @@
+#!/usr/bin/env desres-exec
+# -*- python -*-
+#{
+# desres-cleanenv $MSYS_CLEANENV -- python $0 "$@"
+#}
+
+'''
+dms-info system.dms [ options ]
+
+Write information about a dms file to stdout.
+
+'''
+
+import sys
+import msys
+
+def print_info(mol):
+    print "%12s: %d" % ("Atoms", mol.natoms)
+    print "%12s: %d" % ("Bonds", mol.nbonds)
+    print "%12s: %d" % ("Residues", mol.nresidues)
+    print "%12s: %d" % ("Chains", mol.nchains)
+    print "%12s: %s" % ("Global cell", mol.cell)
+    print "%12s: %s" % ("Tables", len(mol.table_names))
+    
+
+    tables=sorted(mol.tables, key=lambda x: x.category)
+
+    for table in tables:
+        print "%28s: %d sites, %6d terms, %6d params" % (
+                '%18s (%10s)' % (table.name, table.category),
+                table.natoms, table.nterms, len(table.params))
+
+
+def main():
+    import optparse
+    parser = optparse.OptionParser(__doc__)
+
+    opts, args = parser.parse_args()
+    if len(args)!=1:
+        parser.error("incorrect number of arguments")
+
+    for path in args:
+        mol = msys.LoadDMS(path)
+        print path
+        print_info(mol)
+        print "-" * 75
+
+if __name__=="__main__": exit(main())
+
+# vim: filetype=python

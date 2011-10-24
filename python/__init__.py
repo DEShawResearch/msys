@@ -544,6 +544,21 @@ class System(object):
         return self._ptr.atomCount()
 
     @property
+    def nbonds(self):
+        ''' number of bonds '''
+        return self._ptr.bondCount()
+
+    @property
+    def nresidues(self):
+        ''' number of residues '''
+        return self._ptr.residueCount()
+
+    @property
+    def nchains(self):
+        ''' number of chains '''
+        return self._ptr.chainCount()
+
+    @property
     def atoms(self):
         ''' return list of all atoms in the system '''
         ptr=self._ptr
@@ -788,5 +803,13 @@ def __vec3_setitem(self, key, val):
     self.x, self.y, self.z = tmp
 Vec3.__getitem__ = __vec3_getitem
 Vec3.__setitem__ = __vec3_setitem
+
+''' customize GlobalCell '''
+def __globalcell_str(self):
+    A=[x for x in self.A]
+    B=[x for x in self.B]
+    C=[x for x in self.C]
+    return str([A,B,C])
+GlobalCell.__str__ = __globalcell_str
 
 

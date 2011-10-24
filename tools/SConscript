@@ -30,6 +30,7 @@ env.AddScript('validate/dms-validate')
 # info
 env.AddScript('info/dms-diff')
 env.AddScript('info/dms-dump')
+env.AddScript('info/dms-info')
 
 # other scripts
 env.AddScript('scripts/dms-select')
