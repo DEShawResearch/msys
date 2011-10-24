@@ -167,6 +167,11 @@ class Residue(Handle):
         ''' list of Atoms in this Residue '''
         return [Atom(self._ptr, i) for i in self._ptr.atomsForResidue(self._id)]
 
+    @property
+    def chain(self):
+        ''' parent chain '''
+        return Chain(self._ptr, self.data().chain)
+
 __add_properties(Residue, 'name', 'num')
 
 class Chain(Handle):

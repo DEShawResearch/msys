@@ -5,7 +5,7 @@
 #}
 
 '''
-dms-info system.dms [ options ]
+dms-info [ options ] [ dms files ]
 
 Write information about a dms file to stdout.
 
@@ -40,15 +40,26 @@ def print_info(mol):
                     table.name, table.natoms, len(table.params), 
                     table.nterms-nalc, nalc)
 
+    print
+    for sel, title in (
+            ('protein', 'Protein'),
+            ('lipid', 'Lipid'),
+            ('ions', 'Ions'),
+            ('water', 'Water'),
+            ('not (protein or lipid or ions or water)', 'Other')):
+
+        atoms=mol.atomselect(sel)
+        residues=set(a.residue for a in atoms)
+        chains=set(r.chain for r in residues)
+        print "%12s: %8d atoms, %8d residues, %8d chains" % (
+                title, len(atoms), len(residues), len(chains))
+
 
 def main():
     import optparse
     parser = optparse.OptionParser(__doc__)
 
     opts, args = parser.parse_args()
-    if len(args)!=1:
-        parser.error("incorrect number of arguments")
-
     for path in args:
         mol = msys.LoadDMS(path)
         print path
