@@ -27,7 +27,9 @@ env.AddScript('thermalize/dms-thermalize')
 env.AddPythonModule('validate/validate.py', prefix='msys')
 env.AddScript('validate/dms-validate')
 
+# info
+env.AddScript('info/dms-diff')
+env.AddScript('info/dms-dump')
+
 # other scripts
-env.AddScript('scripts/dms-diff')
-env.AddScript('scripts/dms-dump')
 env.AddScript('scripts/dms-select')
