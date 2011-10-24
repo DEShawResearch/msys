@@ -20,15 +20,25 @@ def print_info(mol):
     print "%12s: %d" % ("Residues", mol.nresidues)
     print "%12s: %d" % ("Chains", mol.nchains)
     print "%12s: %s" % ("Global cell", mol.cell)
-    print "%12s: %s" % ("Tables", len(mol.table_names))
     
+    tdict=dict()
+    for table in mol.tables:
+        tdict.setdefault(table.category, []).append(table)
 
-    tables=sorted(mol.tables, key=lambda x: x.category)
+    for cat in sorted(tdict.keys()):
+        tables = tdict[cat]
+        title="%s tables" % cat
+        print "\n%s Tables:" % cat.title()
 
-    for table in tables:
-        print "%28s: %d sites, %6d terms, %6d params" % (
-                '%18s (%10s)' % (table.name, table.category),
-                table.natoms, table.nterms, len(table.params))
+        for table in tables:
+            nalc=0
+            if table.alchemical:
+                for t in table.terms:
+                    if t.alchemical:
+                        nalc += 1
+            print "%18s: %d sites, %6d params, %6d terms, %2d alchemical" % (
+                    table.name, table.natoms, len(table.params), 
+                    table.nterms-nalc, nalc)
 
 
 def main():

@@ -331,6 +331,11 @@ class Term(object):
         self._ptr.setParam(self._id, id)
 
     @property
+    def alchemical(self):
+        ''' Does this term contain an alchemical parameter set? '''
+        return not _msys.bad(self._ptr.paramB(self._id))
+
+    @property
     def atoms(self):
         ''' list of Atoms for this Term '''
         return [Atom(self._ptr.system(), i) for i in self._ptr.atoms(self._id)]
@@ -429,6 +434,11 @@ class TermTable(object):
         ''' remove all terms whose atoms list contains the given Atom '''
         assert atom.system == self.system
         self._ptr.delTermsWithAtom(atom.id)
+
+    @property
+    def alchemical(self):
+        ''' does this table contain alchemical terms? '''
+        return self._ptr.alchemical()
 
     @property
     def terms(self):
