@@ -295,21 +295,23 @@ read_nonbonded( dms_t* dms, System& sys, const std::vector<Id>& nbtypes,
 
 static void
 read_exclusions(dms_t* dms, const IdList& gidmap, System& sys, KnownSet& known) {
-    TermTablePtr terms = sys.addTable("exclusion", 2);
-    terms->category="exclusion";
-
-    dms_reader_t* r;
-    IdList atoms(2);
     known.insert("exclusion");
     /* some dms writers export exclusions with a term and param table. */
     known.insert("exclusion_term");
     known.insert("exclusion_param");
-    for (dms_fetch(dms,"exclusion",&r); r; dms_reader_next(&r)) {
+
+    dms_reader_t* r;
+    if (!dms_fetch(dms,"exclusion",&r)) return;
+
+    TermTablePtr terms = sys.addTable("exclusion", 2);
+    terms->category="exclusion";
+    IdList atoms(2);
+
+    for (; r; dms_reader_next(&r)) {
         atoms[0] = gidmap.at(dms_reader_get_int(r,0));
         atoms[1] = gidmap.at(dms_reader_get_int(r,1));
         terms->addTerm(atoms,-1);
     }
-    //printf("read %d exclusions\n", terms->termCount());
 }
 
 static void
