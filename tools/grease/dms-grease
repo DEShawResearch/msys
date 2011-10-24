@@ -1,0 +1,52 @@
+#!/usr/bin/env desres-exec
+# -*- python -*-
+#{
+# desres-cleanenv $MSYS_CLEANENV -- python $0 "$@"
+#}
+
+'''
+dms-grease input.dms output.dms [ options ]
+
+Build a lipid bilayer around a solute.
+'''
+
+import os, sys
+import msys
+from msys import grease
+
+def main():
+    import optparse
+    parser = optparse.OptionParser(__doc__)
+
+    parser.add_option('-t', '--thickness', default=0.0, type='float',
+        help='Minimum distance from edge of membrane to input structure')
+    parser.add_option('-x', '--xsize', default=None,
+        help='Size of membrane along x dimension')
+    parser.add_option('-y', '--ysize', default=None,
+        help='Size of membrane along y dimension')
+    parser.add_option('-c', '--chain', default='LIP',
+        help='Chain name of constructed lipids')
+    parser.add_option(      '--square', default=False, action='store_true',
+        help='Ensure the resulting membrane is square')
+    parser.add_option('-v', '--verbose', default=False, action='store_true')
+
+    opts, args = parser.parse_args()
+    if len(args)!=2:
+        parser.error("incorrect number of arguments")
+
+    input, output = args
+
+    if opts.verbose: print "Loading input file <%s>" % input
+    if input=='-':
+        mol=msys.CreateSystem()
+    else:
+        mol=msys.LoadDMS(input,structure_only=True)
+    
+    mol = grease.Grease(mol, **opts.__dict__)
+
+    if opts.verbose: print "Writing DMS file <%s>" % output
+    msys.SaveDMS(mol,output)
+
+if __name__=="__main__": main()
+
+# vim: filetype=python
