@@ -8,7 +8,7 @@ trap 'desres_trapped_exit' EXIT
 desres_require_cleanenv
 
 NAME=msys
-PKG_VERSION=0.7.1
+PKG_VERSION=0.7.2
 
 VERSION=${PKG_VERSION}
 DESCRIPTION="Biomolecular Structure Library"
@@ -84,6 +84,7 @@ $PREFIX/doc/html/index.html
 
 This is a pre-release version of msys.
 
+0.7.2  Added dms-info
 0.7.0  Many new tools.
 0.6.2  Documentation
 

@@ -40,6 +40,27 @@ dms2mae
 range of supported forcefield terms. 
 
 
+dms-info
+--------
+.. program:: dms-info
+
+.. describe:: dms-info [ options] [ dms files ]
+
+   Writes a summary of the atom and forcefield information of a dms file.
+
+*dms-info* provides a summary of the contents of a dms file.  Its output
+includes:
+
+ * total number of atoms, bonds, residues, and chains
+
+ * global cell size
+
+ * force tables organized by category (bond, constraint, virtual, etc).
+
+ * number of atoms each that can be selected as protein, lipid, ions, water,
+   or none of the above.
+
+
 dms-dump
 ---------
 .. program:: dms-dump
