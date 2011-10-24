@@ -260,23 +260,31 @@ static void read_metatables(dms_t* dms, const IdList& gidmap, System& sys,
 static void 
 read_nonbonded( dms_t* dms, System& sys, const std::vector<Id>& nbtypes,
                 const std::map<Id,Id>& nbtypesB, KnownSet& known ) {
+
+    known.insert("nonbonded_param");
+    dms_reader_t* r;
+    if (!dms_fetch(dms,"nonbonded_param",&r)) return;
+
     TermTablePtr terms = sys.addTable("nonbonded", 1);
     terms->category="nonbonded";
+    IdList idmap = read_params(r, terms->params());
 
-    dms_reader_t* r;
-    IdList idmap;
-    known.insert("nonbonded_param");
-    if (dms_fetch(dms,"nonbonded_param",&r)) {
-        idmap = read_params(r, terms->params());
-        //printf("created %s with %d params, %d props\n",
-                //"nonbonded_param", params->paramCount(), params->propCount());
-    }
     IdList atoms(1);
     unsigned i,n = nbtypes.size();
     for (i=0; i<n; i++) {
         atoms[0]=i;
         Id nb = nbtypes[i];
-        if (!bad(nb)) nb = idmap.at(nb);
+        if (!bad(nb)) {
+            try {
+                nb = idmap.at(nb);
+            }
+            catch (std::exception& e) {
+                std::stringstream ss;
+                ss << "ImportDMS: particle " << i << " has invalid nbtype " << nb;
+
+                throw std::runtime_error(ss.str());
+            }
+        }
         Id term = terms->addTerm(atoms, nb);
         std::map<Id,Id>::const_iterator iter = nbtypesB.find(atoms[0]);
         if (iter!=nbtypesB.end()) {
