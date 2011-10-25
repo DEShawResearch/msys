@@ -22,11 +22,11 @@ def compare_atomsel(coord_ent,sel):
     #print list(set(vmd_gids)-set(ent_gids))
     #print list(set(ent_gids)-set(vmd_gids))
     #print ent_gids
-    all=atomsel.atomsel()
-    names=all.get('name')
-    for g in ent_gids: 
-      if g not in vmd_gids:
-        print g,names[g], al[g].pos[:2]
+    #all=atomsel.atomsel()
+    #names=all.get('name')
+    #for g in ent_gids: 
+      #if g not in vmd_gids:
+        #print g,names[g], al[g].pos[:2]
   else:
     print "match for [%s] (%d) "% (sel, len(vmd_gids))
 
@@ -48,6 +48,10 @@ compare_atomsel(coord_ent,"y>=1")
 compare_atomsel(coord_ent,"z<=-5")
 
 compare_atomsel(coord_ent,"same residue as within 4 of protein")
+compare_atomsel(coord_ent,"noh and within 1.5 of protein")
+compare_atomsel(coord_ent,"noh and within 2.5 of protein")
+compare_atomsel(coord_ent,"noh and within 5.5 of protein")
+compare_atomsel(coord_ent,"within 0 of protein")
 compare_atomsel(coord_ent,"withinbonds 2 of name C CA N O")
 compare_atomsel(coord_ent,"fragment 0")
 compare_atomsel(coord_ent,"fragment 1")

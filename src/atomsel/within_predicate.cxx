@@ -15,40 +15,40 @@ using desres::msys::Id;
 using desres::msys::IdSet;
 using desres::msys::IdList;
 
-typedef struct voxel_t {
+struct point_t {
+    double x,y,z;
+};
+
+struct voxel_t {
   int nbrs[27];
   int n_nbrs;
-  atom * stack_atoms[STACK_SIZE];
-  atom ** atoms;
-  int num_atoms;
-  int max_atoms;
-} voxel;
+  point_t stack[STACK_SIZE];
+  point_t * points;
+  int num;
+  int max;
 
-static inline
-void voxel_init( voxel * v ) {
-  v->n_nbrs = 0;
-  v->atoms = v->stack_atoms;
-  v->num_atoms = 0;
-  v->max_atoms = STACK_SIZE;
-}
-
-static inline
-void voxel_add_atom( voxel * v, atom * a ) {
-  if (v->num_atoms==v->max_atoms) {
-    v->max_atoms *= 1.3;
-    if (v->atoms==v->stack_atoms) {
-      v->atoms=(atom**)malloc(v->max_atoms*sizeof(atom *));
-      memcpy(v->atoms, v->stack_atoms, STACK_SIZE*sizeof(atom *));
-    } else {
-      v->atoms=(atom**)realloc(v->atoms, v->max_atoms*sizeof(atom *));
-    }
+  voxel_t() : n_nbrs(0), points(stack), num(0), max(STACK_SIZE) {}
+  ~voxel_t() {
+      if (points!=stack) free(points);
   }
-  v->atoms[v->num_atoms++] = a;
-}
 
-static inline void voxel_release( voxel * v ) {
-  if (v->atoms != v->stack_atoms) free(v->atoms);
-}
+  void add(atom const& a) {
+      if (num==max) {
+          max *= 1.3;
+          if (points==stack) {
+              points = (point_t *)malloc(max*sizeof(point_t));
+              memcpy(points, stack, num*sizeof(point_t));
+          } else {
+              points = (point_t *)realloc(points, max*sizeof(point_t));
+          }
+      }
+      point_t& p = points[num++];
+      p.x = a.x;
+      p.y = a.y;
+      p.z = a.z;
+  }
+};
+
 
 /* find the bounding box of selected atoms. Return 0 if no atoms 
  * selected. */
@@ -95,7 +95,7 @@ int find_bbox(const Selection& S, SystemPtr sys, double *min, double *max) {
 }
 
 static
-void find_voxel_full_shell_neighbors(voxel *mesh, int nx, int ny, int nz) {
+void find_voxel_full_shell_neighbors(voxel_t *mesh, int nx, int ny, int nz) {
   int i, zi, yi, xi, ti, si, ri;
   for (zi=0; zi<nz; zi++) {
     for (yi=0; yi<ny; yi++) {
@@ -160,30 +160,25 @@ namespace {
   };
 }
 
-void WithinPredicate::eval( Selection& S ) {
+static void find_within( SystemPtr sys, 
+                         Selection& S,
+                         Selection const& subsel,
+                         double rad,
+                         bool exclude ) {
 
-  Selection subsel = full_selection(sys);
   double min[3], max[3];
   double xmin, ymin, zmin;
   double xsize, ysize, zsize;
   const double r2 = rad*rad;
   double ir;
-  voxel * mesh;
+  voxel_t * mesh;
 
   int nx, ny, nz, nvoxel;
   int i;
 
-  if (rad <= 0) {
-    S.clear();
-    return;
-  }
-  ir = 1.0/rad;
-
-  /* evaluate the subselection */
-  sub->eval(subsel);
-
   /* find bounding box of subselection */
   if (!find_bbox(subsel, sys, min, max)) {
+    /* no atoms in subsel */
     S.clear();
     return;
   }
@@ -193,6 +188,12 @@ void WithinPredicate::eval( Selection& S ) {
   if (exclude) {
     S.subtract(subsel);
   }
+
+  if (rad <= 0) {
+    S.intersect(subsel);
+    return;
+  }
+  ir = 1.0/rad;
 
   /* extend bounding box by selection radius */
   for (i=0; i<3; i++) {
@@ -212,8 +213,7 @@ void WithinPredicate::eval( Selection& S ) {
   nz = (int)(zsize/rad)+3;
   nvoxel = nx*ny*nz;
 
-  mesh = (voxel *)malloc(nvoxel*sizeof(*mesh));
-  for (i=0; i<nvoxel; i++) voxel_init(mesh+i);
+  mesh = new voxel_t[nvoxel];
 
   find_voxel_full_shell_neighbors(mesh, nx, ny, nz);
 
@@ -222,34 +222,27 @@ void WithinPredicate::eval( Selection& S ) {
     if (!subsel[i]) continue;
 
     atom& atm = sys->atom(i);
-    double x=atm.x;
-    double y=atm.y;
-    double z=atm.z;
-    int xi = (x-xmin)*ir;
-    int yi = (y-ymin)*ir;
-    int zi = (z-zmin)*ir;
+    int xi = (atm.x-xmin)*ir;
+    int yi = (atm.y-ymin)*ir;
+    int zi = (atm.z-zmin)*ir;
     int index = xi + nx*(yi + ny*zi);
-    voxel_add_atom( mesh+index, &atm );
+    mesh[index].add(atm);
   }
 
   /* loop over atoms in left selection */
   for (Id i=0; i<S.size(); i++) {
-    double x,y,z;
     int xi,yi,zi;
     int j, index;
     int n_nbrs;
     const int * nbrs;
     int on;
-    voxel * v;
+    voxel_t * v;
     if (!S[i]) continue;
     if (subsel[i]) continue;
     atom& atm = sys->atom(i);
-    x=atm.x;
-    y=atm.y;
-    z=atm.z;
-    xi = (x-xmin)*ir;
-    yi = (y-ymin)*ir;
-    zi = (z-zmin)*ir;
+    xi = (atm.x-xmin)*ir;
+    yi = (atm.y-ymin)*ir;
+    zi = (atm.z-zmin)*ir;
     if (xi<0 || xi>=nx ||
         yi<0 || yi>=ny ||
         zi<0 || zi>=nz) {
@@ -262,16 +255,13 @@ void WithinPredicate::eval( Selection& S ) {
     nbrs = v->nbrs;
     on=0;
     for (j=0; j<n_nbrs; j++) {
-      voxel * nbr = mesh + nbrs[j];
-      atom **atoms = nbr->atoms;
-      unsigned k, natoms = nbr->num_atoms;
+      const voxel_t* nbr = mesh + nbrs[j];
+      const point_t* points = nbr->points; 
+      int k, natoms = nbr->num;
       for (k=0; k<natoms; k++) {
-        double lx=atoms[k]->x;
-        double ly=atoms[k]->y;
-        double lz=atoms[k]->z;
-        double dx = lx-x;
-        double dy = ly-y;
-        double dz = lz-z;
+        double dx=points[k].x - atm.x;
+        double dy=points[k].y - atm.y;
+        double dz=points[k].z - atm.z;
         if (dx*dx + dy*dy + dz*dz <=r2) {
           on=1;
           break;
@@ -281,8 +271,13 @@ void WithinPredicate::eval( Selection& S ) {
     }
     if (!on) S[i]=0;
   }
-  for (i=0; i<nvoxel; i++) voxel_release(mesh+i);
-  free(mesh);
+  delete [] mesh;
+}
+
+void WithinPredicate::eval( Selection& S ) {
+  Selection subsel = full_selection(sys);
+  sub->eval(subsel);
+  find_within( sys, S, subsel, rad, exclude );
 }
 
 void WithinBondsPredicate::eval( Selection& S ) {
