@@ -320,6 +320,11 @@ namespace {
     return exwithin_predicate(ent,rad,parse(child(tree,1),ent));
   }
 
+  PredicatePtr parsePbwithin(Tree* tree, SystemPtr ent) {
+    double rad = atof(str(child(tree,0)));
+    return pbwithin_predicate(ent,rad,parse(child(tree,1),ent));
+  }
+
   PredicatePtr parseWithinBonds(Tree* tree, SystemPtr ent) {
     int n = atoi(str(child(tree,0)));
     return withinbonds_predicate(ent,n,parse(child(tree,1),ent));
@@ -336,6 +341,7 @@ namespace {
       case RELATION: return parseRelation(tree,ent);
       case WITHIN: return parseWithin(tree,ent);
       case EXWITHIN: return parseExwithin(tree,ent);
+      case PBWITHIN: return parsePbwithin(tree,ent);
       case WITHINBONDS: return parseWithinBonds(tree,ent);
       default:;
     }

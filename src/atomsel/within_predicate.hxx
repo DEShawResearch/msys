@@ -14,6 +14,10 @@ namespace desres { namespace msys { namespace atomsel {
    * subselection is less than r, and are also not in S */
   PredicatePtr exwithin_predicate( SystemPtr sys, double r, PredicatePtr S );
 
+  /*! true for elements whose minimum image distance from elements in the 
+   * subselection is less than r */
+  PredicatePtr pbwithin_predicate( SystemPtr sys, double r, PredicatePtr S );
+
   /*! true for elements within n bonds of subselection */
   PredicatePtr withinbonds_predicate( SystemPtr sys, int n, PredicatePtr S );
 

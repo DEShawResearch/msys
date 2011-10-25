@@ -33,6 +33,7 @@ tokens {
   WITHIN = 'within';
   WITHINBONDS = 'withinbonds';
   EXWITHIN = 'exwithin';
+  PBWITHIN = 'pbwithin';
   OF= 'of';
   SAME = 'same';
   AS = 'as';
@@ -81,6 +82,10 @@ selection
   // exwithin 1.5 of protein
   | EXWITHIN LIT OF orSelection
     -> ^(EXWITHIN LIT orSelection)
+
+  // pbwithin 1.5 of protein
+  | PBWITHIN LIT OF orSelection
+    -> ^(PBWITHIN LIT orSelection)
 
   // withinbonds 3 of residue 10 
   | WITHINBONDS LIT OF orSelection

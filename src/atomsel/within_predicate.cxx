@@ -9,6 +9,7 @@
 #define STACK_SIZE 16
 
 using namespace desres::msys::atomsel;
+
 typedef desres::msys::atom_t atom;
 using desres::msys::SystemPtr;
 using desres::msys::Id;
@@ -32,7 +33,7 @@ struct voxel_t {
       if (points!=stack) free(points);
   }
 
-  void add(atom const& a) {
+  void add(point_t const& p) {
       if (num==max) {
           max *= 1.3;
           if (points==stack) {
@@ -42,10 +43,7 @@ struct voxel_t {
               points = (point_t *)realloc(points, max*sizeof(point_t));
           }
       }
-      point_t& p = points[num++];
-      p.x = a.x;
-      p.y = a.y;
-      p.z = a.z;
+      points[num++] = p;
   }
 };
 
@@ -53,7 +51,8 @@ struct voxel_t {
 /* find the bounding box of selected atoms. Return 0 if no atoms 
  * selected. */
 static
-int find_bbox(const Selection& S, SystemPtr sys, double *min, double *max) {
+int find_bbox(const Selection& S, const point_t* points, 
+              double *min, double *max) {
   double xmin, ymin, zmin;
   double xmax, ymax, zmax;
 
@@ -63,17 +62,17 @@ int find_bbox(const Selection& S, SystemPtr sys, double *min, double *max) {
   if (i==n) return 0;
 
   // initialize min/max to first atom position
-  xmin=xmax=sys->atom(i).x;
-  ymin=ymax=sys->atom(i).y;
-  zmin=zmax=sys->atom(i).z;
+  xmin=xmax=points[i].x;
+  ymin=ymax=points[i].y;
+  zmin=zmax=points[i].z;
 
   // extend minmax
   for (;i<n; i++) {
     if (!S[i]) continue;
-    atom& atm = sys->atom(i);
-    double x=atm.x;
-    double y=atm.y;
-    double z=atm.z;
+    point_t const& p = points[i];
+    double x=p.x;
+    double y=p.y;
+    double z=p.z;
 
     if (x<xmin) xmin=x;
     if (x>xmax) xmax=x;
@@ -130,13 +129,16 @@ namespace {
     const double rad;
     PredicatePtr sub;
     const bool exclude;
+    const bool periodic;
 
     public:
-    WithinPredicate( SystemPtr e, double r, bool excl, PredicatePtr s )
-      : sys(e), rad(r), sub(s), exclude(excl) {}
+    WithinPredicate( SystemPtr e, double r, bool excl, bool per, PredicatePtr s )
+      : sys(e), rad(r), sub(s), exclude(excl), periodic(per) {}
 
     void eval( Selection& s );
     void dump( std::ostream& str ) const {
+      if (periodic) str << "pb";
+      if (exclude) str << "ex";
       str << "within " << rad << " of [";
       sub->dump(str);
       str << "]";
@@ -160,7 +162,7 @@ namespace {
   };
 }
 
-static void find_within( SystemPtr sys, 
+static void find_within( const point_t* points,
                          Selection& S,
                          Selection const& subsel,
                          double rad,
@@ -177,7 +179,7 @@ static void find_within( SystemPtr sys,
   int i;
 
   /* find bounding box of subselection */
-  if (!find_bbox(subsel, sys, min, max)) {
+  if (!find_bbox(subsel, points, min, max)) {
     /* no atoms in subsel */
     S.clear();
     return;
@@ -221,12 +223,12 @@ static void find_within( SystemPtr sys,
   for (Id i=0; i<subsel.size(); i++) {
     if (!subsel[i]) continue;
 
-    atom& atm = sys->atom(i);
-    int xi = (atm.x-xmin)*ir;
-    int yi = (atm.y-ymin)*ir;
-    int zi = (atm.z-zmin)*ir;
+    point_t const& p = points[i];
+    int xi = (p.x-xmin)*ir;
+    int yi = (p.y-ymin)*ir;
+    int zi = (p.z-zmin)*ir;
     int index = xi + nx*(yi + ny*zi);
-    mesh[index].add(atm);
+    mesh[index].add(p);
   }
 
   /* loop over atoms in left selection */
@@ -239,10 +241,10 @@ static void find_within( SystemPtr sys,
     voxel_t * v;
     if (!S[i]) continue;
     if (subsel[i]) continue;
-    atom& atm = sys->atom(i);
-    xi = (atm.x-xmin)*ir;
-    yi = (atm.y-ymin)*ir;
-    zi = (atm.z-zmin)*ir;
+    point_t const& p = points[i];
+    xi = (p.x-xmin)*ir;
+    yi = (p.y-ymin)*ir;
+    zi = (p.z-zmin)*ir;
     if (xi<0 || xi>=nx ||
         yi<0 || yi>=ny ||
         zi<0 || zi>=nz) {
@@ -256,12 +258,12 @@ static void find_within( SystemPtr sys,
     on=0;
     for (j=0; j<n_nbrs; j++) {
       const voxel_t* nbr = mesh + nbrs[j];
-      const point_t* points = nbr->points; 
       int k, natoms = nbr->num;
       for (k=0; k<natoms; k++) {
-        double dx=points[k].x - atm.x;
-        double dy=points[k].y - atm.y;
-        double dz=points[k].z - atm.z;
+        point_t const& pk = nbr->points[k];
+        double dx=pk.x - p.x;
+        double dy=pk.y - p.y;
+        double dz=pk.z - p.z;
         if (dx*dx + dy*dy + dz*dz <=r2) {
           on=1;
           break;
@@ -275,9 +277,92 @@ static void find_within( SystemPtr sys,
 }
 
 void WithinPredicate::eval( Selection& S ) {
-  Selection subsel = full_selection(sys);
-  sub->eval(subsel);
-  find_within( sys, S, subsel, rad, exclude );
+    Selection subsel = full_selection(sys);
+    sub->eval(subsel);
+
+    std::vector<point_t> points(S.size());
+    for (unsigned i=0; i<S.size(); i++) {
+        if (S[i] || subsel[i]) {
+            points[i].x = sys->atom(i).x;
+            points[i].y = sys->atom(i).y;
+            points[i].z = sys->atom(i).z;
+        }
+    }
+    if (!points.size()) {
+        S.clear();
+        return;
+    }
+
+    if (periodic) {
+        /* replicate the atoms in S within a bounding box around subsel */
+        double min[3], max[3];
+        if (!find_bbox(subsel, &points[0], min, max)) {
+            S.clear();
+            return;
+        }
+        for (int i=0; i<3; i++) {
+            min[i] -= rad;
+            max[i] += rad;
+        }
+        IdList repids;  /* ids of replicated atoms */
+        desres::msys::Vec3 const& A = sys->global_cell.A;
+        desres::msys::Vec3 const& B = sys->global_cell.B;
+        desres::msys::Vec3 const& C = sys->global_cell.C;
+        for (int i=-1; i<=1; i++) {
+            double ax = A[0]*i;
+            double ay = A[1]*i;
+            double az = A[2]*i;
+            for (int j=-1; j<=1; j++) {
+                double bx = B[0]*j;
+                double by = B[1]*j;
+                double bz = B[2]*j;
+                for (int k=-1; k<=1; k++) {
+                    if (i==0 && j==0 && k==0) continue;
+                    double vx = C[0]*k + ax + bx;
+                    double vy = C[1]*k + ay + by;
+                    double vz = C[2]*k + az + bz;
+
+                    for (Id id=0; id<S.size(); id++) {
+                        if (!S[id]) continue;
+                        point_t p = points[id];
+                        p.x += vx;
+                        p.y += vy;
+                        p.z += vz;
+                        if (p.x > min[0] && p.x <= max[0] &&
+                            p.y > min[1] && p.y <= max[1] &&
+                            p.z > min[2] && p.z <= max[2]) {
+                            points.push_back(p);
+                            repids.push_back(id);
+                        }
+                    }
+                }
+            }
+        }
+
+        Selection Srep(points.size());
+        Selection Ssub(points.size());
+        /* copy original flags */
+        for (unsigned i=0; i<S.size(); i++) Srep[i]=S[i];
+        /* turn on all replica flags - we know they're selected */
+        for (unsigned i=0; i<repids.size(); i++) Srep[i+S.size()]=1;
+        /* copy subsel into expanded set */
+        for (unsigned i=0; i<subsel.size(); i++) Ssub[i]=subsel[i];
+
+        find_within( &points[0], Srep, Ssub, rad, false );
+
+        /* copy Srep back into S */
+        for (unsigned i=0; i<S.size(); i++) S[i]=Srep[i];
+
+        /* OR the replica flags into the home set */
+        for (Id i=0; i<repids.size(); i++) {
+            if (Srep[S.size()+i]) {
+                S[repids[i]]=1;
+            }
+        }
+
+    } else { 
+        find_within( &points[0], S, subsel, rad, exclude );
+    }
 }
 
 void WithinBondsPredicate::eval( Selection& S ) {
@@ -308,11 +393,15 @@ void WithinBondsPredicate::eval( Selection& S ) {
 namespace desres { namespace msys { namespace atomsel {
 
   PredicatePtr within_predicate( SystemPtr sys, double r, PredicatePtr s ) {
-    return PredicatePtr(new WithinPredicate(sys,r,false,s));
+    return PredicatePtr(new WithinPredicate(sys,r,false,false,s));
   }
 
   PredicatePtr exwithin_predicate( SystemPtr sys, double r, PredicatePtr s ) {
-    return PredicatePtr(new WithinPredicate(sys,r,true,s));
+    return PredicatePtr(new WithinPredicate(sys,r,true,false,s));
+  }
+
+  PredicatePtr pbwithin_predicate( SystemPtr sys, double r, PredicatePtr s ) {
+    return PredicatePtr(new WithinPredicate(sys,r,false,true,s));
   }
 
   PredicatePtr withinbonds_predicate( SystemPtr sys, int n, PredicatePtr s ) {

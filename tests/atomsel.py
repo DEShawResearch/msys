@@ -47,6 +47,10 @@ compare_atomsel(coord_ent,"x<3")
 compare_atomsel(coord_ent,"y>=1")
 compare_atomsel(coord_ent,"z<=-5")
 
+compare_atomsel(coord_ent,"pbwithin 3 of protein")
+compare_atomsel(coord_ent,"noh and pbwithin 3 of protein")
+compare_atomsel(coord_ent,"backbone and pbwithin 4 of water")
+
 compare_atomsel(coord_ent,"same residue as within 4 of protein")
 compare_atomsel(coord_ent,"noh and within 1.5 of protein")
 compare_atomsel(coord_ent,"noh and within 2.5 of protein")

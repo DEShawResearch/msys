@@ -17,6 +17,9 @@ namespace desres { namespace msys { namespace atomsel {
         /* initialize with size and list of flags starting out as true */
         Selection(Id size, const IdList& ids);
 
+        /* construct an empty selection of the given size */
+        Selection(Id size) : flags(size) {}
+
         /* clear all flags */
         void clear();
 
