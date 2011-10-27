@@ -15,6 +15,7 @@ static schema_t schemas[] = {
     { "posre_harm",   "bond", 1, {"fcx", "fcy", "fcz"}, {"x0", "y0", "z0"}},
     { "stretch_harm", "bond", 2, {"r0", "fc"},     {{"constrained", 0}}},
     { "torsiontorsion_cmap", "bond", 8, {{"cmapid", 2}}},
+    { "pseudopol_fermi","bond",4,{"a", "b", "cutoff"}},
 
     /* constraints */
     { "constraint_hoh", "constraint", 3, {"theta","r1","r2"}},

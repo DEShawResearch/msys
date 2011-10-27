@@ -26,6 +26,7 @@ mae/ff/dihedrals6atom.cxx
 mae/ff/exclusions.cxx
 mae/ff/inplanewags.cxx
 mae/ff/pairs.cxx
+mae/ff/pseudopol.cxx
 mae/ff/restraints.cxx
 mae/ff/vdwtypes.cxx
 mae/ff/virtuals.cxx
