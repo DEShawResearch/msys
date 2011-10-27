@@ -219,6 +219,10 @@ class TestMain(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             angle.addTerm((m.atom(1),m.atom(1), m.atom(5)))
 
+        angle.destroy()
+        self.assertFalse('angle' in m.table_names)
+        self.assertFalse(angle in m.tables)
+
     def testDelTerm(self):
         m=msys.CreateSystem()
         a1=m.addAtom()

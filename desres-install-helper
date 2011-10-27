@@ -84,6 +84,10 @@ $PREFIX/doc/html/index.html
 
 This is a pre-release version of msys.
 
+0.7.3  Simple dms-grease
+       pbwithin selection
+       Better error checking on dms import.
+
 0.7.2  Added dms-info
 0.7.0  Many new tools.
 0.6.2  Documentation

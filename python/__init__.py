@@ -383,6 +383,10 @@ class TermTable(object):
     def __ne__(self, x): return self._ptr!=x._ptr
     def __hash__(self): return self._ptr.__hash__()
 
+    def destroy(self):
+        ''' Remove this table from its parent system '''
+        self._ptr.system().removeTable(self._ptr)
+
     @property
     def name(self):
         ''' name of this table '''
