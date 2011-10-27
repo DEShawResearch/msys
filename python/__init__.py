@@ -341,6 +341,22 @@ class Term(object):
         return not _msys.bad(self._ptr.paramB(self._id))
 
     @property
+    def paramB(self):
+        ''' The alchemical parameters for this Term; None if not present '''
+        id=self._ptr.paramB(self._id)
+        if _msys.bad(id): return None
+        return Param(self._ptr.params(), id)
+    @paramB.setter
+    def paramB(self, val):
+        if val is None: 
+            id = None
+        else: 
+            if val.table != self.table.params:
+                raise RuntimeError, "param comes from a different ParamTable"
+            id = val.id
+        self._ptr.setParamB(self._id, id)
+
+    @property
     def atoms(self):
         ''' list of Atoms for this Term '''
         return [Atom(self._ptr.system(), i) for i in self._ptr.atoms(self._id)]
