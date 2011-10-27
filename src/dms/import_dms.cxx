@@ -57,13 +57,14 @@ static void read(dms_reader_t* r, int col, ValueRef val) {
     }
 }
 
-static IdList read_params( dms_reader_t* r, ParamTablePtr p ) {
+static IdList read_params( dms_reader_t* r, ParamTablePtr p,
+                           bool ignore_ids = true ) {
     int i,n = dms_reader_column_count(r);
     int idcol=-1;
     for (i=0; i<n; i++) {
         const char * prop = dms_reader_column_name(r,i);
         /* ignore id, assuming param ids are 0-based */
-        if (!strcmp(prop, "id")) {
+        if (ignore_ids && !strcmp(prop, "id")) {
             idcol=i;
             continue;
         }
@@ -371,7 +372,7 @@ static void read_extra( dms_t* dms, System& sys, const KnownSet& known) {
                 if (dms_fetch(dms, extra.c_str(), &p)) {
                     ParamTablePtr ptr = ParamTable::create();
                     sys.addExtra(extra, ptr);
-                    read_params(p, ptr);
+                    read_params(p, ptr, false);
                     //printf("extra %s with %d params, %d props\n",
                         //extra.c_str(), ptr->paramCount(), ptr->propCount());
                 }
