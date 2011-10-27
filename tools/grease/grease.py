@@ -2,7 +2,6 @@
 import os, msys
 
 LIP=os.path.join(os.getenv('MSYS_PREFIX'), 'share', 'grease', 'popc.dms')
-LIPRAD = 2.4
 
 def Grease(mol, thickness=0.0, xsize=None, ysize=None,
             chain='LIP', verbose=False,
@@ -82,16 +81,32 @@ def Grease(mol, thickness=0.0, xsize=None, ysize=None,
                 a.x += xdelta
                 a.y += ydelta
 
-    if verbose: print "removing overlaps"
-    # FIXME: use the low-level interface for speed
+    if verbose: print "replicated system contains %d atoms" % mol.natoms
+    if verbose: print "removing overlap with solute"
+    headgroup_dist = 2.0
     mol = msys.CloneSystem(mol.atomselect(
-        'not (chain %s and same residue as (x<%f or y<%f or x>%f or y>%f  or within %f of (not chain %s)))' % (
-            lipchain,xmin,ymin,xmax,ymax,LIPRAD, lipchain)))
+        'not (chain %s and same residue as (atomicnumber 8 15 and pbwithin %f of (noh and not chain %s)))' % (
+            lipchain, headgroup_dist, lipchain)))
+    dist = 1.0
+    mol = msys.CloneSystem(mol.atomselect(
+        'not (chain %s and same residue as (pbwithin %f of (noh and not chain %s)))' % (
+            lipchain, dist, lipchain)))
+    if verbose: print "after removing solute overlap, have %d atoms" % mol.natoms
 
-    # assign the lipid chain name
+    if verbose: print "removing outer lipids"
+    mol = msys.CloneSystem(mol.atomselect(
+        'not (chain %s and same residue as (atomicnumber 15 and (abs(x)>%f or abs(y)>%f)))' % (
+            lipchain,xmax,ymax)))
+    if verbose: print "after removing outer lipids, have %d atoms" % mol.natoms
+
+    # assign the lipid chain name, and renumber lipid resids
+    lipnum = 1
     for c in mol.chains:
         if c.name == lipchain:
             c.name = chain
+            for r in c.residues:
+                r.num = lipnum
+                lipnum += 1
 
     mol.reassignGids()
 
