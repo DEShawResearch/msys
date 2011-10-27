@@ -356,7 +356,6 @@ static void export_view(TermTablePtr table, const std::string& name, dms_t *dms)
         for (Id i=0; i<table->atomCount(); i++) {
             ss << "p" << (char)('0'+i) << ", ";
         }
-        ss << "moiety, \n";
         for (Id i=0; i<props.size(); i++) {
             ss << "  A." << props[i] << " as " << props[i] << "A, ";
             ss << "B." << props[i] << " as " << props[i] << "B";
