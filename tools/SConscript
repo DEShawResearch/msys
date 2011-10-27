@@ -6,6 +6,11 @@ env.Prepend(CPPPATH=['../src'], LIBS=['msys', 'boost_filesystem', 'boost_system'
 env.AddProgram('mae2dms', 'converters/mae2dms.cxx')
 env.AddProgram('dms2mae', 'converters/dms2mae.cxx')
 
+## fep
+env.AddPythonModule('fep/fep.py', prefix='msys')
+env.AddPythonModule('fep/kept.py', prefix='msys')
+env.AddScript('fep/dms-uncharge')
+
 ## glue
 env.AddPythonModule('glue/glue.py', prefix='msys')
 env.AddScript('glue/dms-glue')

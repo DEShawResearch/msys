@@ -838,6 +838,7 @@ def __vec3_setitem(self, key, val):
     self.x, self.y, self.z = tmp
 Vec3.__getitem__ = __vec3_getitem
 Vec3.__setitem__ = __vec3_setitem
+Vec3.__repr__=lambda self: str((self.x, self.y, self.z))
 
 ''' customize GlobalCell '''
 def __globalcell_str(self):

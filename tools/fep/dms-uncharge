@@ -1,0 +1,36 @@
+#!/usr/bin/env desres-exec
+# -*- python -*-
+#{
+# desres-cleanenv $MSYS_CLEANENV -- python $0 "$@"
+#}
+
+'''
+dms-uncharge a.dms out.dms [options]
+
+Create an alchemical dms file such that the selected atoms have their
+charges set to 0 in the B state.
+'''
+
+import msys
+from msys import fep
+
+def main():
+    import optparse
+    parser = optparse.OptionParser(__doc__)
+
+    parser.add_option('-s', '--selection', default='all',
+        help='Use only atoms in selection')
+
+    opts, args = parser.parse_args()
+    if len(args)!=2: parser.error("incorrect number of arguments")
+
+    a_name, o_name = args
+    mol=msys.LoadDMS(a_name)
+    
+    fep.UnchargeAlchemical(mol, opts.selection)
+
+    msys.SaveDMS(mol, o_name)
+
+if __name__=="__main__": exit(main())
+
+# vim: filetype=python

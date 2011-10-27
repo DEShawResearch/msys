@@ -15,11 +15,14 @@ import sys
 import msys
 
 def print_info(mol):
-    print "%12s: %d" % ("Atoms", mol.natoms)
-    print "%12s: %d" % ("Bonds", mol.nbonds)
-    print "%12s: %d" % ("Residues", mol.nresidues)
-    print "%12s: %d" % ("Chains", mol.nchains)
-    print "%12s: %s" % ("Global cell", mol.cell)
+    alc=[a for a in mol.atoms if a.alchemical]
+    print "%12s: %8d (%4d alchemical)" % ("Atoms", mol.natoms, len(alc))
+    print "%12s: %8d" % ("Bonds", mol.nbonds)
+    print "%12s: %8d" % ("Residues", mol.nresidues)
+    print "%12s: %8d" % ("Chains", mol.nchains)
+    print "%12s: %s"  % ("Global cell", mol.cell[0])
+    print "%12s  %s"  % ("", mol.cell[1])
+    print "%12s  %s"  % ("", mol.cell[2])
     
     tdict=dict()
     for table in mol.tables:
