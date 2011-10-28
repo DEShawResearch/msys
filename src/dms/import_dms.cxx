@@ -430,6 +430,7 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
     ResMap resmap;
     IdList nbtypes;
     IdList gidmap; /* map dms gids to msys ids */
+    IdList ignored_gids;
     std::map<Id,Id> nbtypesB;
     
     dms_fetch(dms, "particle", &r);
@@ -481,8 +482,12 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
 
     /* read the particle table */
     for (; r; dms_reader_next(&r)) {
+        Id gid = dms_reader_get_int(r, GID);
         int anum = dms_reader_get_int(r, ANUM);
-        if (structure_only && anum<=0) continue;
+        if (structure_only && anum<=0) {
+            ignored_gids.push_back(gid);
+            continue;
+        }
 
         /* start a new chain if necessary */
         const char * chainname = dms_reader_get_string(r,CHAIN);
@@ -522,9 +527,9 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
         atm.vy = dms_reader_get_double(r, VY);
         atm.vz = dms_reader_get_double(r, VZ);
         atm.mass = dms_reader_get_double(r, MASS);
-        atm.atomic_number = dms_reader_get_int(r, ANUM);
+        atm.atomic_number = anum;
         atm.name = dms_reader_get_string(r, NAME);
-        atm.gid = dms_reader_get_int(r, GID);
+        atm.gid = gid;
         atm.charge = dms_reader_get_double(r, CHARGE);
         while (gidmap.size()<atm.gid) gidmap.push_back(BadId);
         gidmap.push_back(atmid);
@@ -560,15 +565,24 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
             int aj = dms_reader_get_int(r, p1);
             double order = o<0 ? 1 : dms_reader_get_double(r, o);
             Id id = BadId;
+            if (structure_only && (
+                        std::binary_search(
+                            ignored_gids.begin(), ignored_gids.end(), ai) ||
+                        std::binary_search(
+                            ignored_gids.begin(), ignored_gids.end(), aj))) {
+                continue;
+            }
             try {
                 Id from = gidmap.at(ai);
                 Id to   = gidmap.at(aj);
-                if (bad(from) || bad(to)) continue;
+                //printf("ai %d aj %d from %d to %d max id %d\n", 
+                        //ai, aj, (int)from, (int)to, (int)sys.maxAtomId());
                 id = sys.addBond(from,to);
             }
             catch (std::exception& e) {
                 std::stringstream ss;
-                ss << "Failed adding bond (" << ai << ", " << aj << ")";
+                ss << "Failed adding bond (" << ai << ", " << aj << ")"
+                   << ": " << std::endl << e.what();
                 throw std::runtime_error(ss.str());
             }
             sys.bond(id).order = order;
