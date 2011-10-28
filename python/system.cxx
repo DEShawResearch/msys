@@ -2,6 +2,7 @@
 #include "schema.hxx"
 #include "atomsel.hxx"
 #include "append.hxx"
+#include "alchemical.hxx"
 #include "clone.hxx"
 #include "mae.hxx"
 #include "dms.hxx"
@@ -139,6 +140,7 @@ namespace desres { namespace msys {
         def("ImportMAE", ImportMAE);
 
         def("Clone", Clone);
+        def("CreateAlchemical", CreateAlchemical);
 
         class_<System,SystemPtr>("SystemPtr", no_init)
             .def("__eq__",      list_eq<SystemPtr>)
