@@ -128,6 +128,14 @@ class Atom(Handle):
         self.x, self.y, self.z = xyz
 
     @property
+    def vel(self):
+        ''' velocity '''
+        return (self.vx, self.vy, self.vz)
+    @vel.setter
+    def vel(self, xyz):
+        self.vx, self.vy, self.vz = xyz
+
+    @property
     def residue(self): return Residue(self._ptr, self.data().residue)
     @residue.setter
     def residue(self, res): self._ptr.setResidue(self._id, res.id)
