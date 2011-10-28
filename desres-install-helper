@@ -84,6 +84,8 @@ $PREFIX/doc/html/index.html
 
 This is a pre-release version of msys.
 
+0.8.1  Bugfix for LoadDMS(struture_only=True) for files with bonds to pseudos.
+
 0.8.0  LoadDMS(..., structure_only=True) now skips reading pseudos.
        dms-dump (and dms-diff) no longer reorder terms by default.
        dms-info got faster.
