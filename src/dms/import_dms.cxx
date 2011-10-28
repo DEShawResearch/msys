@@ -561,7 +561,10 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
             double order = o<0 ? 1 : dms_reader_get_double(r, o);
             Id id = BadId;
             try {
-                id = sys.addBond(gidmap.at(ai),gidmap.at(aj));
+                Id from = gidmap.at(ai);
+                Id to   = gidmap.at(aj);
+                if (bad(from) || bad(to)) continue;
+                id = sys.addBond(from,to);
             }
             catch (std::exception& e) {
                 std::stringstream ss;
@@ -573,9 +576,6 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
     }
 
     sys.updateFragids();
-
-    //printf("got %d chains, %d residues, %d atoms, %d fragments.\n",
-            //sys.chainCount(), sys.residueCount(), sys.atomCount(), frags);
 
     KnownSet known;
     known.insert("particle");
