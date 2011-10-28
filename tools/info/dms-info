@@ -15,7 +15,8 @@ import sys
 import msys
 
 def print_info(mol):
-    alc=[a for a in mol.atoms if a.alchemical]
+    print "Structure:"
+    alc=[a for a in mol._ptr.atoms() if mol._ptr.atom(a).alchemical]
     print "%12s: %8d (%4d alchemical)" % ("Atoms", mol.natoms, len(alc))
     print "%12s: %8d" % ("Bonds", mol.nbonds)
     print "%12s: %8d" % ("Residues", mol.nresidues)
@@ -23,6 +24,21 @@ def print_info(mol):
     print "%12s: %s"  % ("Global cell", mol.cell[0])
     print "%12s  %s"  % ("", mol.cell[1])
     print "%12s  %s"  % ("", mol.cell[2])
+    print
+    for sel, title in (
+            ('protein', 'Protein'),
+            ('lipid', 'Lipid'),
+            ('ions', 'Ions'),
+            ('water', 'Water'),
+            ('not (protein or lipid or ions or water)', 'Other')):
+
+        ptr = mol._ptr
+        atoms=ptr.atomselect(sel)
+        residues=set(ptr.atom(a).residue for a in atoms)
+        chains=set(ptr.residue(r).chain for r in residues)
+        print "%12s: %8d atoms, %8d residues, %8d chains" % (
+                title, len(atoms), len(residues), len(chains))
+
     
     tdict=dict()
     for table in mol.tables:
@@ -39,23 +55,9 @@ def print_info(mol):
                 for t in table.terms:
                     if t.alchemical:
                         nalc += 1
-            print "%18s: %d sites, %6d params, %6d terms, %2d alchemical" % (
+            print "%20s: %d sites, %6d params, %6d terms, %2d alchemical" % (
                     table.name, table.natoms, len(table.params), 
                     table.nterms-nalc, nalc)
-
-    print
-    for sel, title in (
-            ('protein', 'Protein'),
-            ('lipid', 'Lipid'),
-            ('ions', 'Ions'),
-            ('water', 'Water'),
-            ('not (protein or lipid or ions or water)', 'Other')):
-
-        atoms=mol.atomselect(sel)
-        residues=set(a.residue for a in atoms)
-        chains=set(r.chain for r in residues)
-        print "%12s: %8d atoms, %8d residues, %8d chains" % (
-                title, len(atoms), len(residues), len(chains))
 
 
 def main():
@@ -65,9 +67,10 @@ def main():
     opts, args = parser.parse_args()
     for path in args:
         mol = msys.LoadDMS(path)
-        print path
-        print_info(mol)
         print "-" * 75
+        print path
+        print
+        print_info(mol)
 
 if __name__=="__main__": exit(main())
 
