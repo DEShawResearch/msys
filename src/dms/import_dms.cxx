@@ -481,6 +481,9 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
 
     /* read the particle table */
     for (; r; dms_reader_next(&r)) {
+        int anum = dms_reader_get_int(r, ANUM);
+        if (structure_only && anum<=0) continue;
+
         /* start a new chain if necessary */
         const char * chainname = dms_reader_get_string(r,CHAIN);
         if (bad(chnid) || strcmp(chainname, sys.chain(chnid).name.c_str())) {

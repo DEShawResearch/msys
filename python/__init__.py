@@ -818,7 +818,8 @@ def CreateParamTable():
 def LoadDMS(path, structure_only = False):
     ''' Load the DMS file at the given path and return a System containing it.
     If structure_only is True, only Atoms, Bonds, Residues and Chains will
-    be loaded, along with the GlobalCell. '''
+    be loaded, along with the GlobalCell, and no pseudos (atoms with atomic 
+    number less than one) will be loaded '''
     return System(_msys.ImportDMS(path, structure_only ))
 
 def LoadMAE(path, ignore_unrecognized = False):
