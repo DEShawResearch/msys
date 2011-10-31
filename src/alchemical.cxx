@@ -1,4 +1,5 @@
 #include "alchemical.hxx"
+#include "clone.hxx"
 #include <sstream>
 #include <stdexcept>
 #include <boost/foreach.hpp>
@@ -12,51 +13,78 @@ using namespace desres::msys;
 } while (0)
 
 
-
-static void validate_map( IdList const& map, Id max, Id* nd ) {
+/* construct and return a mapping from atoms in the given input system to
+ * the merged alchemical system, assuming 0-based ids.  */
+static IdList map_atoms( IdList const& atoms, Id maxid ) {
     std::vector<Id> reals;
-    Id d=0;
-    BOOST_FOREACH(Id id, map) {
+    IdList map;
+    Id n=0;
+    BOOST_FOREACH(Id id, atoms) {
         if (bad(id)) {
-            ++d; 
-        } else if (id>=max) {
+            ++n;
+        } else if (id>=maxid) {
             ERROR("Invalid id " << id << " in atom map");
         } else {
-            reals.push_back(id); 
+            reals.push_back(id);
+            map.push_back(map.size()+n);
         }
     }
     std::sort(reals.begin(), reals.end());
     reals.resize(std::unique(reals.begin(), reals.end())-reals.begin());
-    if (reals.size() + d != map.size()) {
+    if (reals.size() + n != atoms.size()) {
         ERROR("atom map contains duplicates, or some atoms not mapped");
     }
-    if (reals.size() != max) {
+    if (reals.size() != maxid) {
         ERROR("not all atoms in system are mapped");
     }
-    *nd = d;
+    return map;
 }
                     
 
-SystemPtr desres::msys::CreateAlchemical( SystemPtr A, IdList const& amap,
-                                          SystemPtr B, IdList const& bmap ) {
+SystemPtr desres::msys::CreateAlchemical( SystemPtr A, IdList const& aids,
+                                          SystemPtr B, IdList const& bids) {
 
-    Id dumA, dumB;  /* number of unmapped atoms in amap and bmap */
+    if (aids.size() != bids.size()) {
+        ERROR("atom maps have different sizes: " << aids.size() << ", "
+                    << bids.size());
+    }
 
-    /* validate the atom map */
+    IdList mapA, mapB;
     try {
-        validate_map(amap, A->maxAtomId(), &dumA);
+        mapA = map_atoms(aids, A->maxAtomId());
     }
     catch (std::exception& e) {
         ERROR("Invalid map for A sites:\n" << e.what());
     }
     try {
-        validate_map(bmap, B->maxAtomId(), &dumB);
+        mapB =map_atoms(bids, B->maxAtomId());
     }
     catch (std::exception& e) {
         ERROR("Invalid map for B sites:\n" << e.what());
     }
 
+    /* create T based on A; add dummies.  */
+    SystemPtr T = Clone(A, A->atoms());
+    Id nd = aids.size() - A->atomCount(); /* number of dummies */
+    for (Id i=0; i<nd; i++) {
+        /* TODO: add to existing residue if possible based on the identity
+         * of the corresponding B atom */
+        Id chain = T->addChain();
+        Id res = T->addResidue(chain);
+        T->addAtom(res);
+    }
+
+    /* permute T to C such that the dummies are intermingled as specified
+     * in the original atom map. */
     SystemPtr C;
+    {
+        IdList t(aids);
+        Id d=A->maxAtomId();
+        BOOST_FOREACH( Id& id, t ) {
+            if (bad(id)) id=d++;
+        }
+        C = Clone(T, t);
+    }
 
     return C;
 }
