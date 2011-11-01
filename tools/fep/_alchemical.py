@@ -56,6 +56,30 @@ def make_block( amap, bmap, apairs, bpairs, atable, btable):
 
     return block
 
+def make_pairmaps(bmap, atable, btable):
+    # make a and b items same way as exclmap
+    b_item_dict=dict()
+    for t in btable.terms():
+        item = sorted(bmap[a] for a in btable.atoms(t))
+        b_item_dict[tuple(item)]=t+1
+
+    block=list()
+    for t in atable.terms():
+        item = sorted(a for a in atable.atoms(t))
+        j=b_item_dict.get(tuple(item), 0) # 0 instead of -1 as in exclusion
+        block.append( [[t+1,j], item] )
+        if j!=0:
+            del b_item_dict[tuple(item)]
+
+    block2=list()
+    for item, j in b_item_dict.items():
+        block2.append( [[0,j], item] )
+    block2.sort()
+    block.extend(block2)
+
+    return block
+
+
 def copy_param( dstparams, srcparams, srcid ):
     ''' copy parameters from param with id srcid in srctable to dsttable '''
     if dstparams == srcparams:
@@ -119,7 +143,7 @@ def make_alchemical(atable, btable, ctable, block, keeper=None):
 
         else:
             raise ValueError, "Unsupported mapping in %s: ta=%d, tb=%d" % (
-                    nbname, ta, tb)
+                    ctable.name(), ta, tb)
 
         #if has_constrained and item.entryA and item.entryB:
             #item["constrained"] = 0
@@ -195,6 +219,8 @@ def MakeAlchemical(A, B, pairs):
     anglmaps = make_block(amap, bmap, apairs, bpairs, A.table(ff), B.table(ff))
     ff='dihedral_trig'
     dihemaps = make_block(amap, bmap, apairs, bpairs, A.table(ff), B.table(ff))
+    ff='pair_12_6_es'
+    pairmaps = make_pairmaps(bmap, A.table(ff), B.table(ff))
 
     kept.stage2( C, B, pairs, bmap, bondmaps, anglmaps, dihemaps, False )
 
@@ -204,7 +230,8 @@ def MakeAlchemical(A, B, pairs):
     make_alchemical(A.table(ff), B.table(ff), C.table(ff), anglmaps)
     ff='dihedral_trig'
     make_alchemical(A.table(ff), B.table(ff), C.table(ff), dihemaps)
-
+    ff='pair_12_6_es'
+    make_alchemical(A.table(ff), B.table(ff), C.table(ff), pairmaps)
 
     # bonds
     for b in B.bonds():
