@@ -8,7 +8,7 @@ env.AddProgram('dms2mae', 'converters/dms2mae.cxx')
 
 ## fep
 #env.AddPythonModule('fep/fep.py', prefix='msys')
-#env.AddPythonModule('fep/kept.py', prefix='msys')
+env.AddPythonModule('fep/kept.py', prefix='msys')
 #env.AddScript('fep/dms-uncharge')
 #env.AddProgram('dms-fep', ['fep/dms-fep.cxx'])
 env.AddScript('fep/dms-fep')
