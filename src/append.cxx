@@ -91,6 +91,20 @@ IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr ) {
     System const& src = *srcptr;
     IdList src2dst(src.maxAtomId(), BadId);
 
+    /* copy atom properties */
+    Id nprops = src.atomPropCount();
+    IdList propmap(nprops);
+    for (Id i=0; i<nprops; i++) {
+        propmap[i] = dst.addAtomProp(src.atomPropName(i), src.atomPropType(i));
+    }
+
+    /* copy bond properties */
+    Id nbprops = src.bondPropCount();
+    IdList bpropmap(nbprops);
+    for (Id i=0; i<nbprops; i++) {
+        bpropmap[i] = dst.addBondProp(src.bondPropName(i), src.bondPropType(i));
+    }
+
     /* add chains */
     IdList chains = src.chains();
     for (Id i=0; i<chains.size(); i++) {
@@ -116,6 +130,11 @@ IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr ) {
                 /* copy attributes from src atom to dst atom */
                 dst.atom(dstatm) = src.atom(srcatm);
                 dst.atom(dstatm).residue = dstres;
+                /* Copy additional atom properties */
+                for (Id p=0; p<nprops; p++) {
+                    dst.atomPropValue(dstatm,propmap[p]) = 
+                    srcptr->atomPropValue(srcatm, p);
+                }
                 /* map src to dst atoms so we can add bonds */
                 src2dst[srcatm] = dstatm;
             }
@@ -131,6 +150,12 @@ IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr ) {
         Id dstj = src2dst[srcj];
         Id dstbnd = dst.addBond(dsti, dstj);
         dst.bond(dstbnd).order = src.bond(srcbnd).order;
+
+        /* Copy additional bond properties */
+        for (Id k=0; k<nbprops; k++) {
+            dst.bondPropValue(dstbnd,bpropmap[k]) = 
+            srcptr->bondPropValue(srcbnd, k);
+        }
     }
 
     /* add/merge term tables */
