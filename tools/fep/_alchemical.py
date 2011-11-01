@@ -96,6 +96,7 @@ def copy_param( dstparams, srcparams, srcid ):
 def make_alchemical(atable, btable, ctable, block, keeper=None):
     ''' merge forcefield entries from m2 into m1. '''
     b_constrained = btable.termPropIndex('constrained')
+    c_constrained = None
     if not _msys.bad(b_constrained):
         c_constrained = ctable.addTermProp('constrained', int)
     params=ctable.params()
@@ -119,9 +120,9 @@ def make_alchemical(atable, btable, ctable, block, keeper=None):
             for a in atoms: ids.append(a)
             param=copy_param(params, btable.params(), btable.param(tb-1))
             term = ctable.addTerm( ids, param )
-            #if not _msys.bad(constrained):
-                #cons = items_2[tb-1]["constrained"]
-                #item["constrained"] = cons
+            if c_constrained is not None:
+                cons = btable.getTermProp(tb-1, b_constrained)
+                ctable.setTermProp(term, c_constrained, cons)
 
         elif ta==0 and tb>0:
             ''' disappear the A state '''
@@ -150,15 +151,15 @@ def make_alchemical(atable, btable, ctable, block, keeper=None):
 
 def MakeAlchemical(A, B, pairs):
 
-    nA = A.atomCount()
-    nB = B.atomCount()
     nC = len(pairs)
-    assert nA <= nC
-    assert nB <= nC
-
     apairs, bpairs = zip(*pairs)
 
-    C=_msys.Clone(A, A.atoms())
+    # clone just the alchemical part of A
+    atoms = _msys.IdList()
+    for a in apairs:
+        if a >= 0:
+            atoms.append(a)
+    C=_msys.Clone(A, atoms)
     amap = _msys.IdList()
     bmap=dict()
 
@@ -214,13 +215,13 @@ def MakeAlchemical(A, B, pairs):
 
     # stretches, angles, dihedrals
     ff='stretch_harm'
-    bondmaps = make_block(amap, bmap, apairs, bpairs, A.table(ff), B.table(ff))
+    bondmaps = make_block(amap, bmap, apairs, bpairs, C.table(ff), B.table(ff))
     ff='angle_harm'
-    anglmaps = make_block(amap, bmap, apairs, bpairs, A.table(ff), B.table(ff))
+    anglmaps = make_block(amap, bmap, apairs, bpairs, C.table(ff), B.table(ff))
     ff='dihedral_trig'
-    dihemaps = make_block(amap, bmap, apairs, bpairs, A.table(ff), B.table(ff))
+    dihemaps = make_block(amap, bmap, apairs, bpairs, C.table(ff), B.table(ff))
     ff='pair_12_6_es'
-    pairmaps = make_pairmaps(bmap, A.table(ff), B.table(ff))
+    pairmaps = make_pairmaps(bmap, C.table(ff), B.table(ff))
 
     kept.stage2( C, B, pairs, bmap, bondmaps, anglmaps, dihemaps, False )
 
@@ -239,6 +240,11 @@ def MakeAlchemical(A, B, pairs):
         bi, bj = bmap[bnd.i], bmap[bnd.j]
         if apairs[bi]<0 or apairs[bj]<0:
             C.addBond(bi,bj)
+
+    # tack on the non-alchemical part
+    alc_ids = A.atoms()[len(atoms):]
+    alc = _msys.Clone(A, alc_ids)
+    C.append(alc)
 
     # reassign gids in the order they're given by the input maps 
     for a in C.atoms(): C.atom(a).gid = a
