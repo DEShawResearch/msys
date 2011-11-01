@@ -1,19 +1,10 @@
 
 
-def create_map(pairs):
-    ''' convert the atom pairs list into a forward and a reverse lookup '''
-    map={}
-    imap={}
-    for a, b in pairs:
-        map[b]=a
-        imap[a]=b
-    return map, imap
-
 def CtBonds(e):
-    ''' return a 1-based neighbor list for each atom. '''
-    return [sorted(b.id+1 for b in a.bondedAtoms()) for a in e.atoms]
+    ''' return a 0-based neighbor list for each atom. '''
+    return [sorted(e.bondedAtoms(a)) for a in e.atoms()]
 
-def stage2(entA, entB, atommaps,
+def stage2(molC, molB, atommaps, bmap,
            bondmaps, anglemaps, dihedmaps, 
            keep_extra_dihedral):
 
@@ -22,8 +13,6 @@ def stage2(entA, entB, atommaps,
   # of real atoms.
   # First, construct a dictionary into anglemaps and dihedmaps so that we can
   # access individual terms and change their 0 to -1 (if kept)
-
-  map, imap = create_map(atommaps)
 
   bond_dict = dict()
   for i,[[ti,tj],bond] in enumerate(bondmaps):
@@ -47,17 +36,17 @@ def stage2(entA, entB, atommaps,
 
   # contains 1-based atom numbers
   # backward edges are present
-  neighbors = CtBonds(entA)
+  neighbors = CtBonds(molC)
 
   # boolean list that indicates what atoms are always real and what 
   # atoms map to dummies in the B state
   realdummy = [0]*len(atommaps) # more than necessary
   for ai,aj in atommaps:
-    if ai > 0:
-      if aj > 0:
-        realdummy[ai-1] = True
+    if ai >= 0:
+      if aj >= 0:
+        realdummy[ai] = True
       else:
-        realdummy[ai-1] = False
+        realdummy[ai] = False
 
   # boolean list that indicates whether a dummy atom is connected through
   # kept covalent bonds to another dummy atom that is connected to a real
@@ -66,12 +55,13 @@ def stage2(entA, entB, atommaps,
   
   # loop through all bonds - only use (i,j) when i becomes a dummy in state B
   for i,jlist in enumerate(neighbors):
+    if atommaps[i][0] < 0: continue
     if (not realdummy[i] and not connected[i]):
       for j in jlist:
-        if realdummy[j-1]:
+        if realdummy[j]:
           # j is real and i is dummy in B state
-          n1 = two_neighbors(i,   neighbors, realdummy)
-          n2 = two_neighbors(j-1, neighbors, realdummy)
+          n1 = two_neighbors(i, neighbors, realdummy)
+          n2 = two_neighbors(j, neighbors, realdummy)
 
           #print 'Stage A: Using template', n1, n2
 
@@ -102,17 +92,17 @@ def stage2(entA, entB, atommaps,
 
   # contains 1-based atom numbers
   # backward edges are present
-  neighbors = CtBonds(entB)
+  neighbors = CtBonds(molB)
 
   # boolean list that indicates what atoms are always real and what 
   # atoms map to dummies in the A state
   realdummy = [0]*len(atommaps) # more than necessary
   for ai,aj in atommaps:
-    if aj > 0:
-      if ai > 0:
-        realdummy[aj-1] = True
+    if aj >= 0:
+      if ai >= 0:
+        realdummy[aj] = True
       else:
-        realdummy[aj-1] = False
+        realdummy[aj] = False
 
   # This bookkeeps whether a dummy atom is already connected - directly
   # or indirectly - to some real atom through a path of kept covalent
@@ -122,19 +112,20 @@ def stage2(entA, entB, atommaps,
 
   # loop through all bonds - only use (i,j) when i<j
   for i,jlist in enumerate(neighbors):
+    if atommaps[i][0] < 0: continue
     # Seek a connection between the dummy atom and the real atoms, if and
     # only if it is not yet connected - directly or indirectly - to some
     # real atoms.
     if not realdummy[i] and not connected[i]:
       for j in jlist:
-        if realdummy[j-1]:
+        if realdummy[j]:
           # j is real and i is dummy in A state
-          n1 = two_neighbors(i,   neighbors, realdummy)
-          n2 = two_neighbors(j-1, neighbors, realdummy)
+          n1 = two_neighbors(i, neighbors, realdummy)
+          n2 = two_neighbors(j, neighbors, realdummy)
 
           # convert to combined numbering
-          n1 = [map[x] for x in n1]
-          n2 = [map[x] for x in n2]
+          n1 = [bmap[x] for x in n1]
+          n2 = [bmap[x] for x in n2]
 
           #print 'Stage B: Using template', n1, n2
 
@@ -175,16 +166,16 @@ def find_connected_dummies( i, neighbors, realdummy, connected ):
     visited[k] = True
     jlist = neighbors[k]
     for jp in jlist:
-      j = jp - 1
+      j = jp 
       if (visited[j]): continue
       if (not realdummy[j]): continue
       queue.append( j )
   
 def keep(termmaps, i):
   [ind,term] = termmaps[i]
-  #assert ind[0] == 0 or ind[1] == 0
+  assert ind[0] == 0 or ind[1] == 0
   if ind[0] != 0 and ind[1] != 0:
-    print '*****Warning:', termmaps[i]
+    #print '*****Warning:', termmaps[i]
     return
   if ind[0] == 0:
     ind[0] = -1
@@ -195,14 +186,13 @@ def keep(termmaps, i):
 def two_neighbors(i, neighbors, realdummy):
   '''Return a list of 1, 2, or 3 atoms [i, j, k] such that i is bonded to j, 
      j is bonded to k, and k is not i.  Input uses 0-based indexing.
-     Output uses 1-based indexing. (Fix this later.)
      Neighbors list has both directions.
   '''
   ret = list()
-  ret.append(i+1)
+  ret.append(i)
 
   # select neighbors that have the same type
-  neigh = [ j for j in neighbors[i] if realdummy[j-1] == realdummy[i] ]
+  neigh = [ j for j in neighbors[i] if realdummy[j] == realdummy[i] ]
   if len(neigh) == 0:
     return ret  # could not find a j
 
@@ -212,7 +202,7 @@ def two_neighbors(i, neighbors, realdummy):
   neigh_degree = list()
   for x in neigh:
     # y is the list of neighbors of x that have the right type
-    y = [ z for z in neighbors[x-1] if realdummy[z-1] == realdummy[i] ]
+    y = [ z for z in neighbors[x] if realdummy[z] == realdummy[i] ]
     neigh_degree.append(len(y))
 
   # now choose the one with the largest degree
@@ -221,8 +211,8 @@ def two_neighbors(i, neighbors, realdummy):
   ret.append(j)
 
   # now try to find second atom
-  for k in neighbors[j-1]:
-    if realdummy[k-1] == realdummy[i] and k-1 != i:
+  for k in neighbors[j]:
+    if realdummy[k] == realdummy[i] and k != i:
       ret.append(k)
       break
 

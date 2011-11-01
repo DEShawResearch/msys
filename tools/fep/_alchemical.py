@@ -188,13 +188,6 @@ def MakeAlchemical(A, B, pairs):
     # them in the right order.
     C = _msys.Clone(C, amap)
 
-    # bonds
-    for b in B.bonds():
-        bnd = B.bond(b)
-        bi, bj = bmap[bnd.i], bmap[bnd.j]
-        if apairs[bi]<0 or apairs[bj]<0:
-            C.addBond(bi,bj)
-
     # stretches, angles, dihedrals
     ff='stretch_harm'
     bondmaps = make_block(amap, bmap, apairs, bpairs, A.table(ff), B.table(ff))
@@ -203,12 +196,22 @@ def MakeAlchemical(A, B, pairs):
     ff='dihedral_trig'
     dihemaps = make_block(amap, bmap, apairs, bpairs, A.table(ff), B.table(ff))
 
+    kept.stage2( C, B, pairs, bmap, bondmaps, anglmaps, dihemaps, False )
+
     ff='stretch_harm'
     make_alchemical(A.table(ff), B.table(ff), C.table(ff), bondmaps, "r0")
     ff='angle_harm'
     make_alchemical(A.table(ff), B.table(ff), C.table(ff), anglmaps)
     ff='dihedral_trig'
     make_alchemical(A.table(ff), B.table(ff), C.table(ff), dihemaps)
+
+
+    # bonds
+    for b in B.bonds():
+        bnd = B.bond(b)
+        bi, bj = bmap[bnd.i], bmap[bnd.j]
+        if apairs[bi]<0 or apairs[bj]<0:
+            C.addBond(bi,bj)
 
     # reassign gids in the order they're given by the input maps 
     for a in C.atoms(): C.atom(a).gid = a
