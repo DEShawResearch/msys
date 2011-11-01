@@ -137,6 +137,11 @@ def MakeAlchemical(A, B, pairs):
     C=_msys.Clone(A, A.atoms())
     amap = _msys.IdList()
     bmap=dict()
+
+    nbB = B.table('nonbonded') if 'nonbonded' in B.tableNames() else None
+    nbC = C.table('nonbonded') if 'nonbonded' in C.tableNames() else None
+    Czero = None
+
     for i, (ai, bi) in enumerate(pairs):
         assert ai>=0 or bi>=0
         if ai<0:
@@ -149,15 +154,33 @@ def MakeAlchemical(A, B, pairs):
             if res<0: res = C.addResidue(chn)
             atm = C.addAtom(res)
             atom = C.atom(atm)
+            atom.alchemical = True
             atom.mass = batm.mass
             atom.x = batm.x
             atom.y = batm.y
             atom.z = batm.z
-            atom.chargeB = batm.chargeB
+            atom.chargeB = batm.charge
             atom.atomic_number = batm.atomic_number
             amap.append(atm)
+            if nbC is not None:
+                assert nbB is not None
+                # make a zero term for the nonbonded
+                if Czero is None: Czero = nbC.params().addParam()
+                t = nbC.addTerm([atm], Czero)
+                p = copy_param(nbC.params(), nbB.params(), nbB.param(bi))
+                nbC.setParamB(t, p)
         else:
+            atom = C.atom(ai)
             amap.append(ai)
+            atom.alchemical = True
+            if bi>=0:
+                batm = B.atom(bi)
+                atom.chargeB = batm.charge
+                p = copy_param(nbC.params(), nbB.params(), nbB.param(bi))
+                nbC.setParamB(ai, p)
+            else:
+                if Czero is None: Czero = nbC.params().addParam()
+                nbC.setParamB(ai, Czero)
         if bi>=0:
             bmap[bi] = i
 
