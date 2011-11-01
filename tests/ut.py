@@ -416,10 +416,20 @@ class TestMain(unittest.TestCase):
 
     def testAppend(self):
         m=msys.CreateSystem()
-        m.addAtom().name='a'
-        m.addAtom().name='b'
+        a0=m.addAtom()
+        a0.name='a'
+        a1=m.addAtom()
+        a1.name='b'
+        b=a0.addBond(a1)
+        m.addAtomProp('foo', float)
+        m.addBondProp('bar', int)
+        a1['foo']=3.14
+        b['bar']=42
         m.append(m)
         self.assertEqual( [a.name for a in m.atoms], ['a', 'b', 'a', 'b'])
+        self.assertEqual( m.atom(2)['foo'], 0 )
+        self.assertEqual( m.atom(3)['foo'], 3.14 )
+        self.assertEqual( m.bond(1)['bar'], 42)
 
     def testUpdateFragids(self):
         m=msys.CreateSystem()
