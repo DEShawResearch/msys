@@ -18,6 +18,7 @@ namespace desres { namespace msys {
         declare_list<std::vector<String> >("StringVec");
 
         def("bad", bad);
+        scope().attr("BadId") = (Id)BadId;
     }
 
 }}
