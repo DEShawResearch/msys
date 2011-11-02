@@ -126,6 +126,7 @@ def make_alchemical(atable, btable, ctable, block, keeper=None):
 
         elif ta==0 and tb>0:
             ''' disappear the A state '''
+            continue
             ids=_msys.IdList()
             for a in atoms: ids.append(a)
             param=copy_param(params, btable.params(), btable.param(tb-1))
@@ -183,12 +184,23 @@ def MakeAlchemical(A, B, pairs):
     nC = len(pairs)
     apairs, bpairs = zip(*pairs)
 
-    # clone just the alchemical part of A
+    # clone just the alchemical parts of A and B
     atoms = _msys.IdList()
-    for a in apairs:
+    for a in sorted(apairs):
         if a >= 0:
             atoms.append(a)
     C=_msys.Clone(A, atoms)
+
+    batoms = _msys.IdList()
+    for b in sorted(bpairs):
+        if b >= 0:
+            batoms.append(b)
+    B=_msys.Clone(B, batoms)
+
+    # add custom atom properties from B
+    for i in range(B.atomPropCount()):
+        C.addAtomProp(B.atomPropName(i), B.atomPropType(i))
+    
     amap = _msys.IdList()
     bmap=dict()
 
@@ -204,15 +216,24 @@ def MakeAlchemical(A, B, pairs):
             bres = B.residue(batm.residue)
             bchn = B.chain(bres.chain)
             chn, res = find_residue(C, bres.name, bres.num, bchn.name)
-            if chn<0: chn = C.addChain()
-            if res<0: res = C.addResidue(chn)
+            if chn<0: 
+                chn = C.addChain()
+                C.chain(chn).name = bchn.name
+            if res<0: 
+                res = C.addResidue(chn)
+                C.residue(res).name = bres.name
+                C.residue(res).num = bres.num
             atm = C.addAtom(res)
             atom = C.atom(atm)
             atom.alchemical = True
+            atom.name = batm.name
             atom.mass = batm.mass
             atom.x = batm.x
             atom.y = batm.y
             atom.z = batm.z
+            atom.vx = batm.vx
+            atom.vy = batm.vy
+            atom.vz = batm.vz
             atom.chargeB = batm.charge
             atom.atomic_number = batm.atomic_number
             amap.append(atm)
@@ -267,8 +288,7 @@ def MakeAlchemical(A, B, pairs):
     for b in B.bonds():
         bnd = B.bond(b)
         bi, bj = bmap[bnd.i], bmap[bnd.j]
-        if apairs[bi]<0 or apairs[bj]<0:
-            C.addBond(bi,bj)
+        C.addBond(bi,bj)
 
     # constraints
     for ca, (bname, tb) in make_constraint_map(bmap, C, B):
