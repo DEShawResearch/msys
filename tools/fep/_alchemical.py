@@ -177,7 +177,7 @@ def make_exclmap(bmap, apairs, bpairs, atable, btable):
         ai=invbmap.get(item[0], -1)
         aj=invbmap.get(item[1], -1)
         if apairs[item[0]]>=0 and apairs[item[1]]>=0 and ai>=0 and aj>=0:
-            print 'Offset exclusion %d-%d in A by pair interaction in B: %d-%d' % (apairs[item[0]], apairs[item[1]], ai, aj)
+            #print 'Offset exclusion %d-%d in A by pair interaction in B: %d-%d' % (apairs[item[0]], apairs[item[1]], ai, aj)
             pairsB, paramB = make_full_pair_entry(btable.system(), ai, aj)
             paramB = copy_param(pairs.params(), pairsB.params(), paramB)
             for t in pairs.terms():
@@ -190,6 +190,27 @@ def make_exclmap(bmap, apairs, bpairs, atable, btable):
                 t=pairs.addTerm(ids, pairs.params().addParam())
                 pairs.setParamB(t, paramB)
 
+    block2=list()
+    for item, j in b_item_dict.items():
+        block2.append( [[-1,j], item] )
+        ai=invbmap.get(item[0], -1)
+        aj=invbmap.get(item[1], -1)
+        if apairs[item[0]]>=0 and apairs[item[1]]>=0 and ai>=0 and aj>=0:
+            #print 'Offset exclusion %d-%d in B by pair interaction in A: %d-%d' % (ai, aj, apairs[item[0]], apairs[item[1]])
+            pairs, param = make_full_pair_entry(atable.system(), item[0], item[1])
+            for t in pairs.terms():
+                if sorted(pairs.atoms(t))==item:
+                    pairs.setParam(t, param)
+                    break
+            else:
+                ids=_msys.IdList()
+                for i in item: ids.append(i)
+                t = pairs.addTerm(ids, param)
+                pairs.setParamB(t, pairs.params().addParam())
+
+    block2.sort()
+    block.extend(block2)
+    return block
 
 
 def copy_param( dstparams, srcparams, srcid ):
