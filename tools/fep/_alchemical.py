@@ -1,6 +1,7 @@
 
 import _msys
 from msys import kept
+from math import sqrt
 
 def find_residue(mol, resname, resid, chainname):
     for chn in mol.chains():
@@ -78,6 +79,117 @@ def make_pairmaps(bmap, atable, btable):
     block.extend(block2)
 
     return block
+
+def get_pairs_table(mol):
+    funct = mol.nonbonded_info.vdw_funct
+    if funct=='vdw_12_6':
+        pname = 'pair_12_6_es'
+    elif funct=='vdw_exp_6':
+        pname = 'pair_exp_6_es'
+    else:
+        raise ValueError, "Unsupported vdw_funct '%s'" % funct
+    return mol.table(pname)
+
+def find_nonbonded_param(table, atom):
+    for t in table.terms():
+        if table.atom(t,0)==atom:
+            return table.param(t)
+    raise ValueError, "Missing nonbonded term for atom %s" % atom
+
+def convert_sig_eps(sij, eij):
+    aij = pow(sij,12) * eij * 4.0
+    bij = pow(sij, 6) * eij * 4.0
+    return aij, bij
+
+def combine_geometric(vi, vj):
+    sij = sqrt(vi[0] * vj[0])
+    eij = sqrt(vi[1] * vj[1])
+    return convert_sig_eps(sij, eij)
+
+def combine_arith_geom(vi,vj):
+    sij = 0.5*(vi[0] + vj[0])
+    eij = sqrt(vi[1] * vj[1])
+    return convert_sig_eps(sij, eij)
+
+def configure_vdw_12_6_param(pairs, param, nb, rule, nb_i, nb_j):
+    ''' Using the given nonbonded entries, configure the vdw part of
+    the given pair entry. '''
+    # get sigma, epsilon for each atom
+    isig = nb.propIndex('sigma')
+    ieps = nb.propIndex('epsilon')
+    iprops = [nb.getProp(nb_i, isig), nb.getProp(nb_i, ieps)]
+    jprops = [nb.getProp(nb_j, isig), nb.getProp(nb_j, ieps)]
+
+    if rule=='geometric':
+        aij, bij = combine_geometric(iprops, jprops)
+    elif rule=='arithmetic/geometric':
+        aij, bij = combine_arith_geom(iprops, jprops)
+    else:
+        raise ValueError, "unsupported rule '%s' for vdw_12_6" % rule
+    iaij = pairs.propIndex('aij')
+    ibij = pairs.propIndex('bij')
+    pairs.setProp(param, iaij, aij)
+    pairs.setProp(param, ibij, bij)
+
+def make_full_pair_entry(mol, ai, aj):
+    pairs = get_pairs_table(mol)
+    params = pairs.params()
+    param = params.addParam()
+    index = params.propIndex('qij')
+    params.setProp(param, index, mol.atom(ai).charge * mol.atom(aj).charge)
+
+    nb = mol.table('nonbonded')
+    nb_i = find_nonbonded_param(nb, ai)
+    nb_j = find_nonbonded_param(nb, aj)
+    funct = mol.nonbonded_info.vdw_funct
+    rule = mol.nonbonded_info.vdw_rule
+
+    if funct=='vdw_12_6':
+        configure_vdw_12_6_param( params, param, nb.params(), rule, nb_i, nb_j )
+    elif funct=='vdw_exp_6':
+        configure_vdw_exp_6_param( params, param, nb.params(), rule, nb_i, nb_j )
+    else:
+        raise ValueError, "Unsupported vdw_funct '%s'" % funct
+
+    return pairs, param
+
+def make_exclmap(bmap, apairs, bpairs, atable, btable):
+    invbmap=dict()
+    for key, val in bmap.items(): invbmap[val]=key
+
+    pairs = get_pairs_table(atable.system())
+
+    b_item_dict=dict()
+    for t in btable.terms():
+        item = sorted(bmap[a] for a in btable.atoms(t))
+        b_item_dict[tuple(item)]=t+1
+
+    block=list()
+    for t in atable.terms():
+        item=sorted(a for a in atable.atoms(t))
+        j=b_item_dict.get(tuple(item), -1)
+        block.append( [[t+1,j], item] )
+        if j!=-1:
+            del b_item_dict[tuple(item)]
+            continue
+        # An excluded pair of atoms in A mapped onto an unexcluded pair of
+        # atoms in B.  We keep the exclusion, but add an extra pair to B.
+        ai=invbmap.get(item[0], -1)
+        aj=invbmap.get(item[1], -1)
+        if apairs[item[0]]>=0 and apairs[item[1]]>=0 and ai>=0 and aj>=0:
+            print 'Offset exclusion %d-%d in A by pair interaction in B: %d-%d' % (apairs[item[0]], apairs[item[1]], ai, aj)
+            pairsB, paramB = make_full_pair_entry(btable.system(), ai, aj)
+            paramB = copy_param(pairs.params(), pairsB.params(), paramB)
+            for t in pairs.terms():
+                if sorted(pairs.atoms(t))==item:
+                    pairs.setParamB(t, paramB)
+                    break
+            else:
+                ids=_msys.IdList()
+                for i in item: ids.append(i)
+                t=pairs.addTerm(ids, pairs.params().addParam())
+                pairs.setParamB(t, paramB)
+
 
 
 def copy_param( dstparams, srcparams, srcid ):
@@ -301,6 +413,10 @@ def MakeAlchemical(A, B, pairs):
         bnd = B.bond(b)
         bi, bj = bmap[bnd.i], bmap[bnd.j]
         C.addBond(bi,bj)
+
+    # exclusions and pairs
+    ff='exclusion'
+    exclmaps = make_exclmap(bmap, apairs, bpairs, C.table(ff), B.table(ff))
 
     # constraints
     for ca, (bname, tb) in make_constraint_map(bmap, C, B):
