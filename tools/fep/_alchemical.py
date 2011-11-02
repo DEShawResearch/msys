@@ -181,6 +181,17 @@ def create_ahn_constraint(mol, n):
 
 def MakeAlchemical(A, B, pairs):
 
+    # put all the dummy atoms for A at the end
+    # TODO: having made this transformation on pairs, we can probably 
+    # simplify a fair bit of other things in this routine.
+    pairs.sort()
+    zero=None
+    for i, (ai,aj) in enumerate(pairs):
+        if ai==0:
+            break
+    pairs.extend(pairs[:i])
+    pairs=pairs[i:]
+
     nC = len(pairs)
     apairs, bpairs = zip(*pairs)
 
@@ -196,6 +207,7 @@ def MakeAlchemical(A, B, pairs):
         if b >= 0:
             batoms.append(b)
     B=_msys.Clone(B, batoms)
+
 
     # add custom atom properties from B
     for i in range(B.atomPropCount()):
