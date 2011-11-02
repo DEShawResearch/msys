@@ -149,6 +149,35 @@ def make_alchemical(atable, btable, ctable, block, keeper=None):
         #if has_constrained and item.entryA and item.entryB:
             #item["constrained"] = 0
 
+
+def make_constraint_map( bmap, C, B):
+    ''' provide just the alchemical part of m1 and m2.  Yields a lazy 
+    sequence of corresponding items from m1 and m2; the m1 item may be
+    None. '''
+
+    # hash all the constraints in C from all categories by first atom
+    consmap=dict()
+    for name in C.tableNames():
+        atable = C.table(name)
+        if atable.category!='constraint': continue
+        for t in atable.terms():
+            a=atable.atom(t,0)
+            if a in consmap:
+                raise ValueError, "Overlapping constraint for atom %d" % a
+            consmap[a]=(name, t)
+
+    # find constraints in m2 that overlap with m1
+    for name in B.tableNames():
+        btable = B.table(name)
+        if btable.category!='constraint': continue
+        atable=C.table(name)
+        for t in btable.terms():
+            yield consmap.get( bmap[btable.atom(t,0)]), (name, t)
+
+def create_ahn_constraint(mol, n):
+    name='constraint_ah%d' % n
+    return mol.addTableFromSchema(name, name)
+
 def MakeAlchemical(A, B, pairs):
 
     nC = len(pairs)
@@ -240,6 +269,41 @@ def MakeAlchemical(A, B, pairs):
         bi, bj = bmap[bnd.i], bmap[bnd.j]
         if apairs[bi]<0 or apairs[bj]<0:
             C.addBond(bi,bj)
+
+    # constraints
+    for ca, (bname, tb) in make_constraint_map(bmap, C, B):
+        btable = B.table(bname)
+        bparams = btable.params()
+        bp = btable.param(tb)
+        ids=_msys.IdList()
+        for a in btable.atoms(tb): ids.append(bmap[a])
+        if ca is None:
+            # copy constraint from B to C
+            atable = create_ahn_constraint(C, len(ids)-1)
+            param = copy_param(atable.params(), bparams, btable.param(tb))
+            atable.addTerm( ids, param )
+
+        else:
+            # merge constraint from B into C
+            cname, tc = ca
+            ctable = C.table(cname)
+            cparams = ctable.params()
+            nparams = cparams.propCount()
+            p = ctable.param(tc)
+            cids = ctable.atoms(tc)
+            props = [cparams.getProp(p,i) for i in range(nparams)]
+            for i,b in enumerate(ids[1:]):
+                if b not in cids:
+                    cids.append(b)
+                    props.append(bparams.getProp(bp, i))
+            ctable.delTerm(tc)
+            mtable = create_ahn_constraint(C, len(props))
+            mparams = mtable.params()
+            mp = mparams.addParam()
+            for i in range(len(props)):
+                mparams.setProp(mp, i, props[i])
+            mtable.addTerm(cids, mp)
+
 
     # tack on the non-alchemical part
     alc_ids = A.atoms()[len(atoms):]
