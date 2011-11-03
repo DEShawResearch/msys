@@ -40,6 +40,8 @@ KeywordPtr keyword_vx( SystemPtr ent );
 KeywordPtr keyword_vy( SystemPtr ent );
 KeywordPtr keyword_vz( SystemPtr ent );
 
+KeywordPtr keyword_atomprop( SystemPtr ent, String const& prop );
+
 }}}
 
 #endif

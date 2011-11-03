@@ -171,6 +171,8 @@ namespace {
       !strcmp(id,"vy") ? keyword_y(ent) :
       !strcmp(id,"vz") ? keyword_z(ent) :
       KeywordPtr();
+
+    if (!key) key = keyword_atomprop(ent, id);
     return key;
   }
 

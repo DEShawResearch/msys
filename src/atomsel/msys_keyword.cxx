@@ -22,6 +22,27 @@ namespace {
       : Keyword(n,t), sys(_sys) {}
     SystemPtr sys;
   };
+
+  struct AtomPropKeyword : Keyword {
+    AtomPropKeyword( const std::string& n, KeywordType t, SystemPtr _sys)
+    : Keyword(n,t), sys(_sys), col(_sys->atomPropIndex(n)) {}
+
+    SystemPtr sys;
+    Id col;
+
+    void iget(const Selection& s, std::vector<Int>& v) const {
+        Id i,n=s.size();
+        for (i=0; i<n; i++) if (s[i]) v[i]=sys->atomPropValue(i,col).asInt();
+    }
+    void dget(const Selection& s, std::vector<Dbl>& v) const {
+        Id i,n=s.size();
+        for (i=0; i<n; i++) if (s[i]) v[i]=sys->atomPropValue(i,col).asFloat();
+    }
+    void sget(const Selection& s, std::vector<Str>& v) const {
+        Id i,n=s.size();
+        for (i=0; i<n; i++) if (s[i]) v[i]=sys->atomPropValue(i,col).asString();
+    }
+  };
 }
 
 #define INT_KEY(attr,path) \
@@ -91,5 +112,18 @@ DBL_KEY(vz,atom(i).vz)
 STR_KEY(chain,chain(sys->residue(sys->atom(i).residue).chain).name)
 STR_KEY(name,atom(i).name)
 STR_KEY(resname,residue(sys->atom(i).residue).name)
+
+KeywordPtr desres::msys::atomsel::keyword_atomprop( 
+        SystemPtr ent, String const& prop ) {
+
+    Id col = ent->atomPropIndex(prop);
+    if (bad(col)) return KeywordPtr();
+    ValueType vt = ent->atomPropType(col);
+    KeywordType t = vt==IntType ? KEY_INT :
+                    vt==FloatType ? KEY_DBL :
+                                      KEY_STR ;
+
+    return KeywordPtr(new AtomPropKeyword(prop, t, ent));
+}
 
 
