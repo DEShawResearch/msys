@@ -84,7 +84,7 @@ def dump_terms(cmd, ipath, out, table, without_paraminfo, reorder ):
         s=','.join(atoms+p)
         sql='select "%s", "%s", %s from %s' % (table, b, s, b)
         if reorder:
-            s += ' order by %s' % a
+            sql += ' order by %s' % a
         subprocess.call(cmd+[sql], stdout=out)
         newline(out)
 
