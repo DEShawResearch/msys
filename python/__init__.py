@@ -53,7 +53,7 @@ class Bond(Handle):
 
     def data(self): return self._ptr.bond(self._id)
 
-    def destroy(self): 
+    def remove(self): 
         ''' remove this Bond from the System '''
         self._ptr.delBond(self._id)
 
@@ -94,7 +94,7 @@ class Atom(Handle):
 
     def data(self): return self._ptr.atom(self._id)
 
-    def destroy(self):
+    def remove(self):
         ''' remove this Atom from the System '''
         self._ptr.delAtom(self._id)
 
@@ -162,7 +162,7 @@ class Residue(Handle):
     def data(self): 
         return self._ptr.residue(self._id)
 
-    def destroy(self):
+    def remove(self):
         ''' remove this Residue from the System '''
         self._ptr.delResidue(self._id)
 
@@ -187,7 +187,7 @@ class Chain(Handle):
 
     def data(self): return self._ptr.chain(self._id)
 
-    def destroy(self):
+    def remove(self):
         ''' remove this Chain from the System '''
         self._ptr.delChain(self._id)
 
@@ -318,7 +318,7 @@ class Term(object):
 
     def __repr__(self): return '<Term %d>' % self._id
 
-    def destroy(self):
+    def remove(self):
         ''' remove the given Term from its TermTable '''
         self._ptr.delTerm(self._id)
 
@@ -407,7 +407,7 @@ class TermTable(object):
     def __ne__(self, x): return self._ptr!=x._ptr
     def __hash__(self): return self._ptr.__hash__()
 
-    def destroy(self):
+    def remove(self):
         ''' Remove this table from its parent system '''
         self._ptr.system().removeTable(self._ptr)
 

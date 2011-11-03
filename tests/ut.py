@@ -17,8 +17,8 @@ class TestMain(unittest.TestCase):
         self.assertNotEqual(m.atom(0), m.atom(1))
 
         # FIXME: hmm, maybe fetching m.atom(0) ought to throw after the
-        # atom has been destroyed.  
-        m.atom(0).destroy()
+        # atom has been removeed.  
+        m.atom(0).remove()
         self.assertFalse(m.atom(0) in m.atoms)
 
         m2=msys.CreateSystem()
@@ -93,7 +93,7 @@ class TestMain(unittest.TestCase):
         self.assertEqual([a for a in a2.bonded_atoms], [a3])
         self.assertEqual([a for a in a3.bonded_atoms], [a2])
 
-        b.destroy()
+        b.remove()
         self.assertEqual(len(m.bonds),0)
 
         b1=a1.addBond(a2)
@@ -103,9 +103,9 @@ class TestMain(unittest.TestCase):
         self.assertEqual(b1, a2.findBond(a1))
         self.assertEqual(None, m.findBond(a1,a3))
 
-        b.destroy()
-        b.destroy()
-        b.destroy()
+        b.remove()
+        b.remove()
+        b.remove()
         self.assertEqual(len(a2.bonds),1)
 
         m.delBonds(m.bonds)
@@ -126,17 +126,17 @@ class TestMain(unittest.TestCase):
         r=m.addResidue()
         for i in range(10000):
             r.addAtom()
-        r.destroy()
-        r.destroy()
-        r.destroy()
+        r.remove()
+        r.remove()
+        r.remove()
         self.assertEqual(len(m.atoms), 0)
 
         c=m.addChain()
         for i in range(10000):
             c.addResidue()
-        c.destroy()
-        c.destroy()
-        c.destroy()
+        c.remove()
+        c.remove()
+        c.remove()
         self.assertEqual(len(m.residues), 0)
 
     def testResidue(self):
@@ -150,9 +150,9 @@ class TestMain(unittest.TestCase):
         self.assertEqual(len(m.residues), 1)
         self.assertEqual(len(m.atoms), 2)
         self.assertEqual(len(r.atoms), 2)
-        r.destroy()
-        r.destroy()
-        r.destroy()
+        r.remove()
+        r.remove()
+        r.remove()
         self.assertEqual(len(m.residues), 0)
         self.assertEqual(len(m.atoms), 0)
         self.assertEqual(len(r.atoms), 0)
@@ -171,7 +171,7 @@ class TestMain(unittest.TestCase):
         self.assertEqual(len(m.residues), 2)
         self.assertEqual(len(c.residues), 2)
         self.assertEqual(len(m.atoms), 2)
-        c.destroy()
+        c.remove()
         self.assertEqual(len(m.residues), 0)
         self.assertEqual(len(c.residues), 0)
         self.assertEqual(len(m.atoms), 0)
@@ -219,7 +219,7 @@ class TestMain(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             angle.addTerm((m.atom(1),m.atom(1), m.atom(5)))
 
-        angle.destroy()
+        angle.remove()
         self.assertFalse('angle' in m.table_names)
         self.assertFalse(angle in m.tables)
 
@@ -237,12 +237,12 @@ class TestMain(unittest.TestCase):
         table.addTerm((a4,a2))
         table.addTerm((a4,a3))
         self.assertEqual(table.nterms, 6)
-        table.term(2).destroy()     # removes term 2
+        table.term(2).remove()     # removes term 2
         self.assertEqual(table.nterms, 5)
 
         table.delTermsWithAtom(a3)  # removes term 1,3,5
         self.assertEqual(table.nterms, 2)
-        a4.destroy()
+        a4.remove()
         self.assertEqual(table.nterms, 1)
 
 
@@ -410,7 +410,7 @@ class TestMain(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             msys.CloneSystem([m.atoms[0], m.atoms[1], m.atoms[0]])
 
-        m.atom(2).destroy()
+        m.atom(2).remove()
         with self.assertRaises(RuntimeError):
             msys.CloneSystem([m.atom(0), m.atom(1), m.atom(2)])
 
