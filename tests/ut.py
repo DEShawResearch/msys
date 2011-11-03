@@ -103,6 +103,8 @@ class TestMain(unittest.TestCase):
         self.assertEqual(b1, a2.findBond(a1))
         self.assertEqual(None, m.findBond(a1,a3))
 
+        self.assertEqual(a2.nbonds, 1)
+
         b.remove()
         b.remove()
         b.remove()
@@ -126,6 +128,7 @@ class TestMain(unittest.TestCase):
         r=m.addResidue()
         for i in range(10000):
             r.addAtom()
+        self.assertEqual(r.natoms, 10000)
         r.remove()
         r.remove()
         r.remove()
@@ -134,10 +137,13 @@ class TestMain(unittest.TestCase):
         c=m.addChain()
         for i in range(10000):
             c.addResidue()
+        self.assertEqual(c.nresidues, 10000)
+
         c.remove()
         c.remove()
         c.remove()
         self.assertEqual(len(m.residues), 0)
+        self.assertEqual(c.nresidues, 0)
 
     def testResidue(self):
         m=msys.CreateSystem()

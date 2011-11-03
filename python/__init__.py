@@ -142,11 +142,19 @@ class Atom(Handle):
 
     @property
     def bonds(self):
+        ''' Bonds connected to this atom '''
         return [Bond(self._ptr, i) for i in self._ptr.bondsForAtom(self._id)]
 
     @property
     def bonded_atoms(self):
+        ''' Atoms bonded to this atom '''
         return [Atom(self._ptr, i) for i in self._ptr.bondedAtoms(self._id)]
+
+    @property
+    def nbonds(self):
+        ''' number of bonds to this atom '''
+        return self._ptr.bondCountForAtom(self._id)
+
 
 __add_properties(Atom, 
         'gid', 'fragid', 'x', 'y', 'z', 'charge',
@@ -176,6 +184,11 @@ class Residue(Handle):
         return [Atom(self._ptr, i) for i in self._ptr.atomsForResidue(self._id)]
 
     @property
+    def natoms(self):
+        ''' number of atoms in this residue '''
+        return self._ptr.atomCountForResidue(self._id)
+
+    @property
     def chain(self):
         ''' parent chain '''
         return Chain(self._ptr, self.data().chain)
@@ -199,6 +212,11 @@ class Chain(Handle):
     def residues(self):
         ''' list of Residues in this Chain '''
         return [Residue(self._ptr, i) for i in self._ptr.residuesForChain(self._id)]
+
+    @property
+    def nresidues(self):
+        ''' number of residues in this chain '''
+        return self._ptr.residueCountForChain(self._id)
 
 __add_properties(Chain, 'name')
 
@@ -561,6 +579,14 @@ class System(object):
     def bond(self, id):
         ''' return the bond with the specified id '''
         return Bond(self._ptr, id)
+
+    def residue(self, id):
+        ''' return the residue with the specified id '''
+        return Residue(self._ptr, id)
+
+    def chain(self, id):
+        ''' return the chain with the specified id '''
+        return Chain(self._ptr, id)
 
     def findBond(self, a1, a2):
         ''' return the bond between the specified atoms, or None if not found
