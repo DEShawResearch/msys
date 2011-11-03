@@ -8,7 +8,7 @@ trap 'desres_trapped_exit' EXIT
 desres_require_cleanenv
 
 NAME=msys
-PKG_VERSION=0.8.3
+PKG_VERSION=0.9.0
 
 VERSION=${PKG_VERSION}
 DESCRIPTION="Biomolecular Structure Library"
@@ -84,6 +84,15 @@ $PREFIX/doc/html/index.html
 
 This is a pre-release version of msys.
 
+0.9.0  ImportMAE no longer overrides chain with segid.
+       Much stricter dms exporter.
+       ImportDMS merges chains with the same name.
+       Rename destroy() to remove() in the python interface.
+       Add dms-fep.
+       Fix busted --reorder option in dms-diff.
+       Allow atom selections on any custom atom property.
+       Bugfix for append - copy custom atom and bond properties.
+       
 0.8.3  Bugfix: SaveDMS was incorrectly mapping custom term properties (e.g.
                "constrained") into the view statements.
 
