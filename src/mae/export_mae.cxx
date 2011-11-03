@@ -61,7 +61,6 @@ static void build_m_atom( SystemPtr mol, Destro& M ) {
         "s_m_grow_name",
         "i_m_atomic_number",
         "i_m_visibility",
-        "s_m_pdb_segment_name",
         "r_ffio_x_vel",
         "r_ffio_y_vel",
         "r_ffio_z_vel",
@@ -105,7 +104,6 @@ static void build_m_atom( SystemPtr mol, Destro& M ) {
         rec["m_pdb_atom_name"] = pad(atm.name, 4);
         rec["m_pdb_residue_name"] = pad(res.name, 4);
         rec["m_chain_name"] = chn.name;
-        rec["m_pdb_segment_name"] = chn.name;
         rec["m_residue_number"] = res.num;
         rec["m_x_coord"] = atm.x;
         rec["m_y_coord"] = atm.y;
@@ -141,6 +139,20 @@ static void build_m_atom( SystemPtr mol, Destro& M ) {
             if (!bad(col)) {
                 rec.add_schema('i', maeprops[j]);
                 rec[maeprops[j]]=mol->atomPropValue(id,col).asInt();
+            }
+        }
+
+        static const char * s_entprops[] = {
+            "segid" 
+        };
+        static const char * s_maeprops[] = {
+            "m_pdb_segment_name"
+        };
+        for (unsigned j=0; j<sizeof(s_entprops)/sizeof(s_entprops[0]); j++) {
+            Id col = mol->atomPropIndex(s_entprops[j]);
+            if (!bad(col)) {
+                rec.add_schema('s', s_maeprops[j]);
+                rec[s_maeprops[j]]=mol->atomPropValue(id,col).asString();
             }
         }
     }
@@ -255,15 +267,17 @@ static const char * improper_harm_params[] = { "fc", NULL };
 
 static void dihedral_trig_apply(TermTablePtr table, Id term, Destro& row) {
     row.add_schema('r', "ffio_c0");
-    row["ffio_c0"] = table->params()->value(term,"phi0").asFloat();
+    Id param = table->param(term);
+    row["ffio_c0"] = table->params()->value(param,"phi0").asFloat();
 }
 
 static const char * pair_charge_params[] = { "qij", NULL };
 static void pair_lj12_6_apply( TermTablePtr table, Id term, Destro& row) {
     row.add_schema('r', "ffio_c1");
     row.add_schema('r', "ffio_c2");
-    double aij = table->params()->value(term,"aij").asFloat();
-    double bij = table->params()->value(term,"bij").asFloat();
+    Id param = table->param(term);
+    double aij = table->params()->value(param,"aij").asFloat();
+    double bij = table->params()->value(param,"bij").asFloat();
     double sij=1, eij=0;
     if (aij!=0 && bij!=0) {
         sij = pow(aij/bij, 1./6.);
@@ -275,7 +289,8 @@ static void pair_lj12_6_apply( TermTablePtr table, Id term, Destro& row) {
 
 static void cmap_apply( TermTablePtr table, Id term, Destro& row) {
     row.add_schema( 'i', "ffio_c1");
-    std::string cmapid = table->params()->value(term, "cmapid").asString();
+    Id param = table->param(term);
+    std::string cmapid = table->params()->value(param, "cmapid").asString();
     int id;
     if (sscanf(cmapid.c_str(), "cmap%d", &id)!=1) {
         std::stringstream ss;
@@ -350,7 +365,8 @@ static void posre_apply( TermTablePtr table, Id term, Destro& row) {
         if (!bad(propcol)) {
             row[col]=table->termPropValue(term,prop).asFloat();
         } else {
-            row[col]=table->params()->value(term,prop).asFloat();
+            Id param = table->param(term);
+            row[col]=table->params()->value(param,prop).asFloat();
         }
     }
 }

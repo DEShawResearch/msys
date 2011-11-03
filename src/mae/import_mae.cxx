@@ -105,31 +105,26 @@ namespace {
         const Json& frz = m_atom.get(GRP_FROZEN);
         const Json& formals = m_atom.get(FORMAL_CHG);
         Id gtmp=BadId, gene=BadId, glig=BadId, gbias=BadId, gfrz=BadId;
+        Id seg=BadId;
 
         if (!!temp) gtmp=h->addAtomProp("grp_temperature", IntType);
         if (!!nrg)  gene=h->addAtomProp("grp_energy", IntType);
         if (!!lig)  glig=h->addAtomProp("grp_ligand", IntType);
         if (!!bias) gbias=h->addAtomProp("grp_bias", IntType);
         if (!!frz)  gfrz=h->addAtomProp("grp_frozen", IntType);
+        if (!!segids) seg=h->addAtomProp("segid", StringType);
 
         int j,n = m_atom.get("__size__").as_int();
         for (j=0; j<n; j++) {
             int anum=anums.elem(j).as_int();
-            std::string segid = segids.elem(j).as_string("");
             std::string chainname=chains.elem(j).as_string("");
             int resid=resids.elem(j).as_int(0);
             std::string resname=resnames.elem(j).as_string("UNK");
             std::string name=names.elem(j).as_string("");
 
-            boost::trim(segid);
             boost::trim(chainname);
             boost::trim(resname);
             boost::trim(name);
-
-            /* prefer segid to chain */
-            if (contains_non_whitespace(segid)) {
-                chainname = segid;
-            }
 
             if (bad(chn) || h->chain(chn).name!=chainname) {
                 chn = h->addChain();
@@ -160,6 +155,11 @@ namespace {
             if (!!lig)  h->atomPropValue(id,glig)=lig.elem(j).as_int(0);
             if (!!bias) h->atomPropValue(id,gbias)=bias.elem(j).as_int(0);
             if (!!frz)  h->atomPropValue(id,gfrz)=frz.elem(j).as_int(0);
+            if (!!segids)  {
+                std::string segid = segids.elem(j).as_string("");
+                boost::trim(segid);
+                h->atomPropValue(id,seg)=segid;
+            }
             atoms.push_back(id);
             *natoms += 1;
         }
