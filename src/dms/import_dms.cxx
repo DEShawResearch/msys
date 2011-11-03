@@ -426,8 +426,10 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
     Id chnid = BadId;
     Id resid = BadId;
 
+    typedef std::map<String,Id> ChnMap;
     typedef std::map<ResKey,Id> ResMap;
     ResMap resmap;
+    ChnMap chnmap;
     IdList nbtypes;
     IdList gidmap; /* map dms gids to msys ids */
     IdList ignored_gids;
@@ -491,10 +493,14 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
 
         /* start a new chain if necessary */
         const char * chainname = dms_reader_get_string(r,CHAIN);
-        if (bad(chnid) || strcmp(chainname, sys.chain(chnid).name.c_str())) {
+        ChnMap::const_iterator cit = chnmap.find(chainname);
+        if (cit==chnmap.end()) {
             chnid = sys.addChain();
             sys.chain(chnid).name = chainname;
             resid = BadId;
+            chnmap[chainname]=chnid;
+        } else {
+            chnid = cit->second;
         }
 
         /* start a new residue if necessary */
