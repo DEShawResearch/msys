@@ -2,7 +2,7 @@
 
 namespace {
 
-    const char * maecols[] = { "ffio_a", "ffio_b", "ffio_cutoff" };
+    //const char * maecols[] = { "ffio_a", "ffio_b", "ffio_cutoff" };
     struct Pseudopol : public Ffio {
 
         void apply( SystemPtr h,
@@ -11,7 +11,7 @@ namespace {
                     const VdwMap&, bool alchemical  ) const {
 
             TermTablePtr table = AddTable(h,"pseudopol_fermi");
-            ParamMap map(table->params(), blk, 3, maecols);
+            ParamMap map(table->params(), blk /* , 3, maecols */);
             MaeAtoms atoms(blk);
             
             const Json& fn = blk.get("ffio_funct");
