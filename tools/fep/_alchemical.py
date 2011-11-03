@@ -199,7 +199,7 @@ def make_exclmap(bmap, apairs, bpairs, atable, btable):
             #print 'Offset exclusion %d-%d in B by pair interaction in A: %d-%d' % (ai, aj, apairs[item[0]], apairs[item[1]])
             pairs, param = make_full_pair_entry(atable.system(), item[0], item[1])
             for t in pairs.terms():
-                if sorted(pairs.atoms(t))==item:
+                if sorted(pairs.atoms(t))==sorted(item):
                     pairs.setParam(t, param)
                     break
             else:
@@ -210,6 +210,30 @@ def make_exclmap(bmap, apairs, bpairs, atable, btable):
 
     block2.sort()
     block.extend(block2)
+    return block
+
+def add_more_exclusions( pairs, bmap, A, B, cutoff=6.0 ):
+    r2=cutoff*cutoff
+    a_list=list()
+    b_list=list()
+    block=list()
+    xyz=('x', 'y', 'z')
+
+    for i, (a,b) in enumerate(pairs):
+        if a>=0 and b<0: a_list.append(a)
+        if a<0 and b>=0: b_list.append(b)
+
+    for a in a_list:
+        atm=A.atom(a)
+        apos=[getattr(atm, x) for x in xyz]
+        for b in b_list:
+            atm=B.atom(b)
+            bpos=[getattr(atm, x) for x in xyz]
+            d2=sum((bpos[i] - apos[i])**2 for i in range(3))
+            if d2<r2:
+                block.append( [[-1,-1], [a,bmap[b]]] )
+                #print "extra:", a, bmap[b]
+
     return block
 
 
@@ -259,7 +283,6 @@ def make_alchemical(atable, btable, ctable, block, keeper=None):
 
         elif ta==0 and tb>0:
             ''' disappear the A state '''
-            continue
             ids=_msys.IdList()
             for a in atoms: ids.append(a)
             param=copy_param(params, btable.params(), btable.param(tb-1))
@@ -284,6 +307,15 @@ def make_alchemical(atable, btable, ctable, block, keeper=None):
             #item["constrained"] = 0
 
 
+def make_alchemical_excl(table, block):
+    for (ta,tb), atoms in block:
+        ids=_msys.IdList()
+        for i in sorted(atoms): ids.append(i)
+        if ta>0 and (tb>0 or tb==-1):
+            pass # already have this exclusion
+        elif ta==-1 and (tb>0 or tb==-1):
+            table.addTerm(ids, _msys.BadId)
+    
 def make_constraint_map( bmap, C, B):
     ''' provide just the alchemical part of m1 and m2.  Yields a lazy 
     sequence of corresponding items from m1 and m2; the m1 item may be
@@ -438,6 +470,8 @@ def MakeAlchemical(A, B, pairs):
     # exclusions and pairs
     ff='exclusion'
     exclmaps = make_exclmap(bmap, apairs, bpairs, C.table(ff), B.table(ff))
+    exclmaps.extend(add_more_exclusions( pairs, bmap, A, B ))
+    make_alchemical_excl(C.table(ff), exclmaps)
 
     # constraints
     for ca, (bname, tb) in make_constraint_map(bmap, C, B):
