@@ -178,7 +178,7 @@ def Neutralize(mol, cation='NA', anion='CL',
             ionatm.charge = iontype.charge
             ionatm.mass = iontype.mass
 
-            res.destroy()
+            res.remove()
 
     if nother > 0:
         otherchain = mol.addChain()
@@ -196,7 +196,7 @@ def Neutralize(mol, cation='NA', anion='CL',
             ionatm.charge = othertype.charge
             ionatm.mass = othertype.mass
 
-            res.destroy()
+            res.remove()
 
     mol.reassignGids()
 
