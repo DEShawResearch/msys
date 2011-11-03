@@ -75,6 +75,8 @@ compare_atomsel(coord_ent,"abs(x-y)<5")
 
 # test regex
 compare_atomsel(coord_ent,'name "C.*"')
+compare_atomsel(coord_ent,'name "C[a-z]"')
+compare_atomsel(coord_ent,'name "C[A-Z]"')
 
 # macros
 for x in '''

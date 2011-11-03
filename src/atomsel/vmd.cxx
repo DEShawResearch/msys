@@ -219,7 +219,9 @@ namespace {
           pred->addLiteral(str(c));
 
         } else if (type==REGEX) { 
-          pred->addRegex(Regex(str(child(c,0))));
+          std::string r(str(child(c,0))+1);
+          r.resize(r.size()-1);
+          pred->addRegex(Regex(r));
 
         } else {
           THROW_FAILURE("Unexpected type " << type << " following key " << id);

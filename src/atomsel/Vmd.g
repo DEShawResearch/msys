@@ -110,9 +110,9 @@ range
     -> ^(TO LIT LIT)
   ;
 
-regex
-  : '\"' LIT '\"'
-    -> ^(REGEX LIT)
+regex  
+  : REGEXVAL 
+    -> ^(REGEX REGEXVAL)
   ;
 
 relOp
@@ -166,6 +166,12 @@ factor
 LIT
   // we don't try hard at all to catch errors in literal values.
   : ( ALPHA | DIGIT | '.' | '_' | '\'' | '*' ) +
+  ;
+  
+REGEXVAL
+  //: (LIT | '[' | ']' |'+' | '-' )+
+  //:	(~('\"'|' '|'\n' | '\r'))+
+   :    '\"' (~'\"')* '\"'
   ;
 
 fragment ALPHA : 'a'..'z' | 'A'..'Z';
