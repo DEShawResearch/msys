@@ -447,6 +447,46 @@ class TestMain(unittest.TestCase):
         self.assertEqual(fragids(m), [0,1,0])
         self.assertEqual(frags, [[m.atom(0), m.atom(2)], [m.atom(1)]])
 
+    def testBadDMS(self):
+        path='/tmp/_tmp_.dms'
+        m=msys.CreateSystem()
+        msys.SaveDMS(m, path)
+        a0=m.addAtom()
+        msys.SaveDMS(m, path)
+        nb=m.addNonbondedFromSchema('vdw_12_6', 'geometric')
+        # can't save - no terms for particle 0
+        with self.assertRaises(RuntimeError):
+            msys.SaveDMS(m, path)
+        t=nb.addTerm([a0])
+        # can't save - no param
+        with self.assertRaises(RuntimeError):
+            msys.SaveDMS(m, path)
+        p0=nb.params.addParam()
+        t.param=p0
+        # now we can save
+        msys.SaveDMS(m, path)
+        # twiddle param to something bad
+        t._ptr.setParam(t.id, 42)
+        with self.assertRaises(RuntimeError):
+            msys.SaveDMS(m, path)
+        t._ptr.setParam(t.id, 0)
+
+        stretch=m.addTableFromSchema('stretch_harm')
+        t=stretch.addTerm([a0,a0])
+        with self.assertRaises(RuntimeError):
+            msys.SaveDMS(m, path)
+        p=stretch.params.addParam()
+        t.param=p
+        msys.SaveDMS(m, path)
+        t._ptr.setParam(t.id, 42)
+        with self.assertRaises(RuntimeError):
+            msys.SaveDMS(m, path)
+        t.param=p
+        t.paramB=p
+        msys.SaveDMS(m, path)
+        with self.assertRaises(RuntimeError):
+            t._ptr.setParamB(t.id, 42)
+
 
 if __name__=="__main__":
     unittest.main()

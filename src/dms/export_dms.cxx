@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdexcept>
 #include <boost/scoped_ptr.hpp>
+#include <boost/foreach.hpp>
 
 using namespace desres::msys;
 
@@ -33,6 +34,12 @@ static void write(const ValueRef& ref, int col, dms_writer_t* w) {
 
 typedef std::pair<Id,Id> NbType;
 typedef std::map<Id,NbType> NbMap;
+
+/* if a nonbonded table is present, return mapping from particle id to
+ * regular and alchemical nonbonded type; otherwise return empty table.
+ * If non-empty, the returned map will contain a non-bad id for every
+ * atom in the system; if the alchemical param is BadId, it will be set
+ * equal to the regular param. */
 NbMap fetch_nbtypes(const System& sys) {
     TermTablePtr table;
     std::vector<String> tables = sys.tableNames();
@@ -57,8 +64,35 @@ NbMap fetch_nbtypes(const System& sys) {
             Id type  = table->param(termid);
             Id typeB = table->paramB(termid);
             if (bad(typeB)) typeB=type;
+            if (bad(type) || !table->params()->hasParam(type)) {
+                std::stringstream ss;
+                ss << "Cannot export system to DMS file: particle " << atomid
+                   << " has invalid nonbonded param";
+                throw std::runtime_error(ss.str());
+            }
+            if (bad(typeB) || !table->params()->hasParam(typeB)) {
+                std::stringstream ss;
+                ss << "Cannot export system to DMS file: particle " << atomid
+                   << " has invalid nonbonded paramB";
+                throw std::runtime_error(ss.str());
+            }
+            if (nbtypes.find(atomid)!=nbtypes.end()) {
+                std::stringstream ss;
+                ss << "Cannot export system to DMS file: nonbonded table "
+                   << "contains particle " << atomid << "multiple times";
+                throw std::runtime_error(ss.str());
+            }
             nbtypes[atomid].first =type;
             nbtypes[atomid].second=typeB;
+        }
+        IdList atoms = sys.atoms();
+        BOOST_FOREACH(Id atm, atoms) {
+            if (nbtypes.find(atm)==nbtypes.end()) {
+                std::stringstream ss;
+                ss << "Cannot export system to DMS file: nonbonded table is "
+                   << "present but no term contains particle " << atm;
+                throw std::runtime_error(ss.str());
+            }
         }
     }
     return nbtypes;
@@ -69,13 +103,20 @@ static void export_alchemical_particles(const System& sys,
                                         NbMap& nbtypes,
                                         dms_t* dms) {
     if (!alchemical_ids.size()) return;
-    dms_exec(dms, "create table alchemical_particle (\n"
-                  "  p0 integer primary key,\n"
-                  "  moiety integer, \n"
-                  "  nbtypeA integer, \n" 
-                  "  nbtypeB integer, \n"
-                  "  chargeA float,\n"
-                  "  chargeB float)");
+    std::string sql="create table alchemical_particle (\n"
+                    "  p0 integer primary key,\n"
+                    "  moiety integer, \n"
+                    "  chargeA float,\n"
+                    "  chargeB float";
+    if (nbtypes.size()) {
+        sql +=                     ",\n"
+                    "  nbtypeA integer, \n" 
+                    "  nbtypeB integer)\n";
+    } else {
+        sql +=                     ")";
+    }
+
+    dms_exec(dms, sql.c_str());
     dms_writer_t* w;
     dms_insert(dms, "alchemical_particle", &w);
     for (Id i=0; i<alchemical_ids.size(); i++) {
@@ -83,10 +124,13 @@ static void export_alchemical_particles(const System& sys,
         const atom_t& atom = sys.atom(id);
         dms_writer_bind_int(w,0,id);
         dms_writer_bind_int(w,1,atom.moiety);
-        dms_writer_bind_int(w,2,nbtypes[id].first);
-        dms_writer_bind_int(w,3,nbtypes[id].second);
-        dms_writer_bind_double(w,4,atom.charge);
-        dms_writer_bind_double(w,5,atom.chargeB);
+        dms_writer_bind_double(w,2,atom.charge);
+        dms_writer_bind_double(w,3,atom.chargeB);
+        if (nbtypes.size()) {
+            assert(nbtypes.find(id)!=nbtypes.end());
+            dms_writer_bind_int(w,4,nbtypes[id].first);
+            dms_writer_bind_int(w,5,nbtypes[id].second);
+        }
         dms_writer_next(w);
     }
     dms_writer_free(w);
@@ -126,7 +170,12 @@ static void export_particles(const System& sys, const IdList& map, dms_t* dms) {
         sql += str(sys.atomPropType(i));
         sql += ",\n";
     }
-    sql += "  nbtype integer\n);";
+    if (nbtypes.size()) {
+        sql += "  nbtype integer not null\n);";
+    } else {
+        sql.resize(sql.size()-2);
+        sql += ");";
+    }
     dms_exec(dms, sql.c_str());
 
     dms_writer_t* w;
@@ -163,11 +212,10 @@ static void export_particles(const System& sys, const IdList& map, dms_t* dms) {
             ValueRef ref = const_cast<System&>(sys).atomPropValue(atm,j);
             write(ref, col, w);
         }
-        NbMap::const_iterator nbiter=nbtypes.find(atm);
-        if (nbiter!=nbtypes.end()) {
+        if (nbtypes.size()) {
+            NbMap::const_iterator nbiter=nbtypes.find(atm);
+            assert(nbiter != nbtypes.end());
             dms_writer_bind_int(w,14+nprops,nbiter->second.first);
-        } else {
-            dms_writer_bind_null(w,14+nprops);
         }
         try {
             dms_writer_next(w);
@@ -222,8 +270,9 @@ static void export_terms(TermTablePtr table, const IdList& map,
         ss << "'" << table->termPropName(i) << "' " 
            << str(table->termPropType(i)) << ", ";
     }
-    ss << "param integer)";
+    ss << "param integer not null)";
     dms_exec(dms, ss.str().c_str());
+    ParamTablePtr params = table->params();
 
     if (table->alchemical()) {
         std::stringstream ss;
@@ -261,10 +310,13 @@ static void export_terms(TermTablePtr table, const IdList& map,
             ValueRef val = table->termPropValue(id, j);
             write(val, j+natoms, w);
         }
-        /* write param column, if there is a param */
+        /* write param column.  We refuse to write null params to a DMS file! */
         Id param = table->param(id);
-        if (bad(param)) {
-            dms_writer_bind_null(w,nprops+natoms);
+        if (bad(param) || !params->hasParam(param)) {
+            std::stringstream ss;
+            ss << "Cannot write DMS file: table '" << tablename << "' termid "
+                << id << " has missing or invalid param";
+            throw std::runtime_error(ss.str());
         } else {
             dms_writer_bind_int(w,nprops+natoms,param);
         }
