@@ -59,6 +59,18 @@ def print_info(mol):
                     table.name, table.natoms, len(table.params), 
                     table.nterms-nalc, nalc)
 
+    nbinfo=mol.nonbonded_info
+    print "\n%12s:" % "Nonbonded Info"
+    print "%20s %s" %(nbinfo.vdw_funct, nbinfo.vdw_rule)
+
+    print "\n%s:" % "Provenance"
+    if 'provenance' in mol.extra_names:
+        prov=mol.extra('provenance')
+        for param in prov.params:
+            for p in prov.prop_names:
+                print "%12s: %s" % (p, param[p])
+
+
 
 def main():
     import optparse
