@@ -1,6 +1,6 @@
 Import('env')
 env=env.Clone()
-env.Append(LIBS=['pcre', 'boost_iostreams'])
+env.Append(LIBS=['pcre', 'boost_iostreams', 'boost_filesystem', 'boost_system'])
 
 libmsys=env.AddLibrary('msys', Split('''
 dms/dms.cxx
@@ -50,6 +50,7 @@ alchemical.cxx
 append.cxx
 clone.cxx
 param_table.cxx
+provenance.cxx
 system.cxx
 term_table.cxx
 value.cxx

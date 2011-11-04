@@ -5,6 +5,7 @@
 #include <map>
 #include <boost/enable_shared_from_this.hpp>
 
+#include "provenance.hxx"
 #include "types.hxx"
 #include "term_table.hxx"
 #include "param_table.hxx"
@@ -145,6 +146,10 @@ namespace desres { namespace msys {
         typedef std::map<String, ParamTablePtr> ExtraMap;
         ExtraMap    _extras;
 
+        /* provenance.  Ideally, you would append to this just before 
+         * serializing to disk. */
+        std::vector<Provenance> _provenance;
+
         /* create only as shared pointer. */
         System();
     public:
@@ -154,6 +159,19 @@ namespace desres { namespace msys {
         String          name;
         GlobalCell      global_cell;
         NonbondedInfo   nonbonded_info;
+
+        std::vector<Provenance> const& provenance() const {
+            return _provenance;
+        }
+
+        void addProvenance(Provenance const& p) {
+            _provenance.push_back(p);
+        }
+
+        void clearProvenance() {
+            _provenance.clear();
+        }
+
     
         /* element accessors */
         atom_t& atom(Id id) { return _atoms.at(id); }

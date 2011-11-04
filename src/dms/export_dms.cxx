@@ -529,6 +529,29 @@ static void export_cell(const System& sys, dms_t* dms) {
     dms_exec(dms, "commit");
 }
 
+static void export_provenance(System const& sys, dms_t* dms) {
+    std::vector<Provenance> const& prov = sys.provenance();
+    dms_exec(dms,
+            "create table provenance (\n"
+            "  id integer primary key,\n"
+            "  timestamp text,\n"
+            "  user text,\n"
+            "  workdir text,\n"
+            "  cmdline text)");
+    dms_writer_t* w;
+    dms_insert(dms,"provenance", &w);
+    dms_exec(dms, "begin");
+    for (unsigned i=0; i<prov.size(); i++) {
+        dms_writer_bind_string(w, 1, prov[i].timestamp.c_str());
+        dms_writer_bind_string(w, 2, prov[i].user.c_str());
+        dms_writer_bind_string(w, 3, prov[i].workdir.c_str());
+        dms_writer_bind_string(w, 4, prov[i].cmdline.c_str());
+        dms_writer_next(w);
+    }
+    dms_exec(dms, "commit");
+    dms_writer_free(w);
+}
+
 static IdList map_gids(System const& sys) {
     IdList gids, ids = sys.atoms();
     IdList idmap(sys.maxAtomId());
@@ -555,6 +578,7 @@ static void export_dms(SystemPtr h, dms_t* dms) {
     export_extra(    sys,            dms);
     export_nbinfo(   sys,            dms);
     export_cell(     sys,            dms);
+    export_provenance(sys,           dms);
 }
 
 void desres::msys::ExportDMS(SystemPtr h, const std::string& path) {

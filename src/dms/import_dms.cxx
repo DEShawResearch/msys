@@ -381,6 +381,26 @@ static void read_extra( dms_t* dms, System& sys, const KnownSet& known) {
     }
 }
 
+static void read_provenance( dms_t* dms, System& sys, KnownSet& known) {
+    known.insert("provenance");
+    dms_reader_t* r;
+    if (dms_fetch(dms, "provenance", &r)) {
+        int timestamp = dms_reader_column(r, "timestamp");
+        int user = dms_reader_column(r, "user");
+        int workdir = dms_reader_column(r, "workdir");
+        int cmdline = dms_reader_column(r, "cmdline");
+
+        for (; r; dms_reader_next(&r)) {
+            Provenance p;
+            if (timestamp>=0) p.timestamp = dms_reader_get_string(r, timestamp);
+            if (user>=0)      p.user      = dms_reader_get_string(r, user);
+            if (workdir>=0)   p.workdir   = dms_reader_get_string(r, workdir);
+            if (cmdline>=0)   p.cmdline   = dms_reader_get_string(r, cmdline);
+            sys.addProvenance(p);
+        }
+    }
+}
+
 static void
 read_alchemical_particle( dms_t* dms, System& sys, 
                           IdList& nbtypes, std::map<Id,Id>& nbtypesB,
@@ -603,6 +623,7 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
 
     read_cell(dms, sys, known);
     read_alchemical_particle( dms, sys, nbtypes, nbtypesB, known );
+    read_provenance(dms, sys, known);
 
     if (!structure_only) {
         read_metatables(dms, gidmap, sys, known);

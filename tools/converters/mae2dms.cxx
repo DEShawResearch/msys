@@ -7,22 +7,6 @@
 
 using namespace desres::msys;
 
-static void write_provenance( int argc, char * argv[], SystemPtr h ) {
-    std::string path = boost::filesystem::system_complete(".").string();
-    std::string cmdline;
-    for (int i=0; i<argc; i++) {
-        cmdline += argv[i];
-        if (i!=argc-1) cmdline += " ";
-    }
-    ParamTablePtr p = ParamTable::create();
-    p->addProp("workdir", StringType);
-    p->addProp("cmdline", StringType);
-    Id param = p->addParam();
-    p->value(param,0)=path;
-    p->value(param,1)=cmdline;
-    h->addExtra("provenance", p);
-}
-
 static bool ignore_unrecognized = false;
 
 void parse_cmdline( int *pargc, char ***pargv ) {
@@ -63,7 +47,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    write_provenance(argc, argv, h);
+    h->addProvenance(Provenance::fromArgs(argc, argv));
 
     try {
         ExportDMS(h, argv[2]);

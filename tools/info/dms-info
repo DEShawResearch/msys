@@ -68,6 +68,7 @@ def print_info(mol):
         prov=mol.extra('provenance')
         for param in prov.params:
             for p in prov.prop_names:
+                if p=='id': continue
                 print "%12s: %s" % (p, param[p])
 
 
