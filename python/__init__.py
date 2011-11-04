@@ -230,6 +230,7 @@ class Param(object):
 
     def __eq__(self, x): return self._id==x._id and self._ptr==x._ptr
     def __ne__(self, x): return self._id!=x._id or  self._ptr!=x._ptr
+    def __repr__(self): return '<Param %d>' % self._id
 
     @property
     def id(self): 
@@ -244,12 +245,18 @@ class Param(object):
     def __setitem__(self, prop, val):
         ''' update the value of prop with val '''
         p=self._ptr
-        p.setProp(self._id, p.propIndex(prop), val)
+        col=p.propIndex(prop)
+        if col==_msys.BadId:
+            raise KeyError, "No such property '%s'" % prop
+        p.setProp(self._id, col, val)
 
-    def __getitem__(self, key):
+    def __getitem__(self, prop):
         ''' get the value of prop '''
         p=self._ptr
-        return p.getProp(self._id, p.propIndex(key))
+        col=p.propIndex(prop)
+        if col==_msys.BadId:
+            raise KeyError, "No such property '%s'" % prop
+        return p.getProp(self._id, col)
 
     def duplicate(self):
         ''' create a new entry in the parent parameter table with the
@@ -318,6 +325,11 @@ class ParamTable(object):
     def nparams(self):
         ''' number of Params '''
         return self._ptr.paramCount()
+
+    @property
+    def params(self):
+        ''' list of all Params in table '''
+        return [Param(self._ptr, i) for i in self._ptr.params()]
 
     def __len__(self):
         ''' number of Params in the table. '''
