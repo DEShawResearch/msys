@@ -38,6 +38,7 @@ loadmodules() {
         $JSON/lib \
         $SPHINX/bin 
     
+   export MSYS_VERSION=$VERSION
 
    desres_module_stripcolons
 }

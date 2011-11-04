@@ -6,6 +6,7 @@
 namespace desres { namespace msys {
 
     struct Provenance {
+        String version;
         String timestamp;
         String user;
         String workdir;

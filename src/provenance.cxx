@@ -4,11 +4,19 @@
 #include <time.h>
 #include <pwd.h>
 
+#include "version.hxx"
+
 using namespace desres::msys;
 namespace bfs = boost::filesystem;
 
 Provenance Provenance::fromArgs(int argc, char *argv[]) {
     Provenance prov;
+
+    /* version */
+    prov.version = "msys/";
+    prov.version += MSYS_VERSION;
+
+    printf("hex version: %X\n", MSYS_VERSION_HEX);
 
     /* timestamp */
     {
@@ -16,9 +24,7 @@ Provenance Provenance::fromArgs(int argc, char *argv[]) {
         time_t t;
         struct tm *tmp;
         t = time(NULL);
-        printf("time: %f\n", (double)t);
         tmp = localtime(&t);
-        printf("tmp: %p\n", (void *)tmp);
         if (tmp && strftime(buf, sizeof(buf), "%c", tmp)!=0) {
             prov.timestamp = buf;
         }

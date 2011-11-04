@@ -1,6 +1,25 @@
 Import('env')
 env=env.Clone()
 env.Append(LIBS=['pcre', 'boost_iostreams', 'boost_filesystem', 'boost_system'])
+env.Append(CPPPATH=['$OBJDIR/src'])
+
+def build_version_hxx( target, source, env ):
+    import os
+    verstr=os.environ['MSYS_VERSION']
+    major, minor, micro = verstr.split('.')
+    fd=file(target[0].path, 'w')
+    print >> fd, "#define MSYS_VERSION \"%s\"" % verstr
+    for x in 'major', 'minor', 'micro':
+        u=x.upper()
+        v=int(locals()[x])
+        print >> fd, "#define MSYS_%s_VERSION %d" % (u,v)
+    print >> fd, "#define MSYS_VERSION_HEX ((MSYS_MAJOR_VERSION << 16) | \\"
+    print >> fd, "                          (MSYS_MINOR_VERSION <<  8) | \\"
+    print >> fd, "                          (MSYS_MICRO_VERSION <<  0))"
+
+    fd.close()
+
+env.Command('version.hxx', '#desres-install-helper', build_version_hxx )
 
 libmsys=env.AddLibrary('msys', Split('''
 dms/dms.cxx
@@ -70,7 +89,6 @@ atomsel/VmdLexer.c
 atomsel/VmdParser.c
 atomsel/within_predicate.cxx
 '''))
-#view.cxx
 
 env.Alias('install', env.Install('$PREFIX/include/msys', Glob("*.hxx")))
 

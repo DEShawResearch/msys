@@ -534,6 +534,7 @@ static void export_provenance(System const& sys, dms_t* dms) {
     dms_exec(dms,
             "create table provenance (\n"
             "  id integer primary key,\n"
+            "  version text,\n"
             "  timestamp text,\n"
             "  user text,\n"
             "  workdir text,\n"
@@ -542,10 +543,11 @@ static void export_provenance(System const& sys, dms_t* dms) {
     dms_insert(dms,"provenance", &w);
     dms_exec(dms, "begin");
     for (unsigned i=0; i<prov.size(); i++) {
-        dms_writer_bind_string(w, 1, prov[i].timestamp.c_str());
-        dms_writer_bind_string(w, 2, prov[i].user.c_str());
-        dms_writer_bind_string(w, 3, prov[i].workdir.c_str());
-        dms_writer_bind_string(w, 4, prov[i].cmdline.c_str());
+        dms_writer_bind_string(w, 1, prov[i].version.c_str());
+        dms_writer_bind_string(w, 2, prov[i].timestamp.c_str());
+        dms_writer_bind_string(w, 3, prov[i].user.c_str());
+        dms_writer_bind_string(w, 4, prov[i].workdir.c_str());
+        dms_writer_bind_string(w, 5, prov[i].cmdline.c_str());
         dms_writer_next(w);
     }
     dms_exec(dms, "commit");

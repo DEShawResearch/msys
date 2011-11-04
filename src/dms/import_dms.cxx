@@ -385,6 +385,7 @@ static void read_provenance( dms_t* dms, System& sys, KnownSet& known) {
     known.insert("provenance");
     dms_reader_t* r;
     if (dms_fetch(dms, "provenance", &r)) {
+        int version = dms_reader_column(r, "version");
         int timestamp = dms_reader_column(r, "timestamp");
         int user = dms_reader_column(r, "user");
         int workdir = dms_reader_column(r, "workdir");
@@ -392,6 +393,7 @@ static void read_provenance( dms_t* dms, System& sys, KnownSet& known) {
 
         for (; r; dms_reader_next(&r)) {
             Provenance p;
+            if (version>=0)   p.version   = dms_reader_get_string(r, version);
             if (timestamp>=0) p.timestamp = dms_reader_get_string(r, timestamp);
             if (user>=0)      p.user      = dms_reader_get_string(r, user);
             if (workdir>=0)   p.workdir   = dms_reader_get_string(r, workdir);
