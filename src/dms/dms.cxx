@@ -7,6 +7,10 @@
 #include <string>
 #include <stdexcept>
 #include <sstream>
+#include <fstream>
+
+#include <sys/stat.h>
+#include <fcntl.h>
 
 namespace DM = desres::msys;
 
@@ -15,6 +19,118 @@ namespace DM = desres::msys;
     ss << args; \
     throw std::runtime_error(ss.str()); \
 } while (0)
+
+namespace {
+    struct dms_file : sqlite3_file {
+        char * contents;
+        sqlite3_int64 size;
+    };
+
+    int dms_xClose(sqlite3_file *file) {
+        dms_file *dms = (dms_file *)file;
+        if (dms->contents) free(dms->contents);
+        return SQLITE_OK;
+    }
+    int dms_xRead(sqlite3_file *file, void *pBuf, int iAmt, sqlite3_int64 offset) {
+        dms_file *dms = (dms_file *)file;
+        const char *ptr = dms->contents;
+        sqlite3_int64 size=dms->size;
+        int max=size-offset;  // max allowable read
+        int amt=iAmt < max ? iAmt : max;
+        memcpy(pBuf, ptr+offset, amt);
+        if (amt < max) return SQLITE_OK;
+        /* Unread parts of the buffer must be zero-filled */
+        memset(&((char *)pBuf)[amt], 0, amt-max);
+        return SQLITE_IOERR_SHORT_READ;
+    }
+
+    int dms_xWrite(sqlite3_file*file, const void*pBuf, int iAmt, sqlite3_int64 offset) {
+        dms_file *dms = (dms_file *)file;
+        sqlite3_int64 last=offset+iAmt;
+        if (dms->size < last) {
+            dms->contents = (char *)realloc(dms->contents, last);
+        }
+        char *ptr = dms->contents;
+        memcpy(ptr+offset, pBuf, iAmt);
+        return SQLITE_OK;
+    }
+
+    int dms_xLock(sqlite3_file*file, int lockType) {
+        return SQLITE_OK;
+    }
+    int dms_xUnlock(sqlite3_file*file, int) {
+        return SQLITE_OK;
+    }
+
+    int dms_xFileSize(sqlite3_file *file, sqlite3_int64 *pSize) {
+        dms_file *dms = (dms_file *)file;
+        *pSize = dms->size;
+        return SQLITE_OK;
+    }
+
+
+    sqlite3_io_methods iomethods = {
+        1, //int iVersion;
+        dms_xClose,
+        dms_xRead,
+        dms_xWrite,
+        0, // int (*xTruncate)(sqlite3_file*, sqlite3_int64 size);
+        0, // int (*xSync)(sqlite3_file*, int flags);
+        dms_xFileSize,
+        dms_xLock,
+        dms_xUnlock, // int (*xUnlock)(sqlite3_file*, int);
+        0, // int (*xCheckReservedLock)(sqlite3_file*, int *pResOut);
+        0, // int (*xFileControl)(sqlite3_file*, int op, void *pArg);
+        0, // int (*xSectorSize)(sqlite3_file*);
+        0  //int (*xDeviceCharacteristics)(sqlite3_file*);
+    };
+
+    // static variables for passing buffer through the open call
+    char *g_tmpbuf = NULL;
+    sqlite3_int64 g_tmpsize = -1;
+
+    struct dms_vfs : sqlite3_vfs {
+
+        dms_vfs() {
+            zName = "dms";
+            xOpen = dms_xOpen;
+            xAccess = dms_xAccess;
+            xFullPathname = dms_xFullPathname;
+            xAccess = dms_xAccess;
+            mxPathname=1024;
+            szOsFile=sizeof(dms_file);
+        }
+
+        static int dms_xOpen(sqlite3_vfs* self, const char *zName, 
+                sqlite3_file*file, int flags, int *pOutFlags) {
+            dms_file *dms = (dms_file *)file;
+            dms->pMethods = &iomethods;
+            dms->contents = g_tmpbuf;
+            dms->size     = g_tmpsize;
+            g_tmpbuf = NULL;
+            g_tmpsize = -1;
+            return SQLITE_OK;
+        }
+
+        static int dms_xAccess(sqlite3_vfs*, const char *zName, int flags, 
+                int *pResOut) {
+            switch (flags) {
+                case SQLITE_ACCESS_EXISTS:    *pResOut=0; break;
+                case SQLITE_ACCESS_READWRITE: *pResOut=0; break;
+                case SQLITE_ACCESS_READ:      *pResOut=0; break;
+                default:
+                                              return SQLITE_ERROR;
+            }
+            return SQLITE_OK;
+        }
+
+        static int dms_xFullPathname(sqlite3_vfs*, const char *zName, int nOut, 
+                char *zOut) {
+            strncpy(zOut, zName, nOut);
+            return 0;
+        }
+    } vfs[1];
+}
 
 struct dms_reader {
     sqlite3_stmt * stmt;
@@ -30,8 +146,51 @@ struct dms_writer {
 
 dms_t * dms_read( const char * path ) {
     sqlite3* db;
-    if (sqlite3_open_v2(path, &db, SQLITE_OPEN_READONLY, NULL)!=SQLITE_OK)
-        THROW_FAILURE(sqlite3_errmsg(db));
+    sqlite3_vfs_register(vfs, 0);
+
+    int fd=open(path, O_RDONLY);
+    if (fd<0) {
+        std::stringstream ss;
+        ss << "Failed opening DMS file at '" << path << "'";
+        throw std::runtime_error(ss.str());
+    }
+    struct stat statbuf[1];
+    if (fstat(fd, statbuf)!=0) {
+        close(fd);
+        std::stringstream ss;
+        ss << "Failed getting size of DMS file at '" << path 
+           << "' :" << strerror(errno);
+        throw std::runtime_error(ss.str());
+    }
+    g_tmpsize = statbuf->st_size;
+    if (g_tmpsize==0) {
+        close(fd);
+        std::stringstream ss;
+        ss << "DMS file at '" << path << "' has zero size";
+        throw std::runtime_error(ss.str());
+    }
+    g_tmpbuf = (char *)malloc(g_tmpsize);
+    if (!g_tmpbuf) {
+        close(fd);
+        std::stringstream ss;
+        ss << "Failed to allocate read buffer for DMS file at '" << path 
+           << "' of size " << g_tmpsize;
+        throw std::runtime_error(ss.str());
+    }
+    ssize_t readcount = read(fd, g_tmpbuf, g_tmpsize);
+    close(fd);
+    if (readcount!=g_tmpsize) {
+        free(g_tmpbuf);
+        std::stringstream ss;
+        ss << "Failed reading DMS file contents at '" << path 
+           << "' :" << strerror(errno);
+        throw std::runtime_error(ss.str());
+    }
+
+    int rc = sqlite3_open_v2( "::dms::", &db, SQLITE_OPEN_READONLY, 
+            vfs->zName);
+    if (g_tmpbuf) free(g_tmpbuf);
+    if (rc!=SQLITE_OK) THROW_FAILURE(sqlite3_errmsg(db));
     return new dms(db);
 }
 
@@ -243,4 +402,5 @@ void dms_writer_free( dms_writer_t * w ) {
     sqlite3_finalize(w->stmt);
     delete w;
 }
+
 
