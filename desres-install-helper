@@ -8,7 +8,7 @@ trap 'desres_trapped_exit' EXIT
 desres_require_cleanenv
 
 NAME=msys
-PKG_VERSION=0.9.0
+PKG_VERSION=0.9.1
 
 VERSION=${PKG_VERSION}
 DESCRIPTION="Biomolecular Structure Library"
@@ -84,6 +84,12 @@ See documentation in
 $PREFIX/doc/html/index.html
 
 This is a pre-release version of msys.
+
+0.9.1  Fix regex parsing in the atom selection grammar.
+       Read and write provenance, including msys version.
+       ImportMAE: handle gzipped files.
+       ImportDMS: read from internal buffer, avoiding file locking issues.
+       Documentation.
 
 0.9.0  ImportMAE no longer overrides chain with segid.
        Much stricter dms exporter.
