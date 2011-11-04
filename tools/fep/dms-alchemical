@@ -5,7 +5,9 @@
 #}
 
 '''
-dms-fep A.dms B.dms atom.map C.dms
+dms-alchemical A.dms B.dms atom.map C.dms
+
+Create an alchemical system from A and B states and a map between them.
 
 '''
 import sys

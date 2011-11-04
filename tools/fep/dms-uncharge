@@ -12,7 +12,35 @@ charges set to 0 in the B state.
 '''
 
 import msys
-from msys import fep
+
+def UnchargeAlchemical( mol, seltext ):
+    ''' make the selected atoms alchemical, and set their charge to 0 in the
+    B state.
+    '''
+    try:
+        nonbonds=mol.table('nonbonded')
+    except ValueError:
+        nonbonds=None
+
+    nbmap=dict()
+    if nonbonds:
+        for term in nonbonds.terms:
+            nbmap[term.atom(0)] = term
+
+    atoms=mol.atomselect(seltext)
+    if not atoms:
+        print >> sys.stderr, "WARNING: UnchargeAlchemical -- no atoms in selection"
+        return
+    for atom in atoms:
+        atom.alchemical=True
+        atom.chargeB = 0.0
+        nb = nbmap.get(atom)
+        if nb is not None:
+            nb.paramB = nb.param
+        elif nonbonds is not None:
+            raise ValueError, "No nonbond found for atom %s" % atom
+
+
 
 def main():
     import optparse
@@ -27,7 +55,7 @@ def main():
     a_name, o_name = args
     mol=msys.LoadDMS(a_name)
     
-    fep.UnchargeAlchemical(mol, opts.selection)
+    UnchargeAlchemical(mol, opts.selection)
 
     msys.SaveDMS(mol, o_name)
 
