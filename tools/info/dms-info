@@ -61,7 +61,8 @@ def print_info(mol):
 
     nbinfo=mol.nonbonded_info
     print "\n%12s:" % "Nonbonded Info"
-    print "%20s %s" %(nbinfo.vdw_funct, nbinfo.vdw_rule)
+    print "%20s: %s" % ("vdw_funct", nbinfo.vdw_funct)
+    print "%20s: %s" % ("vdw_rule", nbinfo.vdw_rule)
 
     print "\n%s:" % "Provenance"
     for i, p in enumerate(mol.provenance):
