@@ -529,8 +529,10 @@ static void export_cell(const System& sys, dms_t* dms) {
     dms_exec(dms, "commit");
 }
 
-static void export_provenance(System const& sys, dms_t* dms) {
-    std::vector<Provenance> const& prov = sys.provenance();
+static void export_provenance(System const& sys, Provenance const& provenance, 
+                              dms_t* dms) {
+    std::vector<Provenance> prov = sys.provenance();
+    prov.push_back(provenance);
     dms_exec(dms,
             "create table provenance (\n"
             "  id integer primary key,\n"
@@ -571,7 +573,7 @@ static IdList map_gids(System const& sys) {
     return idmap;
 }
 
-static void export_dms(SystemPtr h, dms_t* dms) {
+static void export_dms(SystemPtr h, dms_t* dms, Provenance const& provenance) {
     System& sys = *h;
     IdList atomidmap = map_gids(sys);
     export_particles(sys, atomidmap, dms);
@@ -580,15 +582,16 @@ static void export_dms(SystemPtr h, dms_t* dms) {
     export_extra(    sys,            dms);
     export_nbinfo(   sys,            dms);
     export_cell(     sys,            dms);
-    export_provenance(sys,           dms);
+    export_provenance(sys,provenance,dms);
 }
 
-void desres::msys::ExportDMS(SystemPtr h, const std::string& path) {
+void desres::msys::ExportDMS(SystemPtr h, const std::string& path,
+                             Provenance const& provenance) {
     unlink(path.c_str());
     dms_t* dms = NULL;
     try {
         dms = dms_write(path.c_str());
-        export_dms(h, dms);
+        export_dms(h, dms, provenance);
     }
     catch(std::exception& e) {
         if (dms) dms_close(dms);
@@ -599,8 +602,9 @@ void desres::msys::ExportDMS(SystemPtr h, const std::string& path) {
     dms_close(dms);
 }
 
-void desres::msys::sqlite::ExportDMS(SystemPtr h, sqlite3* db) {
+void desres::msys::sqlite::ExportDMS(SystemPtr h, sqlite3* db,
+                                     Provenance const& provenance) {
     boost::scoped_ptr<dms_t> p(new dms_t(db));
-    export_dms(h, p.get());
+    export_dms(h, p.get(), provenance);
 }
 

@@ -64,12 +64,12 @@ def print_info(mol):
     print "%20s %s" %(nbinfo.vdw_funct, nbinfo.vdw_rule)
 
     print "\n%s:" % "Provenance"
-    if 'provenance' in mol.extra_names:
-        prov=mol.extra('provenance')
-        for param in prov.params:
-            for p in prov.prop_names:
-                print "%12s: %s" % (p, param[p])
-
+    for i, p in enumerate(mol.provenance):
+        print "%4d) %16s %s" % (i+1, p.timestamp, p.user)
+        print "%12s: %s" % ("version", p.version)
+        print "%12s: %s" % ("workdir", p.workdir)
+        print "%12s: %s" % ("cmdline", p.cmdline)
+        print
 
 
 def main():

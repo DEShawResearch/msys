@@ -160,19 +160,16 @@ namespace desres { namespace msys {
         GlobalCell      global_cell;
         NonbondedInfo   nonbonded_info;
 
+        /* get the provenance history */
         std::vector<Provenance> const& provenance() const {
             return _provenance;
         }
 
+        /* add a provenance entry.  Should be used only by ImportDMS! */
         void addProvenance(Provenance const& p) {
             _provenance.push_back(p);
         }
 
-        void clearProvenance() {
-            _provenance.clear();
-        }
-
-    
         /* element accessors */
         atom_t& atom(Id id) { return _atoms.at(id); }
         bond_t& bond(Id id) { return _bonds.at(id); }

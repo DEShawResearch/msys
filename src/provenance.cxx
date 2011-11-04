@@ -16,8 +16,6 @@ Provenance Provenance::fromArgs(int argc, char *argv[]) {
     prov.version = "msys/";
     prov.version += MSYS_VERSION;
 
-    printf("hex version: %X\n", MSYS_VERSION_HEX);
-
     /* timestamp */
     {
         char buf[200];

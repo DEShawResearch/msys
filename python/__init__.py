@@ -819,6 +819,11 @@ class System(object):
             result.append( [Atom(p,i) for i in f] )
         return result
 
+    @property
+    def provenance(self):
+        ''' return a list of Provenance entries for this system '''
+        return self._ptr.provenance()
+
 def CreateSystem():
     ''' Create a new, empty System '''
     return System(_msys.SystemPtr.create())
@@ -870,7 +875,8 @@ def LoadMAE(path, ignore_unrecognized = False):
 
 def SaveDMS(system, path):
     ''' Export the System to a DMS file at the given path. '''
-    _msys.ExportDMS(system._ptr, path)
+    import sys
+    _msys.ExportDMS(system._ptr, path, _msys.Provenance.fromArgs(sys.argv))
 
 
 ''' customize Vec3 '''

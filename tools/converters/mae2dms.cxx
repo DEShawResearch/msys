@@ -47,10 +47,9 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    h->addProvenance(Provenance::fromArgs(argc, argv));
 
     try {
-        ExportDMS(h, argv[2]);
+        ExportDMS(h, argv[2], Provenance::fromArgs(argc, argv));
     }
     catch (std::exception& e) {
         fprintf(stderr, "mae2dms: Failed exporting dms to '%s'\n", argv[2]);

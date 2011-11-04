@@ -115,6 +115,28 @@ namespace {
         }
         return result;
     }
+
+    Provenance prov_from_args( object o ) {
+        int argc=len(o);
+        if (!argc) return Provenance();
+        std::vector<std::string> strings;
+        std::vector<char *> argv;
+        for (int i=0; i<argc; i++) {
+            strings.push_back(extract<std::string>(o[i]));
+            argv.push_back(const_cast<char *>(strings.back().c_str()));
+        }
+        return Provenance::fromArgs(argc, &argv[0]);
+    }
+
+    list sys_provenance( System const& sys ) {
+        list L;
+        std::vector<Provenance> const& prov = sys.provenance();
+        for (unsigned i=0; i<prov.size(); i++) {
+            L.append(object(prov[i]));
+        }
+        return L;
+    }
+
 }
 
 namespace desres { namespace msys { 
@@ -133,6 +155,15 @@ namespace desres { namespace msys {
                     "Name of the nonbonded functional form; e.g., vdw_12_6")
             .def_readwrite("vdw_rule", &NonbondedInfo::vdw_rule,
                     "Nonbonded combining rule; e.g., arithmetic/geometric")
+            ;
+
+        class_<Provenance>("Provenance", init<>())
+            .def("fromArgs", prov_from_args).staticmethod("fromArgs")
+            .def_readwrite("version", &Provenance::version)
+            .def_readwrite("timestamp", &Provenance::timestamp)
+            .def_readwrite("user", &Provenance::user)
+            .def_readwrite("workdir", &Provenance::workdir)
+            .def_readwrite("cmdline", &Provenance::cmdline)
             ;
 
         def("ImportDMS", ImportDMS);
@@ -263,6 +294,7 @@ namespace desres { namespace msys {
             .def("reassignGids",    &System::reassignGids)
             .def("updateFragids", update_fragids)
             .def("findBond",    &System::findBond)
+            .def("provenance",      sys_provenance)
             ;
     }
 

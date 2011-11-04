@@ -49,7 +49,7 @@ def main():
 
     C = _alchemical.MakeAlchemical(A,B,m)
 
-    _msys.ExportDMS(C, o_path)
+    _msys.ExportDMS(C, o_path, _msys.Provenance.fromArgs(sys.argv))
 
 if __name__=="__main__": exit(main())
 
