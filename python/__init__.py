@@ -754,6 +754,8 @@ class System(object):
         otherwise the newly created table is returned.  If no ParamTable
         params is supplied, a new one is created.  '''
         if params is None: params = CreateParamTable()
+        name = str(name)
+        natoms = int(natoms)
         return TermTable(self._ptr.addTable(name, natoms, params._ptr))
 
     def addTableFromSchema(self, type, name = None):
