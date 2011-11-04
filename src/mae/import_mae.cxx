@@ -9,9 +9,12 @@
 
 #include <cstdio>
 #include <fstream>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
 
 using desres::fastjson::Json;
 using namespace desres::msys;
+namespace bio = boost::iostreams;
 
 namespace {
 
@@ -306,12 +309,20 @@ namespace desres { namespace msys {
                          bool ignore_unrecognized ) {
 
         /* slurp in the file */
-        std::ifstream in(path.c_str());
-        if (!in) {
+        std::ifstream file(path.c_str());
+        if (!file) {
             std::stringstream ss;
             ss << "Failed opening MAE file at '" << path << "'";
             throw std::runtime_error(ss.str());
         }
+        bio::filtering_istream in;
+        /* check for gzip magic number */
+        if (file.get()==0x1f && file.get()==0x8b) {
+            in.push(bio::gzip_decompressor());
+        }
+        file.seekg(0);
+        in.push(file);
+
         std::stringstream buf;
         buf << in.rdbuf();
 

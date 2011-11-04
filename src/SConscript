@@ -1,6 +1,6 @@
 Import('env')
 env=env.Clone()
-env.Append(LIBS=['pcre'])
+env.Append(LIBS=['pcre', 'boost_iostreams'])
 
 libmsys=env.AddLibrary('msys', Split('''
 dms/dms.cxx
