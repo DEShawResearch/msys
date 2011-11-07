@@ -193,6 +193,11 @@ dms-grease
 
    Ensure xsize and ysize are equal to max(xsize, ysize)
 
+.. cmdoption:: --path bilayer-path
+
+   Provide path to DMS file containing template lipid bilayer; by default a
+   POPC bilayer is used.
+
 .. cmdoption:: -v, --verbose
 
    Be chatty.

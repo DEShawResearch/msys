@@ -4,7 +4,7 @@ import os, msys
 LIP=os.path.join(os.getenv('MSYS_PREFIX'), 'share', 'grease', 'popc.dms')
 
 def Grease(mol, thickness=0.0, xsize=None, ysize=None,
-            chain='LIP', verbose=False,
+            chain='LIP', verbose=False, patch=None,
             square=False):
     '''
     Build and return a new system consisting of mol plus lipid bilayer.
@@ -15,12 +15,16 @@ def Grease(mol, thickness=0.0, xsize=None, ysize=None,
     with dimensions.  If square is true, the box size will be expanded to
     the size of the longest dimension.
 
+    If patch is supplied, it should be the path to a dms file containing
+    a lipid bilayer centered on the origin.
+
     Return the greased system; no modifications are made to the input system.
     '''
 
     mol=msys.CloneSystem(mol.atoms)
 
-    lip=msys.LoadDMS(LIP)
+    if patch is None: patch = LIP
+    lip=msys.LoadDMS(patch, structure_only=True)
     lipsize=[lip.cell[i][i] for i in range(3)]
 
     # find a chain name for the lipids that doesn't overlap with the 
