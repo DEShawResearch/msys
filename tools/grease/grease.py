@@ -1,13 +1,12 @@
 
 import os, msys
 
-LIP=os.path.join(os.getenv('MSYS_PREFIX'), 'share', 'grease', 'popc.dms')
-
-def Grease(mol, thickness=0.0, xsize=None, ysize=None,
-            chain='LIP', verbose=False, patch=None,
+def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
+            chain='LIP', verbose=False, 
             square=False):
     '''
     Build and return a new system consisting of mol plus lipid bilayer.
+    Tile is the lipid bilayer system to replicate.
 
     If no solute is provided, the solute is treated as a point at the
     origin.  thickness specifies the amount of solute added along the x
@@ -15,17 +14,12 @@ def Grease(mol, thickness=0.0, xsize=None, ysize=None,
     with dimensions.  If square is true, the box size will be expanded to
     the size of the longest dimension.
 
-    If patch is supplied, it should be the path to a dms file containing
-    a lipid bilayer centered on the origin.
-
     Return the greased system; no modifications are made to the input system.
     '''
 
     mol=msys.CloneSystem(mol.atoms)
 
-    if patch is None: patch = LIP
-    lip=msys.LoadDMS(patch, structure_only=True)
-    lipsize=[lip.cell[i][i] for i in range(3)]
+    lipsize=[tile.cell[i][i] for i in range(3)]
 
     # find a chain name for the lipids that doesn't overlap with the 
     # input structure.
@@ -33,7 +27,7 @@ def Grease(mol, thickness=0.0, xsize=None, ysize=None,
     lipchain = 'X'
     while lipchain in chains:
         lipchain += 'X'
-    for c in lip.chains:
+    for c in tile.chains:
         c.name = lipchain
 
     if xsize is None or ysize is None:
@@ -80,7 +74,7 @@ def Grease(mol, thickness=0.0, xsize=None, ysize=None,
         xdelta = xshift + i*lipsize[0]
         for j in range(ny):
             ydelta = yshift + j*lipsize[1]
-            newatoms = mol.append(lip)
+            newatoms = mol.append(tile)
             for a in newatoms:
                 a.x += xdelta
                 a.y += ydelta

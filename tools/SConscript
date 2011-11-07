@@ -19,7 +19,6 @@ env.AddScript('glue/dms-glue')
 ## grease
 env.AddPythonModule('grease/grease.py', prefix='msys')
 env.AddScript('grease/dms-grease')
-env.AddShare('grease/popc.dms')
 
 ## solvate
 env.AddPythonModule('solvate/solvate.py', prefix='msys')
