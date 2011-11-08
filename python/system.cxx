@@ -193,6 +193,7 @@ namespace desres { namespace msys {
         def("ExportDMS", ExportDMS);
         def("ImportMAE", ImportMAE);
         def("ImportMAEFromBuffer", import_mae_from_buffer);
+        def("ExportMAE", ExportMAE);
 
         def("Clone", Clone);
         def("CreateAlchemical", CreateAlchemical);

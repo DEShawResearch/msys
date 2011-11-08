@@ -881,6 +881,12 @@ def SaveDMS(system, path):
     _msys.ExportDMS(system._ptr, path, _msys.Provenance.fromArgs(sys.argv))
 
 
+def SaveMAE(system, path, with_forcefield = True ):
+    ''' Export the System to an MAE file at the given path. '''
+    import sys
+    _msys.ExportMAE(system._ptr, str(path), bool(with_forcefield) )
+
+
 ''' customize Vec3 '''
 from _msys import Vec3
 def __vec3_getitem(self, key):
