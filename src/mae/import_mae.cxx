@@ -315,6 +315,13 @@ namespace desres { namespace msys {
             ss << "Failed opening MAE file at '" << path << "'";
             throw std::runtime_error(ss.str());
         }
+
+        return ImportMAEFromStream(file, ignore_unrecognized);
+    }
+
+    SystemPtr ImportMAEFromStream( std::istream& file,
+                                   bool ignore_unrecognized ) {
+
         bio::filtering_istream in;
         /* check for gzip magic number */
         if (file.get()==0x1f && file.get()==0x8b) {

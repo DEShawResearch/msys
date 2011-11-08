@@ -3,7 +3,9 @@
 
 int main(int argc, char *argv[]) {
     using namespace desres::msys;
-    for (int i=1; i<argc; i++) {
+    if (argc==1) {
+        SystemPtr mol = ImportMAEFromStream(std::cin);
+    } else for (int i=1; i<argc; i++) {
         ImportMAE(argv[i]);
     }
     return 0;
