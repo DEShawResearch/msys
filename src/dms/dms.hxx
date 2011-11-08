@@ -17,6 +17,8 @@ typedef struct dms_writer dms_writer_t;
 /* Initialize the dms handle */
 dms_t * dms_read( const char * path );
 
+dms_t * dms_read_bytes( const char * bytes, int64_t len );
+
 /* Initialize dms handle for writing */
 dms_t * dms_write( const char * path );
 

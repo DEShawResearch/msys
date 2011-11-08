@@ -656,6 +656,24 @@ SystemPtr desres::msys::ImportDMS(const std::string& path,
     return sys;
 }
 
+SystemPtr desres::msys::ImportDMSFromBytes( const char* bytes, int64_t len,
+                                            bool structure_only ) {
+    dms_t * dms = NULL;
+    SystemPtr sys;
+    try {
+        dms = dms_read_bytes(bytes, len);
+        sys = import_dms(dms, structure_only);
+    }
+    catch (std::exception& e) {
+        if (dms) dms_close(dms);
+        std::stringstream ss;
+        ss << "Error reading DMS byte stream: " << e.what();
+        throw std::runtime_error(ss.str());
+    }
+    dms_close(dms);
+    return sys;
+}
+
 SystemPtr desres::msys::sqlite::ImportDMS(sqlite3* db,
                                   bool structure_only) {
     boost::scoped_ptr<dms_t> p(new dms_t(db));

@@ -194,6 +194,25 @@ dms_t * dms_read( const char * path ) {
     return new dms(db);
 }
 
+dms_t * dms_read_bytes( const char * bytes, int64_t len ) {
+    sqlite3* db;
+    sqlite3_vfs_register(vfs, 0);
+
+    g_tmpsize = len;
+    g_tmpbuf = (char *)malloc(len);
+    if (!g_tmpbuf) {
+        std::stringstream ss;
+        ss << "Failed to allocate read buffer for DMS file of size " << len;
+        throw std::runtime_error(ss.str());
+    }
+    memcpy(g_tmpbuf, bytes, len);
+    int rc = sqlite3_open_v2( "::dms::", &db, SQLITE_OPEN_READONLY, 
+            vfs->zName);
+    if (g_tmpbuf) free(g_tmpbuf);
+    if (rc!=SQLITE_OK) THROW_FAILURE(sqlite3_errmsg(db));
+    return new dms(db);
+}
+
 dms_t * dms_write( const char * path ) {
     sqlite3* db;
     if (sqlite3_open(path, &db)!=SQLITE_OK)

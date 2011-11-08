@@ -149,6 +149,16 @@ namespace {
         return ImportMAEFromStream(in);
     }
 
+    SystemPtr import_dms_from_buffer( PyObject* obj, bool structure_only ) {
+        Py_buffer view[1];
+        if (PyObject_GetBuffer(obj, view, PyBUF_ND)) {
+            throw_error_already_set();
+        }
+        boost::shared_ptr<Py_buffer> ptr(view, PyBuffer_Release);
+        char* bytes = reinterpret_cast<char *>(view->buf);
+        return ImportDMSFromBytes(bytes, view->len, structure_only);
+    }
+
 }
 
 namespace desres { namespace msys { 
@@ -179,6 +189,7 @@ namespace desres { namespace msys {
             ;
 
         def("ImportDMS", ImportDMS);
+        def("ImportDMSFromBuffer", import_dms_from_buffer);
         def("ExportDMS", ExportDMS);
         def("ImportMAE", ImportMAE);
         def("ImportMAEFromBuffer", import_mae_from_buffer);

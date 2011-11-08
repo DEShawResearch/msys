@@ -2,12 +2,17 @@
 #define msys_dms_hxx
 
 #include "system.hxx"
+#include <iostream>
 
 struct sqlite3;
 
 namespace desres { namespace msys {
 
     SystemPtr ImportDMS(const std::string& path, bool structure_only=false);
+
+    SystemPtr ImportDMSFromBytes( const char* bytes, int64_t len,
+                                  bool structure_only=false);
+
     void ExportDMS(SystemPtr sys, const std::string& path, 
                    Provenance const& provenance);
 
