@@ -860,20 +860,52 @@ def CreateParamTable():
     ''' Create a new, empty ParamTable '''
     return ParamTable(_msys.ParamTablePtr.create())
 
-def LoadDMS(path, structure_only = False):
+def LoadDMS(path=None, structure_only=False, buffer=None ):
     ''' Load the DMS file at the given path and return a System containing it.
     If structure_only is True, only Atoms, Bonds, Residues and Chains will
     be loaded, along with the GlobalCell, and no pseudos (atoms with atomic 
-    number less than one) will be loaded '''
-    return System(_msys.ImportDMS(path, structure_only ))
+    number less than one) will be loaded.
 
-def LoadMAE(path, ignore_unrecognized = False):
+    If the buffer argument is provided, it is expected to hold the contents
+    of a DMS file, and the path argument will be ignored.
+    '''
+    if buffer is None and path is None:
+        raise ValueError, "Must provide either path or buffer"
+    if buffer is not None and path is not None:
+        raise ValueError, "Must provide either path or buffer"
+
+    if path is not None:
+       ptr = _msys.ImportDMS(path, structure_only )
+    else:
+       ptr = _msys.ImportDMSFromBuffer(buffer, structure_only)
+    return System(ptr)
+
+
+def LoadMAE(path=None, ignore_unrecognized = False, buffer=None):
     ''' load the MAE file at the given path and return a System containing it.
     Forcefield tables will be created that attempt to match as closely as
     possible the force terms in the MAE file; numerical differences are bound
     to exist.  If ignore_unrecognized is True, ignore unrecognized force
-    tables. '''
-    return System(_msys.ImportMAE(path, ignore_unrecognized ))
+    tables.
+
+    If the buffer argument is provided, it is expected to hold the contents
+    of a DMS file, and the path argument will be ignored.
+
+    If the contents of the file specified by path, or the contents of buffer,
+    are recognized as being gzip-compressed, they will be decompressed on
+    the fly. '''
+
+    if buffer is None and path is None:
+        raise ValueError, "Must provide either path or buffer"
+    if buffer is not None and path is not None:
+        raise ValueError, "Must provide either path or buffer"
+
+    if path is not None:
+        ptr = _msys.ImportMAE(path, ignore_unrecognized )
+    else:
+        ptr = _msys.ImportMAEFromBuffer( buffer, ignore_unrecognized )
+    return System(ptr)
+
 
 def SaveDMS(system, path):
     ''' Export the System to a DMS file at the given path. '''

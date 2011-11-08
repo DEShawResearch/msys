@@ -137,7 +137,7 @@ namespace {
         return L;
     }
 
-    SystemPtr import_mae_from_buffer( PyObject* obj ) {
+    SystemPtr import_mae_from_buffer(PyObject* obj, bool ignore_unrecognized) {
         Py_buffer view[1];
         if (PyObject_GetBuffer(obj, view, PyBUF_ND)) {
             throw_error_already_set();
@@ -146,7 +146,7 @@ namespace {
         std::istringstream in;
         char* bytes = reinterpret_cast<char *>(view->buf);
         in.rdbuf()->pubsetbuf(bytes, view->len);
-        return ImportMAEFromStream(in);
+        return ImportMAEFromStream(in, ignore_unrecognized);
     }
 
     SystemPtr import_dms_from_buffer( PyObject* obj, bool structure_only ) {
