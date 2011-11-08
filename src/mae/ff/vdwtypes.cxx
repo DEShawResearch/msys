@@ -21,7 +21,7 @@ namespace {
             if (vdwmap.funct()=="lj12_6_sig_epsilon") {
                 funct="vdw_12_6";
             } else if (vdwmap.funct()=="exp_6x") {
-                funct="vdw_exp6";
+                funct="vdw_exp_6";
             } else if (vdwmap.funct()=="polynomial_pij") {
                 funct="polynomial_cij";
             } else {

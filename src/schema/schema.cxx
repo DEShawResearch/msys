@@ -52,7 +52,7 @@ static schema_t schemas[] = {
 static schema_t nonbonded_schemas[] = {
     { "vdw_12_6", "nonbonded", 1, {"sigma", "epsilon"}},
         //{"geometric", "arithmetic", "arithmetic/geometric" }},
-    { "exp_6x", "nonbonded", 1, {"alpha", "epsilon", "rmin"}}, 
+    { "vdw_exp_6", "nonbonded", 1, {"alpha", "epsilon", "rmin"}}, 
         //{"lb/geometric"}},
     { "polynomial_cij", "nonbonded", 1, 
         { "c1",  "c2",  "c3",  "c4",  "c5",  "c6",  "c7",  "c8", 
