@@ -137,6 +137,18 @@ namespace {
         return L;
     }
 
+    SystemPtr import_mae_from_buffer( PyObject* obj ) {
+        Py_buffer view[1];
+        if (PyObject_GetBuffer(obj, view, PyBUF_ND)) {
+            throw_error_already_set();
+        }
+        boost::shared_ptr<Py_buffer> ptr(view, PyBuffer_Release);
+        std::istringstream in;
+        char* bytes = reinterpret_cast<char *>(view->buf);
+        in.rdbuf()->pubsetbuf(bytes, view->len);
+        return ImportMAEFromStream(in);
+    }
+
 }
 
 namespace desres { namespace msys { 
@@ -169,6 +181,7 @@ namespace desres { namespace msys {
         def("ImportDMS", ImportDMS);
         def("ExportDMS", ExportDMS);
         def("ImportMAE", ImportMAE);
+        def("ImportMAEFromBuffer", import_mae_from_buffer);
 
         def("Clone", Clone);
         def("CreateAlchemical", CreateAlchemical);
