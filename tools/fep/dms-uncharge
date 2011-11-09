@@ -25,7 +25,7 @@ def UnchargeAlchemical( mol, seltext ):
     nbmap=dict()
     if nonbonds:
         for term in nonbonds.terms:
-            nbmap[term.atom(0)] = term
+            nbmap[term.atoms[0]] = term
 
     atoms=mol.atomselect(seltext)
     if not atoms:

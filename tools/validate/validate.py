@@ -38,7 +38,7 @@ class TestBasic(UT.TestCase):
         for t in nb.terms:
             self.assertFalse(t.param is None,
                     "Particle with gid %d has no nonbonded parameters" %
-                    t.atom(0).gid)
+                    t.atoms[0].gid)
 
 
 
