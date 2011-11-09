@@ -281,10 +281,7 @@ class ParamTable(object):
 
     def addProp(self, name, type):
         ''' add a new property of the given type, which must be int,
-        float, or str.  If a property with that name already exists,
-        its index is returned.  If a property with the same name but
-        a different type already exists, an exception is raised.  
-        '''
+        float, or str.  '''
         self._ptr.addProp(name,type)
 
     @property
@@ -514,7 +511,7 @@ class TermTable(object):
 
     def addTermProp(self, name, type):
         ''' add a custom Term property of the given type '''
-        return self._ptr.addTermProp(name, type)
+        self._ptr.addTermProp(name, type)
 
     def delTermProp(self, name):
         ''' remove the custom Term property '''
@@ -673,7 +670,7 @@ class System(object):
         ''' add a custom atom property with the given name and type.
         type should be int, float, or str.
         '''
-        return self._ptr.addAtomProp(name, type)
+        self._ptr.addAtomProp(name, type)
 
     def delAtomProp(self, name):
         ''' remove the given custom atom property '''
@@ -704,7 +701,7 @@ class System(object):
         ''' add a custom bond property with the given name and type.
         type should be int, float, or str.
         '''
-        return self._ptr.addBondProp(name, type)
+        self._ptr.addBondProp(name, type)
 
     def delBondProp(self, name):
         ''' remove the given custom bond property '''
