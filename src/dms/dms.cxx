@@ -68,7 +68,10 @@ namespace {
         return SQLITE_OK;
     }
 
-
+    int dms_xDeviceCharacteristics(sqlite3_file *file) {
+        return 0;
+    }
+  
     sqlite3_io_methods iomethods = {
         1, //int iVersion;
         dms_xClose,
@@ -82,7 +85,7 @@ namespace {
         0, // int (*xCheckReservedLock)(sqlite3_file*, int *pResOut);
         0, // int (*xFileControl)(sqlite3_file*, int op, void *pArg);
         0, // int (*xSectorSize)(sqlite3_file*);
-        0  //int (*xDeviceCharacteristics)(sqlite3_file*);
+        dms_xDeviceCharacteristics //int (*xDeviceCharacteristics)(sqlite3_file*);
     };
 
     // static variables for passing buffer through the open call
