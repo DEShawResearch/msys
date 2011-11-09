@@ -65,7 +65,8 @@ dms-dump
 
 .. describe:: dms-dump file.dms [ options ]
 
-   Writes a readable, grep-able summary of a dms file to stdout.
+   Writes a readable, line-based (i.e., grep-able) summary of a dms file
+   to stdout.
 
 options:
 
