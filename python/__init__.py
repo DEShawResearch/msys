@@ -771,9 +771,9 @@ class System(object):
         self._ptr.reassignGids()
 
     def updateFragids(self):
-        ''' assign 0-based fragment ids to atoms based on the current
-        bond structure.  Return list of fragments as list of lists of atoms.
-        '''
+        ''' Find connected sets of atoms, and assign each a 0-based id,
+        stored in the fragment property of the atom.  Return a list of
+        fragments as a list of lists of atoms. '''
         p = self._ptr
         frags = p.updateFragids()
         result=[]
