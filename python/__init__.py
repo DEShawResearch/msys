@@ -310,10 +310,6 @@ class ParamTable(object):
         ''' removes the property with the given name. ''' 
         self._ptr.delProp(self._ptr.propIndex(name))
 
-    def __getitem__(self, id):
-        ''' fetch the Param with the given id '''
-        return Param(self._ptr, id)
-
     def param(self, id):
         ''' fetch the Param with the given id '''
         return Param(self._ptr, id)
@@ -327,11 +323,6 @@ class ParamTable(object):
     def params(self):
         ''' list of all Params in table '''
         return [Param(self._ptr, i) for i in self._ptr.params()]
-
-    def __len__(self):
-        ''' number of Params in the table. '''
-        return self._ptr.paramCount()
-
 
 class Term(object):
     __slots__=('_ptr', '_id')

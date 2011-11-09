@@ -32,6 +32,8 @@ def print_info(mol):
             ('water', 'Water'),
             ('not (protein or lipid or ions or water)', 'Other')):
 
+        # using the raw ids to count unique items is faster than
+        # making sets out of the high level objects.
         ptr = mol._ptr
         atoms=ptr.atomselect(sel)
         residues=set(ptr.atom(a).residue for a in atoms)
@@ -56,7 +58,7 @@ def print_info(mol):
                     if t.alchemical:
                         nalc += 1
             print "%20s: %d sites, %6d params, %6d terms, %2d alchemical" % (
-                    table.name, table.natoms, len(table.params), 
+                    table.name, table.natoms, table.params.nparams, 
                     table.nterms-nalc, nalc)
 
     nbinfo=mol.nonbonded_info
