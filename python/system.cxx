@@ -174,9 +174,9 @@ namespace desres { namespace msys {
 
         class_<NonbondedInfo>("NonbondedInfo", no_init)
             .def_readwrite("vdw_funct", &NonbondedInfo::vdw_funct,
-                    "Name of the nonbonded functional form; e.g., vdw_12_6")
+                    "Name of the nonbonded functional form; e.g., \"vdw_12_6\"")
             .def_readwrite("vdw_rule", &NonbondedInfo::vdw_rule,
-                    "Nonbonded combining rule; e.g., arithmetic/geometric")
+                    "Nonbonded combining rule; e.g., \"arithmetic/geometric\"")
             ;
 
         class_<Provenance>("Provenance", init<>())
