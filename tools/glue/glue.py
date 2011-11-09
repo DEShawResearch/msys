@@ -62,7 +62,7 @@ def FindGlue(atoms):
     return _find_glue(sys, ids)
 
 def AddGlueTable(mol, pairs):
-    ''' Create an extra table called 'glue' in the System, and add entries
+    ''' Create an auxiliary table called 'glue' in the System, and add entries
     for each pair. '''
     glue=msys.CreateParamTable()
     glue.addProp('p0', int)
@@ -71,5 +71,5 @@ def AddGlueTable(mol, pairs):
         p=glue.addParam()
         p['p0']=i
         p['p1']=j
-    mol.addExtra('glue', glue)
+    mol.addAuxTable('glue', glue)
 

@@ -723,27 +723,27 @@ class System(object):
         return TermTable(self._ptr.addTableFromSchema(type,name))
 
     ###
-    ### extra tables
+    ### auxiliary tables
     ###
 
     @property
-    def extra_names(self):
-        ''' names of the extra tables '''
+    def auxtable_names(self):
+        ''' names of the auxiliary tables '''
         return [x for x in self._ptr.extraNames()]
 
     @property
-    def extra_tables(self):
-        ''' of all the extra tables '''
+    def auxtables(self):
+        ''' all the auxiliary tables '''
         return [ParamTable(self._ptr.extra(x)) for x in self._ptr.extraNames()]
 
-    def extra(self, name):
-        ''' extra table with the given name '''
+    def auxtable(self, name):
+        ''' auxiliary table with the given name '''
         ptr=self._ptr.extra(name)
         if ptr is None:
             raise ValueError, "No such extra table '%s'" % name
         return ParamTable(ptr)
 
-    def addExtra(self, name, table):
+    def addAuxTable(self, name, table):
         ''' add or replace extra table with the given name. '''
         self._ptr.addExtra(name, table._ptr)
 
