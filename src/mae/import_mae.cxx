@@ -32,7 +32,7 @@ namespace {
         IdList residues = h->residuesForChain(chn);
         for (Id i=0, n=residues.size(); i<n; i++) {
             Id id = residues[i];
-            if (h->residue(id).num==resid && h->residue(id).name==name) {
+            if (h->residue(id).resid==resid && h->residue(id).name==name) {
                 return id;
             }
         }
@@ -135,10 +135,10 @@ namespace {
                 res = BadId;
             }
 
-            if (bad(res) || h->residue(res).num!=resid 
+            if (bad(res) || h->residue(res).resid!=resid 
                          || h->residue(res).name!=resname) {
                 res = h->addResidue(chn);
-                h->residue(res).num=resid;
+                h->residue(res).resid=resid;
                 h->residue(res).name=resname;
             }
             Id id = h->addAtom(res);
@@ -238,12 +238,12 @@ namespace {
                     res = BadId;
                 }
 
-                if (bad(res) || h->residue(res).num!=resid 
+                if (bad(res) || h->residue(res).resid!=resid 
                              || h->residue(res).name!=resname) {
                     res = find_residue(h, chn, resname, resid);
                     if (bad(res)) {
                         res = h->addResidue(chn);
-                        h->residue(res).num = resid;
+                        h->residue(res).resid= resid;
                         h->residue(res).name = resname;
                     }
                 }

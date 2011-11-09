@@ -199,7 +199,7 @@ static void export_particles(const System& sys, const IdList& map, dms_t* dms) {
         dms_writer_bind_double(w, 7, atom.vy);
         dms_writer_bind_double(w, 8, atom.vz);
         dms_writer_bind_string(w, 9, residue.name.c_str());
-        dms_writer_bind_int   (w,10, residue.num);
+        dms_writer_bind_int   (w,10, residue.resid);
         dms_writer_bind_string(w,11, chain.name.c_str());
         dms_writer_bind_double(w,12, atom.mass);
         dms_writer_bind_double(w,13, atom.charge);

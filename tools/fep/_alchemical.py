@@ -8,7 +8,7 @@ def find_residue(mol, resname, resid, chainname):
         if mol.chain(chn).name == chainname:
             for res in mol.residuesForChain(chn):
                 residue = mol.residue(res)
-                if residue.name == resname and residue.num == resid:
+                if residue.name == resname and residue.resid == resid:
                     return chn, res
             return chn, -1
     return -1, -1
@@ -392,14 +392,14 @@ def MakeAlchemical(A, B, pairs):
             batm = B.atom(bi)
             bres = B.residue(batm.residue)
             bchn = B.chain(bres.chain)
-            chn, res = find_residue(C, bres.name, bres.num, bchn.name)
+            chn, res = find_residue(C, bres.name, bres.resid, bchn.name)
             if chn<0: 
                 chn = C.addChain()
                 C.chain(chn).name = bchn.name
             if res<0: 
                 res = C.addResidue(chn)
                 C.residue(res).name = bres.name
-                C.residue(res).num = bres.num
+                C.residue(res).resid = bres.resid
             atm = C.addAtom(res)
             atom = C.atom(atm)
             atom.alchemical = True

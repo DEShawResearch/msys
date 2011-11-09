@@ -103,7 +103,7 @@ def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
         if c.name == lipchain:
             c.name = chain
             for r in c.residues:
-                r.num = lipnum
+                r.resid = lipnum
                 lipnum += 1
 
     mol.reassignGids()

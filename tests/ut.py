@@ -156,6 +156,11 @@ class TestMain(unittest.TestCase):
         self.assertEqual(len(m.residues), 1)
         self.assertEqual(len(m.atoms), 2)
         self.assertEqual(len(r.atoms), 2)
+        r.name='alA'
+        r.resid=32
+        self.assertEqual(r.name, 'alA')
+        self.assertEqual(r.resid, 32)
+        
         r.remove()
         r.remove()
         r.remove()
@@ -350,13 +355,13 @@ class TestMain(unittest.TestCase):
         with self.assertRaises(KeyError):
             t1[I]
 
-    def testExtra(self):
+    def testAux(self):
         m=msys.CreateSystem()
         e=msys.CreateParamTable()
-        m.addExtra("cmap", e)
-        self.assertTrue('cmap' in m.extra_names)
-        self.assertEqual(e, m.extra('cmap'))
-        self.assertTrue(e in m.extra_tables)
+        m.addAuxTable("cmap", e)
+        self.assertTrue('cmap' in m.auxtable_names)
+        self.assertEqual(e, m.auxtable('cmap'))
+        self.assertTrue(e in m.auxtables)
 
     def testTableDMS(self):
         m=msys.CreateSystem()

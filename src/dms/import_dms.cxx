@@ -537,7 +537,7 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
             residue_t& res = sys.residue(resid);
             p.first->second = resid;
             res.name = resname;
-            res.num = resnum;
+            res.resid = resnum;
 
             boost::trim(res.name);
         } else {

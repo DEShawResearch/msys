@@ -193,7 +193,21 @@ class Residue(Handle):
         ''' parent chain '''
         return Chain(self._ptr, self.data().chain)
 
-__add_properties(Residue, 'name', 'num')
+    @property
+    def resid(self):
+        ''' the PDB residue identifier '''
+        return self.data().resid
+    @resid.setter
+    def resid(self, val):
+        self.data().resid = val
+
+    @property
+    def name(self):
+        ''' residue name '''
+        return self.data().name
+    @name.setter
+    def name(self, val):
+        self.data().name = val
 
 class Chain(Handle):
     __slots__ = ()

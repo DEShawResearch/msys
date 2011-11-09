@@ -44,7 +44,7 @@ namespace {
             row.append(val.to_int(atm.gid));
             row.append(val.to_string(chn.name.c_str()));
             row.append(val.to_string(res.name.c_str()));
-            row.append(val.to_int(res.num));
+            row.append(val.to_int(res.resid));
             row.append(val.to_float(atm.x));
             row.append(val.to_float(atm.y));
             row.append(val.to_float(atm.z));

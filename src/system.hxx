@@ -93,10 +93,10 @@ namespace desres { namespace msys {
     
     struct residue_t {
         String  name;
-        int     num;
+        int     resid;
         Id      chain;
     
-        residue_t() : num(0), chain(BadId) {}
+        residue_t() : resid(0), chain(BadId) {}
     };
     
     struct chain_t {

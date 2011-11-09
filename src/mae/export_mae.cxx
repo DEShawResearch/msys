@@ -104,7 +104,7 @@ static void build_m_atom( SystemPtr mol, Destro& M ) {
         rec["m_pdb_atom_name"] = pad(atm.name, 4);
         rec["m_pdb_residue_name"] = pad(res.name, 4);
         rec["m_chain_name"] = chn.name;
-        rec["m_residue_number"] = res.num;
+        rec["m_residue_number"] = res.resid;
         rec["m_x_coord"] = atm.x;
         rec["m_y_coord"] = atm.y;
         rec["m_z_coord"] = atm.z;
@@ -230,7 +230,7 @@ static void build_pseudos( SystemPtr mol, Destro& M ) {
         row["ffio_pdb_residue_name"] = pad(res.name,4);
         row["ffio_chain_name"] = chn.name;
         row["ffio_pdb_segment_name"] = chn.name;
-        row["ffio_residue_number"] = res.num;
+        row["ffio_residue_number"] = res.resid;
     }
 }
 
