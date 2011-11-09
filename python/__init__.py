@@ -291,12 +291,6 @@ class ParamTable(object):
         return [p.propName(i) for i in range(p.propCount())]
 
     @property
-    def prop_types(self):
-        ''' types of the properties '''
-        p=self._ptr
-        return [p.propType(i) for i in range(p.propCount())]
-
-    @property
     def nprops(self):
         ''' number of properties '''
         return self._ptr.propCount()
@@ -451,12 +445,6 @@ class TermTable(object):
         ''' names of the custom properties '''
         p=self._ptr
         return [p.termPropName(i) for i in range(p.termPropCount())]
-
-    @property
-    def term_prop_types(self): 
-        ''' types of the custom properties '''
-        p=self._ptr
-        return [p.termPropType(i) for i in range(p.termPropCount())]
 
     @property
     def natoms(self): 
@@ -674,12 +662,6 @@ class System(object):
         ''' type of the given atom property '''
         return self._ptr.atomPropType(self._ptr.atomPropIndex(name))
 
-    @property
-    def atom_prop_types(self):
-        ''' return the types of the custom atom properties '''
-        p=self._ptr
-        return [p.atomPropType(i) for i in range(p.atomPropCount())]
-
     ###
     ### bond properties
     ###
@@ -704,12 +686,6 @@ class System(object):
     def bondPropType(self, name):
         ''' type of the given bond property '''
         return self._ptr.bondPropType(self._ptr.bondPropIndex(name))
-
-    @property
-    def bond_prop_types(self):
-        ''' return the types of the custom bond properties '''
-        p=self._ptr
-        return [p.bondPropType(i) for i in range(p.bondPropCount())]
 
     ###
     ### operations on custom term tables
