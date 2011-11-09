@@ -73,19 +73,20 @@ in a chain in a similar way::
   natoms = len(atoms)
   total_charge = sum(a.charge for a in atoms)
 
-  # iterate over chains, then residues, then atoms:
+  # find the atoms participating in double bonds
   for chn in mol.chains:
     for res in chn.residues:
       for atm in res.atoms:
         for bnd in atm.bonds:
-          a1, a2 = bnd.atoms
-          bond_order = bnd.order
+          if bnd.order == 2:
+            print "atom %d in chain %s residue %s:%d has a double bond" % (
+              atm.id, chn.name, res.name, res.num)
 
   # iterate over tables, print atoms per term and number of terms
   for t in mol.tables:
     print "table %s: %d atoms, %d terms" % (t.name, t.natoms, t.nterms)
 
-  # fetch the stretch_harm table
+  # fetch the stretch_harm table.  Throws an exception if no such table
   stretch = mol.table('stretch_harm')
 
 Atom selections let you fetch a list of atoms using the VMD atom selection
@@ -155,6 +156,40 @@ the duplicated `Param` to the term::
   # we can now make changes to t.param without affecting any other term
   t.param['fc'] = 42
 
+
+Msys properties
+===============
+
+Many objects in Msys (in particular, `Atoms`, `Bonds`, `Terms`, and
+`Params`) can have typed attributes given to all members of the set
+to which they belong.  In Msys, these attributes are referred to as
+`properties`, or `props` for short, and have a type of either `int`,
+`float`, or `str` (string).  The available property names and their
+types can be queried in the appropriate parent object, using the
+``prop_names``, ``atom_prop_names``, etc. properties of the parent.
+The value of the property for a given element can be read and modified
+using a dictionary-like interface on the element itself::
+
+  mol = msys.LoadDMS('input.dms')
+  atom_props = mol.atom_prop_names
+  # find all distinct values of the 'grp_energy' atom property, if it exists
+  grp_energy_vals = set()
+  if 'grp_energy' in atom_props:
+    for atm in mol.atoms:
+      grp_energy_vals.add( atm['grp_energy'] )
+
+  # add a new property 'foo' of type 'float'
+  mol.addAtomProp('foo', float)
+  # Set the value of foo to the z coordinate of the atom
+  for a in mol.atoms: a['foo'] = a.pos[2]
+
+When you add a property to a set of elements, the initial value will be 0
+for `int` and `float` types, and the empty string for `str` types.  If a
+property with the same name and type already exists, no action is taken.
+An exception is thrown if you try to add a property with the same name 
+but different type from an existing property.
+
+
 Gids, ids, and all that
 =======================
 
@@ -162,8 +197,10 @@ In Msys, instances of the `Atom`, `Bond`, `Residue`, and `Chain` classes
 are all `Handles`, in the sense that they refer to a piece of data held
 by the parent `System`.  All Msys handles have an immutable ``id``
 property that uniquely identifies them within their parent `System`.
-Two handles of the same type will compare equal to each other if and
-only if they belong the same `System` and possess the same ``id``.
+Objects that hold references to other objects do so through the ``id``
+of that object.  Two handles of the same type will compare equal to each
+other if and only if they belong the same `System` and possess the same
+``id``.
 
 When you load a system from a file, or create one from scratch, these
 ``ids`` will be numbered consecutively, starting at zero.  Deleting
@@ -175,13 +212,15 @@ file, this property corresponds to the primary key of the corresponding
 particle.  If you wish to write your `System` to a dms file and reorder
 the particles according to some permutation, it is the `gid` property
 that you need to set.  You can change this value by hand, as you would
-any other `Atom` property; or, if you simply wish to let Msys assign a
-'nice' set of 0-based contiguous gids, use the ``reassignGids()`` method
-of `System`.  Writing a `System` out to a dms file using ``SaveDMS``
-will fail if the gids are not all unique.  
+any other `Atom` property, and it will not affect, for example, the
+identity of the `Atoms` referred to by the `Terms`.  However, writing a
+`System` out to a DMS file using ``SaveDMS`` will fail if the gids are
+not all unique.  
 
-You may also wish to use ``reassignGids()`` on the `System` returned
-by `CloneSystem`, because the ``gids`` in the cloned `System` are not
-changed by the clone operation, and will be nonconsective if the gids
-in the cloned atoms are nonconsecutive.
+If you simply wish to let Msys assign a 'nice' set of 0-based contiguous
+gids, use the ``reassignGids()`` method of `System`.  You may also wish
+to use ``reassignGids()`` on the `System` returned by `CloneSystem`,
+because the ``gids`` in the cloned `System` are not changed by the clone
+operation, and will be nonconsective if the gids in the cloned atoms
+are nonconsecutive.
 
