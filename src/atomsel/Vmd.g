@@ -132,7 +132,7 @@ multExpr
   ;
 
 multOp
-  : '*' | '/' 
+  : '*' | '/' | '%'
   ;
 
 unaryExpr

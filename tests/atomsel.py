@@ -73,6 +73,9 @@ compare_atomsel(coord_ent,"fragment 1")
 compare_atomsel(coord_ent,"sqrt(sqr(x)+sqr(y))<5")
 compare_atomsel(coord_ent,"abs(x-y)<5")
 
+compare_atomsel(coord_ent,"residue % 10 == 0")
+
+
 # test regex
 compare_atomsel(coord_ent,'name "C.*"')
 compare_atomsel(coord_ent,'name "C[a-z]"')
