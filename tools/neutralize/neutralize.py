@@ -84,7 +84,7 @@ def Neutralize(mol, cation='NA', anion='CL',
     # first, we add sufficient counterions to neutralize.  Then we add 
     # counterions and counter-counterions until counter-counterions are
     # up to the desired concentration.  
-    solute=mol.atomselect('not resname %s %s' % (cation, anion))
+    solute=mol.select('not resname %s %s' % (cation, anion))
     cg = sum(a.charge for a in solute)
     print "neutralize: solute charge=%s" % cg
 
@@ -99,7 +99,7 @@ def Neutralize(mol, cation='NA', anion='CL',
     othertype = parse_ion(othertype)
 
     # find the water residues
-    water = mol.atomselect(
+    water = mol.select(
             'water and (not hydrogen) and (not within %f of (not water))' 
             % solute_pad)
     residues = list(set(a.residue for a in water))
@@ -107,8 +107,8 @@ def Neutralize(mol, cation='NA', anion='CL',
     print "waters available to be replaced by ions:", nwat
 
     # compute number of ions already present
-    nions_prev = len(mol.atomselect('atomicnumber %d and not bonded' % iontype.anum))
-    nother_prev = len(mol.atomselect('atomicnumber %d and not bonded' % othertype.anum))
+    nions_prev = len(mol.select('atomicnumber %d and not bonded' % iontype.anum))
+    nother_prev = len(mol.select('atomicnumber %d and not bonded' % othertype.anum))
 
     print "Starting with %d %s ions" % (nions_prev, iontype.name)
     print "Starting with %d %s ions" % (nother_prev, othertype.name)
@@ -116,7 +116,7 @@ def Neutralize(mol, cation='NA', anion='CL',
     # convert molar concentration to number based on available waters.  The
     # molar concentration of water is about 55.345 mol/L.  Use all available
     # waters to calculate the number of ions to add.
-    ntotalwat = len(set(a.residue for a in mol.atomselect('water')))
+    ntotalwat = len(set(a.residue for a in mol.select('water')))
     print "Starting with %d water molecules" % ntotalwat
     nother = int((concentration / 55.345) * (ntotalwat - nions + nions_prev))
     nions += nother

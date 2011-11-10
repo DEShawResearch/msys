@@ -310,7 +310,7 @@ namespace desres { namespace msys {
             .def("addNonbondedFromSchema", AddNonbonded)
 
             /* atom selection */
-            .def("atomselect", Atomselect)
+            .def("select", Atomselect)
 
             /* append */
             .def("append", AppendSystem)

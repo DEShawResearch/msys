@@ -21,7 +21,7 @@ def _find_glue(sys, ids):
             query='(%s) and (fragment %s) and (within %s of fragment %s)' % (
                     sel, outside_frag_string, r, inside_frag_string)
             #print "query:", query
-            indices=sys.atomselect(query)
+            indices=sys.select(query)
             #print "indices:", [x for x in indices]
             if not indices:
                 r += 1
@@ -37,7 +37,7 @@ def _find_glue(sys, ids):
             frags_outside.remove(latest_frag)
             best_d = None
             best_atom = None
-            for inside_index in sys.atomselect('(%s) and fragment %s' % (
+            for inside_index in sys.select('(%s) and fragment %s' % (
                 sel, inside_frag_string)):
                 ix = sys.atom(inside_index).x
                 iy = sys.atom(inside_index).y

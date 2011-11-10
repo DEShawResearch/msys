@@ -29,7 +29,7 @@ def main():
     if opts.verbose: print "Loading input file <%s>" % args[0]
     mol=msys.LoadDMS(args[0])
 
-    atoms=mol.atomselect(opts.selection)
+    atoms=mol.select(opts.selection)
     if opts.verbose: print "Finding glue from %d atoms" % len(atoms)
 
     pairs=glue.FindGlue(atoms)

@@ -27,7 +27,7 @@ def UnchargeAlchemical( mol, seltext ):
         for term in nonbonds.terms:
             nbmap[term.atoms[0]] = term
 
-    atoms=mol.atomselect(seltext)
+    atoms=mol.select(seltext)
     if not atoms:
         print >> sys.stderr, "WARNING: UnchargeAlchemical -- no atoms in selection"
         return

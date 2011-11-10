@@ -35,7 +35,7 @@ def print_info(mol):
         # using the raw ids to count unique items is faster than
         # making sets out of the high level objects.
         ptr = mol._ptr
-        atoms=ptr.atomselect(sel)
+        atoms=ptr.select(sel)
         residues=set(ptr.atom(a).residue for a in atoms)
         chains=set(ptr.residue(r).chain for r in residues)
         print "%12s: %8d atoms, %8d residues, %8d chains" % (

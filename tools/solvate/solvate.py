@@ -107,7 +107,7 @@ def Solvate(mol, thickness=0, minmax=None,
 
     if verbose: print "removing overlaps"
     # FIXME: use the low-level interface for speed
-    mol = msys.CloneSystem(mol.atomselect(
+    mol = msys.CloneSystem(mol.select(
         'not (chain %s and same residue as (x<%f or y<%f or z<%f or x>%f or y>%f or z>%f or within %f of (not chain %s)))' % (
             watchain,xmin,ymin,zmin,xmax,ymax,zmax,WATRAD, watchain)))
 

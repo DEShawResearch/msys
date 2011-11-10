@@ -768,10 +768,10 @@ class System(object):
     def addNonbondedFromSchema(self, funct, rule):
         return TermTable(self._ptr.addNonbondedFromSchema(funct,rule))
 
-    def atomselect(self, seltext):
+    def select(self, seltext):
         ''' return a list of Atoms satisfying the given VMD atom selection. '''
         p=self._ptr
-        ids=p.atomselect(seltext)
+        ids=p.select(seltext)
         return [Atom(p,i) for i in ids]
 
     def append(self, system):

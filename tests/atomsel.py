@@ -9,7 +9,7 @@ import molecule
 import atomsel
 
 def compare_atomsel(coord_ent,sel):
-  al = coord_ent.atomselect(sel)
+  al = coord_ent.select(sel)
   ent_gids = []
   for a in al:
     ent_gids.append(a.id)
