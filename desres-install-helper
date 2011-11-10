@@ -91,6 +91,7 @@ This is a pre-release version of msys.
        Added support for modulo (%) operator in atom selections.
        Renamed Residue.num to Residue.resid.
        Renamed System.extra to System.auxtable, etc.
+       Added System.clone().
        Documentation updates.
 
 0.9.2  Support reading MAE from stream.
