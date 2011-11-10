@@ -26,7 +26,7 @@ namespace {
             d->value(row,2)=c1.elem(i).as_float();
         }
         const char * name = buf+5;
-        h->addExtra(name, d);
+        h->addAuxTable(name, d);
     }
 
     struct Cmap : public Ffio {

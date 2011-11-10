@@ -265,13 +265,13 @@ namespace {
     }
 
     void write_ffinfo( const Json& ff, SystemPtr h ) {
-        ParamTablePtr extra = h->extra("forcefield");
+        ParamTablePtr extra = h->auxTable("forcefield");
         if (!extra) {
             extra=ParamTable::create();
             extra->addProp( "id", IntType);
             extra->addProp( "path", StringType);
             extra->addProp( "info", StringType);
-            h->addExtra("forcefield", extra);
+            h->addAuxTable("forcefield", extra);
         }
         std::string info;
         info += ff.get("viparr_command").as_string("");

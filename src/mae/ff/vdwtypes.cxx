@@ -64,7 +64,7 @@ namespace {
                 /* create nonbonded_combined_param extra table with columns
                  * param1, param2, properties... */
                 ParamTablePtr p = ParamTable::create();
-                h->addExtra("nonbonded_combined_param", p);
+                h->addAuxTable("nonbonded_combined_param", p);
                 p->addProp("param1", IntType);
                 p->addProp("param2", IntType);
                 for (Id i=0; i<params->propCount(); i++) {

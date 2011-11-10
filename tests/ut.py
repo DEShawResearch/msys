@@ -362,6 +362,9 @@ class TestMain(unittest.TestCase):
         self.assertTrue('cmap' in m.auxtable_names)
         self.assertEqual(e, m.auxtable('cmap'))
         self.assertTrue(e in m.auxtables)
+        m.delAuxTable('cmap')
+        self.assertFalse('cmap' in m.auxtable_names)
+        self.assertFalse(e in m.auxtables)
 
     def testTableDMS(self):
         m=msys.CreateSystem()

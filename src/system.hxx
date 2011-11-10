@@ -142,9 +142,9 @@ namespace desres { namespace msys {
         typedef std::map<String,TermTablePtr> TableMap;
         TableMap    _tables;
 
-        /* extra tables.  basically a hack for cmap */
-        typedef std::map<String, ParamTablePtr> ExtraMap;
-        ExtraMap    _extras;
+        /* auxiliary tables.  basically a hack for cmap */
+        typedef std::map<String, ParamTablePtr> AuxTableMap;
+        AuxTableMap _auxtables;
 
         /* provenance.  Ideally, you would append to this just before 
          * serializing to disk. */
@@ -287,12 +287,12 @@ namespace desres { namespace msys {
         void delTable(const String& name);
         void removeTable(TermTablePtr terms);
 
-        /* operations on extra tables */
-        std::vector<String> extraNames() const;
-        ParamTablePtr extra(const String& name) const;
-        void addExtra(const String& name, ParamTablePtr ptr);
-        void delExtra(const String& name);
-        void removeExtra(ParamTablePtr extra);
+        /* operations on auxiliary tables */
+        std::vector<String> auxTableNames() const;
+        ParamTablePtr auxTable(String const& name) const;
+        void addAuxTable(String const& name, ParamTablePtr aux);
+        void delAuxTable(String const& name);
+        void removeAuxTable(ParamTablePtr aux);
 
         /* assign the atom to the given residue */
         void setResidue(Id atom, Id residue);

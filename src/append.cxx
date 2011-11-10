@@ -180,12 +180,12 @@ IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr ) {
     }
 
     /* add/replace extra tables */
-    std::vector<String> extras = src.extraNames();
+    std::vector<String> extras = src.auxTableNames();
     for (unsigned i=0; i<extras.size(); i++) {
         std::string const& name = extras[i];
         ParamTablePtr p(ParamTable::create());
-        AppendParams( p, src.extra(name), p->params() );
-        dst.addExtra( name, p );
+        AppendParams( p, src.auxTable(name), p->params() );
+        dst.addAuxTable( name, p );
     }
 
     return src2dst;

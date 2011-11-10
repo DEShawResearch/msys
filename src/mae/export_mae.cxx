@@ -301,7 +301,7 @@ static void cmap_apply( TermTablePtr table, Id term, Destro& row) {
 }
 
 static void build_extra( SystemPtr mol, Destro& ff ) {
-    std::vector<std::string> extras = mol->extraNames();
+    std::vector<std::string> extras = mol->auxTableNames();
     for (unsigned i=0; i<extras.size(); i++) {
         const std::string& name = extras[i];
         if (name.substr(0,4)=="cmap") {
@@ -313,7 +313,7 @@ static void build_extra( SystemPtr mol, Destro& ff ) {
             cmap.add_schema('r', "ffio_aj");
             cmap.add_schema('r', "ffio_c1");
 
-            ParamTablePtr d = mol->extra(name);
+            ParamTablePtr d = mol->auxTable(name);
             unsigned phicol = d->propIndex("phi");
             unsigned psicol = d->propIndex("psi");
             unsigned enecol = d->propIndex("energy");

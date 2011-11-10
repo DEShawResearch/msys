@@ -298,12 +298,12 @@ namespace desres { namespace msys {
             .def("getBondProp",  get_bond_prop)
             .def("setBondProp",  set_bond_prop)
 
-            /* extras */
-            .def("extraNames",  &System::extraNames)
-            .def("extra",       &System::extra)
-            .def("addExtra",    &System::addExtra)
-            .def("delExtra",    &System::delExtra)
-            .def("removeExtra", &System::removeExtra)
+            /* auxiliary tables */
+            .def("auxTableNames",&System::auxTableNames)
+            .def("auxTable",     &System::auxTable)
+            .def("addAuxTable",  &System::addAuxTable)
+            .def("delAuxTable",  &System::delAuxTable)
+            .def("removeAuxTable",&System::removeAuxTable)
 
             /* schemas */
             .def("addTableFromSchema", AddTable)

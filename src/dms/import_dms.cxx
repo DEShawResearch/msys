@@ -371,7 +371,7 @@ static void read_extra( dms_t* dms, System& sys, const KnownSet& known) {
                 dms_reader_t* p;
                 if (dms_fetch(dms, extra.c_str(), &p)) {
                     ParamTablePtr ptr = ParamTable::create();
-                    sys.addExtra(extra, ptr);
+                    sys.addAuxTable(extra, ptr);
                     read_params(p, ptr, false);
                     //printf("extra %s with %d params, %d props\n",
                         //extra.c_str(), ptr->paramCount(), ptr->propCount());

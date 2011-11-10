@@ -492,11 +492,11 @@ static void export_tables( const System& sys, const IdList& map, dms_t* dms) {
     }
 }
 
-static void export_extra(const System& sys, dms_t* dms) {
-    std::vector<String> extras = sys.extraNames();
+static void export_aux(const System& sys, dms_t* dms) {
+    std::vector<String> extras = sys.auxTableNames();
     for (unsigned i=0; i<extras.size(); i++) {
         const std::string& name = extras[i];
-        export_params(sys.extra(name), name, dms, false);
+        export_params(sys.auxTable(name), name, dms, false);
     }
 }
 
@@ -579,7 +579,7 @@ static void export_dms(SystemPtr h, dms_t* dms, Provenance const& provenance) {
     export_particles(sys, atomidmap, dms);
     export_bonds(    sys, atomidmap, dms);
     export_tables(   sys, atomidmap, dms);
-    export_extra(    sys,            dms);
+    export_aux(      sys,            dms);
     export_nbinfo(   sys,            dms);
     export_cell(     sys,            dms);
     export_provenance(sys,provenance,dms);

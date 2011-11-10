@@ -743,24 +743,27 @@ class System(object):
     @property
     def auxtable_names(self):
         ''' names of the auxiliary tables '''
-        return [x for x in self._ptr.extraNames()]
+        return [x for x in self._ptr.auxTableNames()]
 
     @property
     def auxtables(self):
         ''' all the auxiliary tables '''
-        return [ParamTable(self._ptr.extra(x)) for x in self._ptr.extraNames()]
+        return [ParamTable(self._ptr.auxTable(x)) for x in self._ptr.auxTableNames()]
 
     def auxtable(self, name):
         ''' auxiliary table with the given name '''
-        ptr=self._ptr.extra(name)
+        ptr=self._ptr.auxTable(name)
         if ptr is None:
             raise ValueError, "No such extra table '%s'" % name
         return ParamTable(ptr)
 
     def addAuxTable(self, name, table):
         ''' add or replace extra table with the given name. '''
-        self._ptr.addExtra(name, table._ptr)
+        self._ptr.addAuxTable(name, table._ptr)
 
+    def delAuxTable(self, name):
+        ''' remove auxiliary table with the given name. '''
+        self._ptr.delAuxTable(name)
 
     def addNonbondedFromSchema(self, funct, rule):
         return TermTable(self._ptr.addNonbondedFromSchema(funct,rule))

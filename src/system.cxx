@@ -358,32 +358,33 @@ void System::removeTable(TermTablePtr terms) {
     }
 }
 
-void System::addExtra(const String& name, ParamTablePtr ptr) {
-    _extras[name] = ptr;
+void System::addAuxTable(String const& name, ParamTablePtr aux) {
+    _auxtables[name] = aux;
 }
 
-std::vector<String> System::extraNames() const {
+std::vector<String> System::auxTableNames() const {
     std::vector<String> s;
-    for (ExtraMap::const_iterator i=_extras.begin(); i!=_extras.end(); ++i) {
+    AuxTableMap::const_iterator i;
+    for (i=_auxtables.begin(); i!=_auxtables.end(); ++i) {
         s.push_back(i->first);
     }
     return s;
 }
 
-ParamTablePtr System::extra(const String& name) const {
-    ExtraMap::const_iterator i=_extras.find(name);
-    if (i==_extras.end()) return ParamTablePtr();
+ParamTablePtr System::auxTable(String const& name) const {
+    AuxTableMap::const_iterator i=_auxtables.find(name);
+    if (i==_auxtables.end()) return ParamTablePtr();
     return i->second;
 }
 
-void System::delExtra(const String& name) {
-    _extras.erase(name);
+void System::delAuxTable(String const& name) {
+    _auxtables.erase(name);
 }
 
-void System::removeExtra(ParamTablePtr extra) {
-    for (ExtraMap::iterator i=_extras.begin(); i!=_extras.end(); ++i) {
-        if (i->second==extra) {
-            _extras.erase(i);
+void System::removeAuxTable(ParamTablePtr aux) {
+    for (AuxTableMap::iterator i=_auxtables.begin(); i!=_auxtables.end(); ++i) {
+        if (i->second==aux) {
+            _auxtables.erase(i);
             return;
         }
     }

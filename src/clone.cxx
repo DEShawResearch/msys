@@ -138,12 +138,12 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms ) {
     dst->nonbonded_info = src->nonbonded_info;
 
     /* add/replace extra tables */
-    std::vector<String> extras = src->extraNames();
+    std::vector<String> extras = src->auxTableNames();
     for (unsigned i=0; i<extras.size(); i++) {
         std::string const& name = extras[i];
         ParamTablePtr p = ParamTable::create();
-        AppendParams( p, src->extra(name), p->params() );
-        dst->addExtra( name, p );
+        AppendParams( p, src->auxTable(name), p->params() );
+        dst->addAuxTable( name, p );
     }
     dst->updateFragids();
     return dst;
