@@ -166,15 +166,14 @@ to which they belong.  In Msys, these attributes are referred to as
 `properties`, or `props` for short, and have a type of either `int`,
 `float`, or `str` (string).  The available property names and their
 types can be queried in the appropriate parent object, using the
-``prop_names``, ``atom_prop_names``, etc. properties of the parent.
+``props``, ``atom_props``, etc. properties of the parent.
 The value of the property for a given element can be read and modified
 using a dictionary-like interface on the element itself::
 
   mol = msys.LoadDMS('input.dms')
-  atom_props = mol.atom_prop_names
   # find all distinct values of the 'grp_energy' atom property, if it exists
   grp_energy_vals = set()
-  if 'grp_energy' in atom_props:
+  if 'grp_energy' in mol.atom_props:
     for atm in mol.atoms:
       grp_energy_vals.add( atm['grp_energy'] )
 
