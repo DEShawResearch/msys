@@ -40,9 +40,9 @@ class TestMain(unittest.TestCase):
         F, I, S = 'F', 'I', 'S'
         for p,t in zip((F, I, S), (float, int, str)):
             m.addAtomProp(p,t)
-            self.assertTrue(p in m.atom_prop_names)
+            self.assertTrue(p in m.atom_props)
             self.assertEqual(m.atomPropType(p), t)
-        self.assertEqual(len(m.atom_prop_names), 3)
+        self.assertEqual(len(m.atom_props), 3)
         a2=m.addAtom()
 
         a1.charge = 3.5
@@ -68,7 +68,7 @@ class TestMain(unittest.TestCase):
 
         m.delAtomProp('F')
         self.assertFalse('F'in a2)
-        self.assertEqual([m.atomPropType(n) for n in m.atom_prop_names], 
+        self.assertEqual([m.atomPropType(n) for n in m.atom_props], 
                 [int, str])
 
 
@@ -259,15 +259,15 @@ class TestMain(unittest.TestCase):
 
     def testParamProps(self):
         params=msys.CreateParamTable()
-        self.assertEqual(len(params.prop_names), 0)
+        self.assertEqual(len(params.props), 0)
         for n,t in zip(('F', 'I', 'S'), (float, int, str)):
             params.addProp(n,t)
-            self.assertTrue(n in params.prop_names)
+            self.assertTrue(n in params.props)
             self.assertEqual(params.propType(n), t)
-        self.assertEqual(params.prop_names, ['F', 'I', 'S'])
+        self.assertEqual(params.props, ['F', 'I', 'S'])
 
         params.delProp('I')
-        self.assertEqual(params.prop_names, ['F', 'S'])
+        self.assertEqual(params.props, ['F', 'S'])
 
         p1=params.addParam()
         p1['F']=1.5
@@ -282,10 +282,10 @@ class TestMain(unittest.TestCase):
         instead of its ParamTable '''
         m=msys.CreateSystem()
         table=m.addTable("table", 5)
-        self.assertEqual(len(table.term_prop_names), 0)
+        self.assertEqual(len(table.term_props), 0)
         for n,t in zip(('F', 'I', 'S'), (float, int, str)):
             table.addTermProp(n,t)
-            self.assertTrue(n in table.term_prop_names)
+            self.assertTrue(n in table.term_props)
             self.assertEqual(table.termPropType(n), t)
 
     def testParamWithNoProps(self):
@@ -338,7 +338,7 @@ class TestMain(unittest.TestCase):
         self.assertEqual(t1[I], 0)
         self.assertEqual(t2[F], 0)
         self.assertEqual(t2[I], 42)
-        self.assertEqual(table.term_prop_names, [F, I])
+        self.assertEqual(table.term_props, [F, I])
 
         m2=msys.CreateSystem()
         m2.addAtom()
@@ -367,10 +367,10 @@ class TestMain(unittest.TestCase):
         m=msys.CreateSystem()
         t=m.addTableFromSchema('stretch_harm')
         self.assertEqual(t.natoms, 2)
-        self.assertEqual(t.params.prop_names, ['r0', 'fc'])
-        self.assertEqual([t.params.propType(n) for n in t.params.prop_names], 
+        self.assertEqual(t.params.props, ['r0', 'fc'])
+        self.assertEqual([t.params.propType(n) for n in t.params.props], 
                 [float, float])
-        self.assertEqual(t.term_prop_names, ['constrained'])
+        self.assertEqual(t.term_props, ['constrained'])
         self.assertEqual(t.termPropType('constrained'), int)
 
     def testNonbondedDMS(self):
@@ -379,7 +379,7 @@ class TestMain(unittest.TestCase):
         nb2=m.addNonbondedFromSchema("vdw_12_6", "arithemetic/geometric")
         self.assertEqual(nb,nb2)
         params=nb.params
-        props=params.prop_names
+        props=params.props
         self.assertEqual(props, ['sigma', 'epsilon'])
         self.assertEqual([nb.params.propType(n) for n in props], [float,float])
 

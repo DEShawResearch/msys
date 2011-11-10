@@ -299,7 +299,7 @@ class ParamTable(object):
         self._ptr.addProp(name,type)
 
     @property
-    def prop_names(self):
+    def props(self):
         ''' names of the properties '''
         p=self._ptr
         return [p.propName(i) for i in range(p.propCount())]
@@ -455,7 +455,7 @@ class TermTable(object):
         return System(self._ptr.system())
 
     @property
-    def term_prop_names(self): 
+    def term_props(self): 
         ''' names of the custom properties '''
         p=self._ptr
         return [p.termPropName(i) for i in range(p.termPropCount())]
@@ -667,7 +667,7 @@ class System(object):
 
 
     @property
-    def atom_prop_names(self):
+    def atom_props(self):
         ''' return the list of custom atom properties. '''
         p=self._ptr
         return [p.atomPropName(i) for i in range(p.atomPropCount())]
@@ -692,7 +692,7 @@ class System(object):
 
 
     @property
-    def bond_prop_names(self):
+    def bond_props(self):
         ''' return the list of custom bond properties. '''
         p=self._ptr
         return [p.bondPropName(i) for i in range(p.bondPropCount())]
