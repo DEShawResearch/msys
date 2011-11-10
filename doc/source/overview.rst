@@ -105,7 +105,10 @@ the residues or chains, it's easy to do::
 
 Note that the atoms returned by ``select`` refer back to the original
 system.  Msys also provides the means to create a new `System` independent
-of the original, using the ``CloneSystem`` function::
+of the original, using either the ``CloneSystem`` function or the 
+``clone`` method of System.  When you clone a subset of a `System`, the 
+`Terms` in the forcefield whose atoms are completely contained in the 
+selection will be copied to the new `System`::
 
   # get the list of protein atoms
   pro_atoms = mol.select('protein')
@@ -118,6 +121,15 @@ of the original, using the ``CloneSystem`` function::
   assert pro_atoms[0].charge == protein.atoms[0].charge
   pro_atoms[0].charge += 3
   assert pro_atoms[0].charge != protein.atoms[0].charge
+
+The ``clone`` method of `System` is a more concise way of selecting a
+set of atoms, then immediately creating a new `System` from it::
+
+  # create a new System with all the hydrogens removed
+  hless = mol.clone('not hydrogen')
+
+  # create a full copy of the original
+  dup = mol.clone()
 
 You can append the structure and associated forcefield from one `System`
 onto another using System's ``append`` method::
@@ -218,8 +230,8 @@ not all unique.
 
 If you simply wish to let Msys assign a 'nice' set of 0-based contiguous
 gids, use the ``reassignGids()`` method of `System`.  You may also wish
-to use ``reassignGids()`` on the `System` returned by `CloneSystem`,
-because the ``gids`` in the cloned `System` are not changed by the clone
-operation, and will be nonconsective if the gids in the cloned atoms
-are nonconsecutive.
+to use ``reassignGids()`` on the `System` returned by ``System.clone`` or
+``CloneSystem``, because the ``gids`` in the cloned `System` are not
+changed by the clone operation, and will be nonconsective if the gids
+in the cloned atoms are nonconsecutive.
 
