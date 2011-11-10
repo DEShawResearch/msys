@@ -781,6 +781,21 @@ class System(object):
         ids=p.append(system._ptr)
         return [Atom(p,i) for i in ids]
 
+    def clone(self, seltext=None):
+        ''' Clone the System, returning a new System.  If seltext is provided,
+        it should be a valid VMD atom selection, and only the selected atoms 
+        will be cloned.
+
+        This operation is equivalent to "msys.CloneSystem(self.select(seltext))"
+        where seltext defaults to 'all'.
+        '''
+        ptr = self._ptr
+        if seltext is None:
+            ids = ptr.atoms()
+        else:
+            ids = ptr.select(seltext)
+        return System( _msys.Clone(ptr, ids))
+
     def reassignGids(self):
         ''' Assign gids to atoms based on their order of appearance in
         a depth-first traversal of the structure hierarchy. 

@@ -34,7 +34,7 @@ def main():
 
     mol=msys.LoadDMS(args[0])
     if opts.selection:
-        mol=msys.CloneSystem(mol.select(opts.selection))
+        mol=mol.clone(opts.selection)
 
 
     if opts.verbose:

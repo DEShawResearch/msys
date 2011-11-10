@@ -21,7 +21,7 @@ def Solvate(mol, thickness=0, minmax=None,
     Return the solvated system; no modifications are made to the input system.
     '''
 
-    mol=msys.CloneSystem(mol.atoms)
+    mol=mol.clone()
 
     wat=msys.LoadDMS(WAT)
     watsize=[wat.cell[i][i] for i in range(3)]
@@ -107,9 +107,9 @@ def Solvate(mol, thickness=0, minmax=None,
 
     if verbose: print "removing overlaps"
     # FIXME: use the low-level interface for speed
-    mol = msys.CloneSystem(mol.select(
+    mol = mol.clone(
         'not (chain %s and same residue as (x<%f or y<%f or z<%f or x>%f or y>%f or z>%f or within %f of (not chain %s)))' % (
-            watchain,xmin,ymin,zmin,xmax,ymax,zmax,WATRAD, watchain)))
+            watchain,xmin,ymin,zmin,xmax,ymax,zmax,WATRAD, watchain))
 
     # assign the water chain name
     for c in mol.chains:

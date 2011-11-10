@@ -17,7 +17,7 @@ def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
     Return the greased system; no modifications are made to the input system.
     '''
 
-    mol=msys.CloneSystem(mol.atoms)
+    mol=mol.clone()
 
     lipsize=[tile.cell[i][i] for i in range(3)]
 
@@ -82,19 +82,19 @@ def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
     if verbose: print "replicated system contains %d atoms" % mol.natoms
     if verbose: print "removing overlap with solute"
     headgroup_dist = 2.0
-    mol = msys.CloneSystem(mol.select(
+    mol = mol.clone(
         'not (chain %s and same residue as (atomicnumber 8 15 and pbwithin %f of (noh and not chain %s)))' % (
-            lipchain, headgroup_dist, lipchain)))
+            lipchain, headgroup_dist, lipchain))
     dist = 1.0
-    mol = msys.CloneSystem(mol.select(
+    mol = mol.clone(
         'not (chain %s and same residue as (pbwithin %f of (noh and not chain %s)))' % (
-            lipchain, dist, lipchain)))
+            lipchain, dist, lipchain))
     if verbose: print "after removing solute overlap, have %d atoms" % mol.natoms
 
     if verbose: print "removing outer lipids"
-    mol = msys.CloneSystem(mol.select(
+    mol = mol.clone(
         'not (chain %s and same residue as (atomicnumber 15 and (abs(x)>%f or abs(y)>%f)))' % (
-            lipchain,xmax,ymax)))
+            lipchain,xmax,ymax))
     if verbose: print "after removing outer lipids, have %d atoms" % mol.natoms
 
     # assign the lipid chain name, and renumber lipid resids
