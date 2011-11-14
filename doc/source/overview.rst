@@ -235,3 +235,45 @@ to use ``reassignGids()`` on the `System` returned by ``System.clone`` or
 changed by the clone operation, and will be nonconsective if the gids
 in the cloned atoms are nonconsecutive.
 
+Notes on atom selections
+========================
+
+Msys implements essentially all of the atom selection language of VMD.
+Differences between Msys and VMD's implementations (other than as yet
+undiscovered bugs in Msys!) fall into the following categories:
+
+* Element matching: In Msys, the atom selections "carbon", "hydrogen",
+  "oxygen", etc. are based on the atomic number of the atoms.  In 
+  VMD, you maybe shocked and surprised to learn, these atom selections
+  are computed using a regular expression based on the atom name::
+  
+    vmd > atomselect macro oxygen
+    name "O.*"
+    
+    vmd > atomselect macro hydrogen
+    name "[0-9]?H.*"
+    
+    vmd > atomselect macro nitrogen
+    name "N.*"
+    
+    vmd > atomselect macro carbon
+    name "C.*" and not ion
+  
+
+  It was felt that, rather than slavishly follow VMD in this respect, Msys
+  should try to get the correct answer.  Do you really want your "nitrogen"
+  atom selection to include sodium (NA)?
+
+* Field size: DMS and MAE files can hold chain, segment, and residue names
+  of arbitrary length.  In Msys, these values are used as-is.  In VMD,
+  the values are truncated; in particular, chain will be truncated to
+  a single character in VMD, but not by Msys.
+
+* Data representation: Msys has no concept of secondary structure, so the
+  "sheet", helix", etc. atom selection keywords are not implemented in 
+  msys.
+  
+* Floating-point roundoff: There may occasionally be differences in the
+  results of distance based atom selections simply due the fact that Msys
+  stores positions as doubles, while VMD stores them as floats.  
+

@@ -7,8 +7,18 @@ The Msys library
 ====================================
 
 Msys is a library for manipulating molecular structures and their
-associated forcefields.  If you are already familiar with the Ent
-library, you'll see that the two have much in common.
+associated forcefields.  Among its many features:
+
+* Reads and writes DMS and MAE file formats;
+
+* Implements the VMD atom selection language;
+
+* Provides a high-performance C++ interface as well as a friendlier Python
+  interface;
+
+* Contains a collection of command line and scripting tools for examining,
+  combining, and processing DMS files.
+
 
 Msys is written in C++, with bindings for Python.  The direct Python
 bindings are generated using boost::python, and are intended to be

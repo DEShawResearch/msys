@@ -75,6 +75,11 @@ compare_atomsel(coord_ent,"abs(x-y)<5")
 
 compare_atomsel(coord_ent,"residue % 10 == 0")
 
+# operator precedence
+
+compare_atomsel(coord_ent,"x + y * z < 3")
+compare_atomsel(coord_ent,"x * y - z < 3")
+
 
 # test regex
 compare_atomsel(coord_ent,'name "C.*"')
