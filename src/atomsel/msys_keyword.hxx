@@ -33,6 +33,7 @@ KeywordPtr keyword_residue( SystemPtr ent );
 KeywordPtr keyword_resname( SystemPtr ent );
 KeywordPtr keyword_numbonds( SystemPtr ent );
 KeywordPtr keyword_residue( SystemPtr ent );
+KeywordPtr keyword_fragid( SystemPtr ent );
 KeywordPtr keyword_x( SystemPtr ent );
 KeywordPtr keyword_y( SystemPtr ent );
 KeywordPtr keyword_z( SystemPtr ent );

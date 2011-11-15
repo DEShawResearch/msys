@@ -90,7 +90,7 @@ desres::msys::atomsel::keyword_##attr( SystemPtr ent ) { \
   return KeywordPtr(new Keyword_##attr(ent)); \
 }
 
-//INT_KEY(alchemical,getAlch())
+INT_KEY(fragid,sys->atom(i).fragid)
 INT_KEY(anum,sys->atom(i).atomic_number)
 INT_KEY(hydrogen,sys->atom(i).atomic_number==1)
 INT_KEY(gid,sys->atom(i).gid)

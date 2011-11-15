@@ -164,6 +164,7 @@ namespace {
       !strcmp(id,"resid") ? keyword_resid(ent) :
       !strcmp(id,"residue") ? keyword_residue(ent) :
       !strcmp(id,"resname") ? keyword_resname(ent) :
+      !strcmp(id,"fragid") ? keyword_fragid(ent) :
       !strcmp(id,"x") ? keyword_x(ent) :
       !strcmp(id,"y") ? keyword_y(ent) :
       !strcmp(id,"z") ? keyword_z(ent) :
