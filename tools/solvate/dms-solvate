@@ -5,9 +5,20 @@
 #}
 
 '''
-dms-solvate input.dms output.dms [ options ]
+dms-solvate watbox.dms [ options ]  -- create water box
+dms-solvate solute.dms solvate.dms [ options ] -- add water to solute
+dms-solvate solute.dms watbox.dms solvate.dms [ options ] -- specify water box
 
-Add water molecules to a structure.
+Generate water molecules around a structure.  
+
+With one argument, a system containing only water is created.  
+
+With two arguments, a generic water box with no forcefield parameters
+is built around the input system.  The output system will have no forcefield.
+
+With three argments, the provided water box is tiled around the input
+structure, preserving forcefield information from solute and water.
+
 '''
 
 import os, sys
@@ -18,43 +29,37 @@ def main():
     import optparse
     parser = optparse.OptionParser(__doc__)
 
-    parser.add_option('-t', '--thickness', default=0, type='float',
-        help='Minimum distance from edge of water box to input structure')
-    parser.add_option('-m', '--minmax', default=None,
-        help='Specify solvent bounding box as xmin,ymin,zmin,xmax,ymax,zmax')
-    parser.add_option('-x', '--xpad', default=None,type='float',
-        help='Minimum water box thickness along x direction')
-    parser.add_option('-y', '--ypad', default=None,type='float',
-        help='Minimum water box thickness along y direction')
-    parser.add_option('-z', '--zpad', default=None,type='float',
-        help='Minimum water box thickness along z direction')
-    parser.add_option('-c', '--chain', default='WT',
+    parser.add_option('-d', '--dims', default=None,
+        help='water box dimensions: 1 or 3 comma-separated values')
+    parser.add_option('-c', '--center', default=None,
+        help='center of box as 3 comma-separated values; default 0,0,0')
+    parser.add_option('-n', '--chain', default='WT',
         help='Chain name of constructed water box')
-    parser.add_option(      '--cubic', default=False, action='store_true',
-        help='Ensure the resulting box is cubic')
     parser.add_option('-v', '--verbose', default=False, action='store_true')
 
     opts, args = parser.parse_args()
-    if len(args)!=2:
+    watbox = None
+
+    if len(args)==1:
+        mol=msys.CreateSystem()
+        output=args[0]
+    elif len(args)==2:
+        input, output = args
+        if opts.verbose: print "Loading input file <%s>" % input
+        mol=msys.LoadDMS(input, structure_only=True)
+    elif len(args)==3:
+        input, watbox, output = args
+        if opts.verbose: print "Loading input file <%s>" % input
+        mol=msys.LoadDMS(input, structure_only=False)
+    else:
         parser.error("incorrect number of arguments")
 
-    input, output = args
+    if opts.dims is not None:
+        opts.dims = map(float, opts.dims.split(','))
+    if opts.center is not None:
+        opts.center = map(float, opts.center.split(','))
 
-    if opts.verbose: print "Loading input file <%s>" % input
-    if opts.minmax:
-      try:
-        opts.minmax=[float(x) for x in opts.minmax.split(',')]
-        assert len(opts.minmax) == 6
-      except:
-        parser.error("minmax must have 6 comma-separated values")
-      opts.minmax=[opts.minmax[:3], opts.minmax[3:]]
-
-    if input=='-':
-        mol=msys.CreateSystem()
-    else:
-        mol=msys.LoadDMS(input,structure_only=True)
-    
-    mol = solvate.Solvate(mol, **opts.__dict__)
+    mol = solvate.Solvate(mol, watbox, **opts.__dict__)
 
     if opts.verbose: print "Writing DMS file <%s>" % output
     msys.SaveDMS(mol,output)
