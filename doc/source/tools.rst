@@ -221,11 +221,41 @@ greater.
 
 dms-solvate
 -----------
+
 .. program:: dms-solvate
 
-.. describe:: dms-solvate input.dms output.dms [ options ]
+.. describe:: dms-solvate watbox.dms [ options ]  -- create water box
 
-   Adds a solvation box around the input structure.
+.. describe:: dms-solvate solute.dms solvate.dms [ options ] -- add water to solute
+
+.. describe:: dms-solvate solute.dms watbox.dms solvate.dms [ options ] -- specify water box
+
+Generate water molecules around a structure.  
+
+With one argument, a system containing only water is created.  
+
+With two arguments, a generic water box with no forcefield parameters
+is built around the input system.  The output system will have no forcefield.
+
+With three argments, the provided water box is tiled around the input
+structure, preserving forcefield information from solute and water.
+
+.. cmdoption:: -d dims, --dims dims
+
+   water box dimensions: 1 or 3 comma-separated values.  
+
+.. cmdoption:: -c center, --center center
+
+   center of box as 3 comma-separated values; default 0,0,0
+
+.. cmdoption:: -n chain, --chain chain
+
+   Chain name of constructed water box
+
+.. cmdoption:: -v, --verbose
+
+   Be chatty
+
 
 dms-neutralize
 --------------
