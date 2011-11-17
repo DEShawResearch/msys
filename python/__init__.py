@@ -470,9 +470,10 @@ class TermTable(object):
         ''' A string describing what kind of TermTable this is.  
         Possibilities are: *bond*, *constraint*, *virtual*, *polar*, 
         *nonbonded*, and *exclusion*.'''
-        return self._ptr.category
+        return _msys.print_category(self._ptr.category)
     @category.setter
-    def category(self, val): self._ptr.category=val
+    def category(self, val): 
+        self._ptr.category=_msys.parse_category(val)
 
     @property
     def nterms(self): 

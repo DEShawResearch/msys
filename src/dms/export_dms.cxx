@@ -45,7 +45,7 @@ NbMap fetch_nbtypes(const System& sys) {
     std::vector<String> tables = sys.tableNames();
     for (unsigned i=0; i<tables.size(); i++) {
         TermTablePtr t = sys.table(tables[i]);
-        if (t->category=="nonbonded") {
+        if (t->category==NONBONDED) {
             if (table) {
                 throw std::runtime_error("multiple nonbonded tables found");
             }
@@ -450,14 +450,14 @@ static void export_nonbonded( TermTablePtr table, dms_t* dms) {
 static void export_meta( TermTablePtr table, const std::string& name, 
         dms_t* dms) {
     std::string sql("insert into ");
-    sql += table->category;
+    sql += print(table->category);
     sql += "_term values ('";
     sql += name;
     sql += "')";
     dms_exec(dms, sql.c_str());
     if (table->alchemical()) {
         std::string sql("insert into ");
-        sql += table->category;
+        sql += print(table->category);
         sql += "_term values ('alchemical_";
         sql += name;
         sql += "')";
@@ -474,14 +474,14 @@ static void export_tables( const System& sys, const IdList& map, dms_t* dms) {
     for (unsigned i=0; i<tables.size(); i++) {
         const std::string& name = tables[i];
         TermTablePtr table = sys.table(name);
-        if (table->category.size()==0) {
+        if (!table->category) {
             std::stringstream ss;
             ss << "cannot export table '" << tables[i] << "' with no category";
             throw std::runtime_error(ss.str());
 
-        } else if (table->category=="exclusion") {
+        } else if (table->category==EXCLUSION) {
             export_exclusion(table, map, dms);
-        } else if (table->category=="nonbonded") {
+        } else if (table->category==NONBONDED) {
             export_nonbonded(table, dms);
         } else {
             export_terms(table, map, name+"_term", dms);

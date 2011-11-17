@@ -44,6 +44,19 @@ namespace desres { namespace msys {
 
     void export_term() {
 
+        enum_<Category>("Category")
+            .value("none", NO_CATEGORY)
+            .value("bond", BOND)
+            .value("constraint", CONSTRAINT)
+            .value("virtual", VIRTUAL)
+            .value("polar", POLAR)
+            .value("nonbonded", NONBONDED)
+            .value("exclusion", EXCLUSION)
+            ;
+
+        def("parse_category", parse);
+        def("print_category", print);
+
         class_<TermTable, TermTablePtr>("TermTablePtr", no_init)
             .def("__eq__",      list_eq<TermTablePtr>)
             .def("__ne__",      list_ne<TermTablePtr>)

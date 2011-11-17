@@ -117,7 +117,7 @@ static void read_view_table( dms_t* dms,
     }
 
     TermTablePtr terms = sys.addTable(table, acols.size(), params);
-    terms->category = category;
+    terms->category = parse(category);
     IdList atoms(acols.size());
     for (; r; dms_reader_next(&r)) {
         for (unsigned i=0; i<acols.size(); i++) {
@@ -190,7 +190,7 @@ static void read_table( dms_t* dms,
     } else {
         terms = sys.addTable(table, natoms);
     }
-    terms->category = category;
+    terms->category = parse(category);
     for (ExtraMap::const_iterator i=extra.begin(); i!=extra.end(); ++i) {
         terms->addTermProp(i->second.first, i->second.second);
     }
@@ -267,7 +267,7 @@ read_nonbonded( dms_t* dms, System& sys, const std::vector<Id>& nbtypes,
     if (!dms_fetch(dms,"nonbonded_param",&r)) return;
 
     TermTablePtr terms = sys.addTable("nonbonded", 1);
-    terms->category="nonbonded";
+    terms->category=NONBONDED;
     IdList idmap = read_params(r, terms->params());
 
     IdList atoms(1);
@@ -305,7 +305,7 @@ read_exclusions(dms_t* dms, const IdList& gidmap, System& sys, KnownSet& known) 
     if (!dms_fetch(dms,"exclusion",&r)) return;
 
     TermTablePtr terms = sys.addTable("exclusion", 2);
-    terms->category="exclusion";
+    terms->category=EXCLUSION;
     IdList atoms(2);
 
     for (; r; dms_reader_next(&r)) {

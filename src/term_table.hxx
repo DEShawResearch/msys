@@ -13,6 +13,23 @@ namespace desres { namespace msys {
     class System;
     typedef boost::shared_ptr<System> SystemPtr;
 
+    /* Every term table should be assigned a category based on its type. */
+    enum Category {
+        NO_CATEGORY = 0,
+        BOND        = 1,
+        CONSTRAINT  = 2,
+        VIRTUAL     = 3,
+        POLAR       = 4,
+        NONBONDED   = 5,
+        EXCLUSION   = 6
+    };
+
+    /* convert category to string */
+    std::string print(Category const& c);
+
+    /* convert string to category */
+    Category parse(std::string const& s);
+
     class TermTable : public boost::enable_shared_from_this<TermTable> {
         boost::weak_ptr<System> _system;
         ParamTablePtr   _params;
@@ -52,7 +69,7 @@ namespace desres { namespace msys {
         bool alchemical() const;
 
         /* category describing what sort of TermTable we have */
-        String category;
+        Category category;
 
         /* name of this table in the parent system */
         String name() const;

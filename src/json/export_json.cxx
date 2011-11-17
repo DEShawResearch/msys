@@ -99,7 +99,7 @@ namespace {
             Json tnode;
             tnode.to_object();
             TermTablePtr table = sys->table(names[i]);
-            tnode.append("category", tmp.to_string(table->category.c_str()));
+            tnode.append("category", tmp.to_string(print(table->category).c_str()));
             tnode.append("natoms", tmp.to_int(table->atomCount()));
 
             /* term properties */

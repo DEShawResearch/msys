@@ -142,3 +142,33 @@ ValueRef TermTable::termPropValue(Id term, String const& name) {
     return _props->value(term, termPropIndex(name));
 }
 
+static const char* category_names[] = {
+    "none",
+    "bond",
+    "constraint",
+    "virtual",
+    "polar",
+    "nonbonded",
+    "exclusion"
+};
+static const unsigned ncategories = sizeof(category_names)/sizeof(char *);
+
+
+Category desres::msys::parse(std::string const& s) {
+    for (unsigned i=0; i<ncategories; i++) {
+        if (s==category_names[i]) return (Category)i;
+    }
+    std::stringstream ss;
+    ss << "Could not convert '" << s << "' into msys Category";
+    throw std::runtime_error(ss.str());
+}
+
+std::string desres::msys::print(Category const& c) {
+    unsigned n = (unsigned)c;
+    if (n>=ncategories) {
+        std::stringstream ss;
+        ss << "Unrecognized msys category with numerical value " << n;
+        throw std::runtime_error(ss.str());
+    }
+    return category_names[n];
+}

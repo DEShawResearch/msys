@@ -13,7 +13,7 @@ using namespace desres::msys;
 
 static void configure_table(const schema_t* schema, 
                             TermTablePtr table) {
-    table->category = schema->category;
+    table->category = parse(schema->category);
     const column_t* props;
     props = schema->param_props;
     for (int i=0; i<DMS_MAX_PARAM_PROPS; i++) {
