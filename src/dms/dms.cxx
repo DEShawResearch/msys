@@ -374,8 +374,11 @@ void dms_insert( dms_t * dms, const char * table, dms_writer_t ** pw ) {
     sql = sqlite3_mprintf("pragma table_info(%q)", table);
 
     std::vector<std::string> cols;
-    if (sqlite3_prepare_v2(dms->db, sql, -1, &stmt, NULL))
+    if (sqlite3_prepare_v2(dms->db, sql, -1, &stmt, NULL)) {
+        sqlite3_free(sql);
+        sqlite3_free(insert_prefix);
         THROW_FAILURE(sqlite3_errmsg(dms->db));
+    }
     sqlite3_free(sql);
     while (sqlite3_step(stmt)==SQLITE_ROW) {
         cols.push_back((const char * )sqlite3_column_text(stmt, 1));
@@ -384,6 +387,7 @@ void dms_insert( dms_t * dms, const char * table, dms_writer_t ** pw ) {
     sqlite3_finalize(stmt);
 
     std::string insert_sql(insert_prefix);
+    sqlite3_free(insert_prefix);
     for (i=0; i<n; i++) {
         insert_sql += "?";
         insert_sql += i==n-1 ? ")" : ",";
