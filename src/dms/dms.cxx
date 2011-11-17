@@ -144,7 +144,7 @@ struct dms_reader {
 
 struct dms_writer {
     sqlite3_stmt * stmt;
-    std::vector<char *> cols;
+    std::vector<std::string> cols;
 };
 
 dms_t * dms_read( const char * path ) {
@@ -373,12 +373,12 @@ void dms_insert( dms_t * dms, const char * table, dms_writer_t ** pw ) {
     insert_prefix = sqlite3_mprintf("insert into %q values (", table);
     sql = sqlite3_mprintf("pragma table_info(%q)", table);
 
-    std::vector<char*> cols;
+    std::vector<std::string> cols;
     if (sqlite3_prepare_v2(dms->db, sql, -1, &stmt, NULL))
         THROW_FAILURE(sqlite3_errmsg(dms->db));
     sqlite3_free(sql);
     while (sqlite3_step(stmt)==SQLITE_ROW) {
-        cols.push_back(strdup((const char * )sqlite3_column_text(stmt, 1)));
+        cols.push_back((const char * )sqlite3_column_text(stmt, 1));
         ++n;
     }
     sqlite3_finalize(stmt);
