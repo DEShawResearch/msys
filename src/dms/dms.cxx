@@ -9,6 +9,9 @@
 #include <sstream>
 #include <fstream>
 
+#include <boost/shared_ptr.hpp>
+#include <boost/scoped_ptr.hpp>
+
 #include <sys/stat.h>
 #include <fcntl.h>
 
@@ -24,18 +27,40 @@ namespace {
     struct dms_file : sqlite3_file {
         char * contents;
         sqlite3_int64 size;
+        char * path;
     };
 
+    /* sqlite seems to ignore the return value from this function!  Hence
+     * we throw an exception on I/O error */
     int dms_xClose(sqlite3_file *file) {
         dms_file *dms = (dms_file *)file;
-        if (dms->contents) free(dms->contents);
+
+        /* ensure the contents get freed even if we throw */
+        boost::shared_ptr<char> cp;
+        if (dms->contents) cp.reset(dms->contents, free);
+
+        /* if path is non-NULL, we need to write the contents */
+        if (dms->path) {
+            boost::shared_ptr<char> pp(dms->path, free);
+            int fd=open(dms->path, O_WRONLY | O_CREAT, 0644);
+            if (fd<0 ||
+                write(fd, dms->contents, dms->size)!=dms->size ||
+                close(fd)!=0) {
+                THROW_FAILURE("Error writing file '" 
+                        << std::string(dms->path) << "': "
+                        << std::string(strerror(errno)));
+            }
+        }
         return SQLITE_OK;
     }
+
     int dms_xRead(sqlite3_file *file, void *pBuf, int iAmt, sqlite3_int64 offset) {
         dms_file *dms = (dms_file *)file;
         const char *ptr = dms->contents;
         sqlite3_int64 size=dms->size;
+
         int max=size-offset;  // max allowable read
+        if (max<0) max=0;
         int amt=iAmt < max ? iAmt : max;
         memcpy(pBuf, ptr+offset, amt);
         if (amt < max) return SQLITE_OK;
@@ -49,9 +74,9 @@ namespace {
         sqlite3_int64 last=offset+iAmt;
         if (dms->size < last) {
             dms->contents = (char *)realloc(dms->contents, last);
+            dms->size = last;
         }
-        char *ptr = dms->contents;
-        memcpy(ptr+offset, pBuf, iAmt);
+        memcpy(dms->contents+offset, pBuf, iAmt);
         return SQLITE_OK;
     }
 
@@ -59,6 +84,10 @@ namespace {
         return SQLITE_OK;
     }
     int dms_xUnlock(sqlite3_file*file, int) {
+        return SQLITE_OK;
+    }
+
+    int dms_xSync(sqlite3_file* file, int flags) {
         return SQLITE_OK;
     }
 
@@ -78,7 +107,7 @@ namespace {
         dms_xRead,
         dms_xWrite,
         0, // int (*xTruncate)(sqlite3_file*, sqlite3_int64 size);
-        0, // int (*xSync)(sqlite3_file*, int flags);
+        dms_xSync,
         dms_xFileSize,
         dms_xLock,
         dms_xUnlock, // int (*xUnlock)(sqlite3_file*, int);
@@ -97,6 +126,7 @@ namespace {
         dms_vfs() {
             zName = "dms";
             xOpen = dms_xOpen;
+            xDelete = dms_xDelete;
             xAccess = dms_xAccess;
             xFullPathname = dms_xFullPathname;
             xAccess = dms_xAccess;
@@ -108,10 +138,23 @@ namespace {
                 sqlite3_file*file, int flags, int *pOutFlags) {
             dms_file *dms = (dms_file *)file;
             dms->pMethods = &iomethods;
-            dms->contents = g_tmpbuf;
-            dms->size     = g_tmpsize;
-            g_tmpbuf = NULL;
-            g_tmpsize = -1;
+            dms->path = NULL;
+            if (flags & SQLITE_OPEN_CREATE) {
+                dms->contents = NULL;
+                dms->size = 0;
+                if (flags & SQLITE_OPEN_MAIN_DB) {
+                    dms->path = strdup(zName);
+                }
+            } else {
+                dms->contents = g_tmpbuf;
+                dms->size     = g_tmpsize;
+                g_tmpbuf = NULL;
+                g_tmpsize = -1;
+            }
+            return SQLITE_OK;
+        }
+
+        static int dms_xDelete(sqlite3_vfs*, const char *zName, int syncDir) {
             return SQLITE_OK;
         }
 
@@ -218,14 +261,19 @@ dms_t * dms_read_bytes( const char * bytes, int64_t len ) {
 
 dms_t * dms_write( const char * path ) {
     sqlite3* db;
-    if (sqlite3_open(path, &db)!=SQLITE_OK)
-        THROW_FAILURE(sqlite3_errmsg(db));
+    sqlite3_vfs_register(vfs, 0);
+
+    int rc = sqlite3_open_v2(path, &db, 
+            SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, vfs->zName);
+    if (rc!=SQLITE_OK) THROW_FAILURE(sqlite3_errmsg(db));
     return new dms(db);
 }
 
 void dms_close( dms_t * dms ) {
-    sqlite3_close(dms->db);
-    delete dms;
+    boost::scoped_ptr<dms_t> dp(dms);
+    if (sqlite3_close(dms->db)!=SQLITE_OK) {
+        THROW_FAILURE("Closing file failed: " << sqlite3_errmsg(dms->db));
+    }
 }
 
 void dms_exec( dms_t * dms, const char * sql ) {
