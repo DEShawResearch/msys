@@ -5,10 +5,6 @@ Overview
 Introduction
 ============
 
-Msys is a library for manipulating molecular structures and their
-associated forcefields.  If you are already familiar with the Ent
-library, you'll see that the two have much in common.
-
 All molecular structure in Msys is held in an object called a `System`.
 Within a `System`, individual particles, including physical atoms as
 well as pseudo-particles used as interaction sites, are represented
