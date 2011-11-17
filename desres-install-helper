@@ -85,6 +85,12 @@ http://gardendoc.nyc.desres.deshaw.com/$NAME/$VERSION/doc/html/index.html
 
 This is a pre-release version of msys.
 
+0.9.5  Support vdw_exp_6s.
+       C++: TermTable.category is now an enum.
+       SaveDMS is now 10-30x faster.
+       Rewrite of dms-solvate - can now provide your own water box.
+       AppendSystem checks for compatible vdw_funct.
+
 0.9.4  mae2dms: support vdw_exp_6
        Removed some extraneous Python interface methods
        Renamed *prop_names to props, and eliminated *prop_types.
