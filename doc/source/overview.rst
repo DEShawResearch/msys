@@ -26,6 +26,10 @@ for ease of forcefield parameterization, a `TermTable` holds a separate
 table called a `ParamTable` which contains the interaction properties that
 can be shared by many `Terms`.  Changes to an entry in a `ParamTable` will
 affect the interaction strengths of every `Term` referencing that entry.
+However, as illustrated below, operations on an individual `Term` will affect
+the interaction properties of just that `Term`; behind the scenes, Msys
+takes care of creating a copy of a `Term`'s parameters as needed.
+
 It is also possible for developers to construct multiple `TermTables`
 that share the very same `ParamTable`, so that changes to a shared
 `ParamTable` affect multiple `TermTables` or `Systems`.
@@ -148,21 +152,11 @@ through the corresponding `TermTable`::
   params = stretch.param
   print "%d stretch terms, %d stretch params" % (len(terms), len(params))
 
-Note that, because parameters can be and often are shared, modifications
-to the properties of one `Term` can affect the properties of many others.
-In the previous code snippet, it is likely that there will be many fewer
-params than terms, indicating that some terms share parameters.  
+You can change the properties of a selected `Term` using a 
+dictionary-like interface::
 
-Suppose we wish to change the parameters for just a single term.  This
-can be accomplished by duplicating the `Param` of the term, and assigning
-the duplicated `Param` to the term::
-
-  # select the first stretch term
-  t = stretch.terms[0]
-  # make sure this term doesn't share parameters with any other term
-  t.param = t.param.duplicate()
-  # we can now make changes to t.param without affecting any other term
-  t.param['fc'] = 42
+  # Change the force constant of the first stretch term to 42
+  stretch.terms[0]['fc] = 42
 
 
 Msys properties

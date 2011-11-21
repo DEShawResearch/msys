@@ -352,6 +352,49 @@ class TestMain(unittest.TestCase):
         self.assertEqual(t1.param['fc'],42)
         self.assertEqual(t2.param['fc'],42)
 
+    def testTermParamProps(self):
+        m=msys.CreateSystem()
+        m.addAtom()
+        table=m.addTable("table", 1)
+        p=table.params.addParam()
+        t=table.addTerm(m.atoms, p)
+        t2=table.addTerm(m.atoms, p)
+
+        with self.assertRaises(KeyError):
+            t['x']
+            t.stateB['x']
+            t.stateA['x']
+
+        table.params.addProp('x', float)
+        table.params.addProp('y', str)
+        self.assertEqual(t['x'], 0)
+        self.assertEqual(t['y'], '')
+
+        t2['x']=32
+        t2['y']='whodat'
+        self.assertEqual(t['x'], 0)
+        self.assertEqual(t['y'], '')
+        self.assertEqual(table.params.nparams, 2)
+
+        # alchemical term
+        b=t2.stateB
+        with self.assertRaises(RuntimeError):
+            b['x']
+        with self.assertRaises(RuntimeError):
+            b['y']
+        with self.assertRaises(RuntimeError):
+            b['x']=42
+        
+        t2.paramB=t2.param
+        self.assertEqual(b.param, t2.paramB)
+        self.assertEqual(b['x'], 32)
+        self.assertEqual(b['y'], 'whodat')
+
+        self.assertFalse(t2.stateA == t2.stateB)
+        self.assertTrue(t2.stateA == t2.stateA)
+        self.assertEqual(t2, t2.stateA)
+
+
     def testTermProps(self):
         m=msys.CreateSystem()
         m.addAtom()

@@ -333,16 +333,31 @@ class ParamTable(object):
         return [Param(self._ptr, i) for i in self._ptr.params()]
 
 class Term(object):
-    __slots__=('_ptr', '_id')
+    __slots__=('_ptr', '_id', '_state')
 
-    def __init__(self, _ptr, _id):
+    def __init__(self, _ptr, _id, _state='A'):
         self._ptr = _ptr
         self._id  = _id
+        self._state = _state
 
-    def __eq__(self, x): return self._id==x._id and self._ptr==x._ptr
-    def __ne__(self, x): return self._id!=x._id or  self._ptr!=x._ptr
+    def __eq__(self, x): 
+        return self._id==x._id and self._ptr==x._ptr and self._state==x._state
+    def __ne__(self, x): 
+        return self._id!=x._id or  self._ptr!=x._ptr or  self._state!=x._state
 
     def __repr__(self): return '<Term %d>' % self._id
+
+    @property
+    def paramid(self):
+        if self._state is 'A':
+            return self._ptr.param(self._id)
+        return self._ptr.paramB(self._id)
+    @paramid.setter
+    def paramid(self, id):
+        if self._state is 'A':
+            self._ptr.setParam(self._id, id)
+        else:
+            self._ptr.setParamB(self._id, id)
 
     def remove(self):
         ''' remove the given Term from its TermTable '''
@@ -355,8 +370,8 @@ class Term(object):
 
     @property
     def param(self): 
-        ''' The Param corresponding to this Terms parameters '''
-        id=self._ptr.param(self._id)
+        ''' The Param corresponding to this Term's parameters '''
+        id=self.paramid
         if _msys.bad(id): return None
         return Param(self._ptr.params(), id)
     @param.setter
@@ -367,7 +382,23 @@ class Term(object):
             if val.table != self.table.params:
                 raise RuntimeError, "param comes from a different ParamTable"
             id = val.id
-        self._ptr.setParam(self._id, id)
+        self.paramid = id
+
+    @property
+    def paramA(self):
+        ''' param for the A state of this Term '''
+        return self.stateA.param
+    @paramA.setter
+    def paramA(self, val):
+        self.stateA.param = val
+
+    @property
+    def paramB(self):
+        ''' param for the B state of this Term '''
+        return self.stateB.param
+    @paramB.setter
+    def paramB(self, val):
+        self.stateB.param = val
 
     @property
     def alchemical(self):
@@ -375,20 +406,21 @@ class Term(object):
         return not _msys.bad(self._ptr.paramB(self._id))
 
     @property
-    def paramB(self):
-        ''' The alchemical parameters for this Term; None if not present '''
-        id=self._ptr.paramB(self._id)
-        if _msys.bad(id): return None
-        return Param(self._ptr.params(), id)
-    @paramB.setter
-    def paramB(self, val):
-        if val is None: 
-            id = None
-        else: 
-            if val.table != self.table.params:
-                raise RuntimeError, "param comes from a different ParamTable"
-            id = val.id
-        self._ptr.setParamB(self._id, id)
+    def stateA(self):
+        ''' Returns the non-alchemical version of this Term '''
+        if self._state=='A': return self
+        return Term(self._ptr, self._id, 'A')
+
+    @property
+    def stateB(self):
+        ''' Returns the alchemical (B) version of this Term '''
+        if self._state=='B': return self
+        return Term(self._ptr, self._id, 'B')
+
+    @property
+    def state(self):
+        ''' The alchemical state this Term represents; either 'A' or 'B'. '''
+        return self._state
 
     @property
     def atoms(self):
@@ -400,20 +432,44 @@ class Term(object):
         ''' parent TermTable '''
         return TermTable(self._ptr)
 
-    def __getitem__(self, attr):
-        ''' get the value of term property attr '''
-        col = self._ptr.termPropIndex(attr)
-        if _msys.bad(col):
-            raise KeyError, "No such property '%s'" % attr
-        return self._ptr.getTermProp(self._id, col)
+    def __getitem__(self, prop):
+        ''' get the value of property prop '''
+        ptr = self._ptr
+        # first try term properties
+        col = ptr.termPropIndex(prop)
+        if not _msys.bad(col):
+            return ptr.getTermProp(self._id, col)
+        # otherwise use param properties
+        p = ptr.params()
+        col = p.propIndex(prop)
+        if col==_msys.BadId:
+            raise KeyError, "No such property '%s'" % prop
+        id=self.paramid
+        if id==_msys.BadId:
+            # The user asked for a valid property, but the term doesn't
+            # have an assigned param.  
+            raise RuntimeError, "No assigned param for '%s'" % repr(self)
+        return p.getProp(id, col)
 
-    def __setitem__(self, attr, val):
-        ''' set the value of term property attr '''
-        col = self._ptr.termPropIndex(attr)
-        if _msys.bad(col):
-            raise KeyError, "No such property '%s'" % attr
-        self._ptr.setTermProp(self._id, col, val)
-
+    def __setitem__(self, prop, val):
+        ''' set the value of property prop '''
+        ptr = self._ptr
+        # first try term properties
+        col = ptr.termPropIndex(prop)
+        if not _msys.bad(col):
+            return ptr.setTermProp(self._id, col, val)
+        # otherwise use param properties, duplicating if necessary
+        p = ptr.params()
+        col=p.propIndex(prop)
+        if col==_msys.BadId:
+            raise KeyError, "No such property '%s'" % prop
+        id=self.paramid
+        if id==_msys.BadId:
+            raise RuntimeError, "No assigned param for '%s'" % repr(self)
+        if ptr.paramRefs(id) > 1:
+            id=p.duplicate(id)
+            self.paramid=id
+        p.setProp(id, col, val)
 
 
 class TermTable(object):
@@ -934,5 +990,7 @@ def __globalcell_str(self):
     C=[x for x in self.C]
     return str([A,B,C])
 GlobalCell.__str__ = __globalcell_str
+
+
 
 
