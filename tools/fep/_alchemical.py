@@ -369,6 +369,16 @@ def create_ahn_constraint(mol, n):
     name='constraint_ah%d' % n
     return mol.addTableFromSchema(name, name)
 
+def identical_params( params, i, j):
+    ''' do the params in rows i and j have the same values? '''
+    if i==j: return True
+    if _msys.bad(i) or _msys.bad(j):
+        return False
+    for n in range(params.propCount()):
+        if params.getProp(i,n) != params.getProp(j.n):
+            return False
+    return True
+
 def MakeAlchemical(A, B, pairs):
 
     # put all the dummy atoms for A at the end
@@ -449,13 +459,16 @@ def MakeAlchemical(A, B, pairs):
         else:
             atom = C.atom(ai)
             amap.append(ai)
-            atom.alchemical = True
             if bi>=0:
                 batm = B.atom(bi)
-                atom.chargeB = batm.charge
                 p = copy_param(nbC.params(), nbB.params(), nbB.param(bi))
-                nbC.setParamB(ai, p)
+                if batm.charge != atom.charge and not identical_params(
+                        nbC.params(), nbC.param(ai), p):
+                    atom.alchemical = True
+                    atom.chargeB = batm.charge
+                    nbC.setParamB(ai, p)
             else:
+                atom.alchemical = True
                 if Czero is None: Czero = nbC.params().addParam()
                 nbC.setParamB(ai, Czero)
         if bi>=0:
