@@ -23,7 +23,24 @@ def canonical(ids):
         ids.reverse()
     return ids
 
-def make_block( amap, bmap, apairs, bpairs, atable, btable):
+def copy_table( mol, btable ):
+    atable = mol.addTable(btable.name(), btable.atomCount())
+    ap=atable.params()
+    bp=btable.params()
+    for i in range(bp.propCount()):
+        ap.addProp(bp.propName(i), bp.propType(i))
+    for i in range(bp.termPropCount()):
+        ap.addTermProp(bp.termPropName(i), bp.termPropType(i))
+    return atable
+
+
+def make_block( mol, amap, bmap, apairs, bpairs, atable, btable):
+    if atable is None and btable is None:
+        return []
+
+    if atable is None:
+        atable = copy_table(mol, btable)
+
     # a_item_list: the ids of the atoms in each atom, canonicalized
     natoms = atable.atomCount()
     arange = range(natoms)
@@ -31,7 +48,7 @@ def make_block( amap, bmap, apairs, bpairs, atable, btable):
 
     # bterms: mapping from canonicalized atoms to 1-based index
     bterms={}
-    for i in range(btable.termCount()):
+    for i in range(btable.termCount()) if btable is not None else []:
         ids=btable.atoms(i)
         key=canonical([bmap[j] for j in ids])
         bterms[tuple(key)]=i+1
@@ -57,7 +74,13 @@ def make_block( amap, bmap, apairs, bpairs, atable, btable):
 
     return block
 
-def make_pairmaps(bmap, atable, btable):
+def make_pairmaps(mol, bmap, atable, btable):
+    if atable is None and btable is None:
+        return []
+
+    if atable is None:
+        atable = copy_table(mol, btable)
+
     # make a and b items same way as exclmap
     b_item_dict=dict()
     for t in btable.terms():
@@ -252,6 +275,8 @@ def copy_param( dstparams, srcparams, srcid ):
 
 def make_alchemical(atable, btable, ctable, block, keeper=None):
     ''' merge forcefield entries from m2 into m1. '''
+    if btable is None: return
+
     b_constrained = btable.termPropIndex('constrained')
     c_constrained = None
     if not _msys.bad(b_constrained):
@@ -442,13 +467,13 @@ def MakeAlchemical(A, B, pairs):
 
     # stretches, angles, dihedrals
     ff='stretch_harm'
-    bondmaps = make_block(amap, bmap, apairs, bpairs, C.table(ff), B.table(ff))
+    bondmaps = make_block(C,amap, bmap, apairs, bpairs, C.table(ff), B.table(ff))
     ff='angle_harm'
-    anglmaps = make_block(amap, bmap, apairs, bpairs, C.table(ff), B.table(ff))
+    anglmaps = make_block(C,amap, bmap, apairs, bpairs, C.table(ff), B.table(ff))
     ff='dihedral_trig'
-    dihemaps = make_block(amap, bmap, apairs, bpairs, C.table(ff), B.table(ff))
+    dihemaps = make_block(C,amap, bmap, apairs, bpairs, C.table(ff), B.table(ff))
     ff='pair_12_6_es'
-    pairmaps = make_pairmaps(bmap, C.table(ff), B.table(ff))
+    pairmaps = make_pairmaps(C,bmap, C.table(ff), B.table(ff))
 
     kept.stage2( C, B, pairs, bmap, bondmaps, anglmaps, dihemaps, False )
 
