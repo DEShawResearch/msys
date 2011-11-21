@@ -29,11 +29,23 @@ namespace desres { namespace msys {
     
         /* number of rows in each property */
         Id  _nrows;
+
+        /* number of TermTables holding this ParamTable */
+        Id _refcnt;
     
         ParamTable();
     public:
         static boost::shared_ptr<ParamTable> create();
         ~ParamTable();
+
+        /* Do multiple TermTables use this ParamTable? */
+        bool shared() const { return _refcnt > 1; }
+
+        /* incref and decref should be used only from within TermTable
+         * to indicate whether a ParamTable is shared by multiple 
+         * term tables. */
+        void incref() { ++_refcnt; }
+        void decref() { --_refcnt; }
     
         Id paramCount() const { return _nrows; }
         Id addParam();

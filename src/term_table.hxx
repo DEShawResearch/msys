@@ -57,10 +57,17 @@ namespace desres { namespace msys {
          * any part of the table is alchemical. */
         typedef std::map<Id,Id> ParamMap;
         ParamMap    _paramB;
+
+        /* reference count for parameters used by terms in this table. */
+        IdList _paramrefs;
+        void incref(Id param);
+        void decref(Id param);
     
     public:
         TermTable( SystemPtr system, Id natoms, 
                    ParamTablePtr ptr = ParamTablePtr() );
+        ~TermTable();
+
         SystemPtr system() const { return _system.lock(); }
         ParamTablePtr params() { return _params; }
         Id atomCount() const { return _natoms; }
@@ -86,7 +93,11 @@ namespace desres { namespace msys {
          * This operation requires a full scan of the entire set of
          * terms, so use with care.  */
         void delTermsWithAtom(Id atm);
-    
+
+        /* reference count of param within this table; i.e., number of times
+         * this param appears in either param or paramB */
+        Id paramRefs(Id param) const;
+
         /* Operations on individual terms */
         Id param(Id term) const;
         Id paramB(Id term) const;

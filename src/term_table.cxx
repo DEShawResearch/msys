@@ -5,9 +5,33 @@
 
 using namespace desres::msys;
 
+void TermTable::incref(Id p) {
+    if (bad(p)) return;
+    Id sz = _paramrefs.size();
+    _paramrefs.resize(std::max(sz, p+1), 0);
+    ++_paramrefs[p];
+}
+
+void TermTable::decref(Id p) {
+    if (bad(p)) return;
+    Id sz = _paramrefs.size();
+    _paramrefs.resize(std::max(sz, p+1), BadId);
+    --_paramrefs[p];
+}
+
+Id TermTable::paramRefs(Id param) const {
+    if (param>=_paramrefs.size()) return 0;
+    return _paramrefs[param];
+}
+
 TermTable::TermTable( SystemPtr system, Id natoms, ParamTablePtr ptr ) 
 : _system(system), _natoms(natoms), _props(ParamTable::create()) {
     _params = ptr ? ptr : ParamTable::create();
+    _params->incref();
+}
+
+TermTable::~TermTable() {
+    _params->decref();
 }
 
 String TermTable::name() const {
@@ -46,13 +70,16 @@ Id TermTable::addTerm(const IdList& atoms, Id param) {
     Id id=_terms.size()/(1+_natoms);
     _terms.insert(_terms.end(), atoms.begin(), atoms.end());
     _terms.push_back(param);
+    incref(param);
     _props->addParam();
     return id;
 }
 
 void TermTable::delTerm(Id id) {
-    /* don't delete nonexistent term */
-    if (id<_terms.size()) _deadterms.insert(id);
+    if (!hasTerm(id)) return;
+    decref(param(id));
+    decref(paramB(id));
+    _deadterms.insert(id);
     _paramB.erase(id);
 }
 
@@ -68,27 +95,38 @@ void TermTable::delTermsWithAtom(Id atm) {
 }
 
 Id TermTable::param(Id term) const { 
+    if (!hasTerm(term)) throw std::runtime_error("Invalid term");
     return  _terms.at((1+term)*(1+_natoms)-1);
 }
 
 void TermTable::setParam(Id term, Id param) {
+    if (!hasTerm(term)) throw std::runtime_error("Invalid term");
+    decref(this->param(term));
             _terms.at((1+term)*(1+_natoms)-1) = param;
+    incref(param);
 }
 
 Id TermTable::paramB(Id term) const {
+    if (!hasTerm(term)) throw std::runtime_error("Invalid term");
     ParamMap::const_iterator i=_paramB.find(term);
     if (i==_paramB.end()) return BadId;
     return i->second;
 }
 void TermTable::setParamB(Id term, Id param) {
+    if (!hasTerm(term)) throw std::runtime_error("Invalid term");
+    ParamMap::const_iterator i=_paramB.find(term);
+
+    Id oldparam = i==_paramB.end() ? BadId : i->second;
+
     if (bad(param)) {
+        decref(oldparam);
         _paramB.erase(term);
-    } else if (!hasTerm(term)) {
-        throw std::runtime_error("Invalid term");
     } else if (!_params->hasParam(param)) {
         throw std::runtime_error("Invalid param");
     } else {
+        decref(oldparam);
         _paramB[term]=param;
+        incref(param);
     }
 }
 

@@ -295,6 +295,38 @@ class TestMain(unittest.TestCase):
         self.assertEqual(table.category, 'bond')
         msys.SaveDMS(m, 'foo.dms')
 
+    def testRefcount(self):
+        m=msys.CreateSystem()
+        a=m.addAtom()
+        table=m.addTable("foo", 1)
+        ptr=table._ptr
+        p1=table.params.addParam()
+        p2=table.params.addParam()
+        p3=table.params.addParam()
+        t1=table.addTerm([a], p1)
+        self.assertEqual(ptr.paramRefs(t1.param.id), 1)
+        t2=table.addTerm([a], p1)
+        self.assertEqual(ptr.paramRefs(t1.param.id), 2)
+        self.assertEqual(ptr.paramRefs(t2.param.id), 2)
+        t1.remove()
+        self.assertEqual(ptr.paramRefs(t2.param.id), 1)
+        t3=table.addTerm([a], p2)
+        self.assertEqual(ptr.paramRefs(t2.param.id), 1)
+        self.assertEqual(ptr.paramRefs(t3.param.id), 1)
+
+        t3.paramB = p2
+        self.assertEqual(ptr.paramRefs(t3.param.id), 2)
+        self.assertEqual(ptr.paramRefs(t3.paramB.id), 2)
+
+        t2.param=t3.paramB
+        self.assertEqual(ptr.paramRefs(t2.param.id), 3)
+        self.assertEqual(ptr.paramRefs(t3.param.id), 3)
+        self.assertEqual(ptr.paramRefs(t3.paramB.id), 3)
+
+        t3.remove()
+        self.assertEqual(ptr.paramRefs(t2.param.id), 1)
+
+
     def testSharedParams(self):
         m1=msys.CreateSystem()
         m2=msys.CreateSystem()
@@ -305,7 +337,9 @@ class TestMain(unittest.TestCase):
         p1=params.addParam()
         p2=params.addParam()
         table1=m1.addTable("table", 1, params)
+        self.assertFalse(params._ptr.shared())
         table2=m2.addTable("table", 1, params)
+        self.assertTrue(params._ptr.shared())
         self.assertEqual(table1.params, table2.params)
         t1=table1.addTerm(m1.atoms, p2)
         t2=table2.addTerm(m2.atoms[1:], p2)

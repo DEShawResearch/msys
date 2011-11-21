@@ -10,7 +10,7 @@ ParamTablePtr ParamTable::create() {
 }
 
 ParamTable::ParamTable()
-: _nrows(0)
+: _nrows(0), _refcnt(0)
 {}
 
 ParamTable::~ParamTable() {

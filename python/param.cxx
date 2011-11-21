@@ -48,6 +48,7 @@ namespace desres { namespace msys {
             .def("getProp",    param_get_value)
             .def("setProp",    param_set_value)
             .def("duplicate",  &ParamTable::duplicate)
+            .def("shared",     &ParamTable::shared)
             ;
     }
 

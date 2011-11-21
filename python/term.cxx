@@ -78,6 +78,7 @@ namespace desres { namespace msys {
             .def("paramB",      &TermTable::paramB)
             .def("setParamB",   set_paramB)
             .def("alchemical",  &TermTable::alchemical)
+            .def("paramRefs",   &TermTable::paramRefs)
 
             /* term properties */
             .def("termPropCount",&TermTable::termPropCount)
