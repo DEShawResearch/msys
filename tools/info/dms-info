@@ -59,7 +59,7 @@ def print_info(mol):
                         nalc += 1
             print "%20s: %d sites, %6d params, %6d terms, %2d alchemical" % (
                     table.name, table.natoms, table.params.nparams, 
-                    table.nterms-nalc, nalc)
+                    table.nterms, nalc)
 
     nbinfo=mol.nonbonded_info
     print "\n%12s:" % "Nonbonded Info"
