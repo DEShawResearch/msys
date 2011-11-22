@@ -35,6 +35,7 @@ Contents:
    paramtable
    termtable
    system
+   nonbonded
 
 Command line tools
 ==================
