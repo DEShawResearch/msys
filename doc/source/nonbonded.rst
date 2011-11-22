@@ -63,16 +63,19 @@ those two particles::
   combined.addProp('sigma', float)
   combined.addProp('epsilon', float)
 
+  # add the nonbonded combined table to the system
+  mol.addAuxTable('nonbonded_combined_param', combined)
+
   # find the nonbonded parameters for the two atoms, and duplicate them.
   a1=mol.atom(100)
   a2=mol.atom(200)
   p1=None
   p2=None
   for t in nb.terms:
-    if t.atom(0)==a1:
+    if t.atoms[0]==a1:
       p1=t.param.duplicate()
       t.param=p1
-    elif t.atom(0)==a2:
+    elif t.atoms[0]==a2:
       p2=t.param.duplicate()
       t.param=p2
   assert p1 is not None and p2 is not None
@@ -81,6 +84,13 @@ those two particles::
   row = combined.addParam()
   row['param1'] = p1.id
   row['param2'] = p2.id
+  row['sigma'] = 0.0
+  row['epsilon'] = 1.0
+
+  # paranoia: make the nonbonded combined table symmetric
+  row = combined.addParam()
+  row['param1'] = p2.id
+  row['param2'] = p1.id # swapped p1 and p2
   row['sigma'] = 0.0
   row['epsilon'] = 1.0
 
