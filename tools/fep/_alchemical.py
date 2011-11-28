@@ -375,7 +375,7 @@ def identical_params( params, i, j):
     if _msys.bad(i) or _msys.bad(j):
         return False
     for n in range(params.propCount()):
-        if params.getProp(i,n) != params.getProp(j.n):
+        if params.getProp(i,n) != params.getProp(j,n):
             return False
     return True
 
