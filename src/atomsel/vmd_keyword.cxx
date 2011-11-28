@@ -139,10 +139,10 @@ namespace desres { namespace msys { namespace atomsel { namespace {
 
         static const char * protypes[] = { "CA", "C", "O", "N" };
         /* NOTE: VMD 1.7 _tries_ to include O2 in its backbone selection, but
-         * because of a bug in the implementation, it doesn't include it.  We
-         * match that behavior here. */
+         * because of a bug in the implementation, it doesn't include it.  
+         * It's fixed in 1.9.1. and in vmd/1.9.0-17.  */
         static const char * proterms[] = {
-            "OT1", "OT2", "OXT", "O1" /* , "O2" */
+            "OT1", "OT2", "OXT", "O1", "O2"
         };
         static const char * nuctypes[] = {
             "P", "O1P", "O2P", "OP1", "OP2", "C3*", "C3'", "O3*", "O3'",
