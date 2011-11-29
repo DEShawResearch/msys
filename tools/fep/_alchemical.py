@@ -350,7 +350,7 @@ def make_constraint_map( bmap, C, B):
     consmap=dict()
     for name in C.tableNames():
         atable = C.table(name)
-        if atable.category!='constraint': continue
+        if atable.category!=_msys.Category.constraint: continue
         for t in atable.terms():
             a=atable.atom(t,0)
             if a in consmap:
@@ -360,7 +360,7 @@ def make_constraint_map( bmap, C, B):
     # find constraints in m2 that overlap with m1
     for name in B.tableNames():
         btable = B.table(name)
-        if btable.category!='constraint': continue
+        if btable.category!=_msys.Category.constraint: continue
         atable=C.table(name)
         for t in btable.terms():
             yield consmap.get( bmap[btable.atom(t,0)]), (name, t)
@@ -462,8 +462,9 @@ def MakeAlchemical(A, B, pairs):
             if bi>=0:
                 batm = B.atom(bi)
                 p = copy_param(nbC.params(), nbB.params(), nbB.param(bi))
-                if batm.charge != atom.charge and not identical_params(
-                        nbC.params(), nbC.param(ai), p):
+                if True:
+                #if batm.charge != atom.charge and not identical_params(
+                        #nbC.params(), nbC.param(ai), p):
                     atom.alchemical = True
                     atom.chargeB = batm.charge
                     nbC.setParamB(ai, p)

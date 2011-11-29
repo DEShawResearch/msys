@@ -17,20 +17,17 @@ def stage2(molC, molB, atommaps, bmap,
   bond_dict = dict()
   for i,[[ti,tj],bond] in enumerate(bondmaps):
     bond_dict[tuple(bond)] = i
-    bond.reverse()
-    bond_dict[tuple(bond)] = i
+    bond_dict[tuple(reversed(bond))] = i
     
   angle_dict = dict()
   for i,[[ti,tj],angle] in enumerate(anglemaps):
     angle_dict[tuple(angle)] = i
-    angle.reverse()
-    angle_dict[tuple(angle)] = i
+    angle_dict[tuple(reversed(angle))] = i
 
   dihed_dict = dict()
   for i,[[ti,tj],dihed] in enumerate(dihedmaps):
     dihed_dict[tuple(dihed)] = i
-    dihed.reverse()
-    dihed_dict[tuple(dihed)] = i
+    dihed_dict[tuple(reversed(dihed))] = i
 
   # first consider A state
 
