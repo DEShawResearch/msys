@@ -13,11 +13,13 @@ class TestStrict(UT.TestCase):
         self.assertTrue(len(constraints)>0)
 
     def testConsistentMasses(self):
-        ''' Particles with equal atomic number must have equal mass '''
+        ''' Particles with equal atomic number must have equal mass. 
+        Pseudos excluded.  '''
         m=dict()
         for a in self.mol.atoms:
             m.setdefault(a.atomic_number, set()).add(a.mass)
         for anum, masses in m.items():
+            if anum==0: continue
             self.assertEqual(len(masses), 1, 
                     "Multiple masses for atomic number %s: \n\t%s" % (
                         anum, list(masses)))
