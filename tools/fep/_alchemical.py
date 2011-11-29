@@ -448,6 +448,9 @@ def MakeAlchemical(A, B, pairs):
             atom.vz = batm.vz
             atom.chargeB = batm.charge
             atom.atomic_number = batm.atomic_number
+            for p in range(B.atomPropCount()):
+                prop = B.atomPropName(p)
+                C.setAtomProp(atm, prop, B.getAtomProp(bi, prop))
             amap.append(atm)
             if nbC is not None:
                 assert nbB is not None
