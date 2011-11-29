@@ -22,6 +22,33 @@ class TestStrict(UT.TestCase):
                     "Multiple masses for atomic number %s: \n\t%s" % (
                         anum, list(masses)))
 
+    def testSparsify(self):
+        ''' molecule must have all 1-4 exclusions.  '''
+        # hash the exclusions and pairs
+        excls=set()
+        if not 'exclusion' in self.mol.table_names: return
+        ptr=self.mol.table('exclusion')._ptr
+        for t in ptr.terms():
+            ai, aj = ptr.atoms(t)
+            excls.add((ai,aj))
+        p14=set()
+        mol=self.mol._ptr
+        for bi in mol.bonds():
+            bnd=mol.bond(bi)
+            b0 = bnd.i
+            b1 = bnd.j
+            for n0 in mol.bondedAtoms(b0):
+                if n0==b1: continue
+                for n1 in mol.bondedAtoms(b1):
+                    if n1==b0: continue
+                    if n1==n0: continue
+                    pair=[n0, n1]
+                    pair.sort()
+                    p14.add(tuple(pair))
+
+        ediff=p14.difference(excls)
+        self.assertFalse(ediff, "%d 1-4 bonds not found in exclusions - is the file sparsified?" % len(ediff))
+
 class TestBasic(UT.TestCase):
     def setUp(self):
         self.mol=_mol
