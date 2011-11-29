@@ -79,6 +79,19 @@ Id ParamTable::duplicate(Id param) {
     return dst;
 }
 
+int ParamTable::compare(Id L, Id R) {
+    if (!(hasParam(L) && hasParam(R))) {
+        throw std::runtime_error("comparison of invalid param ids");
+    }
+    Id prop, nprops = propCount();
+    for (prop=0; prop<nprops; prop++) {
+        int c=value(L, prop).compare(value(R, prop));
+        if (c<0) return -1;
+        if (c>0) return  1;
+    }
+    return 0;
+}
+
 void ParamTable::delProp(Id index) {
     if (bad(index)) return;
     if (index>=_props.size()) {

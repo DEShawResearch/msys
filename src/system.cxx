@@ -358,6 +358,12 @@ void System::removeTable(TermTablePtr terms) {
     }
 }
 
+void System::coalesceTables() {
+    for (TableMap::iterator i=_tables.begin(), e=_tables.end(); i!=e; ++i) {
+        i->second->coalesce();
+    }
+}
+
 void System::addAuxTable(String const& name, ParamTablePtr aux) {
     _auxtables[name] = aux;
 }

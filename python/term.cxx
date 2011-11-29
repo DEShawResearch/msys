@@ -92,6 +92,9 @@ namespace desres { namespace msys {
 
             /* lookup terms based on atom */
             .def("delTermsWithAtom",    &TermTable::delTermsWithAtom)
+
+            /* coalesce */
+            .def("coalesce",    &TermTable::coalesce)
             ;
     }
 

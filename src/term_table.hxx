@@ -115,6 +115,10 @@ namespace desres { namespace msys {
         void delTermProp(Id index);
         ValueRef termPropValue(Id term, Id index);
         ValueRef termPropValue(Id term, String const& name);
+
+        /* reassign param and paramB to a member of the set of distinct
+         * parameters. */
+        void coalesce();
     };
 
     typedef boost::shared_ptr<TermTable> TermTablePtr;

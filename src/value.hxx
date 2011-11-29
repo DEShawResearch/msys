@@ -79,6 +79,10 @@ namespace desres { namespace msys {
          * uses strcmp.  Any other comparison returns false. */
         bool operator==(const ValueRef& rhs) const;
 
+        /* return -1, 0 or 1 if this compares less than, equal to, or
+         * greater than rhs */
+        int compare(const ValueRef& rhs) const;
+
         template <typename T>
         bool operator!=(const T& rhs) const {
             return ! operator==(rhs);

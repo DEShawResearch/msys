@@ -57,6 +57,10 @@ namespace desres { namespace msys {
          * this is identical to addParam(). */
         Id duplicate(Id param);
 
+        /* Return -1, 0, 1 if the values of L are less than, equal to,
+         * or greater than those of R, with comparisons performed
+         * lexicographically using ValueRef::compare(). */
+        int compare(Id L, Id R);
     
         Id propCount() const            { return _props.size();     }
         String propName(Id i) const     { return _props.at(i).name; }

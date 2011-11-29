@@ -137,6 +137,9 @@ namespace {
         return L;
     }
 
+    void sys_coalesce( System const& sys ) {
+    }
+
     SystemPtr import_mae_from_buffer(PyObject* obj, bool ignore_unrecognized) {
         Py_buffer view[1];
         if (PyObject_GetBuffer(obj, view, PyBUF_ND)) {
@@ -320,6 +323,7 @@ namespace desres { namespace msys {
             .def("updateFragids", update_fragids)
             .def("findBond",    &System::findBond)
             .def("provenance",      sys_provenance)
+            .def("coalesceTables",    &System::coalesceTables)
             ;
     }
 

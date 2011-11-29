@@ -489,6 +489,12 @@ class TermTable(object):
         ''' Remove this table from its parent system '''
         self._ptr.system().removeTable(self._ptr)
 
+    def coalesce(self):
+        ''' Reassign param and paramB for each Term in this Table to a member
+        of the distinct set of Params used by those Terms.
+        '''
+        self._ptr.coalesce()
+
     @property
     def name(self):
         ''' name of this table '''
@@ -759,7 +765,7 @@ class System(object):
         return self._ptr.bondPropType(self._ptr.bondPropIndex(name))
 
     ###
-    ### operations on custom term tables
+    ### operations on term tables
     ###
 
     @property
@@ -792,6 +798,11 @@ class System(object):
     def addTableFromSchema(self, type, name = None):
         if name is None: name=type
         return TermTable(self._ptr.addTableFromSchema(type,name))
+
+    def coalesceTables(self):
+        ''' Invoke TermTable.coalesce on each table '''
+        self._ptr.coalesceTables()
+
 
     ###
     ### auxiliary tables

@@ -17,7 +17,7 @@ class TestMain(unittest.TestCase):
         self.assertNotEqual(m.atom(0), m.atom(1))
 
         # FIXME: hmm, maybe fetching m.atom(0) ought to throw after the
-        # atom has been removeed.  
+        # atom has been removed.  
         m.atom(0).remove()
         self.assertFalse(m.atom(0) in m.atoms)
 
@@ -33,6 +33,36 @@ class TestMain(unittest.TestCase):
         self.assertNotEqual(rnew, a1.residue)
         a1.residue = rnew
         self.assertEqual(rnew, a1.residue)
+
+    def testCoalesce(self):
+        m=msys.CreateSystem()
+        a=m.addAtom()
+        table=m.addTableFromSchema('posre_harm')
+        p1=table.params.addParam()
+        p2=table.params.addParam()
+        p3=table.params.addParam()
+        p3['fcx'] = 32
+
+
+        t1=table.addTerm([a], p1)
+        t2=table.addTerm([a], p2)
+        t3=table.addTerm([a], p3)
+        t4=table.addTerm([a])
+        t4.paramB = p2
+
+        self.assertFalse( t1.param==t2.param)
+        self.assertFalse( t1.param==t3.param)
+
+        table.coalesce()
+        self.assertTrue( t1.param==t2.param)
+        self.assertTrue( t1.param==p1)
+        self.assertTrue( t2.param==p1)
+        self.assertFalse( t1.param==t3.param)
+        self.assertTrue( t3.param==p3)
+
+        self.assertTrue(t4.param is None)
+        self.assertTrue(t4.paramB == p1)
+
 
     def testAtomProps(self):
         m=msys.CreateSystem()

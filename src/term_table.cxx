@@ -2,6 +2,7 @@
 #include "system.hxx"
 #include <stdexcept>
 #include <sstream>
+#include <iostream>
 
 using namespace desres::msys;
 
@@ -180,6 +181,53 @@ ValueRef TermTable::termPropValue(Id term, String const& name) {
     return _props->value(term, termPropIndex(name));
 }
 
+namespace {
+    struct ParamComparator {
+        ParamTablePtr params;
+        
+        explicit ParamComparator(ParamTablePtr p) : params(p) {}
+        bool operator()(Id const& pi, Id const& pj) {
+            return params->compare(pi,pj)<0;
+        }
+    };
+}
+
+void TermTable::coalesce() {
+    if (!_params->paramCount()) return;
+    typedef std::map<Id,IdList,ParamComparator> ParamMap;
+    ParamComparator comp(_params);
+    assert(!comp(0,0));
+    ParamMap map(comp);
+    Id i,n = maxTermId();
+    for (i=0; i<n; i++) {
+        if (!hasTerm(i)) continue;
+        Id p = param(i);
+        if (bad(p)) continue;
+        map[p].push_back(i);
+    }
+    for (ParamMap::iterator iter=map.begin(); iter!=map.end(); ++iter) {
+        Id p = iter->first;
+        IdList& ids = iter->second;
+        for (Id i=0; i<ids.size(); i++) setParam(ids[i], p);
+        /* we clear the list, rather than erase the entire map, so that
+         * we can reuse the set of unique params for paramB */
+        ids.clear();
+    }
+    /* map paramB for each term to a distinct set, using the params from
+     * the first pass when possible */
+    for (i=0; i<n; i++) {
+        if (!hasTerm(i)) continue;
+        Id p = paramB(i);
+        if (bad(p)) continue;
+        map[p].push_back(i);
+    }
+    for (ParamMap::iterator iter=map.begin(); iter!=map.end(); ++iter) {
+        Id p = iter->first;
+        IdList& ids = iter->second;
+        for (Id i=0; i<ids.size(); i++) setParamB(ids[i], p);
+    }
+}
+
 static const char* category_names[] = {
     "none",
     "bond",
@@ -210,3 +258,4 @@ std::string desres::msys::print(Category const& c) {
     }
     return category_names[n];
 }
+

@@ -287,6 +287,9 @@ namespace desres { namespace msys {
         void delTable(const String& name);
         void removeTable(TermTablePtr terms);
 
+        /* invoke coalesce on each table */
+        void coalesceTables();
+
         /* operations on auxiliary tables */
         std::vector<String> auxTableNames() const;
         ParamTablePtr auxTable(String const& name) const;

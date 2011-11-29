@@ -56,8 +56,44 @@ bool ValueRef::operator==(const ValueRef& rhs) const {
             break;
         default:
         case StringType:
-            if (rhs._type==StringType) return !strcmp(_val.s, rhs._val.s);
+            if (rhs._type==StringType) 
+                return strcmp(_val.s ?     _val.s : "", 
+                          rhs._val.s ? rhs._val.s : "")==0;
             break;
     }
     return false;
+}
+
+int ValueRef::compare(const ValueRef& rhs) const {
+    switch (_type) {
+        case IntType:
+            if (rhs._type==IntType) 
+                return _val.i<rhs._val.i ? -1 : 
+                       _val.i>rhs._val.i ?  1 : 
+                                            0 ;
+
+            if (rhs._type==FloatType) 
+                return _val.i<rhs._val.f ? -1 :
+                       _val.i>rhs._val.f ?  1 : 
+                                            0 ;
+            break;
+        case FloatType:
+            if (rhs._type==FloatType) 
+                return _val.f<rhs._val.f ? -1 :
+                       _val.f>rhs._val.f ?  1 :
+                                            0;
+
+            if (rhs._type==IntType) 
+                return _val.f<rhs._val.i ? -1 :
+                       _val.f<rhs._val.i ?  1 :
+                                            0 ;
+            break;
+        default:
+        case StringType:
+            if (rhs._type==StringType) 
+                return strcmp(_val.s ?     _val.s : "", 
+                          rhs._val.s ? rhs._val.s : "");
+            break;
+    }
+    return 0;
 }
