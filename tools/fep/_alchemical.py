@@ -555,9 +555,6 @@ def MakeAlchemical(A, B, pairs):
     alc = _msys.Clone(A, alc_ids)
     C.append(alc)
 
-    # reassign gids in the order they're given by the input maps 
-    for a in C.atoms(): C.atom(a).gid = a
-
     # coalesce and clone to obtain the minimal set of params
     C.coalesceTables()
     return _msys.Clone(C, C.atoms())

@@ -22,8 +22,6 @@ def main():
     parser.add_option('-a', '--append', default=None)
     parser.add_option('-o', '--output', default=None)
     parser.add_option('-v', '--verbose', action='store_true', default=False)
-    parser.add_option('--preserve-gids', default=False, action='store_true',
-            help='preserve gids from the input file')
 
     opts, args = parser.parse_args()
     if len(args)!=1:
@@ -40,9 +38,6 @@ def main():
     if opts.verbose:
         print "dms-select: %d chain(s), %d residue(s), %d atom(s)" % (
                 len(mol.chains), len(mol.residues), len(mol.atoms))
-
-    if not opts.preserve_gids:
-        mol.reassignGids()
 
     if opts.output:
         msys.SaveDMS(mol, opts.output)

@@ -111,8 +111,6 @@ def Solvate(mol, watbox=None, dims=None, center=None,
                 r.resid = watres
                 watres += 1
 
-    mol.reassignGids()
-
     if verbose: print "updating global cell to (%g %g %g)" % tuple(dims)
 
     return mol

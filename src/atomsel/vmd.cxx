@@ -156,7 +156,6 @@ namespace {
       !strcmp(id,"chain") ? keyword_chain(ent) :
       !strcmp(id,"charge") ? keyword_charge(ent) :
       !strcmp(id,"fragment") ? keyword_fragment(ent) :
-      !strcmp(id,"gid") ? keyword_gid(ent) :
       !strcmp(id,"index") ? keyword_index(ent) :
       !strcmp(id,"mass") ? keyword_mass(ent) :
       !strcmp(id,"name") ? keyword_name(ent) :

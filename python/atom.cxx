@@ -7,7 +7,6 @@ namespace desres { namespace msys {
     void export_atom() {
 
         class_<atom_t>("atom_t", no_init)
-            .def_readwrite("gid",       &atom_t::gid)
             .def_readwrite("fragid",    &atom_t::fragid)
             .def_readonly("residue",    &atom_t::residue)
             .def_readwrite("x",         &atom_t::x)

@@ -556,21 +556,16 @@ static void export_provenance(System const& sys, Provenance const& provenance,
     dms_writer_free(w);
 }
 
+/* make a mapping from id to 0-based dms primary key */
 static IdList map_gids(System const& sys) {
-    IdList gids, ids = sys.atoms();
-    IdList idmap(sys.maxAtomId());
-    for (Id i=0, n=ids.size(); i<n; i++) {
-        Id id = ids[i];
-        Id gid = sys.atom(id).gid;
-        idmap[id] = gid;
-        gids.push_back(gid);
+    Id i,n = sys.maxAtomId();
+    IdList ids(n, BadId);
+    Id gid=0;
+    for (i=0; i<n; i++) {
+        if (!sys.hasAtom(i)) continue;
+        ids.at(i)=gid++;
     }
-    /* Ensure that the set of gids has no repeats. */
-    std::sort(gids.begin(), gids.end());
-    if (std::unique(gids.begin(), gids.end()) != gids.end()) {
-        throw std::runtime_error("atom gids are not unique");
-    }
-    return idmap;
+    return ids;
 }
 
 static void export_dms(SystemPtr h, dms_t* dms, Provenance const& provenance) {

@@ -55,11 +55,6 @@ class TestBasic(UT.TestCase):
     def setUp(self):
         self.mol=_mol
 
-    def testContiguousGids(self):
-        ''' Gids must be contiguous, starting at zero '''
-        gids=[a.gid for a in self.mol.atoms]
-        self.assertEqual(gids, range(self.mol.natoms))
-
     def testHasNonbonded(self):
         ''' Every particle must have a nonbonded param assignment '''
         self.assertTrue('nonbonded' in self.mol.table_names)

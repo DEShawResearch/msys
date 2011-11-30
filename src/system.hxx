@@ -57,9 +57,10 @@ namespace desres { namespace msys {
     };
 
     struct atom_t {
-        Id  gid;        /* For dms, the primary key of the particle */
         Id  fragid;
         Id  residue;
+        int atomic_number;
+        int formal_charge;
     
         Float x,y,z;    /* position */
         Float charge;   /* partial charge */
@@ -67,17 +68,15 @@ namespace desres { namespace msys {
         Float mass;
         Float chargeB;
     
-        int atomic_number;
-        int formal_charge;
         int moiety;
         bool alchemical;
     
         String name;
     
         atom_t() 
-        : gid(BadId), fragid(BadId), residue(BadId),
+        : fragid(BadId), residue(BadId), atomic_number(0), formal_charge(0),
           x(0), y(0), z(0), charge(0), vx(0), vy(0), vz(0), mass(0), chargeB(0),
-          atomic_number(0), formal_charge(0), moiety(0), alchemical(false)
+          moiety(0), alchemical(false)
         {}
     };
     
@@ -332,9 +331,9 @@ namespace desres { namespace msys {
          * frags found, and atomid to fragment partitioning if requested */
         Id updateFragids(MultiIdList* fragments=NULL);
 
-        /* Assign gids to atoms based on their order of appearance in
+        /* Return ids of atoms based on their order of appearance in
          * a depth-first traversal of the structure hierarchy. */
-        void reassignGids();
+        IdList orderedIds() const;
     };
 
     typedef boost::shared_ptr<System> SystemPtr;

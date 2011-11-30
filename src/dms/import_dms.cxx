@@ -557,9 +557,8 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
         atm.mass = dms_reader_get_double(r, MASS);
         atm.atomic_number = anum;
         atm.name = dms_reader_get_string(r, NAME);
-        atm.gid = gid;
         atm.charge = dms_reader_get_double(r, CHARGE);
-        while (gidmap.size()<atm.gid) gidmap.push_back(BadId);
+        while (gidmap.size()<gid) gidmap.push_back(BadId);
         gidmap.push_back(atmid);
 
         boost::trim(atm.name);

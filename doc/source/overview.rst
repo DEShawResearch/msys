@@ -191,8 +191,8 @@ An exception is thrown if you try to add a property with the same name
 but different type from an existing property.
 
 
-Gids, ids, and all that
-=======================
+Msys ids
+========
 
 In Msys, instances of the `Atom`, `Bond`, `Residue`, and `Chain` classes
 are all `Handles`, in the sense that they refer to a piece of data held
@@ -208,22 +208,12 @@ When you load a system from a file, or create one from scratch, these
 `Atoms`, `Bonds`, etc. from the `System` can introduce gaps in the set of
 ``ids``, but, once created, the ``id`` of an object never changes.
 
-`Atom` instances also have a mutable property called `gid`.  In a dms
-file, this property corresponds to the primary key of the corresponding
-particle.  If you wish to write your `System` to a dms file and reorder
-the particles according to some permutation, it is the `gid` property
-that you need to set.  You can change this value by hand, as you would
-any other `Atom` property, and it will not affect, for example, the
-identity of the `Atoms` referred to by the `Terms`.  However, writing a
-`System` out to a DMS file using ``SaveDMS`` will fail if the gids are
-not all unique.  
-
-If you simply wish to let Msys assign a 'nice' set of 0-based contiguous
-gids, use the ``reassignGids()`` method of `System`.  You may also wish
-to use ``reassignGids()`` on the `System` returned by ``System.clone`` or
-``CloneSystem``, because the ``gids`` in the cloned `System` are not
-changed by the clone operation, and will be nonconsective if the gids
-in the cloned atoms are nonconsecutive.
+When Msys writes a DMS file, the primary keys of the particles will
+be contiguous starting at 0, and will appear in the order in which the
+particles appear in the `System`, even if the ``ids`` of the atoms in the
+`System` are noncontiguous due to deletions.  When Msys loads a DMS file,
+if the primary keys happen to be noncontiguous, Msys will still create a
+`System` with the usual contiguous ids.
 
 Notes on atom selections
 ========================

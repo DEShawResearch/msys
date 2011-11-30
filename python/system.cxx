@@ -319,7 +319,7 @@ namespace desres { namespace msys {
             .def("append", AppendSystem)
 
             /* miscellaneous */
-            .def("reassignGids",    &System::reassignGids)
+            .def("orderedIds",    &System::orderedIds)
             .def("updateFragids", update_fragids)
             .def("findBond",    &System::findBond)
             .def("provenance",      sys_provenance)

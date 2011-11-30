@@ -865,11 +865,13 @@ class System(object):
             ids = ptr.select(seltext)
         return System( _msys.Clone(ptr, ids))
 
-    def reassignGids(self):
-        ''' Assign gids to atoms based on their order of appearance in
-        a depth-first traversal of the structure hierarchy. 
+    def sorted(self):
+        ''' Return a clone of the system with atoms reordered based on their 
+        order of appearance in a depth-first traversal of the structure 
+        hierarchy.
         '''
-        self._ptr.reassignGids()
+        ptr=self._ptr
+        return System(_msys.Clone(ptr, ptr.orderedIds()))
 
     def updateFragids(self):
         ''' Find connected sets of atoms, and assign each a 0-based id,

@@ -8,7 +8,7 @@ trap 'desres_trapped_exit' EXIT
 desres_require_cleanenv
 
 NAME=msys
-PKG_VERSION=0.9.7
+PKG_VERSION=0.9.8
 
 VERSION=${PKG_VERSION}
 DESCRIPTION="Biomolecular Structure Library"
@@ -84,6 +84,8 @@ See documentation in
 http://gardendoc.nyc.desres.deshaw.com/$NAME/$VERSION/doc/html/index.html
 
 This is a pre-release version of msys.
+
+0.9.8  No more atom gid property.
 
 0.9.7  dms-validate --strict rejects sparsified files.
        TermTables can be coalesced so as to use a minimal set of params.

@@ -91,9 +91,9 @@ def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
             lipchain, dist, lipchain))
     if verbose: print "after removing solute overlap, have %d atoms" % mol.natoms
 
-    if verbose: print "removing outer lipids"
+    if verbose: print "removing outer lipids and water"
     mol = mol.clone(
-        'not (chain %s and same residue as (atomicnumber 15 and (abs(x)>%f or abs(y)>%f)))' % (
+        'not (chain %s and same residue as (atomicnumber 8 15 and (abs(x)>%f or abs(y)>%f)))' % (
             lipchain,xmax,ymax))
     if verbose: print "after removing outer lipids, have %d atoms" % mol.natoms
 
@@ -105,8 +105,6 @@ def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
             for r in c.residues:
                 r.resid = lipnum
                 lipnum += 1
-
-    mol.reassignGids()
 
     if verbose: print "updating global cell"
 

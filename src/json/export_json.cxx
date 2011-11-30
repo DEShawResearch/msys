@@ -14,7 +14,7 @@ namespace {
             Json props;
             props.to_array();
             Json prop;
-            props.append(prop.to_string("gid"));
+            props.append(prop.to_string("id"));
             props.append(prop.to_string("chain"));
             props.append(prop.to_string("resname"));
             props.append(prop.to_string("resid"));
@@ -41,7 +41,7 @@ namespace {
             Json row;
             row.to_array();
             Json val;
-            row.append(val.to_int(atm.gid));
+            row.append(val.to_int(i));
             row.append(val.to_string(chn.name.c_str()));
             row.append(val.to_string(res.name.c_str()));
             row.append(val.to_int(res.resid));
@@ -75,13 +75,11 @@ namespace {
         for (Id i=0; i<sys->maxBondId(); i++) {
             if (!sys->hasBond(i)) continue;
             bond_t const& bnd = sys->bond(i);
-            atom_t const& ai = sys->atom(bnd.i);
-            atom_t const& aj = sys->atom(bnd.j);
 
             Json row;
             row.to_array();
-            row.append(tmp.to_int(ai.gid));
-            row.append(tmp.to_int(aj.gid));
+            row.append(tmp.to_int(bnd.i));
+            row.append(tmp.to_int(bnd.j));
             row.append(tmp.to_float(bnd.order));
             vals.append(row);
         }

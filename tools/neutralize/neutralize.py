@@ -198,5 +198,3 @@ def Neutralize(mol, cation='NA', anion='CL',
 
             res.remove()
 
-    mol.reassignGids()
-

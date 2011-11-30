@@ -22,7 +22,6 @@ Id System::addAtom(Id residue) {
     Id id = _atoms.size();
     atom_t atm;
     atm.residue = residue;
-    atm.gid = id;
     _residueatoms.at(residue).push_back(id);
     _atoms.push_back(atm);
     _atomprops->addParam();
@@ -226,13 +225,13 @@ Id System::updateFragids(MultiIdList* fragments) {
     return fragid;
 }
 
-void System::reassignGids() {
-    Id gid=0;
+IdList System::orderedIds() const {
+    IdList ids;
     for (Id c=0; c<_chains.size(); c++) {
         if (_deadchains.count(c)) continue;
         BOOST_FOREACH(Id r, _chainresidues[c]) {
             if (_deadresidues.count(r)) continue;
-            /* Give pseudos a gid adjacent to their parents.  On the first 
+            /* Give pseudos an id adjacent to their parents.  On the first 
              * pass through the atom list, consider only pseudos.  Make
              * a map from parent atom to pseudo.  On the second pass,
              * when a parent atom is encountered, number its pseudos
@@ -263,19 +262,23 @@ void System::reassignGids() {
             BOOST_FOREACH(Id a, _residueatoms[r]) {
                 if (_deadatoms.count(a)) continue;
                 if (_atoms[a].atomic_number==0) continue;
-                _atoms[a].gid=gid++;
+                ids.push_back(a);
+                //_atoms[a].gid=gid++;
                 std::map<Id,IdList>::const_iterator plist=pseudos.find(a);
                 if (plist!=pseudos.end()) {
                     BOOST_FOREACH(Id p, plist->second) {
-                        _atoms[p].gid=gid++;
+                        //_atoms[p].gid=gid++;
+                        ids.push_back(p);
                     }
                 }
             }
             BOOST_FOREACH(Id p, lone_pseudos) {
-                _atoms[p].gid=gid++;
+                //_atoms[p].gid=gid++;
+                ids.push_back(p);
             }
         }
     }
+    return ids;
 }
 
 TermTablePtr System::addTable(const String& name, Id natoms,
