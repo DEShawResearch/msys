@@ -981,6 +981,14 @@ def SaveMAE(system, path, with_forcefield = True ):
     import sys
     _msys.ExportMAE(system._ptr, str(path), bool(with_forcefield) )
 
+def TableSchemas():
+    ''' available schemas for System.addTableFromSchema '''
+    return [s for s in _msys.TableSchemas()]
+
+def NonbondedSchemas():
+    ''' available nonbonded schemas for System.addNonbondedFromSchema '''
+    return [s for s in _msys.NonbondedSchemas()]
+
 
 ''' customize Vec3 '''
 from _msys import Vec3

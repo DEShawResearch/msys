@@ -45,8 +45,7 @@ static schema_t schemas[] = {
     { "virtual_sp3",     "virtual", 4, {"c1","c2"}},
 
     /* exclusion */
-    { "exclusion", "exclusion", 2 },
-    {}
+    { "exclusion", "exclusion", 2 }
 };
 
 static schema_t nonbonded_schemas[] = {
@@ -58,9 +57,8 @@ static schema_t nonbonded_schemas[] = {
         //{"lb/geometric"}},
     { "polynomial_cij", "nonbonded", 1, 
         { "c1",  "c2",  "c3",  "c4",  "c5",  "c6",  "c7",  "c8", 
-          "c9",  "c10", "c11", "c12", "c13", "c14", "c15", "c16"}}, 
+          "c9",  "c10", "c11", "c12", "c13", "c14", "c15", "c16"}} 
         //{"geometric", "arithmetic", "arithmetic/geometric" }},
-    {}
 };
 
 namespace desres { namespace msys { 

@@ -474,6 +474,9 @@ class TestMain(unittest.TestCase):
         self.assertFalse(e in m.auxtables)
 
     def testTableDMS(self):
+        assert 'stretch_harm' in msys.TableSchemas()
+        assert 'vdw_12_6' in msys.NonbondedSchemas()
+
         m=msys.CreateSystem()
         t=m.addTableFromSchema('stretch_harm')
         self.assertEqual(t.natoms, 2)

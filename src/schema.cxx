@@ -30,17 +30,17 @@ static void configure_table(const schema_t* schema,
 }
 
 namespace desres { namespace msys {
-    std::set<std::string> TableSchemas() {
-        std::set<std::string> s;
+    std::vector<std::string> TableSchemas() {
+        std::vector<std::string> s;
         for (unsigned i=0; i<schema_count(); i++) {
-            s.insert(schema_name(i));
+            s.push_back(schema_name(i));
         }
         return s;
     }
-    std::set<std::string> NonbondedSchemas() {
-        std::set<std::string> s;
+    std::vector<std::string> NonbondedSchemas() {
+        std::vector<std::string> s;
         for (unsigned i=0; i<nonbonded_schema_count(); i++) {
-            s.insert(nonbonded_schema_name(i));
+            s.push_back(nonbonded_schema_name(i));
         }
         return s;
     }

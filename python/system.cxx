@@ -199,6 +199,9 @@ namespace desres { namespace msys {
 
         def("Clone", Clone);
 
+        def("TableSchemas", TableSchemas);
+        def("NonbondedSchemas", NonbondedSchemas);
+
         class_<System,SystemPtr>("SystemPtr", no_init)
             .def("__eq__",      list_eq<SystemPtr>)
             .def("__ne__",      list_ne<SystemPtr>)

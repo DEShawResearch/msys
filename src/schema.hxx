@@ -6,10 +6,10 @@
 namespace desres { namespace msys {
 
     /* Names of available table schemas. */
-    std::set<std::string> TableSchemas();
+    std::vector<std::string> TableSchemas();
 
     /* Names of available nonbonded schemas. */
-    std::set<std::string> NonbondedSchemas();
+    std::vector<std::string> NonbondedSchemas();
 
     /* Add a table to the system if it not already present,
      * returning it.  If optional name field is provided, the table
