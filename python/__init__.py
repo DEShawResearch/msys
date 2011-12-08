@@ -157,7 +157,7 @@ class Atom(Handle):
 
 
 __add_properties(Atom, 
-        'gid', 'fragid', 'x', 'y', 'z', 'charge',
+        'fragid', 'x', 'y', 'z', 'charge',
         'vx', 'vy', 'vz', 'mass',
         'chargeB',
         'atomic_number', 'formal_charge',
