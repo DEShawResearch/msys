@@ -46,6 +46,57 @@ all `Terms` that happen to share that `Param`::
   table.term(0).param['fc'] = 320
 
 
+
+Dealing with duplicate parameters
+=================================
+
+After performing various modifications to a `TermTable`, you may find
+that the associated `ParamTable` contains many entries whose values
+are all identical.  The redundant parameters can be removed by first
+"coalescing" the parameter assignments of each `Term` to a set of distinct
+`Params`, then cloning the `System`.  When a `System` is cloned, only the
+`Params` which are referenced by at least one `Term` in the `TermTable` are
+copied to the new `System`:: 
+
+  import msys
+  mol=msys.CreateSystem()
+  a1=mol.addAtom()
+  a2=mol.addAtom()
+  a3=mol.addAtom()
+  table = mol.addTableFromSchema('stretch_harm')
+  p1=table.params.addParam()
+  p1['fc']=320
+  p1['r0']=1.0
+  t1=table.addTerm([a1,a2], p1)
+  t2=table.addTerm([a1,a3], p1)
+  
+  # At this point we have two terms and one param.  Suppose we ignore the
+  # fact that t1 and t2 share a Param, and we just update their properties
+  # to the same value:
+  
+  t1['r0']=1.2
+  t2['r0']=1.2
+  
+  # Now we have two Params, because when we updated t1, we created a second
+  # Param that was unshared by t2.  When we updated t2, p1 was unshared, so
+  # no duplicate was made.
+  assert table.params.nparams==2
+  
+  # But we could get by with only a single Param.  Let's do that:
+  mol.coalesceTables()
+  
+  # At this point t1 and t2 are sharing a Param, and the other one is unused:
+  assert t1.param==t2.param
+  assert table.params.nparams==2
+  assert table.nterms==2
+  
+  # When we clone, the unused params are not copied to the new system.
+  mol2=mol.clone()
+  assert mol2.table('stretch_harm').params.nparams==1
+
+Alchemical terms
+================
+
 We mentioned above that every `Term` has a ``state``, which is normally
 "A".  In the "A" state, the ``param`` property corresponds to the
 `Term` property ``paramA``.  However, every `Term` also has a ``paramB``
@@ -69,3 +120,4 @@ A `Term` is a handle for an entry in a `TermTable`.
 .. autoclass:: msys.Term
    :members:
    :special-members:
+

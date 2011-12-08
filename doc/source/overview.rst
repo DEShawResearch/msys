@@ -58,10 +58,27 @@ Once you have your Python environment by loading the appropriate
 modules, fire up Python, import the msys module, and load a dms
 or mae file::
 
-
   import msys
+
+  # Load the entire contents of a DMS file
   dms=msys.LoadDMS('system.dms')
+
+  # Import an MAE file, performing conversions on its forcefield data
   mae=msys.LoadMAE('system.mae')
+
+You can also create a new `System` from scratch::
+
+  # mol = msys.CreateSystem()
+
+A `System` resides entirely in memory; changes to the `System` will not
+persist until/unless you write it back out to a file::
+
+  # Save the system as a DMS file
+  msys.SaveDMS(dms, 'output.dms')
+
+  # Export to MAE file
+  msys.SaveMAE(dms, 'output.mae')
+
 
 The full set of `Atoms`, `Bonds`, `Residues`, `Chains`, and `TermTables`
 are available by fetching them from the system.   You can also fetch
@@ -128,7 +145,7 @@ set of atoms, then immediately creating a new `System` from it::
   # create a new System with all the hydrogens removed
   hless = mol.clone('not hydrogen')
 
-  # create a full copy of the original
+  # create a copy of the original
   dup = mol.clone()
 
 You can append the structure and associated forcefield from one `System`
