@@ -65,7 +65,6 @@ mae/destro/Zing.cxx
 schema.cxx
 schema/schema.cxx
 
-alchemical.cxx
 append.cxx
 clone.cxx
 param_table.cxx
