@@ -176,6 +176,45 @@ dictionary-like interface::
   stretch.terms[0]['fc] = 42
 
 
+Adding new forcefield terms
+===========================
+
+Msys provides an interface for adding a `TermTable` corresponding
+to a "standard" forcefield term and configuring that table with
+its category and its the expected set of properties::
+
+
+  # Get the available set of TermTable schemas:
+  schemas = msys.TableSchemas()
+
+  # For bonded, constraint, virtual, and polar terms, as well as 
+  the exclusion table:
+  table = mol.addTableFromSchema('posre_harm')  # position restraints
+
+  # Get the available set of nonbonded schemas
+  nb_schemas = msys.NonbondedSchemas()
+
+  # For a nonbonded table:
+  nb = mol.addNonbondedFromSchema('vdw_12_6')
+
+
+The ``addNonbondedFromSchema`` also takes care of configuring the
+``nonbonded_info`` properties of the `System`; see the section on
+nonbonded parameters for more details.
+
+If you have a new table type that hasn't made it into Msys' canonical
+set, you can simply use ``addTable`` and configure the table yourself::
+
+
+  table = mol.addTable('funky_harm')
+  table.params.addProp('fk', float)
+  table.params.addProp('r0', float)
+
+
+If a table with a given name already exists in a `System`, ``addTable``
+and ``addTableFromSchema`` will just return the existing table.
+
+
 Msys properties
 ===============
 
