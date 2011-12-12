@@ -58,6 +58,59 @@ includes:
  * number of atoms each that can be selected as protein, lipid, ions, water,
    or none of the above.
 
+::
+
+  > drdws0034:msys$ dms-info out.dms 
+  ---------------------------------------------------------------------------
+  out.dms
+  
+  Structure:
+         Atoms:     8982 (  22 alchemical)
+         Bonds:     8948
+      Residues:      675
+        Chains:        1
+   Global cell: (81.659309, 0.0, 0.0)
+                (0.0, 81.659309, 0.0)
+                (0.0, 0.0, 82.648071)
+  
+       Protein:     8225 atoms,      512 residues,        1 chains
+         Lipid:      268 atoms,        2 residues,        1 chains
+          Ions:        0 atoms,        0 residues,        0 chains
+         Water:      477 atoms,      159 residues,        1 chains
+         Other:       12 atoms,        2 residues,        1 chains
+  
+  Bond Tables:
+            angle_harm: 3 sites,    130 params,  15666 terms,  2 alchemical
+         dihedral_trig: 4 sites,     71 params,  22942 terms,  0 alchemical
+         improper_harm: 4 sites,     16 params,   1203 terms,  3 alchemical
+          pair_12_6_es: 2 sites,  22158 params,  22463 terms, 51 alchemical
+          stretch_harm: 2 sites,     89 params,  12236 terms,  1 alchemical
+   torsiontorsion_cmap: 8 sites,      5 params,    511 terms,  0 alchemical
+  
+  Constraint Tables:
+        constraint_ah1: 2 sites,     10 params,   1652 terms,  0 alchemical
+        constraint_ah2: 3 sites,      5 params,    703 terms,  0 alchemical
+        constraint_ah3: 4 sites,      4 params,    424 terms,  0 alchemical
+        constraint_hoh: 3 sites,      1 params,    159 terms,  0 alchemical
+  
+  Exclusion Tables:
+             exclusion: 2 sites,      0 params,  47234 terms,  0 alchemical
+  
+  Nonbonded Tables:
+             nonbonded: 1 sites,     50 params,   8982 terms, 22 alchemical
+  
+  Nonbonded Info:
+             vdw_funct: vdw_12_6
+              vdw_rule: arithmetic/geometric
+  
+  Provenance:
+     1) Mon Dec 12 14:57:27 2011 12028:gullingj:Justin Gullingsrud,nystaff
+       version: msys/1.0.1
+       workdir: /state/partition1/scratch/gullingj/p4/main/sw/libs/msys/.
+       cmdline: /u/nyc/gullingj/dpr/Linux/x86_64/msys/1.0.1/bin/dms-select /u/nyc/gullingj/p4/dms_inputs/leuTaa_leu_POPC.dms -o out.dms
+
+  
+  
 
 dms-dump
 ---------
@@ -266,6 +319,38 @@ dms-neutralize
 
    Replaces water molecules with ions in order to achieve a desired
    ion concentration.
+
+.. cmdoption:: -p CATION, --cation=CATION
+
+   Species of cation.  Supported options are NA and K
+
+.. cmdoption:: -n ANION, --anion=ANION
+
+   Species of anion.  Supported option is CL
+
+.. cmdoption:: -c CHAIN, --chain=CHAIN
+
+   Chain name for counterions
+
+.. cmdoption:: -C CHAIN2, --chain2=CHAIN2
+
+   Chain name for counter-counterions
+
+.. cmdoption:: -s SOLUTE_PAD, --solute-pad=SOLUTE_PAD
+   
+   minimum distance between placed ions and solute
+
+.. cmdoption:: -i ION_PAD, --ion-pad=ION_PAD
+
+   minimum distance between placed ions
+
+.. cmdoption:: -m CONCENTRATION, --concentration=CONCENTRATION
+
+   molar concentration of counter-counterions
+
+.. cmdoption:: -v, --verbose         
+
+   Be chatty
 
 
 dms-thermalize
