@@ -1,0 +1,61 @@
+#!/usr/bin/env desres-exec
+# -*- python -*-
+#{
+# desres-cleanenv $MSYS_CLEANENV -- python $0 "$@"
+#}
+
+'''
+dms-posre input.dms output.dms [ options ]
+
+Assign harmonic position restraints to selected atoms.  
+
+'''
+
+import sys
+import msys
+from msys import posre
+
+def main():
+    import optparse
+    parser = optparse.OptionParser(__doc__)
+    parser.add_option('-f', type='float', default=0.0,
+            help='force constant in PEAK units')
+    parser.add_option('-x', default=None,
+            help='force constant along x axis in PEAK units')
+    parser.add_option('-y', default=None,
+            help='force constant along x axis in PEAK units')
+    parser.add_option('-z', default=None,
+            help='force constant along x axis in PEAK units')
+    parser.add_option('-s', '--selection', default='none',
+            help="selection for restrained atoms")
+    parser.add_option('--replace', action="store_true", default=False,
+            help='replace any existing harmonic position restraints')
+    parser.add_option('-q', '--quiet', action='store_true', default=False)
+
+    opts, args = parser.parse_args()
+    if len(args)!=2:
+        parser.error("incorrect number of arguments")
+
+    if not opts.quiet: print "Loading input file <%s>" % args[0]
+    mol=msys.LoadDMS(args[0])
+
+    atoms=mol.select(opts.selection)
+    if not opts.quiet: print "Adding restraints to %d atoms" % len(atoms)
+
+    fc=float(opts.f)
+    fcx = fc if opts.x is None else float(opts.x)
+    fcy = fc if opts.y is None else float(opts.y)
+    fcz = fc if opts.z is None else float(opts.z)
+    if not opts.quiet: print "Using force constant (%s, %s, %s)" % (
+            fcx,fcy,fcz)
+
+    n=posre.apply(mol, atoms, fcx, fcy, fcz, replace=opts.replace)
+
+    if not opts.quiet: print "Now have restraints on %d atoms" % n
+
+    if not opts.quiet: print "Writing DMS file <%s>" % args[1]
+    msys.SaveDMS(mol,args[1])
+
+if __name__=="__main__": exit(main())
+
+# vim: filetype=python
