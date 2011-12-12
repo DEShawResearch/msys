@@ -6,6 +6,32 @@ The `System` class holds all structure and forcefield data for a single
 chemical system.  Create a new `System` using ``msys.CreateSystem()``, or 
 from a file using ``msys.LoadDMS`` or ``msys.LoadMAE.`` 
 
+
+A `System` organizes the information in a DMS file into several different
+groups:
+
+ * Tables - `TermTables` are grouped and accessed by name
+
+ * cell - the GlobalCell object for the `System`.
+
+ * nonbonded_info - the NonbondedInfo object describing the type of
+   nonbonded interactions.
+
+ * provenance - a list of Provenance objects describing how the input
+   file has been processed. 
+
+ * Auxiliary tables: Everything else in the DMS file that does not fit into
+   one of the above categories finds its way into an auxiliary table.  
+   Notable denizens of this category include:
+
+   - cmap tables
+
+   - nonbonded_combined_param (see the Nonbonded section)
+
+   - forcefield (annotation for parameters in the DMS file)
+
+
+
 .. autoclass:: msys.System
    :members:
 
