@@ -367,7 +367,7 @@ class TestMain(unittest.TestCase):
         p1=params.addParam()
         p2=params.addParam()
         table1=m1.addTable("table", 1, params)
-        self.assertFalse(params._ptr.shared())
+        self.assertFalse(params.shared)
         table2=m2.addTable("table", 1, params)
         self.assertTrue(params._ptr.shared())
         self.assertEqual(table1.params, table2.params)
@@ -381,6 +381,9 @@ class TestMain(unittest.TestCase):
         p2['fc']=42
         self.assertEqual(t1.param['fc'],42)
         self.assertEqual(t2.param['fc'],42)
+
+        t1['fc']=52
+        self.assertEqual(t2['fc'], 52)
 
     def testTermParamProps(self):
         m=msys.CreateSystem()

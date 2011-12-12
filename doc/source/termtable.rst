@@ -112,6 +112,69 @@ and the ``param`` property will correspond to ``paramB``.
    :members:
 
 
+Sharing ParamTables
+===================
+
+
+Forcefield developers will (we hope!) appreciate the ability for Msys to
+parameterize multiple `TermTables` from potentially different `Systems`
+using a single `ParamTable` instance.  Normally, when a `System` is loaded
+from an input file, or a `TermTable` is created using the scripting interface,
+each `TermTable` refer to a `ParamTable` of its very own, and no other
+`TermTable` can or will reference it.  However, at the time that a `TermTable`
+is created, a `ParamTable` can be provided which will be used to hold
+the `Param` entries for the `Terms` in the `TermTable`::
+
+
+  # create two independent systems
+  m1=msys.CreateSystem()
+  m2=msys.CreateSystem()
+
+  # add some atoms
+  m1.addAtom()
+  m2.addAtom()
+  m2.addAtom()
+
+  # create a free-standing ParamTable and add some Params
+  params=msys.CreateParamTable()
+  p1=params.addParam()
+  p2=params.addParam()
+
+  # create a table in system 1 which uses the free ParamTable
+  table1=m1.addTable("table", 1, params)
+
+  # no other TermTable is using the ParamTable
+  assert not params.shared
+
+  # create a table in system 2 which also uses the free ParamTable
+  table2=m2.addTable("table", 1, params)
+
+  # now the ParamTable is shared
+  assert params.shared
+  assert table1.params == table2.params
+
+  # Add some terms to each table
+  t1=table1.addTerm(m1.atoms, p2)
+  t2=table2.addTerm(m2.atoms[1:], p2)
+
+  assert t1.param == t2.param
+  assert t2.param == p2
+
+  # modifications to the the original table and its params are propagated
+  # to each table
+  params.addProp("fc", float)
+  p1['fc']=32
+  p2['fc']=42
+  assert t1['fc']==42
+  assert t2['fc']==42
+
+  # p1 is shared by multiple TermTables, but within a TermTable, p1 is not
+  # shared.  Modifications to t1['fc'] will affect t2!
+  t1['fc'] = 52
+  assert t2['fc'] == 52
+  
+
+
 Term
 ====
 

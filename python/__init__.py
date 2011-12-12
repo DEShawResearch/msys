@@ -332,6 +332,11 @@ class ParamTable(object):
         ''' list of all Params in table '''
         return [Param(self._ptr, i) for i in self._ptr.params()]
 
+    @property
+    def shared(self):
+        ''' is this ParamTable used by more than one TermTable? '''
+        return self._ptr.shared()
+
 class Term(object):
     __slots__=('_ptr', '_id', '_state')
 
