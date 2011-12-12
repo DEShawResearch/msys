@@ -268,6 +268,72 @@ dms-neutralize
    ion concentration.
 
 
+dms-thermalize
+--------------
+
+.. program:: dms-thermalize
+
+.. describe:: dms-thermalize input.dms output.dms [ options ]
+
+   Assign Boltzmann-sampled velocities to the atoms.  Atoms with zero mass
+   will get zero velocity.
+
+.. cmdoption:: -t TEMPERATURE, --temperature TEMPERATURE
+
+   Sample Boltzmann distribute with given temperature in Kelvin.
+
+
+dms-posre
+---------
+
+.. program:: dms-posre
+
+.. describe:: dms-posre input.dms output.dms [ options ]
+
+   Assign harmonic position restraints to selected atoms.  
+
+
+.. cmdoption:: -f FORCE_CONSTANT
+
+   force constant in PEAK units
+
+.. cmdoption:: -x FORCE_CONSTANT
+
+   force constant along x axis in PEAK units
+
+.. cmdoption:: -y FORCE_CONSTANT
+
+   force constant along y axis in PEAK units
+
+.. cmdoption:: -z FORCE_CONSTANT
+
+   force constant along z axis in PEAK units
+
+.. cmdoption:: -s selection, --selection=selection
+
+   Add/replace position restraint for selected atoms
+
+.. cmdoption:: --replace
+
+   Remove all existing position restraints.
+
+.. cmdoption:: --quiet
+
+   Turn off chattiness
+
+
+`dms-posre` adds position restraints to a dms file, using the existing atom
+positions for the reference positions of the restraints.  If ``--replace``
+is specified on the command line, any existing restraints will be replaced
+by the new set.  Otherwise, atoms that are already restrained in the existing
+file will be restrained using the newly provided force constraints::
+
+  # Add position restraints to backbone atoms with a force constant of 0.2
+  dms-posre input.dms out1.dms -s "backbone" -f 0.2
+
+  # Restrain CA atoms with a force constant of 0.3
+  dms-posre out1.dms out2.dms -s "name CA" -f 0.3
+
 
 ------------------------
 Free Energy Perturbation
