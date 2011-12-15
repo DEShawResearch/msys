@@ -340,7 +340,7 @@ static void export_params(ParamTablePtr params, const std::string& tablename,
     }
     ss << "create table " << tablename << " (";
     for (Id i=0; i<nprops; i++) {
-        ss << params->propName(i) << " " << str(params->propType(i));
+        ss << "'" << params->propName(i) << "' " << str(params->propType(i));
         if (i!=nprops-1) ss << ", ";
     }
     if (with_id) {
@@ -390,7 +390,7 @@ static void export_view(TermTablePtr table, const std::string& name, dms_t *dms)
     }
     ss << "\n";
     for (Id i=0; i<props.size(); i++) {
-        ss << props[i];
+        ss << "\"" << props[i] << "\"";
         if (tprops.size() || i!=props.size()-1) ss << ", ";
     }
     for (Id i=0; i<tprops.size(); i++) {

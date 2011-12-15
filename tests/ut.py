@@ -326,6 +326,22 @@ class TestMain(unittest.TestCase):
         self.assertEqual(table.category, 'bond')
         msys.SaveDMS(m, 'foo.dms')
 
+    def testFunnyNames(self):
+        m=msys.CreateSystem()
+        aux=msys.CreateParamTable()
+        aux.addProp('group', float)
+        aux.addParam()
+        m.addAuxTable('aux', aux)
+        msys.SaveDMS(m, 'foo.dms')
+
+        table=m.addTable('foo', 1)
+        table.category='bond'
+        table.addTermProp('select', int)
+        table.params.addProp('group', float)
+        m.addAtom()
+        table.addTerm(m.atoms, table.params.addParam())
+        msys.SaveDMS(m, 'bar.dms')
+
     def testRefcount(self):
         m=msys.CreateSystem()
         a=m.addAtom()
