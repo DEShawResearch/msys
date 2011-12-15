@@ -1,7 +1,8 @@
 #!/usr/bin/env python2.7
 
-import sys, unittest
-sys.path.insert(0,'objs/Linux/x86_64/lib/python')
+import os, sys, unittest
+TMPDIR=os.getenv('TMPDIR', 'objs/Linux/x86_64')
+sys.path.insert(0,os.path.join(TMPDIR, 'lib', 'python'))
 import msys
 
 class TestMain(unittest.TestCase):

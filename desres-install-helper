@@ -8,20 +8,23 @@ trap 'desres_trapped_exit' EXIT
 desres_require_cleanenv
 
 NAME=msys
-PKG_VERSION=1.0.1
+PKG_VERSION=1.0.2
 
 VERSION=${PKG_VERSION}
 DESCRIPTION="Biomolecular Structure Library"
 
+# shared library dependencies
 GCC=gcc/4.5.1-22A
-SCONS=scons/2.0.1-04A
-SCONSUTILS=sconsutils/1.22
 BOOST=boost/1_45_0-21A
 PYTHON=Python/2.7.1-06A
 SQLITE=sqlite/3.6.22-01
 PCRE=pcre/7.4-01
 ANTLR=antlr/3.1.3-06
 JSON=fastjson/1.4.4
+
+# build and documentation
+SCONS=scons/2.0.1-04A
+SCONSUTILS=sconsutils/1.22
 SPHINX=Sphinx/1.1-01A
 
 loadmodules() {
@@ -82,6 +85,8 @@ genhelp() {
 
 See documentation in 
 http://gardendoc.nyc.desres.deshaw.com/$NAME/$VERSION/doc/html/index.html
+
+1.0.2  Internal: fix symbol conflicts with other packages.
 
 1.0.1  Documentation updates.
        Added dms-posre.
@@ -180,6 +185,8 @@ case $1 in
 	desres_require_moduledir
 
         $0 --exec scons -j4 install PREFIX=${PREFIX} OBJDIR=${TMPDIR}
+
+        ./tests/ut.py
 
 	genhelp
 	genmodules
