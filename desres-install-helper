@@ -8,7 +8,7 @@ trap 'desres_trapped_exit' EXIT
 desres_require_cleanenv
 
 NAME=msys
-PKG_VERSION=1.0.2
+PKG_VERSION=1.0.3
 
 VERSION=${PKG_VERSION}
 DESCRIPTION="Biomolecular Structure Library"
