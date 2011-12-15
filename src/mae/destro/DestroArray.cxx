@@ -511,7 +511,7 @@ size_t desres::msys::DestroArray::footprint() const {
 // Unpack string to value
 // -----------------------------------------------
 template<class T>
-T unpack(const std::string& x) {
+static T unpack(const std::string& x) {
   throw desres::msys::dessert("Not implemented",DESSERT_LOC);  /*GCOV-IGNORE*/
 }
 
