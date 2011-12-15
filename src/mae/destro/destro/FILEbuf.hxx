@@ -7,7 +7,7 @@
 #include <streambuf>
 #include <cstdio>
 
-namespace desres {
+namespace desres { namespace msys {
 
 
   /*!
@@ -115,6 +115,6 @@ namespace desres {
      */
     virtual int sync(){ return fflush(fp); } /*GCOV-IGNORE*/
   };
-}
+}}
 
 #endif

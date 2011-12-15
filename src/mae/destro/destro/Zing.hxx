@@ -6,7 +6,7 @@
 #include <string>
 #include <stdint.h>
 
-namespace desres {
+namespace desres { namespace msys {
   class ZingPool {
 
     bool m_inserts_allowed;
@@ -164,5 +164,5 @@ namespace desres {
 
   };
     
-}
+}}
 #endif

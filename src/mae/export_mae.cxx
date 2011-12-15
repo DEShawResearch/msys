@@ -12,9 +12,9 @@
 #include <stdexcept>
 #include <cmath>
 
-using desres::Maeff;
-using desres::Destro;
-using desres::DestroArray;
+using desres::msys::Maeff;
+using desres::msys::Destro;
+using desres::msys::DestroArray;
 
 using namespace desres::msys;
 

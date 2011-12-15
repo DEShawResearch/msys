@@ -26,7 +26,7 @@ namespace {
    * @param bname subblock name
    * @return size of subblock, or zero if not present
    */
-  unsigned destro_block_size(const desres::Destro& MB, 
+  unsigned destro_block_size(const desres::msys::Destro& MB, 
                               const std::string& bname) {
 
     if ( ! MB.has_block(bname) ) return 0;
@@ -81,9 +81,9 @@ namespace {
    * @param[out] v fep table
    * @param[in]  m subsection of fepio_fep 
    */
-  void parse_fepio_map( FepList &v, const desres::Destro &m ) {
+  void parse_fepio_map( FepList &v, const desres::msys::Destro &m ) {
     for (unsigned i=0; i<m.size(); i++) {
-      const desres::Destro &record = m[i+1];
+      const desres::msys::Destro &record = m[i+1];
       fep_elem elem;
       elem.ti = record("fepio_ti").or_else(0);
       elem.tj = record("fepio_tj").or_else(0);
@@ -106,7 +106,7 @@ namespace {
    * @param[out] m parsed fepio_fep block
    * @param[in] fepio_fep section
    */
-  void grovel_fepio_mapping( FepioMapping &m, const desres::Destro &fepio ) {
+  void grovel_fepio_mapping( FepioMapping &m, const desres::msys::Destro &fepio ) {
     static const char *sections[] = {
       "fepio_atommaps", "fepio_bondmaps", "fepio_anglemaps",
       "fepio_dihedmaps", "fepio_pairmaps", "fepio_exclmaps"
@@ -125,12 +125,12 @@ namespace {
   /*! Add DMY atom to vdw table if not already present
    * @param m1 ffio_ff section
    */
-  void provide_dummy( desres::Destro& m1) {
-    desres::Destro& vm1 = m1.block("ffio_vdwtypes");
+  void provide_dummy( desres::msys::Destro& m1) {
+    desres::msys::Destro& vm1 = m1.block("ffio_vdwtypes");
     for ( unsigned int i = 1; i <= vm1->size(); ++i ) {
       if ( vm1[i]["ffio_name"] == "DMY" ) return;
     }
-    desres::Destro& nvm = vm1.append();
+    desres::msys::Destro& nvm = vm1.append();
     nvm["ffio_name"] = "DMY";
     nvm["ffio_funct"] = "LJ12_6_sig_epsilon";
     nvm["ffio_c1"] = 0.0;   // sigma
@@ -144,7 +144,7 @@ namespace {
    * @param keeper field names that don't go to zero if target is zero
    * @param blk ffio_ff subsection
    */
-  void combine_entry(desres::Destro& m1, desres::Destro const& m2,
+  void combine_entry(desres::msys::Destro& m1, desres::msys::Destro const& m2,
       FepioMapping::const_iterator const& map, std::string const& keeper, 
       std::string const& blk, std::string const& alc_blk) {
 
@@ -164,7 +164,7 @@ namespace {
         continue;
 
       } else if ( ta > 0 && tb == -2 ) {
-        desres::Destro &b1 = m1.block(alc_blk).append(m1[blk][ta]);
+        desres::msys::Destro &b1 = m1.block(alc_blk).append(m1[blk][ta]);
         b1.setattr( moiety, i->moiety );
         remove.insert(ta);
 	for ( int j = 0; j < nCs; ++j ) {
@@ -177,7 +177,7 @@ namespace {
 
       } else if ( ta > 0 && tb == 0 ) {
         // B state has zeroed coefficients
-        desres::Destro &b1 = m1.block(alc_blk).append(m1[blk][ta]);
+        desres::msys::Destro &b1 = m1.block(alc_blk).append(m1[blk][ta]);
         b1.setattr( moiety, i->moiety );
         remove.insert(ta);
 	for ( int j = 0; j < nCs; ++j ) {
@@ -190,7 +190,7 @@ namespace {
 
       } else if ( tb > 0 && ta == -2 ) {
         // just add the B state to the list of alchemical terms
-        desres::Destro &b1 = m1.block(alc_blk).append(m2[blk][tb]);
+        desres::msys::Destro &b1 = m1.block(alc_blk).append(m2[blk][tb]);
         b1.setattr( moiety, i->moiety );
 	if ( b1.has_attr("ffio_ai") ) b1.setattr("ffio_ai", std::abs(i->ai));
 	if ( b1.has_attr("ffio_aj") ) b1.setattr("ffio_aj", std::abs(i->aj));
@@ -210,7 +210,7 @@ namespace {
 
       } else if ( tb > 0 && ta == -1 ) {
         // just add the B state to the list of regular terms.
-        desres::Destro &b1 = m1.block(blk).append( m2[blk][tb] );
+        desres::msys::Destro &b1 = m1.block(blk).append( m2[blk][tb] );
 	if ( b1.has_attr("ffio_ai") ) b1.setattr("ffio_ai", std::abs(i->ai));
 	if ( b1.has_attr("ffio_aj") ) b1.setattr("ffio_aj", std::abs(i->aj));
 	if ( b1.has_attr("ffio_ak") ) b1.setattr("ffio_ak", std::abs(i->ak));
@@ -224,7 +224,7 @@ namespace {
         // A state has zeroed coefficients.  Need regular and alchemical term
 
         // build the A state
-        desres::Destro &b1 = m1.block(alc_blk).append(m2[blk][tb]);
+        desres::msys::Destro &b1 = m1.block(alc_blk).append(m2[blk][tb]);
         b1.setattr( moiety, i->moiety );
 	if ( b1.has_attr("ffio_ai") ) b1.setattr("ffio_ai", std::abs(i->ai));
 	if ( b1.has_attr("ffio_aj") ) b1.setattr("ffio_aj", std::abs(i->aj));
@@ -248,11 +248,11 @@ namespace {
 
       } else if ( ta > 0 && tb > 0 ) {
         // move the A state to the alchemical block
-        desres::Destro &b1 = m1.block(alc_blk).append(m1[blk][ta]);
+        desres::msys::Destro &b1 = m1.block(alc_blk).append(m1[blk][ta]);
         b1.setattr( moiety, i->moiety );
         remove.insert(ta);
         // fetch data for the B state
-        desres::Destro const& b2 = m2[blk][tb];
+        desres::msys::Destro const& b2 = m2[blk][tb];
 
         for (int j=0; j<nCs; ++j) {
           const std::string &Cj  = Cs[j];
@@ -273,12 +273,12 @@ namespace {
    * @param[out] cnew newly mapped constraint term
    * @param invmap map from original indices to alchemcally combined indices
    */
-  void update_atom_indices( desres::Destro &cnew,
+  void update_atom_indices( desres::msys::Destro &cnew,
                             std::map<int,int> &invmap ) {
 
     // search for elements of the form ffio_aX and change them to their
     // mapped value.
-    typedef std::map<std::string,desres::Destro::schema_t> SchemaMap;
+    typedef std::map<std::string,desres::msys::Destro::schema_t> SchemaMap;
     const SchemaMap &schemas = cnew.schemas();
     for (SchemaMap::const_iterator i=schemas.begin(); i!=schemas.end(); ++i) {
       std::string attr = i->first;
@@ -294,8 +294,8 @@ namespace {
    * @param cnew stage 2 constraint
    * @param invmap map from original indices to alchemcally combined indices
    */
-  void append_atom_indices( desres::Destro &cold, 
-                            const desres::Destro &cnew,
+  void append_atom_indices( desres::msys::Destro &cold, 
+                            const desres::msys::Destro &cnew,
                             std::map<int,int> &invmap ) {
 
     // create a mapping from ffio_aj, ffio_ak, .... to ffio_c1, ffio_c2, ...
@@ -360,8 +360,8 @@ namespace {
     cold.setattr("ffio_funct", funct);
   }
 
-  void validate_ct( const desres::Destro &m ) {
-      using desres::Destro;
+  void validate_ct( const desres::msys::Destro &m ) {
+      using desres::msys::Destro;
 
       const Destro &atoms = m.block("m_atom");
       const Destro &ffio_ff = m.block("ffio_ff");
@@ -390,28 +390,28 @@ namespace {
    * that do appear and have different values are given new names, and the
    * site that refer to those names are updated.
    */
-  void vdw_combine( desres::Destro &m1, desres::Destro &m2 ) {
+  void vdw_combine( desres::msys::Destro &m1, desres::msys::Destro &m2 ) {
 
-    desres::Destro &fm1 = m1.block("ffio_ff");
-    desres::Destro &fm2 = m2.block("ffio_ff");
+    desres::msys::Destro &fm1 = m1.block("ffio_ff");
+    desres::msys::Destro &fm2 = m2.block("ffio_ff");
 
     if (!fm1.has_block( "ffio_vdwtypes" ) || 
         !fm2.has_block( "ffio_vdwtypes" ) ||
         !fm2.has_block( "ffio_sites" ) )
         return;
 
-    desres::Destro& vdw1 = fm1.block("ffio_vdwtypes");
-    desres::Destro const& vdw2 = fm2.block("ffio_vdwtypes");
+    desres::msys::Destro& vdw1 = fm1.block("ffio_vdwtypes");
+    desres::msys::Destro const& vdw2 = fm2.block("ffio_vdwtypes");
     std::map<std::string,double> stage1_c1, stage1_c2;
 
     for (unsigned i=1; i<=vdw1.size(); i++) {
-      const desres::Destro &rec = vdw1[i];
+      const desres::msys::Destro &rec = vdw1[i];
       const std::string &name = rec("ffio_name");
       stage1_c1[name] = rec("ffio_c1").or_else(0.0);
       stage1_c2[name] = rec("ffio_c2").or_else(0.0);
     }
     for (unsigned i=1; i<=vdw2.size(); i++) {
-      const desres::Destro &rec = vdw2[i];
+      const desres::msys::Destro &rec = vdw2[i];
       const std::string &name = rec("ffio_name");
       if (stage1_c1.find( name ) == stage1_c1.end()) {
         // new vdw entry.
@@ -422,7 +422,7 @@ namespace {
         double c2 = rec("ffio_c2").or_else(0.0);
         if (c1 != stage1_c1[name] || c2 != stage1_c2[name]) {
           // same name, different values.  Create a new entry and update sites
-          desres::Destro &new_entry = vdw1.append();
+          desres::msys::Destro &new_entry = vdw1.append();
           std::string new_name = name + "_stage2";
           // be sure it's unique
           while ( stage1_c1.find( new_name ) != stage1_c1.end())
@@ -433,9 +433,9 @@ namespace {
           new_entry.setattr("ffio_c1", c1 );
           new_entry.setattr("ffio_c2", c2 );
           // update sites
-          desres::Destro &sites = fm2.block("ffio_sites");
+          desres::msys::Destro &sites = fm2.block("ffio_sites");
           for (unsigned j=1; j<=sites.size(); j++) {
-            desres::Destro &site = sites[j];
+            desres::msys::Destro &site = sites[j];
             const std::string &type = site("ffio_vdwtype").or_else("");
             if (type == name) {
               site.setattr("ffio_vdwtype", new_name);
@@ -452,15 +452,15 @@ namespace {
    *  @param ct2 stage 2 ct
    */
   void fixup_m_bond(const std::map<int,int>& a2inv, 
-                    desres::Destro &ct1,
-                    const desres::Destro &ct2) {
+                    desres::msys::Destro &ct1,
+                    const desres::msys::Destro &ct2) {
 
     // go through every m_bond record in ct2 and add it to ct1 after
     // mapping the atom indices.  
     if (!ct2.has_block("m_bond")) return; // nothing to do
     if (!ct1.has_block("m_bond")) ct1.new_array("m_bond");
-    desres::DestroArray &m_bond1 = ct1("m_bond");
-    const desres::DestroArray &m_bond2 = ct2("m_bond");
+    desres::msys::DestroArray &m_bond1 = ct1("m_bond");
+    const desres::msys::DestroArray &m_bond2 = ct2("m_bond");
 
     // Keep track of the bonds we already have
     typedef std::set<std::pair<int,int> > BondSet;
@@ -485,7 +485,7 @@ namespace {
       BondSet::value_type p(from_iter->second, to_iter->second);
       if (bondset.find(p) != bondset.end()) continue;
       bondset.insert(p);
-      desres::Destro &elem = m_bond1.append();
+      desres::msys::Destro &elem = m_bond1.append();
       elem.setattr("m_from", p.first);
       elem.setattr("m_to",   p.second);
       elem.setattr("m_order",1);
@@ -497,12 +497,12 @@ namespace {
    * @param fm2 stage 2 ct
    * @param map fepio_fep map
    */
-  void alchemical_combine( desres::Destro &fm1, desres::Destro const& fm2, 
+  void alchemical_combine( desres::msys::Destro &fm1, desres::msys::Destro const& fm2, 
                           const FepioMapping &map ) {
-    desres::Destro& atom_1 = fm1.block("m_atom");
-    desres::Destro const& atom_2 = fm2.block("m_atom");
-    desres::Destro& m1 = fm1.block("ffio_ff");
-    desres::Destro const& m2 = fm2.block("ffio_ff");
+    desres::msys::Destro& atom_1 = fm1.block("m_atom");
+    desres::msys::Destro const& atom_2 = fm2.block("m_atom");
+    desres::msys::Destro& m1 = fm1.block("ffio_ff");
+    desres::msys::Destro const& m2 = fm2.block("ffio_ff");
 
     FepioMapping::const_iterator atoms  = map.find("fepio_atommaps");
     FepioMapping::const_iterator bonds  = map.find("fepio_bondmaps");
@@ -523,13 +523,13 @@ namespace {
         int const aj = i->aj;
         if (ai > 0 && aj > 0) {
           a2_inv_map[aj] = ai;
-          desres::Destro &t1 = m1["ffio_sites"][ai];
+          desres::msys::Destro &t1 = m1["ffio_sites"][ai];
           t1.setattr( moiety, i->moiety );
-          desres::Destro const& t2 = m2["ffio_sites"][aj];
+          desres::msys::Destro const& t2 = m2["ffio_sites"][aj];
           t1.setattr("ffio_chargeB", double(t2["ffio_charge"]));
           t1.setattr("ffio_vdwtypeB", std::string(t2["ffio_vdwtype"]));
         } else if ( ai > 0 && aj < 0 ) {
-          desres::Destro &t1 = m1["ffio_sites"][ai];
+          desres::msys::Destro &t1 = m1["ffio_sites"][ai];
           t1.setattr( moiety, i->moiety );
 	  provide_dummy(m1);
 	  t1.setattr("ffio_chargeB", 0.0);
@@ -537,9 +537,9 @@ namespace {
 	} else if ( ai < 0 && aj > 0 ) {
 	  a2_inv_map[aj] = std::abs(ai);
 	  provide_dummy(m1);
-          desres::Destro const& b2 = m2["ffio_sites"][aj];
+          desres::msys::Destro const& b2 = m2["ffio_sites"][aj];
 	  atom_1.append(atom_2[aj]);
-	  desres::Destro& ns1 = m1.block("ffio_sites").append(b2);
+	  desres::msys::Destro& ns1 = m1.block("ffio_sites").append(b2);
           ns1.setattr( moiety, i->moiety );
 	  ns1.setattr("ffio_charge", 0.0);
 	  ns1.setattr("ffio_chargeB", b2["ffio_charge"]);
@@ -582,12 +582,12 @@ namespace {
 	if ( ta> 0 && tb == -1 ) {
 	  // Nothing.
 	} else if ( tb > 0 && ta == -1 ) {
-	  desres::Destro const& b2 = m2["ffio_exclusions"][tb];
-	  desres::Destro& b1 = m1.block("ffio_exclusions").append(b2);
+	  desres::msys::Destro const& b2 = m2["ffio_exclusions"][tb];
+	  desres::msys::Destro& b1 = m1.block("ffio_exclusions").append(b2);
 	  b1.setattr("ffio_ai", ai);
 	  b1.setattr("ffio_aj", aj);
 	} else if ( ta == -1 && tb == -1 ) {
-	  desres::Destro& b1 = m1.block("ffio_exclusions").append();
+	  desres::msys::Destro& b1 = m1.block("ffio_exclusions").append();
 	  b1.setattr("ffio_ai", ai);
 	  b1.setattr("ffio_aj", aj);
 	} else if ( ta > 0 && tb > 0 ) {
@@ -600,14 +600,14 @@ namespace {
     if (m2.has_block("ffio_constraints")) {
 
       // Make a hash of constraint terms in stage 1, indexed by the first atom.
-      std::map<int,desres::Destro *> stage1constraints;
+      std::map<int,desres::msys::Destro *> stage1constraints;
 
-      desres::Destro & cons1 = 
+      desres::msys::Destro & cons1 = 
         m1.has_block("ffio_constraints") ? m1.block("ffio_constraints")
                                          : m1.new_block("ffio_constraints");
 
       for (unsigned i=0; i<cons1.size(); i++) {
-        desres::Destro &c = cons1[i+1];
+        desres::msys::Destro &c = cons1[i+1];
         int ai = c("ffio_ai").or_else(0);
         if (ai<1) THROW_FAILURE(("Invalid constraint found in stage 1"));
         if (stage1constraints.find(ai) != stage1constraints.end())
@@ -615,21 +615,21 @@ namespace {
         stage1constraints[ai] = &c;
       }
   
-      desres::Destro const& cons2 = m2.block("ffio_constraints");
+      desres::msys::Destro const& cons2 = m2.block("ffio_constraints");
       for (unsigned i=0; i<cons2.size(); i++) {
-        const desres::Destro &c = cons2[i+1];
+        const desres::msys::Destro &c = cons2[i+1];
         int ai = c("ffio_ai").or_else(0);
         if (!ai) THROW_FAILURE(("Invalid constraint term in stage 2"));
         int mapped_ai = a2_inv_map[ai];
 
         if (stage1constraints.find(mapped_ai) == stage1constraints.end()) {
           // new constraint term: copy it over and update the atom indices
-          desres::Destro &cnew = cons1.append(c);
+          desres::msys::Destro &cnew = cons1.append(c);
           update_atom_indices( cnew, a2_inv_map );
 
         } else {
           // push stage2 atoms onto the existing constraint
-          desres::Destro &cold = *stage1constraints[mapped_ai];
+          desres::msys::Destro &cold = *stage1constraints[mapped_ai];
           append_atom_indices( cold, c, a2_inv_map );
         }
       }
@@ -644,10 +644,10 @@ namespace {
 namespace desres { namespace msys { namespace mae {
   std::string prep_alchemical_mae( const std::string& contents ) {
       size_t stage1=0, stage2=0;
-      desres::Maeff M(contents);
+      desres::msys::Maeff M(contents);
     
       for (unsigned i=0; i<M.size(); i++) {
-        const desres::Destro &ct = M[i+1];
+        const desres::msys::Destro &ct = M[i+1];
         int stage = ct("fepio_stage").or_else(0);
         if (stage==1) stage1 = i+1;
         if (stage==2) stage2 = i+1;
@@ -665,8 +665,8 @@ namespace desres { namespace msys { namespace mae {
         FepioMapping mapping;
         grovel_fepio_mapping( mapping, M[stage2]["fepio_fep"] );
         alchemical_combine( M[stage1], M[stage2], mapping );
-        // FIXME - desres::Maeff overrides del(std::string) but not del(size_t)
-        desres::Destro &m_ = M;
+        // FIXME - desres::msys::Maeff overrides del(std::string) but not del(size_t)
+        desres::msys::Destro &m_ = M;
         m_.del( stage2 );
       }
       std::ostringstream out;

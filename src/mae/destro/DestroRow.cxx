@@ -18,7 +18,7 @@
 // P R I V A T E
 // -----------------------------------------------
 
-desres::DestroArray* desres::DestroArray::DestroRow::owner() {
+desres::msys::DestroArray* desres::msys::DestroArray::DestroRow::owner() {
   DestroArray* array = dynamic_cast<DestroArray*>(m_parent);
   if (array == NULL) {
     throw dessert("invalid parent for row",DESSERT_LOC); /*GCOV-IGNORE*/
@@ -26,7 +26,7 @@ desres::DestroArray* desres::DestroArray::DestroRow::owner() {
   return array;
 }
 
-const desres::DestroArray* desres::DestroArray::DestroRow::owner() const {
+const desres::msys::DestroArray* desres::msys::DestroArray::DestroRow::owner() const {
   const DestroArray* array = dynamic_cast<const DestroArray*>(m_parent);
   if (array == NULL) {
     throw dessert("invalid parent for row",DESSERT_LOC); /*GCOV-IGNORE*/
@@ -38,15 +38,15 @@ const desres::DestroArray* desres::DestroArray::DestroRow::owner() const {
 // -----------------------------------------------
 // P U B L I C
 // -----------------------------------------------
-desres::DestroArray::DestroRow::DestroRow(Destro* parent,size_t row)
+desres::msys::DestroArray::DestroRow::DestroRow(Destro* parent,size_t row)
   : Destro(parent),m_row(row)
 {
 }
 
-desres::DestroArray::DestroRow::~DestroRow() {
+desres::msys::DestroArray::DestroRow::~DestroRow() {
 }
 
-void desres::DestroArray::DestroRow::setrow(size_t i) {
+void desres::msys::DestroArray::DestroRow::setrow(size_t i) {
   m_row = i-1;
 }
 
@@ -54,14 +54,14 @@ void desres::DestroArray::DestroRow::setrow(size_t i) {
 /*!
  * Rows always have zero size (no subblocks)
  */
-size_t desres::DestroArray::DestroRow::size() const {
+size_t desres::msys::DestroArray::DestroRow::size() const {
   return 0;
 }
 
 /*!
  * The row name is it's one-based offset
  */
-std::string desres::DestroArray::DestroRow::name() const {
+std::string desres::msys::DestroArray::DestroRow::name() const {
   std::ostringstream ss;
   ss << (m_row+1);
   return ss.str();
@@ -70,14 +70,14 @@ std::string desres::DestroArray::DestroRow::name() const {
 /*!
  * The row name is unsettable
  */
-void desres::DestroArray::DestroRow::name(const std::string& name) {
+void desres::msys::DestroArray::DestroRow::name(const std::string& name) {
   throw dessert("cannot set row name");
 }
 
 /*!
  * Adding a schema to a row adds it to the enclosing array
  */
-void desres::DestroArray::DestroRow::add_schema(char type,const std::string& attr,const std::string& doc) {
+void desres::msys::DestroArray::DestroRow::add_schema(char type,const std::string& attr,const std::string& doc) {
   owner()->add_schema(type,attr,doc);
 }
 
@@ -85,7 +85,7 @@ void desres::DestroArray::DestroRow::add_schema(char type,const std::string& att
  * Adding a schema to a row adds it to the enclosing array.
  * Then we set just this row's value.
  */
-void desres::DestroArray::DestroRow::add_schema_and_value(char type,const std::string& attr,const std::string& doc,const std::string& value) {
+void desres::msys::DestroArray::DestroRow::add_schema_and_value(char type,const std::string& attr,const std::string& doc,const std::string& value) {
   owner()->add_schema(type,attr,doc);
 
   set_attr(type,attr,value);
@@ -94,14 +94,14 @@ void desres::DestroArray::DestroRow::add_schema_and_value(char type,const std::s
 /*!
  * The enclosing array knows all the schemas
  */
-std::map<std::string,desres::Destro::schema_t> desres::DestroArray::DestroRow::schemas() const {
+std::map<std::string,desres::msys::Destro::schema_t> desres::msys::DestroArray::DestroRow::schemas() const {
   return owner()->schemas();
 }
 
 /*!
  * Get schema list from enclosing array.
  */
-std::vector<desres::Destro::schema_t> desres::DestroArray::DestroRow::ordered_schema() const {
+std::vector<desres::msys::Destro::schema_t> desres::msys::DestroArray::DestroRow::ordered_schema() const {
   return owner()->ordered_schema();
 }
 
@@ -109,7 +109,7 @@ std::vector<desres::Destro::schema_t> desres::DestroArray::DestroRow::ordered_sc
  * The enclosing array has the schema/values.  Look for the
  * value set and then extract this row's value.
  */
-std::string desres::DestroArray::DestroRow::get_value(const std::string& attr) const {
+std::string desres::msys::DestroArray::DestroRow::get_value(const std::string& attr) const {
   const ZingPool& zpool = pool();
   const key_value_t* location = owner()->find_schema(attr,zpool);
   if (location == NULL) {
@@ -127,7 +127,7 @@ std::string desres::DestroArray::DestroRow::get_value(const std::string& attr) c
 /*!
  * We get attribute type info from enclosing array.
  */
-char desres::DestroArray::DestroRow::get_type(const std::string& attr) const {
+char desres::msys::DestroArray::DestroRow::get_type(const std::string& attr) const {
   const ZingPool& zpool = pool();
   const key_value_t* location = owner()->find_schema(attr,zpool);
   if (location == NULL) {
@@ -141,34 +141,34 @@ char desres::DestroArray::DestroRow::get_type(const std::string& attr) const {
 /*!
  * Precision is pulled from the enclosing array
  */
-int desres::DestroArray::DestroRow::get_precision(const std::string& attr) const {
+int desres::msys::DestroArray::DestroRow::get_precision(const std::string& attr) const {
   return owner()->get_precision(attr);
 }
 
 /*!
  * Precision is set in the enclosing array (effects all rows)
  */
-void desres::DestroArray::DestroRow::set_precision(const std::string& attr,int precision) {
+void desres::msys::DestroArray::DestroRow::set_precision(const std::string& attr,int precision) {
   owner()->set_precision(attr,precision);
 }
 
-std::string desres::DestroArray::DestroRow::get_doc(const std::string& attr) const {
+std::string desres::msys::DestroArray::DestroRow::get_doc(const std::string& attr) const {
   return owner()->get_doc(attr);
 }
 
-void desres::DestroArray::DestroRow::set_doc(const std::string& attr, const std::string& doc) {
+void desres::msys::DestroArray::DestroRow::set_doc(const std::string& attr, const std::string& doc) {
   owner()->set_doc(attr,doc);
 }
 
-desres::Destro::Attribute desres::DestroArray::DestroRow::get_attr(const std::string& attr) {
+desres::msys::Destro::Attribute desres::msys::DestroArray::DestroRow::get_attr(const std::string& attr) {
   return Attribute(this,attr);
 }
 
-const desres::Destro::Attribute desres::DestroArray::DestroRow::get_attr(const std::string& attr) const {
+const desres::msys::Destro::Attribute desres::msys::DestroArray::DestroRow::get_attr(const std::string& attr) const {
   return Attribute(const_cast<DestroRow*>(this),attr);
 }
 
-void desres::DestroArray::DestroRow::set_unsafe(const std::string& attr,const std::string& value) {
+void desres::msys::DestroArray::DestroRow::set_unsafe(const std::string& attr,const std::string& value) {
   ZingPool& zpool = pool();
   key_value_t* location = owner()->find_schema(attr,zpool);
   if (location == NULL) {
@@ -183,7 +183,7 @@ void desres::DestroArray::DestroRow::set_unsafe(const std::string& attr,const st
  * We look up the data descriptor in the enclosing array and then
  * set our row's data value.
  */
-void desres::DestroArray::DestroRow::set_attr(char type,const std::string& attr,const std::string& value) {
+void desres::msys::DestroArray::DestroRow::set_attr(char type,const std::string& attr,const std::string& value) {
   ZingPool& zpool = pool();
   key_value_t* location = owner()->find_schema(attr,zpool);
   if (location == NULL) {
@@ -195,14 +195,14 @@ void desres::DestroArray::DestroRow::set_attr(char type,const std::string& attr,
   location->values[m_row] = zval;
 }
 
-void desres::DestroArray::DestroRow::clear(const std::string& attr) {
+void desres::msys::DestroArray::DestroRow::clear(const std::string& attr) {
   owner()->clear(attr);
 }
 
 /*!
  * Deleting an attribute deletes it through the whole array
  */
-void desres::DestroArray::DestroRow::del(const std::string& attr) {
+void desres::msys::DestroArray::DestroRow::del(const std::string& attr) {
   owner()->del(attr);
 }
 
@@ -210,63 +210,63 @@ void desres::DestroArray::DestroRow::del(const std::string& attr) {
  * No blocks to delete.  We silently return (since that block
  * clearly doesn't exist anymore!).
  */
-void desres::DestroArray::DestroRow::del(size_t blockno) {
+void desres::msys::DestroArray::DestroRow::del(size_t blockno) {
 }
 
 /*!
  * Cannot add blocks to a row.
  */
-desres::Destro& desres::DestroArray::DestroRow::new_block(const std::string& name) {
+desres::msys::Destro& desres::msys::DestroArray::DestroRow::new_block(const std::string& name) {
   throw dessert("new_block() not applicable in rows");
 }
 
 /*!
  * Cannot add blocks to a row.
  */
-desres::DestroArray& desres::DestroArray::DestroRow::new_array(const std::string& name,size_t num_elements) {
+desres::msys::DestroArray& desres::msys::DestroArray::DestroRow::new_array(const std::string& name,size_t num_elements) {
   throw dessert("new_array() not applicable in rows");
 }
 
-desres::Destro::Attribute desres::DestroArray::DestroRow::operator[](const std::string& attr) {
+desres::msys::Destro::Attribute desres::msys::DestroArray::DestroRow::operator[](const std::string& attr) {
   return Attribute(this,attr);
 }
 
-const desres::Destro::Attribute desres::DestroArray::DestroRow::operator[](const std::string& attr) const {/*GCOV-IGNORE*/
+const desres::msys::Destro::Attribute desres::msys::DestroArray::DestroRow::operator[](const std::string& attr) const {/*GCOV-IGNORE*/
   return Attribute(const_cast<DestroRow*>(this),attr);/*GCOV-IGNORE*/
 }
 
 /*!
  * No blocks, so no operator[int]
  */
-desres::Destro& desres::DestroArray::DestroRow::operator[](ssize_t) {
+desres::msys::Destro& desres::msys::DestroArray::DestroRow::operator[](ssize_t) {
   throw dessert("operator[] not applicable in rows");
 }
 
 /*!
  * No blocks, so no operator[int]
  */
-const desres::Destro& desres::DestroArray::DestroRow::operator[](ssize_t) const {
+const desres::msys::Destro& desres::msys::DestroArray::DestroRow::operator[](ssize_t) const {
   throw dessert("operator[] not applicable in rows");
 }
 
 /*!
  * Rows contain no blocks
  */
-bool desres::DestroArray::DestroRow::has_block(const std::string& blockname) const {
+bool desres::msys::DestroArray::DestroRow::has_block(const std::string& blockname) const {
   return false;
 }
 
 /*!
  * The row has only the attributes of the enclosing array
  */
-bool desres::DestroArray::DestroRow::has_attr(const std::string& name) const {
+bool desres::msys::DestroArray::DestroRow::has_attr(const std::string& name) const {
   return owner()->has_attr(name);
 }
 
 /*!
  * Find value set in enclosing array and test this row's value
  */
-bool desres::DestroArray::DestroRow::has_value(const std::string& attr) const {
+bool desres::msys::DestroArray::DestroRow::has_value(const std::string& attr) const {
   const ZingPool& zpool = pool();
   const key_value_t* location = owner()->find_schema(attr,zpool);
   if (!location) return false;
@@ -277,35 +277,35 @@ bool desres::DestroArray::DestroRow::has_value(const std::string& attr) const {
 /*!
  * Rows have no subblocks
  */
-desres::Destro& desres::DestroArray::DestroRow::block(size_t i) {
+desres::msys::Destro& desres::msys::DestroArray::DestroRow::block(size_t i) {
   throw dessert("block() not applicable to rows");
 }
 
 /*!
  * Rows have no subblocks
  */
-const desres::Destro& desres::DestroArray::DestroRow::block(size_t i) const {
+const desres::msys::Destro& desres::msys::DestroArray::DestroRow::block(size_t i) const {
   throw dessert("block() not applicable to rows");
 }
 
 /*!
  * Rows have no subblocks
  */
-desres::Destro& desres::DestroArray::DestroRow::block(const std::string& name) {
+desres::msys::Destro& desres::msys::DestroArray::DestroRow::block(const std::string& name) {
   throw dessert("block() not applicable to rows");
 }
 
 /*!
  * Rows have no subblocks
  */
-const desres::Destro& desres::DestroArray::DestroRow::block(const std::string& name) const {
+const desres::msys::Destro& desres::msys::DestroArray::DestroRow::block(const std::string& name) const {
   throw dessert("block() not applicable to rows");
 }
 
 /*!
  * Rows always write horizontally
  */
-void desres::DestroArray::DestroRow::write(std::ostream& os, int level) const {
+void desres::msys::DestroArray::DestroRow::write(std::ostream& os, int level) const {
   //const char* lineterm = (level >= 0)?"\n":"";
   const ZingPool& zpool = pool();
 
@@ -321,7 +321,7 @@ void desres::DestroArray::DestroRow::write(std::ostream& os, int level) const {
  * Rows have no deep storage since their values are held by
  * the enclosing array.
  */
-size_t desres::DestroArray::DestroRow::footprint() const {
+size_t desres::msys::DestroArray::DestroRow::footprint() const {
   return Destro::footprint() + sizeof(m_row);
 }
 
@@ -330,6 +330,6 @@ size_t desres::DestroArray::DestroRow::footprint() const {
  * DestroArray doesn't call this, so nobody should every invoke
  * the function.
  */
-void desres::DestroArray::DestroRow::touch(ZingPool& zpool) const { /*GCOV-IGNORE*/
+void desres::msys::DestroArray::DestroRow::touch(ZingPool& zpool) const { /*GCOV-IGNORE*/
 }
 

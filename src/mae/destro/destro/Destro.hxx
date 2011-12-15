@@ -11,7 +11,7 @@
 #include <string>
 #include <iostream>
 
-namespace desres {
+namespace desres { namespace msys {
   class DestroArray;
 
   class Destro {
@@ -200,7 +200,7 @@ namespace desres {
     static void fill_named(Destro& block,Tokenizer& tokenizer);
     static void fill_nameless(Destro& block,Tokenizer& tokenizer);
 
-    static std::string quotify(desres::Zing z,const desres::ZingPool& zpool);
+    static std::string quotify(Zing z,const ZingPool& zpool);
 
     static Zing zingify(const std::string& value, ZingPool& zpool);
 
@@ -374,13 +374,13 @@ namespace desres {
     bool contains(const std::string& name) const;
 
     //! \brief Get zing pool associated with this object
-    virtual desres::ZingPool& pool();
+    virtual ZingPool& pool();
 
     //! \brief Get zing pool associated with this object or return mutablity error
-    virtual desres::ZingPool& mutable_pool();
+    virtual ZingPool& mutable_pool();
 
     //! \brief Get zing pool associated with this object
-    virtual const desres::ZingPool& pool() const;
+    virtual const ZingPool& pool() const;
 
     //! \brief Create a string representation
     operator std::string() const;
@@ -619,7 +619,7 @@ namespace desres {
   };
 
   class DestroTop : public DestroBlock {
-    desres::ZingPool m_pool;
+    ZingPool m_pool;
 
     // Do not allow compiler created copy c'tor
     DestroTop(const DestroTop&);
@@ -641,8 +641,8 @@ namespace desres {
 
     virtual ~DestroTop();
 
-    virtual desres::ZingPool& pool();
-    virtual const desres::ZingPool& pool() const;
+    virtual ZingPool& pool();
+    virtual const ZingPool& pool() const;
     virtual size_t footprint() const;
 
   };
@@ -853,5 +853,5 @@ namespace desres {
   }
 
 
-}
+}}
 #endif
