@@ -19,6 +19,8 @@ using desres::fastjson::Json;
  * This tokenizer is built on streams and uses a small, tight
  * finite state automata to construct a token
  */
+
+namespace {
 typedef struct tokenizer_t {
 
   char buf[256];
@@ -49,6 +51,8 @@ typedef struct tokenizer_t {
 
 } tokenizer;
 
+}
+
 /*! \brief Get current character */
 /*!
 * Returns the current character in the file
@@ -78,13 +82,13 @@ static inline char tokenizer_read(tokenizer * tk) {
  * @param input The stream to parse
  */
 
-void tokenizer_init( tokenizer * tk, std::istream& input );
+static void tokenizer_init( tokenizer * tk, std::istream& input );
 
 /*!
  * The destructor cleans up any heap allocated temporaries created
  * during construction.
  */
-void tokenizer_release( tokenizer * tk);
+static void tokenizer_release( tokenizer * tk);
 
 /*!
  * Set state to read a new token on the next request.

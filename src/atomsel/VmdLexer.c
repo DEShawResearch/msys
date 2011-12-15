@@ -326,12 +326,12 @@ static const char * getGrammarFileName()
  *     - Success pVmdLexer initialized for the lex start
  *     - Fail NULL
  */
-ANTLR3_API pVmdLexer VmdLexerNew         
+ANTLR3_API pVmdLexer desres_msys_VmdLexerNew         
 (pANTLR3_INPUT_STREAM instream)
 {
 	// See if we can create a new lexer with the standard constructor
 	//
-	return VmdLexerNewSSD(instream, NULL);
+	return desres_msys_VmdLexerNewSSD(instream, NULL);
 }
 
 /** \brief Create a new lexer called VmdLexer
@@ -342,7 +342,7 @@ ANTLR3_API pVmdLexer VmdLexerNew
  *     - Success pVmdLexer initialized for the lex start
  *     - Fail NULL
  */
-ANTLR3_API pVmdLexer VmdLexerNewSSD         
+ANTLR3_API pVmdLexer desres_msys_VmdLexerNewSSD         
 (pANTLR3_INPUT_STREAM instream, pANTLR3_RECOGNIZER_SHARED_STATE state)
 {
     pVmdLexer ctx; // Context structure we will build and return

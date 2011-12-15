@@ -281,11 +281,11 @@ static const char * getGrammarFileName()
  * \return Pointer to new parser context upon success.
  */
 ANTLR3_API pVmdParser
-VmdParserNew   (pANTLR3_COMMON_TOKEN_STREAM instream)
+desres_msys_VmdParserNew   (pANTLR3_COMMON_TOKEN_STREAM instream)
 {
 	// See if we can create a new parser with the standard constructor
 	//
-	return VmdParserNewSSD(instream, NULL);
+	return desres_msys_VmdParserNewSSD(instream, NULL);
 }
 
 /** \brief Create a new VmdParser parser and return a context for it.
@@ -295,7 +295,7 @@ VmdParserNew   (pANTLR3_COMMON_TOKEN_STREAM instream)
  * \return Pointer to new parser context upon success.
  */
 ANTLR3_API pVmdParser
-VmdParserNewSSD   (pANTLR3_COMMON_TOKEN_STREAM instream, pANTLR3_RECOGNIZER_SHARED_STATE state)
+desres_msys_VmdParserNewSSD   (pANTLR3_COMMON_TOKEN_STREAM instream, pANTLR3_RECOGNIZER_SHARED_STATE state)
 {
     pVmdParser ctx;	    /* Context structure we will build and return   */
     

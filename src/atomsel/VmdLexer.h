@@ -185,8 +185,8 @@ struct VmdLexer_Ctx_struct
 // Function protoypes for the constructor functions that external translation units
 // such as delegators and delegates may wish to call.
 //
-ANTLR3_API pVmdLexer VmdLexerNew         (pANTLR3_INPUT_STREAM instream);
-ANTLR3_API pVmdLexer VmdLexerNewSSD      (pANTLR3_INPUT_STREAM instream, pANTLR3_RECOGNIZER_SHARED_STATE state);
+ANTLR3_API pVmdLexer desres_msys_VmdLexerNew         (pANTLR3_INPUT_STREAM instream);
+ANTLR3_API pVmdLexer desres_msys_VmdLexerNewSSD      (pANTLR3_INPUT_STREAM instream, pANTLR3_RECOGNIZER_SHARED_STATE state);
 
 /** Symbolic definitions of all the tokens that the lexer will work with.
  * \{

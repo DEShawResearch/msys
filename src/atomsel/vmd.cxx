@@ -36,12 +36,12 @@ PredicatePtr desres::msys::atomsel::vmd::parse(
   pANTLR3_INPUT_STREAM input=antlr3NewAsciiStringInPlaceStream(
       (pANTLR3_UINT8)txt, sel.size(), (pANTLR3_UINT8)"selection");
 
-  pVmdLexer lxr = VmdLexerNew(input);
+  pVmdLexer lxr = desres_msys_VmdLexerNew(input);
 
   pANTLR3_COMMON_TOKEN_STREAM tstream = antlr3CommonTokenStreamSourceNew(
       ANTLR3_SIZE_HINT, TOKENSOURCE(lxr));
 
-  pVmdParser psr = VmdParserNew(tstream);
+  pVmdParser psr = desres_msys_VmdParserNew(tstream);
 
   VmdParser_start_return ast=psr->start(psr);
 

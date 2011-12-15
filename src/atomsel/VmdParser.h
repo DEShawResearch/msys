@@ -361,8 +361,8 @@ struct VmdParser_Ctx_struct
 // Function protoypes for the constructor functions that external translation units
 // such as delegators and delegates may wish to call.
 //
-ANTLR3_API pVmdParser VmdParserNew         (pANTLR3_COMMON_TOKEN_STREAM instream);
-ANTLR3_API pVmdParser VmdParserNewSSD      (pANTLR3_COMMON_TOKEN_STREAM instream, pANTLR3_RECOGNIZER_SHARED_STATE state);
+ANTLR3_API pVmdParser desres_msys_VmdParserNew         (pANTLR3_COMMON_TOKEN_STREAM instream);
+ANTLR3_API pVmdParser desres_msys_VmdParserNewSSD      (pANTLR3_COMMON_TOKEN_STREAM instream, pANTLR3_RECOGNIZER_SHARED_STATE state);
 
 /** Symbolic definitions of all the tokens that the parser will work with.
  * \{
