@@ -66,6 +66,11 @@ def print_info(mol):
     print "%20s: %s" % ("vdw_funct", nbinfo.vdw_funct)
     print "%20s: %s" % ("vdw_rule", nbinfo.vdw_rule)
 
+    print "\n%12s:" % "Auxiliary Tables"
+    for name in mol.auxtable_names:
+        aux=mol.auxtable(name)
+        print "%20s: %d properties, %6d rows" % (name, aux.nprops, aux.nparams)
+
     print "\n%s:" % "Provenance"
     for i, p in enumerate(mol.provenance):
         print "%4d) %16s %s" % (i+1, p.timestamp, p.user)
