@@ -5,6 +5,8 @@
 
 struct sqlite3;
 
+namespace desres { namespace msys {
+
 typedef struct dms {
     struct sqlite3 * db;
     dms( sqlite3* _db) : db(_db) {}
@@ -79,5 +81,7 @@ void dms_writer_next( dms_writer_t * w );
 
 /* free the write */
 void dms_writer_free( dms_writer_t * w );
+
+}}
 
 #endif

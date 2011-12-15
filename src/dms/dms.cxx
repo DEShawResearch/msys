@@ -178,6 +178,8 @@ namespace {
     } vfs[1];
 }
 
+namespace desres { namespace msys {
+
 struct dms_reader {
     sqlite3_stmt * stmt;
     int ncols;
@@ -477,4 +479,4 @@ void dms_writer_free( dms_writer_t * w ) {
     delete w;
 }
 
-
+}}
