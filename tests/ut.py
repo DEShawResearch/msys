@@ -334,6 +334,18 @@ class TestMain(unittest.TestCase):
         m.addAuxTable('aux', aux)
         msys.SaveDMS(m, 'foo.dms')
 
+        m2=m.clone()
+        aux2=m2.auxtable('aux')
+        self.assertEqual(aux.nprops, aux2.nprops)
+        self.assertEqual(aux.nparams, aux2.nparams)
+
+        m3=msys.CreateSystem()
+        m3.append(m)
+        aux3=m3.auxtable('aux')
+        self.assertEqual(aux.nprops, aux3.nprops)
+        self.assertEqual(aux.nparams, aux3.nparams)
+
+
         table=m.addTable('foo', 1)
         table.category='bond'
         table.addTermProp('select', int)

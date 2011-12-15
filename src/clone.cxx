@@ -141,9 +141,10 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms ) {
     std::vector<String> extras = src->auxTableNames();
     for (unsigned i=0; i<extras.size(); i++) {
         std::string const& name = extras[i];
-        ParamTablePtr p = ParamTable::create();
-        AppendParams( p, src->auxTable(name), p->params() );
-        dst->addAuxTable( name, p );
+        ParamTablePtr srcparams = src->auxTable(name);
+        ParamTablePtr dstparams = ParamTable::create();
+        AppendParams( dstparams, srcparams, srcparams->params() );
+        dst->addAuxTable( name, dstparams );
     }
     dst->updateFragids();
     return dst;

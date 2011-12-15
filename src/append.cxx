@@ -193,9 +193,10 @@ IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr ) {
     std::vector<String> extras = src.auxTableNames();
     for (unsigned i=0; i<extras.size(); i++) {
         std::string const& name = extras[i];
-        ParamTablePtr p(ParamTable::create());
-        AppendParams( p, src.auxTable(name), p->params() );
-        dst.addAuxTable( name, p );
+        ParamTablePtr srcparams = src.auxTable(name);
+        ParamTablePtr dstparams = ParamTable::create();
+        AppendParams( dstparams, srcparams, srcparams->params() );
+        dst.addAuxTable( name, dstparams );
     }
 
     return src2dst;

@@ -86,6 +86,8 @@ genhelp() {
 See documentation in 
 http://gardendoc.nyc.desres.deshaw.com/$NAME/$VERSION/doc/html/index.html
 
+1.0.3  Bugfix: clone() and append() did not copy auxiliary tables (e.g. cmap).
+
 1.0.2  Internal: fix symbol conflicts with other packages.
 
 1.0.1  Documentation updates.
