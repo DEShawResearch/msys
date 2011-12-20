@@ -61,8 +61,8 @@ class TestBasic(UT.TestCase):
         nb=self.mol.table('nonbonded')
         for t in nb.terms:
             self.assertFalse(t.param is None,
-                    "Particle with gid %d has no nonbonded parameters" %
-                    t.atoms[0].gid)
+                    "Particle with id %d has no nonbonded parameters" %
+                    t.atoms[0].id)
 
 
 
