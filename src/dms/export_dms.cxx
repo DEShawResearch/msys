@@ -589,9 +589,17 @@ void desres::msys::ExportDMS(SystemPtr h, const std::string& path,
         export_dms(h, dms, provenance);
     }
     catch(std::exception& e) {
-        if (dms) dms_close(dms);
         std::stringstream ss;
-        ss << "Error writing dms file at '" << path << "': " << e.what();
+        ss << "Error writing dms file at '" << path << "': " << e.what()
+            << std::endl;
+        if (dms) {
+            try {
+                dms_close(dms);
+            }
+            catch (std::exception& e2) {
+                ss << e2.what();
+            }
+        }
         throw std::runtime_error(ss.str());
     }
     dms_close(dms);
