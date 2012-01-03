@@ -744,6 +744,15 @@ class System(object):
         ''' type of the given atom property '''
         return self._ptr.atomPropType(self._ptr.atomPropIndex(name))
 
+    @property
+    def positions(self):
+        ''' Nx3 list of lists of positions of all atoms '''
+        return self._ptr.getPositions()
+    @positions.setter
+    def positions(self, pos):
+        self._ptr.setPositions(pos)
+
+
     ###
     ### bond properties
     ###
