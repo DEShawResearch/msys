@@ -666,7 +666,16 @@ class TestMain(unittest.TestCase):
         self.assertEqual(p[0][1],1)
         self.assertEqual(p[1][2],2)
         self.assertEqual(p[2][0],3)
-
+        p[1][2]=4
+        m._ptr.setPositions(p)
+        p=m._ptr.getPositions()
+        self.assertEqual(p[1][2],4)
+        del p[2]
+        with self.assertRaises(ValueError):
+            m._ptr.setPositions(p)
+        del p[0][2]
+        with self.assertRaises(ValueError):
+            m._ptr.setPositions(p)
 
 if __name__=="__main__":
     unittest.main()

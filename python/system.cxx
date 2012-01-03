@@ -162,6 +162,7 @@ namespace {
         PyObject *result = PyList_New(sys.atomCount());
         Id i,n = sys.maxAtomId();
         for (i=0; i<n; i++) {
+            if (!sys.hasAtom(i)) continue;
             PyObject* xyz = PyList_New(3);
             PyList_SET_ITEM(xyz,0, PyFloat_FromDouble(sys.atom(i).x));
             PyList_SET_ITEM(xyz,1, PyFloat_FromDouble(sys.atom(i).y));
@@ -169,6 +170,42 @@ namespace {
             PyList_SET_ITEM(result,i,xyz);
         }
         return result;
+    }
+
+    void sys_setpos(System& sys, PyObject* obj) {
+        PyObject* fast = PySequence_Fast(obj, "expected a sequence");
+        if (!fast) throw_error_already_set();
+        boost::shared_ptr<PyObject> ptr(fast, Py_DecRef);
+        Id i, n = PySequence_Fast_GET_SIZE(fast);
+        if (n!=sys.atomCount()) {
+            PyErr_Format(PyExc_ValueError, "sequence has %d items, expected %d",
+                    n, sys.atomCount());
+            throw_error_already_set();
+        }
+        PyObject** items = PySequence_Fast_ITEMS(fast);
+        for (i=0, n=0; i<sys.maxAtomId(); i++) {
+            if (!sys.hasAtom(i)) continue;
+            PyObject* item = PySequence_Fast(items[n++], 
+                    "expected sequence of 3-tuples");
+            if (!item) throw_error_already_set();
+            boost::shared_ptr<PyObject> ptr(item, Py_DecRef);
+
+            Id m = PySequence_Fast_GET_SIZE(item);
+            if (m!=3) {
+                PyErr_Format(PyExc_ValueError, 
+                        "sequence item %d has %d items, expected 3", n, m);
+                throw_error_already_set();
+            }
+            double x = PyFloat_AsDouble(PySequence_Fast_GET_ITEM(item,0));
+            if (PyErr_Occurred()) throw_error_already_set();
+            double y = PyFloat_AsDouble(PySequence_Fast_GET_ITEM(item,1));
+            if (PyErr_Occurred()) throw_error_already_set();
+            double z = PyFloat_AsDouble(PySequence_Fast_GET_ITEM(item,2));
+            if (PyErr_Occurred()) throw_error_already_set();
+            sys.atom(i).x=x;
+            sys.atom(i).y=y;
+            sys.atom(i).z=z;
+        }
     }
 }
 
@@ -336,7 +373,7 @@ namespace desres { namespace msys {
             .def("coalesceTables",    &System::coalesceTables)
 
             .def("getPositions",    sys_getpos)
-            //.def("setPositions",    sys_setpos)
+            .def("setPositions",    sys_setpos)
             ;
     }
 
