@@ -136,9 +136,6 @@ namespace {
         return L;
     }
 
-    void sys_coalesce( System const& sys ) {
-    }
-
     SystemPtr import_mae_from_buffer(PyObject* obj, bool ignore_unrecognized) {
         Py_buffer view[1];
         if (PyObject_GetBuffer(obj, view, PyBUF_ND)) {
@@ -161,6 +158,18 @@ namespace {
         return ImportDMSFromBytes(bytes, view->len, structure_only);
     }
 
+    PyObject* sys_getpos(System const& sys) {
+        PyObject *result = PyList_New(sys.atomCount());
+        Id i,n = sys.maxAtomId();
+        for (i=0; i<n; i++) {
+            PyObject* xyz = PyList_New(3);
+            PyList_SET_ITEM(xyz,0, PyFloat_FromDouble(sys.atom(i).x));
+            PyList_SET_ITEM(xyz,1, PyFloat_FromDouble(sys.atom(i).y));
+            PyList_SET_ITEM(xyz,2, PyFloat_FromDouble(sys.atom(i).z));
+            PyList_SET_ITEM(result,i,xyz);
+        }
+        return result;
+    }
 }
 
 namespace desres { namespace msys { 
@@ -325,6 +334,9 @@ namespace desres { namespace msys {
             .def("findBond",    &System::findBond)
             .def("provenance",      sys_provenance)
             .def("coalesceTables",    &System::coalesceTables)
+
+            .def("getPositions",    sys_getpos)
+            //.def("setPositions",    sys_setpos)
             ;
     }
 

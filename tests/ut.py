@@ -654,6 +654,19 @@ class TestMain(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             t._ptr.setParamB(t.id, 42)
 
+    def testPositions(self):
+        m=msys.CreateSystem()
+        a0=m.addAtom()
+        a1=m.addAtom()
+        a2=m.addAtom()
+        a0.y=1
+        a1.z=2
+        a2.x=3
+        p=m._ptr.getPositions()
+        self.assertEqual(p[0][1],1)
+        self.assertEqual(p[1][2],2)
+        self.assertEqual(p[2][0],3)
+
 
 if __name__=="__main__":
     unittest.main()
