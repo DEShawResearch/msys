@@ -32,11 +32,26 @@ namespace {
     Id add_term_prop( TermTable& table, String const& name, object type ) {
         return table.addTermProp(name, as_value_type(type));
     }
+
+    /* TODO: permit col to be provided as string */
     object get_term_prop(TermTable& p, Id row, Id col) {
         return from_value_ref(p.termPropValue(row,col));
     }
     void set_term_prop(TermTable& p, Id row, Id col, object newval) {
         to_value_ref(newval, p.termPropValue(row,col));
+    }
+
+    object get_prop(TermTable& p, Id row, Id col) {
+        return from_value_ref(p.propValue(row,col));
+    }
+    void set_prop(TermTable& p, Id row, Id col, object newval) {
+        to_value_ref(newval, p.propValue(row,col));
+    }
+    object get_propB(TermTable& p, Id row, Id col) {
+        return from_value_ref(p.propValueB(row,col));
+    }
+    void set_propB(TermTable& p, Id row, Id col, object newval) {
+        to_value_ref(newval, p.propValueB(row,col));
     }
 }
 
@@ -79,6 +94,12 @@ namespace desres { namespace msys {
             .def("setParamB",   set_paramB)
             .def("alchemical",  &TermTable::alchemical)
             .def("paramRefs",   &TermTable::paramRefs)
+
+            /* param properties */
+            .def("getProp",     get_prop)
+            .def("setProp",     set_prop)
+            .def("getPropB",    get_propB)
+            .def("setPropB",    set_propB)
 
             /* term properties */
             .def("termPropCount",&TermTable::termPropCount)

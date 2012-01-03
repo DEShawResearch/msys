@@ -438,6 +438,11 @@ class TestMain(unittest.TestCase):
         self.assertEqual(t['y'], '')
         self.assertEqual(table.params.nparams, 2)
 
+        self.assertEqual(t2._ptr.getProp(t2.id, 0), 32)
+        t2._ptr.setProp(t2.id, 0, 33)
+        self.assertEqual(t2._ptr.getProp(t2.id, 0), 33)
+        t2._ptr.setProp(t2.id, 0, 32)
+
         # alchemical term
         b=t2.stateB
         with self.assertRaises(RuntimeError):
@@ -452,9 +457,15 @@ class TestMain(unittest.TestCase):
         self.assertEqual(b['x'], 32)
         self.assertEqual(b['y'], 'whodat')
 
+        self.assertEqual(b._ptr.getPropB(b.id, 0), 32)
+        b._ptr.setPropB(b.id, 0, 33)
+        self.assertEqual(b._ptr.getPropB(b.id, 0), 33)
+        b._ptr.setPropB(b.id, 0, 32)
+
         self.assertFalse(t2.stateA == t2.stateB)
         self.assertTrue(t2.stateA == t2.stateA)
         self.assertEqual(t2, t2.stateA)
+
 
 
     def testTermProps(self):

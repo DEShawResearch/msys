@@ -77,8 +77,7 @@ namespace desres { namespace msys {
             return ValueRef(propType(col), _props.at(col).vals.at(row)); 
         }
         ValueRef value(Id row, String const& name)  { 
-            Id col = propIndex(name);
-            return ValueRef(propType(col), _props.at(col).vals.at(row)); 
+            return value(row, propIndex(name));
         }
         IdList params() const {
             IdList p(_nrows);

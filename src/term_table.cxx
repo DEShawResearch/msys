@@ -181,6 +181,26 @@ ValueRef TermTable::termPropValue(Id term, String const& name) {
     return _props->value(term, termPropIndex(name));
 }
 
+ValueRef TermTable::propValue(Id term, Id index) {
+    Id row = this->param(term);
+    return _params->value(row, index);
+}
+
+ValueRef TermTable::propValue(Id term, String const& name) {
+    Id row = this->param(term);
+    return _params->value(row, name);
+}
+
+ValueRef TermTable::propValueB(Id term, Id index) {
+    Id row = this->paramB(term);
+    return _params->value(row, index);
+}
+
+ValueRef TermTable::propValueB(Id term, String const& name) {
+    Id row = this->paramB(term);
+    return _params->value(row, name);
+}
+
 namespace {
     struct ParamComparator {
         ParamTablePtr params;

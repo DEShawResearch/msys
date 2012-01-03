@@ -106,6 +106,15 @@ namespace desres { namespace msys {
         IdList atoms(Id term) const;
         Id atom(Id term, Id index) const;
 
+        /* look up the value of a property of the term from the associated
+         * ParamTable */
+        ValueRef propValue(Id term, Id index);
+        ValueRef propValue(Id term, String const& name);
+
+        /* Look up the alchemical version of the property */
+        ValueRef propValueB(Id term, Id index);
+        ValueRef propValueB(Id term, String const& name);
+
         /* Operations on term properties */
         Id termPropCount() const;
         String termPropName(Id i) const;
