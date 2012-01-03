@@ -600,6 +600,8 @@ class TermTable(object):
 
 class System(object):
 
+    __slots__ = ('_ptr',)
+
     def __init__(self, _ptr):
         ''' Construct from SystemPtr.
         Do not invoke directly; use CreateSystem() instead.
