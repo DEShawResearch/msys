@@ -229,8 +229,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
             } else if ( ntok > 4 ) {
                 print_msg(v,"ERROR!  Explicit exclusions or fluctuating charges not supported, atom ignored.");
             } else {
-                atom_t atom = res->add_atom();
-                atom.def.parse(tok[1]);
+                atom_t atom = res->add_atom(tok[1]);
                 atom.type = tok[2];
                 atom.charge = atof(tok[3]);
             }
@@ -304,10 +303,8 @@ void defs_t::import_charmm_topology(std::string const& path) {
                     if ( ntok < 3 ) {
                         print_msg(v,"ERROR!  Failed to parse delete atom statement.");
                     } else {
-                        atom_t atom = res->add_atom();
-                        atom.def.parse(tok[1]);
-                        atom.type = "DEL";
-                        atom.del = true;
+                        adef_t atom = res->add_delatom();
+                        atom.parse(tok[1]);
                     }
                 } else if ( ! strncasecmp("ACCE",tok[1],4) ) {
                     ;
@@ -320,10 +317,9 @@ void defs_t::import_charmm_topology(std::string const& path) {
                         print_msg(v,"ERROR!  Failed to parse delete bond statement.");
                     } else {
                         for ( itok = 2; itok < ntok; itok += 2 ) {
-                            bond_t bond = res->add_bond();
+                            bond_t bond = res->add_delbond();
                             bond.def1.parse(tok[itok]);
                             bond.def2.parse(tok[itok+1]);
-                            bond.del = true;
                         }
                     }
                 } else if ( ! strncasecmp("ANGL",tok[1],4) ||

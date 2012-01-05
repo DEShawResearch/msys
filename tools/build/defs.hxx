@@ -28,20 +28,18 @@ namespace desres { namespace msys { namespace builder {
     };
 
     struct atom_t {
-        adef_t      def;
-        bool        del;
         std::string type;
         double      charge;
 
         atom_t() : charge() {}
     };
+    typedef std::map<std::string, atom_t> AtomMap;
 
     struct bond_t {
         adef_t      def1;
         adef_t      def2;
-        bool        del;
 
-        bond_t() : del() {}
+        bond_t() {}
     };
 
     struct conf_t {
@@ -49,7 +47,6 @@ namespace desres { namespace msys { namespace builder {
         adef_t  def2;
         adef_t  def3;
         adef_t  def4;
-        bool    del;
 
         double  r1;
         double  a1;
@@ -63,20 +60,22 @@ namespace desres { namespace msys { namespace builder {
     };
 
     struct resdef_t {
-        std::vector<atom_t> atoms;
+        AtomMap             atoms;
         std::vector<bond_t> bonds;
         std::vector<conf_t> confs;
+
+        std::vector<adef_t> delatoms;
+        std::vector<bond_t> delbonds;
 
         std::string         pfirst;
         std::string         plast;
         
-        bool        patch;
+        bool                patch;
 
         resdef_t() : patch() {}
 
-        atom_t& add_atom() {
-            atoms.resize(atoms.size()+1);
-            return atoms.back();
+        atom_t& add_atom(std::string const& name) {
+            return atoms[name];
         }
         bond_t& add_bond() {
             bonds.resize(bonds.size()+1);
@@ -87,7 +86,16 @@ namespace desres { namespace msys { namespace builder {
             return confs.back();
         }
 
+        adef_t& add_delatom() {
+            delatoms.resize(delatoms.size()+1);
+            return delatoms.back();
+        }
+        bond_t& add_delbond() {
+            delbonds.resize(delbonds.size()+1);
+            return delbonds.back();
+        }
     };
+
     typedef std::map<std::string, resdef_t> ResdefMap;
 
     struct file_t {
