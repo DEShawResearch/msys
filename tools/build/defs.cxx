@@ -146,7 +146,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
                 print_msg(v,"ERROR!  Failed to parse bond statement.");
             } else {
                 for ( itok = 1; itok < ntok; itok += 2 ) {
-                    bond_t bond = res->add_bond();
+                    bond_t& bond = res->add_bond();
                     bond.def1.parse(tok[itok]);
                     bond.def2.parse(tok[itok+1]);
                 }
@@ -229,7 +229,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
             } else if ( ntok > 4 ) {
                 print_msg(v,"ERROR!  Explicit exclusions or fluctuating charges not supported, atom ignored.");
             } else {
-                atom_t atom = res->add_atom(tok[1]);
+                atom_t& atom = res->add_atom(tok[1]);
                 atom.type = tok[2];
                 atom.charge = atof(tok[3]);
             }
@@ -239,7 +239,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
             if ( ntok < 4 ) {
                 print_msg(v,"ERROR!  Failed to parse mass statement.");
             } else {
-                type_t type = add_type(tok[2]);
+                type_t& type = add_type(tok[2]);
                 type.element = ntok>4?tok[4]:"";
                 type.mass = atof(tok[3]);
                 type.id = atoi(tok[1]);
@@ -303,7 +303,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
                     if ( ntok < 3 ) {
                         print_msg(v,"ERROR!  Failed to parse delete atom statement.");
                     } else {
-                        adef_t atom = res->add_delatom();
+                        adef_t& atom = res->add_delatom();
                         atom.parse(tok[1]);
                     }
                 } else if ( ! strncasecmp("ACCE",tok[1],4) ) {
@@ -317,7 +317,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
                         print_msg(v,"ERROR!  Failed to parse delete bond statement.");
                     } else {
                         for ( itok = 2; itok < ntok; itok += 2 ) {
-                            bond_t bond = res->add_delbond();
+                            bond_t& bond = res->add_delbond();
                             bond.def1.parse(tok[itok]);
                             bond.def2.parse(tok[itok+1]);
                         }
