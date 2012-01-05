@@ -1,4 +1,5 @@
 #include "builder.hxx"
+#include "geom.hxx"
 #include <boost/foreach.hpp>
 #include <stdexcept>
 
@@ -122,7 +123,41 @@ namespace desres { namespace msys { namespace builder {
                     continue;
                 }
                 if (added.count(B) || added.count(C)) continue;
+                Float r=0, theta=0, phi=0;
+                Vec3 apos, bpos, cpos;
+                if ( mol->atom(D).atomic_number>1 && 
+                     added.count(A)==0 && added.count(D)==1) { 
+                    r=c.r2;
+                    theta=c.a2;
+                    phi=c.phi;
+                    apos = Vec3(&mol->atom(A).x);
+                    bpos = Vec3(&mol->atom(B).x);
+                    cpos = Vec3(&mol->atom(C).x);
+                } else if ( mol->atom(A).atomic_number>1 &&
+                     added.count(A)==1 && added.count(D)==0) {
+                    r=c.r1;
+                    theta=c.a1;
+                    phi=c.phi;
+                    apos = Vec3(&mol->atom(D).x);
+                    bpos = Vec3(&mol->atom(C).x);
+                    cpos = Vec3(&mol->atom(B).x);
+                    D=A;
+                } else {
+                    continue;
+                }
+                Vec3 dpos = apply_dihedral_geometry(apos,bpos,cpos,r,theta,phi);
+                mol->atom(D).x=dpos.x;
+                mol->atom(D).y=dpos.y;
+                mol->atom(D).z=dpos.z;
+                added.erase(added.find(D));
 
+                /* if we guess a heavy atom position, guess its attached H */
+                IdList bonded = mol->bondedAtoms(D);
+                BOOST_FOREACH(Id b, bonded) {
+                    if (mol->atom(b).atomic_number==1) {
+                        added.insert(b);
+                    }
+                }
             }
         }
     }

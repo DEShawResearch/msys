@@ -11,6 +11,7 @@ env.AddLibrary('msys_build', env.Split('''
 build/builder.cxx
 build/charmm_file.c
 build/defs.cxx
+build/geom.cxx
 '''))
 
 buildenv=env.Clone()

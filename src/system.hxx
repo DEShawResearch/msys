@@ -25,6 +25,9 @@ namespace desres { namespace msys {
         Vec3(Float const& _x, Float const& _y, Float const& _z)
         : x(_x), y(_y), z(_z) {}
 
+        explicit Vec3(const Float* xyz)
+        : x(xyz[0]), y(xyz[1]), z(xyz[2]) {}
+
         Float& operator[](unsigned i) {
             return i==0 ? x : i==1 ? y : z;
         }

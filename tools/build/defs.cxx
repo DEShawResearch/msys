@@ -386,9 +386,9 @@ void defs_t::import_charmm_topology(std::string const& path) {
                 conf.def3.parse(tok[3] + conf.improper);
                 conf.def4.parse(tok[4]);
                 conf.r1 = atof(tok[5]);
-                conf.a1 = atof(tok[6]);
-                conf.phi = atof(tok[7]);
-                conf.a2 = atof(tok[8]);
+                conf.a1 = atof(tok[6]) * M_PI / 180;
+                conf.phi = atof(tok[7]) * M_PI / 180;
+                conf.a2 = atof(tok[8]) * M_PI / 180;
                 conf.r2 = atof(tok[9]);
             }
         }
