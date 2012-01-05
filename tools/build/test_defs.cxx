@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
     }
 
     printf("have %d types, %d residues\n", (int)defs.types.size(),
-            (int)defs.residues.size());
+            (int)defs.resdefs.size());
     return 0;
 }
 

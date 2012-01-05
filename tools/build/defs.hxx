@@ -62,7 +62,7 @@ namespace desres { namespace msys { namespace builder {
         conf_t() : r1(), a1(), phi(), a2(), r2(), improper() {}
     };
 
-    struct residue_t {
+    struct resdef_t {
         std::vector<atom_t> atoms;
         std::vector<bond_t> bonds;
         std::vector<conf_t> confs;
@@ -72,7 +72,7 @@ namespace desres { namespace msys { namespace builder {
         
         bool        patch;
 
-        residue_t() : patch() {}
+        resdef_t() : patch() {}
 
         atom_t& add_atom() {
             atoms.resize(atoms.size()+1);
@@ -88,7 +88,7 @@ namespace desres { namespace msys { namespace builder {
         }
 
     };
-    typedef std::map<std::string, residue_t> ResidueMap;
+    typedef std::map<std::string, resdef_t> ResdefMap;
 
     struct file_t {
         std::string     path;
@@ -101,12 +101,12 @@ namespace desres { namespace msys { namespace builder {
 
         FileList        files;
         TypeMap         types;
-        ResidueMap      residues;
+        ResdefMap       resdefs;
 
         defs_t() {}
 
-        residue_t& add_residue(std::string const& name) {
-            return residues[name];
+        resdef_t& add_resdef(std::string const& name) {
+            return resdefs[name];
         }
 
         type_t& add_type(std::string const& name) {

@@ -78,7 +78,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
     skipall = 0;
     stream = 0;
 
-    residue_t * res = NULL;
+    resdef_t * res = NULL;
 
     while ( (ntok = charmm_get_tokens(tok,TOKLEN,sbuf,BUFLEN,file,all_caps)) ) {
         if ( ! tok[0][0] ) {
@@ -413,7 +413,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
             if ( ntok < 2 ) {
                 print_msg(v,"ERROR!  Failed to parse residue statement.");
             } else {
-                res = &add_residue(tok[1]);
+                res = &add_resdef(tok[1]);
             }
         }
         else if ( ! strncasecmp("PRES",tok[0],4) ) {
@@ -421,7 +421,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
             if ( ntok < 2 ) {
                 print_msg(v,"ERROR!  Failed to parse patch residue statement.");
             } else {
-                res = &add_residue(tok[1]);
+                res = &add_resdef(tok[1]);
                 res->patch = true;
             }
         }
