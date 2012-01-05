@@ -15,10 +15,11 @@ builder/geom.cxx
 '''))
 
 buildenv=env.Clone()
-buildenv.Append(LIBS=['msys_builder'])
+buildenv.Append(LIBS=['msys_builder', 'boost_python'])
 buildenv.AddUnitTest('test_defs', 'builder/test_defs.cxx')
 buildenv.AddUnitTest('test_builder', 'builder/test_builder.cxx')
 buildenv.AddPythonExtension('_builder', ['builder/pymod.cxx'], prefix='msys')
+buildenv.AddPythonModule('builder/builder.py', prefix='msys')
 
 ## fep
 env.AddPythonModule('fep/_alchemical.py', prefix='msys')
