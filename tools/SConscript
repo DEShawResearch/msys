@@ -6,6 +6,16 @@ env.Prepend(CPPPATH=['../src'], LIBS=['msys'])
 env.AddProgram('mae2dms', 'converters/mae2dms.cxx')
 env.AddProgram('dms2mae', 'converters/dms2mae.cxx')
 
+## build
+env.AddLibrary('msys_build', env.Split('''
+build/charmm_file.c
+build/defs.cxx
+'''))
+
+buildenv=env.Clone()
+buildenv.Append(LIBS=['msys_build'])
+buildenv.AddUnitTest('test_defs', 'build/test_defs.cxx')
+
 ## fep
 env.AddPythonModule('fep/_alchemical.py', prefix='msys')
 env.AddPythonModule('fep/kept.py', prefix='msys')
