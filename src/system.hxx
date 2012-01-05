@@ -42,6 +42,24 @@ namespace desres { namespace msys {
             return x!=o.x || y!=o.y || z!=o.z;
         }
 
+        Vec3& operator-=(Vec3 const& o) {
+            x-=o.x;
+            y-=o.y;
+            z-=o.z;
+            return *this;
+        }
+
+        Vec3& operator *=(Float s) {
+            x *= s;
+            y *= s;
+            z *= s;
+            return *this;
+        }
+
+        Float dot(Vec3 const& o) const {
+            return x*o.x + y*o.y + z*o.z;
+        }
+
     };
 
     struct GlobalCell {

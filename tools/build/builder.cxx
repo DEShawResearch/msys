@@ -22,6 +22,90 @@ namespace desres { namespace msys { namespace builder {
             }
             return BadId;
         }
+
+        bool wild_guess(SystemPtr mol, Id atm, IdSet const& added) {
+            static const double def_bond = 1.0;
+            static const double def_angle = 109.5 * M_PI/180;
+            static const double def_dihedral = -120.0 * M_PI/180;
+
+            char name[256];
+            sprintf(name, "%s %s %d", mol->atom(atm).name.c_str(), 
+                    mol->residue(mol->atom(atm).residue).name.c_str(), 
+                    mol->residue(mol->atom(atm).residue).resid);
+
+            /* require a single bond to this atom */
+            if (mol->bondCountForAtom(atm)!=1) {
+                printf("Not building %s: bond count is %d\n",name,
+                        mol->bondCountForAtom(atm));
+                return false;
+            }
+
+            /* ensure the parent atom is sane */
+            Id root = mol->bondedAtoms(atm)[0];
+            IdList const& bonded = mol->bondedAtoms(root);
+            if (bonded.size()>4) return false;
+
+            /* find the identity of the other atoms bonded to root */
+            Id a1=BadId;
+            Id a2=BadId;
+            Id a3=BadId;
+
+            BOOST_FOREACH(Id b, bonded) {
+                if (b==atm) continue;
+                if (added.count(b)) continue;
+                if      (bad(a2)) a2=b;
+                else if (bad(a1)) a1=b;
+                else if (bad(a3)) a3=b;
+                else break;
+            }
+
+            Vec3 rtpos(          &mol->atom(root).x                   );
+            Vec3 a1pos(bad(a1) ? &mol->atom(root).x : &mol->atom(a1).x);
+            Vec3 a2pos(bad(a2) ? &mol->atom(root).x : &mol->atom(a2).x);
+            Vec3 a3pos(bad(a3) ? &mol->atom(root).x : &mol->atom(a3).x);
+
+            Float angle = def_angle;
+            Float dihedral = def_dihedral;
+
+            if (bonded.size()==3 && 
+                    !bad(a1) && !bad(a2) && 
+                    mol->atom(a1).atomic_number>1 &&
+                    mol->atom(a2).atomic_number>1) { 
+
+                angle = calc_angle(a1pos, rtpos, a2pos);
+                angle = M_PI - 0.5*angle;
+                dihedral = M_PI;
+
+            } else if (bonded.size()==4 && 
+                    !bad(a1) && !bad(a2) && !bad(a3)) {
+                /* we have all but one of the atoms in a tetrahedral
+                 * geometry.  find the position of the fourth by taking
+                 * the plane formed by the non-root atoms */
+                Vec3 v1(a1pos);
+                v1 -= a2pos;
+                Vec3 v2(a3pos);
+                v2 -= a2pos;
+                Vec3 d(rtpos);
+                d -= a1pos;
+                Vec3 v3 = calc_cross_prod(v1,v2);
+                calc_normal(v3);
+                v3 *= def_bond;
+
+                if (d.dot(v3) <0) v3 *= -1;
+                mol->atom(atm).x = rtpos.x + v3.x;
+                mol->atom(atm).y = rtpos.y + v3.y;
+                mol->atom(atm).z = rtpos.z + v3.z;
+                return true;
+            }
+
+            Vec3 pos = apply_dihedral_geometry(a1pos, a2pos, rtpos,
+                    def_bond, angle, dihedral);
+
+            mol->atom(atm).x = pos.x;
+            mol->atom(atm).y = pos.y;
+            mol->atom(atm).z = pos.z;
+            return true;
+        }
     }
     void build( defs_t const& defs, SystemPtr mol, Id chain ) {
     
@@ -158,7 +242,18 @@ namespace desres { namespace msys { namespace builder {
                         added.insert(b);
                     }
                 }
+            } /* for each conf */
+        } /* for each residue */
+
+        /* make a chemically reasonable guess for atoms with one bond */
+        IdSet tmp(added);
+        BOOST_FOREACH(Id atm, tmp) {
+            if (wild_guess(mol, atm, added)) {
+                added.erase(added.find(atm));
             }
         }
+        if (added.size()) printf("failed to guess positions for %d atoms\n",
+                (int)added.size());
+
     }
 }}}
