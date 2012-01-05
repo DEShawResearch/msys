@@ -20,17 +20,115 @@
 
 using namespace desres::msys::builder;
 
-#if 0
-static char * parse_atom(char *aref, int *res, int *rel) {
-    if ( isdigit(*aref) ) { *res = *aref - '1'; ++aref; }
-    else { *res = 0; }
-    if ( *aref == '-' ) { *rel = -1; ++aref; }
-    else if ( *aref == '+' ) { *rel = 1; ++aref; }
-    else if ( *aref == '#' ) { *rel = 2; ++aref; }
-    else { *rel = 0; }
-    return aref;
+namespace {
+  struct element {
+    double daltons;
+    const char* abbreviation;
+    const char* name;
+  };
 }
-#else
+
+// url = "http://physics.nist.gov/cgi-bin/Elements/elInfo.pl?element=%d&context=noframes"%element
+static struct element amu[] = {
+  {1.00794,"H","Hydrogen"},
+  {4.002602,"He","Helium"},
+  {6.941,"Li","Lithium"},
+  {9.012182,"Be","Beryllium"},
+  {10.811,"B","Boron"},
+  {12.0107,"C","Carbon"},
+  {14.0067,"N","Nitrogen"},
+  {15.9994,"O","Oxygen"},
+  {18.9984032,"F","Fluorine"},
+  {20.1797,"Ne","Neon"},
+  {22.989770,"Na","Sodium"},
+  {24.3050,"Mg","Magnesium"},
+  {26.981538,"Al","Aluminum"},
+  {28.0855,"Si","Silicon"},
+  {30.973761,"P","Phosphorus"},
+  {32.065,"S","Sulfur"},
+  {35.453,"Cl","Chlorine"},
+  {39.0983,"K","Potassium"},
+  {39.948,"Ar","Argon"},
+  {40.078,"Ca","Calcium"},
+  {44.955910,"Sc","Scandium"},
+  {47.867,"Ti","Titanium"},
+  {50.9415,"V","Vanadium"},
+  {51.9961,"Cr","Chromium"},
+  {54.938049,"Mn","Manganese"},
+  {55.845,"Fe","Iron"},
+  {58.6934,"Ni","Nickel"},
+  {58.933200,"Co","Cobalt"},
+  {63.546,"Cu","Copper"},
+  {65.409,"Zn","Zinc"},
+  {69.723,"Ga","Gallium"},
+  {72.64,"Ge","Germanium"},
+  {74.92160,"As","Arsenic"},
+  {78.96,"Se","Selenium"},
+  {79.904,"Br","Bromine"},
+  {83.798,"Kr","Krypton"},
+  {85.4678,"Rb","Rubidium"},
+  {87.62,"Sr","Strontium"},
+  {88.90585,"Y","Yttrium"},
+  {91.224,"Zr","Zirconium"},
+  {92.90638,"Nb","Niobium"},
+  {95.94,"Mo","Molybdenum"},
+  {101.07,"Ru","Ruthenium"},
+  {102.90550,"Rh","Rhodium"},
+  {106.42,"Pd","Palladium"},
+  {107.8682,"Ag","Silver"},
+  {112.411,"Cd","Cadmium"},
+  {114.818,"In","Indium"},
+  {118.710,"Sn","Tin"},
+  {121.760,"Sb","Antimony"},
+  {126.90447,"I","Iodine"},
+  {127.60,"Te","Tellurium"},
+  {131.293,"Xe","Xenon"},
+  {132.90545,"Cs","Cesium"},
+  {137.327,"Ba","Barium"},
+  {138.9055,"La","Lanthanum"},
+  {140.116,"Ce","Cerium"},
+  {140.90765,"Pr","Praseodymium"},
+  {144.24,"Nd","Neodymium"},
+  {150.36,"Sm","Samarium"},
+  {151.964,"Eu","Europium"},
+  {157.25,"Gd","Gadolinium"},
+  {158.92534,"Tb","Terbium"},
+  {162.500,"Dy","Dysprosium"},
+  {164.93032,"Ho","Holmium"},
+  {167.259,"Er","Erbium"},
+  {168.93421,"Tm","Thulium"},
+  {173.04,"Yb","Ytterbium"},
+  {174.967,"Lu","Lutetium"},
+  {178.49,"Hf","Hafnium"},
+  {180.9479,"Ta","Tantalum"},
+  {183.84,"W","Tungsten"},
+  {186.207,"Re","Rhenium"},
+  {190.23,"Os","Osmium"},
+  {192.217,"Ir","Iridium"},
+  {195.078,"Pt","Platinum"},
+  {196.96655,"Au","Gold"},
+  {200.59,"Hg","Mercury"},
+  {204.3833,"Tl","Thallium"},
+  {207.2,"Pb","Lead"},
+  {208.98038,"Bi","Bismuth"},
+  {231.03588,"Pa","Protactinium"},
+  {232.0381,"Th","Thorium"},
+  {238.02891,"U","Uranium"}
+};
+
+static const int nelements = sizeof(amu)/sizeof(amu[0]);
+
+/* look up element by name, case insensitive.  Return atomic number if
+ * found, 0 if not found */
+static int find_element(const char* abbrv) {
+    for (int i=0; i<nelements; i++) {
+        if (!strcasecmp(abbrv, amu[i].abbreviation)) {
+            return i+1;
+        }
+    }
+    return 0;
+}
+
 void adef_t::parse(const char *aref) {
     if ( isdigit(*aref) ) { res = *aref - '1'; ++aref; }
     else { res = 0; }
@@ -40,7 +138,6 @@ void adef_t::parse(const char *aref) {
     else { rel = 0; }
     name = aref;
 }
-#endif
 
 static void print_msg(void *, const char *s) {
     fprintf(stdout, "%s\n", s);
@@ -240,7 +337,8 @@ void defs_t::import_charmm_topology(std::string const& path) {
                 print_msg(v,"ERROR!  Failed to parse mass statement.");
             } else {
                 type_t& type = add_type(tok[2]);
-                type.element = ntok>4?tok[4]:"";
+                const char* abbrv = ntok>4?tok[4]:"";
+                type.anum = find_element(abbrv);
                 type.mass = atof(tok[3]);
                 type.id = atoi(tok[1]);
             }

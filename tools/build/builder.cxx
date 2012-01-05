@@ -1,5 +1,4 @@
 #include "builder.hxx"
-#include "../../src/clone.hxx"
 #include <boost/foreach.hpp>
 #include <stdexcept>
 
@@ -29,6 +28,7 @@ namespace desres { namespace msys { namespace builder {
 
         std::vector<resdef_t> resdefs;
         IdList const& residues = mol->residuesForChain(chain);
+        IdSet added;
     
         /* assign resdef to each residue */
         BOOST_FOREACH(Id ires, residues) {
@@ -62,11 +62,21 @@ namespace desres { namespace msys { namespace builder {
                 if (!amap.count(adef.first)) {
                     printf("added atom %s\n", adef.first.c_str());
                     atm = mol->addAtom(ires);
+                    added.insert(atm);
                 } else {
                     atm = amap[adef.first];
                 }
                 mol->atom(atm).name = adef.first;
                 mol->atom(atm).charge = adef.second.charge;
+
+                TypeMap::const_iterator tdef = defs.types.find(adef.second.type);
+                if (tdef==defs.types.end()) {
+                    fprintf(stderr, "Invalid type '%s' for atom %s\n",
+                            adef.second.type.c_str(), adef.first.c_str());
+                } else {
+                    mol->atom(atm).atomic_number = tdef->second.anum;
+                    mol->atom(atm).mass = tdef->second.mass;
+                }
             }
 
             /* cache resdef for later */
@@ -93,8 +103,27 @@ namespace desres { namespace msys { namespace builder {
             }
         }
 
-        /* clone and replace */
-        SystemPtr tmp = Clone(mol, mol->atoms());
-        mol.swap(tmp);
+        /* Add coordinates from conf records */
+        for (Id i=0; i<residues.size(); i++) {
+            resdef_t const& resdef = resdefs[i];
+            Id res=residues[i];
+            Id prev = i==0 ? BadId : residues[i-1];
+            Id next = i==residues.size()-1 ? BadId : residues[i+1];
+
+            BOOST_FOREACH(conf_t const& c, resdef.confs) {
+                Id A = find_atom(mol, res, prev, next, c.def1);
+                Id B = find_atom(mol, res, prev, next, c.def2);
+                Id C = find_atom(mol, res, prev, next, c.def3);
+                Id D = find_atom(mol, res, prev, next, c.def4);
+                if (bad(A) || bad(B) || bad(C) || bad(D)) {
+                    printf("Skipping geometry for %s-%s-%s-%s\n",
+                            c.def1.name.c_str(), c.def2.name.c_str(),
+                            c.def3.name.c_str(), c.def4.name.c_str());
+                    continue;
+                }
+                if (added.count(B) || added.count(C)) continue;
+
+            }
+        }
     }
 }}}

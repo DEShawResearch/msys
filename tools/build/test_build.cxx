@@ -1,4 +1,5 @@
 #include "../../src/dms.hxx"
+#include "../../src/clone.hxx"
 #include "builder.hxx"
 
 using namespace desres::msys;
@@ -19,6 +20,7 @@ int main(int argc, char *argv[]) {
         builder::build(defs, dms, i);
     }
 
+    dms = Clone(dms, dms->orderedIds());
     ExportDMS(dms, argv[2], Provenance::fromArgs(argc, argv));
     return 0;
 }

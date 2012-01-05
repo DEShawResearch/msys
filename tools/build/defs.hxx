@@ -9,11 +9,11 @@
 namespace desres { namespace msys { namespace builder {
 
     struct type_t {
-        std::string element;
-        int         id;
-        double      mass;
+        int     id;
+        int     anum;
+        double  mass;
 
-        type_t() : id(), mass() {}
+        type_t() : id(), anum(), mass() {}
     };
     typedef std::map<std::string, type_t> TypeMap;
 
