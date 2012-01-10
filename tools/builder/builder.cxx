@@ -112,8 +112,6 @@ namespace desres { namespace msys { namespace builder {
     void build( defs_t const& defs, SystemPtr mol, Id chain,
                 std::string pfirst, std::string plast) {
     
-        mol->delBonds(mol->bonds());
-
         std::vector<resdef_t> resdefs;
         IdList const& residues = mol->residuesForChain(chain);
         IdSet added;
@@ -132,6 +130,12 @@ namespace desres { namespace msys { namespace builder {
                 return;
             }
             resdef_t resdef = idef->second;
+
+            /* remove all bonds in residue */
+            BOOST_FOREACH(Id atm, mol->atomsForResidue(ires)) {
+                mol->delBonds(mol->bondsForAtom(atm));
+            }
+
             /* apply patch to resdef if first or last.  Hierarchy is
              * 1) arguments to function
              * 2) residue-specific patches
