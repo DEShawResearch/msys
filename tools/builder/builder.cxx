@@ -23,10 +23,11 @@ namespace desres { namespace msys { namespace builder {
             return BadId;
         }
 
+        static const double def_bond = 1.0;
+        static const double def_angle = 109.5 * M_PI/180;
+        static const double def_dihedral = -120.0 * M_PI/180;
+
         bool wild_guess(SystemPtr mol, Id atm, IdSet const& added) {
-            static const double def_bond = 1.0;
-            static const double def_angle = 109.5 * M_PI/180;
-            static const double def_dihedral = -120.0 * M_PI/180;
 
             char name[256];
             sprintf(name, "%s %s %d", mol->atom(atm).name.c_str(), 
@@ -146,15 +147,7 @@ namespace desres { namespace msys { namespace builder {
                                 pfirst.c_str());
                         return;
                     }
-                    printf("original def has %d atoms, %d bonds, %d confs\n",
-                            (int)resdef.atoms.size(),
-                            (int)resdef.bonds.size(),
-                            (int)resdef.confs.size());
                     pdef->second.patch_topology(resdef);
-                    printf("patched def has %d atoms, %d bonds, %d confs\n",
-                            (int)resdef.atoms.size(),
-                            (int)resdef.bonds.size(),
-                            (int)resdef.confs.size());
                 }
             }
             if (i==residues.size()-1) {
@@ -248,12 +241,19 @@ namespace desres { namespace msys { namespace builder {
                 Id C = find_atom(mol, res, prev, next, c.def3);
                 Id D = find_atom(mol, res, prev, next, c.def4);
                 if (bad(A) || bad(B) || bad(C) || bad(D)) {
-                    printf("Skipping geometry for %s-%s-%s-%s\n",
+                    printf("Skipping geometry for %s:%d %s%s:%s:%s:%s%s\n",
+                            mol->residue(res).name.c_str(),
+                            mol->residue(res).resid,
+                            c.def1.rel>0 ? "+" : c.def1.rel<0 ? "-" : "",
                             c.def1.name.c_str(), c.def2.name.c_str(),
-                            c.def3.name.c_str(), c.def4.name.c_str());
+                            c.def3.name.c_str(), 
+                            c.def4.rel>0 ? "+" : c.def4.rel<0 ? "-" : "",
+                            c.def4.name.c_str());
                     continue;
                 }
-                if (added.count(B) || added.count(C)) continue;
+                if (added.count(B) || added.count(C)) {
+                    continue;
+                }
                 Float r=0, theta=0, phi=0;
                 Vec3 apos, bpos, cpos;
                 if ( mol->atom(D).atomic_number>1 && 
@@ -276,6 +276,8 @@ namespace desres { namespace msys { namespace builder {
                 } else {
                     continue;
                 }
+                if (r==0) r=def_bond;
+                if (theta==0) theta=def_angle;
                 Vec3 dpos = apply_dihedral_geometry(apos,bpos,cpos,r,theta,phi);
                 mol->atom(D).x=dpos.x;
                 mol->atom(D).y=dpos.y;
