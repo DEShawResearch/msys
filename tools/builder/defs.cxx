@@ -7,6 +7,7 @@
 #include "defs.hxx"
 
 #include <boost/shared_ptr.hpp>
+#include <boost/foreach.hpp>
 
 #include <stdexcept>
 
@@ -557,6 +558,17 @@ void resdef_t::patch_topology(resdef_t& topo) const {
 
     /* add structure from patch */
     topo.atoms.insert(atoms.begin(), atoms.end());
-    topo.bonds.insert(topo.bonds.begin(), bonds.begin(), bonds.end());
+
+    /* add bonds, checking that all necessary atoms are present */
+    BOOST_FOREACH(bond_t const& b, bonds) {
+        if (topo.atoms.count(b.def1.name)==0 || 
+            topo.atoms.count(b.def2.name)==0) {
+            printf("ERROR, not all atoms for patch bond %s-%s are present\n",
+                    b.def1.name.c_str(),
+                    b.def2.name.c_str());
+        }
+        topo.bonds.push_back(b);
+    }
+
     topo.confs.insert(topo.confs.begin(), confs.begin(), confs.end());
 }

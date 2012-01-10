@@ -118,13 +118,16 @@ namespace desres { namespace msys { namespace builder {
         IdList const& residues = mol->residuesForChain(chain);
         IdSet added;
     
+        printf("building chain '%s' with %d residues\n",
+                mol->chain(chain).name.c_str(), (int)residues.size());
+
         /* assign resdef to each residue */
         for (Id i=0; i<residues.size(); i++) {
             Id ires=residues[i];
             residue_t& res = mol->residue(ires);
             ResdefMap::const_iterator idef = defs.resdefs.find(res.name);
             if (idef==defs.resdefs.end()) {
-                fprintf(stderr, "No topology for residue '%s : %d'\n",
+                fprintf(stderr, "No topology for residue %s:%d\n",
                         res.name.c_str(), res.resid);
                 return;
             }
@@ -138,8 +141,11 @@ namespace desres { namespace msys { namespace builder {
                 if (!pfirst.size()) pfirst = resdef.pfirst;
                 if (!pfirst.size()) pfirst = defs.pfirst;
                 if (pfirst.size()) {
-                    printf("Applying patch '%s' at start of chain %s\n",
-                            pfirst.c_str(), mol->chain(chain).name.c_str());
+                    printf("Applying patch '%s' to %s:%d at start of chain '%s'\n",
+                            pfirst.c_str(), 
+                            res.name.c_str(),
+                            res.resid,
+                            mol->chain(chain).name.c_str());
 
                     ResdefMap::const_iterator pdef = defs.resdefs.find(pfirst);
                     if (pdef==defs.resdefs.end()) {
@@ -154,8 +160,11 @@ namespace desres { namespace msys { namespace builder {
                 if (!plast.size()) plast = resdef.plast;
                 if (!plast.size()) plast = defs.plast;
                 if (plast.size()) {
-                    printf("Applying patch '%s' at end of chain %s\n",
-                            plast.c_str(), mol->chain(chain).name.c_str());
+                    printf("Applying patch '%s' to %s:%d at end of chain '%s'\n",
+                            plast.c_str(), 
+                            res.name.c_str(),
+                            res.resid,
+                            mol->chain(chain).name.c_str());
 
                     ResdefMap::const_iterator pdef = defs.resdefs.find(plast);
                     if (pdef==defs.resdefs.end()) {
