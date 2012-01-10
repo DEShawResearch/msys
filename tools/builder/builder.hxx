@@ -6,7 +6,8 @@
 
 namespace desres { namespace msys { namespace builder {
 
-    void build( defs_t const& defs, SystemPtr mol, Id chain );
+    void build( defs_t const& defs, SystemPtr mol, Id chain,
+                std::string pfirst="", std::string plast="");
 
 }}}
 

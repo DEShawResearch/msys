@@ -74,6 +74,8 @@ namespace desres { namespace msys { namespace builder {
 
         resdef_t() : patch() {}
 
+        void patch_topology(resdef_t& topo) const;
+
         atom_t& add_atom(std::string const& name) {
             return atoms[name];
         }

@@ -18,20 +18,18 @@ class Defs(object):
         else:
             raise ValueError, "Unrecognized format '%s'" % format
 
-    def buildChain(self, chain):
+    def buildChain(self, chain, pfirst="", plast=""):
         ''' build a particular chain of the given system using the previously
         loaded topology definitions '''
         assert isinstance(chain, msys.Chain)
-        _builder.build(self._ptr, chain._ptr, chain.id)
+        _builder.build(self._ptr, chain._ptr, chain.id, pfirst, plast)
 
-
-def build(mol, defs):
-    ''' build all chains of the given System using defs.  Return the
-    new system with atoms put into natural order. '''
-    assert isinstance(mol, msys.System)
-    assert isinstance(defs, Defs)
-
-    mol=mol.clone()
-    for c in mol.chains: defs.buildChain(c)
-    return mol.sorted()
+    def build(self, mol):
+        ''' build all chains of the given System using defs.  Return the
+        new system with atoms put into natural order. '''
+        assert isinstance(mol, msys.System)
+    
+        mol=mol.clone()
+        for c in mol.chains: self.buildChain(c)
+        return mol.sorted()
 

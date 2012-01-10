@@ -107,7 +107,9 @@ namespace desres { namespace msys { namespace builder {
             return true;
         }
     }
-    void build( defs_t const& defs, SystemPtr mol, Id chain ) {
+
+    void build( defs_t const& defs, SystemPtr mol, Id chain,
+                std::string pfirst, std::string plast) {
     
         mol->delBonds(mol->bonds());
 
@@ -116,7 +118,8 @@ namespace desres { namespace msys { namespace builder {
         IdSet added;
     
         /* assign resdef to each residue */
-        BOOST_FOREACH(Id ires, residues) {
+        for (Id i=0; i<residues.size(); i++) {
+            Id ires=residues[i];
             residue_t& res = mol->residue(ires);
             ResdefMap::const_iterator idef = defs.resdefs.find(res.name);
             if (idef==defs.resdefs.end()) {
@@ -125,7 +128,51 @@ namespace desres { namespace msys { namespace builder {
                 return;
             }
             resdef_t resdef = idef->second;
-            /* TODO: apply patch to resdef if first or last */
+            /* apply patch to resdef if first or last.  Hierarchy is
+             * 1) arguments to function
+             * 2) residue-specific patches
+             * 3) global defaults in def_t.
+             */
+            if (i==0) {
+                if (!pfirst.size()) pfirst = resdef.pfirst;
+                if (!pfirst.size()) pfirst = defs.pfirst;
+                if (pfirst.size()) {
+                    printf("Applying patch '%s' at start of chain %s\n",
+                            pfirst.c_str(), mol->chain(chain).name.c_str());
+
+                    ResdefMap::const_iterator pdef = defs.resdefs.find(pfirst);
+                    if (pdef==defs.resdefs.end()) {
+                        fprintf(stderr, "No such patch residue '%s'\n",
+                                pfirst.c_str());
+                        return;
+                    }
+                    printf("original def has %d atoms, %d bonds, %d confs\n",
+                            (int)resdef.atoms.size(),
+                            (int)resdef.bonds.size(),
+                            (int)resdef.confs.size());
+                    pdef->second.patch_topology(resdef);
+                    printf("patched def has %d atoms, %d bonds, %d confs\n",
+                            (int)resdef.atoms.size(),
+                            (int)resdef.bonds.size(),
+                            (int)resdef.confs.size());
+                }
+            }
+            if (i==residues.size()-1) {
+                if (!plast.size()) plast = resdef.plast;
+                if (!plast.size()) plast = defs.plast;
+                if (plast.size()) {
+                    printf("Applying patch '%s' at end of chain %s\n",
+                            plast.c_str(), mol->chain(chain).name.c_str());
+
+                    ResdefMap::const_iterator pdef = defs.resdefs.find(plast);
+                    if (pdef==defs.resdefs.end()) {
+                        fprintf(stderr, "No such patch residue '%s'\n",
+                                plast.c_str());
+                        return;
+                    }
+                    pdef->second.patch_topology(resdef);
+                }
+            }
 
             /* Remove unrepresented atoms */
             IdList atoms = mol->atomsForResidue(ires);
@@ -135,7 +182,7 @@ namespace desres { namespace msys { namespace builder {
                 AtomMap::const_iterator adef=resdef.atoms.find(atm.name);
                 /* remove if not in resdef or if duplicate name */
                 if (adef==resdef.atoms.end() || amap.count(atm.name)) {
-                    printf("deleted atom %s\n", atm.name.c_str());
+                    //printf("deleted atom %s\n", atm.name.c_str());
                     mol->delAtom(atoms[j]);
                 } else {
                     amap[atm.name] = atoms[j];
@@ -145,7 +192,7 @@ namespace desres { namespace msys { namespace builder {
             BOOST_FOREACH(AtomMap::value_type const& adef, resdef.atoms) {
                 Id atm = BadId;
                 if (!amap.count(adef.first)) {
-                    printf("added atom %s\n", adef.first.c_str());
+                    //printf("added atom %s\n", adef.first.c_str());
                     atm = mol->addAtom(ires);
                     added.insert(atm);
                 } else {

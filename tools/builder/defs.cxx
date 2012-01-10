@@ -402,7 +402,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
                         print_msg(v,"ERROR!  Failed to parse delete atom statement.");
                     } else {
                         adef_t& atom = res->add_delatom();
-                        atom.parse(tok[1]);
+                        atom.parse(tok[2]);
                     }
                 } else if ( ! strncasecmp("ACCE",tok[1],4) ) {
                     ;
@@ -528,3 +528,35 @@ void defs_t::import_charmm_topology(std::string const& path) {
 
 }
 
+void resdef_t::patch_topology(resdef_t& topo) const {
+    for (unsigned i=0; i<delatoms.size(); i++) {
+        if (0==topo.atoms.erase(delatoms[i].name)) {
+            printf("ERROR, failed to erase atom %s\n", delatoms[i].name.c_str());
+        }
+        /* delete bonds to-from that atom */
+        unsigned j=topo.bonds.size();
+        while (j) {
+            --j;
+            if (topo.bonds[j].def1.name==delatoms[i].name ||
+                topo.bonds[j].def2.name==delatoms[i].name) {
+                topo.bonds.erase(topo.bonds.begin()+j);
+            }
+        }
+        /* delete confs to-from that atom */
+        j=topo.confs.size();
+        while (j) {
+            --j;
+            if (topo.confs[j].def1.name==delatoms[i].name ||
+                topo.confs[j].def2.name==delatoms[i].name ||
+                topo.confs[j].def3.name==delatoms[i].name ||
+                topo.confs[j].def4.name==delatoms[i].name) {
+                topo.confs.erase(topo.confs.begin()+j);
+            }
+        }
+    }
+
+    /* add structure from patch */
+    topo.atoms.insert(atoms.begin(), atoms.end());
+    topo.bonds.insert(topo.bonds.begin(), bonds.begin(), bonds.end());
+    topo.confs.insert(topo.confs.begin(), confs.begin(), confs.end());
+}
