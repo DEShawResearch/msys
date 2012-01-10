@@ -145,6 +145,15 @@ void System::setResidue(Id atm, Id res) {
     _atoms.at(atm).residue = res;
 }
 
+void System::setChain(Id res, Id chn) {
+    Id oldchn = _residues.at(res).chain;
+    if (oldchn == chn) return;
+    /* remove from previous chain */
+    find_and_remove(_chainresidues.at(oldchn), res);
+    _chainresidues.at(chn).push_back(res);
+    _residues.at(res).chain = chn;
+}
+
 void System::delResidue(Id id) {
     /* nothing to do if invalid residue */
     if (id>=_residues.size()) return;

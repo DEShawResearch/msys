@@ -192,6 +192,8 @@ class Residue(Handle):
     def chain(self):
         ''' parent chain '''
         return Chain(self._ptr, self.data().chain)
+    @chain.setter
+    def chain(self, chn): self._ptr.setChain(self._id, chn.id)
 
     @property
     def resid(self):

@@ -320,6 +320,9 @@ namespace desres { namespace msys {
         /* assign the atom to the given residue */
         void setResidue(Id atom, Id residue);
 
+        /* assign the residue to the given chain */
+        void setChain(Id residue, Id chain);
+
         /* extended atom properties */
         Id atomPropCount() const;
         String atomPropName(Id i) const;

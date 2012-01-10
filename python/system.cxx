@@ -328,6 +328,9 @@ namespace desres { namespace msys {
             .def("setResidue",  &System::setResidue)
             .def("bondedAtoms", &System::bondedAtoms)
 
+            /* residue props */
+            .def("setChain",    &System::setChain)
+
             /* extended atom props */
             .def("atomPropCount",&System::atomPropCount)
             .def("atomPropName", &System::atomPropName)

@@ -140,7 +140,7 @@ namespace desres { namespace msys { namespace builder {
             if (i==0) {
                 if (!pfirst.size()) pfirst = resdef.pfirst;
                 if (!pfirst.size()) pfirst = defs.pfirst;
-                if (pfirst.size()) {
+                if (pfirst.size() && strcasecmp(pfirst.c_str(), "none")) {
                     printf("Applying patch '%s' to %s:%d at start of chain '%s'\n",
                             pfirst.c_str(), 
                             res.name.c_str(),
@@ -159,7 +159,7 @@ namespace desres { namespace msys { namespace builder {
             if (i==residues.size()-1) {
                 if (!plast.size()) plast = resdef.plast;
                 if (!plast.size()) plast = defs.plast;
-                if (plast.size()) {
+                if (plast.size() && strcasecmp(plast.c_str(), "none")) {
                     printf("Applying patch '%s' to %s:%d at end of chain '%s'\n",
                             plast.c_str(), 
                             res.name.c_str(),
