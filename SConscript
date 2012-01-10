@@ -1,7 +1,7 @@
 Import('env')
 env.Append(
-        CFLAGS='-O0 -g',
-        CXXFLAGS='-O0 -Wall -Werror -g -std=c++0x',
+        CFLAGS='-O2 -g',
+        CXXFLAGS='-O2 -Wall -Werror -g -std=c++0x',
         )
 
 env.SConsignFile('%s/.sconsign' % (env['OBJDIR'].strip('#')))
