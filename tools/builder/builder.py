@@ -24,6 +24,21 @@ class Defs(object):
         assert isinstance(chain, msys.Chain)
         _builder.build(self._ptr, chain._ptr, chain.id, pfirst, plast)
 
+    def patch(self, pres, *targets):
+        ''' apply the patch residue with the given name to targets given
+        by the remaining arguments. '''
+        ids=msys._msys.IdList()
+        mols=set()
+        for t in targets:
+            assert isinstance(t, msys.Residue)
+            mols.add(t._ptr)
+            ids.append(t.id)
+            if len(mols)>1:
+                raise ValueError, "all targets must be from the same System"
+        if not mols:
+            raise ValueError, "need at least one target"
+        _builder.patch(self._ptr, pres, mols.pop(), ids)
+
     def build(self, mol):
         ''' build all chains of the given System using defs.  Return the
         new system with atoms put into natural order. '''

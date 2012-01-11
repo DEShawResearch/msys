@@ -9,6 +9,10 @@ namespace desres { namespace msys { namespace builder {
     void build( defs_t const& defs, SystemPtr mol, Id chain,
                 std::string pfirst="", std::string plast="");
 
+    void patch( defs_t const& defs, std::string const& pres, 
+                SystemPtr mol, IdList const& residues );
+
+
 }}}
 
 #endif

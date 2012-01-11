@@ -318,4 +318,57 @@ namespace desres { namespace msys { namespace builder {
                 (int)added.size());
 
     }
+
+    void patch( defs_t const& defs, std::string const& pres,
+                SystemPtr mol, IdList const& residues ) {
+
+        printf("applying patch %s\n", pres.c_str());
+        ResdefMap::const_iterator it=defs.resdefs.find(pres);
+        if (it==defs.resdefs.end()) {
+            throw std::runtime_error("patch: no such patch definition");
+        }
+        resdef_t const& def = it->second;
+        if (!def.patch) {
+            throw std::runtime_error("patch: specified pres is not a patch");
+        }
+        if (residues.size()<1) {
+            throw std::runtime_error("patch: need at least one residue");
+        }
+
+        /* remove atoms */
+        for (unsigned i=0; i<def.delatoms.size(); i++) {
+            adef_t const& adef = def.delatoms[i];
+            if (adef.res >= (int)residues.size()) {
+                fprintf(stderr, "patch residue %s requests residue %d, but only %d targets provided\n",
+                        pres.c_str(), adef.res+1, (int)residues.size());
+                throw std::runtime_error("patch: invalid targets");
+            }
+            assert(adef.res>=0);
+            assert(adef.rel==0);    /* does this ever happen? */
+            Id atm = find_atom(mol, residues.at(adef.res), BadId, BadId, adef);
+            if (bad(atm)) {
+                fprintf(stderr, "patch residue %s could find atom to delete: %s\n", pres.c_str(), adef.name.c_str());
+                throw std::runtime_error("patch: bad target");
+            }
+            printf("deleting atom %s in residue %s:%d chain '%s'\n",
+                    adef.name.c_str(), 
+                    mol->residue(residues.at(adef.res)).name.c_str(),
+                    mol->residue(residues.at(adef.res)).resid,
+                    mol->chain(mol->residue(residues.at(adef.res)).chain).name.c_str());
+
+            mol->delAtom(atm);
+        }
+
+        /* remove bonds? */
+        assert (def.delbonds.size()==0);
+
+        /* add/replace atoms */
+        for (AtomMap::const_iterator it=def.atoms.begin(); it!=def.atoms.end();
+                ++it) {
+
+        }
+
+
+
+    }
 }}}

@@ -13,5 +13,6 @@ BOOST_PYTHON_MODULE(_builder) {
         ;
 
     def("build", build);
+    def("patch", patch);
 }
 
