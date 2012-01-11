@@ -185,9 +185,8 @@ namespace desres { namespace msys { namespace builder {
             std::map<std::string, Id> amap;
             for (Id j=0; j<atoms.size(); j++) {
                 msys::atom_t& atm = mol->atom(atoms[j]);
-                AtomMap::const_iterator adef=resdef.atoms.find(atm.name);
                 /* remove if not in resdef or if duplicate name */
-                if (adef==resdef.atoms.end() || amap.count(atm.name)) {
+                if (amap.count(atm.name) || bad(resdef.atom_index(atm.name))) {
                     //printf("deleted atom %s\n", atm.name.c_str());
                     mol->delAtom(atoms[j]);
                 } else {
@@ -195,22 +194,22 @@ namespace desres { namespace msys { namespace builder {
                 }
             }
             /* Add missing atoms */
-            BOOST_FOREACH(AtomMap::value_type const& adef, resdef.atoms) {
+            BOOST_FOREACH(atom_t const& atom, resdef.atoms) {
                 Id atm = BadId;
-                if (!amap.count(adef.first)) {
+                if (!amap.count(atom.def.name)) {
                     //printf("added atom %s\n", adef.first.c_str());
                     atm = mol->addAtom(ires);
                     added.insert(atm);
                 } else {
-                    atm = amap[adef.first];
+                    atm = amap[atom.def.name];
                 }
-                mol->atom(atm).name = adef.first;
-                mol->atom(atm).charge = adef.second.charge;
+                mol->atom(atm).name = atom.def.name;
+                mol->atom(atm).charge = atom.charge;
 
-                TypeMap::const_iterator tdef = defs.types.find(adef.second.type);
+                TypeMap::const_iterator tdef = defs.types.find(atom.type);
                 if (tdef==defs.types.end()) {
                     fprintf(stderr, "Invalid type '%s' for atom %s\n",
-                            adef.second.type.c_str(), adef.first.c_str());
+                            atom.type.c_str(), atom.def.name.c_str());
                 } else {
                     mol->atom(atm).atomic_number = tdef->second.anum;
                     mol->atom(atm).mass = tdef->second.mass;
@@ -363,10 +362,7 @@ namespace desres { namespace msys { namespace builder {
         assert (def.delbonds.size()==0);
 
         /* add/replace atoms */
-        for (AtomMap::const_iterator it=def.atoms.begin(); it!=def.atoms.end();
-                ++it) {
-
-        }
+        //BOOST_FOREACH(atom_t const& atom, def.atoms) { }
 
 
 

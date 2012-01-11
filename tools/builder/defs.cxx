@@ -244,9 +244,10 @@ void defs_t::import_charmm_topology(std::string const& path) {
                 print_msg(v,"ERROR!  Failed to parse bond statement.");
             } else {
                 for ( itok = 1; itok < ntok; itok += 2 ) {
-                    bond_t& bond = res->add_bond();
+                    bond_t bond;
                     bond.def1.parse(tok[itok]);
                     bond.def2.parse(tok[itok+1]);
+                    res->bonds.push_back(bond);
                 }
             }
         }
@@ -327,9 +328,11 @@ void defs_t::import_charmm_topology(std::string const& path) {
             } else if ( ntok > 4 ) {
                 print_msg(v,"ERROR!  Explicit exclusions or fluctuating charges not supported, atom ignored.");
             } else {
-                atom_t& atom = res->add_atom(tok[1]);
+                atom_t atom;
+                atom.def.parse(tok[1]);
                 atom.type = tok[2];
                 atom.charge = atof(tok[3]);
+                res->atoms.push_back(atom);
             }
         }
         else if ( ! strncasecmp("MASS",tok[0],4) ) {
@@ -380,7 +383,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
             if ( ntok < 10 || !res) {
                 print_msg(v,"ERROR!  Failed to parse internal coordinate statement.");
             } else {
-                conf_t& conf = res->add_conf();
+                conf_t conf;
                 conf.improper = *tok[3]=='*';
                 conf.def1.parse(tok[1]);
                 conf.def2.parse(tok[2]);
@@ -391,6 +394,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
                 conf.phi = atof(tok[7]) * M_PI / 180;
                 conf.a2 = atof(tok[8]) * M_PI / 180;
                 conf.r2 = atof(tok[9]);
+                res->confs.push_back(conf);
             }
         }
         else if ( ! strncasecmp("DELE",tok[0],4) ) {
@@ -402,8 +406,9 @@ void defs_t::import_charmm_topology(std::string const& path) {
                     if ( ntok < 3 ) {
                         print_msg(v,"ERROR!  Failed to parse delete atom statement.");
                     } else {
-                        adef_t& atom = res->add_delatom();
+                        adef_t atom;
                         atom.parse(tok[2]);
+                        res->delatoms.push_back(atom);
                     }
                 } else if ( ! strncasecmp("ACCE",tok[1],4) ) {
                     ;
@@ -416,9 +421,10 @@ void defs_t::import_charmm_topology(std::string const& path) {
                         print_msg(v,"ERROR!  Failed to parse delete bond statement.");
                     } else {
                         for ( itok = 2; itok < ntok; itok += 2 ) {
-                            bond_t& bond = res->add_delbond();
+                            bond_t bond;
                             bond.def1.parse(tok[itok]);
                             bond.def2.parse(tok[itok+1]);
+                            res->delbonds.push_back(bond);
                         }
                     }
                 } else if ( ! strncasecmp("ANGL",tok[1],4) ||
@@ -472,12 +478,14 @@ void defs_t::import_charmm_topology(std::string const& path) {
                     if ( ntok < 6 ) {
                         print_msg(v,"ERROR!  Failed to parse delete internal coordinate statement.");
                     } else {
-                        conf_t& conf = res->add_conf();
+                        conf_t conf;
                         conf.improper = *tok[4]=='*';
                         conf.def1.parse(tok[2]);
                         conf.def2.parse(tok[3]);
                         conf.def3.parse(tok[4] + conf.improper);
                         conf.def4.parse(tok[5]);
+                        // delconfs?? 
+                        // res->delconfs.push_back(conf);
                     }
                 } else {
                     print_msg(v,"ERROR!  Failed to parse delete statement.");
@@ -531,8 +539,12 @@ void defs_t::import_charmm_topology(std::string const& path) {
 
 void resdef_t::patch_topology(resdef_t& topo) const {
     for (unsigned i=0; i<delatoms.size(); i++) {
-        if (0==topo.atoms.erase(delatoms[i].name)) {
-            printf("ERROR, failed to erase atom %s\n", delatoms[i].name.c_str());
+        Id ind = topo.atom_index(delatoms[i].name);
+        if (bad(ind)) {
+            printf("ERROR, failed to erase atom %s\n", 
+                    delatoms[i].name.c_str());
+        } else {
+            topo.atoms.erase(topo.atoms.begin()+ind);
         }
         /* delete bonds to-from that atom */
         unsigned j=topo.bonds.size();
@@ -557,12 +569,12 @@ void resdef_t::patch_topology(resdef_t& topo) const {
     }
 
     /* add structure from patch */
-    topo.atoms.insert(atoms.begin(), atoms.end());
+    topo.atoms.insert(topo.atoms.end(), atoms.begin(), atoms.end());
 
     /* add bonds, checking that all necessary atoms are present */
     BOOST_FOREACH(bond_t const& b, bonds) {
-        if (topo.atoms.count(b.def1.name)==0 || 
-            topo.atoms.count(b.def2.name)==0) {
+        if (bad(topo.atom_index(b.def1.name)) ||
+            bad(topo.atom_index(b.def2.name))) {
             printf("ERROR, not all atoms for patch bond %s-%s are present\n",
                     b.def1.name.c_str(),
                     b.def2.name.c_str());

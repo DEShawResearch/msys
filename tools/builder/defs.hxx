@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include "../../src/types.hxx"
 
 namespace desres { namespace msys { namespace builder {
 
@@ -28,12 +29,12 @@ namespace desres { namespace msys { namespace builder {
     };
 
     struct atom_t {
+        adef_t      def;
         std::string type;
         double      charge;
 
         atom_t() : charge() {}
     };
-    typedef std::map<std::string, atom_t> AtomMap;
 
     struct bond_t {
         adef_t      def1;
@@ -60,7 +61,7 @@ namespace desres { namespace msys { namespace builder {
     };
 
     struct resdef_t {
-        AtomMap             atoms;
+        std::vector<atom_t> atoms;
         std::vector<bond_t> bonds;
         std::vector<conf_t> confs;
 
@@ -76,25 +77,11 @@ namespace desres { namespace msys { namespace builder {
 
         void patch_topology(resdef_t& topo) const;
 
-        atom_t& add_atom(std::string const& name) {
-            return atoms[name];
-        }
-        bond_t& add_bond() {
-            bonds.resize(bonds.size()+1);
-            return bonds.back();
-        }
-        conf_t& add_conf() {
-            confs.resize(confs.size()+1);
-            return confs.back();
-        }
-
-        adef_t& add_delatom() {
-            delatoms.resize(delatoms.size()+1);
-            return delatoms.back();
-        }
-        bond_t& add_delbond() {
-            delbonds.resize(delbonds.size()+1);
-            return delbonds.back();
+        Id atom_index(std::string const& name) const {
+            for (Id i=0; i<atoms.size(); i++) {
+                if (atoms[i].def.name==name) return i;
+            }
+            return BadId;
         }
     };
 
