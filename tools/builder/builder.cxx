@@ -361,10 +361,109 @@ namespace desres { namespace msys { namespace builder {
         /* remove bonds? */
         assert (def.delbonds.size()==0);
 
+
+        IdSet added;
         /* add/replace atoms */
-        //BOOST_FOREACH(atom_t const& atom, def.atoms) { }
+        BOOST_FOREACH(atom_t const& atom, def.atoms) {
+            Id ires = residues.at(atom.def.res);
+            Id atm = find_atom(mol, ires, BadId, BadId, atom.def);
+            if (bad(atm)) {
+                atm = mol->addAtom(ires);
+                added.insert(atm);
+            }
 
+            mol->atom(atm).name = atom.def.name;
+            mol->atom(atm).charge = atom.charge;
 
+            TypeMap::const_iterator tdef = defs.types.find(atom.type);
+            if (tdef==defs.types.end()) {
+                fprintf(stderr, "Invalid type '%s' for atom %s\n",
+                        atom.type.c_str(), atom.def.name.c_str());
+            } else {
+                mol->atom(atm).atomic_number = tdef->second.anum;
+                mol->atom(atm).mass = tdef->second.mass;
+            }
+
+        }
+
+        /* add bonds */
+        BOOST_FOREACH(bond_t const& b, def.bonds) {
+            Id res1 = residues.at(b.def1.res);
+            Id res2 = residues.at(b.def2.res);
+            Id atm1 = find_atom(mol, res1, BadId, BadId, b.def1);
+            Id atm2 = find_atom(mol, res2, BadId, BadId, b.def2);
+            if (bad(atm1) || bad(atm2)) {
+                printf("Error, bond to nonexistent atom %s-%s\n",
+                        b.def1.name.c_str(), b.def2.name.c_str());
+                continue;
+            }
+            mol->addBond(atm1, atm2);
+        }
+
+        /* conformations */
+        BOOST_FOREACH(conf_t const& c, def.confs) {
+            Id res1 = residues.at(c.def1.res);
+            Id res2 = residues.at(c.def2.res);
+            Id res3 = residues.at(c.def3.res);
+            Id res4 = residues.at(c.def4.res);
+            Id A = find_atom(mol, res1, BadId, BadId, c.def1);
+            Id B = find_atom(mol, res2, BadId, BadId, c.def2);
+            Id C = find_atom(mol, res3, BadId, BadId, c.def3);
+            Id D = find_atom(mol, res4, BadId, BadId, c.def4);
+            if (bad(A) || bad(B) || bad(C) || bad(D)) {
+                throw std::runtime_error("missing atoms for conf");
+            }
+            if (added.count(B) || added.count(C)) {
+                continue;
+            }
+            Float r=0, theta=0, phi=0;
+            Vec3 apos, bpos, cpos;
+            if ( mol->atom(D).atomic_number>1 && 
+                 added.count(A)==0 && added.count(D)==1) { 
+                r=c.r2;
+                theta=c.a2;
+                phi=c.phi;
+                apos = Vec3(&mol->atom(A).x);
+                bpos = Vec3(&mol->atom(B).x);
+                cpos = Vec3(&mol->atom(C).x);
+            } else if ( mol->atom(A).atomic_number>1 &&
+                 added.count(A)==1 && added.count(D)==0) {
+                r=c.r1;
+                theta=c.a1;
+                phi=c.phi;
+                apos = Vec3(&mol->atom(D).x);
+                bpos = Vec3(&mol->atom(C).x);
+                cpos = Vec3(&mol->atom(B).x);
+                D=A;
+            } else {
+                continue;
+            }
+            if (r==0) r=def_bond;
+            if (theta==0) theta=def_angle;
+            Vec3 dpos = apply_dihedral_geometry(apos,bpos,cpos,r,theta,phi);
+            mol->atom(D).x=dpos.x;
+            mol->atom(D).y=dpos.y;
+            mol->atom(D).z=dpos.z;
+            added.erase(added.find(D));
+
+            /* if we guess a heavy atom position, guess its attached H */
+            IdList bonded = mol->bondedAtoms(D);
+            BOOST_FOREACH(Id b, bonded) {
+                if (mol->atom(b).atomic_number==1) {
+                    added.insert(b);
+                }
+            }
+        } /* for each conf */
+
+        /* make a chemically reasonable guess for atoms with one bond */
+        IdSet tmp(added);
+        BOOST_FOREACH(Id atm, tmp) {
+            if (wild_guess(mol, atm, added)) {
+                added.erase(added.find(atm));
+            }
+        }
+        if (added.size()) printf("failed to guess positions for %d atoms\n",
+                (int)added.size());
 
     }
 }}}
