@@ -756,6 +756,22 @@ class System(object):
     def positions(self, pos):
         self._ptr.setPositions(pos)
 
+    @property
+    def center(self):
+        ''' return geometric center of positions of all atoms '''
+        n=self.natoms
+        if n==0: return [0,0,0]
+        xyz=reduce(lambda a,b: (a[0]+b[0],a[1]+b[1],a[2]+b[2]), self.positions)
+        return [a/n for a in xyz]
+
+    def translate(self, xyz):
+        ''' shift coordinates by given amount '''
+        x,y,z = xyz
+        for id in self._ptr.atoms():
+            atm=self._ptr.atom(id)
+            atm.x += x
+            atm.y += y
+            atm.z += z
 
     ###
     ### bond properties
