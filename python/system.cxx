@@ -160,14 +160,14 @@ namespace {
 
     PyObject* sys_getpos(System const& sys) {
         PyObject *result = PyList_New(sys.atomCount());
-        Id i,n = sys.maxAtomId();
+        Id i,j=0,n = sys.maxAtomId();
         for (i=0; i<n; i++) {
             if (!sys.hasAtom(i)) continue;
             PyObject* xyz = PyList_New(3);
             PyList_SET_ITEM(xyz,0, PyFloat_FromDouble(sys.atom(i).x));
             PyList_SET_ITEM(xyz,1, PyFloat_FromDouble(sys.atom(i).y));
             PyList_SET_ITEM(xyz,2, PyFloat_FromDouble(sys.atom(i).z));
-            PyList_SET_ITEM(result,i,xyz);
+            PyList_SET_ITEM(result,j++,xyz);
         }
         return result;
     }
