@@ -75,13 +75,8 @@ def dump_terms(cmd, ipath, out, table, without_paraminfo, reorder ):
         else:
             params.sort()
 
-        p=['round(%s,6) as %s' % (x,x) for x in params]
-        for i, x in enumerate(params):
-            if x=='cmapid':
-                p[i]=x
-
         a=','.join(atoms) 
-        s=','.join(atoms+p)
+        s=','.join(atoms+params)
         sql='select "%s", "%s", %s from %s' % (table, b, s, b)
         if reorder:
             sql += ' order by %s' % a
@@ -119,7 +114,7 @@ def dmsdump(ipath, out, without_provenance = False,
     # bonds
     atoms, params = get_columns(ipath, 'bond')
     if('order' in params):
-      subprocess.call(cmd+['select "bond", p0,p1, round("order") as "order" from bond order by p0, p1'], stdout=out)
+      subprocess.call(cmd+['select "bond", p0,p1, "order" from bond order by p0, p1'], stdout=out)
     else:
       subprocess.call(cmd+['select "bond", p0,p1          from bond order by p0, p1'], stdout=out)
     newline(out)
@@ -133,7 +128,7 @@ def dmsdump(ipath, out, without_provenance = False,
     # cmap, if present
     for c in (1,2,3,4,5,6):
         table="cmap%d" % c
-        sql='select "%s", phi,psi,round(energy,6) as energy from %s' % (table,table)
+        sql='select "%s", phi,psi,energy from %s' % (table,table)
         subprocess.call(cmd+[sql], stdout=out, stderr=subprocess.PIPE)
 
     # nonbonded
@@ -145,7 +140,7 @@ def dmsdump(ipath, out, without_provenance = False,
         if p in params:
             params.remove(p)
     params.sort()
-    s = ','.join(['round(nb.%s,6) as %s' % (p,p) for p in params])
+    s = ','.join(['nb.%s as %s' % (p,p) for p in params])
     sql='select "nonbonded", p.id, %s from particle as p join nonbonded_param as nb on p.nbtype = nb.id' % s
     subprocess.call(cmd+[sql], stdout=out, stderr=subprocess.PIPE)
 
@@ -158,7 +153,7 @@ def dmsdump(ipath, out, without_provenance = False,
     # alchemical_particle
     if has_table(ipath, 'alchemical_particle'):
         s = ','.join(
-                ['round(nbA.%s,6) as %sA, round(nbB.%s,6) as %sB' % (p,p,p,p) 
+                ['nbA.%s as %sA, nbB.%s as %sB' % (p,p,p,p) 
                     for p in params])
         sql='''
         select "alchemical_particle", p.p0 as p0, moiety, chargeA, chargeB, %s
