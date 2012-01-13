@@ -165,7 +165,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
     unsigned int utmp;
 
     FILE* file = fopen(path.c_str(), "r");
-    if (!file) throw std::runtime_error("error opening topology file");
+    if (!file) MSYS_FAIL("error opening topology file at '" << path << "'");
     boost::shared_ptr<FILE> ptr(file, fclose);
     
     static const bool all_caps = false;
@@ -175,10 +175,11 @@ void defs_t::import_charmm_topology(std::string const& path) {
     skip = 0;
     skipall = 0;
     stream = 0;
+    int lineno = 0;
 
     resdef_t * res = NULL;
 
-    while ( (ntok = charmm_get_tokens(tok,TOKLEN,sbuf,BUFLEN,file,all_caps)) ) {
+    while ( (ntok = charmm_get_tokens(tok,TOKLEN,sbuf,BUFLEN,file,all_caps, &lineno)) ) {
         if ( ! tok[0][0] ) {
             print_msg(v,tok[1]);
             continue;
@@ -241,7 +242,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
                 ! strncasecmp("TRIP",tok[0],4) ) {
             debug_msg("Recognized bond statement.");
             if ( ntok < 3 || (ntok-1)%2 || !res) {
-                print_msg(v,"ERROR!  Failed to parse bond statement.");
+                MSYS_FAIL("Failed parsing bond statement at line " << lineno);
             } else {
                 for ( itok = 1; itok < ntok; itok += 2 ) {
                     bond_t bond;
@@ -255,7 +256,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
                 ! strncasecmp("THET",tok[0],4) ) {
             debug_msg("Recognized angle statement.");
             if ( ntok < 4 || (ntok-1)%3 ) {
-                print_msg(v,"ERROR!  Failed to parse angle statement.");
+                MSYS_FAIL("Failed parsing angle statement at line " << lineno);
             } else {
 #if 0
                 for ( itok = 1; itok < ntok; itok += 3 ) {
@@ -271,7 +272,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
         else if ( ! strncasecmp("DIHE",tok[0],4) ) {
             debug_msg("Recognized dihedral statement.");
             if ( ntok < 5 || (ntok-1)%4 ) {
-                print_msg(v,"ERROR!  Failed to parse dihedral statement.");
+                MSYS_FAIL("Failed parsing dihedral statement at line " << lineno);
             } else {
 #if 0
                 for ( itok = 1; itok < ntok; itok += 4 ) {
@@ -289,7 +290,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
                 ! strncasecmp("IMPR",tok[0],4) ) {
             debug_msg("Recognized improper statement.");
             if ( ntok < 5 || (ntok-1)%4 ) {
-                print_msg(v,"ERROR!  Failed to parse improper statement.");
+                MSYS_FAIL("Failed parsing improper statement at line " << lineno);
             } else {
 #if 0
                 for ( itok = 1; itok < ntok; itok += 4 ) {
@@ -306,7 +307,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
         else if ( ! strncasecmp("CMAP",tok[0],4) ) {
             debug_msg("Recognized CMAP statement.");
             if ( ntok != 9 ) {
-                print_msg(v,"ERROR!  Failed to parse CMAP statement.");
+                MSYS_FAIL("Failed parsing cmap statement at line " << lineno);
             } else {
 #if 0
                 const char* s[8]; int i[8], j[8];
@@ -324,9 +325,10 @@ void defs_t::import_charmm_topology(std::string const& path) {
         else if ( ! strncasecmp("ATOM",tok[0],4) ) {
             debug_msg("Recognized atom statement.");
             if ( ntok < 4 || !res ) {
-                print_msg(v,"ERROR!  Failed to parse atom statement.");
+                MSYS_FAIL("Failed parsing atom statement at line " << lineno);
             } else if ( ntok > 4 ) {
-                print_msg(v,"ERROR!  Explicit exclusions or fluctuating charges not supported, atom ignored.");
+                // we don't care about forcefield anyway... 
+                //print_msg(v,"ERROR!  Explicit exclusions or fluctuating charges not supported, atom ignored.");
             } else {
                 atom_t atom;
                 atom.def.parse(tok[1]);
@@ -338,7 +340,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
         else if ( ! strncasecmp("MASS",tok[0],4) ) {
             debug_msg("Recognized mass statement.");
             if ( ntok < 4 ) {
-                print_msg(v,"ERROR!  Failed to parse mass statement.");
+                MSYS_FAIL("Failed parsing mass statement at line " << lineno);
             } else {
                 type_t& type = add_type(tok[2]);
                 const char* abbrv = ntok>4?tok[4]:"";
@@ -364,7 +366,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
         else if ( ! strncasecmp("DEFA",tok[0],4) ) {
             debug_msg("Recognized default patch statement.");
             if ( ntok < 3 || (ntok-1)%2 ) {
-                print_msg(v,"ERROR!  Failed to parse default patching statement.");
+                MSYS_FAIL("Failed parsing default patch statement at line " << lineno);
             } else {
                 for ( itok = 1; itok < ntok; itok += 2 ) {
                     if ( ! strncasecmp("FIRS",tok[itok],4) ) {
@@ -372,7 +374,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
                     } else if ( ! strncasecmp("LAST",tok[itok],4) ) {
                         this->plast = tok[itok+1];
                     } else {
-                        print_msg(v,"ERROR!  Failed to parse default patching statement.");
+                        MSYS_FAIL("Failed parsing default patch statement at line " << lineno);
                     }
                 }
             }
@@ -381,7 +383,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
                 ! strncasecmp("IC",tok[0],4) ) {
             debug_msg("Recognized internal coordinate statement.");
             if ( ntok < 10 || !res) {
-                print_msg(v,"ERROR!  Failed to parse internal coordinate statement.");
+                MSYS_FAIL("Failed parsing internal coordinate statement at line " << lineno);
             } else {
                 conf_t conf;
                 conf.improper = *tok[3]=='*';
@@ -400,11 +402,11 @@ void defs_t::import_charmm_topology(std::string const& path) {
         else if ( ! strncasecmp("DELE",tok[0],4) ) {
             debug_msg("Recognized delete statement.");
             if ( ntok < 2 || !res ) {
-                print_msg(v,"ERROR!  Failed to parse delete statement.");
+                MSYS_FAIL("Failed parsing delete statement at line " << lineno);
             } else {
                 if ( ! strncasecmp("ATOM",tok[1],4) ) {
                     if ( ntok < 3 ) {
-                        print_msg(v,"ERROR!  Failed to parse delete atom statement.");
+                        MSYS_FAIL("Failed parsing delete atom statement at line " << lineno);
                     } else {
                         adef_t atom;
                         atom.parse(tok[2]);
@@ -418,7 +420,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
                         ! strncasecmp("DOUB",tok[1],4) ||
                         ! strncasecmp("TRIP",tok[1],4) ) {
                     if ( ntok < 4 || (ntok-2)%2 ) {
-                        print_msg(v,"ERROR!  Failed to parse delete bond statement.");
+                        MSYS_FAIL("Failed parsing delete bond statement at line " << lineno);
                     } else {
                         for ( itok = 2; itok < ntok; itok += 2 ) {
                             bond_t bond;
@@ -430,7 +432,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
                 } else if ( ! strncasecmp("ANGL",tok[1],4) ||
                         ! strncasecmp("THET",tok[1],4) ) {
                     if ( ntok < 5 || (ntok-2)%3 ) {
-                        print_msg(v,"ERROR!  Failed to parse delete angle statement.");
+                        MSYS_FAIL("Failed parsing delete angle statement at line " << lineno);
                     } else {
 #if 0
                         for ( itok = 2; itok < ntok; itok += 3 ) {
@@ -444,7 +446,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
                     }
                 } else if ( ! strncasecmp("DIHE",tok[1],4) ) {
                     if ( ntok < 6 || (ntok-2)%4 ) {
-                        print_msg(v,"ERROR!  Failed to parse delete dihedral statement.");
+                        MSYS_FAIL("Failed parsing delete dihedral statement at line " << lineno);
                     } else {
 #if 0
                         for ( itok = 2; itok < ntok; itok += 4 ) {
@@ -460,7 +462,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
                 } else if ( ! strncasecmp("IMPH",tok[1],4) ||
                         ! strncasecmp("IMPR",tok[1],4) ) {
                     if ( ntok < 6 || (ntok-2)%4 ) {
-                        print_msg(v,"ERROR!  Failed to parse delete improper statement.");
+                        MSYS_FAIL("Failed parsing delete improper statement at line " << lineno);
                     } else {
 #if 0
                         for ( itok = 2; itok < ntok; itok += 4 ) {
@@ -476,7 +478,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
                 } else if ( ! strncasecmp("BILD",tok[1],4) ||
                         ! strncasecmp("IC",tok[1],4) ) {
                     if ( ntok < 6 ) {
-                        print_msg(v,"ERROR!  Failed to parse delete internal coordinate statement.");
+                        MSYS_FAIL("Failed parsing delete internal coordinate statement at line " << lineno);
                     } else {
                         conf_t conf;
                         conf.improper = *tok[4]=='*';
@@ -488,7 +490,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
                         // res->delconfs.push_back(conf);
                     }
                 } else {
-                    print_msg(v,"ERROR!  Failed to parse delete statement.");
+                    MSYS_FAIL("Failed parsing delete statement at line " << lineno);
                 }
             }
         }
@@ -498,7 +500,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
         else if ( ! strncasecmp("PATC",tok[0],4) ) {
             debug_msg("Recognized patching statement.");
             if ( ntok < 3 || (ntok-1)%2 ) {
-                print_msg(v,"ERROR!  Failed to parse patching statement.");
+                MSYS_FAIL("Failed parsing patch statement at line " << lineno);
             } else {
                 for ( itok = 1; itok < ntok; itok += 2 ) {
                     if ( ! strncasecmp("FIRS",tok[itok],4) ) {
@@ -506,7 +508,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
                     } else if ( ! strncasecmp("LAST",tok[itok],4) ) {
                         res->plast = tok[itok+1];
                     } else {
-                        print_msg(v,"ERROR!  Failed to parse patching statement.");
+                        MSYS_FAIL("Failed parsing patch statement at line " << lineno);
                     }
                 }
             }
@@ -514,7 +516,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
         else if ( ! strncasecmp("RESI",tok[0],4) ) {
             debug_msg("Recognized residue statement.");
             if ( ntok < 2 ) {
-                print_msg(v,"ERROR!  Failed to parse residue statement.");
+                MSYS_FAIL("Failed parsing residue statement at line " << lineno);
             } else {
                 res = &add_resdef(tok[1]);
             }
@@ -522,15 +524,14 @@ void defs_t::import_charmm_topology(std::string const& path) {
         else if ( ! strncasecmp("PRES",tok[0],4) ) {
             debug_msg("Recognized patch residue statement.");
             if ( ntok < 2 ) {
-                print_msg(v,"ERROR!  Failed to parse patch residue statement.");
+                MSYS_FAIL("Failed parsing patch residue statement at line " << lineno);
             } else {
                 res = &add_resdef(tok[1]);
                 res->patch = true;
             }
         }
         else {
-            sprintf(msgbuf,"ERROR!  FAILED TO RECOGNIZE %s",tok[0]);
-            print_msg(v,msgbuf);
+            MSYS_FAIL("Failed to recognize '" << tok[0] << "' at line " << lineno);
         }
 
     }
@@ -541,8 +542,7 @@ void resdef_t::patch_topology(resdef_t& topo) const {
     for (unsigned i=0; i<delatoms.size(); i++) {
         Id ind = topo.atom_index(delatoms[i].name);
         if (bad(ind)) {
-            printf("ERROR, failed to erase atom %s\n", 
-                    delatoms[i].name.c_str());
+            MSYS_FAIL("failed to erase atom '" << delatoms[i].name << "'");
         } else {
             topo.atoms.erase(topo.atoms.begin()+ind);
         }
@@ -575,9 +575,7 @@ void resdef_t::patch_topology(resdef_t& topo) const {
     BOOST_FOREACH(bond_t const& b, bonds) {
         if (bad(topo.atom_index(b.def1.name)) ||
             bad(topo.atom_index(b.def2.name))) {
-            printf("ERROR, not all atoms for patch bond %s-%s are present\n",
-                    b.def1.name.c_str(),
-                    b.def2.name.c_str());
+            MSYS_FAIL("not all atoms for patch bond " << b.def1.name << "-" << b.def2.name << " are present in target");
         }
         topo.bonds.push_back(b);
     }

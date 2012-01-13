@@ -10,7 +10,8 @@ extern "C" {
 
 int charmm_get_tokens(char **tok, int toklen,
 			char *sbuf, int sbuflen,
-			FILE *stream, int all_caps);
+			FILE *stream, int all_caps,
+                        int* nread);
 
 #ifdef __cplusplus
 }
