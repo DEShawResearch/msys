@@ -65,7 +65,7 @@ def dump_terms(cmd, ipath, out, table, without_paraminfo, reorder ):
         # don't print moiety for compatibility with ent output
         params = [p for p in params if p!='moiety']
         if without_paraminfo:
-            exclude=set(('memo', 'ff', 'type'))
+            exclude=set(('memo', 'comment', 'ff', 'type', 'typekey'))
             params = [p for p in params if p not in exclude]
 
         if 'constrained' in params:
@@ -136,9 +136,10 @@ def dmsdump(ipath, out, without_provenance = False,
     subprocess.call(cmd+[sql], stdout=out, stderr=subprocess.PIPE)
 
     atoms, params = get_columns(ipath, 'nonbonded_param')
-    for p in ('id', 'ff', 'type', 'memo'): 
-        if p in params:
-            params.remove(p)
+    if without_paraminfo:
+        for p in ('id', 'ff', 'type', 'typekey', 'memo', 'comment'): 
+            if p in params:
+                params.remove(p)
     params.sort()
     s = ','.join(['nb.%s as %s' % (p,p) for p in params])
     sql='select "nonbonded", p.id, %s from particle as p join nonbonded_param as nb on p.nbtype = nb.id' % s
@@ -184,7 +185,7 @@ if __name__=="__main__":
             action="store_true", default=False)
     parser.add_option('--without-forcefield', help="don't write forcefield info",
             action="store_true", default=False)
-    parser.add_option('--without-paraminfo', help="don't write memo, type, ff in terms",
+    parser.add_option('--without-paraminfo', help="don't write memo, type, ff, comment, or typekey in terms",
             action="store_true", default=False)
     parser.add_option('--reorder', default=False, action="store_true", 
             help='order ouput of terms by particle id')
