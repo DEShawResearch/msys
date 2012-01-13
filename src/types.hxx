@@ -8,6 +8,8 @@
 #include <sstream>
 #include <stdexcept>
 
+#include "version.hxx"
+
 #ifdef _MSC_VER
 #define MSYS_LOC __FILE__ << ":" << __LINE__ << "\n" << __FUNCSIG__
 #else
@@ -40,7 +42,7 @@ namespace desres { namespace msys {
 
 #define MSYS_FAIL(args) do { \
     std::stringstream ss; \
-    ss << args << "\nlocation: " << MSYS_LOC; \
+    ss << args << "\nversion: " << MSYS_VERSION << "\nlocation: " << MSYS_LOC; \
     throw desres::msys::Failure(ss.str()); \
 } while(0)
 
