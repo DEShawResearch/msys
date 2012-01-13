@@ -21,6 +21,7 @@ SQLITE=sqlite/3.6.22-01
 PCRE=pcre/7.4-01
 ANTLR=antlr/3.1.3-06
 JSON=fastjson/1.4.4
+GLOG=glog/0.3.1-1-01
 
 # build and documentation
 SCONS=scons/2.0.1-04A
@@ -37,6 +38,7 @@ loadmodules() {
         $BOOST/Release/lib \
         $SQLITE/lib \
         $PCRE/lib-shared \
+        $GLOG/lib-shared \
         $ANTLR/lib \
         $JSON/lib \
         $SPHINX/bin 

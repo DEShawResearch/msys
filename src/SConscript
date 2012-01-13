@@ -62,6 +62,9 @@ mae/destro/prep_alchemical_mae.cxx
 mae/destro/Tokenizer.cxx
 mae/destro/Zing.cxx
 
+pdb/pdb.cxx
+pdb/readpdb.c
+
 schema.cxx
 schema/schema.cxx
 

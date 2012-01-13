@@ -10,11 +10,11 @@ from msys import builder
 defs = builder.Defs()
 defs.load('top_all27_prot_lipid_na.inp')
 
-# 5pti saved as dms from VMD
-mol=msys.LoadDMS('5pti.dms')
+# 5pti saved as pdb from VMD
+mol=msys.LoadPDB('5pti.pdb')
 
 # ignore everything except protein and crystal water
-mol=mol.clone('protein or resname DOD')
+mol=mol.clone('resid 1 to 58 or resname DOD')
 
 # put the water in its own chain
 wat=mol.addChain()

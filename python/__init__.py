@@ -1003,6 +1003,14 @@ def LoadMAE(path=None, ignore_unrecognized = False, buffer=None):
         ptr = _msys.ImportMAEFromBuffer( buffer, ignore_unrecognized )
     return System(ptr)
 
+def LoadPDB(path):
+    ''' Load a PDB file at the given path and return a System.
+    No bonds will be created, even if CONECT records are parent.
+    '''
+    path=str(path)
+    ptr = _msys.ImportPDB(path)
+    return System(ptr)
+
 
 def SaveDMS(system, path):
     ''' Export the System to a DMS file at the given path. '''

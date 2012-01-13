@@ -5,6 +5,7 @@
 #include "clone.hxx"
 #include "mae.hxx"
 #include "dms.hxx"
+#include "pdb.hxx"
 
 #include <fstream>
 
@@ -242,6 +243,7 @@ namespace desres { namespace msys {
         def("ImportMAE", ImportMAE);
         def("ImportMAEFromBuffer", import_mae_from_buffer);
         def("ExportMAE", ExportMAE);
+        def("ImportPDB", ImportPDB);
 
         def("Clone", Clone);
 
