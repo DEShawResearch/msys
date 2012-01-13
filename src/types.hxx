@@ -5,6 +5,14 @@
 #include <set>
 #include <vector>
 #include <stdint.h>
+#include <sstream>
+#include <stdexcept>
+
+#ifdef _MSC_VER
+#define MSYS_LOC __FILE__ << ":" << __LINE__ << "\n" << __FUNCSIG__
+#else
+#define MSYS_LOC __FILE__ << ":" << __LINE__ << "\n" << __PRETTY_FUNCTION__
+#endif
 
 namespace desres { namespace msys {
 
@@ -19,6 +27,21 @@ namespace desres { namespace msys {
     enum { BadId = (uint32_t)-1 };
     inline bool bad(const Id& id) { return id==BadId; }
 
+    struct Failure : public std::exception {
+        explicit Failure(std::string const& msg) throw() : _msg(msg) {}
+        virtual ~Failure() throw() {}
+        virtual const char* what() const throw() { return _msg.c_str(); }
+
+    private:
+        std::string _msg;
+    };
+
 }}
+
+#define MSYS_FAIL(args) do { \
+    std::stringstream ss; \
+    ss << args << "\nlocation: " << MSYS_LOC; \
+    throw desres::msys::Failure(ss.str()); \
+} while(0)
 
 #endif

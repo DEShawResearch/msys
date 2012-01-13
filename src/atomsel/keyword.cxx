@@ -110,8 +110,7 @@ void Keyword::select( Selection& s,
     case KEY_INT:
       {
         if (regexes.size())
-          throw std::runtime_error(
-                  "cannot select on regex for keyword of int type");
+            MSYS_FAIL("cannot select on regex for keyword '" << name << "' of integer type");
 
         std::vector<Int> v(s.size());
         iget(s,v);
@@ -133,8 +132,7 @@ void Keyword::select( Selection& s,
     case KEY_DBL:
       {
         if (regexes.size())
-          throw std::runtime_error(
-                  "cannot select on regex for keyword of float type");
+          MSYS_FAIL("cannot select on regex for keyword '" << name << "' of float type");
 
         std::vector<Dbl> v(s.size());
         dget(s,v);

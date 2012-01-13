@@ -8,7 +8,7 @@ using namespace desres::msys;
 Int ValueRef::asInt() const {
     if (_type==IntType) return _val.i;
     if (_type==FloatType) return (Int)_val.f;
-    throw std::runtime_error("Cannot convert ValueRef to int");
+    MSYS_FAIL("Cannot convert ValueRef string '" << _val.s << "' to int");
 }
 
 Float ValueRef::asFloat() const {
