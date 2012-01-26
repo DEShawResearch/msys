@@ -5,8 +5,6 @@ Check for overlap of term and param properties
 
 alchemical: don't make particles alchemical unnecessarily
 
-dms-grease: provide separate names for upper and lower leaflet
-
 gen-lipid: create a new bilayer
 
 validate atom selections in mae and dms, vmd and msys.

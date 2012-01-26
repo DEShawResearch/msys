@@ -211,6 +211,20 @@ class Residue(Handle):
     def name(self, val):
         self.data().name = val
 
+    @property
+    def center(self):
+        ''' return geometric center of positions of atoms in residue '''
+        n=self.natoms
+        if n==0: return [0,0,0]
+        x=0.0
+        y=0.0
+        z=0.0
+        for a in self.atoms:
+            x += a.x
+            y += a.y
+            z += a.z
+        return [x/n, y/n, z/n]
+
 class Chain(Handle):
     __slots__ = ()
 

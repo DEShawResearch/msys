@@ -3,7 +3,8 @@ import os, msys
 
 def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
             chain='LIP', verbose=False, 
-            square=False):
+            square=False,
+            chain2=None):
     '''
     Build and return a new system consisting of mol plus lipid bilayer.
     Tile is the lipid bilayer system to replicate.
@@ -13,6 +14,9 @@ def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
     and y axis.  The dimensions of the bilayer can also be given explicitly
     with dimensions.  If square is true, the box size will be expanded to
     the size of the longest dimension.
+
+    If chain2 is not None, it should be a string which will be used as the
+    chain name for lipids whose centers have z<0 (i.e. the lower leaflet).
 
     Return the greased system; no modifications are made to the input system.
     '''
@@ -105,6 +109,17 @@ def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
             for r in c.residues:
                 r.resid = lipnum
                 lipnum += 1
+
+    # if a lower leaflet chain is specified, move z<0 lipids to a different 
+    # chain.
+    if chain2 is not None and chain2 != chain:
+        c2=mol.addChain()
+        c2.name = chain2
+        for c in mol.chains:
+            if c.name != chain: continue
+            for r in c.residues:
+                if r.center[2] < 0:
+                    r.chain = c2
 
     if verbose: print "updating global cell"
 
