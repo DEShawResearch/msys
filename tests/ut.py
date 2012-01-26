@@ -319,6 +319,15 @@ class TestMain(unittest.TestCase):
             self.assertTrue(n in table.term_props)
             self.assertEqual(table.termPropType(n), t)
 
+    def testPropOverlap(self):
+        ''' ensure term props cannot overlap param props. '''
+        m=msys.CreateSystem()
+        table=m.addTable("table", 1)
+        table.params.addProp("a", float)
+        with self.assertRaises(RuntimeError):
+            table.addTermProp("a", int)
+
+
     def testParamWithNoProps(self):
         m=msys.CreateSystem()
         table=m.addTable("foo", 1)

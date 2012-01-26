@@ -166,6 +166,9 @@ Id TermTable::termPropIndex(String const& name) const {
 }
 
 Id TermTable::addTermProp(String const& name, ValueType type) {
+    if (_params->propIndex(name)!=BadId) {
+        MSYS_FAIL("TermTable " << this->name() << " already has a param property '" << name << "'");
+    }
     return _props->addProp(name,type);
 }
 
