@@ -1,32 +1,36 @@
 #!/bin/sh
 set -e
+set -x
 . $DESRES_ROOT/modules/init/sourceme.sh
 module add gardenutils/1.9.2/lib-sh
+module add treetop/43-Anton/bin   
 . desres-install-functions
 trap 'desres_trapped_exit' EXIT
 
 desres_require_cleanenv
 
 NAME=msys
-PKG_VERSION=1.0.5
+PKG_VERSION=1.0.6
 
 VERSION=${PKG_VERSION}
 DESCRIPTION="Biomolecular Structure Library"
 
 # shared library dependencies
-GCC=gcc/4.5.1-22A
-BOOST=boost/1_45_0-21A
-PYTHON=Python/2.7.1-06A
-SQLITE=sqlite/3.6.22-01
-PCRE=pcre/7.4-01
-ANTLR=antlr/3.1.3-06
-JSON=fastjson/1.4.4
-GLOG=glog/0.3.1-1-01
+GCC=$(treetop gcc)
+BOOST=$(treetop boost)
+PYTHON=$(treetop Python)
+SQLITE=$(treetop sqlite)
+PCRE=$(treetop pcre)
+ANTLR=$(treetop antlr)
+JSON=$(treetop fastjson)
+GLOG=$(treetop glog)
+
+# scarpazz: glog is tthe only 
 
 # build and documentation
-SCONS=scons/2.0.1-04A
-SCONSUTILS=sconsutils/1.22
-SPHINX=Sphinx/1.1-01A
+SCONS=$(treetop scons)
+SCONSUTILS=$(treetop sconsutils)
+SPHINX=$(treetop Sphinx)
 
 loadmodules() {
     module load \
@@ -88,9 +92,11 @@ genhelp() {
 See documentation in 
 http://gardendoc.nyc.desres.deshaw.com/$NAME/$VERSION/doc/html/index.html
 
-1.0.5  System.positions property
+1.0.6  Anton version: aligning dependencies with treetop/43-Anton. Blame scarpazz.
 
-1.0.4  Typo in dms-validate
+1.0.5  System.positions property.
+
+1.0.4  Typo in dms-validate.
 
 1.0.3  Bugfix: clone() and append() did not copy auxiliary tables (e.g. cmap).
 
