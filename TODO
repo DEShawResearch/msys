@@ -1,8 +1,6 @@
 
 export bond properties
 
-Check for overlap of term and param properties
-
 alchemical: don't make particles alchemical unnecessarily
 
 gen-lipid: create a new bilayer
