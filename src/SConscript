@@ -65,6 +65,8 @@ mae/destro/Zing.cxx
 pdb/pdb.cxx
 pdb/readpdb.c
 
+prmtop/import.cxx
+
 schema.cxx
 schema/schema.cxx
 

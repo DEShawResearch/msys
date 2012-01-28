@@ -11,5 +11,5 @@ env.AddUnitTest('test_schema', 'test_schema.cxx')
 env.AddUnitTest('test_mae', 'test_mae.cxx')
 env.AddUnitTest('test_value', 'test_value.cxx')
 env.AddUnitTest('test_json', 'json.cxx')
-
+env.AddUnitTest('test_prmtop', 'prmtop.cxx')
 

@@ -23,9 +23,6 @@ SQLITE=$(treetop sqlite)
 PCRE=$(treetop pcre)
 ANTLR=$(treetop antlr)
 JSON=$(treetop fastjson)
-GLOG=$(treetop glog)
-
-# scarpazz: glog is tthe only 
 
 # build and documentation
 SCONS=$(treetop scons)
