@@ -190,11 +190,13 @@ static void parse_stretch(SystemPtr mol, SectionMap const& map,
         ids[0] = bonh[3*i  ]/3;
         ids[1] = bonh[3*i+1]/3;
         tb->addTerm(ids, bonh[3*i+2]-1);
+        mol->addBond(ids[0], ids[1]);
     }
     for (int i=0; i<nbona; i++) {
         ids[0] = bona[3*i  ]/3;
         ids[1] = bona[3*i+1]/3;
         tb->addTerm(ids, bona[3*i+2]-1);
+        mol->addBond(ids[0], ids[1]);
     }
 }
  
@@ -409,6 +411,7 @@ SystemPtr desres::msys::ImportPrmTop( std::string const& path ) {
                                   ptrs[Nptra], ptrs[Nphih], ptrs[Nphia]);
     parse_nonbonded(mol, section, ptrs[Ntypes], pairs);
 
+    mol->updateFragids();
     mol->coalesceTables();
     return Clone(mol, mol->atoms());
 }
