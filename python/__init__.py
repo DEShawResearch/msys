@@ -844,6 +844,10 @@ class System(object):
         return TermTable(self._ptr.addTable(name, natoms, params._ptr))
 
     def addTableFromSchema(self, type, name = None):
+        ''' Add a table to the system if it not already present, 
+        returning it.  If optional name field is provided, the table
+        will be added with the given name; otherwise the name is taken
+        from the table schema. '''
         if name is None: name=type
         return TermTable(self._ptr.addTableFromSchema(type,name))
 

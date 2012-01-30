@@ -172,7 +172,7 @@ EOF
 }
 
 gendocs() {
-    (cd doc && make man html)
+    (cd doc && VERSION=$PKG_VERSION make man html)
     mkdir -p $PREFIX/doc/man/man1
     cp -r doc/build/html $PREFIX/doc/
     cp doc/build/man/*.1 $PREFIX/doc/man/man1
