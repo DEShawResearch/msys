@@ -542,6 +542,7 @@ class TestMain(unittest.TestCase):
         m=msys.CreateSystem()
         nb=m.addNonbondedFromSchema("vdw_12_6", "arithemetic/geometric")
         nb2=m.addNonbondedFromSchema("vdw_12_6", "arithemetic/geometric")
+        m.addNonbondedFromSchema("vdw_12_6")
         self.assertEqual(nb,nb2)
         params=nb.params
         props=params.props
