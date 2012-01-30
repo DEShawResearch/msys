@@ -26,6 +26,8 @@ dms/dms.cxx
 dms/export_dms.cxx
 dms/import_dms.cxx
 
+elements.cxx
+
 json/export_json.cxx
 
 mae/ff.cxx

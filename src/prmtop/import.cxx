@@ -2,6 +2,7 @@
 #include "../types.hxx"
 #include "../schema.hxx"
 #include "../clone.hxx"
+#include "../elements.hxx"
 
 #include <fstream>
 #include <boost/algorithm/string.hpp>
@@ -403,6 +404,7 @@ SystemPtr desres::msys::ImportPrmTop( std::string const& path ) {
         mol->atom(atm).name = names.at(atm);
         mol->atom(atm).charge = charges.at(atm) / 18.2223; /* magic scale */
         mol->atom(atm).mass = masses.at(atm);
+        mol->atom(atm).atomic_number = GuessAtomicNumber(masses.at(atm));
     }
 
     parse_stretch(mol, section, ptrs[Numbnd], ptrs[Nbonh], ptrs[Nbona]);
