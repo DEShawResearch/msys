@@ -22,7 +22,7 @@ PYTHON=$(treetop Python)
 SQLITE=$(treetop sqlite)
 PCRE=$(treetop pcre)
 ANTLR=$(treetop antlr)
-JSON=$(treetop fastjson)
+JSON=fastjson/1.4.5   # $(treetop fastjson)
 
 # build and documentation
 SCONS=$(treetop scons)
