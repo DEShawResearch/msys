@@ -1,5 +1,8 @@
 #include "../prmtop.hxx"
 #include "../types.hxx"
+#include "../schema.hxx"
+#include "../clone.hxx"
+
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <cstring>
@@ -37,7 +40,7 @@ namespace {
         Natom, Ntypes, Nbonh, Nbona, Ntheth,
         Ntheta,Nphih,  Nphia, Jparm, Nparm,
         Nnb,   Nres,   Mbona, Mtheta,Mphia,
-        Numbnd,Numang, Mptra, Natyp, Nphb,
+        Numbnd,Numang, Nptra, Natyp, Nphb,
         Ifpert,Nbper,  Ngper, Ndper, Mbper,
         Mgper, Mdper,  IfBox, Nmxrs, IfCap,
         NUM_POINTERS
@@ -78,8 +81,217 @@ namespace {
             boost::trim(v[i]);
         }
     }
+
+    void parse_flts(SectionMap const& map, String const& name, std::vector<double>& v) 
+    {
+        SectionMap::const_iterator it=map.find(name);
+        if (it==map.end()) MSYS_FAIL("Missing section " << name);
+        Section const& sec = it->second;
+        printf("parsing %d dbls for section %s\n",
+               (int)v.size(), sec.flag.c_str());
+        for (unsigned i=0; i<v.size(); i++) {
+            std::string elem = sec.data.substr(i*sec.fmt.width, sec.fmt.width);
+            if (sscanf(elem.c_str(), "%lf", &v[i])!=1) {
+                MSYS_FAIL("Parsing dbls for " << sec.flag);
+            }
+        }
+    }
     
 }
+
+static void parse_nonbonded(SystemPtr mol, SectionMap const& map, int ntypes) {
+
+    TermTablePtr nb = AddNonbonded(mol, "vdw_12_6", "arithmetic/geometric");
+    int ntypes2 = (ntypes * (ntypes+1))/2;
+    std::vector<int> inds(ntypes*ntypes), itype(mol->atomCount());
+    std::vector<double> acoef(ntypes2), bcoef(ntypes2);
+ 
+    parse_ints(map, "ATOM_TYPE_INDEX", itype);
+    parse_ints(map, "NONBONDED_PARM_INDEX", inds);
+    parse_flts(map, "LENNARD_JONES_ACOEF", acoef);
+    parse_flts(map, "LENNARD_JONES_BCOEF", bcoef);
+
+    /* Generate redundant parameters, and coalesce when we're done. */
+    for (Id i=0; i<mol->atomCount(); i++) {
+        int atype = itype.at(i);
+        int ico = inds.at((ntypes * (atype-1)+atype)-1);
+        double c12 = acoef.at(ico-1);
+        double c6  = bcoef.at(ico-1);
+        double sig=0, eps=0;
+        if (c12!=0 && c6!=0) {
+            sig=pow(c12/c6, 1./6.);
+            eps=c6*c6/(4*c12);
+        }
+        Id param = nb->params()->addParam();
+        nb->params()->value(param, "sigma") = sig;
+        nb->params()->value(param, "epsilon") = eps;
+        IdList ids(1, i);
+        nb->addTerm(ids, param);
+    }
+    nb->coalesce();
+}
+
+static void parse_stretch(SystemPtr mol, SectionMap const& map,
+                          int ntypes, int nbonh, int nbona) {
+    
+    std::vector<double> r0(ntypes), fc(ntypes);
+    std::vector<int> bonh(nbonh*3), bona(nbona*3);
+
+    parse_flts(map, "BOND_EQUIL_VALUE", r0);
+    parse_flts(map, "BOND_FORCE_CONSTANT", fc);
+    parse_ints(map, "BONDS_INC_HYDROGEN", bonh);
+    parse_ints(map, "BONDS_WITHOUT_HYDROGEN", bona);
+
+    TermTablePtr tb = AddTable(mol, "stretch_harm");
+    for (int i=0; i<ntypes; i++) {
+        Id param = tb->params()->addParam();
+        tb->params()->value(param, "fc") = fc[i];
+        tb->params()->value(param, "r0") = r0[i];
+    }
+    IdList ids(2);
+    for (int i=0; i<nbonh; i++) {
+        ids[0] = bonh[3*i  ]/3;
+        ids[1] = bonh[3*i+1]/3;
+        tb->addTerm(ids, bonh[3*i+2]-1);
+    }
+    for (int i=0; i<nbona; i++) {
+        ids[0] = bona[3*i  ]/3;
+        ids[1] = bona[3*i+1]/3;
+        tb->addTerm(ids, bona[3*i+2]-1);
+    }
+}
+ 
+static void parse_angle(SystemPtr mol, SectionMap const& map,
+                          int ntypes, int nbonh, int nbona) {
+    
+    std::vector<double> r0(ntypes), fc(ntypes);
+    std::vector<int> bonh(nbonh*4), bona(nbona*4);
+
+    parse_flts(map, "ANGLE_EQUIL_VALUE", r0);
+    parse_flts(map, "ANGLE_FORCE_CONSTANT", fc);
+    parse_ints(map, "ANGLES_INC_HYDROGEN", bonh);
+    parse_ints(map, "ANGLES_WITHOUT_HYDROGEN", bona);
+
+    TermTablePtr tb = AddTable(mol, "angle_harm");
+    for (int i=0; i<ntypes; i++) {
+        Id param = tb->params()->addParam();
+        tb->params()->value(param, "fc") = fc[i];
+        tb->params()->value(param, "theta0") = r0[i] * 180 / M_PI;
+    }
+    IdList ids(3);
+    for (int i=0; i<nbonh; i++) {
+        ids[0] = bonh[4*i  ]/3;
+        ids[1] = bonh[4*i+1]/3;
+        ids[2] = bonh[4*i+2]/3;
+        tb->addTerm(ids, bonh[4*i+3]-1);
+    }
+    for (int i=0; i<nbona; i++) {
+        ids[0] = bona[4*i  ]/3;
+        ids[1] = bona[4*i+1]/3;
+        ids[2] = bona[4*i+2]/3;
+        tb->addTerm(ids, bona[4*i+3]-1);
+    }
+} 
+
+
+namespace {
+    struct CompareTorsion {
+        bool operator() (IdList const& a, IdList const& b) const {
+            for (int i=0; i<4; i++) {
+                if (a[i]!=b[i]) return a[i]<b[i];
+            }
+            return false;
+        }
+    };
+}
+    
+static void merge_torsion(ParamTablePtr params, Id id, 
+                          double phase_in_radians, double fc, double period) {
+
+    double phase = phase_in_radians * 180 / M_PI;
+    /* Amber files approximate pi by 3.141594 */
+    if (fabs(phase)>179.9) {
+             phase = 180;
+        if (phase_in_radians<0) phase *= -1;
+    }
+    if (phase==0) {
+        /* great, nothing to do */
+    } else if (phase==180) {
+        /* just invert the term */
+        fc *= -1;
+    } else if (phase != params->value(id, "phi0").asFloat()) {
+        MSYS_FAIL("multiple dihedral term contains conflicting multiplicity");
+    } else {
+        params->value(id, "phi0") = phase;
+    }
+    double oldval = params->value(id, 1+period);
+    if (oldval==0) {
+        params->value(id, 1+period) = fc;
+    } else if (oldval != fc) {
+        MSYS_FAIL("multiple dihedral term contains conflicting force constant for period " << period);
+    }
+    double oldsum = params->value(id, 1);
+    params->value(id, 1) = oldsum + fabs(fc);
+}
+ 
+static void parse_torsion(SystemPtr mol, SectionMap const& map,
+                          int ntypes, int nbonh, int nbona) {
+    
+    std::vector<double> phase(ntypes), fc(ntypes), period(ntypes);
+    std::vector<int> bonh(nbonh*5), bona(nbona*5);
+
+    parse_flts(map, "DIHEDRAL_PHASE", phase);
+    parse_flts(map, "DIHEDRAL_FORCE_CONSTANT", fc);
+    parse_flts(map, "DIHEDRAL_PERIODICITY", period);
+    parse_ints(map, "DIHEDRALS_INC_HYDROGEN", bonh);
+    parse_ints(map, "DIHEDRALS_WITHOUT_HYDROGEN", bona);
+
+    bonh.insert(bonh.end(), bona.begin(), bona.end());
+    bona.clear();
+
+    /* hash the torsion terms, converting negative indices to positive as
+       needed and tracking which terms should generate 1-4 pair terms.  */
+
+    IdList pairs;
+    typedef std::map<IdList, Id, CompareTorsion> TorsionHash;
+    TorsionHash hash;
+    IdList ids(4);
+    TermTablePtr tb = AddTable(mol, "dihedral_trig");
+
+    for (int i=0; i<nbonh+nbona; i++) {
+        int ai = bonh[5*i  ]/3;
+        int aj = bonh[5*i+1]/3;
+        int ak = bonh[5*i+2]/3;
+        int al = bonh[5*i+3]/3;
+        int ind = bonh[5*i+4]-1;
+        if (ak<0) { /* don't create a pair */
+            ak = -ak;
+        } else {
+            pairs.push_back(i);
+        }
+        if (al<0) { /* it's an improper, though we treat it the same */
+            al = -al;
+        }
+        ids[0]=ai;
+        ids[1]=aj;
+        ids[2]=ak;
+        ids[3]=al;
+        std::pair<TorsionHash::iterator, bool> r;
+        r = hash.insert(std::make_pair(ids, BadId ));
+        Id param = BadId;
+        if (r.second) {
+            /* new term, so create a Term and Param entry */
+            param = tb->params()->addParam();
+            tb->addTerm(ids, param);
+            r.first->second = param;
+        } else {
+            param = r.first->second;
+        }
+        
+        merge_torsion(tb->params(), param, phase.at(ind), fc.at(ind), period.at(ind));
+    }
+    tb->coalesce();
+} 
 
 
 SystemPtr desres::msys::ImportPrmTop( std::string const& path ) {
@@ -130,6 +342,12 @@ SystemPtr desres::msys::ImportPrmTop( std::string const& path ) {
     std::vector<String> names(ptrs[Natom]);
     parse_strs(section, "ATOM_NAME", names);
 
+    std::vector<Float> charges(ptrs[Natom]);
+    parse_flts(section, "CHARGE", charges);
+
+    std::vector<Float> masses(ptrs[Natom]);
+    parse_flts(section, "MASS", masses);
+
     Id res=BadId;
     for (int i=0; i<ptrs[Natom]; i++) {
         if (i+1==resptrs[mol->residueCount()]) {
@@ -139,9 +357,15 @@ SystemPtr desres::msys::ImportPrmTop( std::string const& path ) {
         }
         Id atm = mol->addAtom(res);
         mol->atom(atm).name = names.at(atm);
+        mol->atom(atm).charge = charges.at(atm) * 18.2223; /* magic scale */
+        mol->atom(atm).mass = masses.at(atm);
     }
-    
 
-    return mol;
+    parse_nonbonded(mol, section, ptrs[Ntypes]);
+    parse_stretch(mol, section, ptrs[Numbnd], ptrs[Nbonh], ptrs[Nbona]);
+    parse_angle(mol, section, ptrs[Numang], ptrs[Ntheth], ptrs[Ntheta]);
+    parse_torsion(mol, section, ptrs[Nptra], ptrs[Nphih], ptrs[Nphia]);
+
+    return Clone(mol, mol->atoms());
 }
  
