@@ -99,21 +99,25 @@ namespace {
     
 }
 
-static void parse_nonbonded(SystemPtr mol, SectionMap const& map, int ntypes) {
+typedef std::set<std::pair<Id,Id> > PairSet;
+
+static void parse_nonbonded(SystemPtr mol, SectionMap const& map, int ntypes,
+                            PairSet const& pairs) {
 
     TermTablePtr nb = AddNonbonded(mol, "vdw_12_6", "arithmetic/geometric");
+    TermTablePtr pt = AddTable(mol, "pair_12_6_es");
+
     int ntypes2 = (ntypes * (ntypes+1))/2;
-    std::vector<int> inds(ntypes*ntypes), itype(mol->atomCount());
+    std::vector<int> inds(ntypes*ntypes), types(mol->atomCount());
     std::vector<double> acoef(ntypes2), bcoef(ntypes2);
  
-    parse_ints(map, "ATOM_TYPE_INDEX", itype);
+    parse_ints(map, "ATOM_TYPE_INDEX", types);
     parse_ints(map, "NONBONDED_PARM_INDEX", inds);
     parse_flts(map, "LENNARD_JONES_ACOEF", acoef);
     parse_flts(map, "LENNARD_JONES_BCOEF", bcoef);
 
-    /* Generate redundant parameters, and coalesce when we're done. */
     for (Id i=0; i<mol->atomCount(); i++) {
-        int atype = itype.at(i);
+        int atype = types.at(i);
         int ico = inds.at((ntypes * (atype-1)+atype)-1);
         double c12 = acoef.at(ico-1);
         double c6  = bcoef.at(ico-1);
@@ -128,7 +132,40 @@ static void parse_nonbonded(SystemPtr mol, SectionMap const& map, int ntypes) {
         IdList ids(1, i);
         nb->addTerm(ids, param);
     }
-    nb->coalesce();
+    
+    for (PairSet::const_iterator it=pairs.begin(); it!=pairs.end(); ++it) {
+        Id ai = it->first;
+        Id aj = it->second;
+        int itype = types.at(ai);
+        int jtype = types.at(aj);
+        int ico = inds.at((ntypes * (itype-1) + jtype)-1);
+        double c12 = acoef.at(ico-1);
+        double c6  = bcoef.at(ico-1);
+        double sig=0, eps=0;
+        if (c12!=0 && c6!=0) {
+            sig=pow(c12/c6, 1./6.);
+            eps=c6*c6/(4*c12);
+        }
+        /* FIXME: get ES scale_factor from SCEE_SCALE_FACTOR */
+        /* FIXME: get LJ scale factor from SCNB_SCALE_FACTOR */
+        double lj = 1/2.0;
+        double es = 1/1.2;
+
+        double s3 = sig * sig * sig;
+        double s6 = s3*s3;
+        double s12 = s6*s6;
+        double aij = 4 * eps * lj * s12;
+        double bij = 4 * eps * lj * s6;
+        double qij = es*mol->atom(ai).charge*mol->atom(aj).charge;
+        Id param = pt->params()->addParam();
+        pt->params()->value(param, "aij") = aij;
+        pt->params()->value(param, "bij") = bij;
+        pt->params()->value(param, "qij") = qij;
+        IdList ids(2);
+        ids[0] = ai;
+        ids[1] = aj;
+        pt->addTerm(ids, param);
+    }
 }
 
 static void parse_stretch(SystemPtr mol, SectionMap const& map,
@@ -234,7 +271,7 @@ static void merge_torsion(ParamTablePtr params, Id id,
     params->value(id, 1) = oldsum + fabs(fc);
 }
  
-static void parse_torsion(SystemPtr mol, SectionMap const& map,
+static PairSet parse_torsion(SystemPtr mol, SectionMap const& map,
                           int ntypes, int nbonh, int nbona) {
     
     std::vector<double> phase(ntypes), fc(ntypes), period(ntypes);
@@ -252,22 +289,23 @@ static void parse_torsion(SystemPtr mol, SectionMap const& map,
     /* hash the torsion terms, converting negative indices to positive as
        needed and tracking which terms should generate 1-4 pair terms.  */
 
-    IdList pairs;
+    PairSet pairs;
     typedef std::map<IdList, Id, CompareTorsion> TorsionHash;
     TorsionHash hash;
     IdList ids(4);
     TermTablePtr tb = AddTable(mol, "dihedral_trig");
-
+    
     for (int i=0; i<nbonh+nbona; i++) {
         int ai = bonh[5*i  ]/3;
         int aj = bonh[5*i+1]/3;
         int ak = bonh[5*i+2]/3;
         int al = bonh[5*i+3]/3;
         int ind = bonh[5*i+4]-1;
-        if (ak<0) { /* don't create a pair */
+        bool needs_pair = false;
+        if (ak<0) {
             ak = -ak;
         } else {
-            pairs.push_back(i);
+            needs_pair = true;
         }
         if (al<0) { /* it's an improper, though we treat it the same */
             al = -al;
@@ -287,10 +325,14 @@ static void parse_torsion(SystemPtr mol, SectionMap const& map,
         } else {
             param = r.first->second;
         }
-        
+        if (needs_pair) {
+            Id pi=ai, pj=al;
+            if (pi>pj) std::swap(pi,pj);
+            pairs.insert(std::make_pair(pi,pj));
+        }
         merge_torsion(tb->params(), param, phase.at(ind), fc.at(ind), period.at(ind));
     }
-    tb->coalesce();
+    return pairs;
 } 
 
 
@@ -357,15 +399,17 @@ SystemPtr desres::msys::ImportPrmTop( std::string const& path ) {
         }
         Id atm = mol->addAtom(res);
         mol->atom(atm).name = names.at(atm);
-        mol->atom(atm).charge = charges.at(atm) * 18.2223; /* magic scale */
+        mol->atom(atm).charge = charges.at(atm) / 18.2223; /* magic scale */
         mol->atom(atm).mass = masses.at(atm);
     }
 
-    parse_nonbonded(mol, section, ptrs[Ntypes]);
     parse_stretch(mol, section, ptrs[Numbnd], ptrs[Nbonh], ptrs[Nbona]);
     parse_angle(mol, section, ptrs[Numang], ptrs[Ntheth], ptrs[Ntheta]);
-    parse_torsion(mol, section, ptrs[Nptra], ptrs[Nphih], ptrs[Nphia]);
+    PairSet pairs = parse_torsion(mol, section, 
+                                  ptrs[Nptra], ptrs[Nphih], ptrs[Nphia]);
+    parse_nonbonded(mol, section, ptrs[Ntypes], pairs);
 
+    mol->coalesceTables();
     return Clone(mol, mol->atoms());
 }
  
