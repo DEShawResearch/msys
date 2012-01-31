@@ -22,6 +22,10 @@ def build_version_hxx( target, source, env ):
 env.Command('version.hxx', '#desres-install-helper', build_version_hxx )
 
 libmsys=env.AddLibrary('msys', Split('''
+
+amber/import_crd.cxx
+amber/import_prmtop.cxx
+
 dms/dms.cxx
 dms/export_dms.cxx
 dms/import_dms.cxx
@@ -66,8 +70,6 @@ mae/destro/Zing.cxx
 
 pdb/pdb.cxx
 pdb/readpdb.c
-
-prmtop/import.cxx
 
 schema.cxx
 schema/schema.cxx

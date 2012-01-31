@@ -1,4 +1,4 @@
-#include "../prmtop.hxx"
+#include "../amber.hxx"
 #include "../types.hxx"
 #include "../schema.hxx"
 #include "../clone.hxx"
