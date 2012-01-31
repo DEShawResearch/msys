@@ -142,21 +142,12 @@ static void parse_nonbonded(SystemPtr mol, SectionMap const& map, int ntypes,
         int ico = inds.at((ntypes * (itype-1) + jtype)-1);
         double c12 = acoef.at(ico-1);
         double c6  = bcoef.at(ico-1);
-        double sig=0, eps=0;
-        if (c12!=0 && c6!=0) {
-            sig=pow(c12/c6, 1./6.);
-            eps=c6*c6/(4*c12);
-        }
         /* FIXME: get ES scale_factor from SCEE_SCALE_FACTOR */
         /* FIXME: get LJ scale factor from SCNB_SCALE_FACTOR */
         double lj = 1/2.0;
         double es = 1/1.2;
-
-        double s3 = sig * sig * sig;
-        double s6 = s3*s3;
-        double s12 = s6*s6;
-        double aij = 4 * eps * lj * s12;
-        double bij = 4 * eps * lj * s6;
+        double aij = lj * c12;
+        double bij = lj * c6;
         double qij = es*mol->atom(ai).charge*mol->atom(aj).charge;
         Id param = pt->params()->addParam();
         pt->params()->value(param, "aij") = aij;
