@@ -59,8 +59,6 @@ namespace {
         SectionMap::const_iterator it=map.find(name);
         if (it==map.end()) MSYS_FAIL("Missing section " << name);
         Section const& sec = it->second;
-        printf("parsing %d ints for section %s\n",
-               (int)v.size(), sec.flag.c_str());
         for (unsigned i=0; i<v.size(); i++) {
             std::string elem = sec.data.substr(i*sec.fmt.width, sec.fmt.width);
             if (sscanf(elem.c_str(), "%d", &v[i])!=1) {
@@ -75,8 +73,6 @@ namespace {
         SectionMap::const_iterator it=map.find(name);
         if (it==map.end()) MSYS_FAIL("Missing section " << name);
         Section const& sec = it->second;
-        printf("parsing %d ints for section %s\n",
-               (int)v.size(), sec.flag.c_str());
         for (unsigned i=0; i<v.size(); i++) {
             v[i] = sec.data.substr(i*sec.fmt.width, sec.fmt.width);
             boost::trim(v[i]);
@@ -88,8 +84,6 @@ namespace {
         SectionMap::const_iterator it=map.find(name);
         if (it==map.end()) MSYS_FAIL("Missing section " << name);
         Section const& sec = it->second;
-        printf("parsing %d dbls for section %s\n",
-               (int)v.size(), sec.flag.c_str());
         for (unsigned i=0; i<v.size(); i++) {
             std::string elem = sec.data.substr(i*sec.fmt.width, sec.fmt.width);
             if (sscanf(elem.c_str(), "%lf", &v[i])!=1) {
@@ -403,6 +397,7 @@ SystemPtr desres::msys::ImportPrmTop( std::string const& path ) {
     parse_flts(section, "MASS", masses);
 
     Id res=BadId;
+    resptrs.push_back(ptrs[Natom]+1); /* simplify residue start logic */
     for (int i=0; i<ptrs[Natom]; i++) {
         if (i+1==resptrs[mol->residueCount()]) {
             res = mol->addResidue(chn);
