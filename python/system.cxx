@@ -6,6 +6,7 @@
 #include "mae.hxx"
 #include "dms.hxx"
 #include "pdb.hxx"
+#include "amber.hxx"
 
 #include <fstream>
 
@@ -244,6 +245,8 @@ namespace desres { namespace msys {
         def("ImportMAEFromBuffer", import_mae_from_buffer);
         def("ExportMAE", ExportMAE);
         def("ImportPDB", ImportPDB);
+        def("ImportPrmTop", ImportPrmTop);
+        def("ImportCrdCoordinates", ImportCrdCoordinates);
 
         def("Clone", Clone);
 

@@ -1039,6 +1039,21 @@ def LoadPDB(path):
     ptr = _msys.ImportPDB(path)
     return System(ptr)
 
+def LoadPrmTop(path):
+    ''' Load an Amber7 prmtop file at the given path and return a System.
+    Coordinates and global cell information are not present in the file.
+    '''
+    path=str(path)
+    ptr = _msys.ImportPrmTop(path)
+    return System(ptr)
+
+def ReadCrdCoordinates(mol, path):
+    ''' Read coordinates from the given Amber crd file into the given 
+    System. 
+    '''
+    path=str(path)
+    if not isinstance(mol, System): raise TypeError, "mol must be a System"
+    _msys.ImportCrdCoordinates(mol._ptr, path)
 
 def SaveDMS(system, path):
     ''' Export the System to a DMS file at the given path. '''
