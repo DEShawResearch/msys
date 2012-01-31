@@ -329,6 +329,24 @@ static PairSet parse_torsion(SystemPtr mol, SectionMap const& map,
     return pairs;
 } 
 
+static void parse_exclusions(SystemPtr mol, SectionMap const& map, int n) {
+    if (n==0) return;
+    TermTablePtr tb=AddTable(mol, "exclusion");
+    std::vector<int> nexcl(mol->atomCount()), excl(n);
+    parse_ints(map, "NUMBER_EXCLUDED_ATOMS", nexcl);
+    parse_ints(map, "EXCLUDED_ATOMS_LIST", excl);
+    unsigned j=0;
+    IdList ids(2);
+    for (Id ai=0; ai<mol->atomCount(); ai++) {
+        ids[0]=ai;
+        for (int i=0; i<nexcl[ai]; i++, j++) {
+            Id aj = excl[j];
+            if (aj==0) continue;
+            ids[1]=aj-1;
+            tb->addTerm(ids, BadId);
+        }
+    }
+}
 
 SystemPtr desres::msys::ImportPrmTop( std::string const& path ) {
 
@@ -403,6 +421,7 @@ SystemPtr desres::msys::ImportPrmTop( std::string const& path ) {
     PairSet pairs = parse_torsion(mol, section, 
                                   ptrs[Nptra], ptrs[Nphih], ptrs[Nphia]);
     parse_nonbonded(mol, section, ptrs[Ntypes], pairs);
+    parse_exclusions(mol, section, ptrs[Nnb]);
 
     mol->updateFragids();
     mol->coalesceTables();
