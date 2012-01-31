@@ -102,14 +102,25 @@ static void parse_nonbonded(SystemPtr mol, SectionMap const& map, int ntypes,
     TermTablePtr nb = AddNonbonded(mol, "vdw_12_6", "arithmetic/geometric");
     TermTablePtr pt = AddTable(mol, "pair_12_6_es");
 
+    /* add a type column to store the amber atom type */
+    nb->params()->addProp("type", StringType);
+
     int ntypes2 = (ntypes * (ntypes+1))/2;
     std::vector<int> inds(ntypes*ntypes), types(mol->atomCount());
     std::vector<double> acoef(ntypes2), bcoef(ntypes2);
- 
+    std::vector<String> vdwtypes(mol->atomCount());
+
     parse_ints(map, "ATOM_TYPE_INDEX", types);
     parse_ints(map, "NONBONDED_PARM_INDEX", inds);
     parse_flts(map, "LENNARD_JONES_ACOEF", acoef);
     parse_flts(map, "LENNARD_JONES_BCOEF", bcoef);
+    parse_strs(map, "AMBER_ATOM_TYPE", vdwtypes);
+
+    /* we don't handle custom SCEE or SCNB */
+    if (map.count("SCEE_SCALE_FACTOR")) 
+        MSYS_FAIL("Unexpected SCEE_SCALE_FACTOR section");
+    if (map.count("SCNB_SCALE_FACTOR"))
+        MSYS_FAIL("Unexpected SCNB_SCALE_FACTOR section");
 
     for (Id i=0; i<mol->atomCount(); i++) {
         int atype = types.at(i);
@@ -124,6 +135,7 @@ static void parse_nonbonded(SystemPtr mol, SectionMap const& map, int ntypes,
         Id param = nb->params()->addParam();
         nb->params()->value(param, "sigma") = sig;
         nb->params()->value(param, "epsilon") = eps;
+        nb->params()->value(param, "type") = vdwtypes[i];
         IdList ids(1, i);
         nb->addTerm(ids, param);
     }
@@ -380,6 +392,13 @@ SystemPtr desres::msys::ImportPrmTop( std::string const& path ) {
     /* build residues and atoms */
     std::vector<int> ptrs(NUM_POINTERS);
     parse_ints(section, "POINTERS", ptrs);
+
+    /* a few sanity checks */
+    if (ptrs[Nphb]>0) 
+        MSYS_FAIL("NPHB > 0: cannot read 10-12 hydrogen bonds");
+    if (ptrs[Ifpert]>0)
+        MSYS_FAIL("IFPERT > 0: cannot read perturbation information");
+    
 
     std::vector<int> resptrs(ptrs[Nres]);
     parse_ints(section, "RESIDUE_POINTER", resptrs);
