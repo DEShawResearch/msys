@@ -56,6 +56,13 @@ Bond
 .. autoattribute:: msys.Bond.id
 .. autoattribute:: msys.Bond.system
 
+Example::
+
+  # create a list of bonded atoms for each atom in a System
+  bondlists = [[b.id for b in a.bonded_atoms] for a in mol.atoms]
+  # create a list of atom id pairs for each bond in a System
+  bonds = [(b.first.id, b.second.id) for b in mol.bonds]
+
 Residue
 =======
 
