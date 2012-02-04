@@ -812,6 +812,24 @@ class System(object):
         ''' type of the given bond property '''
         return self._ptr.bondPropType(self._ptr.bondPropIndex(name))
 
+    
+    @property
+    def topology(self, with_glue=True):
+        ''' list of bonded atoms for each atom in the System, augmented
+        by whatever glue may be present.
+        '''
+        top = [[b.id for b in a.bonded_atoms] for a in self.atoms]
+        if with_glue and 'glue' in self.auxtable_names:
+            gtable = self.auxtable('glue')
+            for t in gtable.params:
+                p0 = t['p0']
+                p1 = t['p1']
+                if p1 not in top[p0]:
+                    top[p0].append(p1)
+                if p0 not in top[p1]:
+                    top[p1].append(p0)
+        return top
+
     ###
     ### operations on term tables
     ###
