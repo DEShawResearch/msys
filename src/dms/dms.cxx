@@ -12,10 +12,14 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+
 #include <sys/stat.h>
 #include <fcntl.h>
 
 namespace DM = desres::msys;
+namespace bio = boost::iostreams;
 
 #define THROW_FAILURE( args ) do { \
     std::stringstream ss; \
@@ -121,6 +125,29 @@ namespace {
     char *g_tmpbuf = NULL;
     sqlite3_int64 g_tmpsize = -1;
 
+    /* if buf looks like gzipped data, decompress it, and update *sz.  
+     * Return buf, which may now point to new space. */
+    char* maybe_decompress(char* buf, sqlite3_int64 *sz) {
+        if (*sz<2) return buf;
+        /* check for gzip magic number */
+        unsigned char s0 = buf[0];
+        unsigned char s1 = buf[1];
+        if (s0==0x1f && s1==0x8b) {
+            bio::filtering_istream in;
+            in.push(bio::gzip_decompressor());
+            std::istringstream file;
+            file.rdbuf()->pubsetbuf(buf, *sz);
+            in.push(file);
+            std::stringstream ss;
+            ss << in.rdbuf();
+            std::string s = ss.str();
+            buf = (char *)realloc(buf, s.size());
+            *sz = s.size();
+            memcpy(buf, s.data(), *sz);
+        }
+        return buf;
+    }
+
     struct dms_vfs : sqlite3_vfs {
 
         dms_vfs() {
@@ -146,6 +173,7 @@ namespace {
                     dms->path = strdup(zName);
                 }
             } else {
+                g_tmpbuf = maybe_decompress(g_tmpbuf, &g_tmpsize);
                 dms->contents = g_tmpbuf;
                 dms->size     = g_tmpsize;
                 g_tmpbuf = NULL;
