@@ -89,9 +89,13 @@ genhelp() {
 See documentation in 
 http://gardendoc.nyc.desres.deshaw.com/$NAME/$VERSION/doc/html/index.html
 
+1.0.8  gzipped dms files are detected and handled automatically.
+       Added msys.Load() for guessing file type from filename.
+       dms-info works now on dms, mae, and prmtop files.
+
 1.0.7  Support for importing Amber prmtop and crd files.
        Update fastjson dependency.
-       Documetation fixes.
+       Documentation fixes.
 
 1.0.6  Anton version: aligning dependencies with treetop/43-Anton. 
        Blame scarpazz.
