@@ -458,3 +458,49 @@ is the number of lines in *atom.map*.   Atoms and force terms in the A state
 not referenced by the atom map will be appended to the structure; unreferenced
 atoms and force terms in the B state will be ignored.
 
+----------
+Validation
+----------
+
+
+dms-validate
+------------
+.. program:: dms-validate
+
+.. describe:: dms-validate input.dms [ options ]
+
+    Perform various sanity checks on a chemical system.
+
+.. cmdoption:: --strict
+
+    Perform strict checks in addition to the regular checks.
+
+.. cmdoption:: --verbose
+
+    Be verbose.
+
+`dms-validate` flags conditions that are likely to be errors in a chemical
+system.  The set of "basic" checks are always performed; additional checks
+can be enabled using various command line flags. 
+
+The set of basic checks comprise the following:
+
+ * nonbonded: if a nonbonded table exists, every particle must have a 
+   nonbonded param assignment.
+
+
+The set of strict checks comprise the following items.  Note that it
+is certainly possible for a valid simulation to be performed using a
+system that passes none of its strict checks!  However, it may be worth
+investigating why a system fails theses checks.
+
+ * constraints: the system must have constraint terms.  
+
+ * consistent masses: Particles with equal atomic number must have equal mass.
+   Pseudo particles (those with atomic number zero) are excluded from the
+   check.
+
+ * sparsify: every 1-4 bond (i.e., pair of atoms separated by three 
+   distinct bonds) must be included in the exclusion table.
+
+
