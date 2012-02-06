@@ -86,7 +86,7 @@ def main():
 
     opts, args = parser.parse_args()
     for path in args:
-        mol = msys.LoadDMS(path)
+        mol = msys.Load(path)
         print "-" * 75
         print path
         print

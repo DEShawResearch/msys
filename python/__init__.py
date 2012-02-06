@@ -1003,6 +1003,16 @@ def CreateParamTable():
     ''' Create a new, empty ParamTable '''
     return ParamTable(_msys.ParamTablePtr.create())
 
+def file_endings(*args):
+    ''' decorator: adds file_endings as list of case-insensitive regex patterns
+    '''
+    import re
+    def _tmp(fcn):
+        fcn.file_endings = [re.compile(".+\.%s$" % a, re.I) for a in args]
+        return fcn
+    return _tmp
+
+@file_endings("dms", "dms.gz")
 def LoadDMS(path=None, structure_only=False, buffer=None ):
     ''' Load the DMS file at the given path and return a System containing it.
     If structure_only is True, only Atoms, Bonds, Residues and Chains will
@@ -1024,6 +1034,7 @@ def LoadDMS(path=None, structure_only=False, buffer=None ):
     return System(ptr)
 
 
+@file_endings("mae", "mae.gz", "maegz", "cms", "cms.gz")
 def LoadMAE(path=None, ignore_unrecognized = False, buffer=None):
     ''' load the MAE file at the given path and return a System containing it.
     Forcefield tables will be created that attempt to match as closely as
@@ -1049,6 +1060,7 @@ def LoadMAE(path=None, ignore_unrecognized = False, buffer=None):
         ptr = _msys.ImportMAEFromBuffer( buffer, ignore_unrecognized )
     return System(ptr)
 
+@file_endings("pdb")
 def LoadPDB(path):
     ''' Load a PDB file at the given path and return a System.
     No bonds will be created, even if CONECT records are parent.
@@ -1057,6 +1069,7 @@ def LoadPDB(path):
     ptr = _msys.ImportPDB(path)
     return System(ptr)
 
+@file_endings("prmtop", "prm7")
 def LoadPrmTop(path):
     ''' Load an Amber7 prmtop file at the given path and return a System.
     Coordinates and global cell information are not present in the file.
@@ -1064,6 +1077,25 @@ def LoadPrmTop(path):
     path=str(path)
     ptr = _msys.ImportPrmTop(path)
     return System(ptr)
+
+def GetLoader(path, defval=None):
+    ''' Retrieve a procedure from the current module if it claims
+    to be able to load files with the given path. If no such procedure is
+    found, return defval '''
+    for name, func in globals().items():
+        for pat in getattr(func, "file_endings", ()):
+            if pat.match(path):
+                return func
+    return defval
+
+def Load(path):
+    ''' Infer the file type of path using GetLoader and load the file.
+    Returns a new System.
+    '''
+    func = GetLoader(path)
+    if func is None:
+        raise ValueError, "Could not guess file type of '%s'" % path
+    return func(path)
 
 def ReadCrdCoordinates(mol, path):
     ''' Read coordinates from the given Amber crd file into the given 
