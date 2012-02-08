@@ -10,7 +10,7 @@ trap 'desres_trapped_exit' EXIT
 desres_require_cleanenv
 
 NAME=msys
-PKG_VERSION=1.0.7
+PKG_VERSION=1.0.8
 
 VERSION=${PKG_VERSION}
 DESCRIPTION="Biomolecular Structure Library"
@@ -92,6 +92,7 @@ http://gardendoc.nyc.desres.deshaw.com/$NAME/$VERSION/doc/html/index.html
 1.0.8  gzipped dms files are detected and handled automatically.
        Added msys.Load() for guessing file type from filename.
        dms-info works now on dms, mae, and prmtop files.
+       Documentation for dms-validate.
 
 1.0.7  Support for importing Amber prmtop and crd files.
        Update fastjson dependency.
