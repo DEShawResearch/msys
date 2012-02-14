@@ -1034,7 +1034,7 @@ def LoadDMS(path=None, structure_only=False, buffer=None ):
     return System(ptr)
 
 
-@file_endings("mae", "mae.gz", "maegz", "cms", "cms.gz")
+@file_endings("mae", "mae.gz", "maegz", "maeff", "maeff.gz", "cms", "cms.gz")
 def LoadMAE(path=None, ignore_unrecognized = False, buffer=None):
     ''' load the MAE file at the given path and return a System containing it.
     Forcefield tables will be created that attempt to match as closely as
