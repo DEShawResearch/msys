@@ -65,19 +65,35 @@ class TestBasic(UT.TestCase):
                     t.atoms[0].id)
 
 
+class TestDesmond(UT.TestCase):
+    def setUp(self):
+        self.mol=_mol
 
-def Validate(mol, strict=False, verbose=False):
+    def testBondsBetweenNonbonded(self):
+        ''' Flag bond terms or exclusions between atoms in different fragments.
+        These atoms cannot be guaranteed to remain within a clone buffer
+        radius of each other.  '''
+        for table in self.mol.tables:
+            if table.category in ('exclusion', 'bond') and table.natoms>1:
+                for t in table.terms:
+                    fragids = set(a.fragid for a in t.atoms)
+                    self.assertEqual(len(fragids), 1, 
+                            "Atoms %s form a term in the %s table but are not connected by bonds" % (t.atoms, table.name))
+    
+
+def Validate(mol, strict=False, desmond=False, verbose=False):
     global _mol
     _mol=mol
 
     verbosity = 2 if verbose else 1
 
-    suite=UT.TestLoader().loadTestsFromTestCase(TestBasic)
+    tests=[UT.TestLoader().loadTestsFromTestCase(TestBasic)]
+    if strict: 
+        tests.append(UT.TestLoader().loadTestsFromTestCase(TestStrict))
+    if desmond:
+        tests.append(UT.TestLoader().loadTestsFromTestCase(TestDesmond))
 
-    if strict:
-        suite=UT.TestSuite([suite, 
-                UT.TestLoader().loadTestsFromTestCase(TestStrict)])
-
+    suite=UT.TestSuite(tests)
     result=UT.TextTestRunner(verbosity=verbosity).run(suite)
     return result
 
