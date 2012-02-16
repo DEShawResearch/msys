@@ -479,7 +479,11 @@ dms-validate
 
 .. cmdoption:: --strict
 
-    Perform strict checks in addition to the regular checks.
+    Also perform strict checks.
+
+.. cmdoption:: --desmond
+
+    Also perform Desmond-specific checks.
 
 .. cmdoption:: --verbose
 
@@ -509,4 +513,9 @@ investigating why a system fails theses checks.
  * sparsify: every 1-4 bond (i.e., pair of atoms separated by three 
    distinct bonds) must be included in the exclusion table.
 
+Desmond-specific checks:
+
+ * bonded terms: check that neither the exclusion table nor any table
+   in the bond_term metable contains terms whose atoms are not connected
+   through the bond table.  
 
