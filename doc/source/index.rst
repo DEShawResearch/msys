@@ -48,6 +48,16 @@ present in the Python interface.
    tools
 
 
+DMS files
+=========
+
+The preferred file format for Msys structures is the DMS file.
+
+.. toctree::
+
+   dms
+
+
 Indices and tables
 ==================
 
