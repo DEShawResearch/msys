@@ -12,6 +12,12 @@ mae2dms
    Converts an mae file to a dms file, preserving as much forcefield
    information as possible.
 
+options:
+
+.. cmdoption:: --ignore-unrecognized   
+
+   skip unrecognized ffio_ff subblocks
+
 *mae2dms* converts mae files to dms files.  Atom order and forcefield
 information are all preserved, though there are likely to be differences
 in the precise values of the forces computed from the file due differences
