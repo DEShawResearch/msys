@@ -8,6 +8,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/foreach.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <stdexcept>
 
@@ -130,14 +131,15 @@ static int find_element(const char* abbrv) {
     return 0;
 }
 
-void adef_t::parse(const char *aref) {
-    if ( isdigit(*aref) ) { res = *aref - '1'; ++aref; }
+void adef_t::parse(const char *aref, bool check_res) {
+    if ( check_res && isdigit(*aref) ) { res = *aref - '1'; ++aref; }
     else { res = 0; }
     if ( *aref == '-' ) { rel = -1; ++aref; }
     else if ( *aref == '+' ) { rel = 1; ++aref; }
     else if ( *aref == '#' ) { rel = 2; ++aref; }
     else { rel = 0; }
     name = aref;
+    boost::to_upper(name);
 }
 
 static void print_msg(void *, const char *s) {
@@ -253,8 +255,8 @@ void defs_t::import_charmm_topology(std::string const& path) {
                     MSYS_FAIL("Failed parsing bond statement at line " << lineno);
                 } else for ( itok = 0; itok < ntok; itok += 2 ) {
                     bond_t bond;
-                    bond.def1.parse(tok[itok]);
-                    bond.def2.parse(tok[itok+1]);
+                    bond.def1.parse(tok[itok], false);
+                    bond.def2.parse(tok[itok+1], false);
                     res->bonds.push_back(bond);
                 }
             }
@@ -356,12 +358,12 @@ void defs_t::import_charmm_topology(std::string const& path) {
                 /* must be an atom record */
                 if (ntok<3 || !res) {
                     MSYS_FAIL("Failed parsing atom record at line " << lineno);
-                    atom_t atom;
-                    atom.def.parse(tok[0]);
-                    atom.type = tok[1];
-                    atom.charge = atof(tok[2]);
-                    res->atoms.push_back(atom);
                 }
+                atom_t atom;
+                atom.def.parse(tok[0], false);
+                atom.type = tok[1];
+                atom.charge = atof(tok[2]);
+                res->atoms.push_back(atom);
             }
             continue;
         }

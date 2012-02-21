@@ -25,7 +25,10 @@ namespace desres { namespace msys { namespace builder {
 
         adef_t() : res(), rel() {}
 
-        void parse(const char *s);
+        /* if check_res is true, then interpret a leading digit as a
+         * residue specification for a patch residue; otherwise include
+         * it in the atom name. */
+        void parse(const char *s, bool check_res = true);
     };
 
     struct atom_t {
