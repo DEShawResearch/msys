@@ -35,7 +35,7 @@ int charmm_get_tokens(char **tok, int toklen,
     } while ( s && *s && *s != '\n' );
     s = sbuf;
     while ( *s && isspace(*s) ) ++s;
-    if ( *s == '*' ) {
+    if ( *s == '*' || *s == '#' ) {
       *s = 0;
       tok[ntok] = s;  ++ntok;
       ++s;

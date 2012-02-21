@@ -234,8 +234,31 @@ void defs_t::import_charmm_topology(std::string const& path) {
         else if ( ! strncasecmp("ACCE",tok[0],4) ) {
             debug_msg("Recognized acceptor statement.");
         }
+        else if ( ! strncasecmp("ACC",tok[0],3) ) {
+            debug_msg("Recognized acceptor statement.");
+        }
+        else if ( ! strncasecmp("TERMATOM",tok[0],8) ) {
+            debug_msg("Recognized termatom statement.");
+        }
         else if ( ! strncasecmp("DONO",tok[0],4) ) {
             debug_msg("Recognized donor statement.");
+
+        } else if ( ! strncasecmp("BONDS",tok[0], 5)) {
+            while ( (ntok = charmm_get_tokens(tok,TOKLEN,sbuf,BUFLEN,file,all_caps, &lineno)) ) {
+                if ( ! tok[0][0] ) {
+                    continue;
+                }
+                if (!strncasecmp("END", tok[0], 3)) break;
+                if ( ntok < 2 || (ntok)%2 || !res) {
+                    MSYS_FAIL("Failed parsing bond statement at line " << lineno);
+                } else for ( itok = 0; itok < ntok; itok += 2 ) {
+                    bond_t bond;
+                    bond.def1.parse(tok[itok]);
+                    bond.def2.parse(tok[itok+1]);
+                    res->bonds.push_back(bond);
+                }
+            }
+            continue;
         }
         else if ( ! strncasecmp("BOND",tok[0],4) ||
                 ! strncasecmp("DOUB",tok[0],4) ||
@@ -322,6 +345,27 @@ void defs_t::import_charmm_topology(std::string const& path) {
         else if ( ! strncasecmp("DECL",tok[0],4) ) {
             debug_msg("Recognized atom declaration statement.");
         }
+        else if ( ! strncasecmp("ATOMS", tok[0], 5)) {
+            /* read atom records until we encounter an "end" line */
+            while ( (ntok = charmm_get_tokens(tok,TOKLEN,sbuf,BUFLEN,file,all_caps, &lineno)) ) {
+                if ( ! tok[0][0] ) {
+                    continue;
+                }
+                if (!strncasecmp("GROUP", tok[0], 5)) continue;
+                if (!strncasecmp("END", tok[0], 3)) break;
+                /* must be an atom record */
+                if (ntok<3 || !res) {
+                    MSYS_FAIL("Failed parsing atom record at line " << lineno);
+                    atom_t atom;
+                    atom.def.parse(tok[0]);
+                    atom.type = tok[1];
+                    atom.charge = atof(tok[2]);
+                    res->atoms.push_back(atom);
+                }
+            }
+            continue;
+        }
+
         else if ( ! strncasecmp("ATOM",tok[0],4) ) {
             debug_msg("Recognized atom statement.");
             if ( ntok < 4 || !res ) {
@@ -513,6 +557,10 @@ void defs_t::import_charmm_topology(std::string const& path) {
                 }
             }
         }
+        else if ( ! strncasecmp("RESIDUE_END",tok[0],11) ) {
+            res = NULL;
+        }
+
         else if ( ! strncasecmp("RESI",tok[0],4) ) {
             debug_msg("Recognized residue statement.");
             if ( ntok < 2 ) {
