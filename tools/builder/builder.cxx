@@ -1,6 +1,7 @@
 #include "builder.hxx"
 #include "geom.hxx"
 #include <boost/foreach.hpp>
+#include <boost/algorithm/string.hpp>
 #include <stdexcept>
 
 
@@ -131,9 +132,10 @@ namespace desres { namespace msys { namespace builder {
             }
             resdef_t resdef = idef->second;
 
-            /* remove all bonds in residue */
+            /* remove all bonds in residue, and convert names to upper */
             BOOST_FOREACH(Id atm, mol->atomsForResidue(ires)) {
                 mol->delBonds(mol->bondsForAtom(atm));
+                boost::to_upper(mol->atom(atm).name);
             }
 
             /* apply patch to resdef if first or last.  Hierarchy is
@@ -187,17 +189,17 @@ namespace desres { namespace msys { namespace builder {
                 msys::atom_t& atm = mol->atom(atoms[j]);
                 /* remove if not in resdef or if duplicate name */
                 if (amap.count(atm.name) || bad(resdef.atom_index(atm.name))) {
-                    //printf("deleted atom %s\n", atm.name.c_str());
+                    printf("deleted atom %s\n", atm.name.c_str());
                     mol->delAtom(atoms[j]);
                 } else {
                     amap[atm.name] = atoms[j];
                 }
             }
             /* Add missing atoms */
+            TypeMap guessed_types;
             BOOST_FOREACH(atom_t const& atom, resdef.atoms) {
                 Id atm = BadId;
                 if (!amap.count(atom.def.name)) {
-                    //printf("added atom %s\n", adef.first.c_str());
                     atm = mol->addAtom(ires);
                     added.insert(atm);
                 } else {
@@ -208,12 +210,25 @@ namespace desres { namespace msys { namespace builder {
 
                 TypeMap::const_iterator tdef = defs.types.find(atom.type);
                 if (tdef==defs.types.end()) {
-                    fprintf(stderr, "Invalid type '%s' for atom %s\n",
-                            atom.type.c_str(), atom.def.name.c_str());
-                } else {
-                    mol->atom(atm).atomic_number = tdef->second.anum;
-                    mol->atom(atm).mass = tdef->second.mass;
+                    /* might as well guess something */
+                    tdef=guessed_types.find(atom.type);
+                    if (tdef==guessed_types.end()) {
+                        type_t type;
+                        switch (toupper(atom.type[0])) {
+                            default:
+                            case 'H': type.anum=1; type.mass=1.00794; break;
+                            case 'C': type.anum=6; type.mass=12.0107; break;
+                            case 'N': type.anum=7; type.mass=14.0067; break;
+                            case 'O': type.anum=8; type.mass=15.9994; break;
+                        }
+                        fprintf(stderr, "Warning: guessed atomic number %d mass %f for type '%s'\n",
+                                    type.anum, type.mass, atom.type.c_str());
+                        tdef = guessed_types.insert(
+                                std::make_pair(atom.type,type)).first;
+                    }
                 }
+                mol->atom(atm).atomic_number = tdef->second.anum;
+                mol->atom(atm).mass = tdef->second.mass;
             }
 
             /* cache resdef for later */
