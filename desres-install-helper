@@ -10,7 +10,7 @@ trap 'desres_trapped_exit' EXIT
 desres_require_cleanenv
 
 NAME=msys
-PKG_VERSION=1.0.9
+PKG_VERSION=1.0.10
 
 VERSION=${PKG_VERSION}
 DESCRIPTION="Biomolecular Structure Library"
@@ -60,6 +60,7 @@ module-whatis {$NAME - $DESCRIPTION}
 
 prereq $PYTHON/bin
 prepend-path PYTHONPATH $PREFIX/lib/python
+setenv MSYS_PREFIX "$PREFIX"
 EOF
 
     # library
@@ -89,6 +90,10 @@ genhelp() {
 See documentation in 
 http://gardendoc.nyc.desres.deshaw.com/$NAME/$VERSION/doc/html/index.html
 
+1.0.10 neutralize: set the residue name of ions equal to the atom name.
+       builder: preliminary support for charmm36.
+       builder: guess atom type based on name if not provided in top file.
+       
 1.0.9  msys.Load() supports .maeff and .maeff.gz now.
        Documentation for DMS files converted from Desmond documentation.
        dms-validate --desmond to check for bonds between nonbonded atoms.
