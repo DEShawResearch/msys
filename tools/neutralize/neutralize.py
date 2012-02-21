@@ -170,6 +170,7 @@ def Neutralize(mol, cation='NA', anion='CL',
 
             ionres=ionchain.addResidue()
             ionres.resid=i+1
+            ionres.name=iontype.name
 
             ionatm=ionres.addAtom()
             ionatm.pos=compute_center(res)
@@ -188,6 +189,7 @@ def Neutralize(mol, cation='NA', anion='CL',
 
             ionres=ionchain.addResidue()
             ionres.resid=i+1-nions
+            ionres.name=othertype.name
 
             ionatm=ionres.addAtom()
             ionatm.pos=compute_center(res)
