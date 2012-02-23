@@ -210,9 +210,16 @@ namespace desres { namespace msys {
 
 struct dms_reader {
     sqlite3_stmt * stmt;
-    int ncols;
-    char ** cols;
-    DM::ValueType * types;
+    typedef std::pair<std::string, DM::ValueType> column_t;
+    std::vector<column_t> columns;
+
+    std::string const& name(int i) const { return columns.at(i).first; }
+    std::string&       name(int i)       { return columns.at(i).first; }
+
+    DM::ValueType const& type(int i) const { return columns.at(i).second; }
+    DM::ValueType&       type(int i)       { return columns.at(i).second; }
+
+    int ncols() const { return columns.size(); }
 };
 
 struct dms_writer {
@@ -352,23 +359,21 @@ int dms_fetch( dms_t * dms, const char * name, dms_reader_t ** pr ) {
 
     r=new dms_reader_t;
     r->stmt=stmt;
-    r->ncols=sqlite3_column_count(stmt);
-    r->cols = new char *[r->ncols];
-    r->types = new DM::ValueType[r->ncols];
-    for (i=0; i<r->ncols; i++) {
-        r->cols[i] = strdup(sqlite3_column_name(stmt,i));
+    r->columns.resize(sqlite3_column_count(stmt));
+    for (i=0; i<r->ncols(); i++) {
+        r->name(i) = (const char *)(sqlite3_column_name(stmt,i));
     }
     dms_reader_next(&r);
     if (!r) return 0;
 
     *pr = r;
-    for (i=0; i<r->ncols; i++) {
+    for (i=0; i<r->ncols(); i++) {
         int type = sqlite3_column_type(stmt,i);
         switch(type) {
             default:
-            case SQLITE_TEXT:    r->types[i]=DM::StringType; break;
-            case SQLITE_INTEGER: r->types[i]=DM::IntType; break;
-            case SQLITE_FLOAT:   r->types[i]=DM::FloatType; break;
+            case SQLITE_TEXT:    r->type(i)=DM::StringType; break;
+            case SQLITE_INTEGER: r->type(i)=DM::IntType; break;
+            case SQLITE_FLOAT:   r->type(i)=DM::FloatType; break;
         }
     }
     return 1;
@@ -392,51 +397,48 @@ void dms_reader_next( dms_reader_t ** pr ) {
 void dms_reader_free( dms_reader_t * r ) {
     if (!r) return;
     sqlite3_finalize(r->stmt);
-    while (r->ncols) free(r->cols[--r->ncols]);
-    delete [] r->cols;
-    delete [] r->types;
     delete r;
 }
 
 int dms_reader_column_count( dms_reader_t * r ) {
-    return r->ncols;
+    return r->ncols();
 }
 
 /* get the name of the given column */
 const char * dms_reader_column_name( dms_reader_t * r, int col ) {
-    if (col<0 || col>=r->ncols)
+    if (col<0 || col>=r->ncols())
         THROW_FAILURE("no such column " << col);
-    return r->cols[col];
+    return r->name(col).c_str();
 }
 
 DM::ValueType dms_reader_column_type( dms_reader_t * r, int col ) {
-    if (col<0 || col>=r->ncols)
+    if (col<0 || col>=r->ncols())
         THROW_FAILURE("no such column " << col);
-    return r->types[col];
+    return r->type(col);
 }
 
 int dms_reader_column( dms_reader_t * r, const char * col ) {
-    int i,n=r->ncols;
+    int i,n=r->ncols();
     for (i=0; i<n; i++) {
-        if (!strcmp(r->cols[i],col)) return i;
+        if (!strcmp(r->name(i).c_str(),col)) return i;
     }
     return -1;
 }
 
 int dms_reader_get_int( dms_reader_t * r, int col ) {
-    if (col<0 || col>=r->ncols)
+    if (col<0 || col>=r->ncols())
         THROW_FAILURE("no such column " << col);
     return sqlite3_column_int(r->stmt,col);
 }
 
 double dms_reader_get_double( dms_reader_t * r, int col ) {
-    if (col<0 || col>=r->ncols)
+    if (col<0 || col>=r->ncols())
         THROW_FAILURE("no such column " << col);
     return sqlite3_column_double(r->stmt,col);
 }
 
 const char * dms_reader_get_string( dms_reader_t * r, int col ) {
-    if (col<0 || col>=r->ncols)
+    if (col<0 || col>=r->ncols())
         THROW_FAILURE("no such column " << col);
     return (const char *)sqlite3_column_text(r->stmt,col);
 }
