@@ -192,7 +192,7 @@ const char * desres::msys::Destro::Tokenizer::token(bool ignore_single_character
       // Everything else starts with some other character
       // -----------------------------------------------
       if (issingle(c)) {
-        state = SINGLECHAR;
+        state = ignore_single_character_tokens ? STARTOTHER : SINGLECHAR;
       } else if (c == '"') {
         state = STARTSTRING;
       } else {
