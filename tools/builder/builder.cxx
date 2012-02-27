@@ -189,7 +189,11 @@ namespace desres { namespace msys { namespace builder {
                 msys::atom_t& atm = mol->atom(atoms[j]);
                 /* remove if not in resdef or if duplicate name */
                 if (amap.count(atm.name) || bad(resdef.atom_index(atm.name))) {
-                    printf("deleted atom %s\n", atm.name.c_str());
+                    printf("deleted atom %s-%s%d:%s\n", 
+                            mol->chain(mol->residue(atm.residue).chain).name.c_str(),
+                            mol->residue(atm.residue).name.c_str(),
+                            mol->residue(atm.residue).resid,
+                            atm.name.c_str());
                     mol->delAtom(atoms[j]);
                 } else {
                     amap[atm.name] = atoms[j];
