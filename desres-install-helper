@@ -10,7 +10,7 @@ trap 'desres_trapped_exit' EXIT
 desres_require_cleanenv
 
 NAME=msys
-PKG_VERSION=1.0.11
+PKG_VERSION=1.0.12
 
 VERSION=${PKG_VERSION}
 DESCRIPTION="Biomolecular Structure Library"
@@ -39,7 +39,6 @@ loadmodules() {
         $BOOST/Release/lib \
         $SQLITE/lib \
         $PCRE/lib-shared \
-        $GLOG/lib-shared \
         $ANTLR/lib \
         $JSON/lib \
         $SPHINX/bin 
@@ -89,6 +88,8 @@ genhelp() {
 
 See documentation in 
 http://gardendoc.nyc.desres.deshaw.com/$NAME/$VERSION/doc/html/index.html
+
+1.0.12 dms-builder fixes
 
 1.0.11 Fixed a memory corruption bug in the dms reading code.
 
