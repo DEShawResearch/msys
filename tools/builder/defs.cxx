@@ -618,8 +618,12 @@ void resdef_t::patch_topology(resdef_t& topo) const {
         }
     }
 
-    /* add structure from patch */
-    topo.atoms.insert(topo.atoms.end(), atoms.begin(), atoms.end());
+    /* add structure from patch, avoiding duplicates */
+    BOOST_FOREACH(atom_t const& atm, atoms) {
+        if (bad(topo.atom_index(atm.def.name))) {
+            topo.atoms.push_back(atm);
+        }
+    }
 
     /* add bonds, checking that all necessary atoms are present */
     BOOST_FOREACH(bond_t const& b, bonds) {
