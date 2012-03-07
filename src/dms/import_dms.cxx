@@ -20,16 +20,20 @@ namespace {
         int     resnum;
         String  resname;
         String  chain;
+        String  segid;
 
         ResKey() {}
-        ResKey(int num, const String& name, const String& chn)
-        : resnum(num), resname(name), chain(chn) {}
+        ResKey(int num, const String& name, const String& chn,
+                        const String& seg)
+        : resnum(num), resname(name), chain(chn), segid(seg) {}
 
         bool operator<(const ResKey& r) const {
             if (resnum!=r.resnum) return resnum<r.resnum;
             int rc = strcmp(resname.c_str(), r.resname.c_str());
             if (rc) return rc<0;
-            return strcmp(chain.c_str(), r.chain.c_str())<0;
+            rc = strcmp(chain.c_str(), r.chain.c_str());
+            if (rc) return rc<0;
+            return strcmp(segid.c_str(), r.segid.c_str())<0;
         }
     };
 }
@@ -462,6 +466,7 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
         throw std::runtime_error("Missing particle table");
     }
 
+    int SEGID = dms_reader_column(r,"segid");
     int CHAIN = dms_reader_column(r,"chain");
     int RESNAME = dms_reader_column(r,"resname");
     int RESID = dms_reader_column(r,"resid");
@@ -526,10 +531,11 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
         }
 
         /* start a new residue if necessary */
+        const char * segid = SEGID < 0 ? "" : dms_reader_get_string(r, SEGID);
         const char * resname = dms_reader_get_string(r, RESNAME);
         int resnum = dms_reader_get_int(r, RESID);
         std::pair<ResMap::iterator,bool> p;
-        p = resmap.insert(std::make_pair(ResKey(resnum,resname,chainname),
+        p = resmap.insert(std::make_pair(ResKey(resnum,resname,chainname,segid),
                     resid));
         if (p.second) {
             /* new resname/resnum in this chain, so start a new residue. */
