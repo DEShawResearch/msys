@@ -120,6 +120,18 @@ namespace {
       {"heme","resname HEM HEME"}
   };
 
+  const char* find_macro(std::string const& name, SystemPtr mol) { 
+      if (!mol->selectionMacroCount()) { 
+          const unsigned n=sizeof(builtin_macros)/sizeof(builtin_macros[0]);
+          for (unsigned i=0; i<n; i++) {
+              mol->addSelectionMacro(builtin_macros[i].name,
+                                     builtin_macros[i].text);
+          }
+      }
+      std::string const& m = mol->getSelectionMacro(name);
+      return m.size() ? m.c_str() : NULL;
+  }
+
   char *str(Tree *tree) {
     static char empty[]="";
     if (!tree) return empty;
@@ -241,13 +253,10 @@ namespace {
     if (!strcmp(id,"all")) return all_predicate();
     if (!strcmp(id,"none")) return none_predicate();
 
-    /* special case macros */
-    for (unsigned i=0; i<sizeof(builtin_macros)/sizeof(builtin_macros[0]); i++)
-    {
-        if (!strcmp(builtin_macros[i].name, id)) {
-            return desres::msys::atomsel::vmd::parse(builtin_macros[i].text, ent);
-        }
-    }
+    /* check for macros defined in the system */
+    const char* user_macro = find_macro(id, ent);
+    if (user_macro) return desres::msys::atomsel::vmd::parse(user_macro,ent);
+
     THROW_FAILURE("VmdGrammar: unrecognized keyword " << id);
     return PredicatePtr();
   }

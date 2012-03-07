@@ -166,6 +166,10 @@ namespace desres { namespace msys {
         typedef std::map<String, ParamTablePtr> AuxTableMap;
         AuxTableMap _auxtables;
 
+        /* atom selection macros */
+        typedef std::map<String, String> MacroMap;
+        MacroMap    _macros;
+
         /* provenance.  Ideally, you would append to this just before 
          * serializing to disk. */
         std::vector<Provenance> _provenance;
@@ -358,6 +362,24 @@ namespace desres { namespace msys {
         /* Return ids of atoms based on their order of appearance in
          * a depth-first traversal of the structure hierarchy. */
         IdList orderedIds() const;
+
+        /* atom selection macros are strings that are expanded at parse time
+         * into longer strings.  */
+        void addSelectionMacro(std::string const& selection,
+                               std::string const& macro);
+
+        /* Get the macro corresponding to the given selection.  Returns empty
+         * string if not found. */
+        std::string const& getSelectionMacro(std::string const& selection) const;
+
+        /* number of defined selection macros */
+        Id selectionMacroCount() const;
+
+        /* Return a list of all the selection macros */
+        std::vector<std::string> getSelectionMacros() const;
+
+        /* Remove the macro. */
+        void delSelectionMacro(std::string const& selection);
     };
 
     typedef boost::shared_ptr<System> SystemPtr;
