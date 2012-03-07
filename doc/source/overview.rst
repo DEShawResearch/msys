@@ -313,3 +313,36 @@ undiscovered bugs in Msys!) fall into the following categories:
   results of distance based atom selections simply due the fact that Msys
   stores positions as doubles, while VMD stores them as floats.  
 
+Notes on loading chemical systems
+=================================
+
+As mentioned earlier, Msys groups all `Atoms` into `Residues`, and all
+`Residues` into `Chains`.  This hierarchy is, unfortunately, rarely made
+explicit in the chemical system files in wide use, so Msys must infer the
+grouping based on the values of certain particle attributes.
+
+Msys uses the ``resname``, ``resid``, and ``chain`` names in the particle
+table to groups atoms into `Residues`.  Any particle with the same value
+for these three attributes will wind up in the same `Residue`, regardless of
+the order of the particles or their bond structure.  In addition, starting
+with Msys version 1.0.14, the ``segid`` particle attribute is also used
+to disambiguate residues.  
+
+Msys assigns particles to chains using only the ``chain`` attribute.  This
+attribute can be of any length, although some legacy file formats restrict
+it to only one character.  The ``segid`` attribute is not used for assigning
+chain; if present in the file, it simply appears as an additional particle
+attribute, and, in versions of Msys later than 1.0.14, will also be used to
+disambiguate residues.
+
+Whitespace in atom and residue names
+------------------------------------
+
+The PDB file format specifies that atom and residue names should be
+aligned to particular columns within a 4-column region.  Unfortunately,
+some have taken this alignment requirement to mean that an atom's
+name actually includes the surrounding whitespace!  When Msys loads
+a chemical system, atom and residue names are stripped of leading and
+trailing whitespace before they are inserted into the structure.  
+
+
