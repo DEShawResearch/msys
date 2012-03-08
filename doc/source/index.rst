@@ -32,6 +32,7 @@ Contents:
    :maxdepth: 2
 
    overview
+   selections
    paramtable
    termtable
    system

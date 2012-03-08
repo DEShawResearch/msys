@@ -67,6 +67,14 @@ compare_atomsel(coord_ent,"within 0 of protein")
 compare_atomsel(coord_ent,"withinbonds 2 of name C CA N O")
 compare_atomsel(coord_ent,"fragment 0")
 compare_atomsel(coord_ent,"fragment 1")
+compare_atomsel(coord_ent,"not oxygen or water")
+compare_atomsel(coord_ent,"(not oxygen) or water")
+compare_atomsel(coord_ent,"not (oxygen or water)")
+compare_atomsel(coord_ent,"not oxygen and water")
+compare_atomsel(coord_ent,"(not oxygen) and water")
+compare_atomsel(coord_ent,"not (oxygen and water)")
+
+compare_atomsel(coord_ent,"sqr(x)/36 + sqr(y)/81 + sqr(z)/125 < 1")
 
 
 compare_atomsel(coord_ent,"sqrt(sqr(x)+sqr(y))<5")
