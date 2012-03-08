@@ -71,7 +71,7 @@ namespace {
 
 
   const char* find_macro(std::string const& name, SystemPtr mol) { 
-      std::string const& m = mol->selectionMacro(name);
+      std::string const& m = mol->selectionMacroDefinition(name);
       return m.size() ? m.c_str() : NULL;
   }
 

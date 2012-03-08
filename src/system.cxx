@@ -60,19 +60,18 @@ namespace {
       {"noh","not hydrogen"},
       {"heme","resname HEM HEME"}
   };
+}
 
-    void initialize_macros(System& mol) {
-        const unsigned n=sizeof(builtin_macros)/sizeof(builtin_macros[0]);
-        for (unsigned i=0; i<n; i++) {
-            mol.addSelectionMacro(builtin_macros[i].name,
-                                  builtin_macros[i].text);
-        }
+void System::initSelectionMacros() {
+    const unsigned n=sizeof(builtin_macros)/sizeof(builtin_macros[0]);
+    for (unsigned i=0; i<n; i++) {
+        addSelectionMacro(builtin_macros[i].name, builtin_macros[i].text);
     }
 }
 
 System::System() 
 : _atomprops(ParamTable::create()), _bondprops(ParamTable::create()) {
-    initialize_macros(*this);
+    initSelectionMacros();
     //printf("hello structure %p\n", (void *)this);
 }
 
@@ -557,13 +556,17 @@ ValueRef System::bondPropValue(Id term, String const& name) {
     return _bondprops->value(term, bondPropIndex(name));
 }
 
-void System::addSelectionMacro(std::string const& selection,
-                               std::string const& macro) {
-    _macros[selection]=macro;
+void System::addSelectionMacro(std::string const& macro,
+                               std::string const& definition) {
+    if (!definition.size()) {
+        MSYS_FAIL("empty macro definition provided for '" << macro << "'");
+    } else {
+        _macros[macro]=definition;
+    }
 }
 
-std::string const& System::selectionMacro(std::string const& selection) const {
-    MacroMap::const_iterator it=_macros.find(selection);
+std::string const& System::selectionMacroDefinition(std::string const& m) const {
+    MacroMap::const_iterator it=_macros.find(m);
     if (it==_macros.end()) {
         static const std::string _empty;
         return _empty;
@@ -583,8 +586,8 @@ std::vector<std::string> System::selectionMacros() const {
     return v;
 }
 
-void System::delSelectionMacro(std::string const& selection) {
-    _macros.erase(_macros.find(selection));
+void System::delSelectionMacro(std::string const& macro) {
+    _macros.erase(_macros.find(macro));
 }
 
 void System::clearSelectionMacros() {

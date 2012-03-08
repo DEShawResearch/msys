@@ -363,6 +363,13 @@ namespace desres { namespace msys {
             .def("delAuxTable",  &System::delAuxTable)
             .def("removeAuxTable",&System::removeAuxTable)
 
+            /* selection macros */
+            .def("addSelectionMacro", &System::addSelectionMacro)
+            .def("delSelectionMacro", &System::delSelectionMacro)
+            .def("selectionMacroDefinition", &System::selectionMacroDefinition, return_const())
+            .def("selectionMacroCount", &System::selectionMacroCount)
+            .def("selectionMacros", &System::selectionMacros)
+
             /* schemas */
             .def("addTableFromSchema", AddTable)
             .def("addNonbondedFromSchema", AddNonbonded)

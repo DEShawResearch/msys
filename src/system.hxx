@@ -365,12 +365,15 @@ namespace desres { namespace msys {
 
         /* atom selection macros are strings that are expanded at parse time
          * into longer strings.  */
-        void addSelectionMacro(std::string const& selection,
-                               std::string const& macro);
+        void addSelectionMacro(std::string const& macro,
+                               std::string const& definition);
 
-        /* Get the macro corresponding to the given selection.  Returns empty
+        /* Remove the given macro */
+        void delSelectionMacro(std::string const& macro);
+
+        /* Get the definition corresponding to the given macro.  Returns empty
          * string if not found. */
-        std::string const& selectionMacro(std::string const& selection) const;
+        std::string const& selectionMacroDefinition(std::string const& m) const;
 
         /* number of defined selection macros */
         Id selectionMacroCount() const;
@@ -378,11 +381,12 @@ namespace desres { namespace msys {
         /* Return a list of all the selection macros */
         std::vector<std::string> selectionMacros() const;
 
-        /* Remove the given macro */
-        void delSelectionMacro(std::string const& selection);
-
         /* Remove all macros */
         void clearSelectionMacros();
+
+        /* Assign the default selection macros */
+        void initSelectionMacros();
+
     };
 
     typedef boost::shared_ptr<System> SystemPtr;

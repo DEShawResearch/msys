@@ -563,15 +563,15 @@ static void export_macros(System const& sys, dms_t* dms) {
      * macros installed, and dms files whose macros have all been deleted. */
     dms_exec(dms,
             "create table selection_macro (\n"
-            "  selection text primary key,\n"
-            "  macro text)");
+            "  macro text primary key,\n"
+            "  definition text)");
     dms_writer_t* w;
     dms_insert(dms,"selection_macro", &w);
     dms_exec(dms, "begin");
     std::vector<std::string> v = sys.selectionMacros();
     for (unsigned i=0; i<v.size(); i++) {
         dms_writer_bind_string(w, 0, v[i].c_str());
-        dms_writer_bind_string(w, 1, sys.selectionMacro(v[i]).c_str());
+        dms_writer_bind_string(w, 1, sys.selectionMacroDefinition(v[i]).c_str());
         dms_writer_next(w);
     }
     dms_exec(dms, "commit");

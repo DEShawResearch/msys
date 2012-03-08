@@ -414,15 +414,16 @@ static void read_macros(dms_t* dms, System& sys, KnownSet& known) {
     known.insert("selection_macro");
     dms_reader_t* r;
     if (dms_fetch(dms, "selection_macro", &r)) {
-        int sel = dms_reader_column(r, "selection");
         int mac = dms_reader_column(r, "macro");
-        if (sel<0 || mac<0) {
+        int def = dms_reader_column(r, "definition");
+        if (mac<0 || def<0) {
             dms_reader_free(r);
+            sys.initSelectionMacros();
             return;
         }
         for (; r; dms_reader_next(&r)) {
-            sys.addSelectionMacro(dms_reader_get_string(r, sel),
-                                  dms_reader_get_string(r, mac));
+            sys.addSelectionMacro(dms_reader_get_string(r, mac),
+                                  dms_reader_get_string(r, def));
         }
     }
 }
