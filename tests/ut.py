@@ -701,5 +701,8 @@ class TestMain(unittest.TestCase):
         m.delSelectionMacro('foobar')
         with self.assertRaises(RuntimeError): m.select('foobar')
 
+        with self.assertRaises(RuntimeError):
+            m.addSelectionMacro('foo', 'abc xyz')
+
 if __name__=="__main__":
     unittest.main()

@@ -1,5 +1,6 @@
 #include "system.hxx"
 #include "term_table.hxx"
+#include "atomsel/vmd.hxx"
 #include <sstream>
 #include <stack>
 #include <stdexcept>
@@ -71,7 +72,6 @@ void System::initSelectionMacros() {
 
 System::System() 
 : _atomprops(ParamTable::create()), _bondprops(ParamTable::create()) {
-    initSelectionMacros();
     //printf("hello structure %p\n", (void *)this);
 }
 
@@ -469,8 +469,10 @@ void System::removeAuxTable(ParamTablePtr aux) {
     }
 }
 
-boost::shared_ptr<System> System::create() {
-    return boost::shared_ptr<System>(new System);
+SystemPtr System::create() {
+    SystemPtr sys(new System);
+    sys->initSelectionMacros();
+    return sys;
 }
 
 IdList System::bondedAtoms(Id id) const {
@@ -558,11 +560,9 @@ ValueRef System::bondPropValue(Id term, String const& name) {
 
 void System::addSelectionMacro(std::string const& macro,
                                std::string const& definition) {
-    if (!definition.size()) {
-        MSYS_FAIL("empty macro definition provided for '" << macro << "'");
-    } else {
-        _macros[macro]=definition;
-    }
+
+    atomsel::vmd::parse(definition, shared_from_this());
+    _macros[macro]=definition;
 }
 
 std::string const& System::selectionMacroDefinition(std::string const& m) const {
