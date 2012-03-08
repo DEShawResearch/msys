@@ -557,7 +557,10 @@ static void export_provenance(System const& sys, Provenance const& provenance,
 }
 
 static void export_macros(System const& sys, dms_t* dms) {
-    if (!sys.selectionMacroCount()) return;
+    /* always create the selection_macro table, even if no macros are defined,
+     * so that we can distinguish between dms files written by older versions
+     * of msys that don't contain a selection_macro table and need the default
+     * macros installed, and dms files whose macros have all been deleted. */
     dms_exec(dms,
             "create table selection_macro (\n"
             "  selection text primary key,\n"

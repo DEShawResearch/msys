@@ -378,8 +378,11 @@ namespace desres { namespace msys {
         /* Return a list of all the selection macros */
         std::vector<std::string> selectionMacros() const;
 
-        /* Remove the macro. */
+        /* Remove the given macro */
         void delSelectionMacro(std::string const& selection);
+
+        /* Remove all macros */
+        void clearSelectionMacros();
     };
 
     typedef boost::shared_ptr<System> SystemPtr;

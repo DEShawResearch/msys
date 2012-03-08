@@ -407,6 +407,26 @@ static void read_provenance( dms_t* dms, System& sys, KnownSet& known) {
     }
 }
 
+static void read_macros(dms_t* dms, System& sys, KnownSet& known) {
+    static const char MACRO_TABLE[] = "selection_macro";
+    if (!dms_has_table(dms, MACRO_TABLE)) return;
+    sys.clearSelectionMacros();
+    known.insert("selection_macro");
+    dms_reader_t* r;
+    if (dms_fetch(dms, "selection_macro", &r)) {
+        int sel = dms_reader_column(r, "selection");
+        int mac = dms_reader_column(r, "macro");
+        if (sel<0 || mac<0) {
+            dms_reader_free(r);
+            return;
+        }
+        for (; r; dms_reader_next(&r)) {
+            sys.addSelectionMacro(dms_reader_get_string(r, sel),
+                                  dms_reader_get_string(r, mac));
+        }
+    }
+}
+
 static void
 read_alchemical_particle( dms_t* dms, System& sys, 
                           IdList& nbtypes, std::map<Id,Id>& nbtypesB,
@@ -631,6 +651,7 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
     read_cell(dms, sys, known);
     read_alchemical_particle( dms, sys, nbtypes, nbtypesB, known );
     read_provenance(dms, sys, known);
+    read_macros(dms, sys, known);
 
     if (!structure_only) {
         read_metatables(dms, gidmap, sys, known);

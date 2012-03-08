@@ -587,3 +587,6 @@ void System::delSelectionMacro(std::string const& selection) {
     _macros.erase(_macros.find(selection));
 }
 
+void System::clearSelectionMacros() {
+    _macros.clear();
+}
