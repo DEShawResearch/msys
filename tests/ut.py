@@ -701,14 +701,11 @@ class TestMain(unittest.TestCase):
         m.delSelectionMacro('foobar')
         with self.assertRaises(RuntimeError): m.select('foobar')
 
+        m.addSelectionMacro('foo', 'name CA')
+        m.addSelectionMacro('bar', 'foo')
+        m.addSelectionMacro('foo', 'bar')
         with self.assertRaises(RuntimeError):
-            m.addSelectionMacro('foo', 'abc xyz')
-
-        with self.assertRaises(RuntimeError):
-            m.addSelectionMacro('foo', 'name CA')
-            m.addSelectionMacro('bar', 'foo')
-            m.addSelectionMacro('foo', 'bar')
-            #m.select('foo')
+            m.select('foo')
 
 
 if __name__=="__main__":

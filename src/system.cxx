@@ -1,6 +1,5 @@
 #include "system.hxx"
 #include "term_table.hxx"
-#include "atomsel/vmd.hxx"
 #include <sstream>
 #include <stack>
 #include <stdexcept>
@@ -66,11 +65,7 @@ namespace {
 void System::initSelectionMacros() {
     const unsigned n=sizeof(builtin_macros)/sizeof(builtin_macros[0]);
     for (unsigned i=0; i<n; i++) {
-        //addSelectionMacro(builtin_macros[i].name, builtin_macros[i].text);
-        /* The addSelectionMacro method checks whether the macro is valid
-         * before adding, which takes extra time.  We don't need to check
-         * the built-in macros. */
-        _macros[builtin_macros[i].name] = builtin_macros[i].text;
+        addSelectionMacro(builtin_macros[i].name, builtin_macros[i].text);
     }
 }
 
@@ -564,17 +559,6 @@ ValueRef System::bondPropValue(Id term, String const& name) {
 
 void System::addSelectionMacro(std::string const& macro,
                                std::string const& definition) {
-
-    /* prevent recursive macro definitions */
-    std::string olddef = selectionMacroDefinition(macro);
-    delSelectionMacro(macro);
-    try {
-        atomsel::vmd::parse(definition, shared_from_this());
-    }
-    catch (std::runtime_error& e) {
-        if (olddef.size()) _macros[macro]=olddef;
-        throw;
-    }
     _macros[macro]=definition;
 }
 

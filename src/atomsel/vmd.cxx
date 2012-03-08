@@ -25,11 +25,18 @@ using desres::msys::SystemPtr;
 
 namespace {
   typedef ANTLR3_BASE_TREE Tree;
-  PredicatePtr  parse( Tree * tree, SystemPtr sys );
+  PredicatePtr  parse( Tree * tree, SystemPtr sys, StrList& s );
+
+  static bool contains(StrList& v, const char *s) {
+      for (unsigned i=0; i<v.size(); i++) {
+          if (!strcmp(v[i], s)) return true;
+      }
+      return false;
+  }
 }
 
 PredicatePtr desres::msys::atomsel::vmd::parse(
-        const std::string& sel, SystemPtr sys) {
+        const std::string& sel, SystemPtr sys, StrList& prev) {
 
   char *txt = const_cast<char*>(sel.c_str());
 
@@ -55,7 +62,7 @@ PredicatePtr desres::msys::atomsel::vmd::parse(
     throw std::runtime_error(ss.str());
   }
 
-  PredicatePtr pred = ::parse(ast.tree, sys);
+  PredicatePtr pred = ::parse(ast.tree, sys, prev);
 
   /* TODO: create scoped_ptr for parser state in case exception is thrown
    * during parsing. */
@@ -88,21 +95,21 @@ namespace {
     if (tree->children->count < i) return NULL;
     return (Tree*)tree->children->get(tree->children, i);
   }
-  PredicatePtr parseAnd( Tree *tree, SystemPtr ent ) {
+  PredicatePtr parseAnd( Tree *tree, SystemPtr ent, StrList& s ) {
     return and_predicate( 
-        parse(child(tree,0), ent),
-        parse(child(tree,1), ent) );
+        parse(child(tree,0), ent, s),
+        parse(child(tree,1), ent, s) );
   }
 
-  PredicatePtr parseOr( Tree *tree, SystemPtr ent ) {
+  PredicatePtr parseOr( Tree *tree, SystemPtr ent, StrList& s ) {
     return or_predicate(
-        parse(child(tree,0), ent),
-        parse(child(tree,1), ent) );
+        parse(child(tree,0), ent, s),
+        parse(child(tree,1), ent, s) );
   }
 
-  PredicatePtr parseNot( Tree *tree, SystemPtr ent ) {
+  PredicatePtr parseNot( Tree *tree, SystemPtr ent, StrList& s ) {
     return not_predicate(
-        parse(child(tree,0), ent) );
+        parse(child(tree,0), ent, s) );
   }
 
   KeywordPtr get_keyword( const char * id, SystemPtr ent ) {
@@ -143,7 +150,7 @@ namespace {
     return key;
   }
 
-  PredicatePtr parseSame( Tree *tree, SystemPtr ent ) {
+  PredicatePtr parseSame( Tree *tree, SystemPtr ent, StrList& s ) {
     const char *id = str(child(tree,0));
     KeywordPtr key = get_keyword(id,ent);
     if (!key) {
@@ -152,10 +159,10 @@ namespace {
           << "'");
     }
     return same_keyword_predicate( key, full_selection(ent), 
-            parse(child(tree,1), ent) );
+            parse(child(tree,1), ent, s) );
   }
 
-  PredicatePtr parseKeyword( Tree *tree, SystemPtr ent ) {
+  PredicatePtr parseKeyword( Tree *tree, SystemPtr ent, StrList& s ) {
     const char *id = str(child(tree,0));
     int nterms = tree->children->count-1;
     KeywordPtr key = get_keyword(id,ent);
@@ -198,7 +205,15 @@ namespace {
 
     /* check for macros defined in the system */
     const char* user_macro = find_macro(id, ent);
-    if (user_macro) return desres::msys::atomsel::vmd::parse(user_macro,ent);
+    if (user_macro) {
+        if (contains(s,user_macro)) {
+            MSYS_FAIL("Recursion detected in selection macro " << id);
+        }
+        s.push_back(user_macro);
+        PredicatePtr p = desres::msys::atomsel::vmd::parse(user_macro,ent,s);
+        s.pop_back();
+        return p;
+    }
 
     THROW_FAILURE("VmdGrammar: unrecognized keyword " << id);
     return PredicatePtr();
@@ -266,39 +281,39 @@ namespace {
                                  parseExpression(child(tree,2),ent) );
   }
 
-  PredicatePtr parseWithin(Tree* tree, SystemPtr ent) {
+  PredicatePtr parseWithin(Tree* tree, SystemPtr ent, StrList& s) {
     double rad = atof(str(child(tree,0)));
-    return within_predicate(ent,rad,parse(child(tree,1),ent));
+    return within_predicate(ent,rad,parse(child(tree,1),ent,s));
   }
 
-  PredicatePtr parseExwithin(Tree* tree, SystemPtr ent) {
+  PredicatePtr parseExwithin(Tree* tree, SystemPtr ent, StrList& s) {
     double rad = atof(str(child(tree,0)));
-    return exwithin_predicate(ent,rad,parse(child(tree,1),ent));
+    return exwithin_predicate(ent,rad,parse(child(tree,1),ent,s));
   }
 
-  PredicatePtr parsePbwithin(Tree* tree, SystemPtr ent) {
+  PredicatePtr parsePbwithin(Tree* tree, SystemPtr ent, StrList& s) {
     double rad = atof(str(child(tree,0)));
-    return pbwithin_predicate(ent,rad,parse(child(tree,1),ent));
+    return pbwithin_predicate(ent,rad,parse(child(tree,1),ent,s));
   }
 
-  PredicatePtr parseWithinBonds(Tree* tree, SystemPtr ent) {
+  PredicatePtr parseWithinBonds(Tree* tree, SystemPtr ent, StrList& s) {
     int n = atoi(str(child(tree,0)));
-    return withinbonds_predicate(ent,n,parse(child(tree,1),ent));
+    return withinbonds_predicate(ent,n,parse(child(tree,1),ent,s));
   }
 
-  PredicatePtr parse( Tree *tree, SystemPtr ent ) {
+  PredicatePtr parse( Tree *tree, SystemPtr ent, StrList& s ) {
     if (!tree) THROW_FAILURE("atomsel::vmd - Unexpected NULL tree");
     switch (tree->getType(tree)) {
-      case AND: return parseAnd(tree,ent);
-      case OR:  return parseOr(tree,ent);
-      case NOT: return parseNot(tree,ent);
-      case KEYWORD: return parseKeyword(tree,ent);
-      case SAME: return parseSame(tree,ent);
+      case AND: return parseAnd(tree,ent,s);
+      case OR:  return parseOr(tree,ent,s);
+      case NOT: return parseNot(tree,ent,s);
+      case KEYWORD: return parseKeyword(tree,ent,s);
+      case SAME: return parseSame(tree,ent,s);
       case RELATION: return parseRelation(tree,ent);
-      case WITHIN: return parseWithin(tree,ent);
-      case EXWITHIN: return parseExwithin(tree,ent);
-      case PBWITHIN: return parsePbwithin(tree,ent);
-      case WITHINBONDS: return parseWithinBonds(tree,ent);
+      case WITHIN: return parseWithin(tree,ent,s);
+      case EXWITHIN: return parseExwithin(tree,ent,s);
+      case PBWITHIN: return parsePbwithin(tree,ent,s);
+      case WITHINBONDS: return parseWithinBonds(tree,ent,s);
       default:;
     }
     THROW_FAILURE(

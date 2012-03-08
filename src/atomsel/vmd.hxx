@@ -6,7 +6,8 @@
 
 namespace desres { namespace msys { namespace atomsel { namespace vmd {
 
-    PredicatePtr parse(const std::string& sel, SystemPtr sys);
+    typedef std::vector<const char *> StrList;
+    PredicatePtr parse(const std::string& sel, SystemPtr sys, StrList& prev);
 
 }}}}
 
