@@ -556,6 +556,26 @@ static void export_provenance(System const& sys, Provenance const& provenance,
     dms_writer_free(w);
 }
 
+static void export_macros(System const& sys, dms_t* dms) {
+    if (!sys.selectionMacroCount()) return;
+    dms_exec(dms,
+            "create table selection_macro (\n"
+            "  selection text primary key,\n"
+            "  macro text)");
+    dms_writer_t* w;
+    dms_insert(dms,"selection_macro", &w);
+    dms_exec(dms, "begin");
+    std::vector<std::string> v = sys.selectionMacros();
+    for (unsigned i=0; i<v.size(); i++) {
+        dms_writer_bind_string(w, 0, v[i].c_str());
+        dms_writer_bind_string(w, 1, sys.selectionMacro(v[i]).c_str());
+        dms_writer_next(w);
+    }
+    dms_exec(dms, "commit");
+    dms_writer_free(w);
+}
+
+
 /* make a mapping from id to 0-based dms primary key */
 static IdList map_gids(System const& sys) {
     Id i,n = sys.maxAtomId();
@@ -578,6 +598,7 @@ static void export_dms(SystemPtr h, dms_t* dms, Provenance const& provenance) {
     export_nbinfo(   sys,            dms);
     export_cell(     sys,            dms);
     export_provenance(sys,provenance,dms);
+    export_macros(   sys,            dms);
 }
 
 void desres::msys::ExportDMS(SystemPtr h, const std::string& path,

@@ -370,13 +370,13 @@ namespace desres { namespace msys {
 
         /* Get the macro corresponding to the given selection.  Returns empty
          * string if not found. */
-        std::string const& getSelectionMacro(std::string const& selection) const;
+        std::string const& selectionMacro(std::string const& selection) const;
 
         /* number of defined selection macros */
         Id selectionMacroCount() const;
 
         /* Return a list of all the selection macros */
-        std::vector<std::string> getSelectionMacros() const;
+        std::vector<std::string> selectionMacros() const;
 
         /* Remove the macro. */
         void delSelectionMacro(std::string const& selection);

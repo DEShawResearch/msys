@@ -69,66 +69,9 @@ PredicatePtr desres::msys::atomsel::vmd::parse(
 
 namespace {
 
-  struct atomsel_macro {
-      const char * name;
-      const char * text;
-  };
-
-  atomsel_macro builtin_macros[] = {
-      {"at","resname ADE A THY T"},
-      {"acidic","resname ASP GLU"},
-      {"cyclic","resname HIS PHE PRO TRP TYR"},
-      {"acyclic","protein and not cyclic"},
-      {"aliphatic","resname ALA GLY ILE LEU VAL"},
-      {"alpha","protein and name CA"},
-      {"amino","protein"},
-      {"aromatic","resname HIS PHE TRP TYR"},
-      {"basic","resname ARG HIS LYS HSP"},
-      {"bonded","numbonds > 0"},
-      {"buried"," resname ALA LEU VAL ILE PHE CYS MET TRP"},
-      {"cg","resname CYT C GUA G"},
-      {"charged","basic or acidic"},
-      {"hetero","not (protein or nucleic)"},
-
-    // APD's hydrophobic residue list, from Branden and Tooze (pp6-7).
-      {"hydrophobic","resname ALA LEU VAL ILE PRO PHE MET TRP"},
-    
-      {"small","resname ALA GLY SER"},
-      {"medium","resname VAL THR ASP ASN PRO CYS ASX PCA HYP"},
-      {"large","protein and not (small or medium)"},
-      {"neutral","resname VAL PHE GLN TYR HIS CYS MET TRP ASX GLX PCA HYP"},
-      {"polar","protein and not hydrophobic"},
-      {"purine","resname ADE A GUA G"},
-      {"pyrimidine","resname CYT C THY T URA U"},
-      {"surface","protein and not buried"},
-      {"lipid","resname DLPE DMPC DPPC GPC LPPC PALM PC PGCL POPC POPE"},
-      {"lipids","lipid"},
-      {"ion","resname AL BA CA Ca CAL CD CES CLA CL Cl CO CS CU Cu CU1 CUA HG IN IOD K MG MN3 MO3 MO4 MO5 MO6 NA Na NAW OC7 PB POT PT RB SOD TB TL WO4 YB ZN ZN1 ZN2"},
-      {"ions","ion"},
-      {"sugar","resname AGLC"},
-      {"solvent","not (protein or sugar or nucleic or lipid)"},
-      /* for carbon, nitrogen, oxygen, and sulfur (and hydrogen), VMD
-       * uses a name-based regex; e.g. 'name "N.*"' for nitrogen.  This
-       * is just silly, and gets things like Na and Cl wrong.  We refuse
-       * to reproduce this buggy behavior and intead look to the atomic
-       * number. */
-      {"carbon","atomicnumber 6"},
-      {"nitrogen","atomicnumber 7"},
-      {"oxygen","atomicnumber 8"},
-      {"sulfur","atomicnumber 16"},
-      {"noh","not hydrogen"},
-      {"heme","resname HEM HEME"}
-  };
 
   const char* find_macro(std::string const& name, SystemPtr mol) { 
-      if (!mol->selectionMacroCount()) { 
-          const unsigned n=sizeof(builtin_macros)/sizeof(builtin_macros[0]);
-          for (unsigned i=0; i<n; i++) {
-              mol->addSelectionMacro(builtin_macros[i].name,
-                                     builtin_macros[i].text);
-          }
-      }
-      std::string const& m = mol->getSelectionMacro(name);
+      std::string const& m = mol->selectionMacro(name);
       return m.size() ? m.c_str() : NULL;
   }
 
