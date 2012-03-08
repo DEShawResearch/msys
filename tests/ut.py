@@ -688,5 +688,18 @@ class TestMain(unittest.TestCase):
         with self.assertRaises(ValueError):
             m.positions=p
 
+    def testMacros(self):
+        m=msys.CreateSystem()
+        m.addAtom().name='CA'
+        m.addAtom().name='CB'
+        self.assertFalse('foobar' in m.selection_macros)
+        with self.assertRaises(RuntimeError): m.select('foobar')
+        m.addSelectionMacro('foobar', 'name CB')
+        self.assertEqual(m.selectionMacroDefinition('foobar'), 'name CB')
+        self.assertTrue('foobar' in m.selection_macros)
+        self.assertEqual(m.select('foobar')[0].id, 1)
+        m.delSelectionMacro('foobar')
+        with self.assertRaises(RuntimeError): m.select('foobar')
+
 if __name__=="__main__":
     unittest.main()

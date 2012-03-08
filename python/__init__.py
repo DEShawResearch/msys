@@ -969,6 +969,28 @@ class System(object):
         ''' return a list of Provenance entries for this system '''
         return self._ptr.provenance()
 
+    def addSelectionMacro(self, macro, definition):
+        ''' Add and/or replace the given atom selection macro with the given
+        definition, which must be parseable.
+        '''
+        self._ptr.addSelectionMacro(str(macro).strip(), str(definition))
+
+    def delSelectionMacro(self, macro):
+        ''' Remove the given macro from the dictionary for this system '''
+        self._ptr.delSelectionMacro(str(macro))
+
+    @property
+    def selection_macros(self):
+        ''' Return a list of the selection macros defined for this system.
+        '''
+        return [x for x in self._ptr.selectionMacros()]
+
+    def selectionMacroDefinition(self, macro):
+        ''' Return the definition for the given macro, or None if not defined
+        '''
+        x = self._ptr.selectionMacroDefinition(str(macro).strip())
+        return x if x else None
+
 def CreateSystem():
     ''' Create a new, empty System '''
     return System(_msys.SystemPtr.create())
