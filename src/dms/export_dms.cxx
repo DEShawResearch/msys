@@ -562,11 +562,11 @@ static void export_macros(System const& sys, dms_t* dms) {
      * of msys that don't contain a selection_macro table and need the default
      * macros installed, and dms files whose macros have all been deleted. */
     dms_exec(dms,
-            "create table selection_macro (\n"
+            "create table msys_selection_macro (\n"
             "  macro text primary key,\n"
             "  definition text)");
     dms_writer_t* w;
-    dms_insert(dms,"selection_macro", &w);
+    dms_insert(dms,"msys_selection_macro", &w);
     dms_exec(dms, "begin");
     std::vector<std::string> v = sys.selectionMacros();
     for (unsigned i=0; i<v.size(); i++) {

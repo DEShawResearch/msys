@@ -408,12 +408,12 @@ static void read_provenance( dms_t* dms, System& sys, KnownSet& known) {
 }
 
 static void read_macros(dms_t* dms, System& sys, KnownSet& known) {
-    static const char MACRO_TABLE[] = "selection_macro";
+    static const char MACRO_TABLE[] = "msys_selection_macro";
     if (!dms_has_table(dms, MACRO_TABLE)) return;
     sys.clearSelectionMacros();
-    known.insert("selection_macro");
+    known.insert(MACRO_TABLE);
     dms_reader_t* r;
-    if (dms_fetch(dms, "selection_macro", &r)) {
+    if (dms_fetch(dms, MACRO_TABLE, &r)) {
         int mac = dms_reader_column(r, "macro");
         int def = dms_reader_column(r, "definition");
         if (mac<0 || def<0) {
