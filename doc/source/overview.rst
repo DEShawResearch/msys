@@ -313,6 +313,30 @@ undiscovered bugs in Msys!) fall into the following categories:
   results of distance based atom selections simply due the fact that Msys
   stores positions as doubles, while VMD stores them as floats.  
 
+User-defined atom selection macros
+----------------------------------
+
+The atom selection language can be extended on a per-System basis with
+macros.  A macro must be a single word, and cannot conflict with existing
+selection keywords such as ``name``.  There are a number of pre-defined atom selection macros,
+which you can list with `Selection.selection_macros`.  Other methods
+in `System` let you view or change the definition of a macro, or remove
+it altogether from the language.  Your changes to the selection macros
+are saved in DMS files.
+
+One use case for atom selection macros is when you have to work with
+multiple related chemical systems with different atom selections for
+corresponding functional groups. For example, the "active site" may
+correspond to residues 32, 40, 48 for one chemical system, but residues
+30, 31, 43, and 47 in another system.  If you define the atom selection
+macro appropriately for each system and save it in the DMS file, you
+will be able to simply select "active_site" when working with either
+file and it will just work::
+
+    mol.addSelectionMacro('active_site', 'chain A and resid 32 40 48')
+    sel=mol.select('same residue as water and within 3 of active_site')
+
+
 Notes on loading chemical systems
 =================================
 
