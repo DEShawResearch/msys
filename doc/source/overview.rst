@@ -283,14 +283,14 @@ Msys uses the ``resname``, ``resid``, and ``chain`` names in the particle
 table to groups atoms into `Residues`.  Any particle with the same value
 for these three attributes will wind up in the same `Residue`, regardless of
 the order of the particles or their bond structure.  In addition, starting
-with Msys version 1.0.14, the ``segid`` particle attribute is also used
+with Msys version 1.0.13, the ``segid`` particle attribute is also used
 to disambiguate residues.  
 
 Msys assigns particles to chains using only the ``chain`` attribute.  This
 attribute can be of any length, although some legacy file formats restrict
 it to only one character.  The ``segid`` attribute is not used for assigning
 chain; if present in the file, it simply appears as an additional particle
-attribute, and, in versions of Msys later than 1.0.14, will also be used to
+attribute, and, in versions of Msys later than 1.0.13, will also be used to
 disambiguate residues.
 
 Whitespace in atom and residue names
