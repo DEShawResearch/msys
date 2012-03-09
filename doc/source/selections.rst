@@ -222,6 +222,26 @@ Users are free to override or delete them.
   heme          resname HEM HEME
   ===========   ==========
 
+Comparison selections
+---------------------
+
+Comparisons are formed from two expressions and a binary comparison
+operator.  The available comparison operators are the usual inequality
+and equality operators: ``<``, ``>``, ``<=``, ``>=``, ``==``, and ``!=``.
+Expressions can be built up from numeric literals and from keywords of 
+float type, in the following ways:
+
+* Binary mathematical operators: ``+``, ``-``, ``*``, and ``/``; e.g.,
+  "x * y - z < 3".
+
+* The C-style modulus function ``%``; e.g., "residue % 10 == 0" for every
+  10th residue.
+
+* Unary ``-``.
+
+* The functions ``sqr``, ``sqrt``, and ``abs``; e.g., "sqrt(sqr(x)+sqr(y))<5".
+
+
 User-defined keywords
 ---------------------
 
