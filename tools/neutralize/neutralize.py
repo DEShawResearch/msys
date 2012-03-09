@@ -93,7 +93,7 @@ def Neutralize(mol, cation='NA', anion='CL',
     othertype = cation
     if cg < 0:
         iontype = cation
-    othertype = anion
+        othertype = anion
 
     iontype = parse_ion(iontype)
     othertype = parse_ion(othertype)
