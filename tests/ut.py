@@ -698,6 +698,10 @@ class TestMain(unittest.TestCase):
         self.assertEqual(m.selectionMacroDefinition('foobar'), 'name CB')
         self.assertTrue('foobar' in m.selection_macros)
         self.assertEqual(m.select('foobar')[0].id, 1)
+
+        m2=m.clone()
+        self.assertEqual(m2.select('foobar')[0].id, 1)
+
         m.delSelectionMacro('foobar')
         with self.assertRaises(RuntimeError): m.select('foobar')
 

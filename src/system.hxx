@@ -387,6 +387,8 @@ namespace desres { namespace msys {
         /* Assign the default selection macros */
         void initSelectionMacros();
 
+        /* copy macros from another system */
+        void copySelectionMacros(System const& m);
     };
 
     typedef boost::shared_ptr<System> SystemPtr;

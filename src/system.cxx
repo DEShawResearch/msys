@@ -590,3 +590,7 @@ void System::delSelectionMacro(std::string const& macro) {
 void System::clearSelectionMacros() {
     _macros.clear();
 }
+
+void System::copySelectionMacros(System const& m) {
+    _macros = m._macros;
+}
