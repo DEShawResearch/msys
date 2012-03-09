@@ -122,64 +122,120 @@ Built-in selections
 
 The following selection keywords are available:
 
-* ``atomicnumber`` (integer) `Atom`.atomic_number
-
-* ``chain`` (string) `Chain`.name
-
-* ``charge`` (float) `Atom`.charge
-
-* ``fragment`` (integer) Connected residues will all have the same fragment
-  id, except that the connection check will not follow disulfide bridges,
-  identified as atoms whose name is "SG".
-
-* ``index`` (integer) `Atom`.id
-
-* ``mass`` (float) `Atom`.mass
-
-* ``name`` (string) `Atom`.name
-
-* ``numbonds`` (integer) `Atom`.nbonds
-
-* ``resid`` (integer) `Residue`.resid
-
-* ``residue`` (integer) `Residue`.id
-
-* ``resname`` (string) `Residue`.name
-
-* ``fragid`` (integer) `Atom`.fragid.  Connnected atoms will all have the same
-  fragid.
-
-* ``x``, ``y``, ``z`` (float) `Atom`.x, `Atom`.y, `Atom`.z, the position.
-
-* ``vx``, ``vy``, ``vz`` (float) `Atom`.vx, `Atom`.vy, `Atom`.vz, the 
-velocity.
+  ================  =========== ===========================================
+  keyword           type        definition
+  ================  =========== ===========================================
+  atomicnumber      integer     `Atom`.atomic_number
+  chain             string      `Chain`.name
+  charge            float       `Atom`.charge
+  fragment          integer     Connected residues will all have the same 
+                                fragment id, except that the connection 
+                                check will not follow disulfide bridges, 
+                                identified as atoms whose name is "SG".
+  index             integer     `Atom`.id
+  mass              float       `Atom`.mass
+  name              string      `Atom`.name
+  numbonds          integer     `Atom`.nbonds
+  resid             integer     `Residue`.resid
+  residue           integer     `Residue`.id
+  resname           string      `Residue`.name
+  fragid            integer     `Atom`.fragid.  Connnected atoms will all 
+                                have the same fragid.
+  x, y, z           float       `Atom`.x, `Atom`.y, `Atom`.z, the position.
+  vx, vy, vz        float       `Atom`.vx, `Atom`.vy, `Atom`.vz, the velocity.
+  ================  =========== ===========================================
 
 
 The following selection singlewords are available.  Note that these
 are not implemented as macros and thus cannot be overridden or removed
 by the user.
 
-* ``water`` -- atoms belonging to a residue containing the atomic number
-  and bond structure of water, as well as those residues whose residue
-  name is one of "H2O", "HH0", "OHH", "HOH", "OH2", "SOL", "WAT", "TIP", 
-  "TIP2", "TIP3", "TIP4", or "SPC".
+  ===============   ==========================================================
+  singleword        definition
+  ===============   ==========================================================
+  all               Every atom.
+  none              No atoms.
+  water             Atoms belonging to a residue containing the atomic number 
+                    and bond structure of water, as well as those residues 
+                    whose residue name is one of the following: "H2O", "HH0", 
+                    "OHH", "HOH", "OH2", "SOL", "WAT", "TIP", "TIP2", "TIP3", 
+                    "TIP4", "SPC".
+  hydrogen           atomic number 1
+  backbone          This singleword includes both protein backbone as well as 
+                    nucleic backbone.  Protein backbone is identified by 
+                    searching for atoms named "CA", "C", "O", and "N" in the 
+                    same residue, and for atoms named "OT1", "OT2", "OXT", 
+                    "O1", or "O2" that are bonded to one of the members of 
+                    the first list.  If at least four such atoms are found, 
+                    those atoms are identified as backbone.  Similarly, 
+                    nucleic acid backbone atom names are P", "O1P", "O2P", 
+                    "OP1", "OP2", "C3*", "C3'", "O3*", "O3'", "C4*", "C4'", 
+                    "C5*", "C5'", "O5*", or "O5'"; or atoms named "H5T" or
+                    "H3T" bonded to a member of the first set.  At least 
+                    four such atoms must be found in the same residue in 
+                    order to be identified as backbone.
+  protein           residues containing protein backbone atoms.
+  nucleic           residues containing nucleic backbone atoms.
+  ===============   ==========================================================
 
-* ``hydrogen`` -- atomic number 1.
 
-* ``backbone`` -- This singleword includes both protein backbone as well
-  as nucleic backbone.  Protein backbone is identified by searching for
-  atoms named "CA", "C", "O", and "N" in the same residue, and for atoms
-  named "OT1", "OT2", "OXT", "O1", or "O2" that are bonded to one of the
-  members of the first list.  If at least four such atoms are found, those
-  atoms are identified as backbone.  Similarly, nucleic acid backbone atom
-  names are P", "O1P", "O2P", "OP1", "OP2", "C3*", "C3'", "O3*", "O3'",
-  "C4*", "C4'", "C5*", "C5'", "O5*", or "O5'"; or atoms named "H5T" or
-  "H3T" bonded to a member of the first set.  At least four such atoms
-  must be found in the same residue in order to be identified as backbone.
+The following built-in macros are defined when a System is first created.
+Users are free to override or delete them.
 
-* ``protein`` -- residues containing protein backbone atoms.
+  ===========   ==========
+  macro         definition
+  ===========   ==========
+  at            resname ADE A THY T
+  acidic        resname ASP GLU
+  cyclic        resname HIS PHE PRO TRP TYR
+  acyclic       protein and not cyclic
+  aliphatic     resname ALA GLY ILE LEU VAL
+  alpha         protein and name CA
+  amino         protein
+  aromatic      resname HIS PHE TRP TYR
+  basic         resname ARG HIS LYS HSP
+  bonded        numbonds > 0
+  buried        resname ALA LEU VAL ILE PHE CYS MET TRP
+  cg            resname CYT C GUA G
+  charged       basic or acidic
+  hetero        not (protein or nucleic)
+  hydrophobic   resname ALA LEU VAL ILE PRO PHE MET TRP
+  small         resname ALA GLY SER
+  medium        resname VAL THR ASP ASN PRO CYS ASX PCA HYP
+  large         protein and not (small or medium)
+  neutral       resname VAL PHE GLN TYR HIS CYS MET TRP ASX GLX PCA HYP
+  polar         protein and not hydrophobic
+  purine        resname ADE A GUA G
+  pyrimidine    resname CYT C THY T URA U
+  surface       protein and not buried
+  lipid         resname DLPE DMPC DPPC GPC LPPC PALM PC PGCL POPC POPE
+  lipids        lipid
+  ion           resname AL BA CA Ca CAL CD CES CLA CL Cl CO CS CU Cu CU1 CUA HG IN IOD K MG MN3 MO3 MO4 MO5 MO6 NA Na NAW OC7 PB POT PT RB SOD TB TL WO4 YB ZN ZN1 ZN2
+  ions          ion
+  sugar         resname AGLC
+  solvent       not (protein or sugar or nucleic or lipid)
+  carbon        atomicnumber 6
+  nitrogen      atomicnumber 7
+  oxygen        atomicnumber 8
+  sulfur        atomicnumber 16
+  noh           not hydrogen
+  heme          resname HEM HEME
+  ===========   ==========
 
-* ``nucleic`` -- residues containing nucleic backbone atoms.
+User-defined keywords
+---------------------
+
+In addition to the aforementioned built-in keywords, any atom property may
+also be used as an atom selection keyword.  For example::
+
+  # add atom property 'foo' to a system.  The default value is empty string
+  mol.addAtomProp('foo', str)
+
+  # set the foo property to 'jrg' for all alpha carbons
+  for a in mol.select('name CA'): a['foo'] = 'jrg'
+
+  # check that selecting for foo equal to jrg is equivalent to 'name CA'
+  assert mol.select('foo jrg') == mol.select('name CA')
 
 
 User-defined atom selection macros
@@ -204,5 +260,6 @@ file and it will just work::
 
     mol.addSelectionMacro('active_site', 'chain A and resid 32 40 48')
     sel=mol.select('same residue as water and within 3 of active_site')
+
 
 
