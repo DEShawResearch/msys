@@ -90,6 +90,8 @@ See documentation in
 http://gardendoc.nyc.desres.deshaw.com/$NAME/$VERSION/doc/html/index.html
 
 1.1.1  dms-neutralize: fix for positive solute charge (DESRESCode#1352)
+       dms-neutralize: remove ions if needed to achieve specified concentration
+       Fix bug in atom selections on systems with deleted atoms
 
 1.1.0  Added user-defined atom selection macros.
        New atom selection documentation.
