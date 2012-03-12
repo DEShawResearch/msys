@@ -121,19 +121,32 @@ def Neutralize(mol, cation='NA', anion='CL',
     nother = int((concentration / 55.345) * (ntotalwat - nions + nions_prev))
     nions += nother
 
+    if nions >= 0:
+        print "New system should contain %d %s ions" % (nions, iontype.name)
+    if nother >= 0:
+        print "New system should contain %d %s ions" % (nother, othertype.name)
+
     # subtract off the ions already present in solution
     nions -= nions_prev
     nother -= nother_prev
-    if nions < 0 or nother < 0:
-        raise RuntimeError, "Too many ions already in solution"
+    if nions < 0:
+        # delete ions
+        if nions_prev < -nions:
+            raise RuntimeError, "Cannot decrease concentration - not enough ions to delete"
+        sel=mol.select('atomicnumber %d and not bonded' % iontype.anum)
+        for r in sel[:-nions]: r.remove()
+        nions = 0
+    if nother < 0:
+        # delete other 
+        if nother_prev < -nother:
+            raise RuntimeError, "Cannot decrease concentration - not enough other ions to delete"
+        sel=mol.select('atomicnumber %d and not bonded' % othertype.anum)
+        for r in sel[:-nother]: r.remove()
+        nother = 0
+
 
     if nwat < nions:
         raise RuntimeError, "Only %d waters found; not enough to neutralize" % nwat
-
-    if nother > 0:
-        print "Adding %d %s ions" % (nother, othertype.name)
-    if nions > 0:
-        print "Adding %d %s ions" % (nions, iontype.name)
 
     # Shuffle the residues
     random.shuffle(residues)
