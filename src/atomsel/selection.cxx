@@ -6,7 +6,7 @@ using namespace desres::msys::atomsel;
 
 Selection::Selection(Id size, const IdList& ids)
 : flags(size) {
-    for (unsigned i=0, n=ids.size(); i<n; i++) flags[i]=true;
+    for (unsigned i=0, n=ids.size(); i<n; i++) flags.at(ids[i])=true;
 }
 
 void Selection::clear() {

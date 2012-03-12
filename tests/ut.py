@@ -35,6 +35,14 @@ class TestMain(unittest.TestCase):
         a1.residue = rnew
         self.assertEqual(rnew, a1.residue)
 
+    def testSelectOnRemoved(self):
+        m=msys.CreateSystem()
+        m.addAtom()
+        m.addAtom().atomic_number=17
+        m.addAtom()
+        for a in m.select('atomicnumber 17'): a.remove()
+        self.assertEqual(0, len(m.select('atomicnumber 17')))
+
     def testCoalesce(self):
         m=msys.CreateSystem()
         a=m.addAtom()
