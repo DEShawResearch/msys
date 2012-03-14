@@ -190,6 +190,9 @@ static void export_particles(const System& sys, const IdList& map, dms_t* dms) {
         Id chn = residue.chain;
         const chain_t& chain = sys.chain(chn);
 
+        printf("id %u chain '%s' segid '%s'\n",
+                atm, chain.name.c_str(), chain.segid.c_str());
+
         dms_writer_bind_int(w,    0, map[atm]);
         dms_writer_bind_int(w,    1, atom.atomic_number);
         dms_writer_bind_string(w, 2, atom.name.c_str());

@@ -7,46 +7,11 @@
 #include <string.h>
 #include <stdexcept>
 
-#include <boost/algorithm/string.hpp> /* for boost::trim */
 #include <boost/scoped_ptr.hpp>
 
 using namespace desres::msys;
 
 typedef std::set<String> KnownSet;
-
-namespace {
-
-    struct ChnKey {
-        String name;
-        String segid;
-
-        ChnKey() {}
-        ChnKey(String const& nm, String const& seg)
-        : name(nm), segid(seg) {}
-
-        bool operator<(ChnKey const& c) const {
-            int rc = name.compare(c.name);
-            if (rc) return rc<0;
-            return segid.compare(c.segid)<0;
-        }
-    };
-            
-    struct ResKey {
-        Id      chain;
-        int     resnum;
-        String  resname;
-
-        ResKey() {}
-        ResKey(Id chn, int num, String const& name) 
-        : chain(chn), resnum(num), resname(name) {}
-
-        bool operator<(const ResKey& r) const {
-            if (chain!=r.chain) return chain<r.chain;
-            if (resnum!=r.resnum) return resnum<r.resnum;
-            return resname.compare(r.resname)<0;
-        }
-    };
-}
 
 static bool is_pN(const char * s) {
     if (s[0]!='p') return false;
@@ -480,13 +445,8 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
     System& sys = *h;
     dms_reader_t * r;
 
-    Id chnid = BadId;
-    Id resid = BadId;
+    SystemImporter imp(h);
 
-    typedef std::map<ChnKey,Id> ChnMap;
-    typedef std::map<ResKey,Id> ResMap;
-    ResMap resmap;
-    ChnMap chnmap;
     IdList nbtypes;
     IdList gidmap; /* map dms gids to msys ids */
     IdList ignored_gids;
@@ -550,42 +510,15 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
             continue;
         }
 
-        /* start a new chain if necessary */
-        const char * chainname = dms_reader_get_string(r,CHAIN);
-        const char * segid = SEGID < 0 ? "" : dms_reader_get_string(r, SEGID);
-        std::pair<ChnMap::iterator,bool> cp;
-        cp = chnmap.insert(std::make_pair(ChnKey(chainname,segid),chnid));
-        if (cp.second) {
-            /* new chain/segid pair found, so start a new chain */
-            chnid = sys.addChain();
-            sys.chain(chnid).name = chainname;
-            sys.chain(chnid).segid = segid;
-            resid = BadId;
-            cp.first->second = chnid;
-        } else {
-            /* use existing chain */
-            chnid = cp.first->second;
-        }
+        /* add atom */
+        const char * chainname = CHAIN<0 ? "" : dms_reader_get_string(r,CHAIN);
+        const char * segid = SEGID<0 ? "" : dms_reader_get_string(r, SEGID);
+        const char * resname = RESNAME<0 ? "" : dms_reader_get_string(r, RESNAME);
+        const char * aname = NAME<0 ? "" : dms_reader_get_string(r, NAME);
+        int resnum = RESID<0 ? 0 : dms_reader_get_int(r, RESID);
+        Id atmid = imp.addAtom(chainname, segid, resnum, resname, aname);
 
-        /* start a new residue if necessary */
-        const char * resname = dms_reader_get_string(r, RESNAME);
-        int resnum = dms_reader_get_int(r, RESID);
-        std::pair<ResMap::iterator,bool> p;
-        p = resmap.insert(std::make_pair(ResKey(chnid,resnum,resname), resid));
-        if (p.second) {
-            /* new resname/resnum in this chain, so start a new residue. */
-            resid = sys.addResidue(chnid);
-            sys.residue(resid).name = resname;
-            sys.residue(resid).resid = resnum;
-            boost::trim(sys.residue(resid).name);
-            p.first->second = resid;
-        } else {
-            /* use existing residue */
-            resid = p.first->second;
-        }
-
-        /* add the atom */
-        Id atmid = sys.addAtom(resid);
+        /* add atom properties */
         atom_t& atm = sys.atom(atmid);
         atm.x = dms_reader_get_double(r, X);
         atm.y = dms_reader_get_double(r, Y);
@@ -595,12 +528,9 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
         atm.vz = dms_reader_get_double(r, VZ);
         atm.mass = dms_reader_get_double(r, MASS);
         atm.atomic_number = anum;
-        atm.name = dms_reader_get_string(r, NAME);
         atm.charge = dms_reader_get_double(r, CHARGE);
         while (gidmap.size()<gid) gidmap.push_back(BadId);
         gidmap.push_back(atmid);
-
-        boost::trim(atm.name);
 
         /* extra atom properties */
         Id propcol=0;

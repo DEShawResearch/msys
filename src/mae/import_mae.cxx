@@ -18,27 +18,6 @@ namespace bio = boost::iostreams;
 
 namespace {
 
-    static Id find_chain(SystemPtr h, const std::string& name) {
-        IdList chains = h->chains();
-        for (Id i=0, n=chains.size(); i<n; i++) {
-            Id id = chains[i];
-            if (h->chain(id).name==name) return id;
-        }
-        return BadId;
-    }
-
-    static Id find_residue(SystemPtr h, Id chn, const std::string& name,
-                                                int resid ) {
-        IdList residues = h->residuesForChain(chn);
-        for (Id i=0, n=residues.size(); i<n; i++) {
-            Id id = residues[i];
-            if (h->residue(id).resid==resid && h->residue(id).name==name) {
-                return id;
-            }
-        }
-        return BadId;
-    }
-
     const char * ANUMS     = "m_atomic_number";
     const char * RESIDS    = "m_residue_number";
     const char * RESNAMES  = "m_pdb_residue_name";
@@ -86,9 +65,6 @@ namespace {
         const Json& m_atom = ct.get("m_atom");
         if (!m_atom) return;
 
-        Id chn = BadId;
-        Id res = BadId;
-
         const Json& anums = m_atom.get(ANUMS);
         const Json& resids = m_atom.get(RESIDS);
         const Json& resnames = m_atom.get(RESNAMES);
@@ -108,14 +84,14 @@ namespace {
         const Json& frz = m_atom.get(GRP_FROZEN);
         const Json& formals = m_atom.get(FORMAL_CHG);
         Id gtmp=BadId, gene=BadId, glig=BadId, gbias=BadId, gfrz=BadId;
-        Id seg=BadId;
 
         if (!!temp) gtmp=h->addAtomProp("grp_temperature", IntType);
         if (!!nrg)  gene=h->addAtomProp("grp_energy", IntType);
         if (!!lig)  glig=h->addAtomProp("grp_ligand", IntType);
         if (!!bias) gbias=h->addAtomProp("grp_bias", IntType);
         if (!!frz)  gfrz=h->addAtomProp("grp_frozen", IntType);
-        if (!!segids) seg=h->addAtomProp("segid", StringType);
+
+        SystemImporter imp(h);
 
         int j,n = m_atom.get("__size__").as_int();
         for (j=0; j<n; j++) {
@@ -124,27 +100,12 @@ namespace {
             int resid=resids.elem(j).as_int(0);
             std::string resname=resnames.elem(j).as_string("UNK");
             std::string name=names.elem(j).as_string("");
+            std::string segid=segids.elem(j).as_string("");
 
-            boost::trim(chainname);
-            boost::trim(resname);
-            boost::trim(name);
+            Id id = imp.addAtom(chainname, segid, resid, resname, name);
 
-            if (bad(chn) || h->chain(chn).name!=chainname) {
-                chn = h->addChain();
-                h->chain(chn).name = chainname;
-                res = BadId;
-            }
-
-            if (bad(res) || h->residue(res).resid!=resid 
-                         || h->residue(res).name!=resname) {
-                res = h->addResidue(chn);
-                h->residue(res).resid=resid;
-                h->residue(res).name=resname;
-            }
-            Id id = h->addAtom(res);
             atom_t& atm = h->atom(id);
             atm.atomic_number = anum;
-            atm.name = name;
             atm.x = x.elem(j).as_float(0);
             atm.y = y.elem(j).as_float(0);
             atm.z = z.elem(j).as_float(0);
@@ -157,11 +118,6 @@ namespace {
             if (!!lig)  h->atomPropValue(id,glig)=lig.elem(j).as_int(0);
             if (!!bias) h->atomPropValue(id,gbias)=bias.elem(j).as_int(0);
             if (!!frz)  h->atomPropValue(id,gfrz)=frz.elem(j).as_int(0);
-            if (!!segids)  {
-                std::string segid = segids.elem(j).as_string("");
-                boost::trim(segid);
-                h->atomPropValue(id,seg)=segid;
-            }
             atoms.push_back(id);
             *natoms += 1;
         }
@@ -212,9 +168,6 @@ namespace {
             const Json& vy = pseudo.get(VYCOL);
             const Json& vz = pseudo.get(VZCOL);
 
-            chn = BadId;
-            res = BadId;
-
             int j,n = pseudo.get("__size__").as_int();
             for (j=0; j<n; j++) {
                 std::string segid = segids.elem(j).as_string("");
@@ -223,33 +176,8 @@ namespace {
                 std::string resname=resnames.elem(j).as_string("UNK");
                 std::string name=names.elem(j).as_string("");
 
-                boost::trim(segid);
-                boost::trim(chainname);
-                boost::trim(resname);
-                boost::trim(name);
-
-                if (bad(chn) || h->chain(chn).name!=chainname) {
-                    chn = find_chain(h,chainname);
-                    if (bad(chn)) {
-                        chn = h->addChain();
-                        h->chain(chn).name = chainname;
-                    }
-                    res = BadId;
-                }
-
-                if (bad(res) || h->residue(res).resid!=resid 
-                             || h->residue(res).name!=resname) {
-                    res = find_residue(h, chn, resname, resid);
-                    if (bad(res)) {
-                        res = h->addResidue(chn);
-                        h->residue(res).resid= resid;
-                        h->residue(res).name = resname;
-                    }
-                }
-
-                Id id = h->addAtom(res);
+                Id id = imp.addAtom(chainname, segid, resid, resname, name);
                 atom_t& atom = h->atom(id);
-                atom.name = name;
                 atom.x = x.elem(j).as_float(0);
                 atom.y = y.elem(j).as_float(0);
                 atom.z = z.elem(j).as_float(0);

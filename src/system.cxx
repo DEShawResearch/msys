@@ -4,6 +4,7 @@
 #include <stack>
 #include <stdexcept>
 #include <boost/foreach.hpp>
+#include <boost/algorithm/string.hpp> /* for boost::trim */
 
 using namespace desres::msys;
 
@@ -605,3 +606,49 @@ void System::clearSelectionMacros() {
 void System::copySelectionMacros(System const& m) {
     _macros = m._macros;
 }
+
+Id SystemImporter::addAtom(std::string chain, std::string segid,
+                           int resnum, std::string resname,
+                           std::string aname) {
+
+    boost::trim(chain);
+    boost::trim(segid);
+    boost::trim(resname);
+    boost::trim(aname);
+
+    /* start a new chain if necessary */
+    std::pair<ChnMap::iterator,bool> cp;
+    cp = chnmap.insert(std::make_pair(ChnKey(chain,segid),chnid));
+    if (cp.second) {
+        /* new chain/segid pair found, so start a new chain */
+        chnid = sys->addChain();
+        sys->chain(chnid).name = chain;
+        sys->chain(chnid).segid = segid;
+        resid = BadId;
+        cp.first->second = chnid;
+    } else {
+        /* use existing chain */
+        chnid = cp.first->second;
+    }
+
+    /* start a new residue if necessary */
+    std::pair<ResMap::iterator,bool> p;
+    p = resmap.insert(std::make_pair(ResKey(chnid,resnum,resname), resid));
+    if (p.second) {
+        /* new resname/resnum in this chain, so start a new residue. */
+        resid = sys->addResidue(chnid);
+        sys->residue(resid).name = resname;
+        sys->residue(resid).resid = resnum;
+        boost::trim(sys->residue(resid).name);
+        p.first->second = resid;
+    } else {
+        /* use existing residue */
+        resid = p.first->second;
+    }
+
+    /* add the atom */
+    Id atm = sys->addAtom(resid);
+    sys->atom(atm).name = aname;
+    return atm;
+}
+

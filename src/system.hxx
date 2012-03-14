@@ -125,7 +125,7 @@ namespace desres { namespace msys {
     
         chain_t() {}
     };
-    
+
     class System : public boost::enable_shared_from_this<System> {
     
         static IdList _empty;
@@ -393,6 +393,62 @@ namespace desres { namespace msys {
     };
 
     typedef boost::shared_ptr<System> SystemPtr;
+
+    /* A helper object for importers that manages the logic of 
+     * mapping atoms to residues and residue to chains */
+    class SystemImporter {
+        SystemPtr sys;
+
+        struct ChnKey {
+            String name;
+            String segid;
+
+            ChnKey() {}
+            ChnKey(String const& nm, String const& seg)
+            : name(nm), segid(seg) {}
+
+            bool operator<(ChnKey const& c) const {
+                int rc = name.compare(c.name);
+                if (rc) return rc<0;
+                return segid.compare(c.segid)<0;
+            }
+        };
+                
+        struct ResKey {
+            Id      chain;
+            int     resnum;
+            String  resname;
+
+            ResKey() {}
+            ResKey(Id chn, int num, String const& name) 
+            : chain(chn), resnum(num), resname(name) {}
+
+            bool operator<(const ResKey& r) const {
+                if (chain!=r.chain) return chain<r.chain;
+                if (resnum!=r.resnum) return resnum<r.resnum;
+                return resname.compare(r.resname)<0;
+            }
+        };
+
+        typedef std::map<ChnKey,Id> ChnMap;
+        typedef std::map<ResKey,Id> ResMap;
+        ResMap resmap;
+        ChnMap chnmap;
+
+        Id chnid;
+        Id resid;
+
+    public:
+        explicit SystemImporter(SystemPtr s) 
+        : sys(s), chnid(BadId), resid(BadId) {}
+
+        /* add an atom, after first constructing necessary parent
+         * chain and/or residue object.  All string inputs will
+         * have leading and trailing whitespace removed. */
+        Id addAtom(std::string chain, std::string segid, 
+                   int resnum, std::string resname,
+                   std::string atomname);
+    };
 
 }}
 
