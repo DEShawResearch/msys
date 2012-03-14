@@ -151,16 +151,17 @@ static void export_particles(const System& sys, const IdList& map, dms_t* dms) {
         "create table particle (\n"
         "  id integer primary key,\n"
         "  anum integer,\n"
-        "  name text,\n" 
+        "  name text not null,\n" 
         "  x float,\n"
         "  y float,\n"
         "  z float,\n"
         "  vx float,\n"
         "  vy float,\n"
         "  vz float,\n"
-        "  resname text,\n"
+        "  resname text not null,\n"
         "  resid integer,\n"
-        "  chain text,\n"
+        "  chain text not null,\n"
+        "  segid text not null,\n"
         "  mass float,\n"
         "  charge float,\n";
 
@@ -201,10 +202,11 @@ static void export_particles(const System& sys, const IdList& map, dms_t* dms) {
         dms_writer_bind_string(w, 9, residue.name.c_str());
         dms_writer_bind_int   (w,10, residue.resid);
         dms_writer_bind_string(w,11, chain.name.c_str());
-        dms_writer_bind_double(w,12, atom.mass);
-        dms_writer_bind_double(w,13, atom.charge);
+        dms_writer_bind_string(w,12, chain.segid.c_str());
+        dms_writer_bind_double(w,13, atom.mass);
+        dms_writer_bind_double(w,14, atom.charge);
         for (Id j=0; j<nprops; j++) {
-            int col=14+j;
+            int col=15+j;
 
             /* *sigh* - the ParamTable::value() method is non-const,
              * and I don't feel like making a const version; thus this
@@ -215,7 +217,7 @@ static void export_particles(const System& sys, const IdList& map, dms_t* dms) {
         if (nbtypes.size()) {
             NbMap::const_iterator nbiter=nbtypes.find(atm);
             assert(nbiter != nbtypes.end());
-            dms_writer_bind_int(w,14+nprops,nbiter->second.first);
+            dms_writer_bind_int(w,15+nprops,nbiter->second.first);
         }
         try {
             dms_writer_next(w);

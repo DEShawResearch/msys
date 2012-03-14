@@ -112,15 +112,16 @@ namespace desres { namespace msys {
     };
     
     struct residue_t {
-        String  name;
-        int     resid;
         Id      chain;
+        int     resid;
+        String  name;
     
-        residue_t() : resid(0), chain(BadId) {}
+        residue_t() : chain(BadId), resid() {}
     };
     
     struct chain_t {
         String  name;
+        String  segid;
     
         chain_t() {}
     };

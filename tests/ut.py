@@ -207,6 +207,19 @@ class TestMain(unittest.TestCase):
         self.assertEqual(len(m.atoms), 0)
         self.assertEqual(len(r.atoms), 0)
 
+    def testSegid(self):
+        m=msys.CreateSystem()
+        with self.assertRaises(RuntimeError):
+            m.addAtomProp('segid', str)
+        r=m.addResidue()
+        a1=r.addAtom()
+        a2=r.addAtom()
+        r.chain.segid="WAT1"
+        msys.SaveDMS(m,'foo.dms')
+        m2=msys.LoadDMS('foo.dms')
+        self.assertEqual(1,m.nresidues)
+        self.assertEqual(1,m2.nresidues)
+
     def testChain(self):
         m=msys.CreateSystem()
         c=m.addChain()

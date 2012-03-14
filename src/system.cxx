@@ -512,6 +512,17 @@ Id System::atomPropIndex(String const& name) const {
 }
 
 Id System::addAtomProp(String const& name, ValueType type) {
+    /* disallow properties that would conflict with existing columns */
+    static const char* badprops[] = {
+        "id", "anum", "name", "x", "y", "z", "vx", "vy", "vz",
+        "resname", "resid", "chain", "segid", "mass", "charge"
+    };
+    for (unsigned i=0; i<sizeof(badprops)/sizeof(badprops[0]); i++) {
+        if (!strcasecmp(name.c_str(), badprops[i])) {
+            MSYS_FAIL("Could not add atom property '" << name << "'\n"
+            << "because it would conflict with an existing atom, residue, or chain property");
+        }
+    }
     return _atomprops->addProp(name,type);
 }
 void System::delAtomProp(Id index) {

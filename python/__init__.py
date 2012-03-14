@@ -248,7 +248,7 @@ class Chain(Handle):
         ''' number of residues in this chain '''
         return self._ptr.residueCountForChain(self._id)
 
-__add_properties(Chain, 'name')
+__add_properties(Chain, 'name', 'segid')
 
 
 class Param(object):

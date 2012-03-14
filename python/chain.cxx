@@ -6,6 +6,7 @@ namespace desres { namespace msys {
 
         class_<chain_t>("chain_t", no_init)
             .def_readwrite("name", &chain_t::name)
+            .def_readwrite("segid", &chain_t::segid)
             ;
     }
 }}

@@ -16,24 +16,34 @@ typedef std::set<String> KnownSet;
 
 namespace {
 
+    struct ChnKey {
+        String name;
+        String segid;
+
+        ChnKey() {}
+        ChnKey(String const& nm, String const& seg)
+        : name(nm), segid(seg) {}
+
+        bool operator<(ChnKey const& c) const {
+            int rc = name.compare(c.name);
+            if (rc) return rc<0;
+            return segid.compare(c.segid)<0;
+        }
+    };
+            
     struct ResKey {
+        Id      chain;
         int     resnum;
         String  resname;
-        String  chain;
-        String  segid;
 
         ResKey() {}
-        ResKey(int num, const String& name, const String& chn,
-                        const String& seg)
-        : resnum(num), resname(name), chain(chn), segid(seg) {}
+        ResKey(Id chn, int num, String const& name) 
+        : chain(chn), resnum(num), resname(name) {}
 
         bool operator<(const ResKey& r) const {
+            if (chain!=r.chain) return chain<r.chain;
             if (resnum!=r.resnum) return resnum<r.resnum;
-            int rc = strcmp(resname.c_str(), r.resname.c_str());
-            if (rc) return rc<0;
-            rc = strcmp(chain.c_str(), r.chain.c_str());
-            if (rc) return rc<0;
-            return strcmp(segid.c_str(), r.segid.c_str())<0;
+            return resname.compare(r.resname)<0;
         }
     };
 }
@@ -473,7 +483,7 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
     Id chnid = BadId;
     Id resid = BadId;
 
-    typedef std::map<String,Id> ChnMap;
+    typedef std::map<ChnKey,Id> ChnMap;
     typedef std::map<ResKey,Id> ResMap;
     ResMap resmap;
     ChnMap chnmap;
@@ -506,6 +516,7 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
     
     /* the rest of the columns are extra atom properties */
     std::set<int> handled;
+    handled.insert(SEGID);
     handled.insert(CHAIN);
     handled.insert(RESNAME);
     handled.insert(RESID);
@@ -541,32 +552,33 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
 
         /* start a new chain if necessary */
         const char * chainname = dms_reader_get_string(r,CHAIN);
-        ChnMap::const_iterator cit = chnmap.find(chainname);
-        if (cit==chnmap.end()) {
+        const char * segid = SEGID < 0 ? "" : dms_reader_get_string(r, SEGID);
+        std::pair<ChnMap::iterator,bool> cp;
+        cp = chnmap.insert(std::make_pair(ChnKey(chainname,segid),chnid));
+        if (cp.second) {
+            /* new chain/segid pair found, so start a new chain */
             chnid = sys.addChain();
             sys.chain(chnid).name = chainname;
+            sys.chain(chnid).segid = segid;
             resid = BadId;
-            chnmap[chainname]=chnid;
+            cp.first->second = chnid;
         } else {
-            chnid = cit->second;
+            /* use existing chain */
+            chnid = cp.first->second;
         }
 
         /* start a new residue if necessary */
-        const char * segid = SEGID < 0 ? "" : dms_reader_get_string(r, SEGID);
         const char * resname = dms_reader_get_string(r, RESNAME);
         int resnum = dms_reader_get_int(r, RESID);
         std::pair<ResMap::iterator,bool> p;
-        p = resmap.insert(std::make_pair(ResKey(resnum,resname,chainname,segid),
-                    resid));
+        p = resmap.insert(std::make_pair(ResKey(chnid,resnum,resname), resid));
         if (p.second) {
             /* new resname/resnum in this chain, so start a new residue. */
             resid = sys.addResidue(chnid);
-            residue_t& res = sys.residue(resid);
+            sys.residue(resid).name = resname;
+            sys.residue(resid).resid = resnum;
+            boost::trim(sys.residue(resid).name);
             p.first->second = resid;
-            res.name = resname;
-            res.resid = resnum;
-
-            boost::trim(res.name);
         } else {
             /* use existing residue */
             resid = p.first->second;
@@ -674,7 +686,11 @@ SystemPtr desres::msys::ImportDMS(const std::string& path,
         sys = import_dms(dms, structure_only);
     }
     catch (std::exception& e) {
-        if (dms) dms_close(dms);
+        try {
+            if (dms) dms_close(dms);
+        }
+        catch (std::runtime_error& e) {
+        }
         std::stringstream ss;
         ss << "Error opening dms file at '" << path << "': " << e.what();
         throw std::runtime_error(ss.str());
