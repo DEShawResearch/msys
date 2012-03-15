@@ -1,0 +1,50 @@
+#!/usr/bin/env desres-exec
+# -*- python -*-
+#{
+# desres-cleanenv $MSYS_CLEANENV -- python $0 "$@"
+#}
+
+'''
+dms-set input.dms output.dms [-s selection] atomprop=FOO \\
+                                            residue.resprop=BAR \\
+                                            chain.chainprop=BAZ
+
+Updates the atom, residue, and/or chain properties of the particles
+in input.dms; writes result to output.dms.
+'''
+
+import msys
+from msys import update
+
+def main():
+    import optparse
+    parser = optparse.OptionParser(__doc__)
+
+    parser.add_option('-s', '--selection', default=None)
+    parser.add_option('-v', '--verbose', action='store_true', default=False)
+
+    opts, args = parser.parse_args()
+    if len(args)<2: parser.error("incorrect number of arguments")
+    ifile, ofile = args[:2]
+
+    mol=msys.LoadDMS(ifile)
+    if opts.selection:
+        atoms=mol.select(opts.selection)
+    else:
+        atoms=mol.atoms
+
+    for arg in args[2:]:
+        try:
+            lhs, rhs = arg.split('=')
+        except:
+            #print >> sys.stderr, "'%s' is not of the form FOO=BAR" % arg
+            #exit(1)
+            parser.error("'%s' is not of the form FOO=BAR" % arg)
+
+        update.Update(mol, atoms, lhs, rhs)
+
+    msys.SaveDMS(mol.clone(),ofile)
+
+if __name__=="__main__": exit(main())
+
+# vim: filetype=python
