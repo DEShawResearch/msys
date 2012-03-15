@@ -281,5 +281,8 @@ file and it will just work::
     mol.addSelectionMacro('active_site', 'chain A and resid 32 40 48')
     sel=mol.select('same residue as water and within 3 of active_site')
 
+Atom selection macros can also be listed and updated using the 
+``dms-macro`` command line tool.
+
 
 

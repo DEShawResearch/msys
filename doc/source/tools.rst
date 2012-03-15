@@ -262,6 +262,39 @@ both atoms.
 
    ``dms-set input.dms output.dms -s "index 32 42" stretch_harm.fc=0.0``
 
+
+dms-macro
+---------
+
+.. program:: dms-macro
+
+.. describe:: dms-macro system.dms [ options ]
+
+   List and modify the set of atom selection macros in a dms file.
+
+options:
+
+.. cmdoption:: -d macro, --delete macro
+
+   Remove `macro` from the system's selection macro list.
+
+.. cmdoption:: -m macro="ATOM SELECTION", --macro macro="ATOM SELECTION"
+
+   (Re)define macro named `macro` to the given "ATOM SELECTION".
+
+.. cmdoption:: -l
+
+   Print the macros and their defintions in the system.
+
+.. cmdoption:: -o output.dms
+
+   Write out the system with modifications to the macros to output.dms
+
+*dms-macro* is used to query and modify the set of atom selection
+macros available in the given dms file.  More information about macros
+may be found the atom selections section of the documentation.
+
+
 ------------------
 Structure building
 ------------------
