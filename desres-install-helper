@@ -90,6 +90,7 @@ See documentation in
 http://gardendoc.nyc.desres.deshaw.com/$NAME/$VERSION/doc/html/index.html
 
 1.2.0  segid is now a property of Chain.  
+       New tools: dms-set and dms-macro
 
 1.1.1  dms-neutralize: fix for positive solute charge (DESRESCode#1352)
        dms-neutralize: remove ions if needed to achieve specified concentration
