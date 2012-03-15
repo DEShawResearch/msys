@@ -202,6 +202,66 @@ options:
 *dms-select* takes the selected atoms in ``input.dms`` and either writes
 or appends them to ``output.dms``, depending on the supplied options.
 
+
+dms-set
+-------
+.. program:: dms-set
+
+.. describe:: dms-set input.dms output.dms [ options ] [ updates ]
+
+   Updates atom, residue, chain, and/or table properties of the particles
+   in input.dms; writes result to output.dms.
+
+
+options:
+
+.. cmdoption:: -s selection, --selection selection
+
+   Selects atoms from the input dms file to update.
+
+update format:
+
+.. cmdoption:: atomprop=FOO
+
+   Change the value of atom property ``atomprop`` to FOO.
+
+.. cmdoption:: residue.resprop=BAR
+
+   Change the value of residue property ``resprop`` to BAR.
+  
+.. cmdoption:: chain.chainprop=BAZ
+
+   Change the value of chain property ``chainprop`` to BAZ.
+
+.. cmdoption:: table.tableprop=XYZ
+
+   Change the property `'tableprop`` in table ``table`` to XYZ.
+
+
+*dms-set* creates a new dms file with modifications to the atom, residue,
+chain, or table properties.  Multiple updates may be specified, in which
+case they will be applied in the order they are given.  If an atom selection
+is provided, it is evaluated before any of the updates are applied.
+
+Updates to residues and chains are applied to every residue or chain
+with `at least one atom` in the selection.  Updates to tables are applied
+to terms whose atoms are `completely contained` in the selection.  Since
+the update is specified in terms of an atom selection, the order of atoms
+in the terms is irrelevant in determining whether a term is affected by
+a update.
+
+Example: Change the name CD1 atoms in LYS residues to CD.
+
+   ``dms-set input.dms output.dms -s "resname LYS and name CD1" name=CD``
+
+
+Example: Change the stretch term force constant to 0 for a pair of atoms
+with ids 32 and 42.  As described above, this would not affect the stretch
+terms involving atoms 32 or 42 with any other atom; only the term involving
+both atoms. 
+
+   ``dms-set input.dms output.dms -s "index 32 42" stretch_harm.fc=0.0``
+
 ------------------
 Structure building
 ------------------
