@@ -1,0 +1,57 @@
+#!/usr/bin/env desres-exec
+# -*- python -*-
+#{
+# desres-cleanenv $MSYS_CLEANENV -- python $0 "$@"
+#}
+
+'''
+dms-macro input.dms [ -o output.dms ] [ -l ]
+                    [ -m macro=newvalue ]* [ -d macro_to_delete ]*
+
+Print or update the atom selection macros in a dms file.
+'''
+
+import msys
+
+def main():
+    import optparse
+    parser = optparse.OptionParser(__doc__)
+
+    parser.add_option('-m', '--macro', action='append', default=[],
+            help='(re)define a macro with macro=newvalue')
+    parser.add_option('-d', '--delete', action='append', default=[],
+            help='delete the specified macro')
+    parser.add_option('-l', '--list', action='store_true', default=False,
+            help='list all available macros and their definitions')
+    parser.add_option('-o', '--output', default=None,
+            help='write the modified system to specified path')
+
+    opts, args = parser.parse_args()
+    if len(args) is not 1:
+        parser.error("incorrect number of arguments")
+
+    mol=msys.LoadDMS(args[0])
+    for d in opts.delete:
+        mol.delSelectionMacro(d)
+    for m in opts.macro:
+        try:
+            key, val = m.split('=')
+        except:
+            print "Argument to -m must be of the form 'macro=newvalue'"
+            return -1
+        mol.addSelectionMacro(key,val)
+
+    if opts.list:
+        macros=mol.selection_macros
+        width = max(len(x) for x in macros)
+        for m in macros:
+            print m.ljust(width), mol.selectionMacroDefinition(m)
+    
+    if opts.output:
+        msys.SaveDMS(mol, opts.output)
+
+    return 0
+
+if __name__=="__main__": exit(main())
+
+# vim: filetype=python

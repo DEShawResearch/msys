@@ -62,6 +62,7 @@ env.AddScript('info/dms-dump')
 env.AddScript('info/dms-info')
 
 # other scripts
+env.AddScript('scripts/dms-macro')
 env.AddScript('scripts/dms-select')
 env.AddScript('scripts/dms-set')
 env.AddPythonModule('scripts/update.py', prefix='msys')
