@@ -101,3 +101,9 @@ void ParamTable::delProp(Id index) {
     }
     _props.erase(_props.begin()+index);
 }
+
+ValueRef ParamTable::value(Id row, String const& name)  { 
+    Id col = propIndex(name);
+    if (bad(col)) MSYS_FAIL("No such property '" << name << "'");
+    return value(row, col);
+}
