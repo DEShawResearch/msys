@@ -652,3 +652,31 @@ Id SystemImporter::addAtom(std::string chain, std::string segid,
     return atm;
 }
 
+Id System::glueCount() const {
+    return _glue.size();
+}
+
+std::vector<glue_t> System::gluePairs() const {
+    std::vector<glue_t> v(_glue.size());
+    std::copy(_glue.begin(), _glue.end(), v.begin());
+    return v;
+}
+
+bool System::hasGluePair(Id p0, Id p1) const {
+    if (p0>p1) std::swap(p0,p1);
+    return _glue.count(glue_t(p0,p1));
+}
+
+bool System::addGluePair(Id p0, Id p1) {
+    if (p0>p1) std::swap(p0,p1);
+    if (!hasAtom(p0)) MSYS_FAIL("Bad atom id: " << p0);
+    if (!hasAtom(p1)) MSYS_FAIL("Bad atom id: " << p1);
+    if (p0==p1)       MSYS_FAIL("Identical glue atoms with id " << p0);
+    return _glue.insert(glue_t(p0,p1)).second;
+}
+
+bool System::delGluePair(Id p0, Id p1) {
+    if (p0>p1) std::swap(p0,p1);
+    return _glue.erase(glue_t(p0,p1));
+}
+

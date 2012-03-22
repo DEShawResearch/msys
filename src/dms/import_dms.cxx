@@ -403,6 +403,33 @@ static void read_macros(dms_t* dms, System& sys, KnownSet& known) {
     }
 }
 
+static void read_glue(dms_t* dms, System& sys, KnownSet& known) {
+    /* read and merge glue and msys_glue */
+    static const char* tables[] = {"glue", "msys_glue"};
+    for (int i=0; i<2; i++) {
+        const char* table = tables[i];
+        known.insert(table);
+        dms_reader_t* r;
+        if (dms_fetch(dms, table, &r)) {
+            int p0 = dms_reader_column(r, "p0");
+            int p1 = dms_reader_column(r, "p1");
+            if (p0<0 || p1<0) {
+                dms_reader_free(r);
+                MSYS_FAIL("'" << table << "' table is missing p0 or p1 columns");
+            }
+            if (dms_reader_column_type(r,p0) != IntType ||
+                dms_reader_column_type(r,p1) != IntType) {
+                dms_reader_free(r);
+                MSYS_FAIL("'" << table << "' table is misformatted: p0 and p1 must be integer");
+            }
+            for (; r; dms_reader_next(&r)) {
+                sys.addGluePair(dms_reader_get_int(r, p0),
+                                dms_reader_get_int(r, p1));
+            }
+        }
+    }
+}
+
 static void
 read_alchemical_particle( dms_t* dms, System& sys, 
                           IdList& nbtypes, std::map<Id,Id>& nbtypesB,
@@ -595,6 +622,7 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
     read_alchemical_particle( dms, sys, nbtypes, nbtypesB, known );
     read_provenance(dms, sys, known);
     read_macros(dms, sys, known);
+    read_glue(dms, sys, known);
 
     if (!structure_only) {
         read_metatables(dms, gidmap, sys, known);

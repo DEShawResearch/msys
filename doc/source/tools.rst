@@ -303,10 +303,9 @@ dms-glue
 --------
 .. program:: dms-glue
 
-.. describe:: dms-glue input.dms output.dms [-s selection]
+.. describe:: dms-glue input.dms output.dms [-s selection] [--replace]
 
    Finds a minimal set of "glue" bonds between the atoms in the selection,
-   and writes those bonds to a "glue" table in the output file.
 
 options:
 
@@ -314,9 +313,19 @@ options:
 
    Selects atoms from the input dms file.  Default 'protein'.
 
+.. cmdoption:: --replace
+
+   Replace any existing glue pairs in the system.
+
 .. cmdoption:: -v, --verbose
 
    Be chatty.
+
+
+*dms-glue* finds pairs of atoms which connect the disjoint sets of atoms
+in a selection together.  The default algorithm uses a heuristic to find
+nearby atoms in different connected subsets to serve as the glue pairs.
+
 
 dms-grease
 ----------

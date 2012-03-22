@@ -35,6 +35,34 @@ class TestMain(unittest.TestCase):
         a1.residue = rnew
         self.assertEqual(rnew, a1.residue)
 
+    def testGlue(self):
+        m=msys.CreateSystem()
+        m.addAtom()
+        m.addAtom()
+        m.addAtom()
+
+        with self.assertRaises(RuntimeError): m.addGluePair(1,1)
+        with self.assertRaises(RuntimeError): m.addGluePair(1,10)
+        with self.assertRaises(RuntimeError): m.addGluePair(10,1)
+
+        self.assertEqual(m.gluePairs(), [])
+        self.assertFalse(m.hasGluePair(1,2))
+        self.assertFalse(m.hasGluePair(2,1))
+        m.addGluePair(2,1)
+        m.addGluePair(0,1)
+        self.assertTrue(m.hasGluePair(1,0))
+        self.assertTrue(m.hasGluePair(1,2))
+        self.assertTrue(m.hasGluePair(2,1))
+        self.assertEqual(m.gluePairs(), [(0,1),(1,2)])
+        m2=m.clone('index 1 2')
+        m3=m2.clone()
+        m3.append(m)
+        m.delGluePair(2,1)
+        self.assertFalse(m.hasGluePair(1,2))
+        self.assertFalse(m.hasGluePair(2,1))
+        self.assertEqual(m2.gluePairs(), [(0,1)])
+        self.assertEqual(m3.gluePairs(), [(0,1), (2,3),(3,4)])
+
     def testSelectOnRemoved(self):
         m=msys.CreateSystem()
         m.addAtom()

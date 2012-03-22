@@ -580,6 +580,25 @@ static void export_macros(System const& sys, dms_t* dms) {
     dms_writer_free(w);
 }
 
+static void export_glue(System const& sys, dms_t* dms) {
+    if (!sys.glueCount()) return;
+    dms_exec(dms,
+            "create table glue (\n"
+            "  id integer primary key,\n"
+            "  p0 integer not null,\n"
+            "  p1 integer not null)");
+    dms_writer_t* w;
+    dms_insert(dms,"glue", &w);
+    dms_exec(dms, "begin");
+    std::vector<glue_t> glue = sys.gluePairs();
+    for (unsigned i=0; i<glue.size(); i++) {
+        dms_writer_bind_int(w,1,glue[i].first);
+        dms_writer_bind_int(w,2,glue[i].second);
+        dms_writer_next(w);
+    }
+    dms_exec(dms, "commit");
+    dms_writer_free(w);
+}
 
 /* make a mapping from id to 0-based dms primary key */
 static IdList map_gids(System const& sys) {
@@ -604,6 +623,7 @@ static void export_dms(SystemPtr h, dms_t* dms, Provenance const& provenance) {
     export_cell(     sys,            dms);
     export_provenance(sys,provenance,dms);
     export_macros(   sys,            dms);
+    export_glue(     sys,            dms);
 }
 
 void desres::msys::ExportDMS(SystemPtr h, const std::string& path,

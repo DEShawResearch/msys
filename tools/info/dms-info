@@ -66,6 +66,10 @@ def print_info(mol):
     print "%20s: %s" % ("vdw_funct", nbinfo.vdw_funct)
     print "%20s: %s" % ("vdw_rule", nbinfo.vdw_rule)
 
+    print "\n%12s:" % "Glue"
+    for g in mol.gluePairs():
+        print "\t%8d%8d" % g
+
     print "\n%12s:" % "Auxiliary Tables"
     for name in mol.auxtable_names:
         aux=mol.auxtable(name)

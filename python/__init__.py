@@ -991,6 +991,23 @@ class System(object):
         x = self._ptr.selectionMacroDefinition(str(macro).strip())
         return x if x else None
 
+    def gluePairs(self):
+        ''' return a list of the glue pairs as tuples '''
+        return self._ptr.gluePairs()
+
+    def addGluePair(self, p0, p1):
+        ''' Add a pair of atoms to the glue.  '''
+        return self._ptr.addGluePair(p0,p1)
+
+    def hasGluePair(self, p0, p1):
+        ''' Does the pair of atoms exist in the glue? '''
+        return self._ptr.hasGluePair(p0,p1)
+
+    def delGluePair(self, p0, p1):
+        ''' Remove a pair of atoms from the glue.  '''
+        return self._ptr.delGluePair(p0,p1)
+
+
 def CreateSystem():
     ''' Create a new, empty System '''
     return System(_msys.SystemPtr.create())

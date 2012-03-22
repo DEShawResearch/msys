@@ -121,6 +121,16 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms ) {
         }
     }
 
+    /* Copy glue pairs whose atoms are fully within the subset */
+    std::vector<glue_t> glue = src->gluePairs();
+    for (Id i=0; i<glue.size(); i++) {
+        Id idst = atmmap.at(glue[i].first);
+        Id jdst = atmmap.at(glue[i].second);
+        if (!bad(idst) && !bad(jdst)) {
+            dst->addGluePair(idst,jdst);
+        }
+    }
+
     /* Add term tables */
     std::vector<String> tablenames = src->tableNames();
     for (unsigned i=0; i<tablenames.size(); i++) {
