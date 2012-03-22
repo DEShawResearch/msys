@@ -93,6 +93,9 @@ http://gardendoc.nyc.desres.deshaw.com/$NAME/$VERSION/doc/html/index.html
        operations.  The glue table has been renamed to msys_glue, though
        msys will still read from both tables and merge the two.
 
+       dms-thermalize: the random seed is now 1 by default so that results
+       are reproducible.  
+
 1.2.0  segid is now a property of Chain.  
        New tools: dms-set and dms-macro
 
