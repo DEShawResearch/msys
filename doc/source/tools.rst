@@ -475,6 +475,11 @@ dms-thermalize
 
    Sample Boltzmann distribute with given temperature in Kelvin.
 
+.. cmdoption:: -s SEED, --seed SEED
+
+   Use the given random seed, default 1, or 'random' to get a random random 
+   seed.
+
 
 dms-posre
 ---------

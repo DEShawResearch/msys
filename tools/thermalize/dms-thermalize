@@ -19,20 +19,30 @@ from msys import thermalize
 def main():
     import optparse
     parser = optparse.OptionParser(__doc__)
-    parser.add_option('-t', '--temperature', type='float', default='300')
-    parser.add_option('--verbose', action='store_true', default=False)
-
+    parser.add_option('-t', '--temperature', type='float', default=300, 
+            help="thermalization temperature in Kelvin")
+    parser.add_option('-s', '--seed', default='1',
+            help="Random seed, or 'random' to get a random random seed")
+        
     opts, args = parser.parse_args()
     if len(args)!=2:
         parser.error("incorrect number of arguments")
 
-    if opts.verbose: print "Loading input file <%s>" % args[0]
+    print "Loading input file <%s>" % args[0]
     mol=msys.LoadDMS(args[0])
 
-    if opts.verbose: print "Thermalizing to %sK" % opts.temperature
-    thermalize.apply(mol, opts.temperature)
+    print "Thermalizing to %sK using seed %s" % (
+            opts.temperature, opts.seed)
 
-    if opts.verbose: print "Writing DMS file <%s>" % args[1]
+    seed=opts.seed
+    if seed=='random':
+        seed=None
+    else:
+        seed=int(seed)
+
+    thermalize.apply(mol, opts.temperature, seed)
+
+    print "Writing DMS file <%s>" % args[1]
     msys.SaveDMS(mol,args[1])
 
 if __name__=="__main__": exit(main())
