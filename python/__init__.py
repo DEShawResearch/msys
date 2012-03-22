@@ -628,6 +628,15 @@ class System(object):
     def __ne__(self, x): return self._ptr != x._ptr
     def __hash__(self): return self._ptr.__hash__()
 
+    def __repr__(self): return "<System '%s'>" % self.name
+
+    @property
+    def name(self): 
+        ''' The name of the System, taken from the input file name '''
+        return self._ptr.name
+    @name.setter
+    def name(self, s): self._ptr.name=s
+
     def addAtom(self):
         ''' add and return a new Atom in its own residue '''
         return self.addResidue().addAtom()

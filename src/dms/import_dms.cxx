@@ -654,6 +654,8 @@ SystemPtr desres::msys::ImportDMS(const std::string& path,
         throw std::runtime_error(ss.str());
     }
     dms_close(dms);
+    sys->name = path;
+
     return sys;
 }
 

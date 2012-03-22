@@ -242,7 +242,10 @@ namespace desres { namespace msys {
             throw std::runtime_error(ss.str());
         }
 
-        return ImportMAEFromStream(file, ignore_unrecognized);
+        SystemPtr sys = ImportMAEFromStream(file, ignore_unrecognized);
+        sys->name = path;
+
+        return sys;
     }
 
     SystemPtr ImportMAEFromStream( std::istream& file,
