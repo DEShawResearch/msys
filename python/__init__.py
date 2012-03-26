@@ -6,7 +6,7 @@ by chemists.
 
 import _msys
 
-from _msys import GlobalCell, NonbondedInfo
+from _msys import GlobalCell, NonbondedInfo, version, hexversion
 
 class Handle(object):
     __slots__ = ('_ptr', '_id')
