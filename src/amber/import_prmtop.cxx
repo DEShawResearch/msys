@@ -243,7 +243,8 @@ namespace {
 }
     
 static void merge_torsion(ParamTablePtr params, Id id, 
-                          double phase_in_radians, double fc, double period) {
+                          double phase_in_radians, const double fc_orig, 
+                          double period) {
 
     double phase = phase_in_radians * 180 / M_PI;
     /* Amber files approximate pi by 3.141594 */
@@ -251,11 +252,12 @@ static void merge_torsion(ParamTablePtr params, Id id,
              phase = 180;
         if (phase_in_radians<0) phase *= -1;
     }
+    double fc_phased = fc_orig;
     if (phase==0) {
         /* great, nothing to do */
     } else if (phase==180) {
         /* just invert the term */
-        fc *= -1;
+        fc_phased *= -1;
     } else if (phase != params->value(id, "phi0").asFloat()) {
         MSYS_FAIL("multiple dihedral term contains conflicting multiplicity");
     } else {
@@ -263,12 +265,12 @@ static void merge_torsion(ParamTablePtr params, Id id,
     }
     double oldval = params->value(id, 1+period);
     if (oldval==0) {
-        params->value(id, 1+period) = fc;
-    } else if (oldval != fc) {
+        params->value(id, 1+period) = fc_phased;
+    } else if (oldval != fc_phased) {
         MSYS_FAIL("multiple dihedral term contains conflicting force constant for period " << period);
     }
     double oldsum = params->value(id, 1);
-    params->value(id, 1) = oldsum + fabs(fc);
+    params->value(id, 1) = oldsum + fabs(fc_orig);
 }
  
 static PairSet parse_torsion(SystemPtr mol, SectionMap const& map,
