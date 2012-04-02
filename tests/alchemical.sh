@@ -8,15 +8,18 @@
 
 TMP=/tmp
 set -e
-DUMPOPTS="--without-provenance --reorder --without-forcefield"
+DUMPOPTS="--without-provenance --reorder --without-forcefield --without-paraminfo"
 
 canonicalize() {
+    sqlite3 $1 "update stretch_harm_term set p0=p1,p1=p0 where p0>p1"
+    sqlite3 $1 "update angle_harm_term set p0=p2,p2=p0 where p0>p2"
+    sqlite3 $1 "update dihedral_trig_term set p0=p3,p1=p2,p2=p1,p3=p0 where p1>p2"
+    sqlite3 $1 "update pair_12_6_es_term set p0=p1,p1=p0 where p0>p1"
     sqlite3 $1 "update alchemical_stretch_harm_term set p0=p1,p1=p0 where p0>p1"
     sqlite3 $1 "update alchemical_angle_harm_term set p0=p2,p2=p0 where p0>p2"
     sqlite3 $1 "update alchemical_dihedral_trig_term set p0=p3,p1=p2,p2=p1,p3=p0 where p1>p2"
     sqlite3 $1 "update alchemical_pair_12_6_es_term set p0=p1,p1=p0 where p0>p1"
 }
-
 
 for DIR in $DESMOND_MAEFF_INPUT_PATH/fep/fep*
 #for DIR in $DESMOND_MAEFF_INPUT_PATH/fep/fep1
