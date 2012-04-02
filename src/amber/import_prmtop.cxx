@@ -270,7 +270,7 @@ static void merge_torsion(ParamTablePtr params, Id id,
         MSYS_FAIL("multiple dihedral term contains conflicting force constant for period " << period);
     }
     double oldsum = params->value(id, 1);
-    params->value(id, 1) = oldsum + fabs(fc_orig);
+    params->value(id, 1) = oldsum + fc_orig;
 }
  
 static PairSet parse_torsion(SystemPtr mol, SectionMap const& map,
