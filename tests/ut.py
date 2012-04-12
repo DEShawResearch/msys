@@ -379,7 +379,10 @@ class TestMain(unittest.TestCase):
 
     def testParamWithNoProps(self):
         m=msys.CreateSystem()
+        a=m.addAtom()
         table=m.addTable("foo", 1)
+        p=table.params.addParam()
+        table.addTerm([a], p)
         table.category='bond'
         self.assertEqual(table.category, 'bond')
         msys.SaveDMS(m, 'foo.dms')
