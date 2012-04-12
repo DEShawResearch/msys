@@ -23,18 +23,6 @@ namespace {
         return reinterpret_cast<unsigned long>(obj.get());
     }
 
-    template <class List>
-    class_<List> declare_list( const char * name ) {
-        return class_<List>(name)
-            .def(vector_indexing_suite<List>())
-            /* for some reason, operator== returns false even when all
-             * the component elements compare equal.  What's that about? */
-            .def("__eq__", list_eq<List>)
-            .def("__ne__", list_ne<List>)
-            ;
-    
-    }
-
     /* TODO: make a to-python converter instead */
     object from_value_ref(const ValueRef& val) {
         if (val.type()==IntType) return object(val.asInt());

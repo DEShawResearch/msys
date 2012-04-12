@@ -218,6 +218,38 @@ namespace {
         }
         return result;
     }
+
+    /* FIXME: use a struct holding a member function implementing operator() */
+    list table_names(System const& sys) {
+        std::vector<std::string> names = sys.tableNames();
+        list L;
+        for (unsigned i=0; i<names.size(); i++) L.append(object(names[i]));
+        return L;
+    }
+    list aux_table_names(System const& sys) {
+        std::vector<std::string> names = sys.auxTableNames();
+        list L;
+        for (unsigned i=0; i<names.size(); i++) L.append(object(names[i]));
+        return L;
+    }
+    list selection_macros(System const& sys) {
+        std::vector<std::string> names = sys.selectionMacros();
+        list L;
+        for (unsigned i=0; i<names.size(); i++) L.append(object(names[i]));
+        return L;
+    }
+    list table_schemas() {
+        std::vector<std::string> names = TableSchemas();
+        list L;
+        for (unsigned i=0; i<names.size(); i++) L.append(object(names[i]));
+        return L;
+    }
+    list nonbonded_schemas() {
+        std::vector<std::string> names = NonbondedSchemas();
+        list L;
+        for (unsigned i=0; i<names.size(); i++) L.append(object(names[i]));
+        return L;
+    }
 }
 
 namespace desres { namespace msys { 
@@ -259,8 +291,8 @@ namespace desres { namespace msys {
 
         def("Clone", Clone);
 
-        def("TableSchemas", TableSchemas);
-        def("NonbondedSchemas", NonbondedSchemas);
+        def("TableSchemas", table_schemas);
+        def("NonbondedSchemas", nonbonded_schemas);
 
         class_<System,SystemPtr>("SystemPtr", no_init)
             .def("__eq__",      list_eq<SystemPtr>)
@@ -330,7 +362,7 @@ namespace desres { namespace msys {
             .def("residuesForChain",&System::residuesForChain, return_const())
 
             /* tables */
-            .def("tableNames",  &System::tableNames)
+            .def("tableNames",  table_names)
             .def("tableName",   &System::tableName)
             .def("table",       &System::table)
             .def("addTable",    &System::addTable)
@@ -366,7 +398,7 @@ namespace desres { namespace msys {
             .def("setBondProp",  set_bond_prop)
 
             /* auxiliary tables */
-            .def("auxTableNames",&System::auxTableNames)
+            .def("auxTableNames",aux_table_names)
             .def("auxTable",     &System::auxTable)
             .def("addAuxTable",  &System::addAuxTable)
             .def("delAuxTable",  &System::delAuxTable)
@@ -377,7 +409,7 @@ namespace desres { namespace msys {
             .def("delSelectionMacro", &System::delSelectionMacro)
             .def("selectionMacroDefinition", &System::selectionMacroDefinition, return_const())
             .def("selectionMacroCount", &System::selectionMacroCount)
-            .def("selectionMacros", &System::selectionMacros)
+            .def("selectionMacros", selection_macros)
 
             /* schemas */
             .def("addTableFromSchema", AddTable)

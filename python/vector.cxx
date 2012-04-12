@@ -12,11 +12,14 @@ namespace desres { namespace msys {
             .def("__ne__", list_ne<Vec3>)
             ;
 
-        declare_list<IdList>("IdList");
-        declare_list<std::vector<Int> >("IntVec");
-        declare_list<std::vector<Float> >("FloatVec");
-        declare_list<std::vector<String> >("StringVec");
-
+        class_<IdList>("IdList")
+            .def(vector_indexing_suite<IdList>())
+            /* for some reason, operator== returns false even when all
+             * the component elements compare equal.  What's that about? */
+            .def("__eq__", list_eq<IdList>)
+            .def("__ne__", list_ne<IdList>)
+            ;
+    
         def("bad", bad);
         scope().attr("BadId") = (Id)BadId;
     }
