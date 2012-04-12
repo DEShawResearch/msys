@@ -163,7 +163,8 @@ static void export_particles(const System& sys, const IdList& map, dms_t* dms) {
         "  chain text not null,\n"
         "  segid text not null,\n"
         "  mass float,\n"
-        "  charge float,\n";
+        "  charge float,\n" 
+        "  formal_charge integer,\n";
 
     const Id nprops = sys.atomPropCount();
     for (Id i=0; i<nprops; i++) {
@@ -205,8 +206,9 @@ static void export_particles(const System& sys, const IdList& map, dms_t* dms) {
         dms_writer_bind_string(w,12, chain.segid.c_str());
         dms_writer_bind_double(w,13, atom.mass);
         dms_writer_bind_double(w,14, atom.charge);
+        dms_writer_bind_int   (w,15, atom.formal_charge);
         for (Id j=0; j<nprops; j++) {
-            int col=15+j;
+            int col=16+j;
 
             /* *sigh* - the ParamTable::value() method is non-const,
              * and I don't feel like making a const version; thus this
@@ -217,7 +219,7 @@ static void export_particles(const System& sys, const IdList& map, dms_t* dms) {
         if (nbtypes.size()) {
             NbMap::const_iterator nbiter=nbtypes.find(atm);
             assert(nbiter != nbtypes.end());
-            dms_writer_bind_int(w,15+nprops,nbiter->second.first);
+            dms_writer_bind_int(w,16+nprops,nbiter->second.first);
         }
         try {
             dms_writer_next(w);

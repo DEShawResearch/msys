@@ -415,6 +415,18 @@ class TestMain(unittest.TestCase):
         table.addTerm(m.atoms, table.params.addParam())
         msys.SaveDMS(m, 'bar.dms')
 
+    def testFormalCharge(self):
+        m=msys.CreateSystem()
+        a=m.addAtom()
+        self.assertEqual(a.formal_charge, 0)
+        a.formal_charge=32
+        self.assertEqual(a.formal_charge, 32)
+        a.formal_charge=-10
+        self.assertEqual(a.formal_charge, -10)
+        msys.SaveDMS(m, 'bar.dms')
+        m2=msys.LoadDMS('bar.dms')
+        self.assertEqual(m.atom(0).formal_charge, -10)
+                
     def testRefcount(self):
         m=msys.CreateSystem()
         a=m.addAtom()

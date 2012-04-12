@@ -500,6 +500,7 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
     int NBTYPE = dms_reader_column(r,"nbtype");
     int GID = dms_reader_column(r,"id");
     int CHARGE = dms_reader_column(r,"charge");
+    int FORMAL = dms_reader_column(r,"formal_charge");
     
     /* the rest of the columns are extra atom properties */
     std::set<int> handled;
@@ -519,6 +520,7 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
     handled.insert(NBTYPE);
     handled.insert(GID);
     handled.insert(CHARGE);
+    handled.insert(FORMAL);
 
     typedef std::map<int,ValueType> ExtraMap;
     ExtraMap extra;
@@ -556,6 +558,7 @@ static SystemPtr import_dms( dms_t* dms, bool structure_only ) {
         atm.mass = dms_reader_get_double(r, MASS);
         atm.atomic_number = anum;
         atm.charge = dms_reader_get_double(r, CHARGE);
+        atm.formal_charge = FORMAL<0 ? 0 : dms_reader_get_int(r, FORMAL);
         while (gidmap.size()<gid) gidmap.push_back(BadId);
         gidmap.push_back(atmid);
 
