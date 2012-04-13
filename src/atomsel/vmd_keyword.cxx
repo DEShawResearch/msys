@@ -169,7 +169,11 @@ namespace desres { namespace msys { namespace atomsel { namespace {
         }
 
         int npro=0, nnuc=0;
-        IdList atoms = sys->atomsForResidue(res);
+        IdList const& atoms = sys->atomsForResidue(res);
+        if (atoms.size()<4) return RESIDUE_NOTHING;
+        /* since we rely on atomic number being present below, we can
+         * eliminate water using the fast method. */
+        if (is_water(sys,res)) return RESIDUE_NOTHING;
         for (Id i=0; i<atoms.size(); i++) {
             Id id = atoms[i];
             const atom_t& atm = sys->atom(id);
