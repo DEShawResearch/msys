@@ -164,10 +164,10 @@ Terms in a system's forcefield can be accessed and modified by going
 through the corresponding `TermTable`::
 
   stretch = protein.table('stretch_harm')
-  props = stretch.props # ['fc', 'r0']
   terms = stretch.terms
-  params = stretch.param
-  print "%d stretch terms, %d stretch params" % (len(terms), len(params))
+  params = stretch.params
+  props = params.props # ['fc', 'r0']
+  print "%d stretch terms, %d stretch params" % (terms.nterms, params.nparams)
 
 You can change the properties of a selected `Term` using a 
 dictionary-like interface::
