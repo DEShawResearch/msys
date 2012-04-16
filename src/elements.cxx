@@ -1,7 +1,7 @@
 #include "elements.hxx"
 #include <algorithm>
+#include <string.h>
 
-#if 0
 static const char *ename[] = {
     "X",  "H",  "He", "Li", "Be", "B",  "C",  "N",  "O",  "F",  "Ne",
     "Na", "Mg", "Al", "Si", "P" , "S",  "Cl", "Ar", "K",  "Ca", "Sc",
@@ -15,7 +15,6 @@ static const char *ename[] = {
     "Es", "Fm", "Md", "No", "Lr", "Rf", "Db", "Sg", "Bh", "Hs", "Mt",
     "Ds", "Rg"
 };
-#endif
 
 static const float emass[] = {
     /* X  */ 0.00000, 1.00794, 4.00260, 6.941, 9.012182, 10.811,
@@ -52,4 +51,10 @@ int desres::msys::GuessAtomicNumber( double mass ) {
     double ldiff = mass-*lhs;
     double rdiff = *rhs-mass;
     return ldiff < rdiff ? lhs-begin : rhs-begin;
+}
+
+const char* desres::msys::AbbreviationForElement(int anum) {
+    int n = sizeof(ename)/sizeof(ename[0]);
+    if (anum<0 || anum>=n) return "";
+    return ename[anum];
 }

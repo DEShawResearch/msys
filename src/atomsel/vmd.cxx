@@ -117,6 +117,7 @@ namespace {
       !strcmp(id,"atomicnumber") ? keyword_anum(ent) :
       !strcmp(id,"chain") ? keyword_chain(ent) :
       !strcmp(id,"charge") ? keyword_charge(ent) :
+      !strcmp(id,"element") ? keyword_element(ent) :
       !strcmp(id,"fragment") ? keyword_fragment(ent) :
       !strcmp(id,"index") ? keyword_index(ent) :
       !strcmp(id,"mass") ? keyword_mass(ent) :

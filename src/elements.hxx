@@ -4,6 +4,7 @@
 namespace desres { namespace msys {
 
     int GuessAtomicNumber( double mass );
+    const char* AbbreviationForElement(int anum);
 
 }}
 

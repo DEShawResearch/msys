@@ -22,6 +22,7 @@ KeywordPtr keyword_none( SystemPtr ent );
 KeywordPtr keyword_alchemical( SystemPtr ent );
 KeywordPtr keyword_anum( SystemPtr ent );
 KeywordPtr keyword_chain( SystemPtr ent );
+KeywordPtr keyword_element( SystemPtr ent );
 KeywordPtr keyword_hydrogen( SystemPtr ent );
 KeywordPtr keyword_index( SystemPtr ent );
 KeywordPtr keyword_mass( SystemPtr ent );

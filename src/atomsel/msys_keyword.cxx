@@ -1,6 +1,7 @@
 /* @COPYRIGHT@ */
 
 #include "msys_keyword.hxx"
+#include "../elements.hxx"
 
 using desres::msys::SystemPtr;
 using desres::msys::Id;
@@ -81,7 +82,7 @@ desres::msys::atomsel::keyword_##attr( SystemPtr ent ) { \
       Keyword_##attr(SystemPtr _ent) : MsysKeyword(#attr,KEY_STR,_ent) {} \
       void sget(const Selection& s, std::vector<Str>& v) const { \
         Id i,n=s.size(); \
-        for (i=0; i<n; i++) if (s[i]) v[i]=sys->path; \
+        for (i=0; i<n; i++) if (s[i]) v[i]=path; \
       } \
     }; \
   } \
@@ -108,9 +109,10 @@ DBL_KEY(vx,atom(i).vx)
 DBL_KEY(vy,atom(i).vy)
 DBL_KEY(vz,atom(i).vz)
 
-STR_KEY(chain,chain(sys->residue(sys->atom(i).residue).chain).name)
-STR_KEY(name,atom(i).name)
-STR_KEY(resname,residue(sys->atom(i).residue).name)
+STR_KEY(chain,sys->chain(sys->residue(sys->atom(i).residue).chain).name)
+STR_KEY(name,sys->atom(i).name)
+STR_KEY(resname,sys->residue(sys->atom(i).residue).name)
+STR_KEY(element,desres::msys::AbbreviationForElement(sys->atom(i).atomic_number))
 
 KeywordPtr desres::msys::atomsel::keyword_atomprop( 
         SystemPtr ent, String const& prop ) {

@@ -93,6 +93,14 @@ compare_atomsel(coord_ent,'name "C.*"')
 compare_atomsel(coord_ent,'name "C[a-z]"')
 compare_atomsel(coord_ent,'name "C[A-Z]"')
 
+
+# element
+compare_atomsel(coord_ent,'element H')
+compare_atomsel(coord_ent,'element C')
+compare_atomsel(coord_ent,'element N')
+compare_atomsel(coord_ent,'element O')
+compare_atomsel(coord_ent,'element P')
+
 # macros
 for x in '''
 at

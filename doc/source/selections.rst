@@ -126,6 +126,7 @@ The following selection keywords are available:
   keyword           type        definition
   ================  =========== ===========================================
   atomicnumber      integer     `Atom`.atomic_number
+  element           string      Abbreviation for element `Atom`.atomic_number
   chain             string      `Chain`.name
   charge            float       `Atom`.charge
   fragment          integer     Connected residues will all have the same 
