@@ -248,6 +248,14 @@ namespace desres { namespace msys {
         return sys;
     }
 
+    SystemPtr ImportMAEFromBytes( const char* bytes, int64_t len,
+                         bool ignore_unrecognized ) {
+        std::istringstream in;
+        /* behold the lameness that is std::stringstream */
+        in.rdbuf()->pubsetbuf(const_cast<char *>(bytes), len);
+        return ImportMAEFromStream(in,ignore_unrecognized);
+    }
+
     SystemPtr ImportMAEFromStream( std::istream& file,
                                    bool ignore_unrecognized ) {
 
@@ -312,11 +320,6 @@ namespace desres { namespace msys {
                     if (!blk.get("__size__").as_int()) continue;
                     std::string name = ff.key(j);
                     if (skippable(name)) continue;
-                    const char * suffix = "_alchemical";
-                    bool alchemical = endswith(name.c_str(), suffix);
-                    if (alchemical) {
-                        name = name.substr(0,name.size()-strlen(suffix));
-                    }
                     const mae::Ffio * imp = mae::Ffio::get(name);
                     if (!imp) {
                         if (ignore_unrecognized) {
@@ -328,9 +331,9 @@ namespace desres { namespace msys {
                             throw std::runtime_error(ss.str());
                         }
                     } else if (imp->wants_all()) {
-                        imp->apply( h, ff,  sitemap, vdwmap, alchemical );
+                        imp->apply( h, ff,  sitemap, vdwmap );
                     } else {
-                        imp->apply( h, blk, sitemap, vdwmap, alchemical );
+                        imp->apply( h, blk, sitemap, vdwmap );
                     }
                 }
             }

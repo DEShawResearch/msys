@@ -10,6 +10,6 @@ env.AddUnitTest('test_atomsel', 'test_atomsel.cxx')
 env.AddUnitTest('test_schema', 'test_schema.cxx')
 env.AddUnitTest('test_mae', 'test_mae.cxx')
 env.AddUnitTest('test_value', 'test_value.cxx')
-env.AddUnitTest('test_json', 'json.cxx')
 env.AddUnitTest('test_amber', 'amber.cxx')
-
+env.AddUnitTest('test_defs', 'test_defs.cxx')
+env.AddUnitTest('test_builder', 'test_builder.cxx')

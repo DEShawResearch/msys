@@ -42,8 +42,6 @@ IdList desres::msys::AppendTerms( TermTablePtr dst, TermTablePtr src,
     for (Id i=0; i<terms.size(); i++) {
         Id p = src->param(terms[i]);
         if (!bad(p)) srcparams.push_back(p);
-        Id pB = src->paramB(terms[i]);
-        if (!bad(pB)) srcparams.push_back(pB);
     }
     std::sort(srcparams.begin(), srcparams.end());
     srcparams.resize(
@@ -55,6 +53,14 @@ IdList desres::msys::AppendTerms( TermTablePtr dst, TermTablePtr src,
     /* construct a mapping from srcparams to dstparams */
     IdList pmap(src->params()->paramCount(), BadId);
     for (Id i=0; i<srcparams.size(); i++) pmap[srcparams[i]] = dstparams[i];
+
+    return AppendTerms( dst, src, src2dst, terms, pmap );
+}
+
+IdList desres::msys::AppendTerms( TermTablePtr dst, TermTablePtr src, 
+                                  IdList const& src2dst,
+                                  IdList const& terms,
+                                  IdList const& pmap ) {
 
     IdList ids;
 
@@ -69,13 +75,10 @@ IdList desres::msys::AppendTerms( TermTablePtr dst, TermTablePtr src,
     for (Id i=0; i<terms.size(); i++) {
         Id srcterm = terms[i];
         Id srcparam = src->param(srcterm);
-        Id srcparamB = src->paramB(srcterm);
         Id dstparam = bad(srcparam) ? BadId : pmap[srcparam];
-        Id dstparamB = bad(srcparamB) ? BadId : pmap[srcparamB];
         IdList atoms = src->atoms(srcterm);
         for (Id j=0; j<atoms.size(); j++) atoms[j] = src2dst[atoms[j]];
         Id dstterm = dst->addTerm(atoms, dstparam);
-        dst->setParamB(dstterm, dstparamB);
 
         for (Id j=0; j<nprops; j++) {
             dst->termPropValue(dstterm,map[j]) = src->termPropValue(srcterm, j);

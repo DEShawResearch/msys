@@ -23,6 +23,11 @@ env.Command('version.hxx', '#desres-install-helper', build_version_hxx )
 
 libmsys=env.AddLibrary('msys', Split('''
 
+builder.cxx
+charmm_file.c
+defs.cxx
+geom.cxx
+
 amber/import_crd.cxx
 amber/import_prmtop.cxx
 
@@ -31,8 +36,6 @@ dms/export_dms.cxx
 dms/import_dms.cxx
 
 elements.cxx
-
-json/export_json.cxx
 
 mae/ff.cxx
 mae/export_mae.cxx

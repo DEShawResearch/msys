@@ -7,15 +7,19 @@ namespace {
         return s.substr(0,5)=="harm_" && (s.size()-s.rfind("_constrained"))==12;
     }
 
+    template <bool alchemical>
     struct Bonds : public Ffio {
 
         void apply( SystemPtr h,
                     const Json& blk,
                     const SiteMap& sitemap,
-                    const VdwMap&, bool alchemical ) const {
+                    const VdwMap& ) const {
 
-            TermTablePtr table = AddTable(h, "stretch_harm");
-            ParamMap map(table->params(), blk);
+            std::string name;
+            if (alchemical) name += "alchemical_";
+            name += "stretch_harm";
+            TermTablePtr table = AddTable(h, name);
+            ParamMap map(table->params(), blk, alchemical);
 
             const Json& ai = blk.get("ffio_ai");
             const Json& aj = blk.get("ffio_aj");
@@ -38,17 +42,16 @@ namespace {
                 Id A = map.add(i);
                 ids[0] = ai.elem(i).as_int();
                 ids[1] = aj.elem(i).as_int();
-                Id B = BadId;
-                if (alchemical) B = map.addAlchemical(i);
                 /* we can't really constrain alchemical terms... */
                 if (alchemical && constrained) {
                     constrained = false;
                 }
-                sitemap.addUnrolledTerms( table, A, ids, constrained, B );
+                sitemap.addUnrolledTerms( table, A, ids, constrained );
             }
         }
     };
 
-    RegisterFfio<Bonds> _("ffio_bonds");
+    RegisterFfio<Bonds<false> > _1("ffio_bonds");
+    RegisterFfio<Bonds<true> > _2("ffio_bonds_alchemical");
 }
 

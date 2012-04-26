@@ -104,6 +104,20 @@ that pair.  In the new system, particles 100 and 200 will experience no
 vdw interaction with each other, though they will experience the same
 electrostatic interaction as before.
 
+Alchemical nonbonded interactions
+=================================
+
+DMS files use a table called *alchemical_particle* to indicate which
+particles have alchemical nonbonded states, and the parameters for
+those states.  Msys represents the information in that table with
+a `TermTable` called *alchemical_nonbonded*.   This table will share
+a `ParamTable` with the regular *nonbonded* table, but will contain
+`Terms` only for the alchemical particles.  The parameter for each
+`Term` in *alchemical_nonbonded* will correspond to the B state of
+the term's particle.  Additional per-particle information, such
+as *chargeB*, *chargeC*, or *moiety*, will appear as term properties
+for the particles.
+
 
 NonbondedInfo
 =============

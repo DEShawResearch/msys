@@ -30,22 +30,7 @@ namespace desres { namespace msys { namespace mae {
         void addUnrolledTerms( TermTablePtr nb, 
                                Id param, 
                                const IdList& ids,
-                               bool constrained, 
-                               Id paramB ) const;
-
-        void addUnrolledTerms( TermTablePtr nb, 
-                               Id param, 
-                               const IdList& ids,
-                               bool constrained = false ) const {
-            return addUnrolledTerms( nb, param, ids, constrained, BadId );
-        }
-
-        void addUnrolledTerms( TermTablePtr nb, 
-                               Id param, 
-                               const IdList& ids,
-                               Id paramB ) const {
-            return addUnrolledTerms( nb, param, ids, false, paramB );
-        }
+                               bool constrained = false ) const;
 
         void addUnrolledPseudoBonds(SystemPtr h, Id parent, Id pseudo) const;
     };

@@ -15,11 +15,7 @@ SiteMap::SiteMap( SystemPtr h, const Json& sites, const IdList& atoms,
 
     const Json& mass = sites.get("ffio_mass");
     const Json& charge = sites.get("ffio_charge");
-    const Json& chargeB = sites.get("ffio_chargeB");
     const Json& atype = sites.get("ffio_type");
-    const Json& moiety = sites.get("ffio_moiety");
-    const Json& vdw = sites.get("ffio_vdwtype");
-    const Json& vdwB = sites.get("ffio_vdwtypeB");
 
     Id iatom = 0;
     Id ipseudo=natoms;
@@ -41,23 +37,14 @@ SiteMap::SiteMap( SystemPtr h, const Json& sites, const IdList& atoms,
             atom_t& atom = h->atom(atm);
 
             atom.mass = mass.elem(i).as_float(0);
-            const char * vtype = vdw.elem(i).as_string("");
-            const char * vtypeB = vdwB.elem(i).as_string(vtype);
             atom.charge  = charge.elem(i).as_float(0);
-            atom.chargeB = chargeB.elem(i).as_float(atom.charge);
-            atom.moiety  = moiety.elem(i).as_int(0);
-            if (chargeB.elem(i).kind()==Json::Float ||
-                strcmp(vtype, vtypeB) ||
-                atom.moiety!=0) {
-                atom.alchemical = true;
-            }
         }
     }
 }
 
 void SiteMap::addUnrolledTerms(TermTablePtr table, Id param, 
                                const IdList& sites,
-                               bool constrained, Id paramB ) const {
+                               bool constrained ) const {
     /* do checks on input site ids */
     Id j,m = sites.size();
     for (j=0; j<m; j++) if (sites[j]<1 || sites[j]>_nsites) {
@@ -81,7 +68,6 @@ void SiteMap::addUnrolledTerms(TermTablePtr table, Id param,
             ids[j] = _atoms.at(_s2p.at(sites[j]+offset));
         }
         Id term = table->addTerm(ids, param);
-        table->setParamB(term, paramB);
         if (!bad(constrained_col)) {
             table->termPropValue(term, constrained_col)=1;
         }

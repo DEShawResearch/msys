@@ -17,6 +17,19 @@ static schema_t schemas[] = {
     { "torsiontorsion_cmap", "bond", 8, {{"cmapid", 2}}},
     { "pseudopol_fermi","bond",4,{"a", "b", "cutoff"}},
 
+    /* alchemical bond terms */
+    { "alchemical_stretch_harm", "bond", 2, {"r0A", "fcA", "r0B", "fcB"}},
+    { "alchemical_angle_harm", "bond", 3, {"theta0A", "fcA", "theta0B", "fcB"}},
+    { "alchemical_dihedral_trig", "bond",4, 
+        {"phi0A","fc0A","fc1A","fc2A","fc3A","fc4A","fc5A","fc6A",
+         "phi0B","fc0B","fc1B","fc2B","fc3B","fc4B","fc5B","fc6B"}},
+    { "alchemical_pair_12_6_es", "bond", 2, 
+        {"aijA", "bijA", "qijA",
+         "aijB", "bijB", "qijB"}},
+    { "alchemical_pair_exp_6_es","bond", 2, 
+        {"aijA", "bijA", "cijA", "qijA",
+         "aijB", "bijB", "cijB", "qijB"}},
+
     /* constraints */
     { "constraint_hoh", "constraint", 3, {"theta","r1","r2"}},
     { "constraint_ah1", "constraint", 2, {"r1"}},

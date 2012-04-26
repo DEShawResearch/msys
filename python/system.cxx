@@ -144,10 +144,8 @@ namespace {
             throw_error_already_set();
         }
         boost::shared_ptr<Py_buffer> ptr(view, PyBuffer_Release);
-        std::istringstream in;
-        char* bytes = reinterpret_cast<char *>(view->buf);
-        in.rdbuf()->pubsetbuf(bytes, view->len);
-        return ImportMAEFromStream(in, ignore_unrecognized);
+        const char* bytes = reinterpret_cast<const char *>(view->buf);
+        return ImportMAEFromBytes(bytes, view->len, ignore_unrecognized);
     }
 
     SystemPtr import_dms_from_buffer( PyObject* obj, bool structure_only ) {

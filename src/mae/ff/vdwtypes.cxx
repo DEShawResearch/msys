@@ -1,6 +1,7 @@
 #include "../ff.hxx"
 //#include <cstdio>
 #include <boost/foreach.hpp>
+#include <assert.h>
 
 namespace {
 
@@ -8,14 +9,14 @@ namespace {
         void apply( SystemPtr h,
                     const Json& blk,
                     const SiteMap& sitemap,
-                    const VdwMap&  vdwmap, bool alchemical ) const {}
+                    const VdwMap&  vdwmap ) const {}
     };
 
     struct VdwTypes : public Ffio {
         void apply( SystemPtr h, 
                     const Json& blk,
                     const SiteMap& sitemap,
-                    const VdwMap&  vdwmap, bool alchemical ) const {
+                    const VdwMap&  vdwmap ) const {
 
             std::string funct;
             if (vdwmap.funct()=="lj12_6_sig_epsilon") {
@@ -32,6 +33,7 @@ namespace {
             }
 
             TermTablePtr table = AddNonbonded(h,funct, vdwmap.rule());
+            TermTablePtr atable;
             ParamTablePtr params = table->params();
 
             typedef std::map<VdwType, Id> TypeMap;
@@ -42,9 +44,10 @@ namespace {
                 const VdwType* types[2];
                 types[0] = &vdwmap.type(site);
                 types[1] = &vdwmap.typeB(site);
-                Id p[2];
+                Id p[2]={BadId,BadId};
                 for (int j=0; j<2; j++) {
                     const VdwType& type = *types[j];
+                    if (type=="") continue;
                     TypeMap::const_iterator e = map.find(type);
                     if (e==map.end()) {
                         p[j] = map[type] = params->addParam();
@@ -57,7 +60,23 @@ namespace {
                     }
                 }
                 IdList ids(1,site);
-                sitemap.addUnrolledTerms(table, p[0], ids, false, p[1] );
+                sitemap.addUnrolledTerms(table, p[0], ids );
+
+                if (!bad(p[1])) {
+                    /* alchemical nonbonded term */
+                    if (!atable) {
+                        atable = h->addTable(
+                                "alchemical_nonbonded", 1, params);
+                        atable->category = NONBONDED;
+                        atable->addTermProp("chargeB", FloatType);
+                        atable->addTermProp("moiety", IntType);
+                    }
+                    IdList realids(1,sitemap.site(site));
+                    Id term = atable->addTerm(realids, p[1]);
+                    atable->termPropValue(term,"chargeB") = 
+                        vdwmap.chargeB(site);
+
+                }
             }
 
             if (vdwmap.combined().size()) {

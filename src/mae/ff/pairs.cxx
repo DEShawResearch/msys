@@ -63,12 +63,13 @@ namespace {
     typedef void (*combine_func)( const Param& vi, const Param& vj, double sf,
                                              Param& p );
 
+    template <bool alchemical>
     struct Pairs : public Ffio {
 
         void apply( SystemPtr h,
                     const Json& blk,
                     const SiteMap& sitemap,
-                    const VdwMap& vdwmap, bool alchemical ) const {
+                    const VdwMap& vdwmap ) const {
 
             const char * pname;
             combine_func combine = NULL;
@@ -96,9 +97,12 @@ namespace {
                     << "' in ffio_pairs.");
             }
 
-            TermTablePtr table = AddTable(h,pname);
+            std::string prefix;
+            if (alchemical) prefix = "alchemical_";
+            TermTablePtr table = AddTable(h,prefix+pname);
             ParamMap map(table->params(), blk);
             Id nprops = table->params()->propCount();
+            if (alchemical) nprops /= 2;
 
             const Json& ai = blk.get("ffio_ai");
             const Json& aj = blk.get("ffio_aj");
@@ -147,7 +151,7 @@ namespace {
                     rB=pairhashB.insert(std::make_pair( ids, std::vector<double>()));
                     paramsB = &rB.first->second;
                     if (rB.second) {
-                        /* first time seeing this alchemical pair */
+                        ///* first time seeing this alchemical pair */
                         paramsB->clear();
                         paramsB->insert(paramsB->begin(), nprops, HUGE_VAL);
                     }
@@ -165,9 +169,11 @@ namespace {
 
                     if (alchemical) {
                         double qscale = c1B.elem(i).as_float();
-                        double qi = h->atom(iatom).chargeB;
-                        double qj = h->atom(jatom).chargeB;
-                        paramsB->back() = qscale * qi * qj;
+                        double qiB = vdwmap.chargeB(ai.elem(i).as_int());
+                        double qjB = vdwmap.chargeB(aj.elem(i).as_int());
+                        if (qiB==HUGE_VAL) qiB=qi;
+                        if (qjB==HUGE_VAL) qjB=qj;
+                        paramsB->back() = qscale * qiB * qjB;
                     }
 
                 } else if (f=="coulomb_qij") {
@@ -194,14 +200,18 @@ namespace {
                     }
 
                     if (alchemical) {
-                        const VdwType& itype = vdwmap.typeB(indi);
-                        const VdwType& jtype = vdwmap.typeB(indj);
-                        if (vdwmap.has_combined(itype, jtype)) {
-                            const VdwParam& p = vdwmap.param(itype,jtype);
+                        const VdwType& itypeB = vdwmap.typeB(indi);
+                        const VdwType& jtypeB = vdwmap.typeB(indj);
+                        if (vdwmap.has_combined(itypeB, jtypeB)) {
+                            const VdwParam& p = vdwmap.param(itypeB,jtypeB);
                             combine( p, p, 1.0, *paramsB );
                         } else {
-                            const VdwParam& iparam = vdwmap.param(itype);
-                            const VdwParam& jparam = vdwmap.param(jtype);
+                            const VdwParam& iparam = 
+                                itypeB.size() ? vdwmap.param(itypeB)
+                                              : vdwmap.param(itype);
+                            const VdwParam& jparam = 
+                                jtypeB.size() ? vdwmap.param(jtypeB)
+                                              : vdwmap.param(jtype);
                             double lscale = c1B.elem(i).as_float();
                             combine( iparam, jparam, lscale, *paramsB );
                         }
@@ -229,6 +239,13 @@ namespace {
               PairHash::iterator iter, iterB;
               iterB = pairhashB.begin();
               for (iter=pairhash.begin(); iter!=pairhash.end(); ++iter) {
+                  if (alchemical) {
+                      /* extend with B state */
+                      iter->second.insert(iter->second.end(),
+                                          iterB->second.begin(), 
+                                          iterB->second.end());
+                      ++iterB;
+                  }
                   /* we may have had an mae file with and LJ pair and no
                    * corresponding ES pair, or vice versa, in which case
                    * we would still have the HUGE_VAL sentinel values in
@@ -239,22 +256,13 @@ namespace {
                       }
                   }
                   Id A = map.add(iter->second);
-                  Id B = BadId;
-                  if (alchemical) {
-                      for (unsigned i=0; i<iterB->second.size(); i++) {
-                          if (iterB->second[i]==HUGE_VAL) {
-                              iterB->second[i]=0;
-                          }
-                      }
-                      B=map.add(iterB->second);
-                      ++iterB;
-                  }
-                  sitemap.addUnrolledTerms( table, A, iter->first, false, B );
+                  sitemap.addUnrolledTerms( table, A, iter->first );
               }
             } while (skipped.size());
         }
     };
 
-    RegisterFfio<Pairs> _("ffio_pairs");
+    RegisterFfio<Pairs<false> > _1("ffio_pairs");
+    RegisterFfio<Pairs<true> > _2("ffio_pairs_alchemical");
 }
 

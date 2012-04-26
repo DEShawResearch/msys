@@ -65,7 +65,11 @@ def dump_terms(cmd, ipath, out, table, without_paraminfo, reorder ):
         # don't print moiety for compatibility with ent output
         params = [p for p in params if p!='moiety']
         if without_paraminfo:
-            exclude=set(('memo', 'comment', 'ff', 'type', 'typekey'))
+            exclude=set((
+                    'memo', 'comment', 'ff', 'type', 'typekey',
+                    'memoA', 'commentA', 'ffA', 'typeA', 'typekeyA',
+                    'memoB', 'commentB', 'ffB', 'typeB', 'typekeyB',
+                    ))
             params = [p for p in params if p not in exclude]
 
         if 'constrained' in params:
@@ -137,7 +141,10 @@ def dmsdump(ipath, out, without_provenance = False,
 
     atoms, params = get_columns(ipath, 'nonbonded_param')
     if without_paraminfo:
-        for p in ('id', 'ff', 'type', 'typekey', 'memo', 'comment'): 
+        for p in ( 'id', 'ff', 'type', 'typekey', 'memo', 'comment',
+                         'ffA', 'typeA', 'typekeyA', 'memoA', 'commentA',
+                         'ffB', 'typeB', 'typekeyB', 'memoB', 'commentB',
+                      ):
             if p in params:
                 params.remove(p)
     params.sort()
@@ -157,7 +164,7 @@ def dmsdump(ipath, out, without_provenance = False,
                 ['nbA.%s as %sA, nbB.%s as %sB' % (p,p,p,p) 
                     for p in params])
         sql='''
-        select "alchemical_particle", p.p0 as p0, moiety, chargeA, chargeB, %s
+        select "alchemical_particle", p.p0 as p0, chargeA, chargeB, %s
         from alchemical_particle as p 
         join nonbonded_param as nbA on p.nbtypeA = nbA.id
         join nonbonded_param as nbB on p.nbtypeB = nbB.id

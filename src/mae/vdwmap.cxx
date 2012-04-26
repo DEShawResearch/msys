@@ -47,15 +47,20 @@ VdwMap::VdwMap( const Json& ffio_ff ) {
         ffio_ff.get("ffio_atoms") : ffio_ff.get("ffio_sites");
     const Json& types = sites.get("ffio_vdwtype");
     const Json& typesB = sites.get("ffio_vdwtypeB");
+    const Json& chargeB = sites.get("ffio_chargeB");
     if (types.valid()) {
         int i,n = types.size();
         for (i=0; i<n; i++) {
             _vdwnames.push_back( types.elem(i).as_string());
-            if (typesB.valid()) {
-                const Json& elem = typesB.elem(i);
-                _vdwnamesB.push_back(elem.as_string(_vdwnames[i].c_str()));
+            if (typesB.valid() && typesB.elem(i).kind()==Json::String) {
+                _vdwnamesB.push_back(typesB.elem(i).as_string());
             } else {
-                _vdwnamesB.push_back(_vdwnames[i]);
+                _vdwnamesB.push_back("");
+            }
+            if (chargeB.valid() && chargeB.elem(i).kind()==Json::Float) {
+                _chargeB.push_back(chargeB.elem(i).as_float());
+            } else {
+                _chargeB.push_back(HUGE_VAL);
             }
         }
     }
@@ -123,4 +128,14 @@ const VdwType& VdwMap::typeB( int id ) const {
         throw std::runtime_error(ss.str());
     }
     return _vdwnamesB[id-1];
+}
+
+double VdwMap::chargeB( int id ) const {
+    int n = _chargeB.size();
+    if (id<1 || id>n) {
+        std::stringstream ss;
+        ss << "illegal site id " << id;
+        throw std::runtime_error(ss.str());
+    }
+    return _chargeB[id-1];
 }

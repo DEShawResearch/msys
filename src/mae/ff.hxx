@@ -39,8 +39,7 @@ namespace desres { namespace msys { namespace mae {
         virtual void apply( SystemPtr h,
                             const Json& blk, 
                             const SiteMap& sitemap,
-                            const VdwMap&  vdwmap,
-                            bool alchemical ) const = 0;
+                            const VdwMap&  vdwmap ) const = 0;
     };
 
     /* statically construct one of these for each plugin; e.g.,
@@ -66,9 +65,6 @@ namespace desres { namespace msys { namespace mae {
     /* mae columns */
     typedef std::vector<const Json *> ColumnList;
 
-    typedef void (*ParamConverter)(ParamList& p);
-    static inline void Identity( ParamList& p) {}
-
     /* This class supplies a hash on the actual parameter values for a
      * ParamTable, assuming they are all of FloatType. */
     class ParamMap {
@@ -77,7 +73,6 @@ namespace desres { namespace msys { namespace mae {
 
         ParamTablePtr   _params;        /* the tracked parameter table */
         ColumnList      _columns;       /* mae columns */
-        ColumnList      _alc_columns;   /* alchemical mae columns */
         ParamDict       _pdict;         /* map param values to param id */
 
     public:
@@ -86,62 +81,21 @@ namespace desres { namespace msys { namespace mae {
          * "canonical" mae columns will be used, one for each property. */
         ParamMap( ParamTablePtr params, 
                   const Json& blk,
-                  unsigned ncols = 0,
-                  const char** maecols = NULL )
-        : _params(params) {
-            if (ncols==0) ncols = params->propCount();
-            for (unsigned i=0; i<ncols; i++) {
-                std::string col;
-                if (maecols) {
-                    col = maecols[i];
-                } else {
-                    col ="ffio_c";
-                    col += (char)('1' + i);
-                }
-                _columns.push_back(&blk.get(col.c_str()));
-                col += "B";
-                _alc_columns.push_back(&blk.get(col.c_str()));
-            }
-        }
+                  unsigned ncols,
+                  const char** maecols );
+        ParamMap( ParamTablePtr params, 
+                  const Json& blk, 
+                  bool alchemical=false);
 
         /* the parma table */
         ParamTablePtr params() const { return _params; }
 
-        /* read the values from the given row in the forcefield block,
-         * using the given columns, applying the supplied conversion. */
-        Id add(int row, const ColumnList& cols, ParamConverter convert) {
-            Id n = cols.size();
-            ParamList param(n);
-            for (Id i=0; i<n; i++) {
-                param[i] = cols[i]->elem(row).as_float();
-            }
-            convert(param);
-            return add(param);
-        }
-
-        /* call add() using the original columns */
-        Id add(int row, ParamConverter Convert = Identity ) {
-            return add(row, _columns, Convert);
-        }
-
-        /* call add() using the alchemical columns */
-        Id addAlchemical(int row, ParamConverter Convert = Identity ) {
-            return add(row, _alc_columns, Convert);
-        }
+        /* read the values from the given row in the forcefield block */
+        Id add(int row);
 
         /* add a parameter with specified values not necessarily derived
          * from any row */
-        Id add(const ParamList& param) {
-            int n = param.size();
-            ParamDict::const_iterator iter=_pdict.find(param);
-            if (iter!=_pdict.end()) return iter->second;
-            Id id = _params->addParam();
-            for (int i=0; i<n; i++) {
-                _params->value(id,i) = param[i];
-            }
-            _pdict[param]=id;
-            return id;
-        }
+        Id add(const ParamList& param);
     };
 
     typedef boost::shared_ptr<ParamMap> ParamMapPtr;

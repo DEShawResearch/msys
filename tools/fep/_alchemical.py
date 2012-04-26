@@ -181,6 +181,8 @@ def make_exclmap(bmap, apairs, bpairs, atable, btable):
     for key, val in bmap.items(): invbmap[val]=key
 
     pairs = get_pairs_table(atable.system())
+    name = "alchemical_"+pairs.name()
+    alcpairs = atable.system().addTableFromSchema(name,name)
 
     b_item_dict=dict()
     for t in btable.terms():
@@ -201,17 +203,30 @@ def make_exclmap(bmap, apairs, bpairs, atable, btable):
         aj=invbmap.get(item[1], -1)
         if apairs[item[0]]>=0 and apairs[item[1]]>=0 and ai>=0 and aj>=0:
             #print 'Offset exclusion %d-%d in A by pair interaction in B: %d-%d' % (apairs[item[0]], apairs[item[1]], ai, aj)
+
             pairsB, paramB = make_full_pair_entry(btable.system(), ai, aj)
-            paramB = copy_param(pairs.params(), pairsB.params(), paramB)
+            # remove non-alchemical version if it exists
             for t in pairs.terms():
                 if sorted(pairs.atoms(t))==item:
-                    pairs.setParamB(t, paramB)
+                    pairs.delTerm(t)
+                    break
+
+            # find or create the alchemical pair
+            for t in alcpairs.terms():
+                if sorted(alcpairs.atoms(t))==item:
+                    p = alcpairs.param(t)
                     break
             else:
                 ids=_msys.IdList()
                 for i in item: ids.append(i)
-                t=pairs.addTerm(ids, pairs.params().addParam())
-                pairs.setParamB(t, paramB)
+                p = alcpairs.params().addParam()
+                t = alcpairs.addTerm(ids, p)
+
+            # assign its alchemical state
+            for i in range(pairsB.params().propCount()):
+                prop = pairsB.params().propName(i)
+                col = alcpairs.params().propIndex(prop+'B')
+                alcpairs.params().setProp(p,col,pairsB.params().getProp(paramB,i))
 
     block2=list()
     for item, j in b_item_dict.items():
@@ -220,16 +235,29 @@ def make_exclmap(bmap, apairs, bpairs, atable, btable):
         aj=invbmap.get(item[1], -1)
         if apairs[item[0]]>=0 and apairs[item[1]]>=0 and ai>=0 and aj>=0:
             #print 'Offset exclusion %d-%d in B by pair interaction in A: %d-%d' % (ai, aj, apairs[item[0]], apairs[item[1]])
-            pairs, param = make_full_pair_entry(atable.system(), item[0], item[1])
+            pairs,param = make_full_pair_entry(atable.system(),item[0],item[1])
+            # remove non-alchemical version if it exists
             for t in pairs.terms():
                 if sorted(pairs.atoms(t))==sorted(item):
-                    pairs.setParam(t, param)
+                    pairs.delTerm(t)
+                    break
+
+            # find or create the alchemical pair
+            for t in alcpairs.terms():
+                if sorted(alcpairs.atoms(t))==sorted(item):
+                    p = alcpairs.param(t)
                     break
             else:
                 ids=_msys.IdList()
                 for i in item: ids.append(i)
-                t = pairs.addTerm(ids, param)
-                pairs.setParamB(t, pairs.params().addParam())
+                p = alcpairs.params().addParam()
+                t = alcpairs.addTerm(ids, p)
+
+            # assign its alchemical state
+            for i in range(pairs.params().propCount()):
+                prop = pairs.params().propName(i)
+                col = alcpairs.params().propIndex(prop+'A')
+                alcpairs.params().setProp(p,col,pairs.params().getProp(param,i))
 
     block2.sort()
     block.extend(block2)
@@ -273,6 +301,21 @@ def copy_param( dstparams, srcparams, srcid ):
         dstparams.setProp(dstid, dstindex, newval)
     return dstid
 
+def copy_alchemical(dst, srcA, idA, srcB, idB):
+    ''' copy params from src into alchemical dst '''
+    id = dst.addParam()
+    if not _msys.bad(idA):
+        for i in range(srcA.propCount()):
+            prop = srcA.propName(i)
+            col = dst.propIndex(prop+'A')
+            dst.setProp(id,col,srcA.getProp(idA,i))
+    if not _msys.bad(idB):
+        for i in range(srcB.propCount()):
+            prop = srcB.propName(i)
+            col = dst.propIndex(prop+'B')
+            dst.setProp(id,col,srcB.getProp(idB,i))
+    return id
+
 def make_alchemical(atable, btable, ctable, block, keeper=None):
     ''' merge forcefield entries from m2 into m1. '''
     if btable is None: return
@@ -282,6 +325,12 @@ def make_alchemical(atable, btable, ctable, block, keeper=None):
     if not _msys.bad(b_constrained):
         c_constrained = ctable.addTermProp('constrained', int)
     params=ctable.params()
+    tableBname = "alchemical_" + ctable.name()
+    tableB = ctable.system().table(tableBname)
+    if tableB is None:
+        tableB = ctable.system().addTableFromSchema(tableBname,tableBname)
+    paramsB = tableB.params()
+                                    
     for (ta,tb), atoms in block:
         if ta>0 and tb==-1:
             # Keep the A state intact, no alchemical transformation
@@ -289,12 +338,15 @@ def make_alchemical(atable, btable, ctable, block, keeper=None):
 
         elif ta>0 and tb==0:
             '''disappear the B state '''
-            term=ta-1
-            paramB=copy_param(params, params, ctable.param(term))
-            ctable.setParamB(term, paramB)
-            for index in range(params.propCount()):
-                if params.propName(index)!=keeper:
-                    params.setProp(paramB, index, 0.0)
+            p = copy_alchemical(paramsB,
+                                params,  ctable.param(ta-1),
+                                None,    _msys.BadId)
+            if keeper is not None:
+                colA = paramsB.propIndex(keeper + 'A')
+                colB = paramsB.propIndex(keeper + 'B')
+                paramsB.setProp(p,colB,paramsB.getProp(p,colA))
+            tableB.addTerm(ctable.atoms(ta-1), p)
+            ctable.delTerm(ta-1)
 
         elif ta==-1 and tb>0:
             ''' copy parameters from state B '''
@@ -308,21 +360,29 @@ def make_alchemical(atable, btable, ctable, block, keeper=None):
 
         elif ta==0 and tb>0:
             ''' disappear the A state '''
+            p = copy_alchemical(paramsB,
+                                None, _msys.BadId,
+                                btable.params(), btable.param(tb-1))
+
+            if keeper is not None:
+                colA = paramsB.propIndex(keeper + 'A')
+                colB = paramsB.propIndex(keeper + 'B')
+                paramsB.setProp(p,colA,paramsB.getProp(p,colB))
+
             ids=_msys.IdList()
             for a in atoms: ids.append(a)
-            param=copy_param(params, btable.params(), btable.param(tb-1))
-            paramB=params.duplicate(param)
-            for index in range(params.propCount()):
-                if params.propName(index)!=keeper:
-                    params.setProp(param, index, 0.0)
-            term = ctable.addTerm( ids, param )
-            ctable.setParamB(term, paramB)
+            tableB.addTerm(ids, p)
 
         elif ta>0 and tb>0:
             ''' A state morphs to B state '''
-            term=ta-1
-            paramB = copy_param(params, btable.params(), btable.param(tb-1))
-            ctable.setParamB(term, paramB)
+            # create a new entry in paramsB with values taken from A and B
+            #paramB = copy_param(params, btable.params(), btable.param(tb-1))
+            p = copy_alchemical(paramsB, 
+                                params,          ctable.param(ta-1),
+                                btable.params(), btable.param(tb-1))
+            #ctable.setParamB(term, paramB)
+            tableB.addTerm(ctable.atoms(ta-1), p)
+            ctable.delTerm(ta-1)
 
         else:
             raise ValueError, "Unsupported mapping in %s: ta=%d, tb=%d" % (
@@ -416,9 +476,13 @@ def MakeAlchemical(A, B, pairs):
     amap = _msys.IdList()
     bmap=dict()
 
-    nbB = B.table('nonbonded') if 'nonbonded' in B.tableNames() else None
-    nbC = C.table('nonbonded') if 'nonbonded' in C.tableNames() else None
+    nbB = B.table('nonbonded')
+    nbC = C.table('nonbonded')
     Czero = None
+    alc = C.addTable('alchemical_nonbonded', 1, nbC.params())
+    alc.category = _msys.parse_category('nonbonded')
+    alc.addTermProp('chargeB', float)
+    alc.addTermProp('moiety', int)
 
     for i, (ai, bi) in enumerate(pairs):
         assert ai>=0 or bi>=0
@@ -437,7 +501,6 @@ def MakeAlchemical(A, B, pairs):
                 C.residue(res).resid = bres.resid
             atm = C.addAtom(res)
             atom = C.atom(atm)
-            atom.alchemical = True
             atom.name = batm.name
             atom.mass = batm.mass
             atom.x = batm.x
@@ -446,35 +509,29 @@ def MakeAlchemical(A, B, pairs):
             atom.vx = batm.vx
             atom.vy = batm.vy
             atom.vz = batm.vz
-            atom.chargeB = batm.charge
             atom.atomic_number = batm.atomic_number
             for p in range(B.atomPropCount()):
                 prop = B.atomPropName(p)
                 C.setAtomProp(atm, prop, B.getAtomProp(bi, prop))
             amap.append(atm)
-            if nbC is not None:
-                assert nbB is not None
-                # make a zero term for the nonbonded
-                if Czero is None: Czero = nbC.params().addParam()
-                t = nbC.addTerm([atm], Czero)
-                p = copy_param(nbC.params(), nbB.params(), nbB.param(bi))
-                nbC.setParamB(t, p)
+
+            # make a zero term for the nonbonded
+            if Czero is None: Czero = nbC.params().addParam()
+            t = nbC.addTerm([atm], Czero)
+            p = copy_param(nbC.params(), nbB.params(), nbB.param(bi))
+            alcid = alc.addTerm([atm], p)
+            alc.setTermProp(alcid,0,batm.charge)
         else:
             atom = C.atom(ai)
             amap.append(ai)
             if bi>=0:
                 batm = B.atom(bi)
                 p = copy_param(nbC.params(), nbB.params(), nbB.param(bi))
-                if True:
-                #if batm.charge != atom.charge and not identical_params(
-                        #nbC.params(), nbC.param(ai), p):
-                    atom.alchemical = True
-                    atom.chargeB = batm.charge
-                    nbC.setParamB(ai, p)
+                alcid = alc.addTerm([ai], p)
+                alc.setTermProp(alcid,0,batm.charge)
             else:
-                atom.alchemical = True
                 if Czero is None: Czero = nbC.params().addParam()
-                nbC.setParamB(ai, Czero)
+                alcid = alc.addTerm([ai], Czero)
         if bi>=0:
             bmap[bi] = i
 

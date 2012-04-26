@@ -12,6 +12,9 @@ namespace desres { namespace msys {
     SystemPtr ImportMAEFromStream( std::istream& in,
                          bool ignore_unrecognized = false );
 
+    SystemPtr ImportMAEFromBytes( const char* bytes, int64_t len,
+                         bool ignore_unrecognized = false );
+
     void ExportMAE( SystemPtr h, std::string const& path,
                     bool with_forcefield = true );
     

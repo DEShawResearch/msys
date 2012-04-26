@@ -7,7 +7,7 @@ namespace {
         void apply( SystemPtr h,
                     const Json& blk,
                     const SiteMap& sitemap,
-                    const VdwMap&, bool alchemical  ) const {
+                    const VdwMap& ) const {
 
             TermTablePtr table = AddTable(h,"dihedral6_trig");
             ParamMap map(table->params(), blk);

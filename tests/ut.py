@@ -17,6 +17,8 @@ class TestMain(unittest.TestCase):
         self.assertEqual(a1.system.atoms[1], a2)
         self.assertNotEqual(m.atom(0), m.atom(1))
 
+        self.assertNotEqual(a1,None)
+
         # FIXME: hmm, maybe fetching m.atom(0) ought to throw after the
         # atom has been removed.  
         m.atom(0).remove()
@@ -84,8 +86,6 @@ class TestMain(unittest.TestCase):
         t1=table.addTerm([a], p1)
         t2=table.addTerm([a], p2)
         t3=table.addTerm([a], p3)
-        t4=table.addTerm([a])
-        t4.paramB = p2
 
         self.assertFalse( t1.param==t2.param)
         self.assertFalse( t1.param==t3.param)
@@ -96,9 +96,6 @@ class TestMain(unittest.TestCase):
         self.assertTrue( t2.param==p1)
         self.assertFalse( t1.param==t3.param)
         self.assertTrue( t3.param==p3)
-
-        self.assertTrue(t4.param is None)
-        self.assertTrue(t4.paramB == p1)
 
 
     def testAtomProps(self):
@@ -431,32 +428,23 @@ class TestMain(unittest.TestCase):
         m=msys.CreateSystem()
         a=m.addAtom()
         table=m.addTable("foo", 1)
-        ptr=table._ptr
+        ptr=table.params._ptr
         p1=table.params.addParam()
         p2=table.params.addParam()
         p3=table.params.addParam()
         t1=table.addTerm([a], p1)
-        self.assertEqual(ptr.paramRefs(t1.param.id), 1)
+        self.assertEqual(ptr.refcount(t1.param.id), 1)
         t2=table.addTerm([a], p1)
-        self.assertEqual(ptr.paramRefs(t1.param.id), 2)
-        self.assertEqual(ptr.paramRefs(t2.param.id), 2)
+        self.assertEqual(ptr.refcount(t1.param.id), 2)
+        self.assertEqual(ptr.refcount(t2.param.id), 2)
         t1.remove()
-        self.assertEqual(ptr.paramRefs(t2.param.id), 1)
+        self.assertEqual(ptr.refcount(t2.param.id), 1)
         t3=table.addTerm([a], p2)
-        self.assertEqual(ptr.paramRefs(t2.param.id), 1)
-        self.assertEqual(ptr.paramRefs(t3.param.id), 1)
-
-        t3.paramB = p2
-        self.assertEqual(ptr.paramRefs(t3.param.id), 2)
-        self.assertEqual(ptr.paramRefs(t3.paramB.id), 2)
-
-        t2.param=t3.paramB
-        self.assertEqual(ptr.paramRefs(t2.param.id), 3)
-        self.assertEqual(ptr.paramRefs(t3.param.id), 3)
-        self.assertEqual(ptr.paramRefs(t3.paramB.id), 3)
+        self.assertEqual(ptr.refcount(t2.param.id), 1)
+        self.assertEqual(ptr.refcount(t3.param.id), 1)
 
         t3.remove()
-        self.assertEqual(ptr.paramRefs(t2.param.id), 1)
+        self.assertEqual(ptr.refcount(t2.param.id), 1)
 
 
     def testSharedParams(self):
@@ -469,9 +457,7 @@ class TestMain(unittest.TestCase):
         p1=params.addParam()
         p2=params.addParam()
         table1=m1.addTable("table", 1, params)
-        self.assertFalse(params.shared)
         table2=m2.addTable("table", 1, params)
-        self.assertTrue(params._ptr.shared())
         self.assertEqual(table1.params, table2.params)
         t1=table1.addTerm(m1.atoms, p2)
         t2=table2.addTerm(m2.atoms[1:], p2)
@@ -484,8 +470,9 @@ class TestMain(unittest.TestCase):
         self.assertEqual(t1.param['fc'],42)
         self.assertEqual(t2.param['fc'],42)
 
+        # refcounts work even across shared tables
         t1['fc']=52
-        self.assertEqual(t2['fc'], 52)
+        self.assertEqual(t2['fc'], 42)
 
     def testTermParamProps(self):
         m=msys.CreateSystem()
@@ -515,31 +502,6 @@ class TestMain(unittest.TestCase):
         t2._ptr.setProp(t2.id, 0, 33)
         self.assertEqual(t2._ptr.getProp(t2.id, 0), 33)
         t2._ptr.setProp(t2.id, 0, 32)
-
-        # alchemical term
-        b=t2.stateB
-        with self.assertRaises(RuntimeError):
-            b['x']
-        with self.assertRaises(RuntimeError):
-            b['y']
-        with self.assertRaises(RuntimeError):
-            b['x']=42
-        
-        t2.paramB=t2.param
-        self.assertEqual(b.param, t2.paramB)
-        self.assertEqual(b['x'], 32)
-        self.assertEqual(b['y'], 'whodat')
-
-        self.assertEqual(b._ptr.getPropB(b.id, 0), 32)
-        b._ptr.setPropB(b.id, 0, 33)
-        self.assertEqual(b._ptr.getPropB(b.id, 0), 33)
-        b._ptr.setPropB(b.id, 0, 32)
-
-        self.assertFalse(t2.stateA == t2.stateB)
-        self.assertTrue(t2.stateA == t2.stateA)
-        self.assertEqual(t2, t2.stateA)
-
-
 
     def testTermProps(self):
         m=msys.CreateSystem()
@@ -633,6 +595,31 @@ class TestMain(unittest.TestCase):
         self.assertEqual(nb.vdw_funct , "justinrocks")
         self.assertEqual(nb.vdw_rule , "yep")
 
+    def testClone2(self):
+        m=msys.CreateSystem()
+        a1=m.addAtom()
+        a2=m.addAtom()
+        t1=m.addTable('t1', 1)
+        t1.category='nonbonded'
+        params=t1.params
+        t2=m.addTable('t2', 1, params)
+        t2.category='nonbonded'
+
+        p1=params.addParam()
+        p2=params.addParam()
+        t1.addTerm([a1], p1)
+        t1.addTerm([a2], p2)
+        t2.addTerm([a2], p1)
+
+        self.assertEqual(params.nparams, 2)
+
+        m2=m.clone()
+        t1=m2.table('t1')
+        t2=m2.table('t2')
+        params=t1.params
+        self.assertEqual(t1.params,t2.params)
+        self.assertEqual(params.nparams, 2)
+
     def testClone(self):
         m=msys.CreateSystem()
         m.addAtom().name='a'
@@ -672,6 +659,53 @@ class TestMain(unittest.TestCase):
         self.assertEqual( m.atom(3)['foo'], 3.14 )
         self.assertEqual( m.bond(1)['bar'], 42)
 
+    def testRemoveTable(self):
+        m=msys.CreateSystem()
+        a=m.addAtom()
+        T=m.addTable('foo', 1)
+        T.params.addProp('x', int)
+        p=T.params.addParam()
+        t1=T.addTerm([a], p)
+        t1['x']=32
+        self.assertEqual(t1.param.id,0)
+
+        T2=m.addTable('bar', 1, T.params)
+        t2=T2.addTerm([a], p)
+        t2['x']=32
+        self.assertEqual(t2.param.id,1)
+        self.assertEqual(T.params.nparams,2)
+
+        T.name= 'fooj'
+        self.assertEqual(T.system, m)
+        self.assertEqual(T.name, 'fooj')
+        T.remove()
+        self.assertEqual(T.system, None)
+        with self.assertRaises(RuntimeError):
+            T.name
+        with self.assertRaises(RuntimeError):
+            T.addTerm([a], p)
+        self.assertEqual([t.id for t in T.terms], [0])
+
+    def testChargeC(self):
+        m=msys.CreateSystem()
+        nb=m.addNonbondedFromSchema('vdw_12_6')
+        alc=m.addTable('alchemical_nonbonded', 1, nb.params)
+        alc.category='nonbonded'
+        alc.addTermProp('chargeC', float)
+
+        a=m.addAtom()
+        p=nb.params.addParam()
+
+        nb.addTerm([a], p)
+        t=alc.addTerm([a], p)
+        t['chargeC']=0.5
+
+        msys.SaveDMS(m, 'foo.dms')
+        m2=msys.LoadDMS('foo.dms')
+        alc=m2.table('alchemical_nonbonded')
+        self.assertEqual(alc.term(0)['chargeC'], 0.5)
+
+
     def testUpdateFragids(self):
         m=msys.CreateSystem()
         a1=m.addAtom()
@@ -707,7 +741,7 @@ class TestMain(unittest.TestCase):
         # now we can save
         msys.SaveDMS(m, path)
         # twiddle param to something bad
-        t._ptr.setParam(t.id, 42)
+        t._ptr.setParam(t.id, None)
         with self.assertRaises(RuntimeError):
             msys.SaveDMS(m, path)
         t._ptr.setParam(t.id, 0)
@@ -719,14 +753,9 @@ class TestMain(unittest.TestCase):
         p=stretch.params.addParam()
         t.param=p
         msys.SaveDMS(m, path)
-        t._ptr.setParam(t.id, 42)
+        t._ptr.setParam(t.id, None)
         with self.assertRaises(RuntimeError):
             msys.SaveDMS(m, path)
-        t.param=p
-        t.paramB=p
-        msys.SaveDMS(m, path)
-        with self.assertRaises(RuntimeError):
-            t._ptr.setParamB(t.id, 42)
 
     def testPositions(self):
         m=msys.CreateSystem()

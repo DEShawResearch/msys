@@ -25,7 +25,7 @@ class Handle(object):
         try:
             return self._id!=x._id or  self._ptr!=x._ptr
         except AttributeError:
-            return False
+            return True
 
     def __hash__(self): return hash((self._ptr, self._id))
 
@@ -159,9 +159,7 @@ class Atom(Handle):
 __add_properties(Atom, 
         'fragid', 'x', 'y', 'z', 'charge',
         'vx', 'vy', 'vz', 'mass',
-        'chargeB',
         'atomic_number', 'formal_charge',
-        'moiety', 'alchemical',
         'name')
 
 class Residue(Handle):
@@ -348,37 +346,26 @@ class ParamTable(object):
         ''' list of all Params in table '''
         return [Param(self._ptr, i) for i in self._ptr.params()]
 
-    @property
-    def shared(self):
-        ''' is this ParamTable used by more than one TermTable? '''
-        return self._ptr.shared()
-
 class Term(object):
-    __slots__=('_ptr', '_id', '_state')
+    __slots__=('_ptr', '_id')
 
-    def __init__(self, _ptr, _id, _state='A'):
+    def __init__(self, _ptr, _id):
         self._ptr = _ptr
         self._id  = _id
-        self._state = _state
 
     def __eq__(self, x): 
-        return self._id==x._id and self._ptr==x._ptr and self._state==x._state
+        return self._id==x._id and self._ptr==x._ptr
     def __ne__(self, x): 
-        return self._id!=x._id or  self._ptr!=x._ptr or  self._state!=x._state
+        return self._id!=x._id or  self._ptr!=x._ptr
 
     def __repr__(self): return '<Term %d>' % self._id
 
     @property
     def paramid(self):
-        if self._state is 'A':
-            return self._ptr.param(self._id)
-        return self._ptr.paramB(self._id)
+        return self._ptr.param(self._id)
     @paramid.setter
     def paramid(self, id):
-        if self._state is 'A':
-            self._ptr.setParam(self._id, id)
-        else:
-            self._ptr.setParamB(self._id, id)
+        self._ptr.setParam(self._id, id)
 
     def remove(self):
         ''' remove the given Term from its TermTable '''
@@ -404,44 +391,6 @@ class Term(object):
                 raise RuntimeError, "param comes from a different ParamTable"
             id = val.id
         self.paramid = id
-
-    @property
-    def paramA(self):
-        ''' param for the A state of this Term '''
-        return self.stateA.param
-    @paramA.setter
-    def paramA(self, val):
-        self.stateA.param = val
-
-    @property
-    def paramB(self):
-        ''' param for the B state of this Term '''
-        return self.stateB.param
-    @paramB.setter
-    def paramB(self, val):
-        self.stateB.param = val
-
-    @property
-    def alchemical(self):
-        ''' Does this term contain an alchemical parameter set? '''
-        return not _msys.bad(self._ptr.paramB(self._id))
-
-    @property
-    def stateA(self):
-        ''' Returns the non-alchemical version of this Term '''
-        if self._state=='A': return self
-        return Term(self._ptr, self._id, 'A')
-
-    @property
-    def stateB(self):
-        ''' Returns the alchemical (B) version of this Term '''
-        if self._state=='B': return self
-        return Term(self._ptr, self._id, 'B')
-
-    @property
-    def state(self):
-        ''' The alchemical state this Term represents; either 'A' or 'B'. '''
-        return self._state
 
     @property
     def atoms(self):
@@ -487,7 +436,7 @@ class Term(object):
         id=self.paramid
         if id==_msys.BadId:
             raise RuntimeError, "No assigned param for '%s'" % repr(self)
-        if ptr.paramRefs(id) > 1:
+        if p.refcount(id) > 1:
             id=p.duplicate(id)
             self.paramid=id
         p.setProp(id, col, val)
@@ -508,10 +457,10 @@ class TermTable(object):
 
     def remove(self):
         ''' Remove this table from its parent system '''
-        self._ptr.system().removeTable(self._ptr)
+        self._ptr.destroy()
 
     def coalesce(self):
-        ''' Reassign param and paramB for each Term in this Table to a member
+        ''' Reassign param for each Term in this Table to a member
         of the distinct set of Params used by those Terms.
         '''
         self._ptr.coalesce()
@@ -522,7 +471,7 @@ class TermTable(object):
         return self._ptr.name()
     @name.setter
     def name(self, newname):
-        self._ptr.system().renameTable(self._ptr.name(), newname)
+        self._ptr.rename(newname)
 
     def __repr__(self):
         return "<TermTable '%s'>" % self.name
@@ -535,7 +484,9 @@ class TermTable(object):
     @property
     def system(self): 
         ''' The System whose atoms are referenced by this table. '''
-        return System(self._ptr.system())
+        sys=self._ptr.system()
+        if sys is None: return None
+        return System(sys)
 
     @property
     def term_props(self): 
@@ -565,13 +516,8 @@ class TermTable(object):
 
     def delTermsWithAtom(self, atom):
         ''' remove all terms whose atoms list contains the given Atom '''
-        assert atom.system == self.system
+        assert atom.system == self.system, "atom is from different System"
         self._ptr.delTermsWithAtom(atom.id)
-
-    @property
-    def alchemical(self):
-        ''' does this table contain alchemical terms? '''
-        return self._ptr.alchemical()
 
     @property
     def terms(self):
@@ -624,8 +570,18 @@ class System(object):
         '''
         self._ptr = _ptr
 
-    def __eq__(self, x): return self._ptr == x._ptr
-    def __ne__(self, x): return self._ptr != x._ptr
+    def __eq__(self, x): 
+        try:
+            return self._ptr == x._ptr
+        except AttributeError:
+            return False
+
+    def __ne__(self, x): 
+        try:
+            return self._ptr != x._ptr
+        except AttributeError:
+            return False
+
     def __hash__(self): return self._ptr.__hash__()
 
     def __repr__(self): return "<System '%s'>" % self.name

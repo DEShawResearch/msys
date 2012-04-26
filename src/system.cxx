@@ -419,13 +419,17 @@ TermTablePtr System::table(const String& name) const {
 }
 
 void System::delTable(const String& name) {
-    _tables.erase(name);
+    TableMap::iterator it = _tables.find(name);
+    if (it==_tables.end()) return;
+    TermTablePtr t = it->second;
+    _tables.erase(it);
+    t->destroy();
 }
 
 void System::removeTable(TermTablePtr terms) {
     for (TableMap::iterator i=_tables.begin(), e=_tables.end(); i!=e; ++i) {
         if (i->second==terms) {
-            _tables.erase(i);
+            delTable(i->first);
             return;
         }
     }

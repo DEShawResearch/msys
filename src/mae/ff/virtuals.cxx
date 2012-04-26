@@ -7,7 +7,7 @@ namespace {
         void apply( SystemPtr h,
                     const Json& blk,
                     const SiteMap& sitemap,
-                    const VdwMap&, bool alchemical ) const {
+                    const VdwMap& ) const {
 
             MaeAtoms atoms(blk);
 

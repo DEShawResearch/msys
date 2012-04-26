@@ -66,12 +66,12 @@ includes:
 
 ::
 
-  > drdws0034:msys$ dms-info out.dms 
+  > dms-info leuTaa_leu_POPC.dms 
   ---------------------------------------------------------------------------
-  out.dms
+  leuTaa_leu_POPC.dms
   
   Structure:
-         Atoms:     8982 (  22 alchemical)
+         Atoms:     8982
          Bonds:     8948
       Residues:      675
         Chains:        1
@@ -86,36 +86,48 @@ includes:
          Other:       12 atoms,        2 residues,        1 chains
   
   Bond Tables:
-            angle_harm: 3 sites,    130 params,  15666 terms,  2 alchemical
-         dihedral_trig: 4 sites,     71 params,  22942 terms,  0 alchemical
-         improper_harm: 4 sites,     16 params,   1203 terms,  3 alchemical
-          pair_12_6_es: 2 sites,  22158 params,  22463 terms, 51 alchemical
-          stretch_harm: 2 sites,     89 params,  12236 terms,  1 alchemical
-   torsiontorsion_cmap: 8 sites,      5 params,    511 terms,  0 alchemical
+         alchemical_angle_harm: 3 sites,      2 params,      2 terms
+      alchemical_dihedral_trig: 4 sites,      0 params,      0 terms
+      alchemical_improper_harm: 4 sites,      3 params,      3 terms
+       alchemical_pair_12_6_es: 2 sites,     51 params,     51 terms
+       alchemical_stretch_harm: 2 sites,      1 params,      1 terms
+                    angle_harm: 3 sites,    130 params,  15664 terms
+                 dihedral_trig: 4 sites,     71 params,  22942 terms
+                 improper_harm: 4 sites,     16 params,   1200 terms
+                  pair_12_6_es: 2 sites,  22158 params,  22412 terms
+                  stretch_harm: 2 sites,     89 params,  12235 terms
+           torsiontorsion_cmap: 8 sites,      5 params,    511 terms
   
   Constraint Tables:
-        constraint_ah1: 2 sites,     10 params,   1652 terms,  0 alchemical
-        constraint_ah2: 3 sites,      5 params,    703 terms,  0 alchemical
-        constraint_ah3: 4 sites,      4 params,    424 terms,  0 alchemical
-        constraint_hoh: 3 sites,      1 params,    159 terms,  0 alchemical
+                constraint_ah1: 2 sites,     10 params,   1652 terms
+                constraint_ah2: 3 sites,      5 params,    703 terms
+                constraint_ah3: 4 sites,      4 params,    424 terms
+                constraint_hoh: 3 sites,      1 params,    159 terms
   
   Exclusion Tables:
-             exclusion: 2 sites,      0 params,  47234 terms,  0 alchemical
+                     exclusion: 2 sites,      0 params,  47234 terms
   
   Nonbonded Tables:
-             nonbonded: 1 sites,     50 params,   8982 terms, 22 alchemical
+          alchemical_nonbonded: 1 sites,     50 params,     22 terms
+                     nonbonded: 1 sites,     50 params,   8982 terms
   
   Nonbonded Info:
              vdw_funct: vdw_12_6
               vdw_rule: arithmetic/geometric
   
-  Provenance:
-     1) Mon Dec 12 14:57:27 2011 12028:gullingj:Justin Gullingsrud,nystaff
-       version: msys/1.0.1
-       workdir: /state/partition1/scratch/gullingj/p4/main/sw/libs/msys/.
-       cmdline: /u/nyc/gullingj/dpr/Linux/x86_64/msys/1.0.1/bin/dms-select /u/nyc/gullingj/p4/dms_inputs/leuTaa_leu_POPC.dms -o out.dms
-
+          Glue:
   
+  Auxiliary Tables:
+                         cmap1: 3 properties,    576 rows
+                         cmap2: 3 properties,    576 rows
+                         cmap3: 3 properties,    576 rows
+                         cmap4: 3 properties,    576 rows
+                         cmap5: 3 properties,    576 rows
+                   dms_version: 2 properties,      1 rows
+                    forcefield: 3 properties,      3 rows
+                   viparr_info: 3 properties,      1 rows
+  
+  Provenance:
   
 
 dms-dump
@@ -625,4 +637,5 @@ Desmond-specific checks:
  * bonded terms: check that neither the exclusion table nor any table
    in the bond_term metable contains terms whose atoms are not connected
    through the bond table.  
+
 

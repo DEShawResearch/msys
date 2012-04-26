@@ -20,12 +20,6 @@ namespace {
         table.setParam(term,id);
     }
 
-    void set_paramB(TermTable& table, Id term, object param) {
-        Id id=BadId;
-        if (param.ptr()!=Py_None) id=extract<Id>(param);
-        table.setParamB(term,id);
-    }
-    
     PyObject* term_prop_type(TermTable& table, Id col) {
         return from_value_type(table.termPropType(col));
     }
@@ -46,12 +40,6 @@ namespace {
     }
     void set_prop(TermTable& p, Id row, Id col, object newval) {
         to_value_ref(newval, p.propValue(row,col));
-    }
-    object get_propB(TermTable& p, Id row, Id col) {
-        return from_value_ref(p.propValueB(row,col));
-    }
-    void set_propB(TermTable& p, Id row, Id col, object newval) {
-        to_value_ref(newval, p.propValueB(row,col));
     }
 }
 
@@ -76,11 +64,13 @@ namespace desres { namespace msys {
             .def("__eq__",      list_eq<TermTablePtr>)
             .def("__ne__",      list_ne<TermTablePtr>)
             .def("__hash__",    obj_hash<TermTablePtr>)
+            .def("destroy",     &TermTable::destroy)
             .def("system",      &TermTable::system)
             .def("atomCount",   &TermTable::atomCount)
             .def("termCount",   &TermTable::termCount)
             .def_readwrite("category", &TermTable::category)
             .def("name",        &TermTable::name)
+            .def("rename",      &TermTable::rename)
             .def("terms",       &TermTable::terms)
             .def("addTerm",     add_term)
             .def("hasTerm",     &TermTable::hasTerm)
@@ -90,16 +80,10 @@ namespace desres { namespace msys {
             .def("params",      &TermTable::params)
             .def("param",       &TermTable::param)
             .def("setParam",    set_param)
-            .def("paramB",      &TermTable::paramB)
-            .def("setParamB",   set_paramB)
-            .def("alchemical",  &TermTable::alchemical)
-            .def("paramRefs",   &TermTable::paramRefs)
 
             /* param properties */
             .def("getProp",     get_prop)
             .def("setProp",     set_prop)
-            .def("getPropB",    get_propB)
-            .def("setPropB",    set_propB)
 
             /* term properties */
             .def("termPropCount",&TermTable::termPropCount)

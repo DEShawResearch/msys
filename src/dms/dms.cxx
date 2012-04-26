@@ -11,6 +11,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
@@ -18,14 +19,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-namespace DM = desres::msys;
+using namespace desres::msys;
 namespace bio = boost::iostreams;
-
-#define THROW_FAILURE( args ) do { \
-    std::stringstream ss; \
-    ss << args; \
-    throw std::runtime_error(ss.str()); \
-} while (0)
 
 namespace {
     struct dms_file : sqlite3_file {
@@ -50,7 +45,7 @@ namespace {
             if (fd<0 ||
                 write(fd, dms->contents, dms->size)!=dms->size ||
                 close(fd)!=0) {
-                THROW_FAILURE("Error writing file '" 
+                MSYS_FAIL("Error writing file '" 
                         << std::string(dms->path) << "': "
                         << std::string(strerror(errno)));
             }
@@ -206,32 +201,22 @@ namespace {
     } vfs[1];
 }
 
-namespace desres { namespace msys {
+static void close_db(sqlite3* db) {
+    if (sqlite3_close(db)!=SQLITE_OK) {
+        MSYS_FAIL("Closing db failed: " << sqlite3_errmsg(db));
+    }
+}
 
-struct dms_reader {
-    sqlite3_stmt * stmt;
-    typedef std::pair<std::string, DM::ValueType> column_t;
-    std::vector<column_t> columns;
+const char* Sqlite::errmsg() const {
+    return sqlite3_errmsg(_db.get());
+}
 
-    std::string const& name(int i) const { return columns.at(i).first; }
-    std::string&       name(int i)       { return columns.at(i).first; }
+Sqlite Sqlite::read(std::string const& path)  {
 
-    DM::ValueType const& type(int i) const { return columns.at(i).second; }
-    DM::ValueType&       type(int i)       { return columns.at(i).second; }
-
-    int ncols() const { return columns.size(); }
-};
-
-struct dms_writer {
-    sqlite3_stmt * stmt;
-    std::vector<std::string> cols;
-};
-
-dms_t * dms_read( const char * path ) {
     sqlite3* db;
     sqlite3_vfs_register(vfs, 0);
 
-    int fd=open(path, O_RDONLY);
+    int fd=open(path.c_str(), O_RDONLY);
     if (fd<0) {
         std::stringstream ss;
         ss << "Failed opening DMS file at '" << path << "'";
@@ -260,7 +245,7 @@ dms_t * dms_read( const char * path ) {
            << "' of size " << g_tmpsize;
         throw std::runtime_error(ss.str());
     }
-    ssize_t readcount = read(fd, g_tmpbuf, g_tmpsize);
+    ssize_t readcount = ::read(fd, g_tmpbuf, g_tmpsize);
     close(fd);
     if (readcount!=g_tmpsize) {
         free(g_tmpbuf);
@@ -273,11 +258,11 @@ dms_t * dms_read( const char * path ) {
     int rc = sqlite3_open_v2( "::dms::", &db, SQLITE_OPEN_READONLY, 
             vfs->zName);
     if (g_tmpbuf) free(g_tmpbuf);
-    if (rc!=SQLITE_OK) THROW_FAILURE(sqlite3_errmsg(db));
-    return new dms(db);
+    if (rc!=SQLITE_OK) MSYS_FAIL(sqlite3_errmsg(db));
+    return boost::shared_ptr<sqlite3>(db, close_db);
 }
 
-dms_t * dms_read_bytes( const char * bytes, int64_t len ) {
+Sqlite Sqlite::read_bytes(const char * bytes, int64_t len ) {
     sqlite3* db;
     sqlite3_vfs_register(vfs, 0);
 
@@ -292,52 +277,44 @@ dms_t * dms_read_bytes( const char * bytes, int64_t len ) {
     int rc = sqlite3_open_v2( "::dms::", &db, SQLITE_OPEN_READONLY, 
             vfs->zName);
     if (g_tmpbuf) free(g_tmpbuf);
-    if (rc!=SQLITE_OK) THROW_FAILURE(sqlite3_errmsg(db));
-    return new dms(db);
+    if (rc!=SQLITE_OK) MSYS_FAIL(sqlite3_errmsg(db));
+    return boost::shared_ptr<sqlite3>(db, close_db);
 }
 
-dms_t * dms_write( const char * path ) {
+Sqlite Sqlite::write(std::string const& path) {
     sqlite3* db;
     sqlite3_vfs_register(vfs, 0);
 
-    int rc = sqlite3_open_v2(path, &db, 
+    int rc = sqlite3_open_v2(path.c_str(), &db, 
             SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, vfs->zName);
-    if (rc!=SQLITE_OK) THROW_FAILURE(sqlite3_errmsg(db));
-    return new dms(db);
+    if (rc!=SQLITE_OK) MSYS_FAIL(sqlite3_errmsg(db));
+    return boost::shared_ptr<sqlite3>(db, close_db);
 }
 
-void dms_close( dms_t * dms ) {
-    boost::scoped_ptr<dms_t> dp(dms);
-    if (sqlite3_close(dms->db)!=SQLITE_OK) {
-        THROW_FAILURE("Closing file failed: " << sqlite3_errmsg(dms->db));
-    }
+void Sqlite::exec(std::string const& sql) {
+    if (sqlite3_exec(_db.get(), sql.c_str(), NULL, NULL, NULL))
+        MSYS_FAIL("Error executing SQL '" << sql << "': " << errmsg());
 }
 
-void dms_exec( dms_t * dms, const char * sql ) {
-    if (sqlite3_exec(dms->db, sql, NULL, NULL, NULL))
-        THROW_FAILURE("Error executing SQL '" << sql << "': " 
-                << sqlite3_errmsg(dms->db));
-}
-
-int dms_has_table( dms_t * dms, const char * name ) {
+bool Sqlite::has(std::string const& table) const {
     int rc;
     sqlite3_stmt * stmt;
-    char * sql = sqlite3_mprintf("select rowid from sqlite_master where name=%Q", name);
-    if (sqlite3_prepare_v2(dms->db, sql, -1, &stmt, NULL))
-        THROW_FAILURE(sqlite3_errmsg(dms->db));
+    char * sql = sqlite3_mprintf("select rowid from sqlite_master where name=%Q", table.c_str());
+    if (sqlite3_prepare_v2(_db.get(), sql, -1, &stmt, NULL))
+        MSYS_FAIL(errmsg());
     sqlite3_free(sql);
     rc=sqlite3_step(stmt);
     sqlite3_finalize(stmt);
     return rc==SQLITE_ROW;
 }
 
-int dms_table_size( dms_t * dms, const char * name ) {
+int Sqlite::size(std::string const& table) const {
     char * sql;
     sqlite3_stmt * stmt;
     int result;
-    sql=sqlite3_mprintf("select count() from %q", name);
-    if (sqlite3_prepare_v2(dms->db, sql, -1, &stmt, NULL))
-        THROW_FAILURE(sqlite3_errmsg(dms->db));
+    sql=sqlite3_mprintf("select count() from %q", table.c_str());
+    if (sqlite3_prepare_v2(_db.get(), sql, -1, &stmt, NULL)) 
+        MSYS_FAIL(errmsg());
     sqlite3_free(sql);
     sqlite3_step(stmt);
     result=sqlite3_column_int64(stmt,0);
@@ -345,119 +322,161 @@ int dms_table_size( dms_t * dms, const char * name ) {
     return result;
 }
 
-int dms_fetch( dms_t * dms, const char * name, dms_reader_t ** pr ) {
+Reader Sqlite::fetch(std::string const& table) const {
+    return Reader(_db, table);
+}
+
+const char* Reader::errmsg() const {
+    return sqlite3_errmsg(_db.get());
+}
+
+static void close_stmt(sqlite3_stmt* stmt) {
+    if (sqlite3_finalize(stmt)) 
+        MSYS_FAIL("Error finalizing statement: " << sqlite3_errmsg(sqlite3_db_handle(stmt)));
+}
+
+Reader::Reader(boost::shared_ptr<sqlite3> db, std::string const& table) 
+: _db(db), _table(table) {
+
     sqlite3_stmt * stmt;
-    char * sql;
-    dms_reader_t * r;
-    int i, rc;
 
-    *pr = NULL;
-    sql = sqlite3_mprintf("select * from %q", name);
-    rc = sqlite3_prepare_v2(dms->db, sql, -1, &stmt, NULL);
+    char* sql = sqlite3_mprintf("select * from %q", table.c_str());
+    int rc = sqlite3_prepare_v2(_db.get(), sql, -1, &stmt, NULL);
     sqlite3_free(sql);
-    if (rc) return 0;
+    if (rc) return; /* no such table */
+    _stmt.reset(stmt, close_stmt);
+    stmt = NULL;
 
-    r=new dms_reader_t;
-    r->stmt=stmt;
-    r->columns.resize(sqlite3_column_count(stmt));
-    for (i=0; i<r->ncols(); i++) {
-        r->name(i) = (const char *)(sqlite3_column_name(stmt,i));
+    /* We used to get the table schema from the first row, but that makes
+     * it impossible to distinguish between an empty table and no table
+     * at all.  Also, Sqlite lets you store types of different values
+     * in the same column, so just reading the types of the first row
+     * doesn't necessarily tell you how you should read the others.  The
+     * only sensible way to proceed seems to be to parse the table_info
+     * pragma and use the "declared" type of the table. */
+#if 0
+    _cols.resize(sqlite3_column_count(stmt));
+    for (unsigned i=0; i<_cols.size(); i++) {
+        _cols[i].first = (const char *)(sqlite3_column_name(stmt,i));
     }
-    dms_reader_next(&r);
-    if (!r) return 0;
 
-    *pr = r;
-    for (i=0; i<r->ncols(); i++) {
+    next();
+    if (done()) return;
+
+    for (unsigned i=0; i<_cols.size(); i++) {
         int type = sqlite3_column_type(stmt,i);
         switch(type) {
             default:
-            case SQLITE_TEXT:    r->type(i)=DM::StringType; break;
-            case SQLITE_INTEGER: r->type(i)=DM::IntType; break;
-            case SQLITE_FLOAT:   r->type(i)=DM::FloatType; break;
+            case SQLITE_TEXT:    _cols[i].second = StringType; break;
+            case SQLITE_INTEGER: _cols[i].second = IntType; break;
+            case SQLITE_FLOAT:   _cols[i].second = FloatType; break;
         }
     }
-    return 1;
+#else
+    /* get table schema from table_info pragma */
+    sql = sqlite3_mprintf("pragma table_info(%q)", table.c_str());
+    rc = sqlite3_prepare_v2(_db.get(), sql, -1, &stmt, NULL);
+    sqlite3_free(sql);
+    if (rc) MSYS_FAIL("Error getting schema for " << table << errmsg());
+    /* we expect name and type to be columns 1 and 2, respectively */
+    boost::shared_ptr<sqlite3_stmt> tmp(stmt, close_stmt);
+    while (sqlite3_step(stmt)==SQLITE_ROW) {
+        std::string name = (const char *)sqlite3_column_text(stmt,1);
+        std::string type = (const char *)sqlite3_column_text(stmt,2);
+        ValueType t;
+        boost::to_upper(type);
+        /* see http://www.sqlite.org/datatype3.html, section 2.1 */
+        if (strstr(type.c_str(), "INT")) {
+            t = IntType;
+        } else if (strstr(type.c_str(), "CHAR") ||
+                   strstr(type.c_str(), "CLOB") ||
+                   strstr(type.c_str(), "STRING") || /* msys mistake! */
+                   strstr(type.c_str(), "TEXT")) {
+            t = StringType;
+        } else if (strstr(type.c_str(), "BLOB") ||
+                   type.size()==0) {
+            MSYS_FAIL("Blob type for column " << name << " in table " << table << " not supported.");
+        } else if (strstr(type.c_str(), "REAL") ||
+                   strstr(type.c_str(), "FLOA") ||
+                   strstr(type.c_str(), "DOUB")) {
+            t = FloatType;
+        } else {
+            MSYS_FAIL("Numeric type for column " << name << " in table " << table << " not supported.");
+        }
+        _cols.push_back(std::make_pair(name,t));
+    }
+    /* advance to the first row */
+    next();
+#endif
 }
 
-void dms_reader_next( dms_reader_t ** pr ) {
-    dms_reader_t * r = *pr;
-    int rc;
-    if (!r) return;
-    rc=sqlite3_step(r->stmt);
+void Reader::next() {
+    int rc=sqlite3_step(_stmt.get());
     if (rc==SQLITE_ROW) {
         /* nothing to do */
     } else if (rc==SQLITE_DONE) {
-        /* end of table.  free and set *pr to NULL */
-        dms_reader_free(r);
-        *pr = NULL;
+        _stmt.reset();
     } else {
-        THROW_FAILURE(sqlite3_errmsg(sqlite3_db_handle(r->stmt)));
+        MSYS_FAIL(errmsg());
     }
 }
-void dms_reader_free( dms_reader_t * r ) {
-    if (!r) return;
-    sqlite3_finalize(r->stmt);
-    delete r;
+
+
+std::string Reader::name(int col) const {
+    if (col<0 || col>=size()) MSYS_FAIL("no such column " << col);
+    return _cols[col].first;
 }
 
-int dms_reader_column_count( dms_reader_t * r ) {
-    return r->ncols();
+ValueType Reader::type(int col) const {
+    if (col<0 || col>=size()) MSYS_FAIL("no such column " << col);
+    return _cols[col].second;
 }
 
-/* get the name of the given column */
-const char * dms_reader_column_name( dms_reader_t * r, int col ) {
-    if (col<0 || col>=r->ncols())
-        THROW_FAILURE("no such column " << col);
-    return r->name(col).c_str();
-}
-
-DM::ValueType dms_reader_column_type( dms_reader_t * r, int col ) {
-    if (col<0 || col>=r->ncols())
-        THROW_FAILURE("no such column " << col);
-    return r->type(col);
-}
-
-int dms_reader_column( dms_reader_t * r, const char * col ) {
-    int i,n=r->ncols();
-    for (i=0; i<n; i++) {
-        if (!strcmp(r->name(i).c_str(),col)) return i;
+int Reader::column(std::string const& name) const {
+    for (unsigned i=0; i<_cols.size(); i++) {
+        if (name==_cols[i].first) return i;
     }
     return -1;
 }
 
-int dms_reader_get_int( dms_reader_t * r, int col ) {
-    if (col<0 || col>=r->ncols())
-        THROW_FAILURE("no such column " << col);
-    return sqlite3_column_int(r->stmt,col);
+int Reader::get_int(int col) const {
+    if (type(col)!=IntType) 
+        MSYS_FAIL("Type error reading int from column " << _cols[col].first << " in table " << _table);
+    return sqlite3_column_int(_stmt.get(),col);
 }
 
-double dms_reader_get_double( dms_reader_t * r, int col ) {
-    if (col<0 || col>=r->ncols())
-        THROW_FAILURE("no such column " << col);
-    return sqlite3_column_double(r->stmt,col);
+double Reader::get_flt(int col) const {
+    if (type(col)!=FloatType) 
+        MSYS_FAIL("Type error reading float from column " << _cols[col].first << " in table " << _table);
+    return sqlite3_column_double(_stmt.get(),col);
 }
 
-const char * dms_reader_get_string( dms_reader_t * r, int col ) {
-    if (col<0 || col>=r->ncols())
-        THROW_FAILURE("no such column " << col);
-    return (const char *)sqlite3_column_text(r->stmt,col);
+const char * Reader::get_str(int col) const {
+    if (type(col)!=StringType) 
+        MSYS_FAIL("Type error reading string from column " << _cols[col].first << " in table " << _table);
+    return (const char *)sqlite3_column_text(_stmt.get(),col);
 }
 
-void dms_insert( dms_t * dms, const char * table, dms_writer_t ** pw ) {
-    dms_writer_t * w;
+Writer Sqlite::insert(std::string const& table) const {
+    return Writer(_db, table);
+}
+
+Writer::Writer(boost::shared_ptr<sqlite3> db, std::string const& table) 
+: _db(db) {
+
     sqlite3_stmt * stmt;
     int i, n=0;
     char * insert_prefix;
     char * sql;
 
-    insert_prefix = sqlite3_mprintf("insert into %q values (", table);
-    sql = sqlite3_mprintf("pragma table_info(%q)", table);
+    insert_prefix = sqlite3_mprintf("insert into %q values (", table.c_str());
+    sql = sqlite3_mprintf("pragma table_info(%q)", table.c_str());
 
     std::vector<std::string> cols;
-    if (sqlite3_prepare_v2(dms->db, sql, -1, &stmt, NULL)) {
+    if (sqlite3_prepare_v2(_db.get(), sql, -1, &stmt, NULL)) {
         sqlite3_free(sql);
         sqlite3_free(insert_prefix);
-        THROW_FAILURE(sqlite3_errmsg(dms->db));
+        MSYS_FAIL(sqlite3_errmsg(_db.get()));
     }
     sqlite3_free(sql);
     while (sqlite3_step(stmt)==SQLITE_ROW) {
@@ -472,41 +491,28 @@ void dms_insert( dms_t * dms, const char * table, dms_writer_t ** pw ) {
         insert_sql += "?";
         insert_sql += i==n-1 ? ")" : ",";
     }
-    if (sqlite3_prepare_v2(dms->db, insert_sql.c_str(), -1, &stmt, NULL))
-        THROW_FAILURE(sqlite3_errmsg(dms->db));
+    if (sqlite3_prepare_v2(_db.get(), insert_sql.c_str(), -1, &stmt, NULL))
+        MSYS_FAIL(sqlite3_errmsg(_db.get()));
 
-    w = new dms_writer_t;
-    w->stmt=stmt;
-    w->cols=cols;
-    *pw = w;
+    _stmt.reset(stmt, close_stmt);
 }
 
-void dms_writer_bind_null( dms_writer_t * w, int col) {
-    sqlite3_bind_null(w->stmt, col+1);
-}
-void dms_writer_bind_int( dms_writer_t * w, int col, int v ) {
-    sqlite3_bind_int(w->stmt, col+1, v); 
+void Writer::bind_int(int col, int v) {
+    sqlite3_bind_int(_stmt.get(), col+1, v); 
 }
 
-void dms_writer_bind_double( dms_writer_t * w, int col, double v ) {
-    sqlite3_bind_double(w->stmt, col+1, v); 
+void Writer::bind_flt(int col, double v) {
+    sqlite3_bind_double(_stmt.get(), col+1, v); 
 }
 
-void dms_writer_bind_string( dms_writer_t * w, int col, const char* v ) {
-    sqlite3_bind_text(w->stmt, col+1, v, -1, SQLITE_TRANSIENT);
+void Writer::bind_str(int col, std::string const& v) {
+    sqlite3_bind_text(_stmt.get(), col+1, v.c_str(), -1, SQLITE_TRANSIENT);
 }
 
-void dms_writer_next( dms_writer_t * w ) {
-    if (sqlite3_step(w->stmt) != SQLITE_DONE) {
-        THROW_FAILURE(sqlite3_errmsg(sqlite3_db_handle(w->stmt)));
+void Writer::next() {
+    if (sqlite3_step(_stmt.get()) != SQLITE_DONE) {
+        MSYS_FAIL(sqlite3_errmsg(sqlite3_db_handle(_stmt.get())));
     }
-    sqlite3_reset(w->stmt);
+    sqlite3_reset(_stmt.get());
 }
 
-void dms_writer_free( dms_writer_t * w ) {
-    if (!w) return;
-    sqlite3_finalize(w->stmt);
-    delete w;
-}
-
-}}

@@ -36,7 +36,7 @@ namespace {
         void apply( SystemPtr h,
                     const Json& ff,
                     const SiteMap& sitemap,
-                    const VdwMap&, bool alchemical  ) const {
+                    const VdwMap& ) const {
 
             const Json& blk = ff.get("ffio_torsion_torsion");
             const Json& c1 = blk.get("ffio_c1");
@@ -69,7 +69,7 @@ namespace {
         void apply( SystemPtr h,
                     const Json& blk,
                     const SiteMap& sitemap,
-                    const VdwMap&, bool   ) const {
+                    const VdwMap& ) const {
         }
     };
 

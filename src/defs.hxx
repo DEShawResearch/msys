@@ -5,7 +5,7 @@
 #include <vector>
 #include <map>
 #include <iostream>
-#include "../../src/types.hxx"
+#include "types.hxx"
 
 namespace desres { namespace msys { namespace builder {
 

@@ -34,6 +34,7 @@ namespace desres { namespace msys { namespace mae {
         typedef std::vector<std::string> VdwNameList;
         VdwNameList _vdwnames;
         VdwNameList _vdwnamesB;
+        std::vector<double> _chargeB;
 
         /* combined params */
         CombinedMap _combined;
@@ -65,8 +66,11 @@ namespace desres { namespace msys { namespace mae {
         /* vdw type for given 0-based site id */
         const VdwType& type( int id ) const;
 
-        /* alchemical vdw type */
+        /* alchemical vdw type, or empty string if not present */
         const VdwType& typeB( int id ) const;
+
+        /* alchemical charge, or HUGE_VAL if not present */
+        double chargeB( int id ) const;
     };
 
 }}}

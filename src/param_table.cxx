@@ -10,7 +10,7 @@ ParamTablePtr ParamTable::create() {
 }
 
 ParamTable::ParamTable()
-: _nrows(0), _refcnt(0)
+: _nrows(0)
 {}
 
 ParamTable::~ParamTable() {
@@ -56,7 +56,27 @@ Id ParamTable::addProp( const String& name, ValueType type) {
 
 Id ParamTable::addParam() {
     for (Id i=0; i<_props.size(); i++) _props[i].extend();
+    _paramrefs.push_back(0);
     return _nrows++;
+}
+
+void ParamTable::incref(Id p) {
+    if (bad(p)) return;
+    if (p>=_paramrefs.size()) {
+        MSYS_FAIL("Could not incref param " << p << " in ParamTable of size " << _paramrefs.size());
+    }
+    ++_paramrefs[p];
+}
+
+void ParamTable::decref(Id p) {
+    if (bad(p)) return;
+    if (p>=_paramrefs.size()) {
+        MSYS_FAIL("Invalid param " << p << " in ParamTable of size " << _paramrefs.size());
+    }
+    if (_paramrefs[p]==0) {
+        MSYS_FAIL("param " << p << " already has refcount 0");
+    }
+    --_paramrefs[p];
 }
 
 Id ParamTable::duplicate(Id param) {

@@ -1,5 +1,5 @@
-#include "../../src/dms.hxx"
-#include "../../src/clone.hxx"
+#include "dms.hxx"
+#include "clone.hxx"
 #include "builder.hxx"
 
 using namespace desres::msys;

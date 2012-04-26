@@ -14,138 +14,90 @@ using namespace desres::msys;
 static const char* str(const ValueType& t) {
     return t==IntType   ? "integer" :
            t==FloatType ? "float" :
-                          "string";
+                          "text";
 }
 
-static void write(const ValueRef& ref, int col, dms_writer_t* w) {
+static void write(const ValueRef& ref, int col, Writer w) {
     switch (ref.type()) {
         case IntType: 
-            dms_writer_bind_int(w,col,ref.asInt()); 
+            w.bind_int(col, ref.asInt()); 
             break;
         case FloatType: 
-            dms_writer_bind_double(w,col,ref.asFloat()); 
+            w.bind_flt(col, ref.asFloat()); 
             break;
         default:
         case StringType:
-            dms_writer_bind_string(w,col,ref.asString().c_str());
+            w.bind_str(col, ref.asString()); 
             break;
     }
 }
 
-typedef std::pair<Id,Id> NbType;
-typedef std::map<Id,NbType> NbMap;
-
-/* if a nonbonded table is present, return mapping from particle id to
- * regular and alchemical nonbonded type; otherwise return empty table.
- * If non-empty, the returned map will contain a non-bad id for every
- * atom in the system; if the alchemical param is BadId, it will be set
- * equal to the regular param. */
-NbMap fetch_nbtypes(const System& sys) {
-    TermTablePtr table;
-    std::vector<String> tables = sys.tableNames();
-    for (unsigned i=0; i<tables.size(); i++) {
-        TermTablePtr t = sys.table(tables[i]);
-        if (t->category==NONBONDED) {
-            if (table) {
-                throw std::runtime_error("multiple nonbonded tables found");
-            }
-            if (t->atomCount()!=1) {
-                throw std::runtime_error("nonbonded table has atomCount!=1");
-            }
-            table=t;
+/* Return map from atom id to nonbonded param, or empty table if the
+ * nonbonded table is not present. */
+IdList fetch_nbtypes(const System& sys) {
+    TermTablePtr table = sys.table("nonbonded");
+    if (!table) return IdList();
+    IdList nb(sys.maxAtomId(), BadId);
+    for (Id i=0; i<table->maxTermId(); i++) {
+        if (!table->hasTerm(i)) continue;
+        Id param = table->param(i);
+        Id atom = table->atom(i,0);
+        if (!table->params()->hasParam(param)) {
+            MSYS_FAIL("Cannot export system to DMS file: particle " << atom
+                   << " has invalid nonbonded param");
         }
+        if (nb.at(atom)!=BadId) {
+            MSYS_FAIL("Cannot export system to DMS file: nonbonded table "
+                   << "references particle " << atom << "multiple times");
+        }
+        nb.at(atom) = param;
     }
-    NbMap nbtypes;
-    if (table) {
-        IdList ids=table->terms();
-        for (Id i=0, n=ids.size(); i<n; i++) {
-            Id termid=ids[i];
-            Id atomid=table->atoms(termid)[0];
-            Id type  = table->param(termid);
-            Id typeB = table->paramB(termid);
-            if (bad(typeB)) typeB=type;
-            if (bad(type) || !table->params()->hasParam(type)) {
-                std::stringstream ss;
-                ss << "Cannot export system to DMS file: particle " << atomid
-                   << " has invalid nonbonded param";
-                throw std::runtime_error(ss.str());
-            }
-            if (bad(typeB) || !table->params()->hasParam(typeB)) {
-                std::stringstream ss;
-                ss << "Cannot export system to DMS file: particle " << atomid
-                   << " has invalid nonbonded paramB";
-                throw std::runtime_error(ss.str());
-            }
-            if (nbtypes.find(atomid)!=nbtypes.end()) {
-                std::stringstream ss;
-                ss << "Cannot export system to DMS file: nonbonded table "
-                   << "contains particle " << atomid << "multiple times";
-                throw std::runtime_error(ss.str());
-            }
-            nbtypes[atomid].first =type;
-            nbtypes[atomid].second=typeB;
-        }
-        IdList atoms = sys.atoms();
-        BOOST_FOREACH(Id atm, atoms) {
-            if (nbtypes.find(atm)==nbtypes.end()) {
-                std::stringstream ss;
-                ss << "Cannot export system to DMS file: nonbonded table is "
-                   << "present but no term contains particle " << atm;
-                throw std::runtime_error(ss.str());
-            }
-        }
-    }
-    return nbtypes;
+    return nb;
 }
 
 static void export_alchemical_particles(const System& sys, 
-                                        const IdList& alchemical_ids, 
-                                        NbMap& nbtypes,
-                                        dms_t* dms) {
-    if (!alchemical_ids.size()) return;
-    std::string sql="create table alchemical_particle (\n"
-                    "  p0 integer primary key,\n"
-                    "  moiety integer, \n"
-                    "  chargeA float,\n"
-                    "  chargeB float";
-    if (nbtypes.size()) {
-        sql +=                     ",\n"
-                    "  nbtypeA integer, \n" 
-                    "  nbtypeB integer)\n";
-    } else {
-        sql +=                     ")";
-    }
+                                        IdList const& nbtypes,
+                                        Sqlite dms) {
 
-    dms_exec(dms, sql.c_str());
-    dms_writer_t* w;
-    dms_insert(dms, "alchemical_particle", &w);
-    for (Id i=0; i<alchemical_ids.size(); i++) {
-        Id id = alchemical_ids[i];
-        const atom_t& atom = sys.atom(id);
-        dms_writer_bind_int(w,0,id);
-        dms_writer_bind_int(w,1,atom.moiety);
-        dms_writer_bind_double(w,2,atom.charge);
-        dms_writer_bind_double(w,3,atom.chargeB);
-        if (nbtypes.size()) {
-            assert(nbtypes.find(id)!=nbtypes.end());
-            dms_writer_bind_int(w,4,nbtypes[id].first);
-            dms_writer_bind_int(w,5,nbtypes[id].second);
-        }
-        dms_writer_next(w);
+    TermTablePtr alc = sys.table("alchemical_nonbonded");
+    if (!alc || alc->termCount()==0) return;
+
+    std::stringstream ss;
+    ss << "create table alchemical_particle (\n"
+       << "  p0 integer primary key,\n"
+       << "  chargeA float,\n";
+    for (Id i=0; i<alc->termPropCount(); i++) {
+        ss << "'" << alc->termPropName(i) << "' " 
+           << str(alc->termPropType(i)) << ", ";
     }
-    dms_writer_free(w);
+    ss << "  nbtypeA integer, \n"
+       << "  nbtypeB integer);\n";
+
+    dms.exec(ss.str());
+    Writer w = dms.insert("alchemical_particle");
+    for (Id i=0; i<alc->maxTermId(); i++) {
+        if (!alc->hasTerm(i)) continue;
+        Id id = alc->atom(i,0);
+        Id param = alc->param(i);
+        if (!alc->params()->hasParam(param)) {
+            MSYS_FAIL("alchemical particle " << id << " has invalid nonbonded parameter");
+        }
+        const atom_t& atom = sys.atom(id);
+        w.bind_int(0,id);
+        w.bind_flt(1,atom.charge);
+        for (Id j=0; j<alc->termPropCount(); j++) {
+            write(alc->termPropValue(i,j), 2+j, w);
+        }
+        w.bind_int(2+alc->termPropCount(), nbtypes[id]);
+        w.bind_int(3+alc->termPropCount(), param);
+        w.next();
+    }
 }
 
-static void export_particles(const System& sys, const IdList& map, dms_t* dms) {
+static void export_particles(const System& sys, const IdList& map, Sqlite dms) {
 
-    NbMap nbtypes = fetch_nbtypes(sys);
+    IdList nbtypes = fetch_nbtypes(sys);
     IdList ids = sys.atoms();
-    IdList alchemical_ids;
-    for (Id i=0; i<ids.size(); i++) {
-        if (sys.atom(ids[i]).alchemical) {
-            alchemical_ids.push_back(ids[i]);
-        }
-    }
 
     std::string sql = 
         "create table particle (\n"
@@ -178,11 +130,10 @@ static void export_particles(const System& sys, const IdList& map, dms_t* dms) {
         sql.resize(sql.size()-2);
         sql += ");";
     }
-    dms_exec(dms, sql.c_str());
+    dms.exec( sql.c_str());
 
-    dms_writer_t* w;
-    dms_insert(dms,"particle", &w);
-    dms_exec(dms, "begin");
+    Writer w = dms.insert("particle");
+    dms.exec("begin");
     for (Id i=0, n=ids.size(); i<n; i++) {
         Id atm = ids[i];
         const atom_t& atom = sys.atom(atm);
@@ -191,22 +142,22 @@ static void export_particles(const System& sys, const IdList& map, dms_t* dms) {
         Id chn = residue.chain;
         const chain_t& chain = sys.chain(chn);
 
-        dms_writer_bind_int(w,    0, map[atm]);
-        dms_writer_bind_int(w,    1, atom.atomic_number);
-        dms_writer_bind_string(w, 2, atom.name.c_str());
-        dms_writer_bind_double(w, 3, atom.x);
-        dms_writer_bind_double(w, 4, atom.y);
-        dms_writer_bind_double(w, 5, atom.z);
-        dms_writer_bind_double(w, 6, atom.vx);
-        dms_writer_bind_double(w, 7, atom.vy);
-        dms_writer_bind_double(w, 8, atom.vz);
-        dms_writer_bind_string(w, 9, residue.name.c_str());
-        dms_writer_bind_int   (w,10, residue.resid);
-        dms_writer_bind_string(w,11, chain.name.c_str());
-        dms_writer_bind_string(w,12, chain.segid.c_str());
-        dms_writer_bind_double(w,13, atom.mass);
-        dms_writer_bind_double(w,14, atom.charge);
-        dms_writer_bind_int   (w,15, atom.formal_charge);
+        w.bind_int( 0, map[atm]);
+        w.bind_int( 1, atom.atomic_number);
+        w.bind_str( 2, atom.name.c_str());
+        w.bind_flt( 3, atom.x);
+        w.bind_flt( 4, atom.y);
+        w.bind_flt( 5, atom.z);
+        w.bind_flt( 6, atom.vx);
+        w.bind_flt( 7, atom.vy);
+        w.bind_flt( 8, atom.vz);
+        w.bind_str( 9, residue.name.c_str());
+        w.bind_int(10, residue.resid);
+        w.bind_str(11, chain.name.c_str());
+        w.bind_str(12, chain.segid.c_str());
+        w.bind_flt(13, atom.mass);
+        w.bind_flt(14, atom.charge);
+        w.bind_int(15, atom.formal_charge);
         for (Id j=0; j<nprops; j++) {
             int col=16+j;
 
@@ -217,12 +168,14 @@ static void export_particles(const System& sys, const IdList& map, dms_t* dms) {
             write(ref, col, w);
         }
         if (nbtypes.size()) {
-            NbMap::const_iterator nbiter=nbtypes.find(atm);
-            assert(nbiter != nbtypes.end());
-            dms_writer_bind_int(w,16+nprops,nbiter->second.first);
+            Id param = nbtypes.at(atm);
+            if (bad(param)) {
+                MSYS_FAIL("Missing nonbonded param for particle " << atm);
+            }
+            w.bind_int(16+nprops,param);
         }
         try {
-            dms_writer_next(w);
+            w.next();
         }
         catch (std::exception& e) {
             std::stringstream ss;
@@ -231,42 +184,38 @@ static void export_particles(const System& sys, const IdList& map, dms_t* dms) {
             throw std::runtime_error(ss.str());
         }
     }
-    dms_writer_free(w);
-    export_alchemical_particles(sys, alchemical_ids, nbtypes, dms);
-    dms_exec(dms, "commit");
+    export_alchemical_particles(sys, nbtypes, dms);
+    dms.exec( "commit");
 }
 
-static void export_bonds(const System& sys, const IdList& map, dms_t* dms) {
+static void export_bonds(const System& sys, const IdList& map, Sqlite dms) {
     std::string sql =
         "create table bond (\n"
         "  p0 integer,\n"
         "  p1 integer,\n"
         "  'order' float\n"
         ");";
-    dms_exec(dms, sql.c_str());
+    dms.exec( sql.c_str());
 
-    dms_writer_t* w;
-    dms_insert(dms,"bond", &w);
+    Writer w = dms.insert("bond");
     IdList ids = sys.bonds();
-    dms_exec(dms, "begin");
+    dms.exec( "begin");
     for (Id i=0, n=ids.size(); i<n; i++) {
         Id bnd = ids[i];
         const bond_t& bond = sys.bond(bnd);
-        dms_writer_bind_int(w,0,map[bond.i]);
-        dms_writer_bind_int(w,1,map[bond.j]);
-        dms_writer_bind_double(w,2,bond.order);
-        dms_writer_next(w);
+        w.bind_int(0,map[bond.i]);
+        w.bind_int(1,map[bond.j]);
+        w.bind_flt(2,bond.order);
+        w.next();
     }
-    dms_writer_free(w);
-    dms_exec(dms, "commit");
+    dms.exec( "commit");
 }
 
 static void export_terms(TermTablePtr table, const IdList& map, 
-                         const std::string& tablename, dms_t* dms) {
+                         const std::string& tablename, Sqlite dms) {
 
     const Id natoms = table->atomCount();
     const Id nprops = table->termPropCount();
-    std::string alcname("alchemical_"); alcname += tablename;
     std::stringstream ss;
     ss << "create table " << tablename << " (";
     for (Id i=0; i<natoms; i++) ss << "p" << i << " integer, ";
@@ -275,40 +224,18 @@ static void export_terms(TermTablePtr table, const IdList& map,
            << str(table->termPropType(i)) << ", ";
     }
     ss << "param integer not null)";
-    dms_exec(dms, ss.str().c_str());
+    dms.exec( ss.str().c_str());
     ParamTablePtr params = table->params();
 
-    if (table->alchemical()) {
-        std::stringstream ss;
-        ss << "create table " << alcname << " (";
-        for (Id i=0; i<natoms; i++) ss << "p" << i << " integer, ";
-        for (Id i=0; i<nprops; i++) {
-            ss << "'" << table->termPropName(i) << "' " 
-               << str(table->termPropType(i)) << ", ";
-        }
-        ss << "paramA integer, paramB integer)";
-        dms_exec(dms, ss.str().c_str());
-    }
-
-    dms_writer_t* regw, *alcw=NULL;
-    dms_insert(dms,tablename.c_str(),&regw);
-    if (table->alchemical()) {
-        dms_insert(dms,alcname.c_str(),&alcw);
-    }
-
-    dms_exec(dms,"begin");
+    Writer w = dms.insert(tablename);
+    dms.exec("begin");
     IdList ids = table->terms();
     for (Id i=0,n=ids.size(); i<n; i++) {
         Id id=ids[i];
-        Id paramB = table->paramB(id);
-
-        /* see if this term is alchemical or not */
-        dms_writer_t* w = regw;
-        if (!bad(paramB)) w = alcw;
 
         /* write atom columns */
         IdList atoms = table->atoms(id);
-        for (Id j=0; j<natoms; j++) dms_writer_bind_int(w,j,map[atoms[j]]);
+        for (Id j=0; j<natoms; j++) w.bind_int(j,map[atoms[j]]);
         /* write extra atom properties */
         for (Id j=0; j<nprops; j++) {
             ValueRef val = table->termPropValue(id, j);
@@ -322,18 +249,15 @@ static void export_terms(TermTablePtr table, const IdList& map,
                 << id << " has missing or invalid param";
             throw std::runtime_error(ss.str());
         } else {
-            dms_writer_bind_int(w,nprops+natoms,param);
+            w.bind_int(nprops+natoms,param);
         }
-        if (w==alcw) dms_writer_bind_int(w,nprops+natoms+1,paramB);
-        dms_writer_next(w);
+        w.next();
     }
-    if (regw) dms_writer_free(regw);
-    if (alcw) dms_writer_free(alcw);
-    dms_exec(dms,"commit");
+    dms.exec("commit");
 }
 
 static void export_params(ParamTablePtr params, const std::string& tablename,
-                          dms_t* dms, bool with_id=true) {
+                          Sqlite dms, bool with_id=true) {
 
     std::stringstream ss;
     const Id nprops=params->propCount();
@@ -354,25 +278,23 @@ static void export_params(ParamTablePtr params, const std::string& tablename,
         ss << ")";
     }
 
-    dms_exec(dms, ss.str().c_str());
-    dms_writer_t* w;
-    dms_insert(dms,tablename.c_str(),&w);
-    dms_exec(dms, "begin");
+    dms.exec( ss.str().c_str());
+    Writer w = dms.insert(tablename);
+    dms.exec( "begin");
     for (Id i=0, n=params->paramCount(); i<n; i++) {
         for (Id j=0; j<nprops; j++) {
             ValueRef val = params->value(i,j);
             write(val, j, w);
         }
         if (with_id) {
-            dms_writer_bind_int(w,nprops,i);
+            w.bind_int(nprops,i);
         }
-        dms_writer_next(w);
+        w.next();
     }
-    dms_exec(dms, "commit");
-    dms_writer_free(w);
+    dms.exec( "commit");
 }
 
-static void export_view(TermTablePtr table, const std::string& name, dms_t *dms) {
+static void export_view(TermTablePtr table, const std::string& name, Sqlite dms) {
     std::string termname = name + "_term";
     std::string paramname = name + "_param";
     std::vector<String> props, tprops;
@@ -404,76 +326,54 @@ static void export_view(TermTablePtr table, const std::string& name, dms_t *dms)
     ss << "  from " << paramname << "\n"
        << "  join " << termname << "\n"
        << "  on param=id";
-    dms_exec(dms,ss.str().c_str());
-
-    if (table->alchemical()) {
-        std::stringstream ss;
-        ss << "create view alchemical_" << name << " as \n" << "  select ";
-        for (Id i=0; i<table->atomCount(); i++) {
-            ss << "p" << (char)('0'+i) << ", ";
-        }
-        for (Id i=0; i<props.size(); i++) {
-            ss << "  A." << props[i] << " as " << props[i] << "A, ";
-            ss << "B." << props[i] << " as " << props[i] << "B";
-            if (i!=props.size()-1) ss << ", ";
-            ss << "\n";
-        }
-        ss << "  from alchemical_" << termname << "\n"
-           << "  join " << paramname << " as A on paramA=A.id\n"
-           << "  join " << paramname << " as B on paramB=B.id\n";
-        dms_exec(dms,ss.str().c_str());
-    }
+    dms.exec(ss.str().c_str());
 }
 
-static void export_exclusion(TermTablePtr table, const IdList& map, dms_t* dms) {
+static void export_exclusion(TermTablePtr table, const IdList& map, Sqlite dms) {
     if (table->atomCount()!=2) {
         throw std::runtime_error("table with category exclusion has atomCount!=2");
     }
-    dms_exec(dms, "create table exclusion (p0 integer, p1 integer)");
+    dms.exec( "create table exclusion (p0 integer, p1 integer)");
     IdList ids = table->terms();
-    dms_writer_t* w;
-    dms_insert(dms,"exclusion",&w);
-    dms_exec(dms, "begin");
+    Writer w = dms.insert("exclusion");
+    dms.exec( "begin");
     for (Id i=0, n=ids.size(); i<n; i++) {
         IdList atoms = table->atoms(ids[i]);
-        dms_writer_bind_int(w,0,map[atoms[0]]);
-        dms_writer_bind_int(w,1,map[atoms[1]]);
-        dms_writer_next(w);
+        w.bind_int(0,map[atoms[0]]);
+        w.bind_int(1,map[atoms[1]]);
+        w.next();
     }
-    dms_writer_free(w);
-    dms_exec(dms, "commit");
+    dms.exec( "commit");
 }
 
-static void export_nonbonded( TermTablePtr table, dms_t* dms) {
+static void export_nonbonded( TermTablePtr table, Sqlite dms) {
     if (table->atomCount()!=1) {
         throw std::runtime_error("table with category nonbonded has atomCount!=1");
     }
-    export_params(table->params(), "nonbonded_param", dms);
+    if (table->name()=="nonbonded") {
+        export_params(table->params(), "nonbonded_param", dms);
+    } else if (table->name()=="alchemical_nonbonded") {
+        /* skip, handled by export_alchemical_particles */
+    } else {
+        MSYS_FAIL("Don't know how to export nonbonded table " << table->name());
+    }
 }
 
 static void export_meta( TermTablePtr table, const std::string& name, 
-        dms_t* dms) {
+        Sqlite dms) {
     std::string sql("insert into ");
     sql += print(table->category);
     sql += "_term values ('";
     sql += name;
     sql += "')";
-    dms_exec(dms, sql.c_str());
-    if (table->alchemical()) {
-        std::string sql("insert into ");
-        sql += print(table->category);
-        sql += "_term values ('alchemical_";
-        sql += name;
-        sql += "')";
-        dms_exec(dms, sql.c_str());
-    }
+    dms.exec( sql.c_str());
 }
 
-static void export_tables( const System& sys, const IdList& map, dms_t* dms) {
-    dms_exec(dms, "create table bond_term (name text)");
-    dms_exec(dms, "create table constraint_term (name text)");
-    dms_exec(dms, "create table virtual_term (name text)");
-    dms_exec(dms, "create table polar_term (name text)");
+static void export_tables( const System& sys, const IdList& map, Sqlite dms) {
+    dms.exec( "create table bond_term (name text)");
+    dms.exec( "create table constraint_term (name text)");
+    dms.exec( "create table virtual_term (name text)");
+    dms.exec( "create table polar_term (name text)");
     std::vector<String> tables = sys.tableNames();
     for (unsigned i=0; i<tables.size(); i++) {
         const std::string& name = tables[i];
@@ -496,7 +396,7 @@ static void export_tables( const System& sys, const IdList& map, dms_t* dms) {
     }
 }
 
-static void export_aux(const System& sys, dms_t* dms) {
+static void export_aux(const System& sys, Sqlite dms) {
     std::vector<String> extras = sys.auxTableNames();
     for (unsigned i=0; i<extras.size(); i++) {
         const std::string& name = extras[i];
@@ -504,40 +404,36 @@ static void export_aux(const System& sys, dms_t* dms) {
     }
 }
 
-static void export_nbinfo(const System& sys, dms_t* dms) {
-    dms_exec(dms,"create table nonbonded_info (vdw_funct text, vdw_rule text)");
-    dms_writer_t* w;
-    dms_insert(dms,"nonbonded_info", &w);
-    dms_writer_bind_string(w,0,sys.nonbonded_info.vdw_funct.c_str());
-    dms_writer_bind_string(w,1,sys.nonbonded_info.vdw_rule.c_str());
-    dms_writer_next(w);
-    dms_writer_free(w);
+static void export_nbinfo(const System& sys, Sqlite dms) {
+    dms.exec("create table nonbonded_info (vdw_funct text, vdw_rule text)");
+    Writer w = dms.insert("nonbonded_info");
+    w.bind_str(0,sys.nonbonded_info.vdw_funct.c_str());
+    w.bind_str(1,sys.nonbonded_info.vdw_rule.c_str());
+    w.next();
 }
 
-static void export_cell(const System& sys, dms_t* dms) {
+static void export_cell(const System& sys, Sqlite dms) {
     const GlobalCell& cell = sys.global_cell;
-    dms_exec(dms, 
+    dms.exec( 
             "create table global_cell (\n"
             "  id integer primary key,\n"
             "  x float, y float, z float)");
-    dms_writer_t* w;
-    dms_insert(dms,"global_cell",&w);
-    dms_exec(dms, "begin");
-    for (int i=0; i<3; i++) dms_writer_bind_double(w,i+1,cell.A[i]);
-    dms_writer_next(w);
-    for (int i=0; i<3; i++) dms_writer_bind_double(w,i+1,cell.B[i]);
-    dms_writer_next(w);
-    for (int i=0; i<3; i++) dms_writer_bind_double(w,i+1,cell.C[i]);
-    dms_writer_next(w);
-    dms_writer_free(w);
-    dms_exec(dms, "commit");
+    Writer w = dms.insert("global_cell");
+    dms.exec( "begin");
+    for (int i=0; i<3; i++) w.bind_flt(i+1,cell.A[i]);
+    w.next();
+    for (int i=0; i<3; i++) w.bind_flt(i+1,cell.B[i]);
+    w.next();
+    for (int i=0; i<3; i++) w.bind_flt(i+1,cell.C[i]);
+    w.next();
+    dms.exec( "commit");
 }
 
 static void export_provenance(System const& sys, Provenance const& provenance, 
-                              dms_t* dms) {
+                              Sqlite dms) {
     std::vector<Provenance> prov = sys.provenance();
     prov.push_back(provenance);
-    dms_exec(dms,
+    dms.exec(
             "create table provenance (\n"
             "  id integer primary key,\n"
             "  version text,\n"
@@ -545,61 +441,55 @@ static void export_provenance(System const& sys, Provenance const& provenance,
             "  user text,\n"
             "  workdir text,\n"
             "  cmdline text)");
-    dms_writer_t* w;
-    dms_insert(dms,"provenance", &w);
-    dms_exec(dms, "begin");
+    Writer w = dms.insert("provenance");
+    dms.exec( "begin");
     for (unsigned i=0; i<prov.size(); i++) {
-        dms_writer_bind_string(w, 1, prov[i].version.c_str());
-        dms_writer_bind_string(w, 2, prov[i].timestamp.c_str());
-        dms_writer_bind_string(w, 3, prov[i].user.c_str());
-        dms_writer_bind_string(w, 4, prov[i].workdir.c_str());
-        dms_writer_bind_string(w, 5, prov[i].cmdline.c_str());
-        dms_writer_next(w);
+        w.bind_str( 1, prov[i].version.c_str());
+        w.bind_str( 2, prov[i].timestamp.c_str());
+        w.bind_str( 3, prov[i].user.c_str());
+        w.bind_str( 4, prov[i].workdir.c_str());
+        w.bind_str( 5, prov[i].cmdline.c_str());
+        w.next();
     }
-    dms_exec(dms, "commit");
-    dms_writer_free(w);
+    dms.exec( "commit");
 }
 
-static void export_macros(System const& sys, dms_t* dms) {
+static void export_macros(System const& sys, Sqlite dms) {
     /* always create the selection_macro table, even if no macros are defined,
      * so that we can distinguish between dms files written by older versions
      * of msys that don't contain a selection_macro table and need the default
      * macros installed, and dms files whose macros have all been deleted. */
-    dms_exec(dms,
+    dms.exec(
             "create table msys_selection_macro (\n"
             "  macro text primary key,\n"
             "  definition text)");
-    dms_writer_t* w;
-    dms_insert(dms,"msys_selection_macro", &w);
-    dms_exec(dms, "begin");
+    Writer w = dms.insert("msys_selection_macro");
+    dms.exec( "begin");
     std::vector<std::string> v = sys.selectionMacros();
     for (unsigned i=0; i<v.size(); i++) {
-        dms_writer_bind_string(w, 0, v[i].c_str());
-        dms_writer_bind_string(w, 1, sys.selectionMacroDefinition(v[i]).c_str());
-        dms_writer_next(w);
+        w.bind_str( 0, v[i].c_str());
+        w.bind_str( 1, sys.selectionMacroDefinition(v[i]).c_str());
+        w.next();
     }
-    dms_exec(dms, "commit");
-    dms_writer_free(w);
+    dms.exec( "commit");
 }
 
-static void export_glue(System const& sys, dms_t* dms) {
+static void export_glue(System const& sys, Sqlite dms) {
     if (!sys.glueCount()) return;
-    dms_exec(dms,
+    dms.exec(
             "create table glue (\n"
             "  id integer primary key,\n"
             "  p0 integer not null,\n"
             "  p1 integer not null)");
-    dms_writer_t* w;
-    dms_insert(dms,"glue", &w);
-    dms_exec(dms, "begin");
+    Writer w = dms.insert("glue");
+    dms.exec( "begin");
     std::vector<glue_t> glue = sys.gluePairs();
     for (unsigned i=0; i<glue.size(); i++) {
-        dms_writer_bind_int(w,1,glue[i].first);
-        dms_writer_bind_int(w,2,glue[i].second);
-        dms_writer_next(w);
+        w.bind_int(1,glue[i].first);
+        w.bind_int(2,glue[i].second);
+        w.next();
     }
-    dms_exec(dms, "commit");
-    dms_writer_free(w);
+    dms.exec( "commit");
 }
 
 /* make a mapping from id to 0-based dms primary key */
@@ -614,7 +504,7 @@ static IdList map_gids(System const& sys) {
     return ids;
 }
 
-static void export_dms(SystemPtr h, dms_t* dms, Provenance const& provenance) {
+static void export_dms(SystemPtr h, Sqlite dms, Provenance const& provenance) {
     System& sys = *h;
     IdList atomidmap = map_gids(sys);
     export_particles(sys, atomidmap, dms);
@@ -631,31 +521,19 @@ static void export_dms(SystemPtr h, dms_t* dms, Provenance const& provenance) {
 void desres::msys::ExportDMS(SystemPtr h, const std::string& path,
                              Provenance const& provenance) {
     unlink(path.c_str());
-    dms_t* dms = NULL;
+    Sqlite dms;
     try {
-        dms = dms_write(path.c_str());
-        export_dms(h, dms, provenance);
+        dms = Sqlite::write(path);
+    } catch (std::exception& e) {
+        MSYS_FAIL("Could not create dms file at " << path << ": " << e.what());
     }
-    catch(std::exception& e) {
-        std::stringstream ss;
-        ss << "Error writing dms file at '" << path << "': " << e.what()
-            << std::endl;
-        if (dms) {
-            try {
-                dms_close(dms);
-            }
-            catch (std::exception& e2) {
-                ss << e2.what();
-            }
-        }
-        throw std::runtime_error(ss.str());
-    }
-    dms_close(dms);
+    export_dms(h, dms, provenance);
 }
+
+static void no_close(sqlite3* db) {}
 
 void desres::msys::sqlite::ExportDMS(SystemPtr h, sqlite3* db,
                                      Provenance const& provenance) {
-    boost::scoped_ptr<dms_t> p(new dms_t(db));
-    export_dms(h, p.get(), provenance);
+    export_dms(h, boost::shared_ptr<sqlite3>(db,no_close), provenance);
 }
 

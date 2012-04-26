@@ -17,11 +17,8 @@ namespace desres { namespace msys {
             .def_readwrite("vy",        &atom_t::vy)
             .def_readwrite("vz",        &atom_t::vz)
             .def_readwrite("mass",      &atom_t::mass)
-            .def_readwrite("chargeB",   &atom_t::chargeB)
             .def_readwrite("atomic_number", &atom_t::atomic_number)
             .def_readwrite("formal_charge", &atom_t::formal_charge)
-            .def_readwrite("moiety",    &atom_t::moiety)
-            .def_readwrite("alchemical",&atom_t::alchemical)
             .def_readwrite("name",      &atom_t::name)
             ;
 

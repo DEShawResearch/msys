@@ -6,37 +6,33 @@
 
 using namespace desres::msys;
 
-void TermTable::incref(Id p) {
-    if (bad(p)) return;
-    Id sz = _paramrefs.size();
-    _paramrefs.resize(std::max(sz, p+1), 0);
-    ++_paramrefs[p];
-}
-
-void TermTable::decref(Id p) {
-    if (bad(p)) return;
-    Id sz = _paramrefs.size();
-    _paramrefs.resize(std::max(sz, p+1), BadId);
-    --_paramrefs[p];
-}
-
-Id TermTable::paramRefs(Id param) const {
-    if (param>=_paramrefs.size()) return 0;
-    return _paramrefs[param];
-}
-
 TermTable::TermTable( SystemPtr system, Id natoms, ParamTablePtr ptr ) 
-: _system(system), _natoms(natoms), _props(ParamTable::create()) {
+: _system(system), _natoms(natoms), _props(ParamTable::create()),
+  category(NO_CATEGORY) {
     _params = ptr ? ptr : ParamTable::create();
-    _params->incref();
 }
 
-TermTable::~TermTable() {
-    _params->decref();
+void TermTable::destroy() {
+    SystemPtr sys = system();
+    if (!sys) return;
+    _system.reset();
+    sys->removeTable(shared_from_this());
+    for (unsigned i=0; i<maxTermId(); i++) {
+        if (_deadterms.count(i)) continue;
+        _params->decref(param(i));
+    }
 }
 
 String TermTable::name() const {
-    return system()->tableName(shared_from_this());
+    SystemPtr sys = system();
+    if (!sys) MSYS_FAIL("Table has been destroyed");
+    return sys->tableName(shared_from_this());
+}
+
+void TermTable::rename(String const& newname) {
+    SystemPtr sys = system();
+    if (!sys) MSYS_FAIL("Table has been destroyed");
+    return sys->renameTable(name(), newname);
 }
 
 IdList TermTable::terms() const {
@@ -48,10 +44,6 @@ IdList TermTable::terms() const {
     return ids;
 }
 
-bool TermTable::alchemical() const {
-    return _paramB.size()>0;
-}
-
 Id TermTable::termCount() const { 
     return _terms.size()/(1+_natoms) - _deadterms.size(); 
 }
@@ -60,7 +52,9 @@ Id TermTable::addTerm(const IdList& atoms, Id param) {
     if (atoms.size() != _natoms) {
         throw std::runtime_error("addTerm: incorrect atom count");
     }
-    System const& sys = *system();
+    SystemPtr s = system();
+    if (!s) MSYS_FAIL("Table has been destroyed");
+    System const& sys = *s;
     for (IdList::const_iterator atm=atoms.begin(); atm!=atoms.end(); ++atm) {
         if (!sys.hasAtom(*atm)) {
             std::stringstream ss;
@@ -71,17 +65,15 @@ Id TermTable::addTerm(const IdList& atoms, Id param) {
     Id id=_terms.size()/(1+_natoms);
     _terms.insert(_terms.end(), atoms.begin(), atoms.end());
     _terms.push_back(param);
-    incref(param);
+    _params->incref(param);
     _props->addParam();
     return id;
 }
 
 void TermTable::delTerm(Id id) {
     if (!hasTerm(id)) return;
-    decref(param(id));
-    decref(paramB(id));
+    _params->decref(param(id));
     _deadterms.insert(id);
-    _paramB.erase(id);
 }
 
 void TermTable::delTermsWithAtom(Id atm) {
@@ -102,33 +94,12 @@ Id TermTable::param(Id term) const {
 
 void TermTable::setParam(Id term, Id param) {
     if (!hasTerm(term)) throw std::runtime_error("Invalid term");
-    decref(this->param(term));
-            _terms.at((1+term)*(1+_natoms)-1) = param;
-    incref(param);
-}
-
-Id TermTable::paramB(Id term) const {
-    if (!hasTerm(term)) throw std::runtime_error("Invalid term");
-    ParamMap::const_iterator i=_paramB.find(term);
-    if (i==_paramB.end()) return BadId;
-    return i->second;
-}
-void TermTable::setParamB(Id term, Id param) {
-    if (!hasTerm(term)) throw std::runtime_error("Invalid term");
-    ParamMap::const_iterator i=_paramB.find(term);
-
-    Id oldparam = i==_paramB.end() ? BadId : i->second;
-
-    if (bad(param)) {
-        decref(oldparam);
-        _paramB.erase(term);
-    } else if (!_params->hasParam(param)) {
-        throw std::runtime_error("Invalid param");
-    } else {
-        decref(oldparam);
-        _paramB[term]=param;
-        incref(param);
+    if (!(bad(param) || _params->hasParam(param))) {
+        MSYS_FAIL("Invalid param " << param << " for table " << name());
     }
+    _params->decref(this->param(term));
+    _terms.at((1+term)*(1+_natoms)-1) = param;
+    _params->incref(param);
 }
 
 bool TermTable::hasTerm(Id term) const {
@@ -194,16 +165,6 @@ ValueRef TermTable::propValue(Id term, String const& name) {
     return _params->value(row, name);
 }
 
-ValueRef TermTable::propValueB(Id term, Id index) {
-    Id row = this->paramB(term);
-    return _params->value(row, index);
-}
-
-ValueRef TermTable::propValueB(Id term, String const& name) {
-    Id row = this->paramB(term);
-    return _params->value(row, name);
-}
-
 namespace {
     struct ParamComparator {
         ParamTablePtr params;
@@ -221,7 +182,13 @@ void TermTable::coalesce() {
     ParamComparator comp(_params);
     assert(!comp(0,0));
     ParamMap map(comp);
-    Id i,n = maxTermId();
+    
+    /* hash all parameters, so that tables that share a param table
+     * will wind up using the same params when possible */
+    Id i,n = _params->paramCount();
+    for (i=0; i<n; i++) map[i];
+
+    n = maxTermId();
     for (i=0; i<n; i++) {
         if (!hasTerm(i)) continue;
         Id p = param(i);
@@ -232,22 +199,6 @@ void TermTable::coalesce() {
         Id p = iter->first;
         IdList& ids = iter->second;
         for (Id i=0; i<ids.size(); i++) setParam(ids[i], p);
-        /* we clear the list, rather than erase the entire map, so that
-         * we can reuse the set of unique params for paramB */
-        ids.clear();
-    }
-    /* map paramB for each term to a distinct set, using the params from
-     * the first pass when possible */
-    for (i=0; i<n; i++) {
-        if (!hasTerm(i)) continue;
-        Id p = paramB(i);
-        if (bad(p)) continue;
-        map[p].push_back(i);
-    }
-    for (ParamMap::iterator iter=map.begin(); iter!=map.end(); ++iter) {
-        Id p = iter->first;
-        IdList& ids = iter->second;
-        for (Id i=0; i<ids.size(); i++) setParamB(ids[i], p);
     }
 }
 

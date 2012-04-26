@@ -7,7 +7,7 @@ namespace {
         void apply( SystemPtr h,
                     const Json& blk,
                     const SiteMap& sitemap,
-                    const VdwMap&, bool alchemical ) const {
+                    const VdwMap& ) const {
 
             MaeAtoms atoms(blk);
 
@@ -26,8 +26,7 @@ namespace {
                     std::string name = std::string("constraint_")+f.substr(0,3);
                     type.first = AddTable(h, name);
                     ParamTablePtr params = type.first->params();
-                    type.second = ParamMapPtr(new ParamMap(
-                                params, blk, params->propCount()));
+                    type.second = ParamMapPtr(new ParamMap(params, blk));
                     typemap[f] = type;
                 }
                 Id m = type.first->atomCount();

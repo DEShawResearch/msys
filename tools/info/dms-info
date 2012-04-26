@@ -16,8 +16,7 @@ import msys
 
 def print_info(mol):
     print "Structure:"
-    alc=[a for a in mol._ptr.atoms() if mol._ptr.atom(a).alchemical]
-    print "%12s: %8d (%4d alchemical)" % ("Atoms", mol.natoms, len(alc))
+    print "%12s: %8d" % ("Atoms", mol.natoms)
     print "%12s: %8d" % ("Bonds", mol.nbonds)
     print "%12s: %8d" % ("Residues", mol.nresidues)
     print "%12s: %8d" % ("Chains", mol.nchains)
@@ -52,14 +51,9 @@ def print_info(mol):
         print "\n%s Tables:" % cat.title()
 
         for table in tables:
-            nalc=0
-            if table.alchemical:
-                for t in table.terms:
-                    if t.alchemical:
-                        nalc += 1
-            print "%20s: %d sites, %6d params, %6d terms, %2d alchemical" % (
+            print "%28s: %d sites, %6d params, %6d terms" % (
                     table.name, table.natoms, table.params.nparams, 
-                    table.nterms, nalc)
+                    table.nterms)
 
     nbinfo=mol.nonbonded_info
     print "\n%12s:" % "Nonbonded Info"
@@ -73,7 +67,7 @@ def print_info(mol):
     print "\n%12s:" % "Auxiliary Tables"
     for name in mol.auxtable_names:
         aux=mol.auxtable(name)
-        print "%20s: %d properties, %6d rows" % (name, aux.nprops, aux.nparams)
+        print "%28s: %d properties, %6d rows" % (name, aux.nprops, aux.nparams)
 
     print "\n%s:" % "Provenance"
     for i, p in enumerate(mol.provenance):

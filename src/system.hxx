@@ -87,17 +87,12 @@ namespace desres { namespace msys {
         Float charge;   /* partial charge */
         Float vx,vy,vz; /* velocity */
         Float mass;
-        Float chargeB;
-    
-        int moiety;
-        bool alchemical;
     
         String name;
     
         atom_t() 
         : fragid(BadId), residue(BadId), atomic_number(0), formal_charge(0),
-          x(0), y(0), z(0), charge(0), vx(0), vy(0), vz(0), mass(0), chargeB(0),
-          moiety(0), alchemical(false)
+          x(0), y(0), z(0), charge(0), vx(0), vy(0), vz(0), mass(0)
         {}
     };
     

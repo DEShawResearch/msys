@@ -48,38 +48,25 @@ namespace desres { namespace msys {
          * angle terms, and for the position of position restraints. */
         ParamTablePtr  _props;
 
-        /* parameter id for alchemical state.  We expect most terms,
-         * and indeed most term tables, will not be alchemical, so 
-         * we store these ids in a map.  We never put BadId into the
-         * map; thus, we can return BadId for a term's alchemical
-         * parameter to indicate no alchemical state exists for that
-         * term, and the size of the map can be used to indicate whether
-         * any part of the table is alchemical. */
-        typedef std::map<Id,Id> ParamMap;
-        ParamMap    _paramB;
-
-        /* reference count for parameters used by terms in this table. */
-        IdList _paramrefs;
-        void incref(Id param);
-        void decref(Id param);
-    
     public:
         TermTable( SystemPtr system, Id natoms, 
                    ParamTablePtr ptr = ParamTablePtr() );
-        ~TermTable();
+
+        /* delete all terms and remove from parent system */
+        void destroy();
 
         SystemPtr system() const { return _system.lock(); }
         ParamTablePtr params() { return _params; }
         Id atomCount() const { return _natoms; }
-
-        /* true if there are any alchemical terms */
-        bool alchemical() const;
 
         /* category describing what sort of TermTable we have */
         Category category;
 
         /* name of this table in the parent system */
         String name() const;
+
+        /* rename table */
+        void rename(String const& name);
     
         /* Operations on the set of terms */
         IdList terms() const;
@@ -94,15 +81,9 @@ namespace desres { namespace msys {
          * terms, so use with care.  */
         void delTermsWithAtom(Id atm);
 
-        /* reference count of param within this table; i.e., number of times
-         * this param appears in either param or paramB */
-        Id paramRefs(Id param) const;
-
         /* Operations on individual terms */
         Id param(Id term) const;
-        Id paramB(Id term) const;
         void setParam(Id term, Id param);
-        void setParamB(Id term, Id param);
         IdList atoms(Id term) const;
         Id atom(Id term, Id index) const;
 
@@ -110,10 +91,6 @@ namespace desres { namespace msys {
          * ParamTable */
         ValueRef propValue(Id term, Id index);
         ValueRef propValue(Id term, String const& name);
-
-        /* Look up the alchemical version of the property */
-        ValueRef propValueB(Id term, Id index);
-        ValueRef propValueB(Id term, String const& name);
 
         /* Operations on term properties */
         Id termPropCount() const;
@@ -125,8 +102,7 @@ namespace desres { namespace msys {
         ValueRef termPropValue(Id term, Id index);
         ValueRef termPropValue(Id term, String const& name);
 
-        /* reassign param and paramB to a member of the set of distinct
-         * parameters. */
+        /* reassign param to a member of the set of distinct parameters. */
         void coalesce();
     };
 

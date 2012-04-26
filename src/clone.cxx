@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <sstream>
+#include <boost/unordered_map.hpp>
 
 using namespace desres::msys;
 
@@ -131,10 +132,22 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms ) {
         }
     }
 
-    /* Add term tables */
+    /* Detect when term tables share a ParamTable.  First pass: sort
+     * by param table.  */
+    typedef std::vector<std::string> StringList;
+    typedef boost::unordered_map<ParamTablePtr, StringList> TableMap;
+    TableMap tables;
     std::vector<String> tablenames = src->tableNames();
     for (unsigned i=0; i<tablenames.size(); i++) {
         std::string const& name = tablenames[i];
+        TermTablePtr srctable = src->table(name);
+        tables[srctable->params()].push_back(name);
+    }
+
+    /* process the unshared tables. */
+    for (TableMap::const_iterator it=tables.begin(); it!=tables.end(); ++it) {
+        if (it->second.size()>1) continue;
+        std::string const& name = it->second.at(0);
         TermTablePtr srctable = src->table(name);
         TermTablePtr dsttable = dst->addTable(name, srctable->atomCount());
         dsttable->category = srctable->category;
@@ -143,6 +156,61 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms ) {
                 terms.begin(), terms.end(), BadTerm(srctable, atmmap));
         terms.erase(iter, terms.end());
         AppendTerms( dsttable, srctable, atmmap, terms );
+    }
+
+    /* process the tables with shared params */
+    for (TableMap::const_iterator it=tables.begin(); it!=tables.end(); ++it) {
+        StringList const& s = it->second;
+        if (it->second.size()<2) continue;
+        ParamTablePtr dstparams = ParamTable::create();
+        ParamTablePtr srcparams = src->table(s[0])->params();
+        IdList src2dst(srcparams->paramCount(), BadId);
+        for (unsigned i=0; i<s.size(); i++) {
+            std::string const& name = s[i];
+            TermTablePtr srctable = src->table(name);
+            TermTablePtr dsttable = dst->addTable(name,
+                                                  srctable->atomCount(),
+                                                  dstparams);
+            dsttable->category = srctable->category;
+
+            /* get the terms included in the selection */
+            IdList terms = srctable->terms();
+            terms.erase(
+                    std::remove_if( 
+                        terms.begin(), terms.end(), BadTerm(srctable, atmmap)),
+                    terms.end());
+            /* get the set of parameters referenced by at least one term.
+             * The reference counting in ParamTable doesn't help us here
+             * because we aren't interested in params that are referenced
+             * by tables outside of our System.  However, there is a fair
+             * bit of duplication here of logic in append.cxx and that 
+             * should be addressed at some point. */
+            IdList params;
+            for (Id i=0; i<terms.size(); i++) {
+                Id p = srctable->param(terms[i]);
+                if (!bad(p)) params.push_back(p);
+            }
+            std::sort(params.begin(), params.end());
+            params.resize(
+                    std::unique( params.begin(), params.end()) -params.begin());
+
+            /* Add to dstparams just the params that haven't already been
+             * added. */
+            IdList newsrcparams;
+            for (Id i=0; i<params.size(); i++) {
+                Id p = params[i];
+                if (bad(src2dst.at(p))) newsrcparams.push_back(p);
+            }
+            IdList newdstparams = AppendParams(dstparams, srcparams, 
+                                               newsrcparams);
+            /* update the mapping */
+            for (Id i=0; i<newdstparams.size(); i++) {
+                src2dst.at(newsrcparams[i]) = newdstparams[i];
+            }
+
+            /* append the terms */
+            AppendTerms(dsttable, srctable, atmmap, terms, src2dst);
+        }
     }
 
     /* copy all global data */

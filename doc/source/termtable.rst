@@ -18,8 +18,6 @@ an interaction:
 
  * ``table``: the parent `TermTable`;
 
- * ``state``: the alchemical state; normally "A".  See below.
-
  * ``atoms``: a list of `Atoms`; the ``atoms`` in a `Term` cannot be changed;
 
  * ``param``: the `Param` in the `ParamTable` holding the parameters for
@@ -31,7 +29,7 @@ The properties of a `Term` can be read and updated using a dictionary like
 interface.  Both "term properties" and properties from the `ParamTable`
 are accessed through the same interface.  To add or remove properties,
 use the provided methods in the `TermTable` or `ParamTable` instance.
-If a `Term`'s ``param`` is shared by another `Term` in the `TermTable`,
+If a `Term`'s ``param`` is shared by another `Term` in any other `TermTable`,
 Msys will take care of providing the `Term` with its own `Param` containing
 a copy of the original properties before applying the changes.  However,
 if you a modify a `Param` through its dictionary interface, you will affect
@@ -93,19 +91,6 @@ copied to the new `System`::
   # When we clone, the unused params are not copied to the new system.
   mol2=mol.clone()
   assert mol2.table('stretch_harm').params.nparams==1
-
-Alchemical terms
-================
-
-We mentioned above that every `Term` has a ``state``, which is normally
-"A".  In the "A" state, the ``param`` property corresponds to the
-`Term` property ``paramA``.  However, every `Term` also has a ``paramB``
-attribute, which is normally ``None``.  Setting ``paramB`` to a `Param`
-from the `TermTable's` `ParamTable` makes the `Term` alchemical.  You can
-access the properties of the alchemical state by fetching the "B" state
-of the Term, using the ``stateB`` property.  A `Term` representing the
-"B" state will read and write to its ``paramB`` member instead of ``paramA``, 
-and the ``param`` property will correspond to ``paramB``.    
 
 
 .. autoclass:: msys.TermTable

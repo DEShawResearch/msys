@@ -17,6 +17,15 @@ namespace desres { namespace msys {
                         IdList const& idmap,
                         IdList const& terms );
 
+    /* Append given terms in src to dst, using the mapping from atom id 
+     * in src to atom id in dst provided by idmap, and the provided
+     * mapping from src params to dst params.  No params will be added
+     * to dst.  Return the ids of the newly created terms. */
+    IdList AppendTerms( TermTablePtr dst, TermTablePtr src, 
+                        IdList const& idmap,
+                        IdList const& terms,
+                        IdList const& pmap );
+
     /* Append structure and term tables from src into dst, using 
      * AppendParams to extend the parameter tables, and expanding
      * the set of term properties as necessary.  Extra tables in src

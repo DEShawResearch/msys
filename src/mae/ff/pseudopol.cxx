@@ -8,7 +8,7 @@ namespace {
         void apply( SystemPtr h,
                     const Json& blk,
                     const SiteMap& sitemap,
-                    const VdwMap&, bool alchemical  ) const {
+                    const VdwMap& ) const {
 
             TermTablePtr table = AddTable(h,"pseudopol_fermi");
             ParamMap map(table->params(), blk /* , 3, maecols */);
