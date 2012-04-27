@@ -346,7 +346,6 @@ Reader::Reader(boost::shared_ptr<sqlite3> db, std::string const& table,
     sqlite3_free(sql);
     if (rc) return; /* no such table */
     _stmt.reset(stmt, close_stmt);
-    stmt = NULL;
 
     /* We used to get the table schema from the first row, but that makes
      * it impossible to distinguish between an empty table and no table
@@ -355,25 +354,33 @@ Reader::Reader(boost::shared_ptr<sqlite3> db, std::string const& table,
      * doesn't necessarily tell you how you should read the others.  The
      * only sensible way to proceed seems to be to parse the table_info
      * pragma and use the "declared" type of the table. */
-#if 0
-    _cols.resize(sqlite3_column_count(stmt));
-    for (unsigned i=0; i<_cols.size(); i++) {
-        _cols[i].first = (const char *)(sqlite3_column_name(stmt,i));
-    }
 
-    next();
-    if (done()) return;
+    /* msys/3.0.1: fall back to the old way when strict_types is false,
+     * because otherwise we have no way to handle things like
+     * "create table particle (id integer primary key, ... grp_energy)"
+     * with no declared type.  */
+    if (!_strict_types) {
 
-    for (unsigned i=0; i<_cols.size(); i++) {
-        int type = sqlite3_column_type(stmt,i);
-        switch(type) {
-            default:
-            case SQLITE_TEXT:    _cols[i].second = StringType; break;
-            case SQLITE_INTEGER: _cols[i].second = IntType; break;
-            case SQLITE_FLOAT:   _cols[i].second = FloatType; break;
+        _cols.resize(sqlite3_column_count(stmt));
+        for (unsigned i=0; i<_cols.size(); i++) {
+            _cols[i].first = (const char *)(sqlite3_column_name(stmt,i));
         }
+
+        next();
+        if (done()) return;
+
+        for (unsigned i=0; i<_cols.size(); i++) {
+            int type = sqlite3_column_type(stmt,i);
+            switch(type) {
+                default:
+                case SQLITE_TEXT:    _cols[i].second = StringType; break;
+                case SQLITE_INTEGER: _cols[i].second = IntType; break;
+                case SQLITE_FLOAT:   _cols[i].second = FloatType; break;
+            }
+        }
+        return;
     }
-#else
+
     /* get table schema from table_info pragma */
     sql = sqlite3_mprintf("pragma table_info(%q)", table.c_str());
     rc = sqlite3_prepare_v2(_db.get(), sql, -1, &stmt, NULL);
@@ -408,7 +415,6 @@ Reader::Reader(boost::shared_ptr<sqlite3> db, std::string const& table,
     }
     /* advance to the first row */
     next();
-#endif
 }
 
 void Reader::next() {
