@@ -465,7 +465,7 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
     IdList ignored_gids;
     std::map<Id,Id> nbtypesB;
     
-    Reader r = dms.fetch("particle");
+    Reader r = dms.fetch("particle", false); /* no strict typing */
     if (!r) MSYS_FAIL("Missing particle table");
 
     int SEGID = r.column("segid");
@@ -563,7 +563,7 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
         nbtypes.push_back(NBTYPE>=0 ? r.get_int(NBTYPE) : BadId);
     }
 
-    r = dms.fetch("bond");
+    r = dms.fetch("bond", false); /* no strict typing */
     if (r) {
         int p0=r.column("p0");
         int p1=r.column("p1");

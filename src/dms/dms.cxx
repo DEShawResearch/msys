@@ -322,8 +322,8 @@ int Sqlite::size(std::string const& table) const {
     return result;
 }
 
-Reader Sqlite::fetch(std::string const& table) const {
-    return Reader(_db, table);
+Reader Sqlite::fetch(std::string const& table, bool strict) const {
+    return Reader(_db, table, strict);
 }
 
 const char* Reader::errmsg() const {
@@ -335,8 +335,9 @@ static void close_stmt(sqlite3_stmt* stmt) {
         MSYS_FAIL("Error finalizing statement: " << sqlite3_errmsg(sqlite3_db_handle(stmt)));
 }
 
-Reader::Reader(boost::shared_ptr<sqlite3> db, std::string const& table) 
-: _db(db), _table(table) {
+Reader::Reader(boost::shared_ptr<sqlite3> db, std::string const& table,
+               bool strict) 
+: _db(db), _table(table), _strict_types(strict) {
 
     sqlite3_stmt * stmt;
 
@@ -440,19 +441,19 @@ int Reader::column(std::string const& name) const {
 }
 
 int Reader::get_int(int col) const {
-    if (type(col)!=IntType) 
+    if (_strict_types && type(col)!=IntType) 
         MSYS_FAIL("Type error reading int from column " << _cols[col].first << " in table " << _table);
     return sqlite3_column_int(_stmt.get(),col);
 }
 
 double Reader::get_flt(int col) const {
-    if (type(col)!=FloatType) 
+    if (_strict_types && type(col)!=FloatType) 
         MSYS_FAIL("Type error reading float from column " << _cols[col].first << " in table " << _table);
     return sqlite3_column_double(_stmt.get(),col);
 }
 
 const char * Reader::get_str(int col) const {
-    if (type(col)!=StringType) 
+    if (_strict_types && type(col)!=StringType) 
         MSYS_FAIL("Type error reading string from column " << _cols[col].first << " in table " << _table);
     return (const char *)sqlite3_column_text(_stmt.get(),col);
 }

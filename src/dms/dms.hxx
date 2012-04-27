@@ -31,7 +31,7 @@ namespace desres { namespace msys {
 
         bool has(std::string const& table) const;
         int size(std::string const& table) const;
-        Reader fetch(std::string const& table) const;
+        Reader fetch(std::string const& table, bool strict_types=true) const;
         Writer insert(std::string const& table) const;
     };
 
@@ -42,11 +42,14 @@ namespace desres { namespace msys {
 
         typedef std::pair<std::string, ValueType> column_t;
         std::vector<column_t> _cols;
+        bool _strict_types;
 
         const char* errmsg() const;
 
     public:
-        Reader(boost::shared_ptr<sqlite3> db, std::string const& table);
+        Reader(boost::shared_ptr<sqlite3> db, std::string const& table,
+               bool strict_types);
+        bool strict_types() const { return _strict_types; }
         void next();
         bool done() const { return !_stmt; }
         operator bool() const { return !done(); }
