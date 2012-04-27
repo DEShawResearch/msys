@@ -91,6 +91,8 @@ See documentation in
 http://gardendoc.nyc.desres.deshaw.com/$NAME/$VERSION/doc/html/index.html
 
 1.3.1  Fix ImportMAE handling of virtuals (broken in 1.3.0).
+       Turn off type checking of particle and bond tables.
+       Fix GuessAtomicNumber (affects ReadParmTop only).
 
 1.3.0  Alchemical terms now appear in their own TermTable, and the paramB
        interfaces have been removed.
