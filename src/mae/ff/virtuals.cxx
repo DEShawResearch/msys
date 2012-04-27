@@ -26,8 +26,7 @@ namespace {
                     std::string name = std::string("virtual_")+f;
                     type.first = AddTable(h, name);
                     ParamTablePtr params = type.first->params();
-                    type.second = ParamMapPtr(new ParamMap(
-                                params, blk, params->propCount()));
+                    type.second = ParamMapPtr(new ParamMap(params, blk));
                     typemap[f] = type;
                 }
                 Id m = type.first->atomCount();
