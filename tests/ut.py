@@ -18,6 +18,11 @@ class TestMain(unittest.TestCase):
         self.assertNotEqual(m.atom(0), m.atom(1))
 
         self.assertNotEqual(a1,None)
+        self.assertTrue(a1!=None)
+        self.assertTrue(a1==a1)
+        self.assertFalse(a1==None)
+        self.assertFalse(a1!=a1)
+
 
         # FIXME: hmm, maybe fetching m.atom(0) ought to throw after the
         # atom has been removed.  
