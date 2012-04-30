@@ -809,6 +809,19 @@ class TestMain(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             m.select('foo')
 
+    def testAlchemicalMaeRestraint(self):
+        d=os.path.dirname(__file__)
+        m=msys.LoadMAE(os.path.join(d, 'mae/alchemical_restraint.mae'))
+        self.assertEqual(m.natoms, 5)
+        con=m.table('constraint_ah2')
+        res=m.table('posre_harm')
+        self.assertEqual(con.nterms, 1)
+        self.assertEqual(sorted(x.id for x in con.term(0).atoms), [0,1,2])
+        self.assertEqual(res.nterms, 2)
+        self.assertEqual(res.term(0).atoms[0].id, 0)
+        self.assertEqual(res.term(1).atoms[0].id, 1)
+        self.assertEqual(res.term(0)['fcx'], 0.25)
+        self.assertEqual(res.term(1)['fcy'], 0.35)
 
 if __name__=="__main__":
     unittest.main()

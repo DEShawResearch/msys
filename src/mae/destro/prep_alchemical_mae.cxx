@@ -492,6 +492,44 @@ namespace {
     }
   }
 
+  void combine_entry(desres::msys::Destro& m1, desres::msys::Destro const& m2,
+                     std::string const& blk, std::map<int,int>& a2_inv_map) {
+
+      // Make a hash of constraint terms in stage 1, indexed by the first atom.
+      std::map<int,desres::msys::Destro *> stage1constraints;
+
+      desres::msys::Destro & cons1 = 
+        m1.has_block(blk) ? m1.block(blk) : m1.new_block(blk);
+
+      for (unsigned i=0; i<cons1.size(); i++) {
+        desres::msys::Destro &c = cons1[i+1];
+        int ai = c("ffio_ai").or_else(0);
+        if (ai<1) THROW_FAILURE(("Invalid %s term found in stage 1",blk.c_str()));
+        if (stage1constraints.find(ai) != stage1constraints.end())
+          THROW_FAILURE(("Found overlapping %s for atom %d",blk.c_str(), ai));
+        stage1constraints[ai] = &c;
+      }
+  
+      desres::msys::Destro const& cons2 = m2.block(blk);
+      for (unsigned i=0; i<cons2.size(); i++) {
+        const desres::msys::Destro &c = cons2[i+1];
+        int ai = c("ffio_ai").or_else(0);
+        if (!ai) THROW_FAILURE(("Invalid %s term in stage 2", blk.c_str()));
+        int mapped_ai = a2_inv_map[ai];
+
+        if (stage1constraints.find(mapped_ai) == stage1constraints.end()) {
+          // new constraint term: copy it over and update the atom indices
+          desres::msys::Destro &cnew = cons1.append(c);
+          update_atom_indices( cnew, a2_inv_map );
+
+        } else {
+          // push stage2 atoms onto the existing constraint
+          desres::msys::Destro &cold = *stage1constraints[mapped_ai];
+          append_atom_indices( cold, c, a2_inv_map );
+        }
+      }
+  }
+
   /*! append alchemical forms of atoms and groups onto mapped original forms
    * @param fm1 stage 1 ct
    * @param fm2 stage 2 ct
@@ -598,42 +636,17 @@ namespace {
 
     // constraints
     if (m2.has_block("ffio_constraints")) {
-
-      // Make a hash of constraint terms in stage 1, indexed by the first atom.
-      std::map<int,desres::msys::Destro *> stage1constraints;
-
-      desres::msys::Destro & cons1 = 
-        m1.has_block("ffio_constraints") ? m1.block("ffio_constraints")
-                                         : m1.new_block("ffio_constraints");
-
-      for (unsigned i=0; i<cons1.size(); i++) {
-        desres::msys::Destro &c = cons1[i+1];
-        int ai = c("ffio_ai").or_else(0);
-        if (ai<1) THROW_FAILURE(("Invalid constraint found in stage 1"));
-        if (stage1constraints.find(ai) != stage1constraints.end())
-          THROW_FAILURE(("Found overlapping constraint for atom %d",ai));
-        stage1constraints[ai] = &c;
-      }
-  
-      desres::msys::Destro const& cons2 = m2.block("ffio_constraints");
-      for (unsigned i=0; i<cons2.size(); i++) {
-        const desres::msys::Destro &c = cons2[i+1];
-        int ai = c("ffio_ai").or_else(0);
-        if (!ai) THROW_FAILURE(("Invalid constraint term in stage 2"));
-        int mapped_ai = a2_inv_map[ai];
-
-        if (stage1constraints.find(mapped_ai) == stage1constraints.end()) {
-          // new constraint term: copy it over and update the atom indices
-          desres::msys::Destro &cnew = cons1.append(c);
-          update_atom_indices( cnew, a2_inv_map );
-
-        } else {
-          // push stage2 atoms onto the existing constraint
-          desres::msys::Destro &cold = *stage1constraints[mapped_ai];
-          append_atom_indices( cold, c, a2_inv_map );
-        }
-      }
+        combine_entry(m1, m2, "ffio_constraints", a2_inv_map);
     }
+    // restraints handled the same way.  Note that we avoid creating 
+    // an invalid restraint term with multiple atoms by virtual of the
+    // fact that the funct of restraints does not start with "AH". 
+    // It's a little fragile, but seems ok for now.
+    // ported from viparr3,BRANCHES/3.5.5, DESRESCode#1380
+    if (m2.has_block("ffio_restraints")) {
+        combine_entry(m1, m2, "ffio_restraints", a2_inv_map);
+    }
+
   }
 }
 
