@@ -3,14 +3,14 @@ set -e
 set -x
 . $DESRES_ROOT/modules/init/sourceme.sh
 module add gardenutils/1.9.2/lib-sh
-module add treetop/43-Anton/bin   
+module add treetop/73-Desmond/bin   
 . desres-install-functions
 trap 'desres_trapped_exit' EXIT
 
 desres_require_cleanenv
 
 NAME=msys
-PKG_VERSION=1.3.1
+PKG_VERSION=1.3.2
 
 VERSION=${PKG_VERSION}
 DESCRIPTION="Biomolecular Structure Library"
@@ -22,7 +22,7 @@ PYTHON=$(treetop Python)
 SQLITE=$(treetop sqlite)
 PCRE=$(treetop pcre)
 ANTLR=$(treetop antlr)
-JSON=fastjson/1.4.5   # $(treetop fastjson)
+JSON=$(treetop fastjson)
 
 # build and documentation
 SCONS=$(treetop scons)
@@ -89,6 +89,8 @@ genhelp() {
 
 See documentation in 
 http://gardendoc.nyc.desres.deshaw.com/$NAME/$VERSION/doc/html/index.html
+
+1.3.2  Using 73-Desmond modules.
 
 1.3.1  Fix ImportMAE handling of virtuals (broken in 1.3.0).
        Turn off type checking of particle and bond tables.
