@@ -1,0 +1,109 @@
+#!/usr/bin/env desres-exec
+#{
+# desres-cleanenv $MSYS_CLEANENV -- python $0 "$@"
+#}
+
+import msys, sys
+
+'''
+dms-combine-vdw input.dms output.dms [ options ]
+
+Override vdw interactions between selected atoms.
+
+Restrictions: produces a nonbonded_combined_param table and therefore
+              may not be usable on Anton.
+
+              Works for vdw_funct=vdw_12_6 only.
+'''
+
+def combine(mol, s1, s2, **params):
+    ''' override the nonbonded interaction for the given particles.  '''
+
+    # create combined table if needed
+    cbname = 'nonbonded_combined_param'
+    if not cbname in mol.auxtable_names:
+        print "Constructing %s table" % cbname
+        cb = msys.CreateParamTable()
+        cb.addProp('param1', int)
+        cb.addProp('param2', int)
+        for k,v in params.items():
+            cb.addProp(k, type(v))
+        mol.addAuxTable(cbname, cb)
+    else:
+        cb = mol.auxtable(cbname)
+
+    # perform atom selections _after_ cloning!
+    sel1 = mol.select(s1)
+    sel2 = mol.select(s2)
+
+    # duplicate the nonbonded params used by the input selections
+    nb = mol.table('nonbonded')
+    print "Nonbonded table has %d parameters" % nb.params.nparams
+    p1 = dict()
+    p2 = dict()
+    for t in nb.terms:
+        a = t.atoms[0]
+        if a in sel1: d = p1
+        elif a in sel2: d = p2
+        else: continue
+        p = t.param
+        newp = d.get(p.id)
+        if newp is None:
+            newp = p.duplicate()
+            d[p.id] = newp
+        t.param = newp
+        print "Particle %8d %4s %4s%-4d %6s : nbtype %4d -> %4d" % (
+                a.id, a.residue.chain.name, a.residue.name, 
+                a.residue.resid, a.name, p.id, newp.id)
+
+    print "Group A nbtypes:      %s" % sorted(p1.keys())
+    print "Group B nbtypes:      %s" % sorted(p2.keys())
+    print "New Group A-B Params: %s" % params
+    # override each p1, p2 combination
+    for i in p1.values():
+        for j in p2.values():
+            row = cb.addParam()
+            row['param1'] = i.id
+            row['param2'] = j.id
+            for k,v in params.items(): row[k]=v
+            # make the table symmetric
+            row = cb.addParam()
+            row['param1'] = j.id
+            row['param2'] = i.id
+            for k,v in params.items(): row[k]=v
+
+def main():
+    import optparse
+    parser = optparse.OptionParser(__doc__)
+
+    parser.add_option('--sigma', help='Vdw sigma')
+    parser.add_option('--epsilon', help='Vdw epsilon')
+    parser.add_option('--selection0', help='atom selection for first group')
+    parser.add_option('--selection1', help='atom selection for second group')
+
+    opts, args = parser.parse_args()
+    if len(args)!=2:
+        parser.error("incorrect number of arguments")
+    try:
+        sigma = float(opts.sigma)
+    except TypeError:
+        print >> sys.stderr, "Missing/invalid sigma '%s'" % (opts.sigma)
+        exit(1)
+    try:
+        epsilon = float(opts.epsilon)
+    except TypeError:
+        print >> sys.stderr, "Missing/invalid epsilon '%s'" % (opts.epsilon)
+        exit(1)
+
+    ifile, ofile = args
+    print "Loading DMS file <%s>" % ifile
+    mol=msys.LoadDMS(ifile)
+    s1=str(opts.selection0)
+    s2=str(opts.selection1)
+    combine(mol, s1, s2, **{'sigma' : sigma, 'epsilon' : epsilon })
+    print "Writing DMS file <%s>" % ofile
+    msys.SaveDMS(mol, ofile)
+
+if __name__=="__main__": main()
+
+# vim: filetype=python

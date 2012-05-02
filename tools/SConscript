@@ -49,6 +49,9 @@ env.AddScript('info/dms-diff')
 env.AddScript('info/dms-dump')
 env.AddScript('info/dms-info')
 
+# vdw
+env.AddScript('vdw/dms-combine-vdw')
+
 # other scripts
 env.AddScript('scripts/dms-macro')
 env.AddScript('scripts/dms-select')
