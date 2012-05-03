@@ -429,6 +429,9 @@ structure, preserving forcefield information from solute and water.
 
    Be chatty
 
+Deprecated in msys/1.3.4 in favor of viparr_solvate, present in viparr as
+of viparr/4.2.0.  viparr_solvate is able to add fully parameterized water
+molecules.
 
 dms-neutralize
 --------------

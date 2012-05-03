@@ -19,6 +19,9 @@ is built around the input system.  The output system will have no forcefield.
 With three argments, the provided water box is tiled around the input
 structure, preserving forcefield information from solute and water.
 
+** Deprecated in msys/1.3.4.  Will be removed in msys/1.4.0.  Use
+viparr_solvate from viparr4 instead. **
+
 '''
 
 import os, sys
