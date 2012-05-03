@@ -200,7 +200,7 @@ def Neutralize(mol, cation='NA', anion='CL',
         for i in range(nions, nions+nother):
             res=residues[i]
 
-            ionres=ionchain.addResidue()
+            ionres=otherchain.addResidue()
             ionres.resid=i+1-nions
             ionres.name=othertype.name
 

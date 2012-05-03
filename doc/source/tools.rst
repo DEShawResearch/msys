@@ -473,6 +473,15 @@ dms-neutralize
    Be chatty
 
 
+This tool has been deprecated in favor of the ``viparr_neutralize`` tool
+found in viparr/4.2.0 and later.  The reason for the deprecation is that
+the ions added by msys cannot be given any nonbonded information, but
+in order to run dms-neutralize correctly one must already know the charges
+on the solute atoms.  This means that in practice one must parameterize
+the system, run dms-neutralize, then parameterize it again, which is
+silly.  Since ``viparr_neutralize`` knows about forcefields, it can add
+fully parameterized ions to the system.
+
 dms-thermalize
 --------------
 
