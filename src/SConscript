@@ -83,6 +83,7 @@ param_table.cxx
 provenance.cxx
 system.cxx
 term_table.cxx
+tuples.cxx
 value.cxx
 
 atomsel.cxx
