@@ -122,7 +122,8 @@ desres::msys::CreateTuplesFromCombined( TermTablePtr base,
 
 }
 
-ParamTablePtr CreateCombinedFromTuples( TermTablePtr base,
+ParamTablePtr 
+desres::msys::CreateCombinedFromTuples( TermTablePtr base,
                                         TermTablePtr tuples ) {
 
     ParamTablePtr combined = ParamTable::create();

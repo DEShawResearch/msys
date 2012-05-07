@@ -1,5 +1,6 @@
 #include "wrap_obj.hxx"
 #include "term_table.hxx"
+#include "tuples.hxx"
 
 using namespace desres::msys;
 
@@ -101,6 +102,10 @@ namespace desres { namespace msys {
             /* coalesce */
             .def("coalesce",    &TermTable::coalesce)
             ;
+
+        /* tuples */
+        def("CreateTuplesFromCombined", CreateTuplesFromCombined);
+        def("CreateCombinedFromTuples", CreateCombinedFromTuples);
     }
 
 }}

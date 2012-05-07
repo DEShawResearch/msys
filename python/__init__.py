@@ -16,16 +16,10 @@ class Handle(object):
         self._id = _id
 
     def __eq__(self, x): 
-        try:
-            return self._id==x._id and self._ptr==x._ptr
-        except AttributeError:
-            return False
+        return self.__class__==type(x) and self._id==x._id and self._ptr==x._ptr
 
     def __ne__(self, x): 
-        try:
-            return self._id!=x._id or  self._ptr!=x._ptr
-        except AttributeError:
-            return True
+        return self.__class__!=type(x) or self._id!=x._id or self._ptr!=x._ptr
 
     def __hash__(self): return hash((self._ptr, self._id))
 

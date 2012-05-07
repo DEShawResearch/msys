@@ -147,6 +147,10 @@ class TestMain(unittest.TestCase):
         a2=m.addAtom()
         a3=m.addAtom()
         b=a2.addBond(a3)
+
+        self.assertTrue(a1!=b)
+        self.assertFalse(a1==b)
+
         self.assertEqual(b.system, m)
         self.assertEqual(b.first, a2)
         self.assertEqual(b.second, a3)
