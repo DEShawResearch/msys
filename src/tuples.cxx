@@ -2,6 +2,7 @@
 #include "system.hxx"
 #include <boost/lexical_cast.hpp>
 #include <map>
+#include <iostream>
 
 using namespace desres::msys;
 
@@ -63,7 +64,8 @@ desres::msys::CreateTuplesFromCombined( TermTablePtr base,
     }
 
     /* create mapping from base type to atoms with that type */
-    std::map<Id,IdList> typemap;
+    typedef std::map<Id,IdList> TypeMap;
+    TypeMap typemap;
     for (Id i=0; i<base->maxTermId(); i++) {
         if (!base->hasTerm(i)) continue;
         Id param = base->param(i);
@@ -87,10 +89,20 @@ desres::msys::CreateTuplesFromCombined( TermTablePtr base,
         for (Id j=0; j<N; j++) {
             Id param = combined->value(i,pcols[j]).asInt();
             plist[j] = param;
-            ntuples *= typemap[param].size();
+            TypeMap::const_iterator it=typemap.find(param);
+            if (it==typemap.end()) {
+                /* unused param!  Probably not a good thing. */
+                if (!params->hasParam(param)) {
+                    MSYS_FAIL("Row " << i << " in combined table references nonexistent param " << param << " in " << base->name());
+                }
+                ntuples=0;
+            } else {
+                ntuples *= typemap.at(param).size();
+            }
         }
         if (ntuples==0) {
-            MSYS_FAIL("Row " << i << " in combined table references nonexistent params in " << base->name());
+            std::cerr << "WARNING: Row " << i << " in combined table references unused params in " << base->name() << std::endl;
+            continue;
         }
         if (!combined_params.insert(plist).second) {
             MSYS_FAIL("Row " << i << " in combined table is a duplicate");
