@@ -243,15 +243,9 @@ class Chain(Handle):
 __add_properties(Chain, 'name', 'segid')
 
 
-class Param(object):
-    __slots__=('_ptr', '_id')
+class Param(Handle):
+    __slots__=()
 
-    def __init__(self, _ptr, _id):
-        self._ptr = _ptr
-        self._id  = _id
-
-    def __eq__(self, x): return self._id==x._id and self._ptr==x._ptr
-    def __ne__(self, x): return self._id!=x._id or  self._ptr!=x._ptr
     def __repr__(self): return '<Param %d>' % self._id
 
     @property
@@ -340,17 +334,8 @@ class ParamTable(object):
         ''' list of all Params in table '''
         return [Param(self._ptr, i) for i in self._ptr.params()]
 
-class Term(object):
-    __slots__=('_ptr', '_id')
-
-    def __init__(self, _ptr, _id):
-        self._ptr = _ptr
-        self._id  = _id
-
-    def __eq__(self, x): 
-        return self._id==x._id and self._ptr==x._ptr
-    def __ne__(self, x): 
-        return self._id!=x._id or  self._ptr!=x._ptr
+class Term(Handle):
+    __slots__=()
 
     def __repr__(self): return '<Term %d>' % self._id
 

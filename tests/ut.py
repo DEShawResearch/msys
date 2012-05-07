@@ -23,10 +23,10 @@ class TestCombined(unittest.TestCase):
         p1['sigma']=2
         p2['sigma']=3
         p3['sigma']=4
-        nb.addTerm([a0],p1)
-        nb.addTerm([a1],p2)
-        nb.addTerm([a2],p3)
-        nb.addTerm([a3],p4)
+        nb.addTerm([a0],p0)
+        nb.addTerm([a1],p1)
+        nb.addTerm([a2],p2)
+        nb.addTerm([a3],p3)
         self.m=m
         self.nb=nb
         self.tp=tp
@@ -121,6 +121,34 @@ class TestMain(unittest.TestCase):
         m.addAtom()
         for a in m.select('atomicnumber 17'): a.remove()
         self.assertEqual(0, len(m.select('atomicnumber 17')))
+
+    def testParamHandle(self):
+        params=msys.CreateParamTable()
+        p1=params.addParam()
+        p2=params.addParam()
+        self.assertTrue(p1==p1)
+        self.assertTrue(p1!=p2)
+        self.assertFalse(p1!=p1)
+        self.assertFalse(p1==p2)
+        p1b = params.param(0)
+        self.assertTrue(p1==p1b)
+        self.assertTrue(p1b!=p2)
+        self.assertFalse(p1b!=p1)
+        self.assertFalse(p1b==p2)
+
+        self.assertEqual(len(set((p1,p2))), 2)
+        self.assertEqual(len(set((p1,p1b))), 1)
+
+    def testTermHandle(self):
+        m=msys.CreateSystem()
+        a=m.addAtom()
+        T=m.addTable('foo', 1)
+        t1=T.addTerm([a], None)
+        t2=T.addTerm([a], None)
+        t1b=T.term(0)
+
+        self.assertEqual(len(set((t1,t2))), 2)
+        self.assertEqual(len(set((t1,t1b))), 1)
 
     def testCoalesce(self):
         m=msys.CreateSystem()
