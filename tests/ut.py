@@ -5,6 +5,50 @@ TMPDIR=os.getenv('TMPDIR', 'objs/Linux/x86_64')
 sys.path.insert(0,os.path.join(TMPDIR, 'lib', 'python'))
 import msys
 
+class TestCombined(unittest.TestCase):
+    ''' Testing for nonbonded combined. '''
+    def setUp(self):
+        m = msys.CreateSystem()
+        nb=m.addNonbondedFromSchema('vdw_12_6')
+        tp=m.addTable('nonbonded_combined', 2, nb.params)
+        a0=m.addAtom()
+        a1=m.addAtom()
+        a2=m.addAtom()
+        a3=m.addAtom()
+        p0=nb.params.addParam()
+        p1=nb.params.addParam()
+        p2=nb.params.addParam()
+        p3=nb.params.addParam()
+        p0['sigma']=1
+        p1['sigma']=2
+        p2['sigma']=3
+        p3['sigma']=4
+        nb.addTerm([a0],p1)
+        nb.addTerm([a1],p2)
+        nb.addTerm([a2],p3)
+        nb.addTerm([a3],p4)
+        self.m=m
+        self.nb=nb
+        self.tp=tp
+
+    def testCreate(self):
+        m=self.m
+        cb=msys.CreateParamTable()
+        nb=self.nb._ptr
+        tp=self.tp._ptr
+        # must have both param1 and param2 in cb
+        with self.assertRaises(RuntimeError):
+            msys._msys.CreateTuplesFromCombined(nb, cb._ptr, tp)
+        cb.addProp('param1', int)
+        cb.addProp('param2', int)
+
+        # empty cb
+        msys._msys.CreateTuplesFromCombined(nb, cb._ptr, tp)
+        self.assertFalse(self.tp.terms)
+
+
+
+
 class TestMain(unittest.TestCase):
 
     def testAtom(self):
