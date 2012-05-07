@@ -307,7 +307,6 @@ static void build_extra( SystemPtr mol, Destro& ff ) {
         if (name.substr(0,4)=="cmap") {
             std::string blockname("ffio_cmap");
             blockname += name.substr(4);
-            printf("addding cmap table %s\n", blockname.c_str());
             DestroArray& cmap = ff.new_array(blockname);
             cmap.add_schema('r', "ffio_ai");
             cmap.add_schema('r', "ffio_aj");
@@ -511,6 +510,7 @@ static void build_nonbonded(SystemPtr mol, TermTablePtr table, Destro& ffio_ff) 
     vdw.add_schema('s', "ffio_funct");
 
     /* construct mae columns names, and find corresponding param table cols */
+    ParamTablePtr params = table->params();
     std::vector<std::string> maecols(nprops);
     std::vector<Id> propcols(nprops);
     for (int i=0; i<nprops; i++) {
@@ -518,24 +518,41 @@ static void build_nonbonded(SystemPtr mol, TermTablePtr table, Destro& ffio_ff) 
         ss << "ffio_c" << i+1;
         vdw.add_schema('r', ss.str());
         maecols[i]=ss.str();
-        propcols[i] = table->params()->propIndex(vdwprops[i]);
+        propcols[i] = params->propIndex(vdwprops[i]);
     }
 
-    /* construct string keys for params */
+    /* construct string keys for params.  Use the "type" column if it
+     * exists and all its values are unique; otherwise construct a key
+     * from the param id. */
     std::vector<std::string> vdwtypes;
-
-    /* write the vdwtypes using its 1-based index as its name */
-    for (unsigned i=0; i<table->params()->paramCount(); i++) {
-        std::stringstream ss;
-        ss << i+1;
-        std::string key = ss.str();
-        vdwtypes.push_back(key);
+    Id type_col = BadId;
+    {
+        type_col = params->propIndex("type");
+        if (!bad(type_col)) {
+            std::set<std::string> types;
+            for (unsigned i=0; i<params->paramCount(); i++) {
+                if (!types.insert(params->value(i,type_col).asString()).second) {
+                    /* got a duplicate */
+                    type_col = BadId;
+                    break;
+                }
+            }
+        }
+    }
+    for (unsigned i=0; i<params->paramCount(); i++) {
+        if (bad(type_col)) {
+            std::stringstream ss;
+            ss << i+1;
+            vdwtypes.push_back(ss.str());
+        } else {
+            vdwtypes.push_back(params->value(i,type_col).asString());
+        }
 
         Destro& row = vdw.append();
-        row["ffio_name"]=key;
+        row["ffio_name"]=vdwtypes.back();
         row["ffio_funct"]=funct;
         for (int j=0; j<nprops; j++) {
-            row[maecols[j]] = table->params()->value(i,propcols[j]).asFloat();
+            row[maecols[j]] = params->value(i,propcols[j]).asFloat();
         }
     }
 
