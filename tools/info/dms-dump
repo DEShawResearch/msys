@@ -141,14 +141,18 @@ def dmsdump(ipath, out, without_provenance = False,
 
     atoms, params = get_columns(ipath, 'nonbonded_param')
     if without_paraminfo:
-        for p in ( 'id', 'ff', 'type', 'typekey', 'memo', 'comment',
-                         'ffA', 'typeA', 'typekeyA', 'memoA', 'commentA',
-                         'ffB', 'typeB', 'typekeyB', 'memoB', 'commentB',
+        for p in ( 'ff', 'type', 'typekey', 'memo', 'comment',
+                   'ffA', 'typeA', 'typekeyA', 'memoA', 'commentA',
+                   'ffB', 'typeB', 'typekeyB', 'memoB', 'commentB',
                       ):
             if p in params:
                 params.remove(p)
+    params.remove('id')
     params.sort()
-    s = ','.join(['nb.%s as %s' % (p,p) for p in params])
+    s=''
+    if not without_paraminfo:
+        s = 'nb.id as param, '
+    s += ','.join(['nb.%s as %s' % (p,p) for p in params])
     sql='select "nonbonded", p.id, %s from particle as p join nonbonded_param as nb on p.nbtype = nb.id' % s
     subprocess.call(cmd+[sql], stdout=out, stderr=subprocess.PIPE)
 
