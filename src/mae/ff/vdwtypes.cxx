@@ -35,6 +35,7 @@ namespace {
             TermTablePtr table = AddNonbonded(h,funct, vdwmap.rule());
             TermTablePtr atable;
             ParamTablePtr params = table->params();
+            Id typecol = params->addProp("type", StringType);
 
             typedef std::map<VdwType, Id> TypeMap;
             TypeMap map;
@@ -51,9 +52,10 @@ namespace {
                     TypeMap::const_iterator e = map.find(type);
                     if (e==map.end()) {
                         p[j] = map[type] = params->addParam();
+                        params->value(p[j], typecol) = type;
                         const VdwParam& vals = vdwmap.param(type);
-                        for (Id k=0; k<params->propCount(); k++) {
-                            params->value(p[j], k) = vals.at(k);
+                        for (Id k=0; k<vals.size(); k++) {
+                            params->value(p[j], k) = vals[k];
                         }
                     } else {
                         p[j] = e->second;
