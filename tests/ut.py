@@ -23,31 +23,47 @@ class TestCombined(unittest.TestCase):
         p1['sigma']=2
         p2['sigma']=3
         p3['sigma']=4
+
         nb.addTerm([a0],p0)
         nb.addTerm([a1],p1)
         nb.addTerm([a2],p2)
         nb.addTerm([a3],p3)
+
+        cb=msys.CreateParamTable()
+        cb.addProp('param1', int)
+        cb.addProp('param2', int)
+        cb.addProp('sigma', float)
+        cb.addProp('epsilon', float)
+
         self.m=m
         self.nb=nb
         self.tp=tp
+        self.cb=cb
 
-    def testCreate(self):
-        m=self.m
-        cb=msys.CreateParamTable()
-        nb=self.nb._ptr
-        tp=self.tp._ptr
-        # must have both param1 and param2 in cb
-        with self.assertRaises(RuntimeError):
-            msys._msys.CreateTuplesFromCombined(nb, cb._ptr, tp)
-        cb.addProp('param1', int)
-        cb.addProp('param2', int)
+    def make_tuples(self):
+        msys._msys.CreateTuplesFromCombined( 
+                self.nb._ptr, self.cb._ptr, self.tp._ptr)
 
-        # empty cb
-        msys._msys.CreateTuplesFromCombined(nb, cb._ptr, tp)
+    def testEmpty(self):
+        self.make_tuples()
         self.assertFalse(self.tp.terms)
 
+    def testOne(self):
+        p=self.cb.addParam()
+        p['param1']=0
+        p['param2']=1
+        self.make_tuples()
+        self.assertEqual(len(self.tp.terms), 1)
+        self.assertEqual(self.tp.term(0).atoms, self.m.atoms[:2])
 
-
+    def testOverlap(self):
+        p=self.cb.addParam()
+        p['param1']=0
+        p['param2']=1
+        p=self.cb.addParam()
+        p['param1']=0
+        p['param2']=2
+        self.make_tuples()
 
 class TestMain(unittest.TestCase):
 
