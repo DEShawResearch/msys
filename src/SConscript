@@ -8,7 +8,12 @@ def build_version_hxx( target, source, env ):
     g=dict()
     execfile(source[0].path, g)
     verstr=g['msys_version']
-    major, minor, micro = verstr.split('.')
+    dash = verstr.find('-')
+    if dash != -1:
+        nice_verstr = verstr[:dash]
+    else:
+        nice_verstr = verstr
+    major, minor, micro = nice_verstr.split('.')
     fd=file(target[0].path, 'w')
     print >> fd, "#define MSYS_VERSION \"%s\"" % verstr
     for x in 'major', 'minor', 'micro':
