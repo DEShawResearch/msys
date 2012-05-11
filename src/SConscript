@@ -102,6 +102,6 @@ atomsel/VmdParser.c
 atomsel/within_predicate.cxx
 '''))
 
-env.Alias('install', env.Install('$PREFIX/include/msys', Glob("*.hxx")))
+env.AddStagedHeaders(Glob("*.hxx"), prefix='msys')
 
 Export("libmsys")
