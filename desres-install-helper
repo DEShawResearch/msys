@@ -88,6 +88,8 @@ genhelp() {
 See documentation in 
 http://gardendoc.nyc.desres.deshaw.com/$NAME/$VERSION/doc/html/index.html
 
+1.3.5  Internal changes to facilitate inclusion in larger builds.
+
 1.3.4  DEPRECATED: dms-neutralize, dms-solvate.
        Fixed typo in dms-neutralize.  
        Fixed equality checks between msys handles of different type.
