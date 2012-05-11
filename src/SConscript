@@ -5,7 +5,9 @@ env.Append(CPPPATH=['$OBJDIR/src'])
 
 def build_version_hxx( target, source, env ):
     import os
-    verstr=os.environ['MSYS_VERSION']
+    g=dict()
+    execfile(source[0].path, g)
+    verstr=g['msys_version']
     major, minor, micro = verstr.split('.')
     fd=file(target[0].path, 'w')
     print >> fd, "#define MSYS_VERSION \"%s\"" % verstr
@@ -19,7 +21,7 @@ def build_version_hxx( target, source, env ):
 
     fd.close()
 
-env.Command('version.hxx', '#desres-install-helper', build_version_hxx )
+env.Command('version.hxx', 'version.py', build_version_hxx )
 
 libmsys=env.AddLibrary('msys', Split('''
 
