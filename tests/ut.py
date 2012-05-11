@@ -5,6 +5,54 @@ TMPDIR=os.getenv('TMPDIR', 'objs/Linux/x86_64')
 sys.path.insert(0,os.path.join(TMPDIR, 'lib', 'python'))
 import msys
 
+class TestCombine1(unittest.TestCase):
+    def testOverlap(self):
+        m=msys.CreateSystem()
+        nb=m.addTable("nonbonded", 1)
+        params=nb.params
+        params.addProp('s', float)
+        cb=m.addTable("combined", 2, params)
+
+        a0=m.addAtom()
+        a1=m.addAtom()
+        a2=m.addAtom()
+        a3=m.addAtom()
+        a4=m.addAtom()
+
+        p0=params.addParam()
+        p1=params.addParam()
+        p2=params.addParam()
+        p3=params.addParam()
+        p0['s']=0
+        p1['s']=1
+        p2['s']=2
+        p3['s']=3
+
+        nb.addTerm([a0], p0)
+        nb.addTerm([a1], p0)
+        nb.addTerm([a2], p0)
+        nb.addTerm([a3], p1)
+        nb.addTerm([a4], p1)
+
+        cb.addTerm([a0,a3], p2)
+        cb.addTerm([a0,a4], p3)
+
+        # give each particle its own type, then coalesce and clone.  what
+        # do we get?
+        for t in nb.terms: t.param = t.param.duplicate()
+        m.coalesceTables()
+        m2=m.clone()
+        nb2=m2.table('nonbonded')
+        cb2=m2.table('combined')
+
+        #print "nb params: %d -> %d" % (
+                #params.nparams, nb2.params.nparams)
+        #print "nb1 params:", [(t.param.id, t.param['s']) for t in nb.terms]
+        #print "cb1 params:", [(t.param.id, t.param['s']) for t in cb.terms]
+        #print "nb2 params:", [(t.param.id, t.param['s']) for t in nb2.terms]
+        #print "cb2 params:", [(t.param.id, t.param['s']) for t in cb2.terms]
+
+
 class TestCombined(unittest.TestCase):
     ''' Testing for nonbonded combined. '''
     def setUp(self):
