@@ -9,6 +9,23 @@
 using namespace desres::msys;
 namespace bfs = boost::filesystem;
 
+#ifndef _MSC_VER
+#include <unistd.h>
+#else
+#endif
+
+static std::string executable_path(const char* argv0) {
+#ifndef _MSC_VER
+    char buf[1024];
+    ssize_t rc = readlink("/proc/self/exe", buf, sizeof(buf));
+    if (rc<0 || rc==1024) return argv0;
+    buf[rc]='\0';
+    return buf;
+#else
+    return argv0;
+#endif
+}
+
 Provenance Provenance::fromArgs(int argc, char *argv[]) {
     Provenance prov;
 
@@ -48,6 +65,9 @@ Provenance Provenance::fromArgs(int argc, char *argv[]) {
         prov.cmdline += argv[i];
         if (i!=argc-1) prov.cmdline += " ";
     }
+
+    /* executable */
+    prov.executable = executable_path(argv[0]);
 
     return prov;
 }

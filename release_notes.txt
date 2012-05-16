@@ -1,0 +1,162 @@
+1.3.6  Added executable path to provenance.
+
+1.3.5  Internal changes to facilitate inclusion in larger builds.
+
+1.3.4  DEPRECATED: dms-neutralize, dms-solvate.
+       Fixed typo in dms-neutralize.  
+       Fixed equality checks between msys handles of different type.
+       Fixed hashing of Term and Param handles.
+       Fixed dms-dump nonbonded output for nonbonded param.
+       mae2dms and dms2mae now try to preserve ffio_vdwtype names.
+
+1.3.3  Added dms-combine-vdw.
+
+1.3.2  Using 73-Desmond modules.
+
+1.3.1  Fix ImportMAE handling of virtuals (broken in 1.3.0).
+       Turn off type checking of particle and bond tables.
+       Fix GuessAtomicNumber (affects ReadParmTop only).
+
+1.3.0  Alchemical terms now appear in their own TermTable, and the paramB
+       interfaces have been removed.
+       
+       Alchemical particles are now listed in an "alchemical_nonbonded" table;
+       the chargeB, moiety, and alchemical properties have been removed.
+
+       Alchemical particles can have arbitrary term properties, including
+       "chargeC".
+
+       Msys can now detect sharing of parameters by TermTables that share
+       a ParamTable, not just within a single TermTable.
+
+1.2.5  Export/import formal_charge to/from dms.
+
+1.2.4  Avoid exporting std::vector of primitive types to python.
+       Prmtop import bugfix for when torsions contain negative force constants
+
+1.2.3  Export version info to python.
+
+1.2.2  Module file now adds the -lmsys to DESRES_MODULE_LDLIBS
+
+1.2.1  Much improved support for glue, including in clone() and append()
+       operations.  The glue table has been renamed to msys_glue, though
+       msys will still read from both tables and merge the two.
+
+       dms-thermalize: the random seed is now 1 by default so that results
+       are reproducible.  
+
+1.2.0  segid is now a property of Chain.  
+       New tools: dms-set and dms-macro
+
+1.1.1  dms-neutralize: fix for positive solute charge (DESRESCode#1352)
+       dms-neutralize: remove ions if needed to achieve specified concentration
+       Fix bug in atom selections on systems with deleted atoms
+
+1.1.0  Added user-defined atom selection macros.
+       New atom selection documentation.
+       Bumped the minor version since selection macros are visible in the
+       dms file.
+
+1.0.13 Disambiguate residues by segid (DESRESCode#1345,1346)
+
+1.0.12 dms-builder fixes
+
+1.0.11 Fixed a memory corruption bug in the dms reading code.
+
+1.0.10 neutralize: set the residue name of ions equal to the atom name.
+       builder: preliminary support for charmm36.
+       builder: guess atom type based on name if not provided in top file.
+       
+1.0.9  msys.Load() supports .maeff and .maeff.gz now.
+       Documentation for DMS files converted from Desmond documentation.
+       dms-validate --desmond to check for bonds between nonbonded atoms.
+
+1.0.8  gzipped dms files are detected and handled automatically.
+       Added msys.Load() for guessing file type from filename.
+       dms-info works now on dms, mae, and prmtop files.
+       Documentation for dms-validate.
+
+1.0.7  Support for importing Amber prmtop and crd files.
+       Update fastjson dependency.
+       Documentation fixes.
+
+1.0.6  Anton version: aligning dependencies with treetop/43-Anton. 
+       Blame scarpazz.
+
+1.0.5  System.positions property.
+
+1.0.4  Typo in dms-validate.
+
+1.0.3  Bugfix: clone() and append() did not copy auxiliary tables (e.g. cmap).
+
+1.0.2  Internal: fix symbol conflicts with other packages.
+
+1.0.1  Documentation updates.
+       Added dms-posre.
+
+1.0.0  First stable release.
+
+----------------------------
+
+0.9.8  No more atom gid property.
+
+0.9.7  dms-validate --strict rejects sparsified files.
+       TermTables can be coalesced so as to use a minimal set of params.
+       dms-alchemical creates svelter dms files.
+       dms-alchemical - various bug fixes, added test suite.
+
+0.9.6  getitem and setitem on Terms now operates on just that Term.
+       dms-alchemical: handle missing dihedral and pair tables.
+
+0.9.5  Support vdw_exp_6s.
+       C++: TermTable.category is now an enum.
+       SaveDMS is now 10-30x faster.
+       Rewrite of dms-solvate - can now provide your own water box.
+       AppendSystem checks for compatible vdw_funct.
+
+0.9.4  mae2dms: support vdw_exp_6
+       Removed some extraneous Python interface methods
+       Renamed *prop_names to props, and eliminated *prop_types.
+       Added support for modulo (%) operator in atom selections.
+       Renamed Residue.num to Residue.resid.
+       Renamed System.extra to System.auxtable, etc.
+       Added System.clone().
+       Documentation updates.
+
+0.9.2  Support reading MAE from stream.
+       Support reading DMS from buffer.
+       Interface improvement for dms-grease.
+
+0.9.1  Fix regex parsing in the atom selection grammar.
+       Read and write provenance, including msys version.
+       ImportMAE: handle gzipped files.
+       ImportDMS: read from internal buffer, avoiding file locking issues.
+       Documentation.
+
+0.9.0  ImportMAE no longer overrides chain with segid.
+       Much stricter dms exporter.
+       ImportDMS merges chains with the same name.
+       Rename destroy() to remove() in the python interface.
+       Add dms-fep.
+       Fix busted --reorder option in dms-diff.
+       Allow atom selections on any custom atom property.
+       Bugfix for append - copy custom atom and bond properties.
+       
+0.8.3  Bugfix: SaveDMS was incorrectly mapping custom term properties (e.g.
+               "constrained") into the view statements.
+
+0.8.2  Bugfix for LoadDMS(structure_only=True) for files with bonds to pseudos.
+
+0.8.0  LoadDMS(..., structure_only=True) now skips reading pseudos.
+       dms-dump (and dms-diff) no longer reorder terms by default.
+       dms-info got faster.
+
+0.7.3  Simple dms-grease
+       pbwithin selection
+       Better error checking on dms import.
+       Support for the pseudopol_fermi term.
+
+0.7.2  Added dms-info
+0.7.0  Many new tools.
+0.6.2  Documentation
+

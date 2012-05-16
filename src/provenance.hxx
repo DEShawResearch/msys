@@ -11,6 +11,7 @@ namespace desres { namespace msys {
         String user;
         String workdir;
         String cmdline;
+        String executable;
 
         static Provenance fromArgs(int argc, char *argv[]);
     };

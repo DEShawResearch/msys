@@ -395,6 +395,7 @@ static void read_provenance( Sqlite dms, System& sys, KnownSet& known) {
         int user = r.column( "user");
         int workdir = r.column( "workdir");
         int cmdline = r.column( "cmdline");
+        int executable = r.column("executable");
 
         for (; r; r.next()) {
             Provenance p;
@@ -403,6 +404,7 @@ static void read_provenance( Sqlite dms, System& sys, KnownSet& known) {
             if (user>=0)      p.user      = r.get_str( user);
             if (workdir>=0)   p.workdir   = r.get_str( workdir);
             if (cmdline>=0)   p.cmdline   = r.get_str( cmdline);
+            if (executable>=0) p.executable=r.get_str(executable);
             sys.addProvenance(p);
         }
     }

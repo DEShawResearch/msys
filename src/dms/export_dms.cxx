@@ -440,7 +440,8 @@ static void export_provenance(System const& sys, Provenance const& provenance,
             "  timestamp text,\n"
             "  user text,\n"
             "  workdir text,\n"
-            "  cmdline text)");
+            "  cmdline text,\n"
+            "  executable text)");
     Writer w = dms.insert("provenance");
     dms.exec( "begin");
     for (unsigned i=0; i<prov.size(); i++) {
@@ -449,6 +450,7 @@ static void export_provenance(System const& sys, Provenance const& provenance,
         w.bind_str( 3, prov[i].user.c_str());
         w.bind_str( 4, prov[i].workdir.c_str());
         w.bind_str( 5, prov[i].cmdline.c_str());
+        w.bind_str( 6, prov[i].executable.c_str());
         w.next();
     }
     dms.exec( "commit");
