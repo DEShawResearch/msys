@@ -8,10 +8,10 @@
 extern "C" {
 #endif
 
-int charmm_get_tokens(char **tok, int toklen,
-			char *sbuf, int sbuflen,
-			FILE *stream, int all_caps,
-                        int* nread);
+int desres_msys_charmm_get_tokens(char **tok, int toklen,
+			          char *sbuf, int sbuflen,
+			          FILE *stream, int all_caps,
+                                  int* nread);
 
 #ifdef __cplusplus
 }

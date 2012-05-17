@@ -181,7 +181,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
 
     resdef_t * res = NULL;
 
-    while ( (ntok = charmm_get_tokens(tok,TOKLEN,sbuf,BUFLEN,file,all_caps, &lineno)) ) {
+    while ( (ntok = desres_msys_charmm_get_tokens(tok,TOKLEN,sbuf,BUFLEN,file,all_caps, &lineno)) ) {
         if ( ! tok[0][0] ) {
             print_msg(v,tok[1]);
             continue;
@@ -246,7 +246,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
             debug_msg("Recognized donor statement.");
 
         } else if ( ! strncasecmp("BONDS",tok[0], 5)) {
-            while ( (ntok = charmm_get_tokens(tok,TOKLEN,sbuf,BUFLEN,file,all_caps, &lineno)) ) {
+            while ( (ntok = desres_msys_charmm_get_tokens(tok,TOKLEN,sbuf,BUFLEN,file,all_caps, &lineno)) ) {
                 if ( ! tok[0][0] ) {
                     continue;
                 }
@@ -349,7 +349,7 @@ void defs_t::import_charmm_topology(std::string const& path) {
         }
         else if ( ! strncasecmp("ATOMS", tok[0], 5)) {
             /* read atom records until we encounter an "end" line */
-            while ( (ntok = charmm_get_tokens(tok,TOKLEN,sbuf,BUFLEN,file,all_caps, &lineno)) ) {
+            while ( (ntok = desres_msys_charmm_get_tokens(tok,TOKLEN,sbuf,BUFLEN,file,all_caps, &lineno)) ) {
                 if ( ! tok[0][0] ) {
                     continue;
                 }

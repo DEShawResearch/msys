@@ -37,14 +37,14 @@ SystemPtr desres::msys::ImportPDB( std::string const& path ) {
 
     int indx=PDB_EOF;
     do {
-        indx = read_pdb_record(fd, pdbstr);
+        indx = desres_msys_read_pdb_record(fd, pdbstr);
         if (indx == PDB_ATOM) {
             int serial, resid;
             char name[32], resname[32], chainname[32], segid[32], residstr[32];
             char insertion[4], altloc[4], element[4];
             float x, y, z, occup, beta;
 
-            get_pdb_fields(pdbstr, PDB_BUFFER_LENGTH, &serial,
+            desres_msys_get_pdb_fields(pdbstr, PDB_BUFFER_LENGTH, &serial,
                     name, resname, chainname,
                     segid, residstr, insertion, altloc, element,
                     &x, &y, &z, &occup, &beta);

@@ -40,22 +40,22 @@ enum {
    in the given string pointer (the caller must provide adequate (81 chars)
    buffer space); return the type of record found
 */
-int read_pdb_record(FILE *f, char *retStr);
+int desres_msys_read_pdb_record(FILE *f, char *retStr);
 
 /* Extract the alpha/beta/gamma a/b/c unit cell info from a CRYST1 record */
-void get_pdb_cryst1(const char *record, 
+void desres_msys_get_pdb_cryst1(const char *record, 
                            float *alpha, float *beta, float *gamma, 
                            float *a, float *b, float *c);
 
 /* Extract the x,y,z coords, occupancy, and beta from an ATOM record */
-void get_pdb_coordinates(const char *record, 
+void desres_msys_get_pdb_coordinates(const char *record, 
                          float *x, float *y, float *z,
                          float *occup, float *beta);
 
-void get_pdb_header(const char *record, char *pdbcode, char *date,
+void desres_msys_get_pdb_header(const char *record, char *pdbcode, char *date,
                            char *classification);
 
-void get_pdb_conect(const char *record, int natoms, int *idxmap,
+void desres_msys_get_pdb_conect(const char *record, int natoms, int *idxmap,
                            int *maxbnum, int *nbonds, int **from, int **to);
 
 /* ATOM field format according to PDB standard v2.2
@@ -83,7 +83,7 @@ void get_pdb_conect(const char *record, int natoms, int *idxmap,
    necessary space to store the atom name, residue name, and segment name.
    Character strings will be null-terminated.
 */
-void get_pdb_fields(const char *record, int reclength, int *serial,
+void desres_msys_get_pdb_fields(const char *record, int reclength, int *serial,
                     char *name, char *resname, char *chain, 
                     char *segname, char *resid, char *insertion, 
                     char *altloc, char *elementsymbol,

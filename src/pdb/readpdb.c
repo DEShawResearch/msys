@@ -17,7 +17,7 @@
 
 #include "readpdb.h"
 
-int read_pdb_record(FILE *f, char *retStr) {
+int desres_msys_read_pdb_record(FILE *f, char *retStr) {
   int ch;
   char inbuf[PDB_BUFFER_LENGTH]; /* space for line + cr + lf + NUL */
   int recType = PDB_UNKNOWN;
@@ -91,7 +91,7 @@ int read_pdb_record(FILE *f, char *retStr) {
 
 
 /* Extract the alpha/beta/gamma a/b/c unit cell info from a CRYST1 record */
-void get_pdb_cryst1(const char *record, 
+void desres_msys_get_pdb_cryst1(const char *record, 
                            float *alpha, float *beta, float *gamma, 
                            float *a, float *b, float *c) {
   char tmp[PDB_RECORD_LENGTH+3]; /* space for line + cr + lf + NUL */
@@ -115,7 +115,7 @@ void get_pdb_cryst1(const char *record,
 
 
 /* Extract the x,y,z coords, occupancy, and beta from an ATOM record */
-void get_pdb_coordinates(const char *record, 
+void desres_msys_get_pdb_coordinates(const char *record, 
                                 float *x, float *y, float *z,
                                 float *occup, float *beta) {
   char numstr[50]; /* store all fields in one array to save memset calls */
@@ -165,7 +165,7 @@ static void adjust_pdb_field_string(char *field) {
   }
 }
 
-void get_pdb_header(const char *record, char *pdbcode, char *date,
+void desres_msys_get_pdb_header(const char *record, char *pdbcode, char *date,
                            char *classification) {
   if (date != NULL) {
     strncpy(date, record + 50, 9);
@@ -185,7 +185,7 @@ void get_pdb_header(const char *record, char *pdbcode, char *date,
 }
 
 
-void get_pdb_conect(const char *record, int natoms, int *idxmap,
+void desres_msys_get_pdb_conect(const char *record, int natoms, int *idxmap,
                            int *maxbnum, int *nbonds, int **from, int **to) {
   int bondto[11], numbonds, i;
 
@@ -262,7 +262,7 @@ void get_pdb_conect(const char *record, int natoms, int *idxmap,
    necessary space to store the atom name, residue name, and segment name.
    Character strings will be null-terminated.
 */
-void get_pdb_fields(const char *record, int reclength, int *serial,
+void desres_msys_get_pdb_fields(const char *record, int reclength, int *serial,
                            char *name, char *resname, char *chain, 
                            char *segname, char *resid, char *insertion, 
                            char *altloc, char *elementsymbol,
@@ -304,7 +304,7 @@ void get_pdb_fields(const char *record, int reclength, int *serial,
   insertion[1] = '\0';
 
   /* get x, y, and z coordinates */
-  get_pdb_coordinates(record, x, y, z, occup, beta);
+  desres_msys_get_pdb_coordinates(record, x, y, z, occup, beta);
 
   /* get segment name */
   if (reclength >= 73) {
