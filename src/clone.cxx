@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <boost/unordered_map.hpp>
+#include <boost/foreach.hpp>
 
 using namespace desres::msys;
 
@@ -213,10 +214,11 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms ) {
         }
     }
 
-    /* copy all global data */
+    /* copy all top-level data */
     dst->name = src->name;
     dst->global_cell = src->global_cell;
     dst->nonbonded_info = src->nonbonded_info;
+    BOOST_FOREACH(Provenance const& p, src->provenance()) dst->addProvenance(p);
 
     /* add/replace extra tables */
     std::vector<String> extras = src->auxTableNames();

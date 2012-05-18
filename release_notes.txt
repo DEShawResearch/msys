@@ -1,3 +1,13 @@
+1.4.0  The nonbonded_combined_param is now loaded into a TermTable
+       called nonbonded_combined which has a new category called override.
+       No change to the dms representation, but code that uses msys must
+       use the new API in override.hxx to handle vdw overrides.
+
+       The clone() method now copies provenance.
+
+       Reimplemented dms-combine-vdw correctly and renamed it to
+       dms-override-vdw.
+
 1.3.7  Hide functions that can conflict with other shared libraries.
 
 1.3.6  Added executable path to provenance.

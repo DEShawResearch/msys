@@ -50,7 +50,8 @@ env.AddScript('info/dms-dump')
 env.AddScript('info/dms-info')
 
 # vdw
-env.AddScript('vdw/dms-combine-vdw')
+env.AddPythonModule('vdw/vdw.py', prefix='msys')
+env.AddScript('vdw/dms-override-vdw')
 
 # other scripts
 env.AddScript('scripts/dms-macro')

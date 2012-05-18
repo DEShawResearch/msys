@@ -41,68 +41,23 @@ interaction.
 
 The DMS and MAE file formats allow one to specify nonbonded types whose
 combined values are to be taken from a table, rather than computed
-according to a combining rule.  The way this is done is through an
-auxiliary table named "nonbonded_combined_param".  This table should
-have the same properties as the nonbonded table, and in addition
-the integer properties "param1" and "param2", which refer to the id
-of the nonbonded paramter being overridden.  
+according to a combining rule.  In Msys, it is not possible to store
+this type of table directly, because each `Term` in a `TermTable`
+references only one `Param`, whereas an interaction override involves two.
+Storing the combined tables as an auxiliary table isn't acceptable,
+either, because any change to the particle nonbonded assignment would
+silently break the intended override.
 
-For example, suppose one wishes to zero out the vdw interaction between
-atoms with ids 100 and 200.  Here is a script that will create a
-new nonbonded combined table and override the interaction between just
-those two particles::
+Instead, when Msys loads a "nonbonded_combined_param" table from a DMS
+file, it creates a two-particle `TermTable` called "nonbonded_combined"
+which holds the interaction override for each affect pair of particles.
+The category of this table is "OVERRIDE", which lets Msys recognize
+the table on DMS export and convert it back to its original form.
 
-  # load the system and fetch the nonbonded table
-  mol=msys.LoadDMS('input.dms')
-  nb=mol.table('nonbonded')
-
-  # create the nonbonded combined table
-  combined = msys.CreateParamTable()
-  combined.addProp('param1', int)
-  combined.addProp('param2', int)
-  combined.addProp('sigma', float)
-  combined.addProp('epsilon', float)
-
-  # add the nonbonded combined table to the system
-  mol.addAuxTable('nonbonded_combined_param', combined)
-
-  # find the nonbonded parameters for the two atoms, and duplicate them.
-  a1=mol.atom(100)
-  a2=mol.atom(200)
-  p1=None
-  p2=None
-  for t in nb.terms:
-    if t.atoms[0]==a1:
-      p1=t.param.duplicate()
-      t.param=p1
-    elif t.atoms[0]==a2:
-      p2=t.param.duplicate()
-      t.param=p2
-  assert p1 is not None and p2 is not None
-
-  # add a row to nonbonded combined for the these two parameters
-  row = combined.addParam()
-  row['param1'] = p1.id
-  row['param2'] = p2.id
-  row['sigma'] = 0.0
-  row['epsilon'] = 1.0
-
-  # paranoia: make the nonbonded combined table symmetric
-  row = combined.addParam()
-  row['param1'] = p2.id
-  row['param2'] = p1.id # swapped p1 and p2
-  row['sigma'] = 0.0
-  row['epsilon'] = 1.0
-
-  # save the result
-  msys.SaveDMS(mol, 'combined.dms')
-
-We duplicated the parameters for particles 100 and 200 because those
-entries in the parameter table may be in use by other particles, and
-we did not want to affect the interactions of any particles except
-that pair.  In the new system, particles 100 and 200 will experience no
-vdw interaction with each other, though they will experience the same
-electrostatic interaction as before.
+The 'msys.vdw.Combine' function implements the operation of overriding
+the interaction between two sets of particles while leaving the other
+interactions alone.  The 'dms-override-vdw' script wraps this operation
+in a command line tool.
 
 Alchemical nonbonded interactions
 =================================

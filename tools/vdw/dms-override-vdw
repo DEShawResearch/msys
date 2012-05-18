@@ -1,0 +1,56 @@
+#!/usr/bin/env desres-exec
+#{
+# desres-cleanenv $MSYS_CLEANENV -- python $0 "$@"
+#}
+
+'''
+dms-override-vdw input.dms output.dms [ options ]
+
+Override vdw interactions between selected atoms.
+
+Restrictions: produces a nonbonded_overrided_param table and therefore
+              may not be usable on Anton.
+
+              Works for vdw_funct=vdw_12_6 only.
+'''
+
+import msys, sys
+from msys import vdw
+
+def main():
+    import optparse
+    parser = optparse.OptionParser(__doc__)
+
+    parser.add_option('--sigma', help='Vdw sigma')
+    parser.add_option('--epsilon', help='Vdw epsilon')
+    parser.add_option('--selection0', help='atom selection for first group')
+    parser.add_option('--selection1', help='atom selection for second group')
+
+    opts, args = parser.parse_args()
+    if len(args)!=2:
+        parser.error("incorrect number of arguments")
+    try:
+        sigma = float(opts.sigma)
+    except TypeError:
+        print >> sys.stderr, "Missing/invalid sigma '%s'" % (opts.sigma)
+        exit(1)
+    try:
+        epsilon = float(opts.epsilon)
+    except TypeError:
+        print >> sys.stderr, "Missing/invalid epsilon '%s'" % (opts.epsilon)
+        exit(1)
+
+    ifile, ofile = args
+    print "Loading DMS file <%s>" % ifile
+    mol=msys.LoadDMS(ifile)
+    s1=str(opts.selection0)
+    s2=str(opts.selection1)
+    vdw.Override(mol, s1, s2, **{'sigma' : sigma, 'epsilon' : epsilon })
+    mol.coalesceTables()
+    mol = mol.clone()
+    print "Writing DMS file <%s>" % ofile
+    msys.SaveDMS(mol, ofile)
+
+if __name__=="__main__": main()
+
+# vim: filetype=python

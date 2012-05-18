@@ -26,8 +26,6 @@ groups:
 
    - cmap tables
 
-   - nonbonded_combined_param (see the Nonbonded section)
-
    - forcefield (annotation for parameters in the DMS file)
 
 

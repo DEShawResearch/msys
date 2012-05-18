@@ -209,7 +209,8 @@ static const char* category_names[] = {
     "virtual",
     "polar",
     "nonbonded",
-    "exclusion"
+    "exclusion",
+    "override"
 };
 static const unsigned ncategories = sizeof(category_names)/sizeof(char *);
 

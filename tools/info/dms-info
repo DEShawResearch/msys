@@ -75,6 +75,7 @@ def print_info(mol):
         print "%12s: %s" % ("version", p.version)
         print "%12s: %s" % ("workdir", p.workdir)
         print "%12s: %s" % ("cmdline", p.cmdline)
+        print "%12s: %s" % ("executable", p.executable)
         print
 
 

@@ -1,6 +1,7 @@
 #include "dms.hxx"
 #include "../dms.hxx"
 #include "../term_table.hxx"
+#include "../override.hxx"
 
 #include <sstream>
 #include <stdio.h>
@@ -359,6 +360,40 @@ static void export_nonbonded( TermTablePtr table, Sqlite dms) {
     }
 }
 
+static void export_override( TermTablePtr tuples, Sqlite dms) {
+    /* expect the part of the name before the first underscore to be
+     * the name of the table to be overridden. */
+    std::string name = tuples->name();
+    size_t loc = name.find('_');
+    if (loc==std::string::npos) {
+        MSYS_FAIL("Missing underscore in override table " << name);
+    }
+    std::string basename = name.substr(0,loc);
+    TermTablePtr base = tuples->system()->table(basename);
+    if (!base) {
+        MSYS_FAIL("Missing expected table '" << basename << "' as target of override table '" << name << "'");
+    }
+    OverrideMap map = FindOverridesFromTuples(base, tuples);
+
+    /* convert dictionary into a param table */
+    ParamTablePtr params = ParamTable::create();
+    params->addProp("param1", IntType);
+    params->addProp("param2", IntType);
+    for (Id i=0; i<tuples->params()->propCount(); i++) {
+        params->addProp(tuples->params()->propName(i), 
+                        tuples->params()->propType(i));
+    }
+    for (OverrideMap::const_iterator it=map.begin(); it!=map.end(); ++it) {
+        Id p = params->addParam();
+        params->value(p,0) = it->first.first;
+        params->value(p,1) = it->first.second;
+        for (Id i=2; i<params->propCount(); i++) {
+            params->value(p,i) = tuples->params()->value(it->second, i-2);
+        }
+    }
+    export_params(params, name+"_param", dms, false);
+}
+
 static void export_meta( TermTablePtr table, const std::string& name, 
         Sqlite dms) {
     std::string sql("insert into ");
@@ -387,6 +422,8 @@ static void export_tables( const System& sys, const IdList& map, Sqlite dms) {
             export_exclusion(table, map, dms);
         } else if (table->category==NONBONDED) {
             export_nonbonded(table, dms);
+        } else if (table->category==OVERRIDE) {
+            export_override(table, dms);
         } else {
             export_terms(table, map, name+"_term", dms);
             export_params(table->params(), name+"_param", dms);

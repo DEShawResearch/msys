@@ -21,7 +21,8 @@ namespace desres { namespace msys {
         VIRTUAL     = 3,
         POLAR       = 4,
         NONBONDED   = 5,
-        EXCLUSION   = 6
+        EXCLUSION   = 6,
+        OVERRIDE    = 7
     };
 
     /* convert category to string */

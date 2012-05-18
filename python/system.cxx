@@ -275,6 +275,7 @@ namespace desres { namespace msys {
             .def_readwrite("user", &Provenance::user)
             .def_readwrite("workdir", &Provenance::workdir)
             .def_readwrite("cmdline", &Provenance::cmdline)
+            .def_readwrite("executable", &Provenance::executable)
             ;
 
         def("ImportDMS", ImportDMS);

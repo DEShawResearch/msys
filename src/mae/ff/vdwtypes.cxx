@@ -1,4 +1,5 @@
 #include "../ff.hxx"
+#include "../../override.hxx"
 //#include <cstdio>
 #include <boost/foreach.hpp>
 #include <assert.h>
@@ -82,30 +83,31 @@ namespace {
             }
 
             if (vdwmap.combined().size()) {
-                /* create nonbonded_combined_param extra table with columns
-                 * param1, param2, properties... */
-                ParamTablePtr p = ParamTable::create();
-                h->addAuxTable("nonbonded_combined_param", p);
-                p->addProp("param1", IntType);
-                p->addProp("param2", IntType);
+                TermTablePtr tuples = h->addTable("nonbonded_combined", 2);
+                tuples->category = OVERRIDE;
+                ParamTablePtr p = tuples->params();
                 for (Id i=0; i<params->propCount(); i++) {
                     p->addProp(params->propName(i), params->propType(i));
                 }
+                OverrideMap o;
                 BOOST_FOREACH(TypeMap::value_type ti, map) {
                     VdwType const& itype = ti.first;
                     BOOST_FOREACH(TypeMap::value_type tj, map) {
                         VdwType const& jtype = tj.first;
                         if (vdwmap.has_combined(itype, jtype)) {
                             Id row = p->addParam();
-                            p->value(row,0)=ti.second;
-                            p->value(row,1)=tj.second;
                             VdwParam const& props = vdwmap.param(itype, jtype);
                             for (Id i=0; i<props.size(); i++) {
-                                p->value(row,2+i)=props[i];
+                                p->value(row,i)=props[i];
                             }
+                            Id pi = ti.second;
+                            Id pj = tj.second;
+                            if (pi>pj) std::swap(pi,pj);
+                            o[std::make_pair(pi,pj)]=row;
                         }
                     }
                 }
+                MakeTuplesFromOverrides(o, table, tuples);
             }
         }
     };
