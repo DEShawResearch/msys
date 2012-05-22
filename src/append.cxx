@@ -1,5 +1,6 @@
 #include "append.hxx"
 #include "system.hxx"
+#include "override.hxx"
 
 #include <sstream>
 #include <stdexcept>
@@ -85,6 +86,22 @@ IdList desres::msys::AppendTerms( TermTablePtr dst, TermTablePtr src,
         }
         ids.push_back(dstterm);
     }
+
+    /* copy overrides */
+    if (src->overrides()->count()) {
+        IdList dstparams = AppendParams( dst->overrides()->params(),
+                                         src->overrides()->params(),
+                                         src->overrides()->params()->params());
+        std::vector<IdPair> L = src->overrides()->list();
+        for (unsigned i=0; i<L.size(); i++) {
+            Id p1 = pmap.at(L[i].first);
+            Id p2 = pmap.at(L[i].second);
+            if (bad(p1) || bad(p2)) continue;
+            Id dstparam = dstparams.at(src->overrides()->get(L[i]));
+            dst->overrides()->set(IdPair(p1,p2), dstparam);
+        }
+    }
+
     return ids;
 }
 

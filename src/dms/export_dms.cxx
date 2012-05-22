@@ -347,51 +347,43 @@ static void export_exclusion(TermTablePtr table, const IdList& map, Sqlite dms) 
     dms.exec( "commit");
 }
 
+static void export_overrides( OverrideTablePtr o, std::string const& name,
+                              Sqlite dms) {
+
+    if (!o->count()) return;
+    ParamTablePtr params = ParamTable::create();
+    params->addProp("param1", IntType);
+    params->addProp("param2", IntType);
+    for (Id i=0; i<o->params()->propCount(); i++) {
+        params->addProp(o->params()->propName(i), o->params()->propType(i));
+    }
+    std::vector<IdPair> olist = o->list();
+    for (Id i=0; i<olist.size(); i++) {
+        Id p = params->addParam();
+        params->value(p,0) = olist[i].first;
+        params->value(p,1) = olist[i].second;
+        Id param = o->get(olist[i]);
+        if (bad(param)) MSYS_FAIL("no param for override " << 
+                olist[i].first << "," << olist[i].second);
+        for (Id i=2; i<params->propCount(); i++) {
+            params->value(p,i) = o->params()->value(param, i-2);
+        }
+    }
+    export_params(params, name+"_combined_param", dms, false);
+}
+
 static void export_nonbonded( TermTablePtr table, Sqlite dms) {
     if (table->atomCount()!=1) {
         throw std::runtime_error("table with category nonbonded has atomCount!=1");
     }
     if (table->name()=="nonbonded") {
         export_params(table->params(), "nonbonded_param", dms);
+        export_overrides(table->overrides(), table->name(), dms);
     } else if (table->name()=="alchemical_nonbonded") {
         /* skip, handled by export_alchemical_particles */
     } else {
         MSYS_FAIL("Don't know how to export nonbonded table " << table->name());
     }
-}
-
-static void export_override( TermTablePtr tuples, Sqlite dms) {
-    /* expect the part of the name before the first underscore to be
-     * the name of the table to be overridden. */
-    std::string name = tuples->name();
-    size_t loc = name.find('_');
-    if (loc==std::string::npos) {
-        MSYS_FAIL("Missing underscore in override table " << name);
-    }
-    std::string basename = name.substr(0,loc);
-    TermTablePtr base = tuples->system()->table(basename);
-    if (!base) {
-        MSYS_FAIL("Missing expected table '" << basename << "' as target of override table '" << name << "'");
-    }
-    OverrideMap map = FindOverridesFromTuples(base, tuples);
-
-    /* convert dictionary into a param table */
-    ParamTablePtr params = ParamTable::create();
-    params->addProp("param1", IntType);
-    params->addProp("param2", IntType);
-    for (Id i=0; i<tuples->params()->propCount(); i++) {
-        params->addProp(tuples->params()->propName(i), 
-                        tuples->params()->propType(i));
-    }
-    for (OverrideMap::const_iterator it=map.begin(); it!=map.end(); ++it) {
-        Id p = params->addParam();
-        params->value(p,0) = it->first.first;
-        params->value(p,1) = it->first.second;
-        for (Id i=2; i<params->propCount(); i++) {
-            params->value(p,i) = tuples->params()->value(it->second, i-2);
-        }
-    }
-    export_params(params, name+"_param", dms, false);
 }
 
 static void export_meta( TermTablePtr table, const std::string& name, 
@@ -422,8 +414,6 @@ static void export_tables( const System& sys, const IdList& map, Sqlite dms) {
             export_exclusion(table, map, dms);
         } else if (table->category==NONBONDED) {
             export_nonbonded(table, dms);
-        } else if (table->category==OVERRIDE) {
-            export_override(table, dms);
         } else {
             export_terms(table, map, name+"_term", dms);
             export_params(table->params(), name+"_param", dms);

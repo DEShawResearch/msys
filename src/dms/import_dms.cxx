@@ -302,17 +302,18 @@ read_nonbonded( Sqlite dms, IdList const& gidmap, System& sys,
 }
 
 static void 
-read_combined( Sqlite dms, IdList const& gidmap, System& sys, KnownSet& known ) {
+read_combined( Sqlite dms, System& sys, KnownSet& known ) {
 
     static const char* TABLE = "nonbonded_combined_param";
     known.insert(TABLE);
     Reader r = dms.fetch(TABLE);
     if (!r) return;
+    TermTablePtr nb = sys.table("nonbonded");
+    if (!nb) MSYS_FAIL("nonbonded_combined_param in dms file, but no nonbonded_param table");
+
     ParamTablePtr cb = ParamTable::create();
     read_params(r, cb, false);
-    TermTablePtr tuples = sys.addTable("nonbonded_combined", 2);
-    tuples->category = OVERRIDE;
-    ParamTablePtr params = tuples->params();
+    ParamTablePtr params = nb->overrides()->params();
 
     /* find param1 and param2 columns.  */
     Id param1col = BadId, param2col = BadId;
@@ -330,7 +331,6 @@ read_combined( Sqlite dms, IdList const& gidmap, System& sys, KnownSet& known ) 
     if (bad(param2col)) MSYS_FAIL("Missing param2 from " << TABLE);
 
     /* copy the non-param columns into params, and generate tuples */
-    OverrideMap o;
     for (Id p=0; p<cb->paramCount(); p++) {
         params->addParam();
         for (Id i=0; i<pcols.size(); i++) {
@@ -338,10 +338,8 @@ read_combined( Sqlite dms, IdList const& gidmap, System& sys, KnownSet& known ) 
         }
         Id param1 = cb->value(p,param1col).asInt();
         Id param2 = cb->value(p,param2col).asInt();
-        if (param1>param2) std::swap(param1,param2);
-        o[std::make_pair(param1,param2)]=p;
+        nb->overrides()->set(IdPair(param1,param2), p);
     }
-    MakeTuplesFromOverrides(o, sys.table("nonbonded"), tuples);
 }
 
 
@@ -660,7 +658,7 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
     if (!structure_only) {
         read_metatables(dms, gidmap, sys, known);
         read_nonbonded(dms, gidmap, sys, nbtypes, known);
-        read_combined(dms, gidmap, sys, known);
+        read_combined(dms, sys, known);
         read_exclusions(dms, gidmap, sys, known);
         read_nbinfo(dms, sys, known);
         read_extra(dms, sys, known);

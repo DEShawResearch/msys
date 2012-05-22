@@ -24,6 +24,7 @@ namespace desres { namespace msys {
     typedef std::string String;
     typedef std::set<Id> IdSet;
     typedef std::vector<Id> IdList;
+    typedef std::pair<Id,Id> IdPair;
     typedef std::vector<IdList> MultiIdList;
 
     enum { BadId = (uint32_t)-1 };

@@ -83,13 +83,11 @@ namespace {
             }
 
             if (vdwmap.combined().size()) {
-                TermTablePtr tuples = h->addTable("nonbonded_combined", 2);
-                tuples->category = OVERRIDE;
-                ParamTablePtr p = tuples->params();
+                OverrideTablePtr o = table->overrides();
+                ParamTablePtr p = o->params();
                 for (Id i=0; i<params->propCount(); i++) {
                     p->addProp(params->propName(i), params->propType(i));
                 }
-                OverrideMap o;
                 BOOST_FOREACH(TypeMap::value_type ti, map) {
                     VdwType const& itype = ti.first;
                     BOOST_FOREACH(TypeMap::value_type tj, map) {
@@ -102,12 +100,10 @@ namespace {
                             }
                             Id pi = ti.second;
                             Id pj = tj.second;
-                            if (pi>pj) std::swap(pi,pj);
-                            o[std::make_pair(pi,pj)]=row;
+                            o->set(IdPair(pi,pj), row);
                         }
                     }
                 }
-                MakeTuplesFromOverrides(o, table, tuples);
             }
         }
     };

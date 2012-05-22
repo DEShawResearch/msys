@@ -420,6 +420,43 @@ class Term(Handle):
             self.paramid=id
         p.setProp(id, col, val)
 
+class OverrideTable(object):
+    __slots__=('_ptr',)
+
+    def __init__(self, _ptr):
+        ''' construct from OverrideTablePtr.
+        Do not use directly; fetch from TermTable.overrides
+        '''
+        self._ptr = _ptr
+
+    def __eq__(self, x): return self._ptr==x._ptr
+    def __ne__(self, x): return self._ptr!=x._ptr
+    def __hash__(self): return self._ptr.__hash__()
+
+    @property
+    def params(self):
+        ''' parameter table containing override values '''
+        return ParamTable(self._ptr.params())
+
+    @property
+    def target(self):
+        ''' parameter table whose values are being overridden '''
+        return ParamTable(self._ptr.target())
+
+    def set(self, ids, param):
+        ''' override the interaction of (ids[0], ids[1]) with param '''
+        param1, param2 = ids
+        self._ptr.set(param1, param2, param)
+
+    def get(self, ids):
+        ''' get the override param for ids '''
+        param1, param2 = ids
+        return self._ptr.get(param1, param2)
+
+    def list(self):
+        ''' return a list of all overrides '''
+        return self._ptr.list()
+
 
 class TermTable(object):
 
@@ -492,6 +529,11 @@ class TermTable(object):
     def nterms(self): 
         ''' number of terms '''
         return self._ptr.termCount()
+
+    @property
+    def overrides(self):
+        ''' OverrideTable for this TermTable '''
+        return OverrideTable(self._ptr.overrides())
 
     def delTermsWithAtom(self, atom):
         ''' remove all terms whose atoms list contains the given Atom '''

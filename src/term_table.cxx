@@ -1,5 +1,6 @@
 #include "term_table.hxx"
 #include "system.hxx"
+#include "override.hxx"
 #include <stdexcept>
 #include <sstream>
 #include <iostream>
@@ -10,6 +11,7 @@ TermTable::TermTable( SystemPtr system, Id natoms, ParamTablePtr ptr )
 : _system(system), _natoms(natoms), _props(ParamTable::create()),
   category(NO_CATEGORY) {
     _params = ptr ? ptr : ParamTable::create();
+    _overrides = OverrideTable::create(_params);
 }
 
 void TermTable::destroy() {
@@ -21,6 +23,7 @@ void TermTable::destroy() {
         if (_deadterms.count(i)) continue;
         _params->decref(param(i));
     }
+    _overrides->clear();
 }
 
 String TermTable::name() const {
@@ -179,6 +182,7 @@ namespace {
 void TermTable::coalesce() {
     if (!_params->paramCount()) return;
     typedef std::map<Id,IdList,ParamComparator> ParamMap;
+    IdList old2new(_params->paramCount(), BadId);
     ParamComparator comp(_params);
     assert(!comp(0,0));
     ParamMap map(comp);
@@ -198,8 +202,27 @@ void TermTable::coalesce() {
     for (ParamMap::iterator iter=map.begin(); iter!=map.end(); ++iter) {
         Id p = iter->first;
         IdList& ids = iter->second;
-        for (Id i=0; i<ids.size(); i++) setParam(ids[i], p);
+        for (Id i=0; i<ids.size(); i++) {
+            Id t = ids[i];
+            old2new.at(param(t)) = p;
+            setParam(t, p);
+        }
     }
+
+    /* coalesce the override table, if it exists.  Reuse the same set of
+     * distinct parameters.  If an override points to a parameter that 
+     * is unused, it can be safely removed. */
+    std::vector<IdPair> L = _overrides->list();
+    for (unsigned i=0; i<L.size(); i++) {
+        Id p1 = old2new.at(L[i].first);
+        Id p2 = old2new.at(L[i].second);
+        Id p = _overrides->get(L[i]);
+        _overrides->del(L[i]);
+        if (bad(p1) || bad(p2)) continue;
+        _overrides->set(IdPair(p1,p2), p);
+    }
+    /* At this point there may be duplicate params in the override
+     * params, but I won't bother fixing that now */
 }
 
 static const char* category_names[] = {

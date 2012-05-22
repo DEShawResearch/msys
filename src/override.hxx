@@ -1,31 +1,59 @@
 #ifndef desres_msys_override_hxx
 #define desres_msys_override_hxx
 
-#include "term_table.hxx"
+#include "param_table.hxx"
 
 namespace desres { namespace msys {
 
-    /* Inputs: base   -- a single atom table with one term for every atom.
-     *         tuples -- a two-atom table with distinct entries
-     *
-     * Output: a mapping from the overridden base parameter ids to the
-     *         id of their overridden value in tuples.
-     *         It is an error if terms in tuples with the same param ids
-     *         in base have different parameter values in tuples.
-     *
-     * Side effects: none.
-     */
+    class OverrideTable;
+    typedef boost::shared_ptr<OverrideTable> OverrideTablePtr;
 
-    typedef std::map<std::pair<Id,Id>, Id> OverrideMap;
-    OverrideMap FindOverridesFromTuples( TermTablePtr base,
-                                         TermTablePtr tuples );
+    class OverrideTable {
 
-    /* Add terms to override table tuples based on given overrides.
-     * The key ids in overrides must point to existing params in base;
-     * the value id points to an existing param in tuples. */
-    void MakeTuplesFromOverrides( OverrideMap const& overrides,
-                                  TermTablePtr base,
-                                  TermTablePtr tuples );
+        /* which parameter table's entries are being overridden */
+        ParamTablePtr   _target;
+
+        /* storage for override values */
+        ParamTablePtr   _params;
+
+        /* all the overrides.  Keys have first <= second */
+        typedef std::map<IdPair, Id> OverrideMap;
+        OverrideMap     _map;
+
+        /* constructor: the parameter table we override */
+        explicit OverrideTable( ParamTablePtr target );
+
+    public:
+        /* create an override table */
+        static OverrideTablePtr create(ParamTablePtr target);
+
+        /* clear map and remove all references to target */
+        void clear();
+
+        /* target */
+        ParamTablePtr target() const { return _target; }
+        
+        /* override parameters */
+        ParamTablePtr params() const { return _params; }
+
+        /* get parameter for the given pair of ids in target;
+         * BadId if not present.  The input arguments will be sorted,
+         * so the order in which they are provided is irrelevant */
+        Id get(IdPair params) const;
+
+        /* remove the given override if present */
+        void del(IdPair params);
+
+        /* add or replace an override */
+        void set(IdPair params, Id param);
+
+        /* number of distinct overrides */
+        Id count() const;
+
+        /* list of all the overrides */
+        std::vector<IdPair> list() const;
+    };
+
 }}
 
 #endif

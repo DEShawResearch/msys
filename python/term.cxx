@@ -1,5 +1,6 @@
 #include "wrap_obj.hxx"
 #include "term_table.hxx"
+#include "override.hxx"
 
 using namespace desres::msys;
 
@@ -55,7 +56,6 @@ namespace desres { namespace msys {
             .value("polar", POLAR)
             .value("nonbonded", NONBONDED)
             .value("exclusion", EXCLUSION)
-            .value("override", OVERRIDE)
             ;
 
         def("parse_category", parse);
@@ -101,6 +101,9 @@ namespace desres { namespace msys {
 
             /* coalesce */
             .def("coalesce",    &TermTable::coalesce)
+
+            /* overrides */
+            .def("overrides",   &TermTable::overrides)
             ;
     }
 

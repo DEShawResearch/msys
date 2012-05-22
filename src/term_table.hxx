@@ -13,6 +13,9 @@ namespace desres { namespace msys {
     class System;
     typedef boost::shared_ptr<System> SystemPtr;
 
+    class OverrideTable;
+    typedef boost::shared_ptr<OverrideTable> OverrideTablePtr;
+
     /* Every term table should be assigned a category based on its type. */
     enum Category {
         NO_CATEGORY = 0,
@@ -21,8 +24,7 @@ namespace desres { namespace msys {
         VIRTUAL     = 3,
         POLAR       = 4,
         NONBONDED   = 5,
-        EXCLUSION   = 6,
-        OVERRIDE    = 7
+        EXCLUSION   = 6
     };
 
     /* convert category to string */
@@ -48,6 +50,9 @@ namespace desres { namespace msys {
          * the "constrained" field to mark constrained stretch and 
          * angle terms, and for the position of position restraints. */
         ParamTablePtr  _props;
+
+        /* overrides for the parameters of this table */
+        OverrideTablePtr _overrides;
 
     public:
         TermTable( SystemPtr system, Id natoms, 
@@ -105,6 +110,9 @@ namespace desres { namespace msys {
 
         /* reassign param to a member of the set of distinct parameters. */
         void coalesce();
+
+        /* get the override table */
+        OverrideTablePtr overrides() const { return _overrides; }
     };
 
     typedef boost::shared_ptr<TermTable> TermTablePtr;

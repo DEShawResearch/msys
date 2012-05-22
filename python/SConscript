@@ -11,6 +11,7 @@ atom.cxx
 bond.cxx
 residue.cxx
 chain.cxx
+override.cxx
 param.cxx
 system.cxx
 term.cxx

@@ -10,6 +10,7 @@ namespace desres { namespace msys {
     void export_system();
     void export_term();
     void export_vector();
+    void export_override();
 }}
 
 BOOST_PYTHON_MODULE(_msys) {
@@ -23,5 +24,6 @@ BOOST_PYTHON_MODULE(_msys) {
     desres::msys::export_system();
     desres::msys::export_term();
     desres::msys::export_vector();
+    desres::msys::export_override();
 }
 
