@@ -330,7 +330,6 @@ read_combined( Sqlite dms, System& sys, KnownSet& known ) {
     if (bad(param1col)) MSYS_FAIL("Missing param1 from " << TABLE);
     if (bad(param2col)) MSYS_FAIL("Missing param2 from " << TABLE);
 
-    /* copy the non-param columns into params, and generate tuples */
     for (Id p=0; p<cb->paramCount(); p++) {
         params->addParam();
         for (Id i=0; i<pcols.size(); i++) {
@@ -338,6 +337,14 @@ read_combined( Sqlite dms, System& sys, KnownSet& known ) {
         }
         Id param1 = cb->value(p,param1col).asInt();
         Id param2 = cb->value(p,param2col).asInt();
+        IdPair key(param1,param2);
+        /* don't allow conflicting overrides on input. */
+        Id oldp = nb->overrides()->get(key);
+        if (!bad(oldp)) {
+            if (params->compare(oldp,p)) {
+                MSYS_FAIL("Conflicting " << TABLE << " entries for param1=" << param1 << " param2=" << param2);
+            }
+        }
         nb->overrides()->set(IdPair(param1,param2), p);
     }
 }
