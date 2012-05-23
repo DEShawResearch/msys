@@ -434,11 +434,6 @@ class OverrideTable(object):
     def __hash__(self): return self._ptr.__hash__()
 
     @property
-    def params(self):
-        ''' parameter table containing override values '''
-        return ParamTable(self._ptr.params())
-
-    @property
     def target(self):
         ''' parameter table whose values are being overridden '''
         return ParamTable(self._ptr.target())
@@ -580,6 +575,12 @@ class TermTable(object):
             if a.system != self.system:
                 raise RuntimeError, "Cannot add atoms from different system"
         return Term(self._ptr, self._ptr.addTerm(ids, param))
+
+    @property
+    def override_params(self):
+        ''' parameter table containing override values '''
+        return ParamTable(self._ptr.overrides().params())
+
 
 class System(object):
 

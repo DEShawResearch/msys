@@ -40,9 +40,9 @@ def Override(mol, s1, s2, **params):
                 continue
             cb.set(key, cb.get((i,j)))
 
-    p = cb.params.addParam()
+    p = nb.override_params.addParam()
     for k,v in params.items(): 
-        cb.params.addProp(k,type(v))
+        nb.override_params.addProp(k,type(v))
         p[k]=v
 
     # get the new set of types
