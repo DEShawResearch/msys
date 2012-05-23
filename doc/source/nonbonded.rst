@@ -41,23 +41,15 @@ interaction.
 
 The DMS and MAE file formats allow one to specify nonbonded types whose
 combined values are to be taken from a table, rather than computed
-according to a combining rule.  In Msys, it is not possible to store
-this type of table directly, because each `Term` in a `TermTable`
-references only one `Param`, whereas an interaction override involves two.
-Storing the combined tables as an auxiliary table isn't acceptable,
-either, because any change to the particle nonbonded assignment would
-silently break the intended override.
+according to a combining rule.  In Msys, overrides to the parameters
+in a `TermTable` are stored as a mapping from pairs of entries in the
+``params`` to a entry in the ``override_params`` `ParamTable`.  Pairs
+of `Params` are stored such that the ``id`` of the first `Param` is 
+less than or equal to the ``id`` of the second `Param`; hence, there
+are no redundant or conflicting overrides: if parameters *i* and *j*
+have an override, then parameters *j* and *i* must be considered to
+have the same override.
 
-Instead, when Msys loads a "nonbonded_combined_param" table from a DMS
-file, it creates a two-particle `TermTable` called "nonbonded_combined"
-which holds the interaction override for each affect pair of particles.
-The category of this table is "OVERRIDE", which lets Msys recognize
-the table on DMS export and convert it back to its original form.
-
-The 'msys.vdw.Combine' function implements the operation of overriding
-the interaction between two sets of particles while leaving the other
-interactions alone.  The 'dms-override-vdw' script wraps this operation
-in a command line tool.
 
 Alchemical nonbonded interactions
 =================================
