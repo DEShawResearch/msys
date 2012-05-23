@@ -420,39 +420,6 @@ class Term(Handle):
             self.paramid=id
         p.setProp(id, col, val)
 
-class OverrideTable(object):
-    __slots__=('_ptr',)
-
-    def __init__(self, _ptr):
-        ''' construct from OverrideTablePtr.
-        Do not use directly; fetch from TermTable.overrides
-        '''
-        self._ptr = _ptr
-
-    def __eq__(self, x): return self._ptr==x._ptr
-    def __ne__(self, x): return self._ptr!=x._ptr
-    def __hash__(self): return self._ptr.__hash__()
-
-    @property
-    def target(self):
-        ''' parameter table whose values are being overridden '''
-        return ParamTable(self._ptr.target())
-
-    def set(self, ids, param):
-        ''' override the interaction of (ids[0], ids[1]) with param '''
-        param1, param2 = ids
-        self._ptr.set(param1, param2, param)
-
-    def get(self, ids):
-        ''' get the override param for ids '''
-        param1, param2 = ids
-        return self._ptr.get(param1, param2)
-
-    def list(self):
-        ''' return a list of all overrides '''
-        return self._ptr.list()
-
-
 class TermTable(object):
 
     __slots__=('_ptr',)
@@ -525,11 +492,6 @@ class TermTable(object):
         ''' number of terms '''
         return self._ptr.termCount()
 
-    @property
-    def overrides(self):
-        ''' OverrideTable for this TermTable '''
-        return OverrideTable(self._ptr.overrides())
-
     def delTermsWithAtom(self, atom):
         ''' remove all terms whose atoms list contains the given Atom '''
         assert atom.system == self.system, "atom is from different System"
@@ -581,6 +543,50 @@ class TermTable(object):
         ''' parameter table containing override values '''
         return ParamTable(self._ptr.overrides().params())
 
+    def overrides(self):
+        ''' return a mapping from pairs of Params in self.params to a Param
+        in self.override_params. '''
+        d=dict()
+        p = self.params
+        o = self._ptr.overrides()
+        op = self.override_params
+        for i,j in o.list():
+            pi = p.param(i)
+            pj = p.param(j)
+            d[(pi,pj)] = op.param(o.get(i,j))
+        return d
+
+    def setOverride(self, pi, pj, op):
+        ''' override the interaction between params pi and pj with the
+        interaction given by op.  pi and pj must be Params from self.params;
+        op must be a param from self.override_params, or None to remove
+        the override.
+        '''
+        if pi.__class__ is not Param: raise TypeError, "pi must be Param"
+        if pj.__class__ is not Param: raise TypeError, "pj must be Param"
+        if pi.table != self.params: 
+            raise ValueError, "pi must be from self.params"
+        if pj.table != self.params: 
+            raise ValueError, "pj must be from self.params"
+        if op is None:
+            return self._ptr.overrides().del_(pi.id, pj.id)
+        if op.__class__ is not Param: 
+            raise TypeError, "op must be Param or None"
+        if op.table != self.override_params: 
+            raise ValueError, "op must be from self.override_params"
+        self._ptr.overrides().set(pi.id, pj.id, op.id)
+
+    def getOverride(self, pi, pj):
+        ''' get override for given pair of params, or None if not present. '''
+        if pi.__class__ is not Param: raise TypeError, "pi must be Param"
+        if pj.__class__ is not Param: raise TypeError, "pj must be Param"
+        if pi.table != self.params: 
+            raise ValueError, "pi must be from self.params"
+        if pj.table != self.params: 
+            raise ValueError, "pj must be from self.params"
+        id = self._ptr._overrides().get(pi.id, pj.id)
+        if _msys.bad(id): return None
+        return self.override_params.param(id)
 
 class System(object):
 
