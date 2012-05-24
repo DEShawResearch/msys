@@ -517,19 +517,19 @@ dms-posre
 
 .. cmdoption:: -f FORCE_CONSTANT
 
-   force constant in PEAK units
+   force constant in PEAK units (kcal/mol/A^2)
 
 .. cmdoption:: -x FORCE_CONSTANT
 
-   force constant along x axis in PEAK units
+   force constant along x axis in PEAK units (kcal/mol/A^2)
 
 .. cmdoption:: -y FORCE_CONSTANT
 
-   force constant along y axis in PEAK units
+   force constant along y axis in PEAK units (kcal/mol/A^2)
 
 .. cmdoption:: -z FORCE_CONSTANT
 
-   force constant along z axis in PEAK units
+   force constant along z axis in PEAK units (kcal/mol/A^2)
 
 .. cmdoption:: -s selection, --selection=selection
 
