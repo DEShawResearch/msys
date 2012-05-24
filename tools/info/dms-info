@@ -51,9 +51,14 @@ def print_info(mol):
         print "\n%s Tables:" % cat.title()
 
         for table in tables:
-            print "%28s: %d sites, %6d params, %6d terms" % (
+            n = table.noverrides
+            if n:
+                o = ", %d overrides" % n
+            else:
+                o = ""
+            print "%28s: %d sites, %6d params, %6d terms%s" % (
                     table.name, table.natoms, table.params.nparams, 
-                    table.nterms)
+                    table.nterms, o)
 
     nbinfo=mol.nonbonded_info
     print "\n%12s:" % "Nonbonded Info"

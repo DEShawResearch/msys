@@ -543,6 +543,11 @@ class TermTable(object):
         ''' parameter table containing override values '''
         return ParamTable(self._ptr.overrides().params())
 
+    @property
+    def noverrides(self):
+        ''' number of parameter overrides '''
+        return self._ptr.overrides().count()
+
     def overrides(self):
         ''' return a mapping from pairs of Params in self.params to a Param
         in self.override_params. '''
