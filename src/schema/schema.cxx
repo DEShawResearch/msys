@@ -29,6 +29,8 @@ static schema_t schemas[] = {
     { "alchemical_pair_exp_6_es","bond", 2, 
         {"aijA", "bijA", "cijA", "qijA",
          "aijB", "bijB", "cijB", "qijB"}},
+    { "alchemical_improper_harm","bond", 4,
+        {"phi0A", "fcA", "phi0B", "fcB"}},
 
     /* constraints */
     { "constraint_hoh", "constraint", 3, {"theta","r1","r2"}},
