@@ -1,3 +1,5 @@
+1.4.2  Make ImportDMS thread-safe.
+
 1.4.1  Another way to handle nonbonded_combined_param tables.  We now
        store the 2d table directly, so that we don't choke on systems
        whose entire vdw table has overrides.  API changes at the Python

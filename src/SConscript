@@ -1,6 +1,7 @@
 Import('env')
 env=env.Clone()
-env.Append(LIBS=['pcre', 'boost_iostreams', 'boost_filesystem', 'boost_system'])
+env.Append(LIBS=[
+    'pcre', 'boost_iostreams', 'boost_filesystem', 'boost_system', 'boost_thread'])
 env.Append(CPPPATH=['$OBJDIR/src'])
 
 def build_version_hxx( target, source, env ):
