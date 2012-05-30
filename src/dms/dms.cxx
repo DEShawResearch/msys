@@ -101,6 +101,9 @@ namespace {
     int dms_xDeviceCharacteristics(sqlite3_file *file) {
         return 0;
     }
+    int dms_xFileControl(sqlite3_file*, int op, void *pArg) {
+        return SQLITE_NOTFOUND;
+    }
   
     sqlite3_io_methods iomethods = {
         1, //int iVersion;
@@ -113,7 +116,7 @@ namespace {
         dms_xLock,
         dms_xUnlock, // int (*xUnlock)(sqlite3_file*, int);
         0, // int (*xCheckReservedLock)(sqlite3_file*, int *pResOut);
-        0, // int (*xFileControl)(sqlite3_file*, int op, void *pArg);
+        dms_xFileControl, // int (*xFileControl)(sqlite3_file*, int op, void *pArg);
         0, // int (*xSectorSize)(sqlite3_file*);
         dms_xDeviceCharacteristics //int (*xDeviceCharacteristics)(sqlite3_file*);
     };
