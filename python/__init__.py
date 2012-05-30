@@ -589,7 +589,7 @@ class TermTable(object):
             raise ValueError, "pi must be from self.params"
         if pj.table != self.params: 
             raise ValueError, "pj must be from self.params"
-        id = self._ptr._overrides().get(pi.id, pj.id)
+        id = self._ptr.overrides().get(pi.id, pj.id)
         if _msys.bad(id): return None
         return self.override_params.param(id)
 
