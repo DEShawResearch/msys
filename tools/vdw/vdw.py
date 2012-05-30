@@ -1,22 +1,7 @@
 
-import msys, sys
+import msys, sys, math
 
-def Override(mol, s1, s2, **params):
-    ''' override the nonbonded interaction for selections s1 and s2
-    with the given keyword parameters.  '''
-
-    # add properties
-    nb = mol.table('nonbonded')
-
-    # perform selections
-    sel1 = mol.select(s1)
-    sel2 = mol.select(s2)
-
-    pdict = dict()
-    for a in sel1 + sel2:
-        p = nb.term(a.id).param
-        pdict.setdefault(p,[]).append(a)
-
+def duplicate_overrides(nb, pdict):
     # duplicate the overridden parameters and reassign while disambiguating
     nb.params.addProp('override', int)
     override_base = max(p['override'] for p in nb.params.params)+1
@@ -32,15 +17,76 @@ def Override(mol, s1, s2, **params):
             if pj==p: pj=p_
             nb.setOverride(pi,pj,op)
 
+def add_override(nb, **params):
     p = nb.override_params.addParam()
     for k,v in params.items(): 
         nb.override_params.addProp(k,type(v))
         p[k]=v
+    return p
 
-    # get the new set of types
+def apply_override(nb, sel1, sel2, p):
     t1 = set(nb.term(a.id).param for a in sel1)
     t2 = set(nb.term(a.id).param for a in sel2)
     for pi in t1:
         for pj in t2:
             nb.setOverride(pi,pj,p)
+
+def Override(mol, sel1, sel2, **params):
+    ''' override the nonbonded interaction for selections sel1 and sel2
+    with the given keyword parameters.  '''
+
+    # add properties
+    nb = mol.table('nonbonded')
+    pdict = dict()
+    for a in sel1+sel2:
+        p = nb.term(a.id).param
+        pdict.setdefault(p,[]).append(a)
+
+    duplicate_overrides(nb, pdict)
+    p = add_override(nb, **params)
+    apply_override(nb, sel1, sel2, p)
+
+
+def combine_arithmetic_geometric(pi,pj):
+    sigma =        0.5*(pi['sigma'] + pj['sigma'])
+    epsilon = math.sqrt(pi['epsilon'] * pj['epsilon'])
+    return sigma, epsilon
+
+def combine_geometric(pi,pj):
+    sigma = math.sqrt(pi['sigma'] * pj['sigma'])
+    epsilon = math.sqrt(pi['epsilon'] * pj['epsilon'])
+    return sigma, epsilon
+
+def Scale(mol, sel1, sel2, scale):
+    ''' scale the sigma interaction for selections s1 and s2
+    with the given keyword parameters.  '''
+
+    rule = mol.nonbonded_info.vdw_rule.lower()
+    if rule=='arithmetic/geometric': 
+        combine = combine_arithmetic_geometric
+    elif rule=='geometric': 
+        combine = combine_geometric
+    else:
+        raise ValueError, "Don't understand vdw_rule '%s'" % rule
+
+    # partition selections by type, and call Override for each pair
+    nb = mol.table('nonbonded')
+
+    pdict1 = dict()
+    pdict2 = dict()
+    for a in sel1:
+        p = nb.term(a.id).param
+        pdict1.setdefault(p,[]).append(a)
+    for a in sel2:
+        p = nb.term(a.id).param
+        pdict2.setdefault(p,[]).append(a)
+
+    duplicate_overrides(nb, pdict1)
+    duplicate_overrides(nb, pdict2)
+
+    for p1, s1 in pdict1.items():
+        for p2, s2 in pdict2.items():
+            sigma, epsilon = combine(p1,p2)
+            p = add_override(nb, sigma=scale*sigma, epsilon=epsilon)
+            apply_override(nb, s1, s2, p)
 

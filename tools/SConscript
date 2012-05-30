@@ -52,6 +52,7 @@ env.AddScript('info/dms-info')
 # vdw
 env.AddPythonModule('vdw/vdw.py', prefix='msys')
 env.AddScript('vdw/dms-override-vdw')
+env.AddScript('vdw/dms-scale-vdw')
 
 # other scripts
 env.AddScript('scripts/dms-macro')
