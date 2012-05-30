@@ -1,3 +1,5 @@
+1.4.3  Added dms-scale-vdw.
+
 1.4.2  Make ImportDMS thread-safe.
 
 1.4.1  Another way to handle nonbonded_combined_param tables.  We now
