@@ -518,7 +518,7 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
     std::map<Id,Id> nbtypesB;
     
     Reader r = dms.fetch("particle", false); /* no strict typing */
-    if (!r) MSYS_FAIL("Missing particle table");
+    if (!r.size()) MSYS_FAIL("Missing particle table");
 
     int SEGID = r.column("segid");
     int CHAIN = r.column("chain");
