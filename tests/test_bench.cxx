@@ -1,5 +1,6 @@
 #include "system.hxx"
 #include "dms.hxx"
+#include "schema.hxx"
 
 #include <sys/time.h>
 
@@ -16,12 +17,25 @@ static double time_of_day() {
 static SystemPtr make_system(int n) {
     SystemPtr m = System::create();
     Id chn = m->addChain();
+    TermTablePtr stretch = AddTable(m, "stretch_harm");
+    TermTablePtr angle = AddTable(m, "angle_harm");
+    TermTablePtr excl = AddTable(m, "exclusion");
+    TermTablePtr cons = AddTable(m, "constraint_hoh");
+
+    stretch->params()->addParam();
+    angle->params()->addParam();
+    cons->params()->addParam();
+
+    IdList pair(2), triple(3);
+
     for (int i=0; i<n; i++) {
         Id res = m->addResidue(chn);
         m->residue(res).resid = i;
         m->residue(res).name = "TIP3";
 
-        Id atm = m->addAtom(res);
+        Id atm;
+
+        Id OH = atm = m->addAtom(res);
         m->atom(atm).atomic_number = 8;
         m->atom(atm).x = drand48();
         m->atom(atm).y = drand48();
@@ -32,7 +46,7 @@ static SystemPtr make_system(int n) {
         m->atom(atm).mass = 16;
         m->atom(atm).name = "OH";
 
-        atm = m->addAtom(res);
+        Id H1 = atm = m->addAtom(res);
         m->atom(atm).atomic_number = 1;
         m->atom(atm).x = drand48();
         m->atom(atm).y = drand48();
@@ -43,7 +57,7 @@ static SystemPtr make_system(int n) {
         m->atom(atm).mass = 1;
         m->atom(atm).name = "H1";
 
-        atm = m->addAtom(res);
+        Id H2 = atm = m->addAtom(res);
         m->atom(atm).atomic_number = 1;
         m->atom(atm).x = drand48();
         m->atom(atm).y = drand48();
@@ -53,6 +67,23 @@ static SystemPtr make_system(int n) {
         m->atom(atm).vz = drand48();
         m->atom(atm).mass = 1;
         m->atom(atm).name = "H2";
+
+        m->addBond(OH,H1);
+        m->addBond(OH,H2);
+
+        pair[0] = OH;
+        pair[1] = H1;
+        stretch->addTerm(pair,0);
+        excl->addTerm(pair,BadId);
+        pair[2] = H2;
+        stretch->addTerm(pair,0);
+        excl->addTerm(pair,BadId);
+
+        triple[0] = OH;
+        triple[1] = H1;
+        triple[2] = H2;
+        angle->addTerm(triple,0);
+        cons->addTerm(triple,0);
     }
 
     return m;
