@@ -57,8 +57,8 @@ def combine_geometric(pi,pj):
     epsilon = math.sqrt(pi['epsilon'] * pj['epsilon'])
     return sigma, epsilon
 
-def Scale(mol, sel1, sel2, scale):
-    ''' scale the sigma interaction for selections s1 and s2
+def Scale(mol, sel1, sel2, scale_sigma, scale_epsilon):
+    ''' scale the sigma and epsilon interaction for selections s1 and s2
     with the given keyword parameters.  '''
 
     rule = mol.nonbonded_info.vdw_rule.lower()
@@ -87,6 +87,8 @@ def Scale(mol, sel1, sel2, scale):
     for p1, s1 in pdict1.items():
         for p2, s2 in pdict2.items():
             sigma, epsilon = combine(p1,p2)
-            p = add_override(nb, sigma=scale*sigma, epsilon=epsilon)
+            p = add_override(nb, 
+                             sigma=scale_sigma*sigma, 
+                             epsilon=scale_epsilon*epsilon)
             apply_override(nb, s1, s2, p)
 

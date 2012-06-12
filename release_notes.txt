@@ -1,3 +1,6 @@
+1.4.5  Renamed dms-scale-vdw --scale option to --scale-sigma and added
+       --scale-epsilon.
+
 1.4.4  Add minimal build configuration options.
        DMS import no longer panics on empty particle table.
 
