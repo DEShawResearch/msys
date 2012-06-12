@@ -1,7 +1,12 @@
 Import('env')
 env=env.Clone()
+
+opts=Variables()
+opts.Add("MSYS_WITHOUT_ATOMSEL", "without atom selections?")
+opts.Update(env)
+
 env.Append(LIBS=[
-    'pcre', 'boost_iostreams', 'boost_filesystem', 'boost_system', 'boost_thread'])
+    'boost_iostreams', 'boost_filesystem', 'boost_system', 'boost_thread'])
 env.Append(CPPPATH=['$OBJDIR/src'])
 
 def build_version_hxx( target, source, env ):
@@ -29,7 +34,29 @@ def build_version_hxx( target, source, env ):
 
 env.Command('version.hxx', 'version.py', build_version_hxx )
 
-libmsys=env.AddLibrary('msys', Split('''
+if env.get("MSYS_WITHOUT_ATOMSEL"):
+    selenv=env.Clone()
+    selenv.Append(CPPDEFINES=['MSYS_WITHOUT_ATOMSEL'])
+    selobjs = selenv.AddObject("atomsel.cxx")
+else:
+    selobjs = env.AddObject(Split('''
+atomsel.cxx
+atomsel/expression.cxx
+atomsel/k-nearest.cxx
+atomsel/keyword.cxx
+atomsel/keyword_predicate.cxx
+atomsel/msys_keyword.cxx
+atomsel/selection.cxx
+atomsel/predicate.cxx
+atomsel/regex.cxx
+atomsel/vmd.cxx
+atomsel/vmd_keyword.cxx
+atomsel/VmdLexer.c
+atomsel/VmdParser.c
+atomsel/within_predicate.cxx
+'''))
+
+libmsys=env.AddLibrary('msys', selobjs + Split('''
 
 builder.cxx
 charmm_file.c
@@ -94,20 +121,6 @@ system.cxx
 term_table.cxx
 value.cxx
 
-atomsel.cxx
-atomsel/expression.cxx
-atomsel/k-nearest.cxx
-atomsel/keyword.cxx
-atomsel/keyword_predicate.cxx
-atomsel/msys_keyword.cxx
-atomsel/selection.cxx
-atomsel/predicate.cxx
-atomsel/regex.cxx
-atomsel/vmd.cxx
-atomsel/vmd_keyword.cxx
-atomsel/VmdLexer.c
-atomsel/VmdParser.c
-atomsel/within_predicate.cxx
 '''))
 
 env.AddStagedHeaders(Glob("*.hxx"), prefix='msys')

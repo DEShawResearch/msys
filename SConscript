@@ -10,11 +10,11 @@ env.SConscript('src/SConscript')
 env.SConscript('tests/SConscript')
 
 opts=Variables()
-opts.Add("WITHOUT_PYTHON", "without python?")
+opts.Add("MSYS_WITHOUT_PYTHON", "without python?")
 opts.Update(env)
 
-if env.get("WITHOUT_PYTHON"):
-    print "WITHOUT_PYTHON set; will not build python extensions or tools."
+if env.get("MSYS_WITHOUT_PYTHON"):
+    print "MSYS_WITHOUT_PYTHON set; will not build python extensions or tools."
 else:
     env.SConscript('python/SConscript')
     env.SConscript('tools/SConscript')
