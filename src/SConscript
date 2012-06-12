@@ -3,6 +3,7 @@ env=env.Clone()
 
 opts=Variables()
 opts.Add("MSYS_WITHOUT_ATOMSEL", "without atom selections?")
+opts.Add("MSYS_WITHOUT_MAE", "without mae file support?")
 opts.Update(env)
 
 env.Append(LIBS=[
@@ -56,22 +57,11 @@ atomsel/VmdParser.c
 atomsel/within_predicate.cxx
 '''))
 
-libmsys=env.AddLibrary('msys', selobjs + Split('''
-
-builder.cxx
-charmm_file.c
-defs.cxx
-geom.cxx
-
-amber/import_crd.cxx
-amber/import_prmtop.cxx
-
-dms/dms.cxx
-dms/export_dms.cxx
-dms/import_dms.cxx
-
-elements.cxx
-
+if env.get("MSYS_WITHOUT_MAE"):
+    maeenv=env.Clone()
+    maeobjs=maeenv.AddObject('mae/stub.cxx')
+else:
+    maeobjs=env.AddObject(Split('''
 mae/ff.cxx
 mae/export_mae.cxx
 mae/import_mae.cxx
@@ -105,6 +95,23 @@ mae/destro/Maeff.cxx
 mae/destro/prep_alchemical_mae.cxx
 mae/destro/Tokenizer.cxx
 mae/destro/Zing.cxx
+'''))
+
+libmsys=env.AddLibrary('msys', selobjs + maeobjs + Split('''
+
+builder.cxx
+charmm_file.c
+defs.cxx
+geom.cxx
+
+amber/import_crd.cxx
+amber/import_prmtop.cxx
+
+dms/dms.cxx
+dms/export_dms.cxx
+dms/import_dms.cxx
+
+elements.cxx
 
 pdb/pdb.cxx
 pdb/readpdb.c
