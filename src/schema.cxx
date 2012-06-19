@@ -33,14 +33,14 @@ namespace desres { namespace msys {
     std::vector<std::string> TableSchemas() {
         std::vector<std::string> s;
         for (unsigned i=0; i<schema_count(); i++) {
-            s.push_back(schema_name(i));
+            s.push_back(schema(i).name);
         }
         return s;
     }
     std::vector<std::string> NonbondedSchemas() {
         std::vector<std::string> s;
         for (unsigned i=0; i<nonbonded_schema_count(); i++) {
-            s.push_back(nonbonded_schema_name(i));
+            s.push_back(nonbonded_schema(i).name);
         }
         return s;
     }
@@ -51,22 +51,30 @@ namespace desres { namespace msys {
         std::string name = _name.size() ? _name : type;
         TermTablePtr table = sys->table(name);
         if (table) return table;
-        const schema_t* schema = find_schema(type);
-        if (!schema) {
+        for (unsigned i=0; i<schema_count(); i++) {
+            schema_t s = schema(i);
+            if (name!=s.name) continue;
+            table = sys->addTable(name, s.nsites);
+            configure_table(&s, table);
+        }
+        if (!table) {
             std::stringstream ss;
             ss << "Unknown DMS table schema '" << type << "'";
             throw std::runtime_error(ss.str());
         }
-        table = sys->addTable(name, schema->nsites);
-        configure_table(schema, table);
         return table;
     }
 
     TermTablePtr AddNonbonded(SystemPtr sys, 
                                  const std::string& funct,
                                  const std::string& rule) {
-        const schema_t* schema = find_nonbonded_schema(funct);
-        if (!schema) {
+        schema_t s;
+        for (unsigned i=0; i<nonbonded_schema_count(); i++) {
+            s=nonbonded_schema(i);
+            if (funct==s.name) break;
+            s.name=NULL;
+        }
+        if (!s.name) {
             std::stringstream ss;
             ss << "Unknown DMS nonbonded table type '" << funct << "'";
             throw std::runtime_error(ss.str());
@@ -101,7 +109,7 @@ namespace desres { namespace msys {
         TermTablePtr table = sys->table("nonbonded");
         if (table) return table;
         table = sys->addTable("nonbonded", 1);
-        configure_table(schema, table);
+        configure_table(&s, table);
         return table;
     }
     

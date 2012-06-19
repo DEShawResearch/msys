@@ -27,7 +27,7 @@ namespace desres { namespace msys {
     typedef std::pair<Id,Id> IdPair;
     typedef std::vector<IdList> MultiIdList;
 
-    enum { BadId = (uint32_t)-1 };
+    static const Id BadId = -1;
     inline bool bad(const Id& id) { return id==BadId; }
 
     struct Failure : public std::exception {

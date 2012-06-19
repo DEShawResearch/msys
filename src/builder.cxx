@@ -3,6 +3,7 @@
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
 #include <stdexcept>
+#include <cstdio>
 
 
 namespace desres { namespace msys { namespace builder {

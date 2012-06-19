@@ -7,7 +7,7 @@ using namespace desres::msys;
 
 void desres::msys::ImportCrdCoordinates( SystemPtr mol, 
                                          std::string const& path ) {
-    std::ifstream in(path);
+    std::ifstream in(path.c_str());
     if (!in) MSYS_FAIL("Could not open crd file at " << path);
     std::string line;
     

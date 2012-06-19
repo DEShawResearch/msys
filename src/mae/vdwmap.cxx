@@ -3,6 +3,7 @@
 #include <sstream>
 #include <set>
 #include <cstdio>
+#include <cmath>    // for HUGE_VAL
 
 #include <boost/algorithm/string.hpp>
 

@@ -1,4 +1,5 @@
 #include "maeatoms.hxx"
+#include <cstdio>
 
 using namespace desres::msys;
 using namespace desres::msys::mae;

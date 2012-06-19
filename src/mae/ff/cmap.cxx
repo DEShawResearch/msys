@@ -1,4 +1,5 @@
 #include "../maeatoms.hxx"
+#include <cstdio>
 
 namespace {
 

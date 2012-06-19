@@ -1,6 +1,7 @@
 #include "system.hxx"
 #include "dms.hxx"
 #include "schema.hxx"
+#include <cstdio>
 
 #include <sys/time.h>
 

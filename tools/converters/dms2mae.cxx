@@ -1,5 +1,6 @@
 #include "mae.hxx"
 #include "dms.hxx"
+#include <cstdio>
 
 using namespace desres::msys;
 

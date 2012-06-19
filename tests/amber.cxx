@@ -1,6 +1,7 @@
 #include "amber.hxx"
 #include "dms.hxx"
 #include <sys/stat.h>
+#include <cstdio>
 
 using namespace desres::msys;
 

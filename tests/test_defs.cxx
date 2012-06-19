@@ -1,4 +1,5 @@
 #include "defs.hxx"
+#include <cstdio>
 
 using namespace desres::msys::builder;
 

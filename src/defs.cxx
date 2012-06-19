@@ -1,8 +1,9 @@
 
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include <ctype.h>
-#include <stdlib.h>
+#include <cstdlib>
+#include <cmath>
 #include "charmm_file.h"
 #include "defs.hxx"
 

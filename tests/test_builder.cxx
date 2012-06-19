@@ -1,6 +1,7 @@
 #include "dms.hxx"
 #include "clone.hxx"
 #include "builder.hxx"
+#include <cstdio>
 
 using namespace desres::msys;
 

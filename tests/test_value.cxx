@@ -1,6 +1,7 @@
 #include "value.hxx"
 #include <string.h>
 #include <assert.h>
+#include <cstdlib>
 
 using namespace desres::msys;
 

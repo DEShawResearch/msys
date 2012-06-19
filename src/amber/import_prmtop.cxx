@@ -7,6 +7,7 @@
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <cstring>
+#include <cmath>
 
 using namespace desres::msys;
 
@@ -359,7 +360,7 @@ static void parse_exclusions(SystemPtr mol, SectionMap const& map, int n) {
 SystemPtr desres::msys::ImportPrmTop( std::string const& path ) {
 
     std::string line, flag;
-    std::ifstream in(path);
+    std::ifstream in(path.c_str());
     if (!in) MSYS_FAIL("Could not open prmtop file at '" << path << "'");
 
     SystemPtr mol = System::create();
