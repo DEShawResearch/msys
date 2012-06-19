@@ -77,6 +77,10 @@ void desres::msys::Destro::Attribute::assign(long value) {
   assigni(value);
 }
 
+void desres::msys::Destro::Attribute::assign(long long value) {
+  assigni(value);
+}
+
 void desres::msys::Destro::Attribute::assign(unsigned int value) {
   assigni(value);
 }

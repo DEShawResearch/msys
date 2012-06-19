@@ -47,6 +47,7 @@ namespace desres { namespace msys {
       void assign(int value);
       void assign(short value);
       void assign(long value);
+      void assign(long long value);
       void assign(unsigned int value);
       void assign(unsigned short value);
       void assign(unsigned long value);
