@@ -588,6 +588,14 @@ class TestMain(unittest.TestCase):
         self.assertFalse('cmap' in m.auxtable_names)
         self.assertFalse(e in m.auxtables)
 
+    def testSchemas(self):
+        m=msys.CreateSystem()
+        for s in msys.TableSchemas():
+            m.addTableFromSchema(s)
+        for s in msys.NonbondedSchemas():
+            m.addNonbondedFromSchema(s)
+            m.nonbonded_info.vdw_funct=""
+
     def testTableDMS(self):
         assert 'stretch_harm' in msys.TableSchemas()
         assert 'vdw_12_6' in msys.NonbondedSchemas()

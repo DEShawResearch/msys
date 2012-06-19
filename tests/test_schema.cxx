@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
 
     SystemPtr sys = System::create();
     for (int i=1; i<argc; i++) {
-        TermTablePtr table = AddNonbonded(sys,argv[i], "");
+        TermTablePtr table = AddTable(sys,argv[i], "");
         printf("got table %s with %d atoms, %d term props, %d params\n",
                 argv[i], table->atomCount(),
                 table->termPropCount(),
