@@ -334,6 +334,19 @@ class ParamTable(object):
         ''' list of all Params in table '''
         return [Param(self._ptr, i) for i in self._ptr.params()]
 
+    def find(self, name, value):
+        ''' return the Params with the given value for name '''
+        proptype = self.propType(name)
+        col = self._ptr.propIndex(name)
+        value = proptype(value)
+        if proptype is int:
+            f=self._ptr.findInt
+        elif proptype is float:
+            f=self._ptr.findFloat
+        else:
+            f=self._ptr.findString
+        return [self.param(x) for x in f(col, value)]
+        
 class Term(Handle):
     __slots__=()
 

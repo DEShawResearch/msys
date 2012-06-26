@@ -25,12 +25,14 @@ void ValueRef::fromInt(const Int& i) {
     if (_type==IntType) _val.i = i;
     else if (_type==FloatType) _val.f = i;
     else throw std::runtime_error("cannot assign int to string prop");
+    if (_cb) _cb->valueChanged();
 }
 
 void ValueRef::fromFloat(const Float& i) {
     if (_type==IntType) _val.i = (Int)i;
     else if (_type==FloatType) _val.f = i;
     else throw std::runtime_error("cannot assign float to string prop");
+    if (_cb) _cb->valueChanged();
 }
 
 void ValueRef::fromString(const String& i) {
@@ -42,6 +44,7 @@ void ValueRef::fromString(const String& i) {
         if (_val.s) free(_val.s);
         _val.s = strdup(i.c_str());
     }
+    if (_cb) _cb->valueChanged();
 }
 
 bool ValueRef::operator==(const ValueRef& rhs) const {

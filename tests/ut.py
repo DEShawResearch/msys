@@ -383,7 +383,44 @@ class TestMain(unittest.TestCase):
         self.assertEqual(t.findWithAll([a3]), [t.term(x) for x in (3,5,6)])
         self.assertEqual(t.findWithAny([a3,a5]), [t.term(x) for x in (3,5,6)])
 
-
+    def testParamIndex(self):
+        params=msys.CreateParamTable()
+        params.addProp('i', int)
+        params.addProp('f', float)
+        params.addProp('s', str)
+        p0=params.addParam()
+        p1=params.addParam()
+        p2=params.addParam()
+        p3=params.addParam()
+        p0['i']=1
+        p1['i']=1
+        p1['f']=1.5
+        p2['f']=1.5
+        p2['s']='x'
+        p3['s']='x'
+        for (k,v), ids in {
+                ('i',0) : (2,3),
+                ('i',1) : (0,1),
+                ('f',0) : (0,3),
+                ('f',1.5) : (1,2),
+                ('s','') : (0,1),
+                ('s','x') : (2,3)
+                }.items():
+            self.assertEqual(params.find(k,v), [params.param(x) for x in ids])
+        for i in range(100): params.addParam()
+        for (k,v), ids in {
+                ('i',1) : (0,1),
+                ('f',1.5) : (1,2),
+                ('s','x') : (2,3)
+                }.items():
+            self.assertEqual(params.find(k,v), [params.param(x) for x in ids])
+        p3['s']='y'
+        for (k,v), ids in {
+                ('i',1) : (0,1),
+                ('f',1.5) : (1,2),
+                ('s','x') : (2,)
+                }.items():
+            self.assertEqual(params.find(k,v), [params.param(x) for x in ids])
 
     def testDelTerm(self):
         m=msys.CreateSystem()

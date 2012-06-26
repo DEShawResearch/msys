@@ -50,6 +50,9 @@ namespace desres { namespace msys {
             .def("duplicate",  &ParamTable::duplicate)
             .def("refcount",   &ParamTable::refcount)
             .def("compare",    &ParamTable::compare)
+            .def("findInt",     &ParamTable::findInt)
+            .def("findFloat",     &ParamTable::findFloat)
+            .def("findString",     &ParamTable::findString)
             ;
     }
 

@@ -17,12 +17,27 @@ namespace desres { namespace msys {
         char *  s;
     };
     
+    struct ValueCallback {
+        /* let holders of the values know about mutations.  This interface
+         * could be refined to hold some sort of id about which value
+         * changed, but for now a simple thunk will suffice. */
+        virtual void valueChanged() = 0;
+    };
+
     class ValueRef {
         ValueType   _type;
         Value&      _val;
+        ValueCallback *_cb;
     
     public:
-        ValueRef( ValueType type, Value& val ) : _type(type), _val(val) {}
+        ValueRef( ValueType type, Value& val ) 
+        : _type(type), _val(val), _cb(NULL) {}
+
+        /* constructor taking a callback to notify when modifications are
+         * made */
+        ValueRef( ValueType type, Value& val, ValueCallback* cb) 
+        : _type(type), _val(val), _cb(cb) {}
+
         ValueType type() const { return _type; }
     
         Int asInt() const;
@@ -82,6 +97,10 @@ namespace desres { namespace msys {
         /* return -1, 0 or 1 if this compares less than, equal to, or
          * greater than rhs */
         int compare(const ValueRef& rhs) const;
+
+        bool operator<(const ValueRef& rhs) const {
+            return compare(rhs)<0;
+        }
 
         template <typename T>
         bool operator!=(const T& rhs) const {

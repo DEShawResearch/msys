@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <string.h>
+#include <cstdio>
 
 using namespace desres::msys;
 
@@ -29,6 +30,14 @@ Id ParamTable::propIndex(const String& name) const {
         if (_props[i].name==name) return i;
     }
     return BadId;
+}
+
+void ParamTable::Property::update_index() {
+    for (Id i=maxIndexId; i<vals.size(); i++) {
+        ValueRef r(type, vals[i]);
+        index[r].push_back(i);
+    }
+    maxIndexId = vals.size();
 }
 
 void ParamTable::Property::extend() {
@@ -126,4 +135,36 @@ ValueRef ParamTable::value(Id row, String const& name)  {
     Id col = propIndex(name);
     if (bad(col)) MSYS_FAIL("No such property '" << name << "'");
     return value(row, col);
+}
+
+IdList ParamTable::findInt(Id col, Int const& val) {
+    Value v;
+    v.i=val;
+    ValueRef r(IntType, v);
+    return findValue(col,r);
+}
+
+IdList ParamTable::findFloat(Id col, Float const& val) {
+    Value v;
+    v.f=val;
+    ValueRef r(FloatType, v);
+    return findValue(col,r);
+}
+
+IdList ParamTable::findString(Id col, String const& val) {
+    Value v;
+    v.s=const_cast<char *>(val.c_str());
+    ValueRef r(StringType, v);
+    return findValue(col,r);
+}
+
+IdList ParamTable::findValue(Id col, ValueRef const& v) {
+    if (col>=_props.size()) {
+        MSYS_FAIL("no such column " << col);
+    }
+    Property& prop = _props[col];
+    prop.update_index();
+    Property::Index::iterator p = prop.index.find(v);
+    if (p==prop.index.end()) return IdList();
+    return p->second;
 }

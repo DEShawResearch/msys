@@ -16,14 +16,33 @@ namespace desres { namespace msys {
          * method aren't invalidated by later calls to addProp(). */
         typedef std::deque<Value> ValueList;
     
-        struct Property {
+        struct Property : public ValueCallback {
             String      name;
             ValueType   type;
             ValueList   vals;
     
+            /* index on values in this column */
+            typedef std::map<ValueRef, IdList> Index;
+            Index       index;  
+
+            /* one more than last row indexed */
+            Id          maxIndexId;
+            
+            /* reindex rows [maxIndexId, vals.size()) */
+            void update_index();
+
+            /* add a new row */
             void extend();
+
+            /* invalidate the entire index */
+            virtual void valueChanged() {
+                index.clear();
+                maxIndexId = 0;
+            }
+
+            Property() : maxIndexId(0) {}
         };
-    
+        
         typedef std::deque<Property> PropList;
         PropList _props;
     
@@ -74,7 +93,10 @@ namespace desres { namespace msys {
         void delProp(Id index);
 
         ValueRef value(Id row, Id col)  { 
-            return ValueRef(propType(col), _props.at(col).vals.at(row)); 
+            return ValueRef(
+                    propType(col), 
+                    _props.at(col).vals.at(row),
+                    &_props.at(col));
         }
         ValueRef value(Id row, String const& name);
 
@@ -83,6 +105,12 @@ namespace desres { namespace msys {
             for (Id i=0; i<_nrows; i++) p[i]=i;
             return p;
         }
+
+        /* find parameters with the given value in the given column */
+        IdList findInt(Id col, Int const& val);
+        IdList findFloat(Id col, Float const& val);
+        IdList findString(Id col, String const& val);
+        IdList findValue(Id col, ValueRef const& v);
     };
     typedef boost::shared_ptr<ParamTable> ParamTablePtr;
 }}
