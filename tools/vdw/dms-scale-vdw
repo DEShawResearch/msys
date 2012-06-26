@@ -44,6 +44,14 @@ def main():
 
     for i in range(0,n):
         s1 = mol.select(opts.ligand[i])
+        name = '1st' if i==0 else '2nd' if i==1 else '3rd' if i==2 else '%sth' % (i+1)
+
+        if not s1:
+            print "ERROR: No atoms in the %s selection: %s" % (
+                    name, opts.ligand[i])
+            exit(1)
+        else:
+            print "Selected %d atoms with %s selection" % (len(s1), name)
         for j in range(i+1,n):
             s2 = mol.select(opts.ligand[j])
             vdw.Scale(mol, s1, s2, opts.scale_sigma, opts.scale_epsilon)
@@ -52,6 +60,7 @@ def main():
     mol = mol.clone()
     print "Writing DMS file <%s>" % ofile
     msys.SaveDMS(mol, ofile)
+    print "OK"
 
 if __name__=="__main__": main()
 

@@ -47,11 +47,24 @@ def main():
     s2=str(opts.selection1)
     s1=mol.select(s1)
     s2=mol.select(s2)
-    vdw.Override(mol, s1, s2, **{'sigma' : sigma, 'epsilon' : epsilon })
-    mol.coalesceTables()
-    mol = mol.clone()
+    if not s1:
+        print "ERROR: No atoms in selection0:", opts.selection0
+    else:
+        print "Selected %d atoms in selection0" % len(s1)
+    if not s2:
+        print "ERROR: No atoms in selection1:", opts.selection1
+    else:
+        print "Selected %d atoms in selection1" % len(s2)
+    if s1 and s2:
+        vdw.Override(mol, s1, s2, **{'sigma' : sigma, 'epsilon' : epsilon })
+        mol.coalesceTables()
+        mol = mol.clone()
+    else:
+        print "Exiting abnormally"
+        exit(1)
     print "Writing DMS file <%s>" % ofile
     msys.SaveDMS(mol, ofile)
+    print "OK"
 
 if __name__=="__main__": main()
 
