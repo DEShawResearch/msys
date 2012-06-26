@@ -4,12 +4,13 @@
 #include <stdexcept>
 #include <sstream>
 #include <iostream>
+#include <algorithm>
 
 using namespace desres::msys;
 
 TermTable::TermTable( SystemPtr system, Id natoms, ParamTablePtr ptr ) 
 : _system(system), _natoms(natoms), _props(ParamTable::create()),
-  category(NO_CATEGORY) {
+  _maxIndexId(0), category(NO_CATEGORY) {
     _params = ptr ? ptr : ParamTable::create();
     _overrides = OverrideTable::create(_params);
 }
@@ -77,17 +78,20 @@ void TermTable::delTerm(Id id) {
     if (!hasTerm(id)) return;
     _params->decref(param(id));
     _deadterms.insert(id);
+    if (_index.size()) {
+        unsigned i,n = atomCount();
+        for (i=0; i<n; i++) {
+            Id atm = atom(id,i);
+            IdList& p = _index.at(atm);
+            p.resize(std::remove(p.begin(), p.end(), id)-p.begin());
+        }
+    }
 }
 
 void TermTable::delTermsWithAtom(Id atm) {
-    Id stride = 1+_natoms;
-    Id i,n = _terms.size()/stride;
-    for (i=0; i<n; i++) {
-        if (_deadterms.count(i)) continue;
-        TermList::const_iterator t=_terms.begin() + i*stride;
-        TermList::const_iterator e=t+_natoms;
-        if (std::find(t, e, atm)!=e) delTerm(i);
-    }
+    IdList ids(1, atm);
+    IdList terms = findWithAll(ids);
+    for (unsigned i=0; i<terms.size(); i++) delTerm(terms[i]);
 }
 
 Id TermTable::param(Id term) const { 
@@ -255,5 +259,80 @@ std::string desres::msys::print(Category const& c) {
         throw std::runtime_error(ss.str());
     }
     return category_names[n];
+}
+
+
+void TermTable::update_index() {
+    _index.resize(system()->maxAtomId());
+    const Id natoms=atomCount();
+    Id i=_maxIndexId, n=maxTermId();
+    for (; i<n; i++) {
+        if (!hasTerm(i)) continue;
+        for (Id j=0; j<natoms; j++) {
+            Id atm = atom(i,j);
+            _index.at(atm).push_back(i);
+        }
+    }
+    _maxIndexId = n;
+}
+
+IdList TermTable::findWithAll(IdList const& ids) {
+    update_index();
+    IdList terms;
+    for (unsigned i=0; i<ids.size(); i++) {
+        IdList const& p = _index.at(ids[i]);
+        if (i==0) {
+            terms = p;
+        } else {
+            IdList v(terms.size());
+            v.resize(
+                    std::set_intersection(
+                        p.begin(), p.end(), 
+                        terms.begin(), terms.end(),
+                        v.begin())-v.begin());
+            terms = v;
+        }
+    }
+    return terms;
+}
+
+IdList TermTable::findWithAny(IdList const& ids) {
+    update_index();
+    IdList terms;
+    for (unsigned i=0; i<ids.size(); i++) {
+        IdList const& p = _index.at(ids[i]);
+        if (i==0) {
+            terms = p;
+        } else {
+            IdList v(terms.size()+p.size());
+            v.resize(
+                    std::set_union(
+                        p.begin(), p.end(), 
+                        terms.begin(), terms.end(),
+                        v.begin())-v.begin());
+            terms = v;
+        }
+    }
+    return terms;
+}
+
+IdList TermTable::findExact(IdList const& ids) {
+    const unsigned natoms = atomCount();
+    IdList terms;
+    if (ids.size()!=natoms) return terms;
+
+    /* index gets updated by findWithAll() */
+    IdList tmp = findWithAll(ids);
+    for (unsigned i=0; i<tmp.size(); i++) {
+        Id term = tmp[i];
+        for (unsigned j=0; j<natoms; j++) {
+            if (atom(term,j)!=ids[j]) {
+                term = BadId;
+                break;
+            }
+        }
+        if (!bad(term)) terms.push_back(term);
+    }
+    return terms;
 }
 

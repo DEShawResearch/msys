@@ -497,6 +497,28 @@ class TermTable(object):
         assert atom.system == self.system, "atom is from different System"
         self._ptr.delTermsWithAtom(atom.id)
 
+    def findWithAll(self, atoms):
+        ''' return the terms that contain all the given atoms in any order '''
+        ptr, ids = _find_ids(atoms)
+        if ptr!=self.system:
+            raise ValueError, "atoms are from a different System"
+        return [self.term(x) for x in self._ptr.findWithAll(ids)]
+
+    def findWithAny(self, atoms):
+        ''' return the terms that contain at least one of the given atoms '''
+        ptr, ids = _find_ids(atoms)
+        if ptr!=self.system:
+            raise ValueError, "atoms are from a different System"
+        return [self.term(x) for x in self._ptr.findWithAny(ids)]
+
+    def findExact(self, atoms):
+        ''' return the terms that contain precisely the given atoms in the 
+        given order. '''
+        ptr, ids = _find_ids(atoms)
+        if ptr!=self.system:
+            raise ValueError, "atoms are from a different System"
+        return [self.term(x) for x in self._ptr.findExact(ids)]
+
     @property
     def terms(self):
         ''' returns a list of all the Terms in the table '''

@@ -54,6 +54,15 @@ namespace desres { namespace msys {
         /* overrides for the parameters of this table */
         OverrideTablePtr _overrides;
 
+        /* mapping from atom id to list of terms having that id. */
+        std::vector<IdList> _index;
+        /* max term id from last update */
+        Id _maxIndexId;
+
+        /* the index is updated only by the find() operations, and by 
+         * delTerm if an index has already been created.  */
+        void update_index();
+
     public:
         TermTable( SystemPtr system, Id natoms, 
                    ParamTablePtr ptr = ParamTablePtr() );
@@ -82,10 +91,23 @@ namespace desres { namespace msys {
         Id addTerm(const IdList& atoms, Id param);
         void delTerm(Id id);
 
-        /* delete all terms t containing atom id atm i the atoms list. 
-         * This operation requires a full scan of the entire set of
-         * terms, so use with care.  */
+        /* delete all terms t containing atom id atm i the atoms list.  */
         void delTermsWithAtom(Id atm);
+
+        /* return the ids of the terms which contain _all_ of the
+         * given atoms, in any order.  */
+        IdList findWithAll(IdList const& ids);
+
+        /* Return the ids of the terms which contain _any_ (at least one)
+         * of the given atoms, in any order. */
+        IdList findWithAny(IdList const& ids);
+
+        /* return the ids of the terms containing _exactly_ the given ids,
+         * in the given order.
+         *
+         * Internally, this just calls findAllIds(), then filters the result.
+         */
+        IdList findExact(IdList const& ids);
 
         /* Operations on individual terms */
         Id param(Id term) const;

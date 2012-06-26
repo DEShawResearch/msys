@@ -98,6 +98,9 @@ namespace desres { namespace msys {
 
             /* lookup terms based on atom */
             .def("delTermsWithAtom",    &TermTable::delTermsWithAtom)
+            .def("findWithAll", &TermTable::findWithAll)
+            .def("findWithAny", &TermTable::findWithAny)
+            .def("findExact",   &TermTable::findExact)
 
             /* coalesce */
             .def("coalesce",    &TermTable::coalesce)
