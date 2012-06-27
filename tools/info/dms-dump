@@ -2,6 +2,7 @@
 #{
 # desres-cleanenv \
 # -m Python/2.5.1-09/bin \
+# -m sqlite/3.6.23.1-02A/bin \
 # -- python $0 "$@"
 #}
 
@@ -108,8 +109,26 @@ def dmsdump(ipath, out, without_provenance = False,
     params=[p for p in params if p not in skipped]
     if without_groups:
         params = [p for p in params if not p.startswith('grp_')]
+    if 'segid' not in params:
+        params.append('segid')
+        fake_segid=True
+    else:
+        fake_segid=False
+    if 'name' not in params:
+        params.append('name')
+        fake_name=True
+    else:
+        fake_name=False
+    params.sort()
+    if fake_segid:
+        params[params.index('segid')]='"" as segid'
+    if fake_name:
+        params[params.index('name')]='"" as name'
+    else:
+        params[params.index('name')]='trim(name) as name'
 
-    s = ','.join(sorted(params))
+    s = ','.join(params)
+
     sql='select "particle", %s from particle' % s
 
     subprocess.call(cmd+[sql], stdout=out)
@@ -120,7 +139,7 @@ def dmsdump(ipath, out, without_provenance = False,
     if('order' in params):
       subprocess.call(cmd+['select "bond", p0,p1, "order" from bond order by p0, p1'], stdout=out)
     else:
-      subprocess.call(cmd+['select "bond", p0,p1          from bond order by p0, p1'], stdout=out)
+      subprocess.call(cmd+['select "bond", p0,p1, 1.0 as "order" from bond order by p0, p1'], stdout=out)
     newline(out)
 
     # bond, constraint, and virtual and drude terms
@@ -141,9 +160,9 @@ def dmsdump(ipath, out, without_provenance = False,
 
     atoms, params = get_columns(ipath, 'nonbonded_param')
     if without_paraminfo:
-        for p in ( 'ff', 'type', 'typekey', 'memo', 'comment',
-                   'ffA', 'typeA', 'typekeyA', 'memoA', 'commentA',
-                   'ffB', 'typeB', 'typekeyB', 'memoB', 'commentB',
+        for p in ( 'ff', 'type', 'typekey', 'memo', 'comment', 'override',
+                   'ffA', 'typeA', 'typekeyA', 'memoA', 'commentA', 'overrideA',
+                   'ffB', 'typeB', 'typekeyB', 'memoB', 'commentB', 'overrideB',
                       ):
             if p in params:
                 params.remove(p)
@@ -155,6 +174,17 @@ def dmsdump(ipath, out, without_provenance = False,
     s += ','.join(['nb.%s as %s' % (p,p) for p in params])
     sql='select "nonbonded", p.id, %s from particle as p join nonbonded_param as nb on p.nbtype = nb.id' % s
     subprocess.call(cmd+[sql], stdout=out, stderr=subprocess.PIPE)
+
+    # nonbonded combined
+    if has_table(ipath, "nonbonded_combined_param"):
+        atoms, params = get_columns(ipath, "nonbonded_combined_param")
+        params.remove("param1")
+        params.remove("param2")
+        params.sort()
+        params=['"nonbonded_combined"', "param1", "param2"] + params
+        s=",".join(params)
+        sql='select %s from nonbonded_combined_param' % s
+        subprocess.call(cmd+[sql], stdout=out, stderr=subprocess.PIPE)
 
     # exclusions
     sql='select "exclusion", * from exclusion'
