@@ -119,6 +119,11 @@ def dmsdump(ipath, out, without_provenance = False,
         fake_name=True
     else:
         fake_name=False
+    if 'resname' not in params:
+        params.append('resname')
+        fake_resname=True
+    else:
+        fake_resname=False
     params.sort()
     if fake_segid:
         params[params.index('segid')]='"" as segid'
@@ -126,6 +131,10 @@ def dmsdump(ipath, out, without_provenance = False,
         params[params.index('name')]='"" as name'
     else:
         params[params.index('name')]='trim(name) as name'
+    if fake_resname:
+        params[params.index('resname')]='"" as resname'
+    else:
+        params[params.index('resname')]='trim(resname) as resname'
 
     s = ','.join(params)
 
