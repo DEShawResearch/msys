@@ -10,6 +10,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <sys/types.h>
 
 namespace desres { namespace msys {
   class DestroArray;
