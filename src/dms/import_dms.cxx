@@ -129,11 +129,13 @@ static void read_table( Sqlite dms,
     bool separate_param_table = false;
     if (paramcol>=0 && paramAcol==-1 && paramBcol==-1) {
         Reader r = dms.fetch(param_table);
+        if (!r.size()) MSYS_FAIL("Missing param table at " << param_table);
         idmap = read_params(r, terms->params());
         separate_param_table = true;
     } else if (paramcol==-1 && paramAcol>=0 && paramBcol>=0) {
         param_table = param_table.substr(11);
         Reader r = dms.fetch(param_table);
+        if (!r.size()) MSYS_FAIL("Missing param table at " << param_table);
         rp = ParamTable::create();
         idmap = read_params(r, rp);
         separate_param_table = true;
