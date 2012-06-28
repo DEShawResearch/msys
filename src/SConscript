@@ -114,7 +114,6 @@ dms/import_dms.cxx
 elements.cxx
 
 pdb/pdb.cxx
-pdb/readpdb.c
 
 schema.cxx
 schema/schema.cxx

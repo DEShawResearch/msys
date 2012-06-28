@@ -4,9 +4,8 @@
 #include "readpdb.h"
 
 #include <vector>
+#include <boost/foreach.hpp>
 #include <string>
-#include <map>
-#include <stdexcept>
 
 using namespace desres::msys;
 
@@ -25,7 +24,7 @@ SystemPtr desres::msys::ImportPDB( std::string const& path ) {
     char pdbstr[PDB_BUFFER_LENGTH];
 
     FILE* fd = fopen(path.c_str(), "r");
-    if (!fd) throw std::runtime_error("Failed opening pdb file");
+    if (!fd) MSYS_FAIL("Failed opening pdb file for reading at " << path);
     boost::shared_ptr<FILE> defer_close(fd, fclose);
 
     SystemPtr mol = System::create();
@@ -38,7 +37,7 @@ SystemPtr desres::msys::ImportPDB( std::string const& path ) {
             int serial, resid;
             char name[32], resname[32], chainname[32], segid[32], residstr[32];
             char insertion[4], altloc[4], element[4];
-            float x, y, z, occup, beta;
+            double x, y, z, occup, beta;
 
             desres_msys_get_pdb_fields(pdbstr, PDB_BUFFER_LENGTH, &serial,
                     name, resname, chainname,
@@ -59,5 +58,43 @@ SystemPtr desres::msys::ImportPDB( std::string const& path ) {
     } while (indx != PDB_END && indx != PDB_EOF);
 
     return mol;
+}
+
+void desres::msys::ExportPDB(SystemPtr mol, std::string const& path) {
+    FILE* fd = fopen(path.c_str(), "w");
+    if (!fd) MSYS_FAIL("Failed opening pdb file for writing at " << path);
+    boost::shared_ptr<FILE> defer_close(fd, fclose);
+    
+    int index=0;
+    for (Id chn=0; chn<mol->maxChainId(); chn++) {
+        if (!mol->hasChain(chn)) continue;
+        const char* segid = mol->chain(chn).segid.c_str();
+        const char* chain = mol->chain(chn).name.c_str();
+
+        BOOST_FOREACH(Id res, mol->residuesForChain(chn)) {
+            int resid = mol->residue(res).resid;
+            const char* resname = mol->residue(res).name.c_str();
+
+            BOOST_FOREACH(Id atm, mol->atomsForResidue(res)) {
+                const char* name = mol->atom(atm).name.c_str();
+                const char* elementsym = " ";
+                const char* insertion = " ";
+                const char* altloc = " ";
+                double x = mol->atom(atm).x;
+                double y = mol->atom(atm).y;
+                double z = mol->atom(atm).z;
+                double occ = 1;
+                double beta = 0;
+
+                ++index;
+                if (!desres_msys_write_raw_pdb_record(
+                        fd, "ATOM", index, name, resname, resid,
+                        insertion, altloc, elementsym, x, y, z,
+                        occ, beta, chain, segid)) {
+                    MSYS_FAIL("Failed writing PDB to " << path << " at line " << index);
+                }
+            }
+        }
+    }
 }
 

@@ -6,6 +6,7 @@
 namespace desres { namespace msys {
 
     SystemPtr ImportPDB( std::string const& path );
+    void ExportPDB(SystemPtr mol, std::string const& path);
 
 }}
 

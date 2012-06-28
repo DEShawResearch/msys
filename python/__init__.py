@@ -1185,8 +1185,11 @@ def SaveDMS(system, path):
 
 def SaveMAE(system, path, with_forcefield = True ):
     ''' Export the System to an MAE file at the given path. '''
-    import sys
     _msys.ExportMAE(system._ptr, str(path), bool(with_forcefield) )
+
+def SavePDB(system, path):
+    ''' Export the System to a PDB file at the given path. '''
+    _msys.ExportPDB(system._ptr, str(path))
 
 def TableSchemas():
     ''' available schemas for System.addTableFromSchema '''

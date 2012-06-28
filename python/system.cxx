@@ -285,6 +285,7 @@ namespace desres { namespace msys {
         def("ImportMAEFromBuffer", import_mae_from_buffer);
         def("ExportMAE", ExportMAE);
         def("ImportPDB", ImportPDB);
+        def("ExportPDB", ExportPDB);
         def("ImportPrmTop", ImportPrmTop);
         def("ImportCrdCoordinates", ImportCrdCoordinates);
 
