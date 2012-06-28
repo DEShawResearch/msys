@@ -821,6 +821,7 @@ class TestMain(unittest.TestCase):
 
         msys.SaveDMS(m, 'foo.dms')
         m2=msys.LoadDMS('foo.dms')
+        msys.SaveDMS(m2, 'foo.dms')
         alc=m2.table('alchemical_nonbonded')
         self.assertEqual(alc.term(0)['chargeC'], 0.5)
 

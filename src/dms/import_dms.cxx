@@ -269,7 +269,7 @@ read_nonbonded( Sqlite dms, IdList const& gidmap, System& sys,
         alc->category = NONBONDED;
         std::vector<int> termprops;
         for (int i=0; i<r.size(); i++) {
-            if (i==P0 || i==TYPEA || i==TYPEB) continue;
+            if (i==P0 || i==CHARGEA || i==TYPEA || i==TYPEB) continue;
             alc->addTermProp(r.name(i), r.type(i));
             termprops.push_back(i);
         }
