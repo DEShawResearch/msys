@@ -1,3 +1,10 @@
+1.4.7  NEW: ParamTable::find and TermTable::find{WithAny,WithAll,Exact}.
+       NEW: msys.SavePDB.
+       NEW: better logging in dms-override-vdw and dms-scale-vdw.
+       FIXED: reading of alchemical dms files.
+       FIXED: LoadPDB now uses correct chain/segid logic.
+       FIXED: dms-dump prints nonbonded_combined information.
+
 1.4.6  Portability (build without C++0x, and on OS X).
 
 1.4.5  Renamed dms-scale-vdw --scale option to --scale-sigma and added
