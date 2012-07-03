@@ -55,6 +55,7 @@ env.AddScript('vdw/dms-override-vdw')
 env.AddScript('vdw/dms-scale-vdw')
 
 # other scripts
+env.AddScript('scripts/dms-frame')
 env.AddScript('scripts/dms-macro')
 env.AddScript('scripts/dms-select')
 env.AddScript('scripts/dms-set')

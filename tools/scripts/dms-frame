@@ -1,0 +1,137 @@
+#!/usr/bin/env desres-exec
+# -*- python -*-
+#{
+# desres-cleanenv $MSYS_CLEANENV \
+# -m numpy/1.5.1-29A/lib-python \
+# -m molfile/1.8.15/lib-python \
+# -m periodicfix/2.3.13/lib-python \
+# -- python $0 "$@"
+#}
+
+'''
+dms-frame input.dms output.dms [ options ]
+    Extract a frame from a trajectory into a dms file, and perform optional
+    centering and periodic wrapping.
+                    
+'''
+
+import msys
+import molfile
+from molfile import findframe
+import periodicfix as PF
+import numpy as NP
+
+def main():
+    import optparse
+    parser = optparse.OptionParser(__doc__)
+
+    parser.add_option('-i', "--input-path", default=None,
+            help="Input trajectory")
+    parser.add_option('--input-type', default='dtr',
+            help="molfile type for input trajectory (default 'dtr')")
+    parser.add_option('-t', "--time", default=None, type='float',
+            help="Selected frame time")
+    parser.add_option('-n', "--index", default=None, type='int',
+            help="Selected frame index")
+    parser.add_option('--zero-velocities', action="store_true", default=False,
+            help="Use zero velocities instead of reading from frame")
+    parser.add_option('-c', '--center', default=None,
+            help="Centering selection")
+    parser.add_option('-g', '--glue', default=[], action='append',
+            help="Glue selections (multiple)")
+    parser.add_option('--wrap', action="store_true", default=False,
+            help="Apply periodic wrapping; implied by --center")
+
+
+    opts, args = parser.parse_args()
+    if len(args)!=2:
+        parser.error("incorrect number of arguments")
+
+    print "Reading input file", args[0]
+    mol=msys.Load(args[0])
+    print "Input file contains %d atoms, %d bonds" % (mol.natoms, mol.nbonds)
+
+    if opts.input_path is not None:
+        print "Reading trajectory of type %s at %s" % (
+                opts.input_type, opts.input_path)
+        plugin=getattr(molfile, opts.input_type)
+        T=plugin.read(opts.input_path)
+        print "Trajectory contains %d frames, %d atoms" % (T.nframes, T.natoms)
+        if T.natoms != mol.natoms:
+            raise ValueError, "Trajectory and DMS file have different #atoms"
+        if opts.time is not None:
+            F = T.at_time_near(opts.time)
+            ind = findframe.at_time_near(T.times, F.time)
+        elif opts.index is not None:
+            F = T.frame(opts.index)
+            ind = opts.index
+        else:
+            raise ValueError, "Specify either --index or --frame"
+        print "Selected frame %d with time %s" % (ind, F.time)
+        mol.positions = F.pos
+        for i in range(3):
+            mol.cell[i][:] = F.box[i]
+        if opts.zero_velocities:
+            print "Setting velocities to zero"
+            for a in mol.atoms:
+                a.vx=0
+                a.vy=0
+                a.vz=0
+        else:
+            vel = F.vel
+            if vel is None:
+                print "No velocities in frame, not updating velocities"
+            else:
+                print "Updating velocities"
+                for i, a in enumerate(mol.atoms):
+                    a.vel = vel[i]
+
+    if opts.wrap or opts.center:
+        print "Extracting old positions and unit cell"
+        pos = NP.zeros((mol.natoms, 3), 'f')
+        box = NP.zeros((3,3), 'd')
+        pos[:] = mol.positions
+        for i in range(3):
+            for j in range(3):
+                box[i][j] = mol.cell[i][j]
+
+        print "Adjusting bonds"
+        top=PF.Topology(mol.natoms)
+        for b in mol.bonds:
+            ai, aj = b.atoms
+            top.add_bond(ai.id, aj.id)
+        top.wrap_bonds(pos, box)
+        wrapper = PF.FragmentWrapper(top)
+
+        if opts.center or opts.glue:
+            print "Joining atoms in center or glue"
+            for glue in opts.glue:
+                for g in glue.split(';'):
+                    sel = [a.id for a in mol.select(g)]
+                    wrapper.aggregate(sel)
+            center = None
+            if opts.center:
+                center = mol.select(opts.center)
+                wrapper.aggregate([a.id for a in center])
+            wrapper.join(box, pos)
+
+            if center:
+                print "Centering %d atoms" % len(center)
+                c=NP.zeros(3, 'd')
+                for a in center:
+                    c += pos[a.id]
+                c /= len(center)
+                pos -= c
+
+        print "Wrapping fragments"
+        wrapper.wrap(box, pos, None)
+
+        print "Applying changes"
+        mol.positions = pos
+
+    print "Writing DMS file", args[1]
+    msys.SaveDMS(mol, args[1])
+
+if __name__=="__main__": main()
+
+# vim: filetype=python
