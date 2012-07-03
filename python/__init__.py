@@ -119,7 +119,7 @@ class Atom(Handle):
         return (self.x, self.y, self.z)
     @pos.setter
     def pos(self, xyz):
-        self.x, self.y, self.z = xyz
+        self.x, self.y, self.z = map(float, xyz)
 
     @property
     def vel(self):
@@ -127,7 +127,7 @@ class Atom(Handle):
         return (self.vx, self.vy, self.vz)
     @vel.setter
     def vel(self, xyz):
-        self.vx, self.vy, self.vz = xyz
+        self.vx, self.vy, self.vz = map(float, xyz)
 
     @property
     def residue(self): return Residue(self._ptr, self.data().residue)
