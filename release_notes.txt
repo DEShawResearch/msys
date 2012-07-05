@@ -2,6 +2,7 @@
        REMOVED: Undocumented "builder" module.
        FIXED: Documentation for dms-override-vdw, dms-scale-vdw
        NEW: dms-frame tool for extracting coordinates and doing periodic fix.
+       NEW: C++ interface for guessing file type.
 
 1.4.8  NEW dms-frame script for frame extraction with centering and wrapping.
 
