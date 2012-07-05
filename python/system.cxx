@@ -6,6 +6,7 @@
 #include "mae.hxx"
 #include "dms.hxx"
 #include "pdb.hxx"
+#include "load.hxx"
 #include "amber.hxx"
 
 #include <fstream>
@@ -288,6 +289,9 @@ namespace desres { namespace msys {
         def("ExportPDB", ExportPDB);
         def("ImportPrmTop", ImportPrmTop);
         def("ImportCrdCoordinates", ImportCrdCoordinates);
+        def("Load", Load,
+                (arg("path"),
+                 arg("opt_format")=object()));
 
         def("Clone", Clone);
 

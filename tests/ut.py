@@ -279,6 +279,7 @@ class TestMain(unittest.TestCase):
         r.chain.segid="WAT1"
         msys.SaveDMS(m,'foo.dms')
         m2=msys.LoadDMS('foo.dms')
+        msys.Load("foo.dms")
         self.assertEqual(1,m.nresidues)
         self.assertEqual(1,m2.nresidues)
 
@@ -926,7 +927,7 @@ class TestMain(unittest.TestCase):
 
     def testAlchemicalMaeRestraint(self):
         d=os.path.dirname(__file__)
-        m=msys.LoadMAE(os.path.join(d, 'mae/alchemical_restraint.mae'))
+        m=msys.Load(os.path.join(d, 'mae/alchemical_restraint.mae'))
         self.assertEqual(m.natoms, 5)
         con=m.table('constraint_ah2')
         res=m.table('posre_harm')
