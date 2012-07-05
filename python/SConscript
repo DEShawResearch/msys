@@ -22,4 +22,3 @@ pymod.cxx
 env.AddPythonExtension('_msys', pymodfiles, prefix='msys')
 env.AddPythonModule('__init__.py', prefix='msys')
 
-env.AddPythonExtension('_builder', ['builder.cxx'], prefix='msys')

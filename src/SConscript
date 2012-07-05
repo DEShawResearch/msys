@@ -99,9 +99,6 @@ mae/destro/Zing.cxx
 
 libmsys=env.AddLibrary('msys', selobjs + maeobjs + Split('''
 
-builder.cxx
-charmm_file.c
-defs.cxx
 geom.cxx
 
 amber/import_crd.cxx
