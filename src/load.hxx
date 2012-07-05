@@ -20,7 +20,10 @@ namespace desres { namespace msys {
 
     /* Returns a name for the given file format, for logging purposes.
      * For unrecognized the name will be "UNRECOGNIZED". */
-    std::string FileFormatName(FileFormat format);
+    std::string FileFormatAsString(FileFormat format);
+
+    /* Inverse of previous: file format given a string. */
+    FileFormat FileFormatFromString(std::string const& name);
 
     /* Load using the specified format with default options.  Returns
      * NULL SystemPtr if format is UnrecognizedFileFormat */

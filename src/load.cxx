@@ -25,6 +25,13 @@ namespace {
         return false;
     }
 
+    const char *format_names[] = {
+        "UNRECOGNIZED",
+        "DMS",
+        "MAE",
+        "PDB",
+        "PARM7"
+    };
 }
 
 namespace desres { namespace msys {
@@ -43,25 +50,18 @@ namespace desres { namespace msys {
         return UnrecognizedFileFormat;
     }
 
-    std::string FileFormatName(FileFormat format) {
-        std::string s;
-        switch (format) {
-            default:
-            case UnrecognizedFileFormat:
-                s="UNRECOGNIZED";
-                break;
-            case DmsFileFormat:
-                s="DMS";
-                break;
-            case MaeFileFormat:
-                s="MAE";
-                break;
-            case PdbFileFormat:
-                s="PDB";
-            case ParmTopFileFormat:
-                s="PARM7";
+    std::string FileFormatAsString(FileFormat format) {
+        return format_names[format];
+    }
+
+    FileFormat FileFormatFromString(std::string const& name) {
+        unsigned i,n = sizeof(format_names)/sizeof(format_names[0]);
+        for (i=0; i<n; i++) {
+            if (name==format_names[i]) {
+                return FileFormat(i);
+            }
         }
-        return s;
+        return UnrecognizedFileFormat;
     }
 
     SystemPtr LoadWithFormat(std::string const& path, FileFormat format) {
