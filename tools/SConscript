@@ -23,15 +23,6 @@ env.AddScript('glue/dms-glue')
 env.AddPythonModule('grease/grease.py', prefix='msys')
 env.AddScript('grease/dms-grease')
 
-## solvate
-env.AddPythonModule('solvate/solvate.py', prefix='msys')
-env.AddScript('solvate/dms-solvate')
-env.AddShare('solvate/h2o.dms')
-
-## neutralize
-env.AddPythonModule('neutralize/neutralize.py', prefix='msys')
-env.AddScript('neutralize/dms-neutralize')
-
 ## posre
 env.AddPythonModule('posre/posre.py', prefix='msys')
 env.AddScript('posre/dms-posre')
