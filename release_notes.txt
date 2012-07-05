@@ -1,4 +1,5 @@
 1.5.0  REMOVED: dms-neutralize, dms-solvate
+       REMOVED: Undocumented "builder" module.
 
 1.4.8  NEW dms-frame script for frame extraction with centering and wrapping.
 
