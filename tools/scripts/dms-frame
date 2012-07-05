@@ -2,8 +2,6 @@
 # -*- python -*-
 #{
 # desres-cleanenv $MSYS_CLEANENV \
-# -m numpy/1.5.1-29A/lib-python \
-# -m molfile/1.8.15/lib-python \
 # -m periodicfix/2.3.13/lib-python \
 # -- python $0 "$@"
 #}

@@ -21,6 +21,8 @@ SQLITE=$(treetop sqlite)
 PCRE=$(treetop pcre)
 ANTLR=$(treetop antlr)
 JSON=$(treetop fastjson)
+MOLFILE=molfile/1.9.0
+NUMPY=numpy/1.5.1-29A
 
 # build and documentation
 SCONS=$(treetop scons)
@@ -39,6 +41,7 @@ loadmodules() {
         $PCRE/lib-shared \
         $ANTLR/lib \
         $JSON/lib \
+        $MOLFILE/lib \
         $SPHINX/bin 
     
    export MSYS_VERSION=$VERSION
@@ -78,7 +81,7 @@ module-whatis {$NAME - $DESCRIPTION}
 prepend-path PATH $PREFIX/bin
 prepend-path MANPATH $PREFIX/doc/man
 setenv MSYS_PREFIX "$PREFIX"
-setenv MSYS_CLEANENV "-m $PYTHON/bin -m $NAME/$VERSION/lib-python"
+setenv MSYS_CLEANENV "-m $PYTHON/bin -m $NAME/$VERSION/lib-python -m $NUMPY/lib-python -m $MOLFILE/lib-python"
 EOF
 }
 
