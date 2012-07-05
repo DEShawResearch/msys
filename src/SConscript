@@ -110,6 +110,8 @@ dms/import_dms.cxx
 
 elements.cxx
 
+load.cxx
+
 pdb/pdb.cxx
 
 schema.cxx

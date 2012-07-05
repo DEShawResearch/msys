@@ -14,7 +14,7 @@ namespace desres { namespace msys { namespace atomsel {
   class Regex {
   public:
     /* initialize with a regular expression pattern.  Throws on failure */
-    explicit Regex( const std::string& r );
+    Regex( const std::string& r, int pcre_options = 0 );
 
     /* does the input match? */
     bool match( const std::string& pat ) const;

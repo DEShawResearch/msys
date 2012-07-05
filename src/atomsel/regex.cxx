@@ -5,7 +5,7 @@
 
 using namespace desres::msys::atomsel;
 
-Regex::Regex( const std::string& r ) {
+Regex::Regex( const std::string& r, int options ) {
     const char * errmsg;
     int offset;
     /* we only want to find complete matches */
@@ -14,7 +14,7 @@ Regex::Regex( const std::string& r ) {
     r2 += ")$";
     pcre * pc = pcre_compile( 
             r2.c_str(), /* regex */
-            0,          /* options */
+            options,    /* options */
             &errmsg,    /* error message */
             &offset,    /* location of error */
             NULL );     /* table pointer */
