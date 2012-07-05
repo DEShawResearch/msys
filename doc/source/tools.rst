@@ -185,6 +185,69 @@ dms-diff
 Basic Manipulation
 ------------------
 
+dms-frame
+---------
+.. program:: dms-frame
+
+.. describe:: dms-frame input.dms output.dms [ options ]
+
+   Extract a frame from a trajectory into a dms file, and perform optional
+   centering and periodic wrapping.
+
+options:
+
+.. cmdoption:: -i input, --input-path input
+
+   Input coordinate/trajectory file.
+
+.. cmdoption:: --input-type type
+
+   File type for input file; default 'dtr'.
+
+.. cmdoption:: -t time, --time time
+
+   Selected frame time for input coordinates
+
+.. cmdoption:: -n index, --index index
+
+   Selected frame index for input coordinates
+
+.. cmdoption:: --zero-velocities
+
+   Use zero velocities instead of reading from frame.
+
+.. cmdoption:: -g glue, --glue glue
+
+   Glue atom selections (can be specified multiple times)
+
+.. cmdoption:: -c centersel, --center centersel
+
+   Center atoms in the given selection
+
+.. cmdoption:: --wrap
+
+   Apply periodic wrapping (implied by --center)
+
+
+*dms-frame* reads coordinates from a coordinate or trajectory file and
+copies them into a DMS file.  Periodic wrapping may also be applied
+to the coordinates.  If the input coordinate file is a trajectory containing
+multiple frames, the frame may be selected either with a time, in which case
+the frame whose time is closest to the provided value will be selected,
+or with a frame index, which can be negative in the usual Python sense
+(i.e. index -1 chooses the last frame).  Either time or index may be 
+provided, but not both.
+
+If a centering selection is provided, the center will be calculated from
+the input coordinates after applying any glue or periodic wrapping.  The
+selection will be centered on the origin, and the rest of the system will
+be wrapped so as to fit in the periodic cell.
+
+Velocities will be copied from the input frame if they are present; if
+not, the velocities in the input dms file will be used.  Specifying 
+`--zero-velocities` makes the velocities zero in the output file.
+
+
 dms-select  
 ----------
 .. program:: dms-select
@@ -462,6 +525,77 @@ file will be restrained using the newly provided force constraints::
 
   # Restrain CA atoms with a force constant of 0.3
   dms-posre out1.dms out2.dms -s "name CA" -f 0.3
+
+dms-override-vdw
+----------------
+.. program:: dms-override-vdw
+
+.. describe:: dms-override-vdw input.dms output.dms [ options ]
+
+   Override vdw interactions between selected atoms.
+
+options:
+
+.. cmdoption:: --sigma sigma
+
+   Vdw sigma
+
+.. cmdoption:: --epsilon epsilon
+
+   Vdw epsilon
+
+.. cmdoption:: --selection0 selection
+ 
+   Atom selection for the first group
+
+.. cmdoption:: --selection1 selection
+
+   Atom selection for the second group
+
+*dms-override-vdw* changes the vdw interaction between two specified groups
+of atoms to the specified values of sigma and epsilon.  All options (sigma,
+epsilon, selection0, selection1) are required, and the selection groups must
+not be empty.  
+
+Currently, the vdw functional form of the DMS file must be "vdw_12_6".  
+
+This tool uses the `nonbonded_combined_param` table in the DMS file to store
+the overrides and therefore should not be used with versions of Anton
+software older than 2.9.2  
+
+dms-scale-vdw
+-------------
+.. program:: dms-scale-vdw
+
+.. describe:: dms-scale-vdw input.dms output.dms [ options ]
+
+   Scale vdw interactions between selected atoms.
+
+options:
+
+.. cmdoption:: -s scale_sigma, --scale-sigma scale_sigma
+
+   scale factor for sigma, default 1.0
+
+.. cmdoption:: -e scale_epsilon, --scale-epsilon scale_epsilon
+
+   scale factor for epsilon, default 1.0
+
+.. cmdoption:: -l selection, --ligand selection
+
+   atom selection groups (specify multiple)
+
+*dms-scale-vdw* scales the vdw interactions between multiple groups of atoms.
+The vdw interactions between each ligand group will be scaled by the
+specified amount.  As many ligands may be specified as desired, though
+different implementations on Desmond and Anton may in practice limit the
+number possible
+
+Currently, the vdw functional form of the DMS file must be "vdw_12_6".  
+
+This tool uses the `nonbonded_combined_param` table in the DMS file to store
+the overrides and therefore should not be used with versions of Anton
+software older than 2.9.2  
 
 
 ------------------------

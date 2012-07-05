@@ -1,5 +1,7 @@
 1.5.0  REMOVED: dms-neutralize, dms-solvate
        REMOVED: Undocumented "builder" module.
+       FIXED: Documentation for dms-override-vdw, dms-scale-vdw
+       NEW: dms-frame tool for extracting coordinates and doing periodic fix.
 
 1.4.8  NEW dms-frame script for frame extraction with centering and wrapping.
 
