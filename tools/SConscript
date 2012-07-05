@@ -6,9 +6,6 @@ env.Prepend(CPPPATH=['../src'], LIBS=['msys'])
 env.AddProgram('mae2dms', 'converters/mae2dms.cxx')
 env.AddProgram('dms2mae', 'converters/dms2mae.cxx')
 
-## builder
-env.AddPythonModule('builder/builder.py', prefix='msys')
-
 ## fep
 env.AddPythonModule('fep/_alchemical.py', prefix='msys')
 env.AddPythonModule('fep/kept.py', prefix='msys')
@@ -22,6 +19,15 @@ env.AddScript('glue/dms-glue')
 ## grease
 env.AddPythonModule('grease/grease.py', prefix='msys')
 env.AddScript('grease/dms-grease')
+
+## psfgen
+psfenv=env.Clone()
+psfenv.Append(
+        CPPDEFINES=['PSFGEN_USEPLUGINS'],
+        LIBS=['molfile'],
+        )
+psfenv.AddLibrary('psfgen', Glob('psfgen/src/*.c'))
+psfenv.AddPythonModule('psfgen/psfgen.py', prefix='msys')
 
 ## posre
 env.AddPythonModule('posre/posre.py', prefix='msys')
