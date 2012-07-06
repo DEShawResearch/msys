@@ -54,7 +54,7 @@ Id TermTable::termCount() const {
 
 Id TermTable::addTerm(const IdList& atoms, Id param) {
     if (atoms.size() != _natoms) {
-        throw std::runtime_error("addTerm: incorrect atom count");
+        MSYS_FAIL("incorrect atom count for TermTable " << name());
     }
     SystemPtr s = system();
     if (!s) MSYS_FAIL("Table has been destroyed");
@@ -95,12 +95,16 @@ void TermTable::delTermsWithAtom(Id atm) {
 }
 
 Id TermTable::param(Id term) const { 
-    if (!hasTerm(term)) throw std::runtime_error("Invalid term");
+    if (!hasTerm(term)) {
+        MSYS_FAIL("Table '" << name() << "' has no term with id " << term);
+    }
     return  _terms.at((1+term)*(1+_natoms)-1);
 }
 
 void TermTable::setParam(Id term, Id param) {
-    if (!hasTerm(term)) throw std::runtime_error("Invalid term");
+    if (!hasTerm(term)) {
+        MSYS_FAIL("Table '" << name() << "' has no term with id " << term);
+    }
     if (!(bad(param) || _params->hasParam(param))) {
         MSYS_FAIL("Invalid param " << param << " for table " << name());
     }
@@ -117,12 +121,21 @@ Id TermTable::maxTermId() const {
     return _terms.size()/(1+_natoms);
 }
 
-IdList TermTable::atoms(Id i) const { 
-    TermList::const_iterator b=_terms.begin()+i*(1+_natoms);
+IdList TermTable::atoms(Id term) const { 
+    if (term>=maxTermId()) {
+        MSYS_FAIL("Table '" << name() << "' has no term with id " << term);
+    }
+    TermList::const_iterator b=_terms.begin()+term*(1+_natoms);
     return IdList(b, b+_natoms);
 }
 
 Id TermTable::atom(Id term, Id index) const {
+    if (term>=maxTermId()) {
+        MSYS_FAIL("Table '" << name() << "' has no term with id " << term);
+    }
+    if (index>=atomCount()) {
+        MSYS_FAIL("Table '" << name() << "' has no atoms for index " << index);
+    }
     TermList::const_iterator b=_terms.begin()+term*(1+_natoms);
     return *(b+index);
 }
@@ -155,11 +168,22 @@ void TermTable::delTermProp(Id index) {
 }
 
 ValueRef TermTable::termPropValue(Id term, Id index) {
+    if (!hasTerm(term)) {
+        MSYS_FAIL("TermTable " << this->name() << " has no term with id " << term);
+    }
     return _props->value(term, index);
 }
 
 ValueRef TermTable::termPropValue(Id term, String const& name) {
-    return _props->value(term, termPropIndex(name));
+    Id index = termPropIndex(name);
+    if (bad(index)) {
+        std::string extra;
+        if (!bad(_params->propIndex(name))) {
+                extra = ", although a param property with that name does exist.";
+        }
+        MSYS_FAIL("TermTable " << this->name() << " has no term property '" << name << "'" << extra);
+    }
+    return termPropValue(term, index);
 }
 
 ValueRef TermTable::propValue(Id term, Id index) {
@@ -168,8 +192,15 @@ ValueRef TermTable::propValue(Id term, Id index) {
 }
 
 ValueRef TermTable::propValue(Id term, String const& name) {
-    Id row = this->param(term);
-    return _params->value(row, name);
+    Id index = _params->propIndex(name);
+    if (bad(index)) {
+        std::string extra;
+        if (!bad(termPropIndex(name))) {
+            extra = ", although a term property with that name does exist.";
+        }
+        MSYS_FAIL("TermTable " << this->name() << " has no param property '" << name << "'" << extra);
+    }
+    return propValue(term, index);
 }
 
 namespace {
