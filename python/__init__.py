@@ -803,6 +803,39 @@ class System(object):
     def positions(self, pos):
         self._ptr.setPositions(pos)
 
+    def setPositions(self, pos):
+        ''' set positions from Nx3 array '''
+        self._ptr.setPositions(pos)
+
+    def setVelocities(self, vel):
+        ''' set velocities from Nx3 array '''
+        for i,a in enumerate(self.atoms):
+            a.vel = vel[i]
+
+    def setCell(self, cell):
+        ''' set unit cell from from 3x3 array '''
+        for i in range(3):
+            self.cell[i][:] = cell[i]
+
+    def readFrame(self, frame, zero_velocities=False):
+        ''' read positions and box information from molfile
+        frame into System.  '''
+        pos = frame.pos
+        if pos is None:
+            pos = frame.dpos
+        vel = frame.vel
+        if vel is None:
+            vel = frame.dvel
+        cell = frame.box
+
+        if pos is not None:
+            self.setPositions(pos)
+        if zero_velocities:
+            self.setVelocities([(0., 0., 0.)]*self.natoms) 
+        elif vel is not None:
+            self.setVelocities(vel)
+        self.setCell(cell)
+
     @property
     def center(self):
         ''' return geometric center of positions of all atoms '''
