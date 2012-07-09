@@ -71,47 +71,10 @@ def main():
         mol.readFrame(F, zero_velocities = opts.zero_velocities)
 
     if opts.wrap or opts.center:
-        print "Extracting old positions and unit cell"
-        pos = NP.zeros((mol.natoms, 3), 'f')
-        box = NP.zeros((3,3), 'd')
-        pos[:] = mol.positions
-        for i in range(3):
-            for j in range(3):
-                box[i][j] = mol.cell[i][j]
-
-        print "Adjusting bonds"
-        top=PF.Topology(mol.natoms)
-        for b in mol.bonds:
-            ai, aj = b.atoms
-            top.add_bond(ai.id, aj.id)
-        top.wrap_bonds(pos, box)
-        wrapper = PF.FragmentWrapper(top)
-
-        if opts.center or opts.glue:
-            print "Joining atoms in center or glue"
-            for glue in opts.glue:
-                for g in glue.split(';'):
-                    sel = [a.id for a in mol.select(g)]
-                    wrapper.aggregate(sel)
-            center = None
-            if opts.center:
-                center = mol.select(opts.center)
-                wrapper.aggregate([a.id for a in center])
-            wrapper.join(box, pos)
-
-            if center:
-                print "Centering %d atoms" % len(center)
-                c=NP.zeros(3, 'd')
-                for a in center:
-                    c += pos[a.id]
-                c /= len(center)
-                pos -= c
-
-        print "Wrapping fragments"
-        wrapper.wrap(box, pos, None)
-
-        print "Applying changes"
-        mol.positions = pos
+        print "Applying periodic wrapping"
+        from msys.wrap import Wrapper
+        w=Wrapper(mol, center=opts.center, glue=opts.glue)
+        w.wrap()
 
     print "Writing DMS file", args[1]
     msys.SaveDMS(mol, args[1])

@@ -57,4 +57,5 @@ env.AddScript('scripts/dms-macro')
 env.AddScript('scripts/dms-select')
 env.AddScript('scripts/dms-set')
 env.AddPythonModule('scripts/update.py', prefix='msys')
+env.AddPythonModule('scripts/wrap.py', prefix='msys')
 
