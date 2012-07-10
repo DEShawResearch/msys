@@ -66,9 +66,23 @@ def main():
         else:
             raise ValueError, "Specify either --index or --frame"
         print "Selected frame %d with time %s" % (ind, F.time)
-        if F.vel is None and not opts.zero_velocities:
-            print "No velocities in frame, not updating velocities"
-        mol.readFrame(F, zero_velocities = opts.zero_velocities)
+        mol.positions = F.pos
+        for i in range(3):
+            mol.cell[i][:] = F.box[i]
+        if opts.zero_velocities:
+            print "Setting velocities to zero"
+            for a in mol.atoms:
+                a.vx=0
+                a.vy=0
+                a.vz=0
+        else:
+            vel = F.vel
+            if vel is None:
+                print "No velocities in frame, not updating velocities"
+            else:
+                print "Updating velocities"
+                for i, a in enumerate(mol.atoms):
+                    a.vel = vel[i]
 
     if opts.wrap or opts.center:
         print "Applying periodic wrapping"

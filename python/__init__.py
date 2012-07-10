@@ -116,7 +116,7 @@ class Atom(Handle):
     @property
     def pos(self):
         ''' position '''
-        return (self.x, self.y, self.z)
+        return [self.x, self.y, self.z]
     @pos.setter
     def pos(self, xyz):
         self.x, self.y, self.z = map(float, xyz)
@@ -124,7 +124,7 @@ class Atom(Handle):
     @property
     def vel(self):
         ''' velocity '''
-        return (self.vx, self.vy, self.vz)
+        return [self.vx, self.vy, self.vz]
     @vel.setter
     def vel(self, xyz):
         self.vx, self.vy, self.vz = map(float, xyz)
@@ -803,9 +803,17 @@ class System(object):
     def positions(self, pos):
         self._ptr.setPositions(pos)
 
+    def getPositions(self):
+        ''' get copy of positions as Nx3 array '''
+        return self._ptr.getPositions()
+
     def setPositions(self, pos):
         ''' set positions from Nx3 array '''
         self._ptr.setPositions(pos)
+
+    def getVelocities(self):
+        ''' get copy of velocities as N3x array '''
+        return [a.vel for a in self.atoms]
 
     def setVelocities(self, vel):
         ''' set velocities from Nx3 array '''
@@ -817,24 +825,9 @@ class System(object):
         for i in range(3):
             self.cell[i][:] = cell[i]
 
-    def readFrame(self, frame, zero_velocities=False):
-        ''' read positions and box information from molfile
-        frame into System.  '''
-        pos = frame.pos
-        if pos is None:
-            pos = frame.dpos
-        vel = frame.vel
-        if vel is None:
-            vel = frame.dvel
-        cell = frame.box
-
-        if pos is not None:
-            self.setPositions(pos)
-        if zero_velocities:
-            self.setVelocities([(0., 0., 0.)]*self.natoms) 
-        elif vel is not None:
-            self.setVelocities(vel)
-        self.setCell(cell)
+    def getCell(self):
+        ''' return unit cell as 3x3 array '''
+        return [self.cell[i][:] for i in range(3)]
 
     @property
     def center(self):
