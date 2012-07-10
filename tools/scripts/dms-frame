@@ -53,7 +53,12 @@ def main():
         print "Reading trajectory of type %s at %s" % (
                 opts.input_type, opts.input_path)
         plugin=getattr(molfile, opts.input_type)
-        T=plugin.read(opts.input_path)
+        try:
+            T=plugin.read(opts.input_path, double_precision=True)
+            dbl=True
+        except:
+            T=plugin.read(opts.input_path, double_precision=False)
+            dbl=False
         print "Trajectory contains %d frames, %d atoms" % (T.nframes, T.natoms)
         if T.natoms != mol.natoms:
             raise ValueError, "Trajectory and DMS file have different #atoms"
@@ -66,7 +71,10 @@ def main():
         else:
             raise ValueError, "Specify either --index or --frame"
         print "Selected frame %d with time %s" % (ind, F.time)
-        mol.positions = F.pos
+        if dbl:
+            mol.positions = F.dpos
+        else:
+            mol.positions = F.pos
         for i in range(3):
             mol.cell[i][:] = F.box[i]
         if opts.zero_velocities:
@@ -76,7 +84,10 @@ def main():
                 a.vy=0
                 a.vz=0
         else:
-            vel = F.vel
+            if dbl:
+                vel = F.dvel
+            else:
+                vel = F.vel
             if vel is None:
                 print "No velocities in frame, not updating velocities"
             else:
