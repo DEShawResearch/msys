@@ -4,6 +4,7 @@ import os, sys, unittest
 TMPDIR=os.getenv('TMPDIR', 'objs/Linux/x86_64')
 sys.path.insert(0,os.path.join(TMPDIR, 'lib', 'python'))
 import msys
+import numpy as NP
 
 class TestMain(unittest.TestCase):
 
@@ -706,6 +707,13 @@ class TestMain(unittest.TestCase):
         self.assertNotEqual(m.cell.A, m.cell.C)
         with self.assertRaises(IndexError): m.cell[3]
         with self.assertRaises(IndexError): m.cell[-4]
+
+        # accept numpy floats instead of doubles. 
+        c=NP.zeros((3,3), 'f')
+        m.setCell(c)
+        # FIXME: this is hard to make work due to how I implemented the
+        # bindings.  
+        #m.cell.A[:] = c[0]
 
     def testNonbondedInfo(self):
         m=msys.CreateSystem()

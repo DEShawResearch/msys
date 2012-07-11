@@ -823,7 +823,7 @@ class System(object):
     def setCell(self, cell):
         ''' set unit cell from from 3x3 array '''
         for i in range(3):
-            self.cell[i][:] = cell[i]
+            self.cell[i][:] = map(float, cell[i])
 
     def getCell(self):
         ''' return unit cell as 3x3 array '''
