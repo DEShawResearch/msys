@@ -1,3 +1,5 @@
+1.5.2  FIXED: System.setCell() converts its input to the correct type.
+
 1.5.1  FIXED: dms-frame reads in double precision if possible.
        FIXED: Better error messages when accessing nonexistent Term properties.
        NEW: Added getPositions(), getVelocities(), and getCell() to System.
