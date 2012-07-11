@@ -2,7 +2,6 @@
 # -*- python -*-
 #{
 # desres-cleanenv $MSYS_CLEANENV \
-# -m periodicfix/2.3.13/lib-python \
 # -- python $0 "$@"
 #}
 
@@ -16,8 +15,6 @@ dms-frame input.dms output.dms [ options ]
 import msys
 import molfile
 from molfile import findframe
-import periodicfix as PF
-import numpy as NP
 
 def main():
     import optparse
