@@ -95,13 +95,28 @@ namespace {
     
 }
 
-typedef std::set<std::pair<Id,Id> > PairSet;
+namespace {
+    struct Pair {
+        Id ai, aj;
+        double es;
+        double lj;
+
+        Pair() : ai(BadId), aj(BadId), es(), lj() {}
+        Pair(Id i, Id j, double e, double l)
+        : ai(i), aj(j), es(e), lj(l) {}
+    };
+    typedef std::vector<Pair> PairList;
+}
+
 
 static void parse_nonbonded(SystemPtr mol, SectionMap const& map, int ntypes,
-                            PairSet const& pairs) {
+                            PairList const& pairs) {
 
     TermTablePtr nb = AddNonbonded(mol, "vdw_12_6", "arithmetic/geometric");
     TermTablePtr pt = AddTable(mol, "pair_12_6_es");
+    /* this might be nice for debugging, but I'll leave it off for now */
+    //pt->params()->addProp("scee_scale_factor", FloatType);
+    //pt->params()->addProp("scnb_scale_factor", FloatType);
 
     /* add a type column to store the amber atom type */
     nb->params()->addProp("type", StringType);
@@ -116,12 +131,6 @@ static void parse_nonbonded(SystemPtr mol, SectionMap const& map, int ntypes,
     parse_flts(map, "LENNARD_JONES_ACOEF", acoef);
     parse_flts(map, "LENNARD_JONES_BCOEF", bcoef);
     parse_strs(map, "AMBER_ATOM_TYPE", vdwtypes);
-
-    /* we don't handle custom SCEE or SCNB */
-    if (map.count("SCEE_SCALE_FACTOR")) 
-        MSYS_FAIL("Unexpected SCEE_SCALE_FACTOR section");
-    if (map.count("SCNB_SCALE_FACTOR"))
-        MSYS_FAIL("Unexpected SCNB_SCALE_FACTOR section");
 
     for (Id i=0; i<mol->atomCount(); i++) {
         int atype = types.at(i);
@@ -141,18 +150,16 @@ static void parse_nonbonded(SystemPtr mol, SectionMap const& map, int ntypes,
         nb->addTerm(ids, param);
     }
     
-    for (PairSet::const_iterator it=pairs.begin(); it!=pairs.end(); ++it) {
-        Id ai = it->first;
-        Id aj = it->second;
+    for (PairList::const_iterator it=pairs.begin(); it!=pairs.end(); ++it) {
+        Id ai = it->ai;
+        Id aj = it->aj;
+        double lj = 1.0/it->lj;
+        double es = 1.0/it->es;
         int itype = types.at(ai);
         int jtype = types.at(aj);
         int ico = inds.at((ntypes * (itype-1) + jtype)-1);
         double c12 = acoef.at(ico-1);
         double c6  = bcoef.at(ico-1);
-        /* FIXME: get ES scale_factor from SCEE_SCALE_FACTOR */
-        /* FIXME: get LJ scale factor from SCNB_SCALE_FACTOR */
-        double lj = 1/2.0;
-        double es = 1/1.2;
         double aij = lj * c12;
         double bij = lj * c6;
         double qij = es*mol->atom(ai).charge*mol->atom(aj).charge;
@@ -160,6 +167,8 @@ static void parse_nonbonded(SystemPtr mol, SectionMap const& map, int ntypes,
         pt->params()->value(param, "aij") = aij;
         pt->params()->value(param, "bij") = bij;
         pt->params()->value(param, "qij") = qij;
+        //pt->params()->value(param, "scee_scale_factor") = it->es;
+        //pt->params()->value(param, "scnb_scale_factor") = it->lj;
         IdList ids(2);
         ids[0] = ai;
         ids[1] = aj;
@@ -274,17 +283,25 @@ static void merge_torsion(ParamTablePtr params, Id id,
     params->value(id, 1) = oldsum + fc_orig;
 }
  
-static PairSet parse_torsion(SystemPtr mol, SectionMap const& map,
+static PairList parse_torsion(SystemPtr mol, SectionMap const& map,
                           int ntypes, int nbonh, int nbona) {
     
     std::vector<double> phase(ntypes), fc(ntypes), period(ntypes);
     std::vector<int> bonh(nbonh*5), bona(nbona*5);
+    std::vector<double> scee(ntypes, 1.2);
+    std::vector<double> scnb(ntypes, 2.0);
 
     parse_flts(map, "DIHEDRAL_PHASE", phase);
     parse_flts(map, "DIHEDRAL_FORCE_CONSTANT", fc);
     parse_flts(map, "DIHEDRAL_PERIODICITY", period);
     parse_ints(map, "DIHEDRALS_INC_HYDROGEN", bonh);
     parse_ints(map, "DIHEDRALS_WITHOUT_HYDROGEN", bona);
+    if (map.count("SCEE_SCALE_FACTOR")) {
+        parse_flts(map, "SCEE_SCALE_FACTOR", scee);
+    }
+    if (map.count("SCNB_SCALE_FACTOR")) {
+        parse_flts(map, "SCNB_SCALE_FACTOR", scnb);
+    }
 
     bonh.insert(bonh.end(), bona.begin(), bona.end());
     bona.clear();
@@ -292,7 +309,7 @@ static PairSet parse_torsion(SystemPtr mol, SectionMap const& map,
     /* hash the torsion terms, converting negative indices to positive as
        needed and tracking which terms should generate 1-4 pair terms.  */
 
-    PairSet pairs;
+    PairList pairs;
     typedef std::map<IdList, Id, CompareTorsion> TorsionHash;
     TorsionHash hash;
     IdList ids(4);
@@ -331,7 +348,7 @@ static PairSet parse_torsion(SystemPtr mol, SectionMap const& map,
         if (needs_pair) {
             Id pi=ai, pj=al;
             if (pi>pj) std::swap(pi,pj);
-            pairs.insert(std::make_pair(pi,pj));
+            pairs.push_back(Pair(pi,pj,scee.at(ind), scnb.at(ind)));
         }
         merge_torsion(tb->params(), param, phase.at(ind), fc.at(ind), period.at(ind));
     }
@@ -435,7 +452,7 @@ SystemPtr desres::msys::ImportPrmTop( std::string const& path ) {
 
     parse_stretch(mol, section, ptrs[Numbnd], ptrs[Nbonh], ptrs[Nbona]);
     parse_angle(mol, section, ptrs[Numang], ptrs[Ntheth], ptrs[Ntheta]);
-    PairSet pairs = parse_torsion(mol, section, 
+    PairList pairs = parse_torsion(mol, section, 
                                   ptrs[Nptra], ptrs[Nphih], ptrs[Nphia]);
     parse_nonbonded(mol, section, ptrs[Ntypes], pairs);
     parse_exclusions(mol, section, ptrs[Nnb]);
