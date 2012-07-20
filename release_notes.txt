@@ -1,3 +1,6 @@
+1.5.4  FIXED: SaveMAE reports error on failure.
+       NEW: SaveMAE and SaveDMS print errno information on failure.
+
 1.5.3  FIXED: Support SC{EE,NB}_SCALE_FACTOR in Amber PrmTop importer.
 
 1.5.2  FIXED: System.setCell() converts its input to the correct type.

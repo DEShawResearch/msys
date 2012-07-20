@@ -11,6 +11,8 @@
 #include <sstream>
 #include <stdexcept>
 #include <cmath>
+#include <errno.h>
+#include <string.h>
 
 using desres::msys::Maeff;
 using desres::msys::Destro;
@@ -587,6 +589,10 @@ namespace desres { namespace msys {
 
         Maeff M;
         std::ofstream out(path.c_str());
+        if (!out) {
+            MSYS_FAIL("Error opening " << path << " for writing: "
+                    << strerror(errno));
+        }
 
         /* create a single ct for the entire dms file */
         Destro& ct = M.new_block("f_m_ct");
@@ -618,6 +624,15 @@ namespace desres { namespace msys {
         }
 
         out << M;
+        if (!out) {
+            MSYS_FAIL("Error writing to " << path << " : " 
+                    << strerror(errno));
+        }
+        out.close();
+        if (!out) {
+            MSYS_FAIL("Error closing file at " << path << " : "
+                    << strerror(errno));
+        }
     }
 }}
 

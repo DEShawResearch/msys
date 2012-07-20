@@ -8,7 +8,31 @@ import numpy as NP
 
 class TestMain(unittest.TestCase):
 
+    def testBadPath(self):
+        m=msys.CreateSystem()
+        m.addAtom()
+        with self.assertRaises(RuntimeError):
+            msys.SaveDMS(m,'/root/nono.dms')
+        with self.assertRaises(RuntimeError):
+            msys.SaveMAE(m,'/root/nono.mae')
+        with self.assertRaises(RuntimeError):
+            msys.SavePDB(m,'/root/nono.pdb')
+
+    def xxtestFailedWrite(self):
+        print "building big system..."
+        m=msys.CreateSystem()
+        c=m.addChain()
+        r=c.addResidue()
+        id=r.id
+        f=r._ptr.addAtom
+        for i in range(1000000):
+            f(id)
+        print "saving..."
+        msys.SaveMAE(m,'/usr/tmp/big.dms')
+        print "done"
+
     def testAtom(self):
+
         m=msys.CreateSystem()
         a1=m.addAtom()
         a2=m.addAtom()

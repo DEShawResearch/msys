@@ -44,12 +44,28 @@ namespace {
         if (dms->path) {
             boost::shared_ptr<char> pp(dms->path, free);
             int fd=open(dms->path, O_WRONLY | O_CREAT, 0644);
-            if (fd<0 ||
-                write(fd, dms->contents, dms->size)!=dms->size ||
-                close(fd)!=0) {
-                MSYS_FAIL("Error writing file '" 
-                        << std::string(dms->path) << "': "
-                        << std::string(strerror(errno)));
+            if (fd<0) {
+                MSYS_FAIL("Error opening " << dms->path 
+                    << " for writing: " << strerror(errno));
+            }
+            sqlite3_int64 sz = dms->size;
+            char* ptr = dms->contents;
+            while (sz) {
+                errno = 0;
+                ssize_t rc = write(fd, dms->contents, dms->size);
+                if (rc<0 || (rc==0 && errno!=0)) {
+                    std::string errmsg = strerror(errno);
+                    close(fd);
+                    MSYS_FAIL("Error writing DMS contents of size " << dms->size
+                        << " bytes to " << dms->path << " : " << errmsg);
+                }
+                sz -= rc;
+                ptr += rc;
+            }
+            if (close(fd)!=0) {
+                std::string errmsg = strerror(errno);
+                MSYS_FAIL("Error closing DMS file at " << dms->path
+                        << " : " << errmsg);
             }
         }
         return SQLITE_OK;
