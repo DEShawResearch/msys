@@ -7,8 +7,9 @@ import msys
 import vmd
 import molecule
 import atomsel
+from time import time
 
-def compare_atomsel(coord_ent,sel):
+def compare_atomsel(coord_ent,sel, dump=False, perf=False):
   al = coord_ent.select(sel)
   ent_gids = []
   for a in al:
@@ -30,6 +31,19 @@ def compare_atomsel(coord_ent,sel):
     return False
   else:
     print "match for [%s] (%d) "% (sel, len(vmd_gids))
+    if dump:
+        print "MSYS:" 
+        print ent_gids
+        print "VMD:"
+        print vmd_gids
+    if perf:
+        t0=time()
+        coord_ent.select(sel)
+        t1=time()
+        atomsel.atomsel(sel)
+        t2=time()
+        print "MSYS: %s ms" % ((t1-t0)*1000)
+        print "VMD:  %s ms" % ((t2-t1)*1000)
     return True
 
 DMSROOT='/proj/desres/root/Linux/x86_64/dms_inputs/1.5.5/share'
@@ -81,6 +95,9 @@ compare_atomsel(coord_ent,"sqrt(sqr(x)+sqr(y))<5")
 compare_atomsel(coord_ent,"abs(x-y)<5")
 
 compare_atomsel(coord_ent,"residue % 10 == 0")
+
+# nearest
+compare_atomsel(coord_ent,"water and noh and nearest 20 to backbone", dump=True, perf=True)
 
 # operator precedence
 

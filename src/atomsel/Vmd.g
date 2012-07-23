@@ -39,6 +39,7 @@ tokens {
   AS = 'as';
   NOT = 'not';
   TO = 'to';
+  NEAREST = 'nearest';
 }
 
 // The symbol table used to recognize keyword selections, booleans,
@@ -74,6 +75,10 @@ selection
   // same residue as selection 
   | SAME LIT AS orSelection
     -> ^(SAME LIT orSelection)
+
+  // nearest k to selection
+  | NEAREST LIT TO orSelection
+    -> ^(NEAREST LIT orSelection)
 
   // within 1.5 of protein
   | WITHIN LIT OF orSelection

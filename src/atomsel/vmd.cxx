@@ -6,6 +6,7 @@
 #include "keyword.hxx"
 #include "expression.hxx"
 #include "within_predicate.hxx"
+#include "k-nearest.hxx"
 #include "VmdLexer.h"
 #include "VmdParser.h"
 
@@ -282,6 +283,11 @@ namespace {
                                  parseExpression(child(tree,2),ent) );
   }
 
+  PredicatePtr parseNearest(Tree* tree, SystemPtr ent, StrList& s) {
+    int k = atoi(str(child(tree,0)));
+    return k_nearest_predicate(ent,k,parse(child(tree,1),ent,s));
+  }
+
   PredicatePtr parseWithin(Tree* tree, SystemPtr ent, StrList& s) {
     double rad = atof(str(child(tree,0)));
     return within_predicate(ent,rad,parse(child(tree,1),ent,s));
@@ -311,6 +317,7 @@ namespace {
       case KEYWORD: return parseKeyword(tree,ent,s);
       case SAME: return parseSame(tree,ent,s);
       case RELATION: return parseRelation(tree,ent);
+      case NEAREST: return parseNearest(tree,ent,s);
       case WITHIN: return parseWithin(tree,ent,s);
       case EXWITHIN: return parseExwithin(tree,ent,s);
       case PBWITHIN: return parsePbwithin(tree,ent,s);
