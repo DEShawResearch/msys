@@ -10,10 +10,8 @@ import atomsel
 from time import time
 
 def compare_atomsel(coord_ent,sel, dump=False, perf=False):
-  al = coord_ent.select(sel)
-  ent_gids = []
-  for a in al:
-    ent_gids.append(a.id)
+  al = coord_ent._ptr.select(sel)
+  ent_gids = [a for a in al]
 
   vmd_atomsel = atomsel.atomsel(sel)
   vmd_gids = vmd_atomsel.get("index")
