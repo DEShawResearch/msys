@@ -4,6 +4,7 @@
 #include "types.hxx"
 #include "param_table.hxx"
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/foreach.hpp>
 
 namespace desres { namespace msys {
 
@@ -82,7 +83,62 @@ namespace desres { namespace msys {
 
         /* rename table */
         void rename(String const& name);
-    
+
+        class term_t {
+        protected:
+            const Id*   _ptr;
+            Id          _size;
+            Id          _id;
+
+            term_t(const Id* ptr, Id size, Id id) 
+            : _ptr(ptr), _size(size), _id(id) {}
+
+        public:
+            term_t() 
+            : _ptr(), _size(), _id(BadId) {}
+
+            const Id* atoms() const { return _ptr; }
+            Id const& atom(int i) const { return _ptr[i]; }
+            Id size() const { return _size; }
+            Id id() const { return _id; }
+            Id param() const { return _ptr[_size]; }
+        };
+
+        /* const iterator access over all terms (even the dead ones) */
+        class const_iterator : protected term_t {
+            friend class TermTable;
+
+            const_iterator(const Id* ptr, Id size, Id id)
+            : term_t(ptr+id*(size+1), size, id) {}
+
+            void increment() { 
+                _ptr += _size+1;
+                ++_id;
+            }
+
+            bool equal(const_iterator const& c) const { return _ptr==c._ptr; }
+            const term_t& dereference() const { return *this; }
+
+        public:
+            const_iterator() : term_t() {}
+            const term_t& operator*() const { return dereference(); }
+            const term_t* operator->() const { return &dereference(); }
+            const_iterator& operator++() { increment(); return *this; }
+            bool operator==(const_iterator const& c) { return equal(c); }
+            bool operator!=(const_iterator const& c) { return !equal(c); }
+        };
+
+        /* iterator pointing to first element */
+        const_iterator begin() const {
+            if (_terms.empty()) return const_iterator();
+            return const_iterator(&_terms[0], _natoms, 0);
+        }
+        /* iterator pointing past last element */
+        const_iterator end() const {
+            if (_terms.empty()) return const_iterator();
+            return const_iterator(&_terms[0], _natoms, maxTermId());
+        }
+
         /* Operations on the set of terms */
         IdList terms() const;
         Id termCount() const;
@@ -140,6 +196,13 @@ namespace desres { namespace msys {
     typedef boost::shared_ptr<TermTable> TermTablePtr;
 
 }}
+
+namespace boost {
+    template<>
+    struct range_const_iterator<desres::msys::TermTable> {
+        typedef typename desres::msys::TermTable::const_iterator type;
+    };
+}
 
 #endif
 
