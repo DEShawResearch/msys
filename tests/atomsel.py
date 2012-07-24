@@ -28,23 +28,24 @@ def compare_atomsel(coord_ent,sel, dump=False, perf=False):
     #for g in ent_gids: 
       #if g not in vmd_gids:
         #print g,names[g], al[g].pos[:2]
-    return False
+    rc=False
   else:
+    rc=True
     print "match for [%s] (%d) "% (sel, len(vmd_gids))
-    if dump:
-        print "MSYS:" 
-        print ent_gids
-        print "VMD:"
-        print vmd_gids
-    if perf:
-        t0=time()
-        coord_ent.select(sel)
-        t1=time()
-        atomsel.atomsel(sel)
-        t2=time()
-        print "MSYS: %s ms" % ((t1-t0)*1000)
-        print "VMD:  %s ms" % ((t2-t1)*1000)
-    return True
+  if dump:
+      print "MSYS:" 
+      print ent_gids
+      print "VMD:"
+      print vmd_gids
+  if perf:
+      t0=time()
+      coord_ent.select(sel)
+      t1=time()
+      atomsel.atomsel(sel)
+      t2=time()
+      print "MSYS: %s ms" % ((t1-t0)*1000)
+      print "VMD:  %s ms" % ((t2-t1)*1000)
+  return rc
 
 DMSROOT='/proj/desres/root/Linux/x86_64/dms_inputs/1.5.5/share'
 coord_vmd=molecule.load("dms","%s/2f4k.dms" % DMSROOT)
@@ -54,17 +55,17 @@ coord_ent = msys.LoadDMS("%s/2f4k.dms" % DMSROOT,True)
 
 compare_atomsel(coord_ent,"all")
 compare_atomsel(coord_ent,"none")
-compare_atomsel(coord_ent,"index 10 20 30")
-compare_atomsel(coord_ent,"resid 1 to 20 22 24 to 27 35")
-compare_atomsel(coord_ent,"protein")
-compare_atomsel(coord_ent,"backbone")
+compare_atomsel(coord_ent,"index 10 20 30",perf=True)
+compare_atomsel(coord_ent,"resid 1 to 20 22 24 to 27 35",perf=True)
+compare_atomsel(coord_ent,"protein",perf=True)
+compare_atomsel(coord_ent,"backbone",perf=True)
 #compare_atomsel(coord_ent,"hydrogen")
-compare_atomsel(coord_ent,"atomicnumber 1")
+compare_atomsel(coord_ent,"atomicnumber 1",perf=True)
 
-compare_atomsel(coord_ent,"chain A B")
+compare_atomsel(coord_ent,"chain A B",perf=True)
 #compare_atomsel(coord_ent,"segid L14")
 
-compare_atomsel(coord_ent,"water")
+compare_atomsel(coord_ent,"water",perf=True)
 compare_atomsel(coord_ent,"x<3")
 compare_atomsel(coord_ent,"y>=1")
 compare_atomsel(coord_ent,"z<=-5")
@@ -97,7 +98,20 @@ compare_atomsel(coord_ent,"abs(x-y)<5")
 compare_atomsel(coord_ent,"residue % 10 == 0")
 
 # nearest
-compare_atomsel(coord_ent,"water and noh and nearest 20 to backbone", dump=True, perf=True)
+compare_atomsel(coord_ent,"water and noh")
+compare_atomsel(coord_ent,"water and noh and nearest 1 to protein", perf=True)
+compare_atomsel(coord_ent,"water and noh and nearest 10 to protein", perf=True)
+compare_atomsel(coord_ent,"water and noh and nearest 100 to protein", perf=True)
+
+compare_atomsel(coord_ent,"nearest 1 to protein", perf=True)
+compare_atomsel(coord_ent,"nearest 10 to protein", perf=True)
+compare_atomsel(coord_ent,"nearest 100 to protein", perf=True)
+compare_atomsel(coord_ent,"nearest 1000 to protein", perf=True)
+compare_atomsel(coord_ent,"nearest 20000 to protein", perf=True)
+
+compare_atomsel(coord_ent,"water and same residue as nearest 1 to protein", perf=True)
+compare_atomsel(coord_ent,"water and same residue as nearest 10 to protein", perf=True)
+compare_atomsel(coord_ent,"water and same residue as nearest 100 to protein", perf=True)
 
 # operator precedence
 
