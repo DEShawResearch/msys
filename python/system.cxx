@@ -200,6 +200,46 @@ namespace {
         return arr;
     }
 
+    PyObject* sys_getvel(System const& sys, object idobj) {
+        npy_intp dims[2];
+        dims[1] = 3;
+        PyObject* arr=NULL;
+        if (idobj.ptr()==Py_None) {
+            dims[0] = sys.atomCount();
+            arr = PyArray_SimpleNew(2,dims,NPY_FLOAT64);
+            if (!arr) throw_error_already_set();
+            double* ptr = (double *)PyArray_DATA(arr);
+            for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
+                if (!sys.hasAtom(i)) continue;
+                atom_t const& atm = sys.atom(i);
+                ptr[0] = atm.vx;
+                ptr[1] = atm.vy;
+                ptr[2] = atm.vz;
+                ptr += 3;
+            }
+        } else {
+            IdList const& ids = extract<IdList const&>(idobj);
+            dims[0] = ids.size();
+            arr = PyArray_SimpleNew(2,dims,NPY_FLOAT64);
+            if (!arr) throw_error_already_set();
+            double* ptr = (double *)PyArray_DATA(arr);
+            for (Id i=0, n = ids.size(); i<n; i++) {
+                Id id = ids[i];
+                if (!sys.hasAtom(id)) {
+                    Py_DECREF(arr);
+                    PyErr_Format(PyExc_ValueError, "Invalid id %u", id);
+                    throw_error_already_set();
+                }
+                atom_t const& atm = sys.atom(id);
+                ptr[0] = atm.vx;
+                ptr[1] = atm.vy;
+                ptr[2] = atm.vz;
+                ptr += 3;
+            }
+        }
+        return arr;
+    }
+
     void sys_setpos(System& sys, PyObject* obj) {
         PyObject* arr = PyArray_FromAny(
                 obj,
@@ -229,6 +269,38 @@ namespace {
             atm.y = pos[1];
             atm.z = pos[2];
             pos += 3;
+        }
+    }
+
+    void sys_setvel(System& sys, PyObject* obj) {
+        PyObject* arr = PyArray_FromAny(
+                obj,
+                PyArray_DescrFromType(NPY_FLOAT64),
+                2, 2,   /* must be 2-dimensional */
+                NPY_C_CONTIGUOUS | NPY_ALIGNED,
+                NULL);
+        if (!arr) throw_error_already_set();
+        Py_ssize_t n = PyArray_DIM(arr,0);
+        if (n!=sys.atomCount()) {
+            PyErr_Format(PyExc_ValueError, 
+                    "Supplied %ld velocities, but system has %u atoms", 
+                    n, sys.atomCount());
+            throw_error_already_set();
+        }
+        if (PyArray_DIM(arr,1)!=3) {
+            PyErr_Format(PyExc_ValueError, 
+                    "Supplied %ld-d velocities, expected 3-d", 
+                    PyArray_DIM(arr,1));
+            throw_error_already_set();
+        }
+        const double* vel = (const double *)PyArray_DATA(arr);
+        for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
+            if (!sys.hasAtom(i)) continue;
+            atom_t& atm = sys.atom(i);
+            atm.vx = vel[0];
+            atm.vy = vel[1];
+            atm.vz = vel[2];
+            vel += 3;
         }
     }
 
@@ -467,6 +539,9 @@ namespace desres { namespace msys {
             .def("getPositions", sys_getpos,
                     (arg("ids")=object()))
             .def("setPositions",    sys_setpos)
+            .def("getVelocities", sys_getvel,
+                    (arg("ids")=object()))
+            .def("setVelocities",    sys_setvel)
             ;
     }
 

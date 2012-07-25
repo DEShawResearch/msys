@@ -806,12 +806,11 @@ class System(object):
 
     def getVelocities(self):
         ''' get copy of velocities as N3x array '''
-        return [a.vel for a in self.atoms]
+        return self._ptr.getVelocities()
 
     def setVelocities(self, vel):
         ''' set velocities from Nx3 array '''
-        for i,a in enumerate(self.atoms):
-            a.vel = vel[i]
+        self._ptr.setVelocities(vel)
 
     def setCell(self, cell):
         ''' set unit cell from from 3x3 array '''
