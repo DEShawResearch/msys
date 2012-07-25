@@ -5,6 +5,7 @@ by chemists.
 '''
 
 import _msys
+import numpy
 
 from _msys import GlobalCell, NonbondedInfo, version, hexversion
 
@@ -206,16 +207,8 @@ class Residue(Handle):
     @property
     def center(self):
         ''' return geometric center of positions of atoms in residue '''
-        n=self.natoms
-        if n==0: return [0,0,0]
-        x=0.0
-        y=0.0
-        z=0.0
-        for a in self.atoms:
-            x += a.x
-            y += a.y
-            z += a.z
-        return [x/n, y/n, z/n]
+        pos=self._ptr.getPositions(self._ptr.atomsForResidue(self._id))
+        return numpy.mean(pos,axis=0)
 
 class Chain(Handle):
     __slots__ = ()
@@ -832,10 +825,7 @@ class System(object):
     @property
     def center(self):
         ''' return geometric center of positions of all atoms '''
-        n=self.natoms
-        if n==0: return [0,0,0]
-        xyz=reduce(lambda a,b: (a[0]+b[0],a[1]+b[1],a[2]+b[2]), self.positions)
-        return [a/n for a in xyz]
+        return numpy.mean(self.getPositions(), axis=0)
 
     def translate(self, xyz):
         ''' shift coordinates by given amount '''

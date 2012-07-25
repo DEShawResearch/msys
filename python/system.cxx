@@ -160,20 +160,42 @@ namespace {
         return ImportDMSFromBytes(bytes, view->len, structure_only);
     }
 
-    PyObject* sys_getpos(System const& sys) {
+    PyObject* sys_getpos(System const& sys, object idobj) {
         npy_intp dims[2];
-        dims[0] = sys.atomCount();
         dims[1] = 3;
-        PyObject* arr = PyArray_SimpleNew(2,dims,NPY_FLOAT64);
-        if (!arr) throw_error_already_set();
-        double* ptr = (double *)PyArray_DATA(arr);
-        for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
-            if (!sys.hasAtom(i)) continue;
-            atom_t const& atm = sys.atom(i);
-            ptr[0] = atm.x;
-            ptr[1] = atm.y;
-            ptr[2] = atm.z;
-            ptr += 3;
+        PyObject* arr=NULL;
+        if (idobj.ptr()==Py_None) {
+            dims[0] = sys.atomCount();
+            arr = PyArray_SimpleNew(2,dims,NPY_FLOAT64);
+            if (!arr) throw_error_already_set();
+            double* ptr = (double *)PyArray_DATA(arr);
+            for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
+                if (!sys.hasAtom(i)) continue;
+                atom_t const& atm = sys.atom(i);
+                ptr[0] = atm.x;
+                ptr[1] = atm.y;
+                ptr[2] = atm.z;
+                ptr += 3;
+            }
+        } else {
+            IdList const& ids = extract<IdList const&>(idobj);
+            dims[0] = ids.size();
+            arr = PyArray_SimpleNew(2,dims,NPY_FLOAT64);
+            if (!arr) throw_error_already_set();
+            double* ptr = (double *)PyArray_DATA(arr);
+            for (Id i=0, n = ids.size(); i<n; i++) {
+                Id id = ids[i];
+                if (!sys.hasAtom(id)) {
+                    Py_DECREF(arr);
+                    PyErr_Format(PyExc_ValueError, "Invalid id %u", id);
+                    throw_error_already_set();
+                }
+                atom_t const& atm = sys.atom(id);
+                ptr[0] = atm.x;
+                ptr[1] = atm.y;
+                ptr[2] = atm.z;
+                ptr += 3;
+            }
         }
         return arr;
     }
@@ -442,7 +464,8 @@ namespace desres { namespace msys {
             .def("provenance",      sys_provenance)
             .def("coalesceTables",    &System::coalesceTables)
 
-            .def("getPositions",    sys_getpos)
+            .def("getPositions", sys_getpos,
+                    (arg("ids")=object()))
             .def("setPositions",    sys_setpos)
             ;
     }
