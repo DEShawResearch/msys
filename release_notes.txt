@@ -1,3 +1,10 @@
+1.5.5  NEW: {get,set}Positions is ~100x faster due to NumPy integration.
+       NEW: {get,set}Velocities is ~500x faster due to NumPy integration. 
+       NEW: System.center and Residue.center use NumPy.
+       NEW: Low-level SystemPtr positions and velocities accessors take
+            optional ids argument to get/set values for specified atoms.
+       NEW: C++ interface for TermTable provides iterator for efficiency.
+
 1.5.4  FIXED: SaveMAE reports error on failure.
        NEW: SaveMAE and SaveDMS print errno information on failure.
 

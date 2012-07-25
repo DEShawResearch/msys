@@ -36,6 +36,7 @@ loadmodules() {
         $PYTHON/bin \
         $PYTHON/lib \
         $NUMPY/include \
+        $NUMPY/lib-python \
         $SCONS/bin \
         $SCONSUTILS/lib-python \
         $BOOST/Release/lib \

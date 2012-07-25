@@ -117,7 +117,7 @@ class Atom(Handle):
     @property
     def pos(self):
         ''' position '''
-        return [self.x, self.y, self.z]
+        return numpy.array((self.x, self.y, self.z))
     @pos.setter
     def pos(self, xyz):
         self.x, self.y, self.z = map(float, xyz)
@@ -125,7 +125,7 @@ class Atom(Handle):
     @property
     def vel(self):
         ''' velocity '''
-        return [self.vx, self.vy, self.vz]
+        return numpy.array((self.vx, self.vy, self.vz))
     @vel.setter
     def vel(self, xyz):
         self.vx, self.vy, self.vz = map(float, xyz)
