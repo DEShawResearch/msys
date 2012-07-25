@@ -926,13 +926,11 @@ class TestMain(unittest.TestCase):
         m.positions=p
         p=m.positions
         self.assertEqual(p[1][2],4)
-        self.assertEqual(p, m.positions)
-        del p[2]
+        self.assertTrue((p==m.positions).all())
         with self.assertRaises(ValueError):
-            m.positions=p
-        del p[0][2]
+            m.positions=p[1:,:]
         with self.assertRaises(ValueError):
-            m.positions=p
+            m.positions=p[:,1:]
 
     def testMacros(self):
         m=msys.CreateSystem()

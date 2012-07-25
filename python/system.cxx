@@ -161,17 +161,21 @@ namespace {
     }
 
     PyObject* sys_getpos(System const& sys) {
-        PyObject *result = PyList_New(sys.atomCount());
-        Id i,j=0,n = sys.maxAtomId();
-        for (i=0; i<n; i++) {
+        npy_intp dims[2];
+        dims[0] = sys.atomCount();
+        dims[1] = 3;
+        PyObject* arr = PyArray_SimpleNew(2,dims,NPY_FLOAT64);
+        if (!arr) throw_error_already_set();
+        double* ptr = (double *)PyArray_DATA(arr);
+        for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
             if (!sys.hasAtom(i)) continue;
-            PyObject* xyz = PyList_New(3);
-            PyList_SET_ITEM(xyz,0, PyFloat_FromDouble(sys.atom(i).x));
-            PyList_SET_ITEM(xyz,1, PyFloat_FromDouble(sys.atom(i).y));
-            PyList_SET_ITEM(xyz,2, PyFloat_FromDouble(sys.atom(i).z));
-            PyList_SET_ITEM(result,j++,xyz);
+            atom_t const& atm = sys.atom(i);
+            ptr[0] = atm.x;
+            ptr[1] = atm.y;
+            ptr[2] = atm.z;
+            ptr += 3;
         }
-        return result;
+        return arr;
     }
 
     void sys_setpos(System& sys, PyObject* obj) {
