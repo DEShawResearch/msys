@@ -10,6 +10,7 @@
 #include "amber.hxx"
 
 #include <fstream>
+#include <numpy/ndarrayobject.h>
 
 using namespace desres::msys;
 
@@ -174,38 +175,34 @@ namespace {
     }
 
     void sys_setpos(System& sys, PyObject* obj) {
-        PyObject* fast = PySequence_Fast(obj, "expected a sequence");
-        if (!fast) throw_error_already_set();
-        boost::shared_ptr<PyObject> ptr(fast, Py_DecRef);
-        Id i, n = PySequence_Fast_GET_SIZE(fast);
+        PyObject* arr = PyArray_FromAny(
+                obj,
+                PyArray_DescrFromType(NPY_FLOAT64),
+                2, 2,   /* must be 2-dimensional */
+                NPY_C_CONTIGUOUS | NPY_ALIGNED,
+                NULL);
+        if (!arr) throw_error_already_set();
+        Py_ssize_t n = PyArray_DIM(arr,0);
         if (n!=sys.atomCount()) {
-            PyErr_Format(PyExc_ValueError, "sequence has %d items, expected %d",
+            PyErr_Format(PyExc_ValueError, 
+                    "Supplied %ld positions, but system has %u atoms", 
                     n, sys.atomCount());
             throw_error_already_set();
         }
-        PyObject** items = PySequence_Fast_ITEMS(fast);
-        for (i=0, n=0; i<sys.maxAtomId(); i++) {
+        if (PyArray_DIM(arr,1)!=3) {
+            PyErr_Format(PyExc_ValueError, 
+                    "Supplied %ld-d positions, expected 3-d", 
+                    PyArray_DIM(arr,1));
+            throw_error_already_set();
+        }
+        const double* pos = (const double *)PyArray_DATA(arr);
+        for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
             if (!sys.hasAtom(i)) continue;
-            PyObject* item = PySequence_Fast(items[n++], 
-                    "expected sequence of 3-tuples");
-            if (!item) throw_error_already_set();
-            boost::shared_ptr<PyObject> ptr(item, Py_DecRef);
-
-            Id m = PySequence_Fast_GET_SIZE(item);
-            if (m!=3) {
-                PyErr_Format(PyExc_ValueError, 
-                        "sequence item %d has %d items, expected 3", n, m);
-                throw_error_already_set();
-            }
-            double x = PyFloat_AsDouble(PySequence_Fast_GET_ITEM(item,0));
-            if (PyErr_Occurred()) throw_error_already_set();
-            double y = PyFloat_AsDouble(PySequence_Fast_GET_ITEM(item,1));
-            if (PyErr_Occurred()) throw_error_already_set();
-            double z = PyFloat_AsDouble(PySequence_Fast_GET_ITEM(item,2));
-            if (PyErr_Occurred()) throw_error_already_set();
-            sys.atom(i).x=x;
-            sys.atom(i).y=y;
-            sys.atom(i).z=z;
+            atom_t& atm = sys.atom(i);
+            atm.x = pos[0];
+            atm.y = pos[1];
+            atm.z = pos[2];
+            pos += 3;
         }
     }
 
@@ -254,6 +251,8 @@ namespace {
 namespace desres { namespace msys { 
 
     void export_system() {
+        import_array();
+        if (PyErr_Occurred()) return;
         
         class_<GlobalCell>("GlobalCell", no_init)
             .add_property("A", make_function(get_A, return_ptr()))
