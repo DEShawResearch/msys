@@ -240,7 +240,7 @@ namespace {
         return arr;
     }
 
-    void sys_setpos(System& sys, PyObject* obj) {
+    void sys_setpos(System& sys, PyObject* obj, object idobj) {
         PyObject* arr = PyArray_FromAny(
                 obj,
                 PyArray_DescrFromType(NPY_FLOAT64),
@@ -248,13 +248,7 @@ namespace {
                 NPY_C_CONTIGUOUS | NPY_ALIGNED,
                 NULL);
         if (!arr) throw_error_already_set();
-        Py_ssize_t n = PyArray_DIM(arr,0);
-        if (n!=sys.atomCount()) {
-            PyErr_Format(PyExc_ValueError, 
-                    "Supplied %ld positions, but system has %u atoms", 
-                    n, sys.atomCount());
-            throw_error_already_set();
-        }
+        Id n = PyArray_DIM(arr,0);
         if (PyArray_DIM(arr,1)!=3) {
             PyErr_Format(PyExc_ValueError, 
                     "Supplied %ld-d positions, expected 3-d", 
@@ -262,17 +256,46 @@ namespace {
             throw_error_already_set();
         }
         const double* pos = (const double *)PyArray_DATA(arr);
-        for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
-            if (!sys.hasAtom(i)) continue;
-            atom_t& atm = sys.atom(i);
-            atm.x = pos[0];
-            atm.y = pos[1];
-            atm.z = pos[2];
-            pos += 3;
+
+        if (idobj.ptr()==Py_None) {
+            if (n!=sys.atomCount()) {
+                PyErr_Format(PyExc_ValueError, 
+                        "Supplied %u positions, but system has %u atoms", 
+                        n, sys.atomCount());
+                throw_error_already_set();
+            }
+            for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
+                if (!sys.hasAtom(i)) continue;
+                atom_t& atm = sys.atom(i);
+                atm.x = pos[0];
+                atm.y = pos[1];
+                atm.z = pos[2];
+                pos += 3;
+            }
+        } else {
+            IdList const& ids = extract<IdList const&>(idobj);
+            if (n != ids.size()) {
+                PyErr_Format(PyExc_ValueError,
+                        "Supplied %u positions != %lu ids", n, ids.size());
+                throw_error_already_set();
+            }
+            for (Py_ssize_t i=0; i<n; i++) {
+                Id id = ids[i];
+                if (!sys.hasAtom(id)) {
+                    PyErr_Format(PyExc_ValueError,
+                            "Id %u at position %ld is invalid", id, i);
+                    throw_error_already_set();
+                }
+                atom_t& atm = sys.atom(id);
+                atm.x = pos[0];
+                atm.y = pos[1];
+                atm.z = pos[2];
+                pos += 3;
+            }
         }
     }
 
-    void sys_setvel(System& sys, PyObject* obj) {
+    void sys_setvel(System& sys, PyObject* obj, object idobj) {
         PyObject* arr = PyArray_FromAny(
                 obj,
                 PyArray_DescrFromType(NPY_FLOAT64),
@@ -280,27 +303,50 @@ namespace {
                 NPY_C_CONTIGUOUS | NPY_ALIGNED,
                 NULL);
         if (!arr) throw_error_already_set();
-        Py_ssize_t n = PyArray_DIM(arr,0);
-        if (n!=sys.atomCount()) {
-            PyErr_Format(PyExc_ValueError, 
-                    "Supplied %ld velocities, but system has %u atoms", 
-                    n, sys.atomCount());
-            throw_error_already_set();
-        }
+        Id n = PyArray_DIM(arr,0);
         if (PyArray_DIM(arr,1)!=3) {
             PyErr_Format(PyExc_ValueError, 
                     "Supplied %ld-d velocities, expected 3-d", 
                     PyArray_DIM(arr,1));
             throw_error_already_set();
         }
-        const double* vel = (const double *)PyArray_DATA(arr);
-        for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
-            if (!sys.hasAtom(i)) continue;
-            atom_t& atm = sys.atom(i);
-            atm.vx = vel[0];
-            atm.vy = vel[1];
-            atm.vz = vel[2];
-            vel += 3;
+        const double* pos = (const double *)PyArray_DATA(arr);
+
+        if (idobj.ptr()==Py_None) {
+            if (n!=sys.atomCount()) {
+                PyErr_Format(PyExc_ValueError, 
+                        "Supplied %u velocities, but system has %u atoms", 
+                        n, sys.atomCount());
+                throw_error_already_set();
+            }
+            for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
+                if (!sys.hasAtom(i)) continue;
+                atom_t& atm = sys.atom(i);
+                atm.vx = pos[0];
+                atm.vy = pos[1];
+                atm.vz = pos[2];
+                pos += 3;
+            }
+        } else {
+            IdList const& ids = extract<IdList const&>(idobj);
+            if (n != ids.size()) {
+                PyErr_Format(PyExc_ValueError,
+                        "Supplied %u velocities != %lu ids", n, ids.size());
+                throw_error_already_set();
+            }
+            for (Py_ssize_t i=0; i<n; i++) {
+                Id id = ids[i];
+                if (!sys.hasAtom(id)) {
+                    PyErr_Format(PyExc_ValueError,
+                            "Id %u at position %ld is invalid", id, i);
+                    throw_error_already_set();
+                }
+                atom_t& atm = sys.atom(id);
+                atm.vx = pos[0];
+                atm.vy = pos[1];
+                atm.vz = pos[2];
+                pos += 3;
+            }
         }
     }
 
@@ -538,10 +584,14 @@ namespace desres { namespace msys {
 
             .def("getPositions", sys_getpos,
                     (arg("ids")=object()))
-            .def("setPositions",    sys_setpos)
+            .def("setPositions",    sys_setpos,
+                    (arg("pos"),
+                     arg("ids")=object()))
             .def("getVelocities", sys_getvel,
                     (arg("ids")=object()))
-            .def("setVelocities",    sys_setvel)
+            .def("setVelocities",    sys_setvel,
+                    (arg("vel"),
+                     arg("ids")=object()))
             ;
     }
 

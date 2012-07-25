@@ -932,6 +932,40 @@ class TestMain(unittest.TestCase):
         with self.assertRaises(ValueError):
             m.positions=p[:,1:]
 
+        # test of the low level Id-based accessors for positions
+        ids=m._ptr.select('index 1')
+        m._ptr.setPositions([[8,9,10]], ids)
+        self.assertEqual(list(m.positions[1]), [8,9,10])
+        self.assertEqual(list(m._ptr.getPositions(ids)[0]), [8,9,10])
+
+    def testVelocities(self):
+        m=msys.CreateSystem()
+        a0=m.addAtom()
+        a1=m.addAtom()
+        a2=m.addAtom()
+        a0.vy=1
+        a1.vz=2
+        a2.vx=3
+        p=m.getVelocities()
+        self.assertEqual(p[0][1],1)
+        self.assertEqual(p[1][2],2)
+        self.assertEqual(p[2][0],3)
+        p[1][2]=4
+        m.setVelocities(p)
+        p=m.getVelocities()
+        self.assertEqual(p[1][2],4)
+        self.assertTrue((p==m.getVelocities()).all())
+        with self.assertRaises(ValueError):
+            m.setVelocities(p[1:,:])
+        with self.assertRaises(ValueError):
+            m.setVelocities(p[:,1:])
+
+        # test of the low level Id-based accessors for velocities
+        ids=m._ptr.select('index 1')
+        m._ptr.setVelocities([[8,9,10]], ids)
+        self.assertEqual(list(m.getVelocities()[1]), [8,9,10])
+        self.assertEqual(list(m._ptr.getVelocities(ids)[0]), [8,9,10])
+
     def testMacros(self):
         m=msys.CreateSystem()
         m.addAtom().name='CA'
