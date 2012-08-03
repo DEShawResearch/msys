@@ -1,3 +1,5 @@
+1.5.6  FIXED: Memory leak in setPositions and setVelocities.
+       
 1.5.5  NEW: {get,set}Positions is ~100x faster due to NumPy integration.
        NEW: {get,set}Velocities is ~500x faster due to NumPy integration. 
        NEW: System.center and Residue.center use NumPy.
