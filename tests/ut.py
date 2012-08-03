@@ -6,7 +6,26 @@ sys.path.insert(0,os.path.join(TMPDIR, 'lib', 'python'))
 import msys
 import numpy as NP
 
+def vsize():
+    cmd='ps -p %d h -o vsz' % os.getpid()
+    s=os.popen(cmd).read()
+    return int(s)
+
+
 class TestMain(unittest.TestCase):
+
+    def testMemoryLeakPosVel(self):
+        mol=msys.CreateSystem()
+        for i in xrange(1000):
+            mol.addAtom()
+
+        pos=NP.zeros((mol.natoms, 3), 'f')
+        oldsize = vsize()
+        for i in xrange(1000):
+            mol.setPositions(pos)
+            mol.setVelocities(pos)
+        newsize = vsize()
+        self.assertEqual(oldsize, newsize)
 
     def testBadPath(self):
         m=msys.CreateSystem()
