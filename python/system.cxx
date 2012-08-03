@@ -240,6 +240,10 @@ namespace {
         return arr;
     }
 
+    void destructor(PyObject* obj) { 
+        Py_DECREF(obj); 
+    }
+
     void sys_setpos(System& sys, PyObject* obj, object idobj) {
         PyObject* arr = PyArray_FromAny(
                 obj,
@@ -248,9 +252,9 @@ namespace {
                 NPY_C_CONTIGUOUS | NPY_ALIGNED,
                 NULL);
         if (!arr) throw_error_already_set();
+        boost::shared_ptr<PyObject> _(arr, destructor);
         Id n = PyArray_DIM(arr,0);
         if (PyArray_DIM(arr,1)!=3) {
-            Py_DECREF(arr);
             PyErr_Format(PyExc_ValueError, 
                     "Supplied %ld-d positions, expected 3-d", 
                     PyArray_DIM(arr,1));
@@ -260,7 +264,6 @@ namespace {
 
         if (idobj.ptr()==Py_None) {
             if (n!=sys.atomCount()) {
-                Py_DECREF(arr);
                 PyErr_Format(PyExc_ValueError, 
                         "Supplied %u positions, but system has %u atoms", 
                         n, sys.atomCount());
@@ -277,7 +280,6 @@ namespace {
         } else {
             IdList const& ids = extract<IdList const&>(idobj);
             if (n != ids.size()) {
-                Py_DECREF(arr);
                 PyErr_Format(PyExc_ValueError,
                         "Supplied %u positions != %lu ids", n, ids.size());
                 throw_error_already_set();
@@ -285,7 +287,6 @@ namespace {
             for (Py_ssize_t i=0; i<n; i++) {
                 Id id = ids[i];
                 if (!sys.hasAtom(id)) {
-                    Py_DECREF(arr);
                     PyErr_Format(PyExc_ValueError,
                             "Id %u at position %ld is invalid", id, i);
                     throw_error_already_set();
@@ -297,7 +298,6 @@ namespace {
                 pos += 3;
             }
         }
-        Py_DECREF(arr);
     }
 
     void sys_setvel(System& sys, PyObject* obj, object idobj) {
@@ -308,9 +308,9 @@ namespace {
                 NPY_C_CONTIGUOUS | NPY_ALIGNED,
                 NULL);
         if (!arr) throw_error_already_set();
+        boost::shared_ptr<PyObject> _(arr, destructor);
         Id n = PyArray_DIM(arr,0);
         if (PyArray_DIM(arr,1)!=3) {
-            Py_DECREF(arr);
             PyErr_Format(PyExc_ValueError, 
                     "Supplied %ld-d velocities, expected 3-d", 
                     PyArray_DIM(arr,1));
@@ -320,7 +320,6 @@ namespace {
 
         if (idobj.ptr()==Py_None) {
             if (n!=sys.atomCount()) {
-                Py_DECREF(arr);
                 PyErr_Format(PyExc_ValueError, 
                         "Supplied %u velocities, but system has %u atoms", 
                         n, sys.atomCount());
@@ -337,7 +336,6 @@ namespace {
         } else {
             IdList const& ids = extract<IdList const&>(idobj);
             if (n != ids.size()) {
-                Py_DECREF(arr);
                 PyErr_Format(PyExc_ValueError,
                         "Supplied %u velocities != %lu ids", n, ids.size());
                 throw_error_already_set();
@@ -345,7 +343,6 @@ namespace {
             for (Py_ssize_t i=0; i<n; i++) {
                 Id id = ids[i];
                 if (!sys.hasAtom(id)) {
-                    Py_DECREF(arr);
                     PyErr_Format(PyExc_ValueError,
                             "Id %u at position %ld is invalid", id, i);
                     throw_error_already_set();
@@ -357,7 +354,6 @@ namespace {
                 pos += 3;
             }
         }
-        Py_DECREF(arr);
     }
 
     list glue_pairs(System const& sys) {
