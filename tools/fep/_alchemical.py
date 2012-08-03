@@ -307,12 +307,12 @@ def copy_alchemical(dst, srcA, idA, srcB, idB):
     if not _msys.bad(idA):
         for i in range(srcA.propCount()):
             prop = srcA.propName(i)
-            col = dst.propIndex(prop+'A')
+            col = dst.addProp(prop+'A', srcA.propType(i))
             dst.setProp(id,col,srcA.getProp(idA,i))
     if not _msys.bad(idB):
         for i in range(srcB.propCount()):
             prop = srcB.propName(i)
-            col = dst.propIndex(prop+'B')
+            col = dst.addProp(prop+'B', srcB.propType(i))
             dst.setProp(id,col,srcB.getProp(idB,i))
     return id
 
