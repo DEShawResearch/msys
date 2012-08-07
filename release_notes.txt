@@ -1,3 +1,9 @@
+1.5.8  NEW: dms-fix-mass for fixing inconsitent masses.
+       NEW: dms-find-knot for finding bonds passing through rings.
+       NEW: dms-validate runs the knot check.
+
+1.5.7  FIXED: dms-alchemical was confused by extra properties in the B state.
+
 1.5.6  FIXED: Memory leak in setPositions and setVelocities.
        
 1.5.5  NEW: {get,set}Positions is ~100x faster due to NumPy integration.
