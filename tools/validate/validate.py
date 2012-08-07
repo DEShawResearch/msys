@@ -1,11 +1,18 @@
 import sys, msys
 import unittest as UT
+from msys import knot
+
 
 _mol = None
 
 class TestStrict(UT.TestCase):
     def setUp(self):
         self.mol=_mol
+
+    def testKnots(self):
+        ''' the system must not contain knots '''
+        knots = knot.FindKnots(self.mol)
+        self.assertTrue(len(knots)==0, "The system has %d bonds passing through rings: %s" % (len(knots), knots))
 
     def testHasConstraints(self):
         ''' The system must have constraints '''
