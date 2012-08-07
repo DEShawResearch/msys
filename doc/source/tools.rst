@@ -640,6 +640,32 @@ atoms and force terms in the B state will be ignored.
 Validation
 ----------
 
+dms-find-knot
+-------------
+.. program:: dms-find-knot
+
+.. describe:: dms-find-knot system.dms [ options ]
+
+   Check for bonds passing through rings.
+   
+.. cmdoption:: --max_cycle N
+
+   Maximum cycle to check; default 10.  If too large, disulfide-induced rings
+   will be checked.
+
+.. cmdoption:: --include_h2o
+
+   Look for knots involving water molecules; default false.
+
+.. cmdoption:: --no_boxing
+
+   Turn off 'boxing' optimization, which can potentially miss some knots;
+   default false.
+
+*dms-find-knot* searches for bonds which pass through a ring of atoms; e.g.,
+a lipid tail passing through an aromatic ring in a protein.  Such geometries
+can accidentally arise during system construction and usually indicate
+a badly constructed system which will behave badly during simulation.
 
 dms-validate
 ------------
