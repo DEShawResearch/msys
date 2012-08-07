@@ -23,6 +23,7 @@ def fixmass(atoms):
     
     elems=list()
     for anum, d in m.items():
+        if anum==0: continue
         if len(d)==1: continue
         elems.append(anum)
         print "Found %d distinct masses for atomic number %d" % (len(d), anum)
