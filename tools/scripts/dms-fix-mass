@@ -1,0 +1,73 @@
+#!/usr/bin/env desres-exec
+# -*- python -*-
+#{
+# desres-cleanenv $MSYS_CLEANENV -- python $0 "$@"
+#}
+
+'''
+dms-fix-mass system.dms [ options ]
+
+Find inconsistent masses among elements in a system, and optionally replace 
+them by their median value.
+'''
+
+import sys
+import msys
+import numpy
+
+def fixmass(atoms):
+    m=dict()
+    for a in atoms:
+        d=m.setdefault(a.atomic_number, dict())
+        d.setdefault(a.mass, []).append(a)
+    
+    elems=list()
+    for anum, d in m.items():
+        if len(d)==1: continue
+        elems.append(anum)
+        print "Found %d distinct masses for atomic number %d" % (len(d), anum)
+        all=[]
+        for mass, atoms in d.items():
+            print "\t%f (%d)" % (mass, len(atoms))
+            all.extend(a.mass for a in atoms)
+        M=numpy.median(numpy.array(all))
+        print "===> Replacing with median value", M
+        for atoms in d.values():
+            for a in atoms:
+                a.mass = M
+    return elems
+
+def main():
+    import optparse
+    parser = optparse.OptionParser(__doc__)
+
+    parser.add_option('-s', '--selection', default='all',
+            help='consider only atoms in the selection')
+    parser.add_option('-o', '--output', default=None,
+            help='path of output file with corrected masses')
+
+    opts, args = parser.parse_args()
+    if len(args)!=1:
+        parser.error("incorrect number of arguments")
+
+    print "Reading input file", args[0]
+    mol=msys.Load(args[0])
+
+    atoms=mol.select(opts.selection)
+    print "Checking %d atoms" % len(atoms)
+
+    elems = fixmass(atoms)
+    if not elems:
+        print "All elements have exactly consistent masses."
+
+    if opts.output:
+        print "Writing DMS file", opts.output
+        msys.SaveDMS(mol, opts.output)
+    else:
+        if len(elems):
+            print "Inconsistent masses were found, but no output file was written."
+        sys.exit(len(elems))
+
+if __name__=="__main__": exit(main())
+
+# vim: filetype=python
