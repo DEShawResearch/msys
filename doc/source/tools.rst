@@ -185,6 +185,29 @@ dms-diff
 Basic Manipulation
 ------------------
 
+dms-fix-mass
+------------
+.. program:: dms-fix-mass
+
+.. describe:: dms-fix-mass input.dms [ options ]
+
+   Find atoms with the same atomic number but different mass, and replaces
+   the masses with their median value.
+
+options:
+
+.. cmdoption:: -s selection, --selection selection
+
+   Consider only atoms in the given atom selection
+
+.. cmdoption:: -o output.dms, ---output output.dms
+
+   Write corrected file to ``output.dms``.
+
+*dms-fix-mass* fixes inconsistencies in the masses of particles in the
+system.  This can occur when using forcefields from multiple sources.
+
+
 dms-frame
 ---------
 .. program:: dms-frame
