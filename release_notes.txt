@@ -1,6 +1,7 @@
 1.5.8  NEW: dms-fix-mass for fixing inconsitent masses.
        NEW: dms-find-knot for finding bonds passing through rings.
        NEW: dms-validate runs the knot check.
+       FIXED: dms-alchemical handles alchemical_improper_harm .
 
 1.5.7  FIXED: dms-alchemical was confused by extra properties in the B state.
 

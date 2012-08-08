@@ -549,6 +549,9 @@ def MakeAlchemical(A, B, pairs):
     ff='pair_12_6_es'
     pairmaps = make_pairmaps(C,bmap, C.table(ff), B.table(ff))
 
+    ff='improper_harm'
+    imprmaps = make_block(C,amap, bmap, apairs, bpairs, C.table(ff), B.table(ff))
+
     kept.stage2( C, B, pairs, bmap, bondmaps, anglmaps, dihemaps, False )
 
     ff='stretch_harm'
@@ -559,6 +562,8 @@ def MakeAlchemical(A, B, pairs):
     make_alchemical(A.table(ff), B.table(ff), C.table(ff), dihemaps)
     ff='pair_12_6_es'
     make_alchemical(A.table(ff), B.table(ff), C.table(ff), pairmaps)
+    ff='improper_harm'
+    make_alchemical(A.table(ff), B.table(ff), C.table(ff), imprmaps)
 
     # bonds
     for b in B.bonds():
