@@ -6,7 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define STACK_SIZE 16
+#define STACK_SIZE 4
 
 using namespace desres::msys::atomsel;
 
@@ -23,8 +23,8 @@ struct point_t {
 struct voxel_t {
   int nbrs[27];
   int n_nbrs;
-  point_t stack[STACK_SIZE];
-  point_t * points;
+  Id stack[STACK_SIZE];
+  Id * points;
   int num;
   int max;
 
@@ -33,14 +33,14 @@ struct voxel_t {
       if (points!=stack) free(points);
   }
 
-  void add(point_t const& p) {
+  void add(Id p) {
       if (num==max) {
           max *= 1.3;
           if (points==stack) {
-              points = (point_t *)malloc(max*sizeof(point_t));
-              memcpy(points, stack, num*sizeof(point_t));
+              points = (Id*)malloc(max*sizeof(Id));
+              memcpy(points, stack, num*sizeof(Id));
           } else {
-              points = (point_t *)realloc(points, max*sizeof(point_t));
+              points = (Id*)realloc(points, max*sizeof(Id));
           }
       }
       points[num++] = p;
@@ -111,7 +111,7 @@ void find_voxel_full_shell_neighbors(voxel_t *mesh, int nx, int ny, int nz) {
             for (ri=xi-1; ri<=xi+1; ri++) {
               if (ri<0 || ri>=nx) continue;
               int index = ri + nx*(si + ny*ti);
-              if (index!=self) nbrs[n++] = index;
+              if (index!=self && mesh[index].num) nbrs[n++] = index;
             }
           }
         }
@@ -210,14 +210,12 @@ static void find_within( const point_t* points,
   zsize=max[2]-zmin;
 
   /* create and initialize voxel mesh */
-  nx = (int)(xsize/rad)+3;
-  ny = (int)(ysize/rad)+3;
-  nz = (int)(zsize/rad)+3;
+  nx = (int)(xsize/rad)+1;
+  ny = (int)(ysize/rad)+1;
+  nz = (int)(zsize/rad)+1;
   nvoxel = nx*ny*nz;
 
   mesh = new voxel_t[nvoxel];
-
-  find_voxel_full_shell_neighbors(mesh, nx, ny, nz);
 
   /* map subsel atoms to voxels */
   for (Id i=0; i<subsel.size(); i++) {
@@ -228,8 +226,10 @@ static void find_within( const point_t* points,
     int yi = (p.y-ymin)*ir;
     int zi = (p.z-zmin)*ir;
     int index = xi + nx*(yi + ny*zi);
-    mesh[index].add(p);
+    mesh[index].add(i);
   }
+
+  find_voxel_full_shell_neighbors(mesh, nx, ny, nz);
 
   /* loop over atoms in left selection */
   for (Id i=0; i<S.size(); i++) {
@@ -242,9 +242,12 @@ static void find_within( const point_t* points,
     if (!S[i]) continue;
     if (subsel[i]) continue;
     point_t const& p = points[i];
-    xi = (p.x-xmin)*ir;
-    yi = (p.y-ymin)*ir;
-    zi = (p.z-zmin)*ir;
+    const double x = p.x;
+    const double y = p.y;
+    const double z = p.z;
+    xi = (x-xmin)*ir;
+    yi = (y-ymin)*ir;
+    zi = (z-zmin)*ir;
     if (xi<0 || xi>=nx ||
         yi<0 || yi>=ny ||
         zi<0 || zi>=nz) {
@@ -260,10 +263,11 @@ static void find_within( const point_t* points,
       const voxel_t* nbr = mesh + nbrs[j];
       int k, natoms = nbr->num;
       for (k=0; k<natoms; k++) {
-        point_t const& pk = nbr->points[k];
-        double dx=pk.x - p.x;
-        double dy=pk.y - p.y;
-        double dz=pk.z - p.z;
+        const Id pk = nbr->points[k];
+        point_t const& p = points[pk];
+        double dx=x-p.x;
+        double dy=y-p.y;
+        double dz=z-p.z;
         if (dx*dx + dy*dy + dz*dz <=r2) {
           on=1;
           break;
