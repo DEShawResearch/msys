@@ -62,6 +62,7 @@ $hdr
 module-whatis {$NAME - $DESCRIPTION}
 
 prereq $PYTHON/bin
+prereq $NUMPY/lib-python
 prepend-path PYTHONPATH $PREFIX/lib/python
 setenv MSYS_PREFIX "$PREFIX"
 EOF
