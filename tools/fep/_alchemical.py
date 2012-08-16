@@ -1,5 +1,5 @@
 
-import _msys
+from msys import _msys
 from msys import kept
 from math import sqrt
 
@@ -316,7 +316,7 @@ def copy_alchemical(dst, srcA, idA, srcB, idB):
             dst.setProp(id,col,srcB.getProp(idB,i))
     return id
 
-def make_alchemical(atable, btable, ctable, block, keeper=None):
+def make_alchemical(btable, ctable, block, keeper=None):
     ''' merge forcefield entries from m2 into m1. '''
     if btable is None: return
 
@@ -439,6 +439,17 @@ def identical_params( params, i, j):
             return False
     return True
 
+def are_same_atom( a1, a2):
+    '''
+    Return true if the two atoms are actually the same atom, based on
+    the comparison of a list of attributes.
+    '''
+    attrs = [ "atomic_number", "charge", "formal_charge",
+              "mass", "name", "vx", "vy", "vz", "x", "y", "z" ]
+    return reduce( lambda x, y: x and y,
+                   [ a1.__getattribute__( s) == a2.__getattribute__( s)
+                     for s in attrs ])
+
 def MakeAlchemical(A, B, pairs):
 
     # put all the dummy atoms for A at the end
@@ -462,13 +473,32 @@ def MakeAlchemical(A, B, pairs):
             atoms.append(a)
     C=_msys.Clone(A, atoms)
 
+    # Map the atom indices in A to atom indices in C. Here we assume that
+    # the cloned atoms in C follow the same order as the atoms in A.
+    atoc = {}
+    for j, ia in enumerate(atoms):
+        atoc[ia] = j
+        assert( are_same_atom( A.atom( ia), C.atom( j)))
+        
     batoms = _msys.IdList()
     for b in sorted(bpairs):
         if b >= 0:
             batoms.append(b)
+    B0 = B
     B=_msys.Clone(B, batoms)
+    
+    # Map the atom indices in B and to atom indices in its clone.
+    btob = {}
+    for j, ib in enumerate(batoms):
+        btob[ib] = j
+        assert( are_same_atom( B0.atom( ib), B.atom(j)))
 
-
+    # Update the pairs list so that the indices correspond to the cloned C
+    # and B sub-systems.
+    pairs = [ (i>=0 and atoc[i] or i, j>=0 and btob[j] or j)
+              for i, j in pairs ]
+    apairs, bpairs = zip(*pairs)
+    
     # add custom atom properties from B
     for i in range(B.atomPropCount()):
         C.addAtomProp(B.atomPropName(i), B.atomPropType(i))
@@ -555,15 +585,15 @@ def MakeAlchemical(A, B, pairs):
     kept.stage2( C, B, pairs, bmap, bondmaps, anglmaps, dihemaps, False )
 
     ff='stretch_harm'
-    make_alchemical(A.table(ff), B.table(ff), C.table(ff), bondmaps, "r0")
+    make_alchemical(B.table(ff), C.table(ff), bondmaps, "r0")
     ff='angle_harm'
-    make_alchemical(A.table(ff), B.table(ff), C.table(ff), anglmaps)
+    make_alchemical(B.table(ff), C.table(ff), anglmaps)
     ff='dihedral_trig'
-    make_alchemical(A.table(ff), B.table(ff), C.table(ff), dihemaps)
+    make_alchemical(B.table(ff), C.table(ff), dihemaps)
     ff='pair_12_6_es'
-    make_alchemical(A.table(ff), B.table(ff), C.table(ff), pairmaps)
+    make_alchemical(B.table(ff), C.table(ff), pairmaps)
     ff='improper_harm'
-    make_alchemical(A.table(ff), B.table(ff), C.table(ff), imprmaps)
+    make_alchemical(B.table(ff), C.table(ff), imprmaps)
 
     # bonds
     for b in B.bonds():
@@ -574,7 +604,7 @@ def MakeAlchemical(A, B, pairs):
     # exclusions and pairs
     ff='exclusion'
     exclmaps = make_exclmap(bmap, apairs, bpairs, C.table(ff), B.table(ff))
-    exclmaps.extend(add_more_exclusions( pairs, bmap, A, B ))
+    exclmaps.extend(add_more_exclusions( pairs, bmap, C, B ))
     make_alchemical_excl(C.table(ff), exclmaps)
 
     # constraints
@@ -611,10 +641,12 @@ def MakeAlchemical(A, B, pairs):
                 mparams.setProp(mp, i, props[i])
             mtable.addTerm(cids, mp)
 
-
     # tack on the non-alchemical part
-    alc_ids = A.atoms()[len(atoms):]
-    alc = _msys.Clone(A, alc_ids)
+    alchemy = set(atoms)
+    nonalc_ids = _msys.IdList()
+    for a in A.atoms():
+        if a not in alchemy: nonalc_ids.append( a)
+    alc = _msys.Clone(A, nonalc_ids)
     C.append(alc)
 
     # coalesce and clone to obtain the minimal set of params

@@ -11,7 +11,8 @@ Create an alchemical system from A and B states and a map between them.
 
 '''
 import sys
-from msys import _msys, _alchemical
+from msys import _msys
+from msys import _alchemical
 
 
 def read_atommap(path):
