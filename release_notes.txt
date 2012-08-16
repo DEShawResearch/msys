@@ -1,3 +1,6 @@
+1.5.11 NEW: Slightly optimized within selections.
+       FIXED: dms-alchemical for noncontiguous alchemical ranges.
+
 1.5.8  NEW: dms-fix-mass for fixing inconsitent masses.
        NEW: dms-find-knot for finding bonds passing through rings.
        NEW: dms-validate runs the knot check.
