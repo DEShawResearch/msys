@@ -85,7 +85,7 @@ module-whatis {$NAME - $DESCRIPTION}
 prepend-path PATH $PREFIX/bin
 prepend-path MANPATH $PREFIX/doc/man
 setenv MSYS_PREFIX "$PREFIX"
-setenv MSYS_CLEANENV "-m $PYTHON/bin -m $NAME/$VERSION/lib-python -m $NUMPY/lib-python -m $MOLFILE/lib-python -m$PERIODICFIX/lib-python"
+setenv MSYS_CLEANENV "-m $PYTHON/bin -m $NUMPY/lib-python -m $NAME/$VERSION/lib-python -m $MOLFILE/lib-python -m$PERIODICFIX/lib-python"
 EOF
 }
 
