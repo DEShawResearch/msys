@@ -465,6 +465,10 @@ class TermTable(object):
         ''' The ParamTable for terms in this table. '''
         return ParamTable(self._ptr.params())
 
+    @params.setter
+    def params(self, p):
+        self._ptr.resetParams(p._ptr)
+
     @property
     def system(self): 
         ''' The System whose atoms are referenced by this table. '''

@@ -191,6 +191,11 @@ namespace desres { namespace msys {
 
         /* get the override table */
         OverrideTablePtr overrides() const { return _overrides; }
+
+        /* replace the parameter table with a new one.  The param of all
+         * terms will be set to BadId, even if the new ParamTable is the
+         * same as the old one.  */
+        void resetParams(ParamTablePtr params);
     };
 
     typedef boost::shared_ptr<TermTable> TermTablePtr;

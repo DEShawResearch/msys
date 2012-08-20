@@ -367,3 +367,10 @@ IdList TermTable::findExact(IdList const& ids) {
     return terms;
 }
 
+void TermTable::resetParams(ParamTablePtr params) {
+    for (unsigned i=0; i<maxTermId(); i++) {
+        if (_deadterms.count(i)) continue;
+        setParam(i,BadId);
+    }
+    _params = params;
+}

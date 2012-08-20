@@ -346,6 +346,36 @@ class TestMain(unittest.TestCase):
         self.assertEqual(len(c.residues), 0)
         self.assertEqual(len(m.atoms), 0)
 
+    def testResetParams(self):
+        m=msys.CreateSystem()
+        a1=m.addAtom()
+        T=m.addTable('foo', 1)
+        P=T.params
+        P.addProp('f', float)
+        p=P.addParam()
+        p['f']=32
+        t=T.addTerm([a1], p)
+
+        P2=msys.CreateParamTable()
+        P2.addProp('i', int)
+        p2=P2.addParam()
+        p2['i']=4
+
+        with self.assertRaises(RuntimeError):
+            T.term(0).param = p2
+
+        T.params = P2
+        self.assertEqual(T.params, P2)
+        T.term(0).param = p2
+        with self.assertRaises(RuntimeError):
+            T.term(0).param = p
+
+        T.params = P
+        self.assertEqual(T.params, P)
+        T.term(0).param = p
+
+
+
     def testTermTable(self):
         m=msys.CreateSystem()
         a1=m.addAtom()

@@ -107,6 +107,9 @@ namespace desres { namespace msys {
 
             /* overrides */
             .def("overrides",   &TermTable::overrides)
+
+            /* misc */
+            .def("resetParams", &TermTable::resetParams)
             ;
     }
 
