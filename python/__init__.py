@@ -538,6 +538,10 @@ class TermTable(object):
         ''' returns the Term in the table with the given id '''
         return Term(self._ptr, id)
 
+    def hasTerm(self, id):
+        ''' Does a Term with the given id exist in the table? '''
+        return self._ptr.hasTerm(id)
+
     def addTermProp(self, name, type):
         ''' add a custom Term property of the given type '''
         self._ptr.addTermProp(name, type)

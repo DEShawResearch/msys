@@ -376,7 +376,6 @@ class TestMain(unittest.TestCase):
         T.term(0).param = p
 
 
-
     def testTermTable(self):
         m=msys.CreateSystem()
         a1=m.addAtom()
@@ -387,6 +386,10 @@ class TestMain(unittest.TestCase):
         self.assertEqual(angle.natoms, 3)
         self.assertEqual(len(angle.terms), 0)
         t1=angle.addTerm(m.atoms[:3])
+
+        self.assertTrue(angle.hasTerm(0))
+        self.assertFalse(angle.hasTerm(1))
+
         self.assertEqual(t1.atoms, m.atoms[:3])
         self.assertTrue(t1.param is None)
         t2=angle.addTerm(m.atoms[1:4], None)

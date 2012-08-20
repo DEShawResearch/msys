@@ -142,7 +142,10 @@ namespace desres { namespace msys {
         /* Operations on the set of terms */
         IdList terms() const;
         Id termCount() const;
-        Id maxTermId() const;
+        Id maxTermId() const {
+            return _terms.size()/(1+_natoms);
+        }
+
         bool hasTerm(Id term) const;
         Id addTerm(const IdList& atoms, Id param);
         void delTerm(Id id);

@@ -116,11 +116,7 @@ void TermTable::setParam(Id term, Id param) {
 }
 
 bool TermTable::hasTerm(Id term) const {
-    return term<_terms.size() && !_deadterms.count(term);
-}
-
-Id TermTable::maxTermId() const {
-    return _terms.size()/(1+_natoms);
+    return term<maxTermId() && !_deadterms.count(term);
 }
 
 IdList TermTable::atoms(Id term) const { 
