@@ -366,6 +366,7 @@ class TestMain(unittest.TestCase):
 
         T.params = P2
         self.assertEqual(T.params, P2)
+        self.assertEqual(T.term(0).param, None)
         T.term(0).param = p2
         with self.assertRaises(RuntimeError):
             T.term(0).param = p
