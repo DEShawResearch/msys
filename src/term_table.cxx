@@ -9,10 +9,11 @@
 using namespace desres::msys;
 
 TermTable::TermTable( SystemPtr system, Id natoms, ParamTablePtr ptr ) 
-: _system(system), _natoms(natoms), _props(ParamTable::create()),
+: _system(system), _natoms(natoms), _ndead(0), _props(ParamTable::create()),
   _maxIndexId(0), category(NO_CATEGORY) {
     _params = ptr ? ptr : ParamTable::create();
     _overrides = OverrideTable::create(_params);
+    if (natoms<1) MSYS_FAIL("TermTable must have at least 1 atom");
 }
 
 void TermTable::destroy() {
@@ -21,7 +22,7 @@ void TermTable::destroy() {
     _system.reset();
     sys->removeTable(shared_from_this());
     for (unsigned i=0; i<maxTermId(); i++) {
-        if (_deadterms.count(i)) continue;
+        if (!_alive(i)) continue;
         _params->decref(param(i));
     }
     _overrides->clear();
@@ -43,15 +44,11 @@ void TermTable::rename(String const& newname) {
 
 IdList TermTable::terms() const {
     IdList ids(termCount());
-    unsigned i,j=0,n=termCount() + _deadterms.size();
+    Id i,j=0,n=maxTermId();
     for (i=0; i<n; i++) {
-        if (!_deadterms.count(i)) ids[j++] = i;
+        if (_alive(i)) ids[j++]=i;
     }
     return ids;
-}
-
-Id TermTable::termCount() const { 
-    return _terms.size()/(1+_natoms) - _deadterms.size(); 
 }
 
 Id TermTable::addTerm(const IdList& atoms, Id param) {
@@ -68,7 +65,7 @@ Id TermTable::addTerm(const IdList& atoms, Id param) {
             throw std::runtime_error(ss.str());
         }
     }
-    Id id=_terms.size()/(1+_natoms);
+    Id id=maxTermId();
     _terms.insert(_terms.end(), atoms.begin(), atoms.end());
     _terms.push_back(param);
     _params->incref(param);
@@ -79,15 +76,16 @@ Id TermTable::addTerm(const IdList& atoms, Id param) {
 void TermTable::delTerm(Id id) {
     if (!hasTerm(id)) return;
     _params->decref(param(id));
-    _deadterms.insert(id);
     if (_index.size()) {
-        unsigned i,n = atomCount();
+        Id i,n = atomCount();
         for (i=0; i<n; i++) {
             Id atm = atom(id,i);
             IdList& p = _index.at(atm);
             p.resize(std::remove(p.begin(), p.end(), id)-p.begin());
         }
     }
+    _terms[id*(1+_natoms)] = BadId; /* mark as dead */
+    ++_ndead;
 }
 
 void TermTable::delTermsWithAtom(Id atm) {
@@ -115,15 +113,11 @@ void TermTable::setParam(Id term, Id param) {
     _params->incref(param);
 }
 
-bool TermTable::hasTerm(Id term) const {
-    return term<maxTermId() && !_deadterms.count(term);
-}
-
 IdList TermTable::atoms(Id term) const { 
     if (term>=maxTermId()) {
         MSYS_FAIL("Table '" << name() << "' has no term with id " << term);
     }
-    TermList::const_iterator b=_terms.begin()+term*(1+_natoms);
+    IdList::const_iterator b=_terms.begin()+term*(1+_natoms);
     return IdList(b, b+_natoms);
 }
 
@@ -134,7 +128,7 @@ Id TermTable::atom(Id term, Id index) const {
     if (index>=atomCount()) {
         MSYS_FAIL("Table '" << name() << "' has no atoms for index " << index);
     }
-    TermList::const_iterator b=_terms.begin()+term*(1+_natoms);
+    IdList::const_iterator b=_terms.begin()+term*(1+_natoms);
     return *(b+index);
 }
 
@@ -367,9 +361,8 @@ IdList TermTable::findExact(IdList const& ids) {
 }
 
 void TermTable::resetParams(ParamTablePtr params) {
-    for (unsigned i=0; i<maxTermId(); i++) {
-        if (_deadterms.count(i)) continue;
-        setParam(i,BadId);
+    for (Id i=0; i<maxTermId(); i++) {
+        if (_alive(i)) setParam(i,BadId);
     }
     _params = params;
 }

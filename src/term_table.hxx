@@ -39,12 +39,18 @@ namespace desres { namespace msys {
         ParamTablePtr   _params;
     
         /* number of atoms in each term */
-        Id          _natoms;
+        Id      _natoms;
+
+        /* number of dead terms */
+        Id      _ndead;
     
         /* all the terms. */
-        typedef std::vector<Id> TermList;
-        TermList    _terms;
-        IdSet   _deadterms; 
+        IdList  _terms;
+
+        /* terms are live if their first atom is not BadId */
+        bool _alive(Id term) const {
+            return BadId != _terms.at(term*(1+_natoms));
+        }
 
         /* extra term properties, analogous to extra atom properties.
          * These are currently used for two things in dms files: 
@@ -141,12 +147,17 @@ namespace desres { namespace msys {
 
         /* Operations on the set of terms */
         IdList terms() const;
-        Id termCount() const;
+        Id termCount() const {
+            return maxTermId() - _ndead;
+        }
         Id maxTermId() const {
             return _terms.size()/(1+_natoms);
         }
 
-        bool hasTerm(Id term) const;
+        bool hasTerm(Id term) const {
+            return term<maxTermId() && _alive(term);
+        }
+
         Id addTerm(const IdList& atoms, Id param);
         void delTerm(Id id);
 

@@ -382,6 +382,9 @@ class TestMain(unittest.TestCase):
         a2=m.addAtom()
         a3=m.addAtom()
         a4=m.addAtom()
+        with self.assertRaises(RuntimeError):
+            m.addTable("foo", 0)
+
         angle=m.addTable("angle", 3)
         self.assertEqual(angle.natoms, 3)
         self.assertEqual(len(angle.terms), 0)
