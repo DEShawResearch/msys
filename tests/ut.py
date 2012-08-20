@@ -881,11 +881,11 @@ class TestMain(unittest.TestCase):
         self.assertEqual(T.name, 'fooj')
         T.remove()
         self.assertEqual(T.system, None)
-        with self.assertRaises(RuntimeError):
-            T.name
+        self.assertEqual(T.name, "")
         with self.assertRaises(RuntimeError):
             T.addTerm([a], p)
-        self.assertEqual([t.id for t in T.terms], [0])
+        self.assertEqual(T.name, '')
+        self.assertEqual([t.id for t in T.terms], [])
 
     def testChargeC(self):
         m=msys.CreateSystem()

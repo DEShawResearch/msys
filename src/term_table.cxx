@@ -25,11 +25,13 @@ void TermTable::destroy() {
         _params->decref(param(i));
     }
     _overrides->clear();
+    _terms.clear();
+    _index.clear();
 }
 
 String TermTable::name() const {
     SystemPtr sys = system();
-    if (!sys) MSYS_FAIL("Table has been destroyed");
+    if (!sys) return "";
     return sys->tableName(shared_from_this());
 }
 
@@ -294,6 +296,7 @@ std::string desres::msys::print(Category const& c) {
 
 
 void TermTable::update_index() {
+    if (_terms.empty()) return;
     _index.resize(system()->maxAtomId());
     const Id natoms=atomCount();
     Id i=_maxIndexId, n=maxTermId();

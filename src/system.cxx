@@ -353,6 +353,9 @@ IdList System::orderedIds() const {
 
 TermTablePtr System::addTable(const String& name, Id natoms,
                                  ParamTablePtr params) {
+    if (name.empty()) {
+        MSYS_FAIL("Table names must have at least one character");
+    }
     TermTablePtr terms = table(name);
     std::stringstream ss;
     if (!terms) {
