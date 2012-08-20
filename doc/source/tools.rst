@@ -550,9 +550,9 @@ file will be restrained using the newly provided force constraints::
   dms-posre out1.dms out2.dms -s "name CA" -f 0.3
 
   # Remove all position restraints:
-  dms-posre input.dms output.dms
+  dms-posre input.dms output.dms --replace
   ## or:
-  dms-posre input.dms output.dms -s none
+  dms-posre input.dms output.dms -s none --replace
 
 
 dms-override-vdw
