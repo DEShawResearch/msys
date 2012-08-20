@@ -549,6 +549,12 @@ file will be restrained using the newly provided force constraints::
   # Restrain CA atoms with a force constant of 0.3
   dms-posre out1.dms out2.dms -s "name CA" -f 0.3
 
+  # Remove all position restraints:
+  dms-posre input.dms output.dms
+  ## or:
+  dms-posre input.dms output.dms -s none
+
+
 dms-override-vdw
 ----------------
 .. program:: dms-override-vdw

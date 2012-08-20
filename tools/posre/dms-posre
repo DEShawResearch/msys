@@ -8,6 +8,7 @@
 dms-posre input.dms output.dms [ options ]
 
 Assign harmonic position restraints to selected atoms.  
+If no selection is provided, the output file will contain no restraints.
 
 '''
 
