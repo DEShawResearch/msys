@@ -122,6 +122,8 @@ struct topo_mol {
   topo_mol_segment_t *buildseg;
 
   memarena *arena;
+
+  double cell[9];
 };
 
 topo_mol_bond_t * topo_mol_bond_next(

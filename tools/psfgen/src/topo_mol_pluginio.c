@@ -428,12 +428,6 @@ int topo_mol_read_plugin(topo_mol *mol, const char *pluginname,
    */
   memset(&ts, 0, sizeof(molfile_timestep_t));
 
-  /* set defaults for unit cell information */
-#ifndef DESRES_READ_TIMESTEP2
-  ts.A = ts.B = ts.C = 0.0f;
-  ts.alpha = ts.beta = ts.gamma = 90.0f; 
-#endif
-
   /* optionally read coordinates from second file at same time */
   if ( coorpluginname && coorfilename ) {
 
@@ -711,6 +705,8 @@ int topo_mol_read_plugin(topo_mol *mol, const char *pluginname,
     free(atomarray);
   plg->close_file_read(rv);
 
+  for (i=0; i<9; i++) mol->cell[i] = ts.unit_cell[i];
+
   return 0;
 }
 
@@ -723,7 +719,7 @@ int topo_mol_write_plugin(topo_mol *mol, const char *pluginname,
                           void *v, void (*print_msg)(void *, const char *)) {
   char buf[256];
   int iseg,nseg,ires,nres,atomid;
-  int ia,ib,ic,ii;
+  int ia,ib,ic,ii,i;
   int has_guessed_atoms = 0;
   double x,y,z,o,b;
   topo_mol_segment_t *seg=NULL;
@@ -1245,6 +1241,7 @@ int topo_mol_write_plugin(topo_mol *mol, const char *pluginname,
   /* emit atom coordinates */
   if (plg->write_timestep != NULL) {
     ts.coords = atomcoords;
+    for (i=0; i<9; i++) ts.unit_cell[i] = mol->cell[i];
     ts.velocities = NULL;
     if (plg->write_timestep(wv, &ts)) {
       free(atomcoords);
