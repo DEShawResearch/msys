@@ -93,6 +93,14 @@ def pdb_coordinates(mol, path, segid, alias, all_caps):
     lib.fclose(fd)
     return rc
 
+def _read_psf(mol, path):
+    fd=lib.fopen(path, 'r')
+    if not fd:
+        raise IOError, "Error opening psf file for reading at %s" % path
+    rc = lib.psf_file_extract(mol, fd, None, cb)
+    lib.fclose(fd)
+    return rc
+
 
 def patch(mol, pres, targets):
     n=len(targets)
@@ -214,7 +222,7 @@ class Psfgen(object):
     def readPSF(self, path):
         path=str(path)
         print "Reading structure from psf file %s" % path
-        assert 0==lib.psf_file_extract(self._mol, path)
+        assert 0==_read_psf(self._mol, path)
 
     def writePSF(self, path):
         path=str(path)
@@ -267,6 +275,14 @@ class Psfgen(object):
         print "applying patch %s to %d residues" % (pres, len(args))
         assert 0==patch(self._mol, pres, targets)
 
+    def applyResidue(self, res, segid, resid):
+        ''' Mutate the residue at segid, resid to the topology defined in res
+        '''
+        idents = (topo_mol_ident * 1)()
+        idents[0].segid = str(segid)
+        idents[0].resid = str(resid)
+        res=str(res)
+        assert 0==lib.topo_mol_patch_residue(self._mol, idents, res)
 
 class Params(object):
     def __init__(self):

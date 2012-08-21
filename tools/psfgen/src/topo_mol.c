@@ -1432,6 +1432,115 @@ static int topo_mol_auto_dihedrals(topo_mol *mol, topo_mol_segment_t *segp) {
   return 0;
 }
 
+int topo_mol_patch_residue(topo_mol* mol, const topo_mol_ident_t *targets,
+                           const char* rname) {
+
+  int idef;
+  const int ntargets=1;
+  topo_defs_residue_t *resdef;
+  topo_defs_atom_t *atomdef;
+  topo_defs_bond_t *bonddef;
+  topo_defs_angle_t *angldef;
+  topo_defs_dihedral_t *dihedef;
+  topo_defs_improper_t *imprdef;
+  topo_defs_conformation_t *confdef;
+  topo_mol_residue_t *res;
+  topo_mol_atom_t *atm, *prevatm;
+  char errmsg[128];
+
+  if ( ! mol ) return -1;
+  if ( mol->buildseg ) return -2;
+  if ( ! mol->defs ) return -3;
+
+  idef = hasharray_index(mol->defs->residue_hash,rname);
+  if ( idef == HASHARRAY_FAIL ) {
+    sprintf(errmsg,"unknown residue type %s",rname);
+    topo_mol_log_error(mol,errmsg);
+    return -4;
+  }
+  resdef = &(mol->defs->residue_array[idef]);
+  if ( resdef->patch ) {
+    sprintf(errmsg,"unknown residue type %s",rname);
+    topo_mol_log_error(mol,errmsg);
+    return -5;
+  }
+
+  res = topo_mol_get_res(mol, targets, 0);
+  if (!res) return -7;
+
+  /* remove atoms from the residue which are not present in the resdef */
+  prevatm=NULL;
+  atm=res->atoms;
+  while (atm) {
+      int found=0; 
+      for ( atomdef=resdef->atoms; atomdef; atomdef=atomdef->next ) { 
+          if (!strcmp(atomdef->name, atm->name)) { 
+              found=1; 
+              break;
+          }
+      }
+      if (found) {
+          prevatm=atm;
+          atm=atm->next;
+          continue;
+      }
+      if (atm==res->atoms) {
+          res->atoms = atm->next;
+          topo_mol_destroy_atom(atm);
+          atm = res->atoms;
+      } else {
+          prevatm->next = atm->next;
+          topo_mol_destroy_atom(atm);
+          atm = prevatm->next;
+      }
+  }
+
+  /* add the new topology */
+
+  for ( atomdef = resdef->atoms; atomdef; atomdef = atomdef->next ) {
+    if ( topo_mol_add_atom(mol,&(res->atoms),&(res->atoms),atomdef) ) {
+      sprintf(errmsg,"add atom failed in patch %s",rname);
+      topo_mol_log_error(mol,errmsg);
+      return -8;
+    }
+  }
+
+  for ( bonddef = resdef->bonds; bonddef; bonddef = bonddef->next ) {
+    if ( topo_mol_add_bond(mol,targets,ntargets,bonddef) ) {
+      sprintf(errmsg,"Warning: add bond failed in patch %s",rname);
+      topo_mol_log_error(mol,errmsg);
+    }
+  }
+
+  for ( angldef = resdef->angles; angldef; angldef = angldef->next ) {
+    if ( topo_mol_add_angle(mol,targets,ntargets,angldef) ) {
+      sprintf(errmsg,"Warning: add angle failed in patch %s",rname);
+      topo_mol_log_error(mol,errmsg);
+    }
+  }
+
+  for ( dihedef = resdef->dihedrals; dihedef; dihedef = dihedef->next ) {
+    if ( topo_mol_add_dihedral(mol,targets,ntargets,dihedef) ) {
+      sprintf(errmsg,"Warning: add dihedral failed in patch %s",rname);
+        topo_mol_log_error(mol,errmsg);
+      }
+  }
+  for ( imprdef = resdef->impropers; imprdef; imprdef = imprdef->next ) {
+    if ( topo_mol_add_improper(mol,targets,ntargets,imprdef) ) {
+      sprintf(errmsg,"Warning: add improper failed in patch %s",rname);
+      topo_mol_log_error(mol,errmsg);
+    }
+  }
+  for ( confdef = resdef->conformations; confdef; confdef = confdef->next ) {
+    if ( topo_mol_add_conformation(mol,targets,ntargets,confdef) ) {
+      sprintf(errmsg,"Warning: add conformation failed in patch %s",rname);
+      topo_mol_log_error(mol,errmsg);
+    }
+  }
+
+  return 0;
+}
+
 int topo_mol_patch(topo_mol *mol, const topo_mol_ident_t *targets,
                         int ntargets, const char *rname, int prepend,
 			int warn_angles, int warn_dihedrals, int deflt) {

@@ -36,6 +36,15 @@ int topo_mol_patch(topo_mol *mol, const topo_mol_ident_t *targets,
 			int ntargets, const char *rname, int prepend,
 			int warn_angles, int warn_dihedrals, int deflt);
 
+/* like topo_mol_patch, but use a regular residue definition instead of
+ * a patch residue. atoms not in the residue definition are discarded. */
+int topo_mol_patch_residue(topo_mol* mol, const topo_mol_ident_t *target,
+                           const char* rname);
+
+int topo_mol_patch(topo_mol *mol, const topo_mol_ident_t *targets,
+			int ntargets, const char *rname, int prepend,
+			int warn_angles, int warn_dihedrals, int deflt);
+
 int topo_mol_regenerate_angles(topo_mol *mol);
 int topo_mol_regenerate_dihedrals(topo_mol *mol);
 
