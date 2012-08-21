@@ -249,8 +249,25 @@ class Psfgen(object):
     def read(self, type, path):
         type=str(type)
         path=str(path)
-        assert 0==lib.topo_mol_read_plugin(self._mol, self._alias, 
-                type, path, None)
+        fd=lib.fopen(path, 'r')
+        if not fd:
+            raise IOError, "Error opening %s file for reading at %s" % (
+                    type, path)
+        print "Reading %s file %s" % (type,path)
+        segid=None
+        all_caps=0
+        coordinatesonly=0
+        residuesonly=0
+        rc=lib.topo_mol_read_plugin(self._mol, 
+                                    type, path,
+                                    type, path,
+                                    segid,
+                                    self._alias, 
+                                    all_caps,
+                                    coordinatesonly, residuesonly,
+                                    0, cb)
+        lib.fclose(fd)
+        assert 0==rc
 
     def write(self, type, path):
         type=str(type)
