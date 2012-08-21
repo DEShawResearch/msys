@@ -1,3 +1,12 @@
+1.5.12 NEW: Psfgen.applyResidue does point mutations.
+       NEW: C++ interface for filtered bonds.
+       NEW: TermTable::resetParams(); in Python TermTable.params is settable.
+       FIXED: deleting terms is faster now.
+       FIXED: Psfgen.read() works now.
+       FIXED: TermTable::hasTerm().
+       FIXED: Destroyed TermTables appear empty.
+       FIXED: Document dms-posre better.
+
 1.5.11 NEW: Slightly optimized within selections.
        FIXED: dms-alchemical for noncontiguous alchemical ranges.
 
