@@ -249,10 +249,6 @@ class Psfgen(object):
     def read(self, type, path):
         type=str(type)
         path=str(path)
-        fd=lib.fopen(path, 'r')
-        if not fd:
-            raise IOError, "Error opening %s file for reading at %s" % (
-                    type, path)
         print "Reading %s file %s" % (type,path)
         segid=None
         all_caps=0
@@ -266,7 +262,6 @@ class Psfgen(object):
                                     all_caps,
                                     coordinatesonly, residuesonly,
                                     0, cb)
-        lib.fclose(fd)
         assert 0==rc
 
     def write(self, type, path):
