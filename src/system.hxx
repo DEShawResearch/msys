@@ -256,6 +256,22 @@ namespace desres { namespace msys {
             if (id>=_bondindex.size()) return _empty;
             return _bondindex[id];
         }
+        /* filtered list of subelements.  Predicate implements
+         * bool operator()(bond_t const& b) const; */
+        template <typename T>
+        IdList filteredBondsForAtom(Id id, T const& predicate) const {
+            IdList const& src = _bondindex[id];
+            IdList dst;
+            for (IdList::const_iterator it=src.begin(); it!=src.end(); ++it) {
+                Id bid = *it;
+                bond_t const& b = bond(bid);
+                if (predicate(b)) {
+                    dst.push_back(bid);
+                }
+            }
+            return dst;
+        }
+
         IdList const& atomsForResidue(Id id) const {
             if (id>=_residueatoms.size()) return _empty;
             return _residueatoms[id];
@@ -355,6 +371,24 @@ namespace desres { namespace msys {
 
         /* ids of atoms bonded to given atom */
         IdList bondedAtoms(Id id) const;
+
+        /* bonded atoms satisfying a predicate.  predicate implements
+         * bool operator()(atom_t const& atm) const; */
+        template <typename T>
+        IdList filteredBondedAtoms(Id id, T const& predicate) const {
+            if (id>=_bondindex.size()) return _empty;
+            IdList const& src = _bondindex[id];
+            IdList dst;
+            for (IdList::const_iterator it=src.begin(); it!=src.end(); ++it) {
+                Id bid = *it;
+                Id other = bond(bid).other(id);
+                atom_t const& atm = atom(other);
+                if (predicate(atm)) {
+                    dst.push_back(other);
+                }
+            }
+            return dst;
+        }
     
         /* update the fragid of each atom according to its bond topology:
          * bonded atoms share the same fragid.  Return the number of
