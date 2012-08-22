@@ -437,6 +437,9 @@ class TestMain(unittest.TestCase):
         a3=m.addAtom()
         a4=m.addAtom()
         t=m.addTable("foo", 2)
+
+        t.findWithAll([a1])
+
         t.addTerm((a1,a2))
         t.addTerm((a1,a3))
         t.addTerm((a1,a4))

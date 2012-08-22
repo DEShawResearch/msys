@@ -286,8 +286,8 @@ std::string desres::msys::print(Category const& c) {
 
 
 void TermTable::update_index() {
-    if (_terms.empty()) return;
     _index.resize(system()->maxAtomId());
+    if (_terms.empty()) return;
     const Id natoms=atomCount();
     Id i=_maxIndexId, n=maxTermId();
     for (; i<n; i++) {
