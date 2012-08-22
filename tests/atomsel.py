@@ -37,7 +37,7 @@ def compare_atomsel(coord_ent,sel, dump=False, perf=False):
       print vmd_gids
   if perf:
       t0=time()
-      coord_ent.select(sel)
+      coord_ent._ptr.select(sel)
       t1=time()
       atomsel.atomsel(sel)
       t2=time()
@@ -45,11 +45,14 @@ def compare_atomsel(coord_ent,sel, dump=False, perf=False):
       print "VMD:  %s ms" % ((t2-t1)*1000)
   return rc
 
-DMSROOT='/proj/desres/root/Linux/x86_64/dms_inputs/1.5.5/share'
-coord_vmd=molecule.load("dms","%s/2f4k.dms" % DMSROOT)
-coord_ent = msys.LoadDMS("%s/2f4k.dms" % DMSROOT,True)
-#coord_vmd=molecule.load("dms","/tmp/pro.dms")
-#coord_ent = msys.LoadDMS("/tmp/pro.dms",True)
+if len(sys.argv)<2:
+    DMSROOT='/proj/desres/root/Linux/x86_64/dms_inputs/1.5.5/share'
+    path='%s/2f4k.dms' % DMSROOT
+else:
+    path=sys.argv[1]
+
+coord_vmd=molecule.load(path.split('.')[-1], path)
+coord_ent = msys.Load(path)
 
 compare_atomsel(coord_ent,"all")
 compare_atomsel(coord_ent,"none")

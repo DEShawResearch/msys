@@ -57,6 +57,7 @@ SystemPtr desres::msys::ImportPDB( std::string const& path ) {
 
     } while (indx != PDB_END && indx != PDB_EOF);
 
+    mol->analyze();
     return mol;
 }
 

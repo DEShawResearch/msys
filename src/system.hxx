@@ -77,6 +77,12 @@ namespace desres { namespace msys {
         String vdw_rule;
     };
 
+    enum AtomType {
+        AtomOther   = 0,
+        AtomProBack = 1,
+        AtomNucBack = 2
+    };
+
     struct atom_t {
         Id  fragid;
         Id  residue;
@@ -89,10 +95,11 @@ namespace desres { namespace msys {
         Float mass;
     
         String name;
+        AtomType type;
     
         atom_t() 
         : fragid(BadId), residue(BadId), atomic_number(0), formal_charge(0),
-          x(0), y(0), z(0), charge(0), vx(0), vy(0), vz(0), mass(0)
+          x(0), y(0), z(0), charge(0), vx(0), vy(0), vz(0), mass(0), type()
         {}
     };
     
@@ -106,12 +113,20 @@ namespace desres { namespace msys {
         Id other(Id id) const { return id==i ? j : i; }
     };
     
+    enum ResidueType {
+        ResidueOther    = 0,
+        ResidueProtein  = 1,
+        ResidueNucleic  = 2,
+        ResidueWater    = 3
+    };
+
     struct residue_t {
         Id      chain;
         int     resid;
         String  name;
+        ResidueType type;
     
-        residue_t() : chain(BadId), resid() {}
+        residue_t() : chain(BadId), resid(), type() {}
     };
     
     struct chain_t {
@@ -390,6 +405,11 @@ namespace desres { namespace msys {
             return dst;
         }
     
+        /* Assign atom and residue types; do this after loading a new
+         * system from a file or creating it from scratch.  This method
+         * also calls updateFragids() for you. */
+        void analyze();
+
         /* update the fragid of each atom according to its bond topology:
          * bonded atoms share the same fragid.  Return the number of
          * frags found, and atomid to fragment partitioning if requested */

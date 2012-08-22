@@ -5,6 +5,11 @@
 
 using desres::msys::SystemPtr;
 using desres::msys::Id;
+using desres::msys::ResidueWater;
+using desres::msys::ResidueProtein;
+using desres::msys::ResidueNucleic;
+using desres::msys::AtomProBack;
+using desres::msys::AtomNucBack;
 
 namespace desres { namespace msys { namespace atomsel {
 
@@ -98,6 +103,10 @@ INT_KEY(numbonds,sys->bondCountForAtom(i))
 INT_KEY(resid,sys->residue(sys->atom(i).residue).resid)
 INT_KEY(residue,sys->atom(i).residue)
 INT_KEY(index,i)
+INT_KEY(backbone,sys->atom(i).type==AtomProBack || sys->atom(i).type==AtomNucBack)
+INT_KEY(water,sys->residue(sys->atom(i).residue).type==ResidueWater)
+INT_KEY(protein,sys->residue(sys->atom(i).residue).type==ResidueProtein)
+INT_KEY(nucleic,sys->residue(sys->atom(i).residue).type==ResidueNucleic)
 
 
 DBL_KEY(charge,atom(i).charge)

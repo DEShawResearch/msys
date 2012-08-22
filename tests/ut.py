@@ -20,6 +20,9 @@ class TestMain(unittest.TestCase):
             mol.addAtom()
 
         pos=NP.zeros((mol.natoms, 3), 'f')
+        for i in xrange(100):
+            mol.setPositions(pos)
+            mol.setVelocities(pos)
         oldsize = vsize()
         for i in xrange(1000):
             mol.setPositions(pos)

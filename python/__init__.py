@@ -1009,6 +1009,14 @@ class System(object):
         ptr=self._ptr
         return System(_msys.Clone(ptr, ptr.orderedIds()))
 
+    def analyze(self):
+        ''' Assign atom and residue types.  This needs to be called
+        manually only if you create a system from scratch, using 
+        msys.CreateSystem(); in that case, analyze() should be called
+        before performing any atom selections.
+        '''
+        self._ptr.analyze()
+
     def updateFragids(self):
         ''' Find connected sets of atoms, and assign each a 0-based id,
         stored in the fragment property of the atom.  Return a list of

@@ -457,7 +457,7 @@ SystemPtr desres::msys::ImportPrmTop( std::string const& path ) {
     parse_nonbonded(mol, section, ptrs[Ntypes], pairs);
     parse_exclusions(mol, section, ptrs[Nnb]);
 
-    mol->updateFragids();
+    mol->analyze();
     mol->coalesceTables();
     return Clone(mol, mol->atoms());
 }

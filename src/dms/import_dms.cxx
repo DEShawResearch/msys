@@ -653,7 +653,7 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
         }
     }
 
-    sys.updateFragids();
+    sys.analyze();
 
     KnownSet known;
     known.insert("particle");

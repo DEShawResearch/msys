@@ -584,6 +584,7 @@ namespace desres { namespace msys {
             /* miscellaneous */
             .def("orderedIds",    &System::orderedIds)
             .def("updateFragids", update_fragids)
+            .def("analyze",     &System::analyze)
             .def("findBond",    &System::findBond)
             .def("provenance",      sys_provenance)
             .def("coalesceTables",    &System::coalesceTables)

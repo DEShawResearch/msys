@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp> /* for boost::trim */
+#include <stdio.h>
 
 using namespace desres::msys;
 
@@ -685,5 +686,145 @@ bool System::addGluePair(Id p0, Id p1) {
 bool System::delGluePair(Id p0, Id p1) {
     if (p0>p1) std::swap(p0,p1);
     return _glue.erase(glue_t(p0,p1));
+}
+
+
+namespace {
+
+    bool is_water( System* sys, Id res ) {
+        Id O(BadId), H1(BadId), H2(BadId);
+        IdList const& atoms = sys->atomsForResidue(res);
+        for (Id i=0; i<atoms.size(); i++) {
+            Id id=atoms[i];
+            const atom_t& b = sys->atom(id);
+            if (b.atomic_number==8) {
+                if (bad(O)) O=id;
+                else {
+                    O=BadId;
+                    break;
+                }
+            } else if (b.atomic_number==1) {
+                if      (bad(H1)) H1=id;
+                else if (bad(H2)) H2=id;
+                else {
+                    O=BadId;
+                    break;
+                }
+            }
+        }
+        if (bad(O) || bad(H1) || bad(H2)) return false;
+        return
+            sys->bondCountForAtom(O)==2 &&
+            sys->bondCountForAtom(H1)==1 &&
+            sys->bondCountForAtom(H2)==1 &&
+            sys->bond(sys->bondsForAtom(H1)[0]).other(H1)==O &&
+            sys->bond(sys->bondsForAtom(H2)[0]).other(H2)==O;
+    }
+
+    bool has_water_residue_name( const std::string& resname ) {
+        static const char * names[] = {
+            "H2O", "HH0", "OHH", "HOH", "OH2", "SOL", "WAT", "TIP",
+            "TIP2", "TIP3", "TIP4", "SPC"
+        };
+        unsigned i,n = sizeof(names)/sizeof(names[0]);
+        for (i=0; i<n; i++) {
+            if (resname==names[i]) return true;
+        }
+        return false;
+    }
+
+    void analyze_residue(System* sys, Id res) {
+
+        static const char * protypes[] = { "CA", "C", "O", "N" };
+        /* NOTE: VMD 1.7 _tries_ to include O2 in its backbone selection, but
+         * because of a bug in the implementation, it doesn't include it.  
+         * It's fixed in 1.9.1. and in vmd/1.9.0-17.  */
+        static const char * proterms[] = {
+            "OT1", "OT2", "OXT", "O1", "O2"
+        };
+        static const char * nuctypes[] = {
+            "P", "O1P", "O2P", "OP1", "OP2", "C3*", "C3'", "O3*", "O3'",
+            "C4*", "C4'", "C5*", "C5'", "O5*", "O5'"
+        };
+        static const char * nucterms[] = {
+            "H5T", "H3T"
+        };
+        typedef std::map<std::string,AtomType> NameMap;
+        static NameMap types, terms;
+        if (types.empty()) {
+            for (unsigned i=0; i<sizeof(protypes)/sizeof(protypes[0]); i++) {
+                types[protypes[i]]=AtomProBack;
+            }
+            for (unsigned i=0; i<sizeof(nuctypes)/sizeof(nuctypes[0]); i++) {
+                types[nuctypes[i]]=AtomNucBack;
+            }
+            for (unsigned i=0; i<sizeof(proterms)/sizeof(proterms[0]); i++) {
+                terms[proterms[i]]=AtomProBack;
+            }
+            for (unsigned i=0; i<sizeof(nucterms)/sizeof(nucterms[0]); i++) {
+                terms[nucterms[i]]=AtomNucBack;
+            }
+        }
+
+        /* clear structure */
+        IdList const& atoms = sys->atomsForResidue(res);
+        for (Id i=0; i<atoms.size(); i++) sys->atom(atoms[i]).type=AtomOther;
+        sys->residue(res).type = ResidueOther;
+
+        /* check for water */
+        if (has_water_residue_name(sys->residue(res).name) || 
+                is_water(sys,res)) {
+            sys->residue(res).type = ResidueWater;
+            return;
+        }
+
+        /* need at least four atoms to determine protein or nucleic */
+        if (atoms.size()<4) return;
+
+        int npro=0, nnuc=0;
+        for (Id i=0; i<atoms.size(); i++) {
+            Id id = atoms[i];
+            const atom_t& atm = sys->atom(id);
+            const std::string& aname = atm.name;
+            /* check for nucleic or protein backbone */
+            NameMap::const_iterator iter=types.find(aname);
+            AtomType atype=AtomOther;
+            if (iter!=types.end()) {
+                atype=iter->second;
+            } else {
+                /* try terminal names */
+                iter=terms.find(aname);
+                if (iter!=terms.end()) {
+                    /* must be bonded to atom of the same type */
+                    IdList const& bonds = sys->bondsForAtom(id);
+                    for (Id j=0; j<bonds.size(); j++) {
+                        Id o = sys->bond(bonds[j]).other(id);
+                        AtomType otype = sys->atom(o).type;
+                        if (otype==iter->second) {
+                            atype=otype;
+                            break;
+                        }
+                    }
+                }
+            }
+            sys->atom(id).type = atype;
+            if (atype==AtomProBack) ++npro;
+            if (atype==AtomNucBack) ++nnuc;
+        }
+        ResidueType rtype=ResidueOther;
+        if      (npro>=4) rtype=ResidueProtein;
+        else if (nnuc>=4) rtype=ResidueNucleic;
+        else for (Id i=0; i<atoms.size(); i++) {
+            sys->atom(atoms[i]).type = AtomOther;
+        }
+        sys->residue(res).type=rtype;
+    }
+}
+
+void System::analyze() {
+    updateFragids();
+    for (Id res=0; res<maxResidueId(); res++) {
+        if (hasResidue(res)) analyze_residue(this,res);
+    }
 }
 

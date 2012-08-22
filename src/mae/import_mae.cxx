@@ -338,7 +338,7 @@ namespace desres { namespace msys {
                 }
             }
         }
-        h->updateFragids();
+        h->analyze();
         return h;
     }
 
