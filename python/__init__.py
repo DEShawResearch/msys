@@ -280,8 +280,12 @@ class ParamTable(object):
         ''' Construct from ParamTablePtr.
         Do not invoke directly; use CreateParamTable() instead.  '''
 
-    def __eq__(self, x): return self._ptr==x._ptr
-    def __ne__(self, x): return self._ptr!=x._ptr
+    def __eq__(self, x): 
+        return self.__class__==type(x) and self._ptr==x._ptr
+
+    def __ne__(self, x): 
+        return self.__class__!=type(x) or  self._ptr!=x._ptr
+
     def __hash__(self): return self._ptr.__hash__()
 
     def addParam(self):
@@ -509,23 +513,26 @@ class TermTable(object):
 
     def findWithAll(self, atoms):
         ''' return the terms that contain all the given atoms in any order '''
+        if not atoms: return []
         ptr, ids = _find_ids(atoms)
-        if ptr!=self.system:
+        if ptr!=self.system._ptr:
             raise ValueError, "atoms are from a different System"
         return [self.term(x) for x in self._ptr.findWithAll(ids)]
 
     def findWithAny(self, atoms):
         ''' return the terms that contain at least one of the given atoms '''
+        if not atoms: return []
         ptr, ids = _find_ids(atoms)
-        if ptr!=self.system:
+        if ptr!=self.system._ptr:
             raise ValueError, "atoms are from a different System"
         return [self.term(x) for x in self._ptr.findWithAny(ids)]
 
     def findExact(self, atoms):
         ''' return the terms that contain precisely the given atoms in the 
         given order. '''
+        if not atoms: return []
         ptr, ids = _find_ids(atoms)
-        if ptr!=self.system:
+        if ptr!=self.system._ptr:
             raise ValueError, "atoms are from a different System"
         return [self.term(x) for x in self._ptr.findExact(ids)]
 
@@ -640,16 +647,10 @@ class System(object):
         self._ptr = _ptr
 
     def __eq__(self, x): 
-        try:
-            return self._ptr == x._ptr
-        except AttributeError:
-            return False
+        return self.__class__==type(x) and self._ptr==x._ptr
 
     def __ne__(self, x): 
-        try:
-            return self._ptr != x._ptr
-        except AttributeError:
-            return False
+        return self.__class__!=type(x) or  self._ptr!=x._ptr
 
     def __hash__(self): return self._ptr.__hash__()
 

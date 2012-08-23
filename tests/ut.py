@@ -127,6 +127,9 @@ class TestMain(unittest.TestCase):
 
     def testParamHandle(self):
         params=msys.CreateParamTable()
+        self.assertNotEqual(params,None)
+        self.assertEqual(params,params)
+        self.assertNotEqual(params, msys.CreateParamTable())
         p1=params.addParam()
         p2=params.addParam()
         self.assertTrue(p1==p1)
@@ -141,6 +144,12 @@ class TestMain(unittest.TestCase):
 
         self.assertEqual(len(set((p1,p2))), 2)
         self.assertEqual(len(set((p1,p1b))), 1)
+
+    def testSystemHandle(self):
+        m=msys.CreateSystem()
+        self.assertNotEqual(m,None)
+        self.assertEqual(m,m)
+        self.assertNotEqual(m,msys.CreateSystem())
 
     def testTermHandle(self):
         m=msys.CreateSystem()
@@ -441,7 +450,8 @@ class TestMain(unittest.TestCase):
         a4=m.addAtom()
         t=m.addTable("foo", 2)
 
-        t.findWithAll([a1])
+        self.assertEqual(t.findWithAll([a1]), [])
+        self.assertEqual(t.findWithAny([a1]), [])
 
         t.addTerm((a1,a2))
         t.addTerm((a1,a3))
