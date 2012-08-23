@@ -1,68 +1,81 @@
-#!/usr/bin/env desres-exec
-#{
-# desres-cleanenv -m Python/2.7.1-06A/bin -m msys/1.2.0/lib-python \
-# -- python $0 "$@"
-#}
+#!/usr/bin/env python2.7
 
 import msys
+import os
+import sys
 
-def main(mol):
-    # Add a chargeC property.  It will be nonzero only for alchemical atoms.
-    mol.addAtomProp('chargeC', float)
-    for a in mol.atoms:
-        if a.alchemical:
-            a['chargeC'] = 0.5*(a.charge + a.chargeB)
+def modify_dms(mol):
 
-    # create a new pair_softcore_es table, with the same parameters as 
-    # the pair_12_6_es table.
-    hardpair = mol.table('pair_12_6_es')
-    params = hardpair.params
-    softpair = mol.addTable('pair_softcore_es', 2, params=params)
-    softpair.category = 'bond'
+    if 'alchemical_pair_12_6_es' not in mol.table_names:
+        print "WARNING: alchemical_pair_12_6_es table not found.  Nothing to do"
+        return
 
-    # modify the original alchemical hard pair terms
-    for t in hardpair.terms:
-        if not t.alchemical: continue
-        A = t.param
-        B = t.paramB
-        # "noncore pair": if vdw parameters are mutating, move to softcore
-        if A['aij']!=B['aij'] and A['bij']!=B['bij']:
-            ts = softpair.addTerm(t.atoms)
-            ts.param  = A
-            ts.paramB = B
+    if 'alchemical_nonbonded' not in mol.table_names:
+        print "WARNING: no alchemical particles.  Nothing to do."
+        return
+    
+    # rename alchemical_pair_12_6_es to softcore.
+    alcpair = mol.table('alchemical_pair_12_6_es')
+    alcpair.name = 'alchemical_pair_softcore_es'
+
+    # Add a chargeC property and initialize to zero.
+    nb = mol.table('nonbonded')
+    alc = mol.table('alchemical_nonbonded')
+    alc.addTermProp('chargeC', float)
+    for t in alc.terms: t['chargeC'] = 0.0
+
+    # Alchemical atoms are 'core' if their nbtype doesn't change.
+    core_terms = []
+    for tB in alc.terms:
+        a = tB.atoms[0]
+        tA = nb.findExact([a])[0]
+        paramA = tA.param
+        paramB = tB.param
+        # Set chargeC to average charge for core atoms.
+        if paramA == paramB:
+            tB['chargeC'] = 0.5*(tB['chargeB'] + a.charge)
+            core_terms.append(tB)
+
+    # select core-core pairs
+    core_atoms = set(t.atoms[0] for t in core_terms)
+    core_pairs = [t for t in alcpair.terms if set(t.atoms).issubset(core_atoms)]
+
+    # Add core-core pairs to the regular pairs table
+    pairs = mol.addTableFromSchema('pair_12_6_es')
+    for t in core_pairs:
+        p = pairs.params.addParam()
+        qijA = t['qijA']
+        qijB = t['qijB']
+        qij  = 0.5*(qijA + qijB)
+        p['aij'] = t['aijA']
+        p['bij'] = t['bijA']
+        p['qij'] = qij
+        pairs.addTerm(t.atoms, p)
+
+        # perform the alchemical charge operation if needed
+        if qijA != qijB:
+            t['aijA'] = 0.0
+            t['aijB'] = 0.0
+            t['bijA'] = 0.0
+            t['bijB'] = 0.0
+            t['qijA'] -= qij
+            t['qijB'] -= qij
+        else:
             t.remove()
 
-        # "core pair": if vdw is unchanged but qij changes, create a new 
-        # softcore pair term with some funny qij parameters and no vdw
-        # parameters.  Modify the original pair term, and since all the
-        # alchemical part is now handled by the new softcore term, remove
-        # the alchemical part of the hardcore pair.
-        elif A['aij']==B['aij'] and A['bij']==B['bij'] and A['qij']!=B['qij']:
-            p  = A.duplicate()
-            pA = params.addParam()
-            pB = params.addParam()
-            qC = (A['qij']+B['qij'])/2
-            p ['qij'] = qC
-            pA['qij'] = A['qij'] - qC
-            pB['qij'] = B['qij'] - qC
-            ts = softpair.addTerm(t.atoms)
-            ts.param  = pA
-            ts.paramB = pB
-            t.param = p
-            t.paramB = None
-
-        # eliminate spurious alchemical pairs: those with identical A and B
-        elif A['aij']==B['aij'] and A['bij']==B['bij'] and A['qij']==B['qij']:
-            t.paramB = None
-
 if __name__=="__main__":
-    import sys
-    ifile, ofile = sys.argv[1:]
-    mol = msys.Load(ifile)
-    main(mol)
+    if len(sys.argv) != 3:
+        print "modify_dms.py input.dms output.dms"
+        sys.exit(1)
+    ipath= sys.argv[1]
+    opath= sys.argv[2]
 
-    # the coalesce/clone trick gives us nonredundant parameter tables
+    try:
+        os.unlink(opath)
+    except OSError:
+        pass
+    mol=msys.Load(ipath)
+    modify_dms(mol)
     mol.coalesceTables()
-    mol = mol.clone()
-    msys.SaveDMS(mol, ofile)
-
+    mol=mol.clone()
+    msys.SaveDMS(mol, opath)
