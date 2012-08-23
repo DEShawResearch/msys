@@ -17,30 +17,40 @@ def UnchargeAlchemical( mol, seltext ):
     ''' make the selected atoms alchemical, and set their charge to 0 in the
     B state.
     '''
-    try:
-        nonbonds=mol.table('nonbonded')
-    except ValueError:
-        nonbonds=None
 
-    nbmap=dict()
-    if nonbonds:
-        for term in nonbonds.terms:
-            nbmap[term.atoms[0]] = term
-
+    # select atoms
     atoms=mol.select(seltext)
     if not atoms:
-        print >> sys.stderr, "WARNING: UnchargeAlchemical -- no atoms in selection"
+        print >> sys.stderr, "WARNING: no atoms in selection"
         return
+
+    # get the nonbonded table
+    try:
+        nb=mol.table('nonbonded')
+    except:
+        print >> sys.stderr, "ERROR: no nonbonded table was found"
+        exit(1)
+
+    # get the alchemical nonbonded table
+    ALC='alchemical_nonbonded'
+    if not ALC in mol.table_names:
+        alc=mol.addTable(ALC, 1, nb.params)
+        alc.category = 'nonbonded'
+        alc.addTermProp('chargeB', float)
+        alc.addTermProp('moiety', int)
+    else:
+        alc=mol.table(ALC)
+
     for atom in atoms:
-        atom.alchemical=True
-        atom.chargeB = 0.0
-        nb = nbmap.get(atom)
-        if nb is not None:
-            nb.paramB = nb.param
-        elif nonbonds is not None:
-            raise ValueError, "No nonbond found for atom %s" % atom
-
-
+        nbterm = nb.findWithAll([atom])
+        if not nbterm:
+            print >> sys.stderr, "No nonbonded params for atom %d" %(atom.id)
+            exit(1)
+        nbterm = nbterm[0]
+        alcterm=alc.findWithAll([atom])
+        if not alcterm:
+            alcterm=alc.addTerm([atom], nbterm.param)
+        alcterm['chargeB'] = 0.0
 
 def main():
     import optparse

@@ -1,3 +1,5 @@
+1.5.14 FIXED: dms-uncharge works now.
+
 1.5.13 NEW: Psfgen.read() and Psfgen.write() handle unit cell.
        FIXED: findWith{Any,All} on empty tables.
 
