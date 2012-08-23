@@ -1,4 +1,11 @@
-1.5.14 FIXED: dms-uncharge works now.
+1.5.14 NEW: protein, backbone, and water analysis is done on load instead of
+            being repeated for each selection.  This is faster and allows
+            these selections to work on cloned subsets of the original system.
+       FIXED: dms-uncharge works again now.
+       FIXED: examples/alchemical_pair.py (for Schrodinger).
+       FIXED: Python findWithAny, findWithAll, findExact for empty input.
+       FIXED: __eq__ and __ne__ methods of System and ParamTable.
+       FIXED: dms-dump raises an exception on sqlite errors.
 
 1.5.13 NEW: Psfgen.read() and Psfgen.write() handle unit cell.
        FIXED: findWith{Any,All} on empty tables.
