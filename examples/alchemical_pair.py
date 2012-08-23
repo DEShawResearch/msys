@@ -4,6 +4,9 @@ import msys
 import os
 import sys
 
+ver=map(int, msys.version.split('.'))
+assert ver >= (1,4,7), "Msys version 1.4.7 or later required."
+
 def modify_dms(mol):
 
     if 'alchemical_pair_12_6_es' not in mol.table_names:
