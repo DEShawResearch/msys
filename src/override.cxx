@@ -6,17 +6,8 @@ OverrideTable::OverrideTable(ParamTablePtr target)
 : _target(target), _params(ParamTable::create()) {
 }
 
-OverrideTable::OverrideTable(ParamTablePtr target, ParamTablePtr params)
-: _target(target), _params(params) {
-}
-
 OverrideTablePtr OverrideTable::create(ParamTablePtr target) {
     return OverrideTablePtr(new OverrideTable(target));
-}
-
-OverrideTablePtr OverrideTable::create(ParamTablePtr target,
-        ParamTablePtr params) {
-    return OverrideTablePtr(new OverrideTable(target, params));
 }
 
 void OverrideTable::clear() {
@@ -28,6 +19,11 @@ void OverrideTable::clear() {
     _map.clear();
 }
 
+void OverrideTable::reset(ParamTablePtr target, ParamTablePtr params) {
+    clear();
+    _target = target;
+    _params = params;
+}
 
 Id OverrideTable::get(IdPair params) const {
     if (params.first>params.second) std::swap(params.first, params.second);
