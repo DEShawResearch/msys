@@ -203,8 +203,9 @@ namespace desres { namespace msys {
         /* reassign param to a member of the set of distinct parameters. */
         void coalesce();
 
-        /* get the override table */
+        /* get and set the override table */
         OverrideTablePtr overrides() const { return _overrides; }
+        void setOverrides(OverrideTablePtr overrides) { _overrides=overrides; }
 
         /* replace the parameter table with a new one.  The param of all
          * terms will be set to BadId, even if the new ParamTable is the

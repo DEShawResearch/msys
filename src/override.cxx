@@ -6,8 +6,17 @@ OverrideTable::OverrideTable(ParamTablePtr target)
 : _target(target), _params(ParamTable::create()) {
 }
 
+OverrideTable::OverrideTable(ParamTablePtr target, ParamTablePtr params)
+: _target(target), _params(params) {
+}
+
 OverrideTablePtr OverrideTable::create(ParamTablePtr target) {
     return OverrideTablePtr(new OverrideTable(target));
+}
+
+OverrideTablePtr OverrideTable::create(ParamTablePtr target,
+        ParamTablePtr params) {
+    return OverrideTablePtr(new OverrideTable(target, params));
 }
 
 void OverrideTable::clear() {

@@ -22,10 +22,13 @@ namespace desres { namespace msys {
 
         /* constructor: the parameter table we override */
         explicit OverrideTable( ParamTablePtr target );
+        OverrideTable( ParamTablePtr target, ParamTablePtr params );
 
     public:
         /* create an override table */
         static OverrideTablePtr create(ParamTablePtr target);
+        static OverrideTablePtr create(ParamTablePtr target,
+                ParamTablePtr params);
 
         /* clear map and remove all references to target */
         void clear();
