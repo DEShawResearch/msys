@@ -53,6 +53,8 @@ else:
 
 coord_vmd=molecule.load(path.split('.')[-1], path)
 coord_ent = msys.Load(path)
+coord_ent.select('none')
+
 
 compare_atomsel(coord_ent,"all")
 compare_atomsel(coord_ent,"none")

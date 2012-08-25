@@ -638,13 +638,14 @@ class TermTable(object):
 
 class System(object):
 
-    __slots__ = ('_ptr',)
+    __slots__ = ('_ptr', '_atoms')
 
     def __init__(self, _ptr):
         ''' Construct from SystemPtr.
         Do not invoke directly; use CreateSystem() instead.
         '''
         self._ptr = _ptr
+        self._atoms = []
 
     def __eq__(self, x): 
         return self.__class__==type(x) and self._ptr==x._ptr
@@ -976,8 +977,13 @@ class System(object):
     def select(self, seltext):
         ''' return a list of Atoms satisfying the given VMD atom selection. '''
         p=self._ptr
-        ids=p.select(seltext)
-        return [Atom(p,i) for i in ids]
+        ids=p.selectAsTuple(seltext)
+        atms=self._atoms
+        n=len(atms)
+        A=Atom
+        for i in xrange(n,p.maxAtomId()):
+            atms.append(A(p,i))
+        return [atms[i] for i in ids]
 
     def append(self, system):
         ''' Appends atoms and forcefield from system to self.  Returns

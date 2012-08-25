@@ -396,6 +396,16 @@ namespace {
         for (unsigned i=0; i<names.size(); i++) L.append(object(names[i]));
         return L;
     }
+
+    PyObject* tuple_Atomselect(SystemPtr mol, std::string const& sel) {
+        IdList ids = Atomselect(mol,sel);
+        PyObject *L = PyTuple_New(ids.size());
+        if (!L) throw_error_already_set();
+        for (unsigned i=0; i<ids.size(); i++) {
+            PyTuple_SET_ITEM(L,i,PyInt_FromLong(ids[i]));
+        }
+        return L;
+    }
 }
 
 namespace desres { namespace msys { 
@@ -570,6 +580,7 @@ namespace desres { namespace msys {
 
             /* atom selection */
             .def("select", Atomselect)
+            .def("selectAsTuple", tuple_Atomselect)
 
             /* append */
             .def("append", AppendSystem)
