@@ -19,9 +19,8 @@ void OverrideTable::clear() {
     _map.clear();
 }
 
-void OverrideTable::reset(ParamTablePtr target, ParamTablePtr params) {
+void OverrideTable::resetParams(ParamTablePtr params) {
     clear();
-    _target = target;
     _params = params;
 }
 

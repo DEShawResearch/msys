@@ -365,4 +365,5 @@ void TermTable::resetParams(ParamTablePtr params) {
         if (_alive(i)) setParam(i,BadId);
     }
     _params = params;
+    _overrides = OverrideTable::create(_params);
 }

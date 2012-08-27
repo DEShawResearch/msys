@@ -27,8 +27,8 @@ namespace desres { namespace msys {
         /* create an override table */
         static OverrideTablePtr create(ParamTablePtr target);
 
-        /* reset target and params tables and clear all overrides */
-        void reset(ParamTablePtr target, ParamTablePtr params);
+        /* reset params table and clear all overrides */
+        void resetParams(ParamTablePtr params);
 
         /* clear map and remove all references to target */
         void clear();
