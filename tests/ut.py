@@ -792,6 +792,43 @@ class TestMain(unittest.TestCase):
         self.assertEqual(props, ['sigma', 'epsilon'])
         self.assertEqual([nb.params.propType(n) for n in props], [float,float])
 
+    def testMultipleNonbonded(self):
+        m=msys.CreateSystem()
+        a=m.addAtom()
+        m.addAtom()
+        disp = m.addTable('nonbonded_dispersion', 1)
+        repl = m.addTable('nonbonded_repulsion', 1)
+        elec = m.addTable('nonbonded_charge', 1)
+        for t in disp, repl, elec: 
+            t.category='nonbonded'
+            p=t.params.addParam()
+            t.addTerm([a],p)
+
+        disp.params.addProp('foo', float)
+        repl.params.addProp('bar', float)
+        elec.params.addProp('charge', float)
+        m.nonbonded_info.vdw_funct = "disp_repl_charge"
+        m.nonbonded_info.vdw_rule = "geom/geom/geom"
+
+        fname='/tmp/saveit.dms'
+        try:
+            msys.SaveDMS(m,fname)
+        finally:
+            pass
+            #if os.path.exists(fname):
+                #os.unlink(fname)
+        t=m.addTable('nonbonded', 1)
+        t.category='nonbonded'
+        p=t.params.addParam()
+        t.addTerm([a], p)
+        t.addTerm([m.atom(1)], p)
+        try:
+            msys.SaveDMS(m,fname)
+        finally:
+            pass
+        
+
+
     def testGlobalCell(self):
         m=msys.CreateSystem()
         m.cell.A.x=32

@@ -29,6 +29,36 @@ information.  When saving a `System` to a DMS file, Msys checks that
 there is at most one nonbonded table, and if one exists, ensures that
 every `Atom` is found in exactly one `Term`.  
 
+Alternative nonbonded tables
+============================
+
+Starting with version 1.6.0, Msys supports export to DMS files of
+systems containing nonbonded tables not named "nonbonded".  Any
+number of such tables may be created, either with or without the
+traditional "nonbonded" table"::
+
+        m=msys.CreateSystem()
+        a=m.addAtom()
+        disp = m.addTable('nonbonded_dispersion', 1)
+        repl = m.addTable('nonbonded_repulsion', 1)
+        elec = m.addTable('nonbonded_charge', 1)
+        for t in disp, repl, elec: 
+            t.category='nonbonded'
+            p=t.params.addParam()
+            t.addTerm([a],p)
+
+        disp.params.addProp('foo', float)
+        repl.params.addProp('bar', float)
+        elec.params.addProp('charge', float)
+        m.nonbonded_info.vdw_funct = "disp_repl_charge"
+        m.nonbonded_info.vdw_rule = "geom/geom/geom"
+
+The ``vdw_funct`` attribute should reflect the nature of the nonbonded
+schemas that are present in the system.
+
+Note that if there is no table named "nonbonded", then the particle table
+in the DMS file will not contain an ``nbtype`` column.  
+
 Overriding nonbonded interactions
 =================================
 

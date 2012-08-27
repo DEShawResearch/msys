@@ -179,6 +179,7 @@ polar terms, described below.
   **constraint_term**   Constraints on bonds and/or angles involving a reduction in the number of degrees of freedom of the system.
   **virtual_term**      Similar to a constraint; a set of parameters describing how a pseudoparticle is to be positioned relative to a set of parent atoms. 
   **polar_term**        Similar to a virtual site; a set of parameters describing how a pseudoparticle moves relative to its parent atoms. 
+  **nonbonded_table**   Additional or alternative nonbonded interactions.  Present only if such alternative tables are present.
   ===================   ===========
 
 Each table name corresponding to the values in the local term metatables

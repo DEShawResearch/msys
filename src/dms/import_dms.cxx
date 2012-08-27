@@ -222,6 +222,17 @@ static void read_metatables(Sqlite dms, const IdList& gidmap, System& sys,
             }
         }
     }
+    std::string category = "nonbonded";
+    std::string metatable = "nonbonded_table";
+    known.insert(metatable);
+    Reader r = dms.fetch(metatable);
+    if (r) {
+        int col=r.column("name");
+        for (; r; r.next()) {
+            std::string table = r.get_str(col);
+            read_table( dms, gidmap, sys, category, table, known );
+        }
+    }
 }
 
 static void 

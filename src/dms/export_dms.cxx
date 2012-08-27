@@ -372,7 +372,24 @@ static void export_overrides( OverrideTablePtr o, std::string const& name,
     export_params(params, name+"_combined_param", dms, false);
 }
 
-static void export_nonbonded( TermTablePtr table, Sqlite dms) {
+static void export_meta( TermTablePtr table, const std::string& name, 
+        Sqlite dms) {
+    std::string category(print(table->category));
+    std::string sql("insert into ");
+    sql += category;
+    /* We really can't call the metatable for nonbonded "nonbonded_term". */
+    if (category=="nonbonded") {
+        dms.exec( "create table if not exists nonbonded_table (name text)");
+        sql += "_table values ('";
+    } else {
+        sql += "_term values ('";
+    }
+    sql += name;
+    sql += "')";
+    dms.exec( sql.c_str());
+}
+
+static void export_nonbonded( TermTablePtr table, const IdList& map, Sqlite dms) {
     if (table->atomCount()!=1) {
         throw std::runtime_error("table with category nonbonded has atomCount!=1");
     }
@@ -382,18 +399,12 @@ static void export_nonbonded( TermTablePtr table, Sqlite dms) {
     } else if (table->name()=="alchemical_nonbonded") {
         /* skip, handled by export_alchemical_particles */
     } else {
-        MSYS_FAIL("Don't know how to export nonbonded table " << table->name());
+        std::string const& name = table->name();
+        export_terms(table, map, name+"_term", dms);
+        export_params(table->params(), name+"_param", dms);
+        export_view(table, name, dms);
+        export_meta(table, name, dms);
     }
-}
-
-static void export_meta( TermTablePtr table, const std::string& name, 
-        Sqlite dms) {
-    std::string sql("insert into ");
-    sql += print(table->category);
-    sql += "_term values ('";
-    sql += name;
-    sql += "')";
-    dms.exec( sql.c_str());
 }
 
 static void export_tables( const System& sys, const IdList& map, Sqlite dms) {
@@ -413,7 +424,7 @@ static void export_tables( const System& sys, const IdList& map, Sqlite dms) {
         } else if (table->category==EXCLUSION) {
             export_exclusion(table, map, dms);
         } else if (table->category==NONBONDED) {
-            export_nonbonded(table, dms);
+            export_nonbonded(table, map, dms);
         } else {
             export_terms(table, map, name+"_term", dms);
             export_params(table->params(), name+"_param", dms);
