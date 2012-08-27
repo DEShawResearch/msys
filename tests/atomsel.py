@@ -10,9 +10,7 @@ import atomsel
 from time import time
 
 def compare_atomsel(coord_ent,sel, dump=False, perf=False):
-  al = coord_ent._ptr.select(sel)
-  ent_gids = [a for a in al]
-
+  ent_gids = coord_ent.selectIds(sel)
   vmd_atomsel = atomsel.atomsel(sel)
   vmd_gids = vmd_atomsel.get("index")
 
@@ -37,7 +35,7 @@ def compare_atomsel(coord_ent,sel, dump=False, perf=False):
       print vmd_gids
   if perf:
       t0=time()
-      coord_ent._ptr.select(sel)
+      coord_ent.selectIds(sel)
       t1=time()
       atomsel.atomsel(sel)
       t2=time()

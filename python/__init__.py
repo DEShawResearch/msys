@@ -977,13 +977,19 @@ class System(object):
     def select(self, seltext):
         ''' return a list of Atoms satisfying the given VMD atom selection. '''
         p=self._ptr
-        ids=p.selectAsTuple(seltext)
+        ids=p.selectAsList(seltext)
         atms=self._atoms
         n=len(atms)
         A=Atom
         for i in xrange(n,p.maxAtomId()):
             atms.append(A(p,i))
         return [atms[i] for i in ids]
+
+    def selectIds(self, seltext):
+        ''' Return the ids of the Atoms satisfying the given VMD atom
+        selection.  This can be considerably faster than calling select().
+        '''
+        return self._ptr.selectAsList(seltext)
 
     def append(self, system):
         ''' Appends atoms and forcefield from system to self.  Returns
