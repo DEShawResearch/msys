@@ -110,6 +110,8 @@ elements.cxx
 
 load.cxx
 
+mol2/export.cxx
+
 pdb/pdb.cxx
 
 schema.cxx
