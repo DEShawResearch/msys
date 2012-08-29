@@ -7,7 +7,8 @@ namespace desres {
 namespace msys {
 
     /* Write the given system as a mol2 file to the given stream */
-    void ExportMol2( SystemPtr mol, std::ostream& out);
+    void ExportMol2( SystemPtr mol, std::ostream& out,
+                     Provenance const& provenance);
 
 }}
 
