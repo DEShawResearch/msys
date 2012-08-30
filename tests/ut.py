@@ -14,6 +14,35 @@ def vsize():
 
 class TestMain(unittest.TestCase):
 
+    def testSSSR(self):
+        sys = msys.LoadDMS('/d/en/gregerse-0/p4/sw/forcefields/viparr4/cubane.dms', True)
+        rings = msys.GetSSSR(sys.atoms, False)
+        self.assertTrue(len(rings) == 5)
+        for ring in rings:
+            self.assertTrue(len(ring) == 4)
+            for ring2 in rings:
+                if ring != ring2:
+                    intersect = set([a.id for a in ring]) & set([a.id for a in ring2])
+                    self.assertTrue(len(intersect) == 2 or len(intersect) == 0)
+        rings = msys.GetSSSR(sys.atoms, True)
+        self.assertTrue(len(rings) == 6)
+        for ring in rings:
+            self.assertTrue(len(ring) == 4)
+            for ring2 in rings:
+                if ring != ring2:
+                    intersect = set([a.id for a in ring]) & set([a.id for a in ring2])
+                    self.assertTrue(len(intersect) == 2 or len(intersect) == 0)
+
+    def testAssignBondOrdersAndFormalCharges(self):
+        # Smoke test only
+        sys = msys.LoadDMS('/proj/desres/root/Linux/x86_64/dms_inputs/1.5.4/share/ww.dms')
+        msys.AssignBondOrderAndFormalCharge(sys)
+        self.assertTrue('resonant_charge' in sys.atom_props)
+        self.assertTrue('resonant_order' in sys.bond_props)
+        msys.AssignBondOrderAndFormalCharge(sys.select('water'))
+        self.assertTrue('resonant_charge' in sys.atom_props)
+        self.assertTrue('resonant_order' in sys.bond_props)
+
     def testMemoryLeakPosVel(self):
         mol=msys.CreateSystem()
         for i in xrange(1000):

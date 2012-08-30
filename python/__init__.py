@@ -1220,6 +1220,48 @@ def NonbondedSchemas():
     ''' available nonbonded schemas for System.addNonbondedFromSchema '''
     return [s for s in _msys.NonbondedSchemas()]
 
+def GetSSSR(atoms, all_relevant=False):
+    """Get smallest set of smallest rings (SSSR) for a system fragment.
+
+    The SSSR is in general not unique; the SSSR of a tetrahedron is any three of
+    its four triangular faces. The set of rings that is the union of all SSSR's
+    (all relevant rings) may be obtained by setting all_relevant to True.
+
+    Arguments:
+    atoms -- [msys.Atom, ..., msys.Atom] from a single system
+    all_relevant -- bool
+    Returns: [[msys.Atom, ..., msys.Atom], ..., [msys.Atom, ..., msys.Atom]]
+    """
+    ptr, ids = _find_ids(atoms)
+    rings = _msys.GetSSSR(ptr, ids, all_relevant)
+    return [[Atom(ptr, id) for id in ring] for ring in rings]
+
+def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge = None):
+    """Assign bond orders and formal charges to a molecular system.
+
+    Determines bond orders and formal charges by preferring neutral charges and
+    placing negative charges with more electronegative atoms, under octet
+    constraints and the total system charge constraint. Assigns the bond orders
+    and formal charges to the system. Also determines resonance forms and
+    creates and populates a 'resonant_order' bond property and 'resonant_charge'
+    atom property in the system, where resonant order/charge is the average of
+    the bond order/formal charge over all resonant forms. Can assign to a subset of
+    atoms of the system, provided these atoms form complete connected fragments.
+
+    Arguments:
+    system_or_atoms: either a System or a list of Atoms
+    total_charge: if not None, integral total charge
+    """
+    if isinstance(system_or_atoms, System):
+        ptr = system_or_atoms._ptr
+        ids = ptr.atoms()
+    else:
+        ptr, ids = _find_ids(system_or_atoms)
+
+    if total_charge is None:
+        _msys.AssignBondOrderAndFormalCharge(ptr, ids)
+    else:
+        _msys.AssignBondOrderAndFormalCharge(ptr, ids, int(total_charge))
 
 ''' customize Vec3 '''
 from _msys import Vec3

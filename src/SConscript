@@ -102,6 +102,13 @@ libmsys=env.AddLibrary('msys', selobjs + maeobjs + Split('''
 amber/import_crd.cxx
 amber/import_prmtop.cxx
 
+analyze.cxx
+analyze/aromatic.cxx
+analyze/bond_orders.cxx
+analyze/eigensystem.cxx
+analyze/filtered_bonds.cxx
+analyze/get_fragments.cxx
+
 dms/dms.cxx
 dms/export_dms.cxx
 dms/import_dms.cxx

@@ -24,6 +24,7 @@ JSON=$(treetop fastjson)
 MOLFILE=molfile/1.9.0
 PERIODICFIX=periodicfix/2.3.14
 NUMPY=numpy/1.5.1-29A
+LPSOLVE=lp_solve/5.5.2.0-03A
 
 # build and documentation
 SCONS=$(treetop scons)
@@ -45,6 +46,7 @@ loadmodules() {
         $ANTLR/lib \
         $JSON/lib \
         $MOLFILE/lib \
+        $LPSOLVE/lib \
         $SPHINX/bin 
     
    export MSYS_VERSION=$VERSION

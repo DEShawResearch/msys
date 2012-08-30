@@ -2,6 +2,7 @@
 #include "version.hxx"
 
 namespace desres { namespace msys {
+    void export_analyze();
     void export_atom();
     void export_bond();
     void export_residue();
@@ -16,6 +17,7 @@ namespace desres { namespace msys {
 BOOST_PYTHON_MODULE(_msys) {
     boost::python::scope().attr("version")=std::string(MSYS_VERSION);
     boost::python::scope().attr("hexversion")=MSYS_VERSION_HEX;
+    desres::msys::export_analyze();
     desres::msys::export_atom();
     desres::msys::export_bond();
     desres::msys::export_residue();

@@ -7,6 +7,7 @@ env.Append(
         LIBS=['msys', 'boost_python$BOOST_SUFFIX'] )
 
 pymodfiles='''
+analyze.cxx
 atom.cxx
 bond.cxx
 residue.cxx
