@@ -5,7 +5,7 @@ import os
 import sys
 
 ver=map(int, msys.version.split('.'))
-assert ver >= (1,4,7), "Msys version 1.4.7 or later required."
+assert ver >= [1,4,7], "Msys version 1.4.7 or later required, have %s." % msys.version
 
 def modify_dms(mol):
 
