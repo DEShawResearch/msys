@@ -81,6 +81,7 @@ class Bond(Handle):
 
 
 __add_properties(Bond, 'order')
+__add_properties(Bond, 'resonant_order')
 
 class Atom(Handle):
     __slots__ = ()

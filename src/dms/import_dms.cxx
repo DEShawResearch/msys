@@ -550,6 +550,7 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
     int GID = r.column("id");
     int CHARGE = r.column("charge");
     int FORMAL = r.column("formal_charge");
+    int RESCHG = r.column("resonant_charge");
     
     /* the rest of the columns are extra atom properties */
     std::set<int> handled;
@@ -570,6 +571,7 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
     handled.insert(GID);
     handled.insert(CHARGE);
     handled.insert(FORMAL);
+    handled.insert(RESCHG);
 
     typedef std::map<int,ValueType> ExtraMap;
     ExtraMap extra;
@@ -607,7 +609,8 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
         atm.mass = r.get_flt( MASS);
         atm.atomic_number = anum;
         atm.charge = r.get_flt( CHARGE);
-        atm.formal_charge = FORMAL<0 ? 0 : r.get_int( FORMAL);
+        atm.formal_charge = FORMAL<0 ? 0 : r.get_int(FORMAL);
+        atm.resonant_charge = RESCHG<0 ? 0 : r.get_flt(RESCHG);
         while (gidmap.size()<gid) gidmap.push_back(BadId);
         gidmap.push_back(atmid);
 
@@ -633,12 +636,14 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
         int p0=r.column("p0");
         int p1=r.column("p1");
         int o = r.column("order");
+        int ro = r.column("resonant_order");
 
         /* read the bond table */
         for (; r; r.next()) {
             int ai = r.get_int( p0);
             int aj = r.get_int( p1);
-            double order = o<0 ? 1 : r.get_flt( o);
+            int order = o<0 ? 1 : r.get_int(o);
+            Float resonant_order = ro<0 ? 1 : r.get_flt(ro);
             Id id = BadId;
             if (structure_only && (
                         std::binary_search(
@@ -650,8 +655,6 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
             try {
                 Id from = gidmap.at(ai);
                 Id to   = gidmap.at(aj);
-                //printf("ai %d aj %d from %d to %d max id %d\n", 
-                        //ai, aj, (int)from, (int)to, (int)sys.maxAtomId());
                 id = sys.addBond(from,to);
             }
             catch (std::exception& e) {
@@ -661,6 +664,7 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
                 throw std::runtime_error(ss.str());
             }
             sys.bond(id).order = order;
+            sys.bond(id).resonant_order = resonant_order;
         }
     }
 

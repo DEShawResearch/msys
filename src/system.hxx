@@ -96,20 +96,23 @@ namespace desres { namespace msys {
     
         String name;
         AtomType type;
+        Float resonant_charge;
     
         atom_t() 
         : fragid(BadId), residue(BadId), atomic_number(0), formal_charge(0),
-          x(0), y(0), z(0), charge(0), vx(0), vy(0), vz(0), mass(0), type()
+          x(0), y(0), z(0), charge(0), vx(0), vy(0), vz(0), mass(0), type(),
+          resonant_charge()
         {}
     };
     
     struct bond_t {
-        Id  i;      /* id of first bond partner     */
-        Id  j;      /* id of second bond partner    */
-        Float order;  /* resonant bond order          */
+        Id  i;                  /* id of first bond partner     */
+        Id  j;                  /* id of second bond partner    */
+        int order;              /* formal bond order            */
+        Float resonant_order;   /* resonant bond order          */
     
-        bond_t() : i(BadId), j(BadId), order(1) {}
-        bond_t(Id ai, Id aj) : i(ai), j(aj), order(1) {}
+        bond_t() : i(BadId), j(BadId), order(1), resonant_order(1) {}
+        bond_t(Id ai, Id aj) : i(ai), j(aj), order(1), resonant_order(1) {}
         Id other(Id id) const { return id==i ? j : i; }
     };
     

@@ -68,16 +68,13 @@ namespace desres { namespace msys {
         boa->_total_charge=0;
         boa->_mol=sys;
 
-
-        msys::Id resq_col=boa->_mol->addAtomProp("resonant_charge", desres::msys::FloatType);
-        msys::Id reso_col=boa->_mol->addBondProp("resonant_order",  desres::msys::FloatType);
         BOOST_FOREACH(msys::Id aid, fragment){
             assert(boa->_mol->hasAtom(aid));
             boa->_mol->atom(aid).formal_charge=0;
-            boa->_mol->atomPropValue(aid, resq_col)=0.0;
+            boa->_mol->atom(aid).resonant_charge=0.0;
             BOOST_FOREACH(msys::Id bid, boa->_mol->bondsForAtom(aid)){
                 boa->_mol->bond(bid).order=1;
-                boa->_mol->bondPropValue(bid, reso_col)=1.0;
+                boa->_mol->bond(bid).resonant_order=1.0;
             }
             if(boa->_mol->atom(aid).atomic_number<1){
                 printf("BondOrderAssigner::create - Skipping atomid=%u with atomic_number<1\n",aid);
@@ -1966,11 +1963,9 @@ namespace desres { namespace msys {
         /* Assign the final charges and bond orders (both formal and resonant)
            Formal Charges are given by: fc[i]= ValenceElectrons[i] - freeElectrons[i] - 0.5*Sum_j ( BondElectrons[ij] )
         */
-        msys::Id resq_col=_mol->addAtomProp("resonant_charge", desres::msys::FloatType);
-        msys::Id reso_col=_mol->addBondProp("resonant_order",  desres::msys::FloatType);
         BOOST_FOREACH(msys::Id aid1, _fragatoms){
             _mol->atom(aid1).formal_charge=0;
-            _mol->atomPropValue(aid1, resq_col)=0.0;
+            _mol->atom(aid1).resonant_charge=0.0;
         }
 
 
@@ -1989,16 +1984,13 @@ namespace desres { namespace msys {
             int order=bdata.nonresonant;
             bond.order=order;
             double resorder=bdata.resonant;
-            _mol->bondPropValue(bid, reso_col)=resorder;
-
+            bond.resonant_order=resorder;
 
             /* Charges */
             atm1.formal_charge-=order;
             atm2.formal_charge-=order;
-            _mol->atomPropValue(aid1, resq_col)= 
-                _mol->atomPropValue(aid1, resq_col).asFloat()-resorder;
-            _mol->atomPropValue(aid2, resq_col)= 
-                _mol->atomPropValue(aid2, resq_col).asFloat()-resorder;
+            atm1.resonant_charge -= resorder;
+            atm2.resonant_charge -= resorder;
         }
 
         /* Take care of the "ValenceElectrons[i] - freeElectrons[i]" part of charge here */
@@ -2011,12 +2003,12 @@ namespace desres { namespace msys {
 
             atm.formal_charge+= nValence - 2*adata.nonresonant;
 
-            double resq=_mol->atomPropValue(aid, resq_col).asFloat();
+            double resq=atm.resonant_charge;
             resq += nValence - 2*adata.resonant;
             if(fabs(resq)<1E-5){
-                _mol->atomPropValue(aid, resq_col)=0.0;
+                atm.resonant_charge=0.0;
             }else{
-                _mol->atomPropValue(aid, resq_col)= resq;
+                atm.resonant_charge=resq;
             }
 
             /* Assert that the model calculated charges agree with the above.

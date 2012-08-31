@@ -3,26 +3,31 @@
 #include "analyze.hxx"
 #include "clone.hxx"
 //#include <profiler/profiler.hxx>
-#include "dms.hxx"
+#include "load.hxx"
 #include "atomsel.hxx"
 
 using namespace desres::msys;
 
+static void assign(SystemPtr);
+
 int main(int argc,char **argv){
 
-    if (argc!=3) {
-        fprintf(stderr, "Usage: %s input.dms selection\n", argv[0]);
-        return 2;
+    for (int i=1; i<argc; i++) {
+        SystemPtr mol = Load(argv[i]);
+        mol = Clone(mol, Atomselect(mol, "atomicnumber > 0"));
+        try {
+            assign(mol);
+        } catch (std::exception& e) {
+            fprintf(stderr, "  FAILED ON %s: %s\n", argv[i], e.what());
+        }
     }
-    const char* ipath=argv[1];
-    std::string sel("atomicnumber>0 and (");
-    sel += argv[2];
-    sel += ")";
+    //desres::profiler::printFlat(stdout);
+    //desres::profiler::printTree(stdout);
+    return 0;
+}
 
-    const bool structure_only = true;
-    SystemPtr mol = ImportDMS(ipath, structure_only);
-    mol = Clone(mol, Atomselect(mol, sel));
-
+static
+void assign(SystemPtr mol) {
     AssignBondOrderAndFormalCharge(mol);
 
     MultiIdList fragments;
@@ -36,7 +41,7 @@ int main(int argc,char **argv){
             printf("   ( %3d %3s ): molecule= %2d  fc= %d  rc= %e  x= %f y= %f z= %f\n",
                    *miter, atm1.name.c_str(), 
                    frag, atm1.formal_charge, 
-                   mol->atomPropValue(*miter, "resonant_charge").asFloat(),
+                   atm1.resonant_charge,
                    atm1.x, atm1.y, atm1.z);
         }
         printf("BONDS:\n");
@@ -55,16 +60,11 @@ int main(int argc,char **argv){
                 printf("   ( %3d %s %u ) <-> ( %3d %s %u ):   order= %2.1f rorder= %f length= %f\n",
                        id,      atm1.name.c_str(), mol->bondCountForAtom(id),
                        otherid, atm2.name.c_str(), mol->bondCountForAtom(otherid),
-                       mol->bond(bonds[j]).order, 
-                       mol->bondPropValue(bonds[j],"resonant_order").asFloat(),
+                       (double)mol->bond(bonds[j]).order, 
+                       mol->bond(bonds[j]).resonant_order,
                        r);
             }
         }
     }
-
-    //desres::profiler::printFlat(stdout);
-    //desres::profiler::printTree(stdout);
-
-    return 0; // exit with success
 }
  

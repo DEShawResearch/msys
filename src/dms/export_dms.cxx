@@ -117,7 +117,8 @@ static void export_particles(const System& sys, const IdList& map, Sqlite dms) {
         "  segid text not null,\n"
         "  mass float,\n"
         "  charge float,\n" 
-        "  formal_charge integer,\n";
+        "  formal_charge integer,\n"
+        "  resonant_charge float,\n";
 
     const Id nprops = sys.atomPropCount();
     for (Id i=0; i<nprops; i++) {
@@ -159,8 +160,9 @@ static void export_particles(const System& sys, const IdList& map, Sqlite dms) {
         w.bind_flt(13, atom.mass);
         w.bind_flt(14, atom.charge);
         w.bind_int(15, atom.formal_charge);
+        w.bind_int(16, atom.resonant_charge);
         for (Id j=0; j<nprops; j++) {
-            int col=16+j;
+            int col=17+j;
 
             /* *sigh* - the ParamTable::value() method is non-const,
              * and I don't feel like making a const version; thus this
@@ -173,7 +175,7 @@ static void export_particles(const System& sys, const IdList& map, Sqlite dms) {
             if (bad(param)) {
                 MSYS_FAIL("Missing nonbonded param for particle " << atm);
             }
-            w.bind_int(16+nprops,param);
+            w.bind_int(17+nprops,param);
         }
         try {
             w.next();
@@ -194,7 +196,8 @@ static void export_bonds(const System& sys, const IdList& map, Sqlite dms) {
         "create table bond (\n"
         "  p0 integer,\n"
         "  p1 integer,\n"
-        "  'order' float\n"
+        "  'order' integer,\n"
+        "  resonant_order float\n"
         ");";
     dms.exec( sql.c_str());
 
@@ -206,7 +209,8 @@ static void export_bonds(const System& sys, const IdList& map, Sqlite dms) {
         const bond_t& bond = sys.bond(bnd);
         w.bind_int(0,map[bond.i]);
         w.bind_int(1,map[bond.j]);
-        w.bind_flt(2,bond.order);
+        w.bind_int(2,bond.order);
+        w.bind_flt(3,bond.resonant_order);
         w.next();
     }
     dms.exec( "commit");
