@@ -66,7 +66,7 @@ namespace desres { namespace msys {
         std::vector<unsigned> typecounts(AromaticAtomClassification::INVALID);
         IdList ringAtoms(atoms);
         size_t natoms= ringAtoms.size();
-        msys::Id previous= ringAtoms[natoms-1];
+        Id previous= ringAtoms[natoms-1];
         /* simple detection for closed ring cycle in provided atoms list */
         if(ringAtoms[0]==ringAtoms[natoms-1]){
             natoms-=1;
@@ -76,20 +76,20 @@ namespace desres { namespace msys {
         }
         for(size_t iatom=0; iatom<natoms; ++iatom){
             
-            msys::Id current = ringAtoms[iatom];
-            msys::Id next =  ringAtoms[iatom+1];
+            Id current = ringAtoms[iatom];
+            Id next =  ringAtoms[iatom+1];
             
-            msys::IdList bonds=filteredBondsForAtom(mol,current);
-            msys::Id nb=bonds.size();
+            IdList bonds=filteredBondsForAtom(mol,current);
+            Id nb=bonds.size();
 
-            msys::atom_t & atm=mol->atom(current);
+            atom_t & atm=mol->atom(current);
             int a0=DataForElement(atm.atomic_number).nValence-atm.formal_charge;
             unsigned b0,b1,be;
             b0=b1=be=0;
-            BOOST_FOREACH( msys::Id bid, bonds){
-                msys::bond_t & bond=mol->bond(bid);
+            BOOST_FOREACH( Id bid, bonds){
+                bond_t & bond=mol->bond(bid);
                 a0-=bond.order;
-                msys::Id other=bond.other(current);
+                Id other=bond.other(current);
                 if(other==previous){
                     b0=bond.order;
                 }else if(other==next){
@@ -131,13 +131,13 @@ namespace desres { namespace msys {
  
         double xctr=0.0,yctr=0.0,zctr=0.0;
         for(size_t idx=0; idx<nids;++idx){
-            const msys::atom_t& atm=mol->atom(aids[idx]);
+            const atom_t& atm=mol->atom(aids[idx]);
             xctr+=atm.x; yctr+=atm.y; zctr+=atm.z;
         }
         xctr/=nids; yctr/=nids; zctr/=nids;
         double I[9]={0,0,0,0,0,0,0,0,0};
         for(size_t idx=0; idx<nids;++idx){
-            const msys::atom_t& atm=mol->atom(aids[idx]);
+            const atom_t& atm=mol->atom(aids[idx]);
             double x=atm.x-xctr;
             double y=atm.y-yctr;
             double z=atm.z-zctr;

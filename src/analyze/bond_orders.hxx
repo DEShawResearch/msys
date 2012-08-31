@@ -15,7 +15,7 @@ namespace desres { namespace msys {
         int lb;
         int ub;
     };
-    typedef std::map<msys::Id, electronRange> electronMap;
+    typedef std::map<Id, electronRange> electronMap;
 
     struct solutionValues {
         solutionValues():nonresonant(0),resonant(0){};
@@ -23,7 +23,7 @@ namespace desres { namespace msys {
         int nonresonant;
         double resonant;
     };
-    typedef std::map<msys::Id, solutionValues> solutionMap;
+    typedef std::map<Id, solutionValues> solutionMap;
 
     class ComponentAssigner;
     typedef boost::shared_ptr<ComponentAssigner> ComponentAssignerPtr;
@@ -77,19 +77,19 @@ namespace desres { namespace msys {
         ~BondOrderAssigner(){};
 
 
-        static boost::shared_ptr<BondOrderAssigner> create(msys::SystemPtr sys, 
-                                                           msys::IdList const& fragments);
+        static boost::shared_ptr<BondOrderAssigner> create(SystemPtr sys, 
+                                                           IdList const& fragments);
 
-        bool allow_hextet_for_atom(msys::Id aid1);
+        bool allow_hextet_for_atom(Id aid1);
         void reset();
 
         void setTotalCharge(int qTotal);
         void unsetTotalCharge();
         int getSolvedTotalCharge();
 
-        void setComponentCharge(msys::Id component, int qTotal);
-        void unsetComponentCharge(msys::Id component);
-        int  getSolvedComponentCharge(msys::Id component);
+        void setComponentCharge(Id component, int qTotal);
+        void unsetComponentCharge(Id component);
+        int  getSolvedComponentCharge(Id component);
 
         bool solveIntegerLinearProgram();
         void assignSolutionToAtoms();
@@ -98,8 +98,8 @@ namespace desres { namespace msys {
         double getSolvedObjective();
 
     protected:
-        int max_bond_order(const msys::Id aid);
-        void presolve_octets(msys::IdList& unsolved);
+        int max_bond_order(const Id aid);
+        void presolve_octets(IdList& unsolved);
         void rebuild();
 
         /* setup during create() */
@@ -109,8 +109,8 @@ namespace desres { namespace msys {
         int _total_charge;      // total charge of fragment
         int _presolved_charge;  // charge of presolved components
         bool _total_charge_set; // did we set the total charge?
-        msys::SystemPtr _mol; 
-        msys::IdList _fragatoms;
+        SystemPtr _mol; 
+        IdList _fragatoms;
         /* These contain the presolved atom lp, bond orders and atomic charges */
         solutionMap _atominfo;
         solutionMap _bondinfo;
@@ -120,12 +120,12 @@ namespace desres { namespace msys {
 
 
         /* filled during rebuild */
-        typedef std::pair<double, msys::IdList> RingPair;
+        typedef std::pair<double, IdList> RingPair;
         typedef std::vector<RingPair> RingList;
         RingList _planar_rings;
         RingList _nonplanar_rings;
         std::vector<ComponentAssignerPtr> _component_assigners;
-        std::map<msys::Id, int> _fixed_component_charges;
+        std::map<Id, int> _fixed_component_charges;
 
     };
     typedef boost::shared_ptr<BondOrderAssigner> BondOrderAssignerPtr;
@@ -140,8 +140,8 @@ namespace desres { namespace msys {
         ~ComponentAssigner();
         
         static boost::shared_ptr<ComponentAssigner> create(BondOrderAssignerPtr boa,
-                                                           msys::IdList const& comp, 
-                                                           msys::Id cid );
+                                                           IdList const& comp, 
+                                                           Id cid );
         /* lpsolve helper routines */
         static int add_column_to_ilp(lpsolve::_lprec *lp, std::string const& colname, 
                                      double penalty, double lb, double ub);
@@ -168,7 +168,7 @@ namespace desres { namespace msys {
             ringAtomInfo(): nBonds(0), lonePairIdx(0),
                             bondIdxPrevious(0), bondIdxNext(0),
                             bondIdxExoCyclic(0){};
-            msys::Id aid;
+            Id aid;
             int nBonds;
             int lonePairIdx;
             int bondIdxPrevious;
@@ -191,13 +191,13 @@ namespace desres { namespace msys {
         /* This has to be a weak_ptr otherwise we can never 
          * destroy parent if we have any componentAssigners */
         BondOrderAssignerWeakPtr _parent;
-        msys::Id _component_id;
-        std::set<msys::Id> _component_atoms_present;
+        Id _component_id;
+        std::set<Id> _component_atoms_present;
         
         int _component_valence_count;
         // bool _component_has_expanded_octets;
         
-        typedef std::map<msys::Id, int> ilpMap;
+        typedef std::map<Id, int> ilpMap;
         ilpMap _component_atom_cols;
         ilpMap _component_atom_charge_cols;
         ilpMap _component_atom_hextet_cols;
@@ -217,7 +217,7 @@ namespace desres { namespace msys {
         
         void set_atom_hextet_penalties();
 
-        bool gen_charge_penalty_for_atom(msys::Id aid1);
+        bool gen_charge_penalty_for_atom(Id aid1);
         void set_atom_charge_penalties();
 
         void set_atom_lonepair_penalties();
@@ -228,7 +228,7 @@ namespace desres { namespace msys {
         void break_ring_symmetry();
         
         void add_atom_octet_and_charge_constraints();
-        void generate_ring_constraint( msys::Id ridx, int rcolid, double &target, 
+        void generate_ring_constraint( Id ridx, int rcolid, double &target, 
                                        std::vector<double> &rowdata);
         void add_aromatic_ring_constraints();
         void add_component_electron_constraint();
