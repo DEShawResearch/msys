@@ -6,6 +6,7 @@
 #include "mae.hxx"
 #include "dms.hxx"
 #include "pdb.hxx"
+#include "mol2.hxx"
 #include "load.hxx"
 #include "amber.hxx"
 
@@ -406,6 +407,17 @@ namespace {
         }
         return L;
     }
+
+    void export_mol2(SystemPtr mol, std::string const& path,
+                     Provenance const& provenance) {
+        std::ofstream out(path.c_str());
+        if (!out) {
+            PyErr_Format(PyExc_IOError, "Could not open '%s' for writing",
+                    path.c_str());
+            throw_error_already_set();
+        }
+        ExportMol2(mol,out,provenance);
+    }
 }
 
 namespace desres { namespace msys { 
@@ -448,6 +460,7 @@ namespace desres { namespace msys {
         def("ExportPDB", ExportPDB);
         def("ImportPrmTop", ImportPrmTop);
         def("ImportCrdCoordinates", ImportCrdCoordinates);
+        def("ExportMOL2", export_mol2);
         def("Load", Load,
                 (arg("path"),
                  arg("opt_format")=object()));

@@ -6,6 +6,7 @@ by chemists.
 
 import _msys
 import numpy
+import sys
 
 from _msys import GlobalCell, NonbondedInfo, version, hexversion
 
@@ -1201,7 +1202,6 @@ def ReadCrdCoordinates(mol, path):
 
 def SaveDMS(system, path):
     ''' Export the System to a DMS file at the given path. '''
-    import sys
     _msys.ExportDMS(system._ptr, path, _msys.Provenance.fromArgs(sys.argv))
 
 
@@ -1212,6 +1212,15 @@ def SaveMAE(system, path, with_forcefield = True ):
 def SavePDB(system, path):
     ''' Export the System to a PDB file at the given path. '''
     _msys.ExportPDB(system._ptr, str(path))
+
+def SaveMOL2(system, path):
+    ''' Export the System to a PDB file at the given path.  You should
+    probably call AssignBondOrderAndFormalCharge() before exporting
+    the system.  '''
+    ptr=system._ptr
+    path=str(path)
+    prov=_msys.Provenance.fromArgs(sys.argv)
+    _msys.ExportMOL2(ptr,path,prov)
 
 def TableSchemas():
     ''' available schemas for System.addTableFromSchema '''
