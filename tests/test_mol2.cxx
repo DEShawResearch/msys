@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     SystemPtr sys = Load(argv[1]);
-    if (argc==2) {
+    if (argc==3) {
         ExportMol2(sys, argv[2], Provenance::fromArgs(argc,argv));
     }
     return 0;

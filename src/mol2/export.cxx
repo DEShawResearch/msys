@@ -256,11 +256,10 @@ void desres::msys::ExportMol2( SystemPtr mol, std::string const& path,
         atypes.at(i)=type;
 
         /* write the atom line */
-        printf("writing charge %f %8.6f\n", atm.charge, atm.charge);
         fprintf(fd, 
-           "%7d %-4s      %8.4f  %8.4f  %8.4f %-6s %4d  %4s    %6.4f\n", 
+           "%7d %-4s      %8.4f  %8.4f  %8.4f %-6s %4d  %4s  %8.4f\n", 
            index, aname.c_str(), atm.x, atm.y, atm.z,
-           type, res.resid, rname.c_str(), atm.charge);
+           type, atm.residue+1, rname.c_str(), atm.charge);
     }
 
     /* bond records */
@@ -277,5 +276,17 @@ void desres::msys::ExportMol2( SystemPtr mol, std::string const& path,
         fprintf(fd, "%5u %5u %5u %s\n", i+1, ai, aj, btype);
     }
 
+    /* substructure */
+    fprintf(fd, "@<TRIPOS>SUBSTRUCTURE\n");
+    for (Id i=0; i<mol->maxResidueId(); i++) {
+        residue_t const& res = mol->residue(i);
+        chain_t const& chn = mol->chain(res.chain);
+        fprintf(fd, "%7u %-4s %7u %-8s **** %s\n",
+                i+1,                                /* residue id */
+                res.name.c_str(),                   /* residue name */
+                mol->atomsForResidue(i).at(0)+1,    /* root atom */
+                mol->residueCount()==1 ? "GROUP" : "RESIDUE",
+                chn.name.c_str());
+    }
 }
 
