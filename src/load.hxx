@@ -11,7 +11,9 @@ namespace desres { namespace msys {
         DmsFileFormat          = 1,
         MaeFileFormat          = 2,
         PdbFileFormat          = 3,
-        ParmTopFileFormat      = 4
+        ParmTopFileFormat      = 4,
+        Mol2FileFormat         = 5
+
     };
 
     /* Guess file format for the given path.  Returns UnrecognizedFileFormat
