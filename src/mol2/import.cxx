@@ -1,4 +1,5 @@
 #include "../mol2.hxx"
+#include "../sssr.hxx"
 #include "elements.hxx"
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp> /* for boost::trim */
@@ -126,7 +127,38 @@ desres::msys::ImportMol2Many(std::string const& path) {
                     if (ai<1 || aj<1 || ai>natoms || aj>natoms) {
                         MSYS_FAIL("Invalid atoms in Bond record:\n" << buf);
                     }
-                    mol->addBond(atoms.at(ai-1), atoms.at(aj-1));
+                    Id bnd = mol->addBond(atoms.at(ai-1), atoms.at(aj-1));
+                    bond_t& bond = mol->bond(bnd);
+                    if (!strcmp(btype, "1")) {
+                        bond.order = bond.resonant_order = 1;
+                    } else if (!strcmp(btype, "2")) {
+                        bond.order = bond.resonant_order = 2;
+                    } else if (!strcmp(btype, "3")) {
+                        bond.order = bond.resonant_order = 3;
+                    } else if (!strcmp(btype, "am")) {
+                        bond.order = bond.resonant_order = 1;
+                    } else if (!strcmp(btype, "ar")) {
+                        bond.order = 1;
+                        bond.resonant_order = 1.5;
+                    }
+                }
+                BOOST_FOREACH(IdList const& ring, 
+                              GetSSSR(mol, mol->atoms())) {
+                    bool all_resonant = true;
+                    for (Id i=1; i<ring.size(); i++) {
+                        Id bid = mol->findBond(ring[i-1], ring[i]);
+                        if (bad(bid)) MSYS_FAIL("Missing bond!");
+                        if (mol->bond(bid).resonant_order!=1.5) {
+                            all_resonant = false;
+                            break;
+                        }
+                    }
+                    if (all_resonant) {
+                        for (Id i=1; i<ring.size(); i++) {
+                            Id bid = mol->findBond(ring[i-1], ring[i]);
+                            mol->bond(bid).order = i % 2;
+                        }
+                    }
                 }
                 state = Skip;
                 break;
