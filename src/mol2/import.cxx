@@ -1,6 +1,7 @@
 #include "../mol2.hxx"
 #include "elements.hxx"
 #include <boost/foreach.hpp>
+#include <boost/algorithm/string.hpp> /* for boost::trim */
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -27,7 +28,7 @@ desres::msys::ImportMol2Many(std::string const& path) {
     char buf[256];
     State state = Start;
     IdList atoms;
-    int natoms, nbonds, nres;
+    int natoms, nbonds, nsub;
     SystemPtr mol;
     Id chn = BadId;
     while (fgets(buf, sizeof(buf), fd)) {
@@ -53,16 +54,13 @@ desres::msys::ImportMol2Many(std::string const& path) {
                 /* read mol_name */
                 fgets(buf, sizeof(buf), fd); 
                 mol->name = buf;
-                /* read natoms, nbonds, nres */
-                natoms = nbonds = 1;
-                nres = 1;
+                boost::trim(mol->name);
+                /* read natoms, nbonds, nsub */
+                natoms = nbonds = 0;
+                nsub = 0;
                 fgets(buf, sizeof(buf), fd);
-                if (sscanf(buf, "%d %d %d", &natoms, &nbonds, &nres)<1) {
+                if (sscanf(buf, "%d %d %d", &natoms, &nbonds, &nsub)<1) {
                     MSYS_FAIL("Could not parse num_atoms from line:\n" << buf);
-                }
-                for (int i=0; i<nres; i++) {
-                    Id res = mol->addResidue(chn);
-                    mol->residue(res).resid = i+1;
                 }
                 /* read mol_type and ignore */
                 fgets(buf, sizeof(buf), fd);
@@ -87,11 +85,16 @@ desres::msys::ImportMol2Many(std::string const& path) {
                     if (rc<6) {
                         MSYS_FAIL("Could not parse Atom record:\n" << buf);
                     }
-                    if (rc<7 && nres>1) {
-                        MSYS_FAIL("Multiple substructures present in molecule, but subst_id is missing in Atom record:\n" << buf);
+                    if (rc>=7 && (resid<1)) {
+                        fprintf(stderr, "WARNING: Invalid subst_id %d will be assumed to be 1 in:\n%s\n",
+                                resid, buf);
+                        resid=1;
                     }
-                    if (rc>=7 && (resid<1 || resid>nres)) {
-                        MSYS_FAIL("Invalid subst_id " << resid  << " in Atom record:\n" << buf);
+                    int nres = mol->residueCountForChain(chn);
+                    for (; nres<resid; ++nres) {
+                        Id res = mol->addResidue(chn);
+                        mol->residue(res).resid = nres+1;
+                        mol->residue(nres).name = resname;
                     }
                     Id res = mol->residuesForChain(chn).at(resid-1);
                     Id atm = mol->addAtom(res);
@@ -129,7 +132,7 @@ desres::msys::ImportMol2Many(std::string const& path) {
                 break;
 
             case Substructure:
-                for (int i=0; i<nres; i++) {
+                for (int i=0; i<nsub; i++) {
                     if (!fgets(buf, sizeof(buf), fd)) {
                         MSYS_FAIL("Missing expected Substructure record " << i+1);
                     }
