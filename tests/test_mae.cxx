@@ -1,12 +1,14 @@
 #include "mae.hxx"
-#include <fstream>
+#include "load.hxx"
+
+using namespace desres::msys;
 
 int main(int argc, char *argv[]) {
-    using namespace desres::msys;
-    if (argc==1) {
-        SystemPtr mol = ImportMAEFromStream(std::cin);
-    } else for (int i=1; i<argc; i++) {
-        ImportMAE(argv[i], true);
+    if (argc>1) {
+        SystemPtr sys = Load(argv[1]);
+        if (argc>2) {
+            ExportMAE(sys, argv[2]);
+        }
     }
     return 0;
 }
