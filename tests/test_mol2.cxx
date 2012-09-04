@@ -13,10 +13,7 @@ int main(int argc, char *argv[]) {
     }
     SystemPtr sys = Load(argv[1]);
     if (argc==2) {
-        ExportMol2(sys, std::cout, Provenance::fromArgs(argc,argv));
-    } else {
-        std::ofstream out(argv[2]);
-        ExportMol2(sys, out, Provenance::fromArgs(argc,argv));
+        ExportMol2(sys, argv[2], Provenance::fromArgs(argc,argv));
     }
     return 0;
 }

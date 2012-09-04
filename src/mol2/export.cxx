@@ -1,7 +1,5 @@
 #include "../mol2.hxx"
 #include "elements.hxx"
-#include <iostream>
-#include <iomanip>
 #include <boost/foreach.hpp>
 #include <stdio.h>
 #include <math.h>
@@ -208,37 +206,31 @@ static const char* guess_bond_type( SystemPtr mol, Id bnd,
     return "un";
 }
 
-static void format_float(std::ostream& out, double v) {
-    std::stringstream ss;
-    if (v>=0) ss << " ";
-    ss.precision(9);
-    ss << v;
-    out.width(9);
-    out << ss.str() << " ";
-}
-
-void desres::msys::ExportMol2( SystemPtr mol, std::ostream& out,
+void desres::msys::ExportMol2( SystemPtr mol, std::string const& path,
                                Provenance const& provenance) {
+
+    FILE* fd = fopen(path.c_str(), "wb");
+    if (!fd) MSYS_FAIL("Could not open '" << "' for writing.");
+    boost::shared_ptr<FILE> dtor(fd, fclose);
 
     /* mapping of atom id to atom type */
     std::vector<const char*> atypes(mol->maxAtomId());
 
     /* molecule record */
-    out << "@<TRIPOS>MOLECULE" << std::endl;
-    out << mol->name << std::endl;
-    out << mol->atomCount() << " " 
-        << mol->bondCount() << " "
-        << mol->residueCount() << std::endl;
-    out << "BIOPOLYMER" << std::endl;
-    out << "USER_CHARGES" << std::endl;
-    out << "****" << std::endl;   /* status bits */
-    out << std::endl;   /* comment */
+    fprintf(fd, "@<TRIPOS>MOLECULE\n");
+    fprintf(fd, "%s\n", mol->name.c_str());
+    fprintf(fd, " %4d %4d %4d\n", 
+            mol->atomCount(), mol->bondCount(), mol->residueCount());
+    fprintf(fd, "%s\n", mol->residueCount()==1 ? "SMALL" : "BIOPOLYMER");
+    fprintf(fd, "USER_CHARGES\n");
+    fprintf(fd, "%s\n", "****");    /* status bits */
+    fprintf(fd, "\n");              /* comment */
 
     /* atom records */
-    out << "@<TRIPOS>ATOM" << std::endl;
     IdList idmap(mol->maxAtomId(), 0);
     Id index=0;
 
+    fprintf(fd, "@<TRIPOS>ATOM\n");
     for (Id i=0; i<mol->maxAtomId(); i++) {
         if (!mol->hasAtom(i)) continue;
         idmap[i] = ++index;
@@ -264,22 +256,15 @@ void desres::msys::ExportMol2( SystemPtr mol, std::ostream& out,
         atypes.at(i)=type;
 
         /* write the atom line */
-        out << std::setw(7) << index << " ";
-        out << std::setw(7) << aname << " ";
-        format_float(out, atm.x);
-        format_float(out, atm.y);
-        format_float(out, atm.z);
-        out << type << " ";
-        out.width(4);
-        out << res.resid << " ";
-        out.width(7);
-        out << rname << " ";
-        format_float(out, atm.charge);
-        out << std::endl;
+        printf("writing charge %f %8.6f\n", atm.charge, atm.charge);
+        fprintf(fd, 
+           "%7d %-4s      %8.4f  %8.4f  %8.4f %-6s %4d  %4s    %6.4f\n", 
+           index, aname.c_str(), atm.x, atm.y, atm.z,
+           type, res.resid, rname.c_str(), atm.charge);
     }
 
     /* bond records */
-    out << "@<TRIPOS>BOND" << std::endl;
+    fprintf(fd, "@<TRIPOS>BOND\n");
     for (Id i=0; i<mol->maxBondId(); i++) {
         if (!mol->hasBond(i)) continue;
         bond_t const& bnd = mol->bond(i);
@@ -289,10 +274,7 @@ void desres::msys::ExportMol2( SystemPtr mol, std::ostream& out,
         const char* jtype = atypes.at(bnd.j);
         const char* btype = guess_bond_type(mol, i, itype, jtype);
 
-        out << std::setw(7) << i+1 << " ";
-        out << std::setw(7) << ai << " ";
-        out << std::setw(7) << aj << " ";
-        out << btype << std::endl;
+        fprintf(fd, "%5u %5u %5u %s\n", i+1, ai, aj, btype);
     }
 
 }
