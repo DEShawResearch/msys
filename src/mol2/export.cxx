@@ -296,13 +296,11 @@ void desres::msys::ExportMol2( SystemPtr mol, std::string const& path,
     fprintf(fd, "@<TRIPOS>SUBSTRUCTURE\n");
     for (Id i=0; i<mol->maxResidueId(); i++) {
         residue_t const& res = mol->residue(i);
-        chain_t const& chn = mol->chain(res.chain);
-        fprintf(fd, "%7u %-4s %7u %-8s **** %s\n",
+        fprintf(fd, "%7u %-4s %7u %-8s\n",
                 i+1,                                /* residue id */
                 res.name.c_str(),                   /* residue name */
                 mol->atomsForResidue(i).at(0)+1,    /* root atom */
-                mol->residueCount()==1 ? "GROUP" : "RESIDUE",
-                chn.name.c_str());
+                mol->residueCount()==1 ? "GROUP" : "RESIDUE");
     }
 }
 
