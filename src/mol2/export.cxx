@@ -58,6 +58,7 @@ const char* guess_atom_type(SystemPtr mol, Id id) {
     Id nnit=0;  /* number of bonds to nitrogen */
     Id ncar=0;  /* number of bonds to carbon */
     Id npho=0;  /* number of bonds to phosphorus */
+    Id nhyd=0;  /* number of bonds to hydrogen */
     BOOST_FOREACH(Id bid, mol->bondsForAtom(id)) {
         bond_t const& bond = mol->bond(bid);
         if (bond.resonant_order==1.5) ++nres;
@@ -65,7 +66,8 @@ const char* guess_atom_type(SystemPtr mol, Id id) {
         if (bond.order==2) ++ndbl;
         if (bond.order==3) ++ntrp;
         atom_t const& other = mol->atom(bond.other(id));
-        if      (other.atomic_number==6) ++ncar;
+        if      (other.atomic_number==1) ++nhyd;
+        else if (other.atomic_number==6) ++ncar;
         else if (other.atomic_number==7) ++nnit;
         else if (other.atomic_number==15) ++npho;
     }
@@ -128,7 +130,7 @@ const char* guess_atom_type(SystemPtr mol, Id id) {
             if (nbnd==2 && (ndbl==2 || (nsng==1 && ntrp==1))) {
                 return "N.1";                           /* 1.8.4 */
             }
-            if (nbnd==3 && ncar==1) {                   /* 1.8.5 */
+            if (nbnd==3 && nhyd<=1 && ncar>=1) {        /* 1.8.5 */
                 /* check for amide */
                 int namide=0;
                 BOOST_FOREACH(Id car, mol->bondedAtoms(id)) {
@@ -197,7 +199,21 @@ static const char* guess_bond_type( SystemPtr mol, Id bnd,
                                     std::string const& itype, 
                                     std::string const& jtype) {
 
-    if (itype=="N.am" || jtype=="N.am") return "am";
+    if (itype=="N.am" || jtype=="N.am") {
+        Id n = mol->bond(bnd).i;
+        if (mol->atom(n).atomic_number!=7) n = mol->bond(bnd).j;
+        Id car = mol->bond(bnd).other(n);
+        if (mol->atom(car).atomic_number==6) {
+            BOOST_FOREACH(Id bnd, mol->bondsForAtom(car)) {
+                Id other = mol->bond(bnd).other(car);
+                if (mol->bond(bnd).order==2 && (
+                    mol->atom(other).atomic_number==8 ||
+                    mol->atom(other).atomic_number==16)) {
+                    return "am";
+                }
+            }
+        }
+    }
     if (itype=="C.ar" && jtype=="C.ar") return "ar";
     int order = mol->bond(bnd).order;
     if (order==1) return "1";
