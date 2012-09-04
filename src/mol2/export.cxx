@@ -195,6 +195,19 @@ const char* guess_atom_type(SystemPtr mol, Id id) {
     return AbbreviationForElement(atm.atomic_number);
 }
 
+static const char* guess_bond_type( SystemPtr mol, Id bnd,
+                                    std::string const& itype, 
+                                    std::string const& jtype) {
+
+    if (itype=="N.am" || jtype=="N.am") return "am";
+    if (itype=="C.ar" && jtype=="C.ar") return "ar";
+    int order = mol->bond(bnd).order;
+    if (order==1) return "1";
+    if (order==2) return "2";
+    if (order==3) return "3";
+    return "un";
+}
+
 static void format_float(std::ostream& out, double v) {
     std::stringstream ss;
     if (v>=0) ss << " ";
@@ -206,6 +219,9 @@ static void format_float(std::ostream& out, double v) {
 
 void desres::msys::ExportMol2( SystemPtr mol, std::ostream& out,
                                Provenance const& provenance) {
+
+    /* mapping of atom id to atom type */
+    std::vector<const char*> atypes(mol->maxAtomId());
 
     /* molecule record */
     out << "@<TRIPOS>MOLECULE" << std::endl;
@@ -245,6 +261,7 @@ void desres::msys::ExportMol2( SystemPtr mol, std::ostream& out,
 
         /* guess an atom type */
         const char* type = guess_atom_type(mol, i);
+        atypes.at(i)=type;
 
         /* write the atom line */
         out << std::setw(7) << index << " ";
@@ -268,10 +285,14 @@ void desres::msys::ExportMol2( SystemPtr mol, std::ostream& out,
         bond_t const& bnd = mol->bond(i);
         Id ai = idmap[bnd.i];
         Id aj = idmap[bnd.j];
+        const char* itype = atypes.at(bnd.i);
+        const char* jtype = atypes.at(bnd.j);
+        const char* btype = guess_bond_type(mol, i, itype, jtype);
+
         out << std::setw(7) << i+1 << " ";
         out << std::setw(7) << ai << " ";
         out << std::setw(7) << aj << " ";
-        out << "un" << std::endl;
+        out << btype << std::endl;
     }
 
 }
