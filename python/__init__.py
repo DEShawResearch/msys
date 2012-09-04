@@ -1183,6 +1183,15 @@ def LoadPrmTop(path):
     ptr = _msys.ImportPrmTop(path)
     return System(ptr)
 
+def LoadMol2(path, multiple=False):
+    ''' Load a mol2 file at the given path. If multiple is True, return a list
+    of Systems, one for each MOLECULE record.  Otherwise, return just one
+    System corresponding to the first MOLECULE record.
+    '''
+    if multiple:
+        return [System(p) for p in _msys.ImportMOL2Many(path)]
+    return System(_msys.ImportMOL2(path))
+
 def Load(path):
     ''' Infer the file type of path and load the file.
     Returns a new System.

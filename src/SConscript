@@ -118,6 +118,7 @@ elements.cxx
 load.cxx
 
 mol2/export.cxx
+mol2/import.cxx
 
 pdb/pdb.cxx
 

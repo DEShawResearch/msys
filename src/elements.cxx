@@ -1,6 +1,8 @@
 #include "elements.hxx"
 #include <algorithm>
 #include <string.h>
+#include <string>
+#include <boost/algorithm/string.hpp>
 
 using namespace desres::msys;
 
@@ -193,6 +195,17 @@ const char* desres::msys::AbbreviationForElement(int anum) {
     int n = sizeof(ename)/sizeof(ename[0]);
     if (anum<0 || anum>=n) return "";
     return ename[anum];
+}
+
+int desres::msys::ElementForAbbreviation(const char* abbr) {
+    std::string src(abbr);
+    boost::to_upper(src);
+    for (unsigned i=1; i<nelems; i++) {
+        std::string ref(ename[i]);
+        boost::to_upper(ref);
+        if (ref==src) return i;
+    }
+    return 0;
 }
 
 namespace {

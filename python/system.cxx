@@ -407,6 +407,14 @@ namespace {
         }
         return L;
     }
+    list import_mol2_many(std::string const& path) {
+        std::vector<SystemPtr> mols = ImportMol2Many(path);
+        list L;
+        for (unsigned i=0; i<mols.size(); i++) {
+            L.append(object(mols[i]));
+        }
+        return L;
+    }
 }
 
 namespace desres { namespace msys { 
@@ -449,6 +457,8 @@ namespace desres { namespace msys {
         def("ExportPDB", ExportPDB);
         def("ImportPrmTop", ImportPrmTop);
         def("ImportCrdCoordinates", ImportCrdCoordinates);
+        def("ImportMOL2", ImportMol2);
+        def("ImportMOL2Many", import_mol2_many);
         def("ExportMOL2", ExportMol2);
         def("Load", Load,
                 (arg("path"),

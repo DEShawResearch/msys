@@ -5,6 +5,7 @@ namespace desres { namespace msys {
 
     int GuessAtomicNumber( double mass );
     const char* AbbreviationForElement(int anum);
+    int ElementForAbbreviation(const char* abbr);
 
     struct ChemData {
         float eneg;    // Electronegativities (Allen Scale)
