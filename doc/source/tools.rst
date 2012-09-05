@@ -40,6 +40,26 @@ dms2mae
 *dms2mae* is the inverse of *mae2dms*, though with somewhat more restricted
 range of supported forcefield terms. 
 
+msys2mol2
+---------
+.. program:: msys2mol2
+
+.. describe:: msys2mol2 input_file output.mol2
+
+   Creates a mol2 file from the given input file.
+
+.. cmdoption:: ----preserve-bondorder
+
+   By default, msys2mol2 will recompute bond orders using the
+   AssignBondOrderAndFormalCharge function.  This option causes msys2mol2 to
+   use whatever bond order information is already present in the file.
+
+.. cmdoption:: ----preserve-sybyltypes
+
+   By default, msys2mol2 will assign sybyl types to each atom using the
+   AssignSybylTypes function.  This option causes msys2mol2 to
+   use whatever sybyl atom and bond types were already present in the file.
+
 -----------
 Information
 -----------
