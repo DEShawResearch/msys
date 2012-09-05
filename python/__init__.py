@@ -1242,9 +1242,10 @@ def NonbondedSchemas():
 def GetSSSR(atoms, all_relevant=False):
     """Get smallest set of smallest rings (SSSR) for a system fragment.
 
-    The SSSR is in general not unique; the SSSR of a tetrahedron is any three of
-    its four triangular faces. The set of rings that is the union of all SSSR's
-    (all relevant rings) may be obtained by setting all_relevant to True.
+    The SSSR is in general not unique; the SSSR of a tetrahedron is any
+    three of its four triangular faces. The set of rings that is the
+    union of all SSSR's (all relevant rings) may be obtained by setting
+    all_relevant to True.
 
     Arguments:
     atoms -- [msys.Atom, ..., msys.Atom] from a single system
@@ -1265,14 +1266,19 @@ def AssignSybylTypes(system):
 def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge = None):
     """Assign bond orders and formal charges to a molecular system.
 
-    Determines bond orders and formal charges by preferring neutral charges and
-    placing negative charges with more electronegative atoms, under octet
-    constraints and the total system charge constraint. Assigns the bond orders
-    and formal charges to the system. Also determines resonance forms and
-    creates and populates a 'resonant_order' bond property and 'resonant_charge'
-    atom property in the system, where resonant order/charge is the average of
-    the bond order/formal charge over all resonant forms. Can assign to a subset of
-    atoms of the system, provided these atoms form complete connected fragments.
+    Determines bond orders and formal charges by preferring neutral
+    charges and placing negative charges with more electronegative
+    atoms, under octet constraints and the total system charge
+    constraint. Assigns the bond orders and formal charges to the
+    system. Also determines resonance forms and creates and populates a
+    'resonant_order' bond property and 'resonant_charge' atom property
+    in the system, where resonant order/charge is the average of the
+    bond order/formal charge over all resonant forms. Can assign to a
+    subset of atoms of the system, provided these atoms form complete
+    connected fragments.
+
+    WARNING: calling this function on a chemically incomplete system,
+    i.e. just protein backbone, may cause msys to hang indefinitely.
 
     Arguments:
     system_or_atoms: either a System or a list of Atoms
