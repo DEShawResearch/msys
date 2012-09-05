@@ -24,7 +24,9 @@ void desres::msys::ExportMol2( SystemPtr mol, std::string const& path,
     fprintf(fd, "%s\n", mol->residueCount()==1 ? "SMALL" : "BIOPOLYMER");
     fprintf(fd, "USER_CHARGES\n");
     fprintf(fd, "%s\n", "****");    /* status bits */
-    fprintf(fd, "\n");              /* comment */
+    fprintf(fd, "%s: %s\n", 
+            provenance.version.c_str(),
+            provenance.cmdline.c_str());
 
     /* atom records */
     IdList idmap(mol->maxAtomId(), 0);
