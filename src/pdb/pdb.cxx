@@ -1,6 +1,7 @@
 /* @COPYRIGHT@ */
 
 #include "../pdb.hxx"
+#include "../elements.hxx"
 #include "readpdb.h"
 
 #include <vector>
@@ -47,12 +48,15 @@ SystemPtr desres::msys::ImportPDB( std::string const& path ) {
             strip_whitespace(resname);
             strip_whitespace(chainname);
             strip_whitespace(segid);
+            strip_whitespace(element);
             resid = atoi(residstr);
 
             Id atm = imp.addAtom(chainname, segid, resid, resname, name);
-            mol->atom(atm).x = x;
-            mol->atom(atm).y = y;
-            mol->atom(atm).z = z;
+            atom_t& atom = mol->atom(atm);
+            atom.x = x;
+            atom.y = y;
+            atom.z = z;
+            atom.atomic_number = ElementForAbbreviation(element);
         }
 
     } while (indx != PDB_END && indx != PDB_EOF);
