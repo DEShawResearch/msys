@@ -1222,8 +1222,8 @@ def SavePDB(system, path):
     ''' Export the System to a PDB file at the given path. '''
     _msys.ExportPDB(system._ptr, str(path))
 
-def SaveMOL2(system, path):
-    ''' Export the System to a PDB file at the given path.  You should
+def SaveMol2(system, path):
+    ''' Export the System to a mol2 file at the given path.  You should
     probably call AssignBondOrderAndFormalCharge() before exporting
     the system.  '''
     ptr=system._ptr
