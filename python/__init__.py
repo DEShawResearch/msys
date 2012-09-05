@@ -1255,6 +1255,13 @@ def GetSSSR(atoms, all_relevant=False):
     rings = _msys.GetSSSR(ptr, ids, all_relevant)
     return [[Atom(ptr, id) for id in ring] for ring in rings]
 
+def AssignSybylTypes(system):
+    ''' Assign Sybyl atom and bond types to the given system.  
+    Types will be stored in the "sybyl_type" property of each atom and bond.
+    Invoke AssignBondOrderAndFormalCharge first if bond orders need to
+    be recalculated. '''
+    _msys.AssignSybylTypes(system._ptr)
+
 def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge = None):
     """Assign bond orders and formal charges to a molecular system.
 

@@ -1,5 +1,6 @@
 #include "analyze.hxx"
 #include "sssr.hxx"
+#include "mol2.hxx"
 #include <boost/python.hpp>
 
 using namespace desres::msys;
@@ -29,6 +30,7 @@ namespace desres { namespace msys {
         def("AssignBondOrderAndFormalCharge", assign_1);
         def("AssignBondOrderAndFormalCharge", assign_2);
         def("AssignBondOrderAndFormalCharge", assign_3);
+        def("AssignSybylTypes", AssignSybylTypes);
         def("GetSSSR", get_sssr);
     }
 }}

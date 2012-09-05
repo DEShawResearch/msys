@@ -117,6 +117,7 @@ elements.cxx
 
 load.cxx
 
+mol2/assign.cxx
 mol2/export.cxx
 mol2/import.cxx
 

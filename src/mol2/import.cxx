@@ -32,6 +32,7 @@ desres::msys::ImportMol2Many(std::string const& path) {
     int natoms, nbonds, nsub;
     SystemPtr mol;
     Id chn = BadId;
+    Id atype=BadId, btype=BadId;
     while (fgets(buf, sizeof(buf), fd)) {
         if (buf[0]=='@') {
             if (!strncmp(buf, "@<TRIPOS>MOLECULE", 17)) {
@@ -49,6 +50,8 @@ desres::msys::ImportMol2Many(std::string const& path) {
         switch (state) {
             case Molecule: 
                 mol = System::create();
+                atype=mol->addAtomProp("sybyl_type", StringType);
+                btype=mol->addBondProp("sybyl_type", StringType);
                 mols.push_back(mol);
                 chn = mol->addChain();
                 atoms.clear();
@@ -99,6 +102,7 @@ desres::msys::ImportMol2Many(std::string const& path) {
                     }
                     Id res = mol->residuesForChain(chn).at(resid-1);
                     Id atm = mol->addAtom(res);
+                    mol->atomPropValue(atm,atype)=type;
                     atoms.push_back(atm);
                     atom_t& atom = mol->atom(atm);
                     atom.name = name;
@@ -117,27 +121,28 @@ desres::msys::ImportMol2Many(std::string const& path) {
             case Bond:
                 for (int i=0; i<nbonds; i++) {
                     int ai, aj;
-                    char btype[32];
+                    char type[32];
                     if (!fgets(buf, sizeof(buf), fd)) {
                         MSYS_FAIL("Missing expected Bond record " << i+1);
                     }
-                    if (sscanf(buf, "%*d %d %d %s", &ai, &aj, btype)!=3) {
+                    if (sscanf(buf, "%*d %d %d %s", &ai, &aj, type)!=3) {
                         MSYS_FAIL("Could not parse Bond record:\n" << buf);
                     }
                     if (ai<1 || aj<1 || ai>natoms || aj>natoms) {
                         MSYS_FAIL("Invalid atoms in Bond record:\n" << buf);
                     }
                     Id bnd = mol->addBond(atoms.at(ai-1), atoms.at(aj-1));
+                    mol->bondPropValue(bnd,btype)=type;
                     bond_t& bond = mol->bond(bnd);
-                    if (!strcmp(btype, "1")) {
+                    if (!strcmp(type, "1")) {
                         bond.order = bond.resonant_order = 1;
-                    } else if (!strcmp(btype, "2")) {
+                    } else if (!strcmp(type, "2")) {
                         bond.order = bond.resonant_order = 2;
-                    } else if (!strcmp(btype, "3")) {
+                    } else if (!strcmp(type, "3")) {
                         bond.order = bond.resonant_order = 3;
-                    } else if (!strcmp(btype, "am")) {
+                    } else if (!strcmp(type, "am")) {
                         bond.order = bond.resonant_order = 1;
-                    } else if (!strcmp(btype, "ar")) {
+                    } else if (!strcmp(type, "ar")) {
                         bond.order = 1;
                         bond.resonant_order = 1.5;
                     }
