@@ -1,3 +1,7 @@
+1.6.1  NEW: mol2 import/export support.
+       NEW: AssignBondOrderAndFormalCharge function (was in Viparr)
+       NEW: GetSSSR (smallest set of smallest rings) (was in Viparr)
+
 1.6.0  NEW: The Python atom selection handles large selections much more
             efficiently. 
        NEW: Added System.selectIds(), which is more efficient than 
