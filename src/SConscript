@@ -4,6 +4,7 @@ env=env.Clone()
 opts=Variables()
 opts.Add("MSYS_WITHOUT_ATOMSEL", "without atom selections?")
 opts.Add("MSYS_WITHOUT_MAE", "without mae file support?")
+opts.Add("MSYS_WITHOUT_LPSOLVE", "without lpsolve support?")
 opts.Update(env)
 
 env.Append(LIBS=[
@@ -97,17 +98,24 @@ mae/destro/Tokenizer.cxx
 mae/destro/Zing.cxx
 '''))
 
-libmsys=env.AddLibrary('msys', selobjs + maeobjs + Split('''
-
-amber/import_crd.cxx
-amber/import_prmtop.cxx
-
+if env.get('MSYS_WITHOUT_LPSOLVE'):
+    lpenv=env.Clone()
+    lpenv.Append(CPPDEFINES=['MSYS_WITHOUT_LPSOLVE'])
+    lpobjs=lpenv.AddObject(['analyze.cxx'])
+else:
+    lpobjs=env.AddObject(Split('''
 analyze.cxx
 analyze/aromatic.cxx
 analyze/bond_orders.cxx
 analyze/eigensystem.cxx
 analyze/filtered_bonds.cxx
 analyze/get_fragments.cxx
+'''))
+
+libmsys=env.AddLibrary('msys', selobjs + maeobjs + lpobjs + Split('''
+
+amber/import_crd.cxx
+amber/import_prmtop.cxx
 
 dms/dms.cxx
 dms/export_dms.cxx

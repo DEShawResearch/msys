@@ -14,6 +14,9 @@ namespace desres { namespace msys {
     void AssignBondOrderAndFormalCharge(SystemPtr mol, 
                                         IdList const& atoms,
                                         int total_charge) {
+#ifdef MSYS_WITHOUT_LPSOLVE
+        MSYS_FAIL("LPSOLVE functionality was not included.");
+#else
         if (atoms.empty()) return;
         BondOrderAssignerPtr boa=BondOrderAssigner::create(mol, atoms);
         if (total_charge != INT_MAX) {
@@ -21,6 +24,7 @@ namespace desres { namespace msys {
         }
         boa->solveIntegerLinearProgram();
         boa->assignSolutionToAtoms();
+#endif
     }
 
 }}
