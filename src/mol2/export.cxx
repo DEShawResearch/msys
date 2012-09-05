@@ -295,6 +295,7 @@ void desres::msys::ExportMol2( SystemPtr mol, std::string const& path,
     /* substructure */
     fprintf(fd, "@<TRIPOS>SUBSTRUCTURE\n");
     for (Id i=0; i<mol->maxResidueId(); i++) {
+        if (!mol->atomCountForResidue(i)) continue;
         residue_t const& res = mol->residue(i);
         fprintf(fd, "%7u %-4s %7u %-8s\n",
                 i+1,                                /* residue id */
