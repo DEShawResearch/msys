@@ -2,6 +2,7 @@
 
 #include "../pdb.hxx"
 #include "../elements.hxx"
+#include "../analyze.hxx"
 #include "readpdb.h"
 
 #include <vector>
@@ -61,7 +62,9 @@ SystemPtr desres::msys::ImportPDB( std::string const& path ) {
 
     } while (indx != PDB_END && indx != PDB_EOF);
 
+    GuessBondConnectivity(mol);
     mol->analyze();
+
     return mol;
 }
 

@@ -16,6 +16,11 @@ namespace desres { namespace msys {
     void AssignBondOrderAndFormalCharge(SystemPtr mol,
                                         IdList const& atoms,
                                         int total_charge = INT_MAX);
+
+
+    /* Add bonds based on estimated VDW radii determined from atomic
+     * number (Bondi radii). */
+    void GuessBondConnectivity(SystemPtr mol);
 }}
 
 #endif
