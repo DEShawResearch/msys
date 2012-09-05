@@ -20,6 +20,19 @@ static const char *ename[] = {
     "Ds", "Rg"
 };
 
+static double eradius[] = {
+    0.00, 1.10, 1.40, 1.81, 1.53, 1.92, 1.70, 1.55, 1.52, 1.47, 1.54,
+    1.81, 1.73, 1.84, 2.10, 1.80, 1.80, 1.75, 1.88, 2.75, 2.31, 2,
+    2,    2,    2,    2,    2,    2,    2,    2,    2,    1.87, 2.11,
+    1.85, 1.90, 1.83, 2.02, 3.03, 2.49, 2,    2,    2,    2,    2,
+    2,    2,    2,    2,    2,    1.93, 2.17, 2.06, 2.06, 1.98, 2.16,
+    3.43, 2.68, 2,    2,    2,    2,    2,    2,    2,    2,    2,
+    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+    2,    2,    2,    2,    1.96, 2.02, 2.07, 1.97, 2.02, 2.20, 3.48,
+    2.83, 2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+    2,    2
+};
+
 /* atomic weights do not increase monotonically!  I'm writing down
  * the masses in order of atomic number, and I'll then assign
  * atomic number and then sort by mass. */
@@ -195,6 +208,13 @@ const char* desres::msys::AbbreviationForElement(int anum) {
     int n = sizeof(ename)/sizeof(ename[0]);
     if (anum<0 || anum>=n) return "";
     return ename[anum];
+}
+
+double desres::msys::RadiusForElement(int anum) {
+    int n = sizeof(eradius)/sizeof(eradius[0]);
+    if (anum<0) return 0;
+    if (anum>=n) return 2.0;
+    return eradius[anum];
 }
 
 int desres::msys::ElementForAbbreviation(const char* abbr) {

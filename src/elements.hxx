@@ -7,6 +7,8 @@ namespace desres { namespace msys {
     const char* AbbreviationForElement(int anum);
     int ElementForAbbreviation(const char* abbr);
 
+    double RadiusForElement(int anum);
+
     struct ChemData {
         float eneg;    // Electronegativities (Allen Scale)
         int nValence;  // Number of valence electrons present in atom
