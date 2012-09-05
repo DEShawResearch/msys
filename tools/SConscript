@@ -3,8 +3,10 @@ Import('env')
 env=env.Clone()
 env.Prepend(CPPPATH=['../src'], LIBS=['msys'])
 
+# converters
 env.AddProgram('mae2dms', 'converters/mae2dms.cxx')
 env.AddProgram('dms2mae', 'converters/dms2mae.cxx')
+env.AddProgram('msys2mol2', 'converters/msys2mol2.cxx')
 
 ## fep
 env.AddPythonModule('fep/_alchemical.py', prefix='msys')
