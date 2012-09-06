@@ -143,6 +143,7 @@ sssr.cxx
 system.cxx
 term_table.cxx
 value.cxx
+xyz.cxx
 
 '''))
 

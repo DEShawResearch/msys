@@ -7,6 +7,7 @@
 #include "dms.hxx"
 #include "pdb.hxx"
 #include "mol2.hxx"
+#include "xyz.hxx"
 #include "load.hxx"
 #include "amber.hxx"
 
@@ -460,6 +461,7 @@ namespace desres { namespace msys {
         def("ImportMOL2", ImportMol2);
         def("ImportMOL2Many", import_mol2_many);
         def("ExportMOL2", ExportMol2);
+        def("ImportXYZ", ImportXYZ);
         def("Load", Load,
                 (arg("path"),
                  arg("opt_format")=object()));

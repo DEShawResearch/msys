@@ -1192,6 +1192,13 @@ def LoadMol2(path, multiple=False):
         return [System(p) for p in _msys.ImportMOL2Many(path)]
     return System(_msys.ImportMOL2(path))
 
+def LoadXYZ(path):
+    ''' Load an xyz file at the given path.  Guesses bonds based on 
+    guessed atomic numbers based on atom name.
+    '''
+    return System(_msys.ImportXYZ(path))
+
+
 def Load(path):
     ''' Infer the file type of path and load the file.
     Returns a new System.

@@ -5,6 +5,7 @@
 #include "pdb.hxx"
 #include "amber.hxx"
 #include "mol2.hxx"
+#include "xyz.hxx"
 
 #include <boost/algorithm/string.hpp>
 #include <pcre.h>
@@ -32,7 +33,8 @@ namespace {
         "MAE",
         "PDB",
         "PARM7",
-        "MOL2"
+        "MOL2",
+        "XYZ"
     };
 }
 
@@ -45,12 +47,14 @@ namespace desres { namespace msys {
         const char* PDB = "pdb";
         const char* PRM = "prmtop,prm7";
         const char* MOL2= "mol2";
+        const char* XYZ = "xyz";
 
         if (match(path, DMS)) return DmsFileFormat;
         if (match(path, MAE)) return MaeFileFormat;
         if (match(path, PDB)) return PdbFileFormat;
         if (match(path, PRM)) return ParmTopFileFormat;
         if (match(path,MOL2)) return Mol2FileFormat;
+        if (match(path, XYZ)) return XyzFileFormat;
         return UnrecognizedFileFormat;
     }
 
@@ -85,6 +89,9 @@ namespace desres { namespace msys {
                 break;
             case Mol2FileFormat: 
                 m=ImportMol2(path); 
+                break;
+            case XyzFileFormat: 
+                m=ImportXYZ(path); 
                 break;
             default:
                 ;
