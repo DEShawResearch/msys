@@ -3,7 +3,7 @@ set -e
 #set -x
 . $DESRES_ROOT/modules/init/sourceme.sh
 module add gardenutils/1.9.2/lib-sh
-module add treetop/73-Desmond/bin   
+module add treetop/87-Desmond/bin   
 . desres-install-functions
 trap 'desres_trapped_exit' EXIT
 
@@ -21,10 +21,10 @@ SQLITE=$(treetop sqlite)
 PCRE=$(treetop pcre)
 ANTLR=$(treetop antlr)
 JSON=$(treetop fastjson)
-MOLFILE=molfile/1.9.4
+MOLFILE=$(treetop molfile)
 PERIODICFIX=periodicfix/2.3.16
-NUMPY=numpy/1.5.1-29A
-LPSOLVE=lp_solve/5.5.2.0-03A
+NUMPY=$(treetop numpy)
+LPSOLVE=$(treetop lp_solve)
 
 # build and documentation
 SCONS=$(treetop scons)
@@ -88,7 +88,7 @@ module-whatis {$NAME - $DESCRIPTION}
 prepend-path PATH $PREFIX/bin
 prepend-path MANPATH $PREFIX/doc/man
 setenv MSYS_PREFIX "$PREFIX"
-setenv MSYS_CLEANENV "-m $PYTHON/bin -m $NUMPY/lib-python -m $NAME/$VERSION/lib-python -m $MOLFILE/lib-python -m$PERIODICFIX/lib-python"
+setenv MSYS_CLEANENV "-m $PYTHON/bin -m $NUMPY/lib-python -m $NAME/$VERSION/lib-python -m $MOLFILE/lib-python -m $PERIODICFIX/lib-python -m $SQLITE/bin"
 EOF
 }
 
