@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <boost/foreach.hpp>
+#include <periodicfix/unitcell.hxx>
 #include <string>
 
 using namespace desres::msys;
@@ -58,6 +59,16 @@ SystemPtr desres::msys::ImportPDB( std::string const& path ) {
             atom.y = y;
             atom.z = z;
             atom.atomic_number = ElementForAbbreviation(element);
+
+        } else if (indx==PDB_CRYST1) {
+            double alpha, beta, gamma, a, b, c;
+            desres_msys_get_pdb_cryst1(pdbstr,&alpha,&beta,&gamma,&a,&b,&c);
+            periodicfix::UnitCell cell(a,b,c,alpha,beta,gamma);
+            double box[9];
+            cell.as_matrix(box);
+            for (int i=0; i<3; i++) for (int j=0; j<3; j++) {
+                mol->global_cell[i][j] = box[3*i+j];
+            }
         }
 
     } while (indx != PDB_END && indx != PDB_EOF);
