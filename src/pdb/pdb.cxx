@@ -79,11 +79,59 @@ SystemPtr desres::msys::ImportPDB( std::string const& path ) {
     return mol;
 }
 
+static double dotprod(const double* x, const double* y) {
+    return x[0]*y[0] + x[1]*y[1] + x[2]*y[2];
+}
+
+static void unitcell_to_pdb( const double* m_box,
+                             double* a, double* b, double* c,
+                             double* alpha, double* beta, double* gamma) {
+
+    double A[3] = { m_box[0], m_box[1], m_box[2] };
+    double B[3] = { m_box[3], m_box[4], m_box[5] };
+    double C[3] = { m_box[6], m_box[7], m_box[8] };
+
+    *a = *b = *c = 1;
+    *alpha = *beta = *gamma = 90;
+
+    /* store lengths */
+    *a = sqrt(dotprod(A,A));
+    *b = sqrt(dotprod(B,B));
+    *c = sqrt(dotprod(C,C));
+
+    if (*a && *b && *c) {
+        /* compute angles */
+        double cosAB = dotprod(A,B)/(a[0] * b[0]);
+        double cosAC = dotprod(A,C)/(a[0] * c[0]);
+        double cosBC = dotprod(B,C)/(b[0] * c[0]);
+
+        // clamp
+        if (cosAB > 1.0) cosAB = 1.0; else if (cosAB < -1.0) cosAB = -1.0;
+        if (cosAC > 1.0) cosAC = 1.0; else if (cosAC < -1.0) cosAC = -1.0;
+        if (cosBC > 1.0) cosBC = 1.0; else if (cosBC < -1.0) cosBC = -1.0;
+
+        /* convert to angles using asin to avoid nasty rounding when we are */
+        /* close to 90 degree angles. */
+        *alpha = 90.0 - asin(cosBC) * 90.0 / M_PI_2; /* cosBC */
+        *beta  = 90.0 - asin(cosAC) * 90.0 / M_PI_2; /* cosAC */
+        *gamma = 90.0 - asin(cosAB) * 90.0 / M_PI_2; /* cosAB */
+    }
+}
+
 void desres::msys::ExportPDB(SystemPtr mol, std::string const& path) {
     FILE* fd = fopen(path.c_str(), "w");
     if (!fd) MSYS_FAIL("Failed opening pdb file for writing at " << path);
     boost::shared_ptr<FILE> defer_close(fd, fclose);
     
+    double box[9];
+    for (int i=0; i<3; i++) for (int j=0; j<3; j++) 
+        box[3*i+j]=mol->global_cell[i][j];
+    double A,B,C,alpha,beta,gamma;
+    unitcell_to_pdb(box, &A,&B,&C,&alpha,&beta,&gamma);
+
+    fprintf(fd, "%6s%9.3f%9.3f%9.3f%7.2f%7.2f%7.2f %-11s%4d\n",
+            "CRYST1", A,B,C,alpha,beta,gamma,"P 1", 1);
+
     int index=0;
     for (Id chn=0; chn<mol->maxChainId(); chn++) {
         if (!mol->hasChain(chn)) continue;
