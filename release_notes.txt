@@ -1,3 +1,8 @@
+1.6.2  NEW: Heuristic for guessing bonds.  From Python: System.guessBonds()
+       NEW: xyz importer.
+       NEW: xyz and pdb importers guess bonds.
+       NEW: pdb importer reads and writes unit cell.
+
 1.6.1  NEW: mol2 import/export support.
        NEW: AssignBondOrderAndFormalCharge function (was in Viparr)
        NEW: GetSSSR (smallest set of smallest rings) (was in Viparr)
