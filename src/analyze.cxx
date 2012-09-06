@@ -11,6 +11,7 @@ namespace {
         BondFinder(SystemPtr m) : mol(m) {}
 
         bool exclude(Id i, Id j) {
+            if (i>=j) return true;
             int ai = mol->atom(i).atomic_number;
             int aj = mol->atom(j).atomic_number;
             if ((ai==1 && aj==1) ||
@@ -20,7 +21,7 @@ namespace {
         }
 
         void operator()(Id i, Id j, double d2) {
-            if (i<j && d2>0.001) {
+            if (d2>0.001) {
                 int ai = mol->atom(i).atomic_number;
                 int aj = mol->atom(j).atomic_number;
                 double ri = RadiusForElement(ai);
