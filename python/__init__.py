@@ -1024,6 +1024,23 @@ class System(object):
         ptr=self._ptr
         return System(_msys.Clone(ptr, ptr.orderedIds()))
 
+    def guessBonds(self, replace=True, reanalyze=True):
+        ''' Guess bond connectivity based on an atomic-number based
+        atom radius.  
+
+        Replaces any existing bonds, unless replace=False is specified.
+
+        Reanalyzes fragids and atom types unless reanalyze=False is specified.
+        In that case, you MUST call updateFragids() manually before making
+        any use of the fragment assignment (fragids will be out of date).
+        '''
+        ptr=self._ptr
+        if replace:
+            ptr.delBonds(ptr.bonds())
+        _msys.GuessBondConnectivity(ptr)
+        if reanalyze:
+            ptr.analyze()
+
     def analyze(self):
         ''' Assign atom and residue types.  This needs to be called
         manually only if you create a system from scratch, using 

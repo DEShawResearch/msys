@@ -32,6 +32,7 @@ namespace desres { namespace msys {
         def("AssignBondOrderAndFormalCharge", assign_3);
         def("AssignSybylTypes", AssignSybylTypes);
         def("GetSSSR", get_sssr);
+        def("GuessBondConnectivity", GuessBondConnectivity);
     }
 }}
 
