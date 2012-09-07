@@ -1,3 +1,5 @@
+1.6.3  FIXED: SavePDB writes element determined from atomic number.
+
 1.6.2  NEW: Heuristic for guessing bonds.  From Python: System.guessBonds()
        NEW: xyz importer.
        NEW: xyz and pdb importers guess bonds.
