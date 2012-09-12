@@ -160,7 +160,9 @@ if __name__=="__main__":
         print "Loading", path
         mol=msys.Load(path)
         view = QtGui.QTreeView()
+        print "Processing..."
         model = MsysTreeModel(mol)
+        print "done"
         view.setModel(model)
         view.setWindowTitle("MView")
         view.show()
