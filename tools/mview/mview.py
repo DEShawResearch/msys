@@ -177,8 +177,50 @@ class AtomTreeItem(TreeItem):
 class TableTreeItem(TreeItem):
     def __init__(self, parent, table):
         name=table.name
-        size="%d params, %d terms" % (table.params.nparams, table.nterms)
+        size=table.category
+        #size="%d params, %d terms" % (table.params.nparams, table.nterms)
         TreeItem.__init__(self, parent, [name,size])
+        self.childItems = [
+                ParamsItem(self, table.params),
+                TermsItem(self, table),
+                ]
+
+class TermsItem(TreeItem):
+    def __init__(self, parent, table):
+        name="Terms"
+        size=table.nterms
+        TreeItem.__init__(self, parent, [name,size])
+        self.table = table
+        self.childItems = None
+
+    def build(self):
+        ''' lazy building of terms '''
+        if self.childItems is None:
+            self.childItems = [TermTreeItem(self,t) for t in self.table.terms]
+
+    def child(self,row):
+        self.build()
+        return self.childItems[row]
+
+    def childCount(self):
+        return self.table.nterms
+
+class TermTreeItem(TreeItem):
+    def __init__(self, parent, term):
+        name="%d %s" % (term.id, [a.id for a in term.atoms])
+        size=[]
+        for p in term.table.params.props:
+            size.append('%s=%s' % (p, term[p]))
+        size=' '.join(size)
+        TreeItem.__init__(self, parent, [name,size])
+
+class ParamsItem(TreeItem):
+    def __init__(self, parent, params):
+        name="Params"
+        size=params.nparams
+        TreeItem.__init__(self, parent, [name,size])
+        self.params = params
+
 
 if __name__=="__main__":
     import sys
