@@ -102,6 +102,11 @@ class TreeItem(object):
     def childCount(self):
         return len(self.childItems)
 
+    def row(self):
+        if self.parentItem is not None:
+            return self.parentItem.childItems.index(self)
+        return 0
+
     def columnCount(self):
         return len(self.itemData)
  
@@ -111,10 +116,6 @@ class TreeItem(object):
     def parent(self):
         return self.parentItem
 
-    def row(self):
-        if self.parentItem is not None:
-            return self.parentItem.childItems.index(self)
-        return 0
 
 class SystemTreeItem(TreeItem):
     def __init__(self, parent, mol):
@@ -151,8 +152,21 @@ class ResidueTreeItem(TreeItem):
         name="%4s %d" % (residue.name, residue.resid)
         size=str(residue.natoms)
         TreeItem.__init__(self, parent, [name, size])
-        for a in residue.atoms:
-            self.childItems.append(AtomTreeItem(self, a))
+        self.residue = residue
+        self.childItems = None
+
+    def build(self):
+        ''' lazy building of atoms '''
+        if self.childItems is None:
+            self.childItems = [AtomTreeItem(self,a) for a in self.residue.atoms]
+
+    def child(self,row):
+        self.build()
+        return self.childItems[row]
+
+    def childCount(self):
+        return self.residue.natoms
+
 
 class AtomTreeItem(TreeItem):
     def __init__(self, parent, atom):
