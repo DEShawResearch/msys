@@ -529,6 +529,14 @@ class TermTable(object):
             raise ValueError, "atoms are from a different System"
         return [self.term(x) for x in self._ptr.findWithAny(ids)]
 
+    def findWithOnly(self, atoms):
+        ''' return the terms that contain only the given atoms '''
+        if not atoms: return []
+        ptr, ids = _find_ids(atoms)
+        if ptr!=self.system._ptr:
+            raise ValueError, "atoms are from a different System"
+        return [self.term(x) for x in self._ptr.findWithOnly(ids)]
+
     def findExact(self, atoms):
         ''' return the terms that contain precisely the given atoms in the 
         given order. '''

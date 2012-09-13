@@ -113,6 +113,7 @@ analyze/get_fragments.cxx
 '''))
 
 libmsys=env.AddLibrary('msys', selobjs + maeobjs + lpobjs + Split('''
+alchemical.cxx
 
 amber/import_crd.cxx
 amber/import_prmtop.cxx

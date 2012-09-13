@@ -1,8 +1,9 @@
 #!/usr/bin/env desres-exec
 #{
-# desres-with \
+# exec desres-cleanenv \
 # -m ndiff/2.00-02/bin \
-# -m maeff_inputs/1.4.1/share \
+# -m dms_inputs/1.5.8/share \
+# -m msys/1.6.2/bin \
 # -- sh $0 "$@"
 #}
 
@@ -23,25 +24,25 @@ canonicalize() {
     set -e
 }
 
-for DIR in $DESMOND_MAEFF_INPUT_PATH/fep/fep*
-#for DIR in $DESMOND_MAEFF_INPUT_PATH/fep/fep9
+for DIR in $DMS_INPUTS_PATH/fep/fep*
+#for DIR in $DESMOND_MAEFF_INPUT_PATH/fep/fep1
 do
-    echo "Reading A.mae, B.mae, and atom.map from $DIR"
+    rm -f old.dms new.dms
+
+    echo "Reading A.dms, B.dms, and atom.map from $DIR"
     
-    # viparr1 route.
-    mae2dms $DIR/C.mae $TMP/viparr.dms
-    canonicalize $TMP/viparr.dms
-    dms-dump $DUMPOPTS $TMP/viparr.dms | grep -v "\-----" > $TMP/viparr.dump
+    # old msys route.
+    dms-alchemical $DIR/A.dms $DIR/B.dms $DIR/atom.map $TMP/old.dms
+    canonicalize $TMP/old.dms
+    dms-dump $DUMPOPTS $TMP/old.dms | grep -v "\-----" > $TMP/old.dump
     
-    # msys route.
-    mae2dms $DIR/A.mae $TMP/A.dms
-    mae2dms $DIR/B.mae $TMP/B.dms
-    dms-alchemical $TMP/A.dms $TMP/B.dms $DIR/atom.map $TMP/msys.dms
-    canonicalize $TMP/msys.dms
-    dms-dump $DUMPOPTS $TMP/msys.dms | grep -v "\-----" > $TMP/msys.dump
+    # new msys route.
+    ./objs/Linux/x86_64/bin/dms-alchemical --keep-alchemical-noop $DIR/A.dms $DIR/B.dms $DIR/atom.map $TMP/new.dms
+    canonicalize $TMP/new.dms
+    dms-dump $DUMPOPTS $TMP/new.dms | grep -v "\-----" > $TMP/new.dump
 
     # compare
-    ndiff -relerr 1e-4 -silent $TMP/viparr.dump $TMP/msys.dump
+    ndiff -relerr 1e-4 -silent $TMP/old.dump $TMP/new.dump
 
     echo "OK"
 done

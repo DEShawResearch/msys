@@ -9,10 +9,8 @@ env.AddProgram('dms2mae', 'converters/dms2mae.cxx')
 env.AddProgram('msys2mol2', 'converters/msys2mol2.cxx')
 
 ## fep
-env.AddPythonModule('fep/_alchemical.py', prefix='msys')
-env.AddPythonModule('fep/kept.py', prefix='msys')
-env.AddScript('fep/dms-alchemical')
 env.AddScript('fep/dms-uncharge')
+env.AddProgram('dms-alchemical', 'fep/dms-alchemical.cxx')
 
 ## glue
 env.AddPythonModule('glue/glue.py', prefix='msys')

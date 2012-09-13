@@ -1,4 +1,16 @@
 Import('env')
+
+# Avoid doing dependency checks on garden files.
+cpp=[]
+flg=[]
+for p in env['CPPPATH']:
+    if p.startswith('/proj'):
+        flg.append('-I%s' % p)
+    else:
+        cpp.append(p)
+env.Replace(CPPPATH=cpp)
+env.Append(CFLAGS=flg, CXXFLAGS=flg)
+
 env.Append(
         CFLAGS='-O2 -g',
         CXXFLAGS='-O2 -Wall -Werror -g',

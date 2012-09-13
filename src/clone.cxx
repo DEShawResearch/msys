@@ -31,11 +31,7 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms ) {
     /* check for duplicates */
     {
         IdList tmp(atoms);
-        std::sort(tmp.begin(), tmp.end());
-        if (std::unique(tmp.begin(), tmp.end())!=tmp.end()) {
-            throw std::runtime_error(
-                    "Clone: atoms argument contains duplicates");
-        }
+        if (sort_unique(tmp)) MSYS_FAIL("atoms argument contains duplicates");
     }
     SystemPtr dst = System::create();
 
@@ -191,9 +187,7 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms ) {
                 Id p = srctable->param(terms[i]);
                 if (!bad(p)) params.push_back(p);
             }
-            std::sort(params.begin(), params.end());
-            params.resize(
-                    std::unique( params.begin(), params.end()) -params.begin());
+            sort_unique(params);
 
             /* Add to dstparams just the params that haven't already been
              * added. */

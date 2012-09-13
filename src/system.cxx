@@ -615,6 +615,31 @@ void System::copySelectionMacros(System const& m) {
     _macros = m._macros;
 }
 
+void SystemImporter::initialize(IdList const& atoms) {
+    resmap.clear();
+    chnmap.clear();
+    IdList reslist, chnlist;
+    BOOST_FOREACH(Id atm, atoms) {
+        Id res = sys->atom(atm).residue;
+        Id chn = sys->residue(res).chain;
+        reslist.push_back(res);
+        chnlist.push_back(chn);
+    }
+    sort_unique(reslist);
+    sort_unique(chnlist);
+
+    BOOST_FOREACH(Id chn, chnlist) {
+        chain_t const& chain = sys->chain(chn);
+        chnmap[ChnKey(chain.name, chain.segid)] = chn;
+        BOOST_FOREACH(Id res, sys->residuesForChain(chn)) {
+            if (std::binary_search(reslist.begin(), reslist.end(), res)) {
+                residue_t const& residue = sys->residue(res);
+                resmap[ResKey(chn, residue.resid, residue.name)] = res;
+            }
+        }
+    }
+}
+
 Id SystemImporter::addAtom(std::string chain, std::string segid,
                            int resnum, std::string resname,
                            std::string aname) {

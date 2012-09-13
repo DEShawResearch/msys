@@ -44,9 +44,7 @@ IdList desres::msys::AppendTerms( TermTablePtr dst, TermTablePtr src,
         Id p = src->param(terms[i]);
         if (!bad(p)) srcparams.push_back(p);
     }
-    std::sort(srcparams.begin(), srcparams.end());
-    srcparams.resize(
-            std::unique(srcparams.begin(), srcparams.end())-srcparams.begin());
+    sort_unique(srcparams);
 
     /* append the necessary parameters */
     IdList dstparams = AppendParams( dst->params(), src->params(), srcparams );

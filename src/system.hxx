@@ -519,6 +519,9 @@ namespace desres { namespace msys {
         explicit SystemImporter(SystemPtr s) 
         : sys(s), chnid(BadId), resid(BadId) {}
 
+        /* process existing atoms in the system */
+        void initialize(IdList const& atoms);
+
         /* add an atom, after first constructing necessary parent
          * chain and/or residue object.  All string inputs will
          * have leading and trailing whitespace removed. */

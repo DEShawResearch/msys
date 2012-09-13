@@ -497,11 +497,19 @@ class TestMain(unittest.TestCase):
         self.assertEqual(t.findWithAll([a4]), [t.term(x) for x in (2,4,5)])
         self.assertEqual(t.findWithAny([a1,a2]), [t.term(x) for x in range(5)])
         self.assertEqual(t.findWithAny([a1,a3]), [t.term(x) for x in (0,1,2,3,5)])
+
+        self.assertEqual(t.findWithOnly([a1,a2,a4]), [t.term(x) for x in (0,2,4)])
+        self.assertEqual(t.findWithOnly([]), [])
+        self.assertEqual(t.findWithOnly([a4]), [])
+        self.assertEqual(t.findWithOnly([a4]), [])
+
         self.assertEqual(t.findWithAll([a4,a2]), [t.term(4)])
         self.assertEqual(t.findWithAll([a2,a4]), [t.term(4)])
         self.assertEqual(t.findExact([a4,a2]), [t.term(4)])
         self.assertEqual(t.findExact([a2,a4]), [])
         a1.remove()
+
+        self.assertEqual(t.findWithOnly([a2,a4]), [t.term(4)])
         self.assertEqual(t.findWithAll([a1]), [t.term(x) for x in ()])
         self.assertEqual(t.findWithAll([a2]), [t.term(x) for x in (3,4)])
         self.assertEqual(t.findWithAll([a3]), [t.term(x) for x in (3,5)])

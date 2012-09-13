@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <sstream>
 #include <stdexcept>
+#include <algorithm>
 
 #include "version.hxx"
 
@@ -38,6 +39,17 @@ namespace desres { namespace msys {
     private:
         std::string _msg;
     };
+
+    /* make the given container hold only unique elements in sorted order.
+     * Return the number of non-unique elements (i.e. difference in size
+     * between original and final container). */
+    template <typename T>
+    static Id sort_unique(T& t) {
+        Id oldsize = t.size();
+        std::sort(t.begin(), t.end());
+        t.resize(std::unique(t.begin(), t.end()) - t.begin());
+        return oldsize - t.size();
+    }
 
 }}
 

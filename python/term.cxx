@@ -100,6 +100,7 @@ namespace desres { namespace msys {
             .def("delTermsWithAtom",    &TermTable::delTermsWithAtom)
             .def("findWithAll", &TermTable::findWithAll)
             .def("findWithAny", &TermTable::findWithAny)
+            .def("findWithOnly",&TermTable::findWithOnly)
             .def("findExact",   &TermTable::findExact)
 
             /* coalesce */

@@ -172,10 +172,17 @@ namespace desres { namespace msys {
          * of the given atoms, in any order. */
         IdList findWithAny(IdList const& ids);
 
+        /* Return the ids of terms which contain only the given atoms;
+         * these are the terms which would be included in a clone().
+         *
+         * Internally, this just calls findWithAny(), then fiters the result.
+         */
+        IdList findWithOnly(IdList const& ids);
+
         /* return the ids of the terms containing _exactly_ the given ids,
          * in the given order.
          *
-         * Internally, this just calls findAllIds(), then filters the result.
+         * Internally, this just calls findWithAll(), then filters the result.
          */
         IdList findExact(IdList const& ids);
 
