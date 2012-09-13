@@ -1,3 +1,7 @@
+1.6.4  FIXED: dms-alchemical checks for valid atom maps.
+       FIXED: dms-alchemical avoid writing unnecessary alchemical terms.
+       NEW: TermTable.findWithOnly.
+
 1.6.3  FIXED: SavePDB writes element determined from atomic number.
 
 1.6.2  NEW: Heuristic for guessing bonds.  From Python: System.guessBonds()
