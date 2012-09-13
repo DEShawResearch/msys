@@ -116,42 +116,55 @@ class TreeItem(object):
             return self.parentItem.childItems.index(self)
         return 0
 
-def SystemTreeItem(parent, mol):
-    tree = TreeItem(parent, [mol.name])
-    tree.childItems = [ParticlesTreeItem(tree, mol), TablesTreeItem(tree, mol)]
-    return tree
+class SystemTreeItem(TreeItem):
+    def __init__(self, parent, mol):
+        TreeItem.__init__(self, parent, [mol.name, ''])
+        self.childItems = [
+                ParticlesTreeItem(self, mol), 
+                TablesTreeItem(self, mol),
+                ]
 
-def ParticlesTreeItem(parent, mol):
-    tree = TreeItem(parent, ["Particles"])
-    for c in mol.chains:
-        tree.childItems.append(ChainTreeItem(tree, c))
-    return tree
+class ParticlesTreeItem(TreeItem):
+    def __init__(self, parent, mol):
+        TreeItem.__init__(self, parent, ["Particles", str(mol.natoms)])
+        for c in mol.chains:
+            self.childItems.append(ChainTreeItem(self, c))
 
-def TablesTreeItem(parent, mol):
-    tree = TreeItem(parent, ["Tables"])
-    for table in mol.tables:
-        tree.childItems.append(TableTreeItem(tree, table))
-    return tree
+class TablesTreeItem(TreeItem):
+    def __init__(self, parent, mol):
+        name="Tables"
+        size=str(len(mol.tables))
+        TreeItem.__init__(self, parent, [name,size])
+        for table in mol.tables:
+            self.childItems.append(TableTreeItem(self, table))
 
-def ChainTreeItem(parent, chain):
-    tree = TreeItem(parent, ["Chain '%s'" % chain.name])
-    for r in chain.residues:
-        tree.childItems.append(ResidueTreeItem(tree, r))
-    return tree
+class ChainTreeItem(TreeItem):
+    def __init__(self, parent, chain):
+        name="Chain '%s'" % chain.name
+        size=str(chain.nresidues)
+        TreeItem.__init__(self, parent, [name, size])
+        for r in chain.residues:
+            self.childItems.append(ResidueTreeItem(self, r))
 
-def ResidueTreeItem(parent, residue):
-    tree = TreeItem(parent, ["%4s %d" % (residue.name, residue.resid)])
-    for a in residue.atoms:
-        tree.childItems.append(AtomTreeItem(tree, a))
-    return tree
+class ResidueTreeItem(TreeItem):
+    def __init__(self, parent, residue):
+        name="%4s %d" % (residue.name, residue.resid)
+        size=str(residue.natoms)
+        TreeItem.__init__(self, parent, [name, size])
+        for a in residue.atoms:
+            self.childItems.append(AtomTreeItem(self, a))
 
-def AtomTreeItem(parent, atom):
-    tree = TreeItem(parent, ["%d %s" % (atom.id, atom.name)])
-    return tree
+class AtomTreeItem(TreeItem):
+    def __init__(self, parent, atom):
+        name="%d %s" % (atom.id, atom.name)
+        size=''
+        TreeItem.__init__(self, parent, [name, size])
 
-def TableTreeItem(parent, table):
-    tree = TreeItem(parent, [table.name])
-    return tree
+class TableTreeItem(TreeItem):
+    def __init__(self, parent, table):
+        name=table.name
+        size="%d params, %d terms" % (table.params.nparams, table.nterms)
+        TreeItem.__init__(self, parent, [name,size])
 
 if __name__=="__main__":
     import sys
