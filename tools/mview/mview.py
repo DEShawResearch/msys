@@ -15,9 +15,12 @@ Qt = QtCore.Qt
 import msys
 
 class MsysTreeModel(QtCore.QAbstractItemModel):
-    def __init__(self, mol, parent=None):
+    def __init__(self, parent=None):
         super(MsysTreeModel, self).__init__(parent)
-        self.rootItem = SystemTreeItem(None, mol)
+        self.rootItem = SystemListItem(None)
+
+    def addSystem(self, mol):
+        self.rootItem.addChild(mol)
 
     def columnCount(self, parent=QtCore.QModelIndex()):
         #print("columnCount")
@@ -116,10 +119,16 @@ class TreeItem(object):
     def parent(self):
         return self.parentItem
 
+class SystemListItem(TreeItem):
+    def __init__(self, parent):
+        TreeItem.__init__(self, parent, ["Systems", ""])
+
+    def addChild(self, mol):
+        self.childItems.append(SystemTreeItem(self, mol))
 
 class SystemTreeItem(TreeItem):
     def __init__(self, parent, mol):
-        TreeItem.__init__(self, parent, [mol.name, ''])
+        TreeItem.__init__(self, parent, [mol.name, "%d atoms" % mol.natoms])
         self.childItems = [
                 ParticlesTreeItem(self, mol), 
                 TablesTreeItem(self, mol),
@@ -127,14 +136,14 @@ class SystemTreeItem(TreeItem):
 
 class ParticlesTreeItem(TreeItem):
     def __init__(self, parent, mol):
-        TreeItem.__init__(self, parent, ["Particles", str(mol.natoms)])
+        TreeItem.__init__(self, parent, ["Structure", "%d chains" % mol.nchains])
         for c in mol.chains:
             self.childItems.append(ChainTreeItem(self, c))
 
 class TablesTreeItem(TreeItem):
     def __init__(self, parent, mol):
-        name="Tables"
-        size=str(len(mol.tables))
+        name="Forcefield"
+        size="%d tables" % len(mol.tables)
         TreeItem.__init__(self, parent, [name,size])
         for table in mol.tables:
             self.childItems.append(TableTreeItem(self, table))
@@ -142,7 +151,7 @@ class TablesTreeItem(TreeItem):
 class ChainTreeItem(TreeItem):
     def __init__(self, parent, chain):
         name="Chain '%s'" % chain.name
-        size=str(chain.nresidues)
+        size="%d residues" % chain.nresidues
         TreeItem.__init__(self, parent, [name, size])
         for r in chain.residues:
             self.childItems.append(ResidueTreeItem(self, r))
@@ -150,7 +159,7 @@ class ChainTreeItem(TreeItem):
 class ResidueTreeItem(TreeItem):
     def __init__(self, parent, residue):
         name="%4s %d" % (residue.name, residue.resid)
-        size=str(residue.natoms)
+        size="%d atoms" % residue.natoms
         TreeItem.__init__(self, parent, [name, size])
         self.residue = residue
         self.childItems = None
@@ -248,17 +257,17 @@ class ParamItem(TreeItem):
 if __name__=="__main__":
     import sys
     app = QtGui.QApplication(sys.argv)
+    view = QtGui.QTreeView()
+    model = MsysTreeModel()
     for path in sys.argv[1:]:
         print "Loading", path
         mol=msys.Load(path)
-        view = QtGui.QTreeView()
         print "Processing..."
-        model = MsysTreeModel(mol)
+        model.addSystem(mol)
         print "done"
-        view.setModel(model)
-        view.setWindowTitle("MView")
-        view.show()
-
+    view.setModel(model)
+    view.setWindowTitle("MView")
+    view.show()
     sys.exit(app.exec_())
 
 
