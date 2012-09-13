@@ -676,14 +676,20 @@ dms-alchemical
 The *atom.map* file should consist of lines with two 1-based indices,
 the first referring to atoms in the A state and the second to atoms in
 the B state.  Either the A or B index may be negative, indicating that
-the corresponding atom has no analog in the other state.  The mapping
-must reference the first Na atoms in the A state and Nb atoms in the B
-state, where Na need not equal Nb.  
+the corresponding atom has no analog in the other state.  The order of
+the lines in the file is insignificant.
 
-The generated alchemical system C will have N alchemical atoms, where N
-is the number of lines in *atom.map*.   Atoms and force terms in the A state
-not referenced by the atom map will be appended to the structure; unreferenced
-atoms and force terms in the B state will be ignored.
+It is not necessary that the atom map reference every atom in A and B
+states; however, any term in a given state must be either completely
+mapped or completely unmapped.  In practice this usually means that
+the atom map should contain complete sets of connected atoms.
+
+.. cmdoption:: --keep-alchemical-noop
+
+   Generate all alchemical terms described by the atom map, even those 
+   whose A and B states are identical.  This option is present only for
+   comparison with previous versions of dms-alchemical.
+   
 
 ----------
 Validation
