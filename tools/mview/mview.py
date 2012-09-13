@@ -252,12 +252,8 @@ class ParamItem(TreeItem):
        size=' '.join(size)
        TreeItem.__init__(self, parent, [name,size])
 
-        
-
 if __name__=="__main__":
     import sys
-    app = QtGui.QApplication(sys.argv)
-    view = QtGui.QTreeView()
     model = MsysTreeModel()
     for path in sys.argv[1:]:
         print "Loading", path
@@ -265,9 +261,16 @@ if __name__=="__main__":
         print "Processing..."
         model.addSystem(mol)
         print "done"
+
+    app = QtGui.QApplication(sys.argv)
+    view = QtGui.QTreeView()
+    view.setMinimumSize(500,500)
     view.setModel(model)
-    view.setWindowTitle("MView")
-    view.show()
+    view.resizeColumnToContents(0)
+    win=QtGui.QMainWindow()
+    win.setWindowTitle("MView")
+    win.setCentralWidget(view)
+    win.show()
     sys.exit(app.exec_())
 
 
