@@ -220,7 +220,30 @@ class ParamsItem(TreeItem):
         size=params.nparams
         TreeItem.__init__(self, parent, [name,size])
         self.params = params
+        self.childItems = None
 
+    def build(self):
+        ''' lazy building of params '''
+        if self.childItems is None:
+            self.childItems = [ParamItem(self,p) for p in self.params.params]
+
+    def child(self,row):
+        self.build()
+        return self.childItems[row]
+
+    def childCount(self):
+        return self.params.nparams
+
+class ParamItem(TreeItem):
+    def __init__(self, parent, param): 
+       name=param.id
+       size=[]
+       for p in param.table.props:
+           size.append('%s=%s' % (p,param[p]))
+       size=' '.join(size)
+       TreeItem.__init__(self, parent, [name,size])
+
+        
 
 if __name__=="__main__":
     import sys
