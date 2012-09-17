@@ -1,3 +1,5 @@
+1.6.5  NEW:   stretch_quartic schema.
+
 1.6.4  FIXED: dms-alchemical checks for valid atom maps.
        FIXED: dms-alchemical avoid writing unnecessary alchemical terms.
        NEW: TermTable.findWithOnly.
