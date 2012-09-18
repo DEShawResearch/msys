@@ -18,18 +18,17 @@ if __name__ == "__main__":
     
     parser = OptionParser("Usage: dms_find_knot [options] system.dms.\n\nGiven a dms file, find any instances where a bond is 'threaded' through a ring.")
 
-    parser.add_option("--max_cycle", type="int", help="Maximum cycle size to check (if this is set too large, disulfide-bond-induced rings will be checked).", default=10)
-    parser.add_option("--include_h2o", action="store_true", help="Look for knots involving water molecules", default=False)
+    parser.add_option("-s", "--selection", help="Limit knot search to selection")
     parser.add_option("--no_boxing", action="store_true", help="Turn off the 'boxing' optimization, which can potentially miss some knots.", default=False)
 
     (o,a) = parser.parse_args(sys.argv)
-    assert len(a) == 2, "Usage: $prog [options] system.dms"
+    if len(a)!=2:
+        parser.error("Incorrect number of arguments")
  
     mol=msys.Load(a[1])
     klist = knot.FindKnots(
             mol,
-            max_cycle_size=o.max_cycle, 
-            include_h2o=o.include_h2o, 
+            o.selection,
             use_boxing=(not o.no_boxing),
             verbose=True)
 

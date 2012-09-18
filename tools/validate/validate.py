@@ -11,7 +11,7 @@ class TestStrict(UT.TestCase):
 
     def testKnots(self):
         ''' the system must not contain knots '''
-        knots = knot.FindKnots(self.mol, max_cycle_size=10)
+        knots = knot.FindKnots(self.mol)
         self.assertTrue(len(knots)==0, "The system has %d bonds passing through rings: %s" % (len(knots), knots))
 
     def testHasConstraints(self):

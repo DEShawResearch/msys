@@ -27,6 +27,7 @@ The algorithm works as follows:
 import numpy
 import sys
 import math
+import msys
 
 sys.setrecursionlimit(10000)
 
@@ -88,102 +89,22 @@ def ut_intersection():
 #######################################################################
 #######################################################################
 
-"""
-find_all_cycles contributed by Mathias Laurin <Mathias Laurin AT gmail com>
-"""
+def FindKnots(mol, selection=None, use_boxing=True, verbose=False):
 
-def find_cycle_to_ancestor(spanning_tree, node, ancestor):
-    """
-    Find a cycle containing both node and ancestor.
-    """
-    path = []
-    while (node != ancestor):
-        if node is None:
-            return []
-        path.append(node)
-        node = spanning_tree[node]
-    path.append(node)
-    path.reverse()
-    return path
-
-def find_all_cycles(graph):
-    """
-    Find all cycles in the given graph.
-
-    This function will return a list of lists of nodes, which form cycles in the
-    graph or an empty list if no cycle exists.
-    """
-
-    def dfs(node):
-        """
-        Depth-first search subfunction.
-        """
-        visited.add(node)
-        # Explore recursively the connected component
-        for each in graph[node]:
-            if each not in visited:
-                spanning_tree[each] = node
-                dfs(each)
-            else:
-                if (spanning_tree[node] != each):
-                    cycle = find_cycle_to_ancestor(spanning_tree, node, each)
-                    if cycle:
-                        cycles.append(cycle)
-
-    visited = set()         # List for marking visited and non-visited nodes
-    spanning_tree = {}      # Spanning tree
-    cycles = []
-
-    # Algorithm outer-loop
-    for each in graph:
-        # Select a non-visited node
-        if each not in visited:
-            spanning_tree[each] = None
-            # Explore node's connected component
-            dfs(each)
-
-    return cycles
-
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-
-def FindKnots(mol, max_cycle_size=None, use_boxing=True, include_h2o=False,
-        verbose=False):
-
-    bonds = {}
-    bond_list = []
-    
-    h2o_particle_list = set()
-    if not include_h2o:
-        h2o_particle_list.update(a.id for a in mol.select('water'))
-    
-    for b in mol.bonds:
-        a0, a1 = b.atoms
-        p0, p1 = a0.id, a1.id
-        if p0 in h2o_particle_list: continue
-        if p0 not in bonds: bonds[p0] = []
-        if p1 not in bonds: bonds[p1] = []
-        bonds[p0] += [p1]
-        bonds[p1] += [p0]
-        bond_list += [(p0,p1)]
-    cycles = find_all_cycles(bonds)
-    cycles = [tuple(cycle) for cycle in cycles]
+    atoms = mol.atoms if selection is None else mol.select(selection)
+    cycles = msys.GetSSSR(atoms)
     if verbose: print "Found %d cycles" % len(cycles)
-    if max_cycle_size:
-        cycles = [cycle for cycle in cycles if len(cycle) <= max_cycle_size]
-        if verbose:
-            print "Reduced to %d cycles of length <= %d" % (len(cycles), max_cycle_size)
+    if not cycles: return []
+    cycles = [tuple(a.id for a in c) for c in cycles]
 
-    
+    bonds = set()
+    for a in atoms:
+        for b in a.bonds:
+            bonds.add(tuple(sorted((b.first.id, b.second.id))))
+
     # fetch positions
     pos = mol.getPositions()
 
-    # l = (c.execute("select x from global_cell where id=1").fetchone()[0],
-    #      c.execute("select y from global_cell where id=2").fetchone()[0],
-    #      c.execute("select z from global_cell where id=3").fetchone()[0])
-    # print l
     def insert(b,bi,boxes):
         atom_pos = pos[b[bi]]
         #idx = [math.floor(atom_pos[i] / l[i] * 2) for i in range(3)]
@@ -192,13 +113,12 @@ def FindKnots(mol, max_cycle_size=None, use_boxing=True, include_h2o=False,
         # print b,bi,atom_pos,"in",idx
         boxes[full_idx].add(b)
 
-    # WARNING: there are (literally) 'corner cases' that get missed by this boxing strategy
-    bond_boxes = []
-    for i in range(8): bond_boxes += [set()]
-    cycle_boxes = []
-    for i in range(8): cycle_boxes += [set()]
+    # WARNING: there are (literally) 'corner cases' that get missed by 
+    # this boxing strategy.
+    bond_boxes = [set() for i in range(8)]
+    cycle_boxes = [set() for i in range(8)]
     if use_boxing:
-        for b in bond_list:
+        for b in bonds:
             insert(b,0,bond_boxes)
             insert(b,1,bond_boxes)
         cycle_boxes = []
@@ -207,11 +127,11 @@ def FindKnots(mol, max_cycle_size=None, use_boxing=True, include_h2o=False,
             for i in range(len(c)):
                 insert(tuple(c),i, cycle_boxes)
     else:
-        bond_boxes[0]  = set(bond_list)
+        bond_boxes[0]  = set(bonds)
         cycle_boxes[0] = set(cycles)
 
     if verbose:
-        print "Total bonds", len(bond_list), "; bond boxes", [len(x) for x in bond_boxes]
+        print "Total bonds", len(bonds), "; bond boxes", [len(x) for x in bond_boxes]
         print "Total cycles", len(cycles), "; cycle boxes", [len(x) for x in cycle_boxes]
 
     results = []
