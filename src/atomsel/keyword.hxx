@@ -23,6 +23,9 @@ namespace desres { namespace msys { namespace atomsel {
     typedef std::string Literal;
     typedef std::pair<Literal,Literal> Range;
 
+    Int parse_int(std::string const& s);
+    Dbl parse_dbl(std::string const& s);
+
     struct Keyword {
         const std::string name;
         const KeywordType type;

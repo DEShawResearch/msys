@@ -1,8 +1,37 @@
 #include "keyword.hxx"
 #include <cstdlib>
 #include <stdexcept>
+#include <errno.h>
+#include <boost/static_assert.hpp>
 
 using namespace desres::msys::atomsel;
+
+Int desres::msys::atomsel::parse_int(std::string const& s) {
+    static const int base=10;
+    char* end;
+    errno=0;
+    Int result = strtoll(s.c_str(), &end, base);
+    if (errno==ERANGE) {
+        MSYS_FAIL("Integer value " << s << " would overflow");
+    }
+    if (s.empty() || *end!='\0') {
+        MSYS_FAIL("Could not convert all of '" << s << "' to integer");
+    }
+    return result;
+}
+
+Dbl desres::msys::atomsel::parse_dbl(std::string const& s) {
+    char* end;
+    errno=0;
+    Dbl result = strtod(s.c_str(), &end);
+    if (errno==ERANGE) {
+        MSYS_FAIL("Float value " << s << " would overflow");
+    }
+    if (s.empty() || *end!='\0') {
+        MSYS_FAIL("Could not convert all of '" << s << "' to float");
+    }
+    return result;
+}
 
 void Keyword::iget( const Selection& s, std::vector<Int>& v ) const {
   int i,n=s.size();
@@ -118,12 +147,11 @@ void Keyword::select( Selection& s,
         std::set<std::pair<Int,Int> > ran;
         for (std::set<Literal>::const_iterator i=literals.begin();
             i!=literals.end(); i++) {
-          lit.insert(atoi(i->c_str()));
+          lit.insert(parse_int(*i));
         }
         for (std::set<Range>::const_iterator i=ranges.begin();
             i!=ranges.end(); i++) {
-          ran.insert(std::make_pair(atoi(i->first.c_str()),
-                atoi(i->second.c_str()) ));
+          ran.insert(std::make_pair(parse_int(i->first),parse_int(i->second)));
         }
         compare_literals( v, lit, s2 );
         compare_ranges(   v, ran, s2 );
@@ -140,12 +168,11 @@ void Keyword::select( Selection& s,
         std::set<std::pair<Dbl,Dbl> > ran;
         for (std::set<Literal>::const_iterator i=literals.begin();
             i!=literals.end(); i++) {
-          lit.insert(atof(i->c_str()));
+          lit.insert(parse_dbl(*i));
         }
         for (std::set<Range>::const_iterator i=ranges.begin();
             i!=ranges.end(); i++) {
-          ran.insert(std::make_pair(atof(i->first.c_str()),
-                atof(i->second.c_str()) ));
+          ran.insert(std::make_pair(parse_dbl(i->first),parse_dbl(i->second)));
         }
         compare_literals( v, lit, s2 );
         compare_ranges(   v, ran, s2 );

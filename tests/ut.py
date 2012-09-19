@@ -14,6 +14,17 @@ def vsize():
 
 class TestMain(unittest.TestCase):
 
+    def testBadAtomsel(self):
+        mol=msys.CreateSystem()
+        mol.addAtom()
+        for s in 'residue X', 'residue 3.0', 'residue 3.5', 'mass a':
+            with self.assertRaises(RuntimeError): mol.select(s)
+        with self.assertRaises(RuntimeError):
+            mol.select('residue 999999999999999999999999999')
+        #with self.assertRaises(RuntimeError):
+            #mol.select('residue -99999999')
+
+
     def testSSSR(self):
         sys = msys.LoadDMS('/d/en/gregerse-0/p4/sw/forcefields/viparr4/cubane.dms', True)
         rings = msys.GetSSSR(sys.atoms, False)

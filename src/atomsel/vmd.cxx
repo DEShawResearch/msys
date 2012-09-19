@@ -54,13 +54,9 @@ PredicatePtr desres::msys::atomsel::vmd::parse(
   VmdParser_start_return ast=psr->start(psr);
 
   if (psr->pParser->rec->state->errorCount > 0) {
-    int pos=psr->pParser->rec->state->exception->charPositionInLine;
-    std::stringstream ss;
-    ss << "VmdGrammar: parsing failed at offset " 
-        << pos 
-        << "around '" << sel.substr(pos, std::string::npos).c_str() << "'"
-        ;
-    throw std::runtime_error(ss.str());
+      int pos=psr->pParser->rec->state->exception->charPositionInLine;
+      MSYS_FAIL("Parsing failed at offset " << pos << " around '" << 
+              sel.substr(pos, std::string::npos).c_str() << "'");
   }
 
   PredicatePtr pred = ::parse(ast.tree, sys, prev);
