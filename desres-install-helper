@@ -22,7 +22,7 @@ PCRE=$(treetop pcre)
 ANTLR=$(treetop antlr)
 JSON=$(treetop fastjson)
 MOLFILE=$(treetop molfile)
-PERIODICFIX=periodicfix/2.3.16
+PERIODICFIX=periodicfix/2.4.1
 NUMPY=$(treetop numpy)
 LPSOLVE=$(treetop lp_solve)
 
@@ -45,7 +45,7 @@ loadmodules() {
         $PCRE/lib-shared \
         $ANTLR/lib \
         $JSON/lib \
-        $PERIODICFIX/include \
+        $PERIODICFIX/lib \
         $MOLFILE/lib \
         $LPSOLVE/lib \
         $SPHINX/bin 
