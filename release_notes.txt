@@ -1,3 +1,8 @@
+1.6.6  NEW: 'sidechain' atom selection.
+       FIXED: bad int and float literals in atom selections are caught.
+       FIXED: FindKnot uses accurate ring finder from GetSSSR.
+       REMOVED: stretch_quartic schema.
+
 1.6.5  NEW:   stretch_quartic schema.
 
 1.6.4  FIXED: dms-alchemical checks for valid atom maps.
