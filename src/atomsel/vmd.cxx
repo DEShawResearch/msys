@@ -141,6 +141,7 @@ namespace {
       !strcmp(id,"water") ? keyword_water(ent) :
       !strcmp(id,"hydrogen") ? keyword_hydrogen(ent) :
       !strcmp(id,"backbone") ? keyword_backbone(ent) :
+      !strcmp(id,"sidechain") ? keyword_sidechain(ent) :
       !strcmp(id,"protein") ? keyword_protein(ent) :
       //!strcmp(id,"alchemical") ? keyword_alchemical(ent) :
       !strcmp(id,"nucleic") ? keyword_nucleic(ent) :

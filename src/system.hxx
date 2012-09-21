@@ -80,7 +80,8 @@ namespace desres { namespace msys {
     enum AtomType {
         AtomOther   = 0,
         AtomProBack = 1,
-        AtomNucBack = 2
+        AtomNucBack = 2,
+        AtomProSide = 3
     };
 
     struct atom_t {

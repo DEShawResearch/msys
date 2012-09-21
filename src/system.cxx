@@ -2,6 +2,7 @@
 #include "term_table.hxx"
 #include <sstream>
 #include <stack>
+#include <queue>
 #include <stdexcept>
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp> /* for boost::trim */
@@ -758,6 +759,38 @@ namespace {
         return false;
     }
 
+    void find_sidechain(System* mol, Id res, Id ca) {
+        /* pick a c-beta atom, or settle for a hydrogen */
+        Id cb=BadId;
+        BOOST_FOREACH(Id nbr, mol->bondedAtoms(ca)) {
+            if (mol->atom(nbr).type==AtomProBack) continue;
+            if (bad(cb)) {
+                cb=nbr;
+            } else {
+                /* already have a cb candidate.  Pick the better one. */
+                if (mol->atom(nbr).atomic_number==1 || 
+                    toupper(mol->atom(nbr).name[0]=='H')) continue;
+                cb=nbr;
+            }
+        }
+        if (bad(cb)) return;
+        /* starting from cb, recursively add all atoms in the residue
+         * which are bonded to the cb but are not backbone. */
+        std::queue<Id> q;
+        q.push(cb);
+        while (!q.empty()) {
+            Id atm = q.front();
+            mol->atom(atm).type = AtomProSide;
+            BOOST_FOREACH(Id nbr, mol->bondedAtoms(atm)) {
+                atom_t const& nbratm = mol->atom(nbr);
+                if (nbratm.type==AtomOther && nbratm.residue==res) {
+                    q.push(nbr);
+                }
+            }
+            q.pop();
+        }
+    }
+
     void analyze_residue(System* sys, Id res) {
 
         static const char * protypes[] = { "CA", "C", "O", "N" };
@@ -807,6 +840,7 @@ namespace {
         if (atoms.size()<4) return;
 
         int npro=0, nnuc=0;
+        Id ca_atm = BadId;
         for (Id i=0; i<atoms.size(); i++) {
             Id id = atoms[i];
             const atom_t& atm = sys->atom(id);
@@ -816,6 +850,7 @@ namespace {
             AtomType atype=AtomOther;
             if (iter!=types.end()) {
                 atype=iter->second;
+                if (atype==AtomProBack && aname=="CA") ca_atm=id;
             } else {
                 /* try terminal names */
                 iter=terms.find(aname);
@@ -841,6 +876,9 @@ namespace {
         else if (nnuc>=4) rtype=ResidueNucleic;
         else for (Id i=0; i<atoms.size(); i++) {
             sys->atom(atoms[i]).type = AtomOther;
+        }
+        if (rtype==ResidueProtein) {
+            find_sidechain(sys, res, ca_atm);
         }
         sys->residue(res).type=rtype;
     }

@@ -10,6 +10,7 @@ using desres::msys::ResidueProtein;
 using desres::msys::ResidueNucleic;
 using desres::msys::AtomProBack;
 using desres::msys::AtomNucBack;
+using desres::msys::AtomProSide;
 
 namespace desres { namespace msys { namespace atomsel {
 
@@ -104,6 +105,7 @@ INT_KEY(resid,sys->residue(sys->atom(i).residue).resid)
 INT_KEY(residue,sys->atom(i).residue)
 INT_KEY(index,i)
 INT_KEY(backbone,sys->atom(i).type==AtomProBack || sys->atom(i).type==AtomNucBack)
+INT_KEY(sidechain,sys->atom(i).type==AtomProSide)
 INT_KEY(water,sys->residue(sys->atom(i).residue).type==ResidueWater)
 INT_KEY(protein,sys->residue(sys->atom(i).residue).type==ResidueProtein)
 INT_KEY(nucleic,sys->residue(sys->atom(i).residue).type==ResidueNucleic)

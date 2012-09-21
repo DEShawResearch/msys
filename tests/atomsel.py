@@ -60,6 +60,7 @@ compare_atomsel(coord_ent,"index 10 20 30",perf=True)
 compare_atomsel(coord_ent,"resid 1 to 20 22 24 to 27 35",perf=True)
 compare_atomsel(coord_ent,"protein",perf=True)
 compare_atomsel(coord_ent,"backbone",perf=True)
+compare_atomsel(coord_ent,"sidechain",perf=True)
 #compare_atomsel(coord_ent,"hydrogen")
 compare_atomsel(coord_ent,"atomicnumber 1",perf=True)
 

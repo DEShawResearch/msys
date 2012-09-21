@@ -42,6 +42,7 @@ KeywordPtr keyword_vy( SystemPtr ent );
 KeywordPtr keyword_vz( SystemPtr ent );
 KeywordPtr keyword_water( SystemPtr sys );
 KeywordPtr keyword_backbone( SystemPtr sys );
+KeywordPtr keyword_sidechain( SystemPtr sys );
 KeywordPtr keyword_protein( SystemPtr sys );
 KeywordPtr keyword_nucleic( SystemPtr sys );
 
