@@ -840,11 +840,14 @@ namespace {
         if (atoms.size()<4) return;
 
         int npro=0, nnuc=0;
+        std::set<std::string> names;
+
         Id ca_atm = BadId;
         for (Id i=0; i<atoms.size(); i++) {
             Id id = atoms[i];
             const atom_t& atm = sys->atom(id);
             const std::string& aname = atm.name;
+            if (!names.insert(aname).second) continue;
             /* check for nucleic or protein backbone */
             NameMap::const_iterator iter=types.find(aname);
             AtomType atype=AtomOther;
@@ -872,7 +875,7 @@ namespace {
             if (atype==AtomNucBack) ++nnuc;
         }
         ResidueType rtype=ResidueOther;
-        if      (npro>=4) rtype=ResidueProtein;
+        if      (npro>=4 && ca_atm!=BadId) rtype=ResidueProtein;
         else if (nnuc>=4) rtype=ResidueNucleic;
         else for (Id i=0; i<atoms.size(); i++) {
             sys->atom(atoms[i]).type = AtomOther;
