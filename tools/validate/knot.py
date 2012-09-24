@@ -89,13 +89,21 @@ def ut_intersection():
 #######################################################################
 #######################################################################
 
-def FindKnots(mol, selection=None, use_boxing=True, verbose=False):
+def FindKnots(mol, max_cycle_size=None, selection=None, use_boxing=True, 
+        verbose=False):
 
     atoms = mol.atoms if selection is None else mol.select(selection)
     cycles = msys.GetSSSR(atoms)
     if verbose: print "Found %d cycles" % len(cycles)
     if not cycles: return []
+    if verbose: print "Largest cycle has size %d" % max(map(len,cycles))
     cycles = [tuple(a.id for a in c) for c in cycles]
+    if max_cycle_size is not None:
+        max_cycle_size = int(max_cycle_size)
+        cycles = [c for c in cycles if len(c) <= max_cycle_size]
+        if verbose:
+            print "Reduced to %d cycles of length <= %d" % (
+                    len(cycles), max_cycle_size)
 
     bonds = set()
     for a in atoms:

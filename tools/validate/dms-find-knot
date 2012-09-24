@@ -18,6 +18,8 @@ if __name__ == "__main__":
     
     parser = OptionParser("Usage: dms_find_knot [options] system.dms.\n\nGiven a dms file, find any instances where a bond is 'threaded' through a ring.")
 
+    parser.add_option("--max-cycle", help="Maximum cycle size to check (if this is set too large, disulfide-bond-induced rings will be checked).")
+
     parser.add_option("-s", "--selection", help="Limit knot search to selection")
     parser.add_option("--no_boxing", action="store_true", help="Turn off the 'boxing' optimization, which can potentially miss some knots.", default=False)
 
@@ -28,7 +30,8 @@ if __name__ == "__main__":
     mol=msys.Load(a[1])
     klist = knot.FindKnots(
             mol,
-            o.selection,
+            max_cycle_size=o.max_cycle,
+            selection=o.selection,
             use_boxing=(not o.no_boxing),
             verbose=True)
 
