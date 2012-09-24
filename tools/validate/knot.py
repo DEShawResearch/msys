@@ -105,10 +105,14 @@ def FindKnots(mol, max_cycle_size=None, selection=None, use_boxing=True,
             print "Reduced to %d cycles of length <= %d" % (
                     len(cycles), max_cycle_size)
 
-    bonds = set()
-    for a in atoms:
-        for b in a.bonds:
-            bonds.add(tuple(sorted((b.first.id, b.second.id))))
+    ids=set(a.id for a in atoms)
+    bonds=list()
+    for b in mol.bonds:
+        ai, aj = b.atoms
+        i=ai.id
+        j=aj.id
+        if i in ids and j in ids:
+            bonds.append((i,j))
 
     # fetch positions
     pos = mol.getPositions()
