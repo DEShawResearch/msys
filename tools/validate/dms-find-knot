@@ -21,7 +21,6 @@ if __name__ == "__main__":
     parser.add_option("--max-cycle", help="Maximum cycle size to check (if this is set too large, disulfide-bond-induced rings will be checked).")
 
     parser.add_option("-s", "--selection", help="Limit knot search to selection")
-    parser.add_option("--no_boxing", action="store_true", help="Turn off the 'boxing' optimization, which can potentially miss some knots.", default=False)
 
     (o,a) = parser.parse_args(sys.argv)
     if len(a)!=2:
@@ -32,7 +31,6 @@ if __name__ == "__main__":
             mol,
             max_cycle_size=o.max_cycle,
             selection=o.selection,
-            use_boxing=(not o.no_boxing),
             verbose=True)
 
     sys.exit(len(klist)!=0)

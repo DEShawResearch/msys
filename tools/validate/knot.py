@@ -89,10 +89,10 @@ def ut_intersection():
 #######################################################################
 #######################################################################
 
-def FindKnots(mol, max_cycle_size=None, selection=None, use_boxing=True, 
-        verbose=False):
+def FindKnots(mol, max_cycle_size=None, selection='all', verbose=False):
 
-    atoms = mol.atoms if selection is None else mol.select(selection)
+    if selection is None: selection = 'all'
+    atoms = mol.select(selection) 
     cycles = msys.GetSSSR(atoms)
     if verbose: print "Found %d cycles" % len(cycles)
     if not cycles: return []
@@ -105,76 +105,33 @@ def FindKnots(mol, max_cycle_size=None, selection=None, use_boxing=True,
             print "Reduced to %d cycles of length <= %d" % (
                     len(cycles), max_cycle_size)
 
-    ids=set(a.id for a in atoms)
-    bonds=list()
-    for b in mol.bonds:
-        ai, aj = b.atoms
-        i=ai.id
-        j=aj.id
-        if i in ids and j in ids:
-            bonds.append((i,j))
-
     # fetch positions
     pos = mol.getPositions()
-
-    def insert(b,bi,boxes):
-        atom_pos = pos[b[bi]]
-        #idx = [math.floor(atom_pos[i] / l[i] * 2) for i in range(3)]
-        idx = [1 if atom_pos[i] > 0 else 0  for i in range(3)]
-        full_idx = 4*idx[0]+2*idx[1]+idx[2]
-        # print b,bi,atom_pos,"in",idx
-        boxes[full_idx].add(b)
-
-    # WARNING: there are (literally) 'corner cases' that get missed by 
-    # this boxing strategy.
-    bond_boxes = [set() for i in range(8)]
-    cycle_boxes = [set() for i in range(8)]
-    if use_boxing:
-        for b in bonds:
-            insert(b,0,bond_boxes)
-            insert(b,1,bond_boxes)
-        cycle_boxes = []
-        for i in range(8): cycle_boxes += [set()]
-        for c in cycles:
-            for i in range(len(c)):
-                insert(tuple(c),i, cycle_boxes)
-    else:
-        bond_boxes[0]  = set(bonds)
-        cycle_boxes[0] = set(cycles)
-
-    if verbose:
-        print "Total bonds", len(bonds), "; bond boxes", [len(x) for x in bond_boxes]
-        print "Total cycles", len(cycles), "; cycle boxes", [len(x) for x in cycle_boxes]
+    ids = set(a.id for a in atoms)
+    bonds=[]
+    for b in mol.bonds:
+        ai, aj = b.first.id, b.second.id
+        if ai in ids and aj in ids:
+            bonds.append((ai,aj))
 
     results = []
     num_int = 0
-    for box in range(8):
-        if verbose:
-            print "Checking box %d of %d" % (box+1, 8 if use_boxing else 1)
-        for cycle in cycle_boxes[box]:
-            cycle_set = set(cycle)
-            #print "checking cycle", cycle
-            for bond in bond_boxes[box]:
-                bond_rep  = pos[bond[0]]
-                cycle_rep = pos[cycle[0]]
-                if sum((bond_rep-cycle_rep)**2) > 100: continue # skip if reps are more than 10A apart
-                if bond[0] in cycle_set or bond[1] in cycle_set: continue
 
-                cp = [pos[atom] for atom in cycle]
-                bp = [pos[atom] for atom in bond]
-                for cycle_idx in range(1,len(cycle)-1):
-                    #print bond,"vs",(cycle[0],cycle[cycle_idx],cycle[cycle_idx+1])
-                    intersect = check_line_intersect_tri(cp[0          ],
-                                                         cp[cycle_idx  ],
-                                                         cp[cycle_idx+1],
-                                                         bp[0],
-                                                         bp[1]
-                                        )
-                    if intersect:
-                        num_int += 1
-                        if verbose: print "==> intersection:",cycle,bond
-                        results.append((cycle, bond))
-                #print c1,c2
+    for icycle, cycle in enumerate(cycles):
+        cycle_sel='index ' + ' '.join(map(str,cycle))
+        sel = '(%s) and exwithin 10 of %s' % (selection, cycle_sel)
+        ids = set(mol.selectIds(sel))
+        cp = [pos[i] for i in cycle]
+        cycle_inds = range(1,len(cycle)-1)
+        for bond in bonds:
+            ai, aj = bond
+            if ai not in ids: continue
+            for idx in cycle_inds:
+                if check_line_intersect_tri(
+                        cp[0    ], cp[idx  ], cp[idx+1], pos[ai], pos[aj]):
+                    num_int += 1
+                    if verbose: print "==> intersection:",cycle,bond
+                    results.append((cycle, bond))
     if verbose: print "Total intersections: %d" % num_int
     return results
 
