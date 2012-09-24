@@ -1,3 +1,5 @@
+1.6.8  FIXED: Bug in sidechain detection for residues with non-unique names.
+
 1.6.7  FIXED: FindKnot uses within selections instead of boxing.
        FIXED: Restored the max-cycle option to FindKnot.
 
