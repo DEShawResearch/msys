@@ -5,10 +5,12 @@
 #}
 
 '''
-dms-select file.dms [-s | --selection seltext] [-o | --output dstfile]
-                                               [-a | --append dstfile]
+dms-select input_file [-s | --selection seltext] [-o | --output dstfile]
+                                                 [-a | --append dstfile]
 
-Write or append a selection from file.dms to an output dms file.
+Write or append a selection from input_file to an output dms file.
+
+The input file can be any file type supported by msys.Load.
 '''
 
 import sys
@@ -30,7 +32,7 @@ def main():
     if opts.output and opts.append:
         raise ValueError, "Cannot specify both --append and --output"
 
-    mol=msys.LoadDMS(args[0])
+    mol=msys.Load(args[0])
     if opts.selection:
         mol=mol.clone(opts.selection)
 
