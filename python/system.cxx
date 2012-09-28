@@ -408,6 +408,20 @@ namespace {
         }
         return L;
     }
+
+    PyObject* list_atoms(SystemPtr mol) {
+        Id i,n = mol->atomCount(), m = mol->maxAtomId();
+        PyObject *L = PyList_New(n);
+        if (!L) throw_error_already_set();
+        if (n==m) for (i=0; i<m; i++) {
+            PyList_SET_ITEM(L,i,PyInt_FromLong(i));
+        } else    for (i=0, n=0; i<m; i++) {
+            if (!mol->hasAtom(i)) continue;
+            PyList_SET_ITEM(L,n++, PyInt_FromLong(i));
+        }
+        return L;
+    }
+
     list import_mol2_many(std::string const& path) {
         std::vector<SystemPtr> mols = ImportMol2Many(path);
         list L;
@@ -518,9 +532,11 @@ namespace desres { namespace msys {
 
             /* list of element ids */
             .def("atoms",       &System::atoms)
+            .def("atomsAsList", list_atoms)
             .def("bonds",       &System::bonds)
             .def("residues",    &System::residues)
             .def("chains",      &System::chains)
+
 
             /* count of elements */
             .def("atomCount",   &System::atomCount)

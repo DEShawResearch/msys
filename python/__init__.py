@@ -760,8 +760,8 @@ class System(object):
     @property
     def atoms(self):
         ''' return list of all atoms in the system '''
-        ptr=self._ptr
-        return [Atom(ptr, i) for i in ptr.atoms()]
+        atms=self._update_atoms()
+        return [atms[i] for i in self._ptr.atomsAsList()]
 
     @property
     def bonds(self):
@@ -984,15 +984,19 @@ class System(object):
         '''
         return TermTable(self._ptr.addNonbondedFromSchema(funct,rule))
 
-    def select(self, seltext):
-        ''' return a list of Atoms satisfying the given VMD atom selection. '''
+    def _update_atoms(self):
         p=self._ptr
-        ids=p.selectAsList(seltext)
         atms=self._atoms
         n=len(atms)
         A=Atom
         for i in xrange(n,p.maxAtomId()):
             atms.append(A(p,i))
+        return atms
+
+    def select(self, seltext):
+        ''' return a list of Atoms satisfying the given VMD atom selection. '''
+        ids=self._ptr.selectAsList(seltext)
+        atms=self._update_atoms()
         return [atms[i] for i in ids]
 
     def selectIds(self, seltext):
