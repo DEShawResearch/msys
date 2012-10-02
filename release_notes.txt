@@ -1,3 +1,7 @@
+1.6.9  FIXED: System.atoms is now (amortized) constant time.
+       NEW: dms-select now reads any msys-supported file type, not just dms.
+       NEW: mae2dms supports fbhw terms.
+
 1.6.8  FIXED: Bug in sidechain detection for residues with non-unique names.
 
 1.6.7  FIXED: FindKnot uses within selections instead of boxing.
