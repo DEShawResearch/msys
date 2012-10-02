@@ -3,6 +3,7 @@
 namespace {
 
     static const char* angle_cols[] = {"ffio_sigma", "ffio_theta0", "ffio_fc"};
+    static const char* improper_cols[] = {"ffio_sigma", "ffio_phi0", "ffio_fc"};
     static const char* posre_cols[] = {"ffio_fc", "ffio_sigma"};
 
     struct Angle : public Ffio {
@@ -28,6 +29,33 @@ namespace {
             }
         }
     };
+
+    struct Improper : public Ffio {
+
+        void apply( SystemPtr h,
+                    const Json& blk,
+                    const SiteMap& sitemap,
+                    const VdwMap& ) const {
+
+            TermTablePtr table = AddTable(h,"improper_fbhw");
+            ParamMap map(table->params(), blk, 3, improper_cols);
+
+            const Json& ai = blk.get("ffio_ai");
+            const Json& aj = blk.get("ffio_aj");
+            const Json& ak = blk.get("ffio_ak");
+            const Json& al = blk.get("ffio_al");
+            int i,n = blk.get("__size__").as_int();
+            IdList ids(4);
+            for (i=0; i<n; i++) {
+                ids[0]=ai.elem(i).as_int()-1;
+                ids[1]=aj.elem(i).as_int()-1;
+                ids[2]=ak.elem(i).as_int()-1;
+                ids[3]=al.elem(i).as_int()-1;
+                table->addTerm(ids, map.add(i));
+            }
+        }
+    };
+
 
     struct Posre : public Ffio {
 
@@ -57,7 +85,8 @@ namespace {
         }
     };
 
-    RegisterFfio<Posre> _1("ffio_posre_fbhw");
-    RegisterFfio<Angle> _2("ffio_angle_fbhw");
+    RegisterFfio<Posre>     _1("ffio_posre_fbhw");
+    RegisterFfio<Angle>     _2("ffio_angle_fbhw");
+    RegisterFfio<Improper>  _3("ffio_improper_fbhw");
 }
 

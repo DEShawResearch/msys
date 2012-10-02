@@ -1324,8 +1324,16 @@ f_m_ct {
    1 1 2 3 10.0 120.0 70.0
    :::
   } 
-  ffio_improper_fbhw[0] { 
+  ffio_improper_fbhw[1] { 
+   i_ffio_ai
+   i_ffio_aj
+   i_ffio_ak
+   i_ffio_al
+   r_ffio_sigma
+   r_ffio_phi0
+   r_ffio_fc
    :::
+   1 1 2 3 4 10.0 180.0 70.0
    :::
   } 
   ffio_stretch_fbhw[0] { 
