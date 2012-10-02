@@ -6,6 +6,70 @@ namespace {
     static const char* improper_cols[] = {"ffio_sigma", "ffio_phi0", "ffio_fc"};
     static const char* posre_cols[] = {"ffio_fc", "ffio_sigma"};
 
+    static IdList parse_ids(std::string const& s) {
+        std::stringstream ss(s);
+        IdList ids;
+        Id id;
+        while (ss >> id) ids.push_back(id-1);
+        return ids;
+    }
+
+    struct Stretch : public Ffio {
+        void apply( SystemPtr h,
+                    const Json& blk,
+                    const SiteMap& sitemap,
+                    const VdwMap& ) const {
+
+            static const char* stretch_cols[] = {
+                "ffio_lower", "ffio_upper", "ffio_sigma", "ffio_beta", "ffio_fc"
+            };
+
+            Int max_group=0;
+            TermTablePtr table = h->addTable("stretch_fbhw", 1);
+            table->category = BOND;
+            table->addTermProp("group", IntType);
+            for (Id i=0; i<table->termCount(); i++) {
+                max_group=std::min(
+                        max_group, table->termPropValue(i,"group").asInt());
+            }
+            ParamTablePtr params = table->params();
+            for (int i=0; i<5; i++) {
+                params->addProp(stretch_cols[i]+5, FloatType);
+            }
+            ParamMap map(params, blk, 5, stretch_cols);
+
+            ParamTablePtr itable = ParamTable::create();
+            h->addAuxTable("stretch_fbhw_interaction", itable);
+            itable->addProp("group1", IntType);
+            itable->addProp("group2", IntType);
+            itable->addProp("param",  IntType);
+
+            const Json& g1 = blk.get("ffio_group1");
+            const Json& g2 = blk.get("ffio_group2");
+            
+            int i,n = blk.get("__size__").as_int();
+            for (i=0; i<n; i++) {
+                Id itc = itable->addParam();
+                Id p = map.add(i);
+                itable->value(itc,"group1") = max_group;
+                itable->value(itc,"group2") = max_group+1;
+                itable->value(itc,"param" ) = p;
+                IdList group1 = parse_ids(g1.elem(i).as_string());
+                IdList group2 = parse_ids(g2.elem(i).as_string());
+                BOOST_FOREACH(Id id, group1) {
+                    Id t = table->addTerm(IdList(1,id), p);
+                    table->termPropValue(t,"group") = max_group;
+                }
+                BOOST_FOREACH(Id id, group2) {
+                    Id t = table->addTerm(IdList(1,id), p);
+                    table->termPropValue(t,"group") = max_group+1;
+                }
+                max_group += 2;
+            }
+        }
+
+    };
+
     struct Angle : public Ffio {
 
         void apply( SystemPtr h,
@@ -88,5 +152,6 @@ namespace {
     RegisterFfio<Posre>     _1("ffio_posre_fbhw");
     RegisterFfio<Angle>     _2("ffio_angle_fbhw");
     RegisterFfio<Improper>  _3("ffio_improper_fbhw");
+    RegisterFfio<Stretch>   _4("ffio_stretch_fbhw");
 }
 

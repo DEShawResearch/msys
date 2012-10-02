@@ -1336,8 +1336,16 @@ f_m_ct {
    1 1 2 3 4 10.0 180.0 70.0
    :::
   } 
-  ffio_stretch_fbhw[0] { 
+  ffio_stretch_fbhw[1] { 
+   s_ffio_group1
+   s_ffio_group2
+   r_ffio_lower
+   r_ffio_upper
+   r_ffio_sigma
+   r_ffio_beta
+   r_ffio_fc
    :::
+   1 "1 2" "5 6 8" 1.0 4.0 1.0 0.5 100.0
    :::
   } 
   ffio_vdwtypes_combined[0] { 
