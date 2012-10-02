@@ -7,6 +7,7 @@ using desres::fastjson::Json;
 
 static char schemas_as_json[] = "["
     "[ \"angle_harm\",   \"bond\", 3, [\"theta0\", \"fc\"], [[\"constrained\", 0]]],"
+    "[ \"angle_fbhw\",   \"bond\", 3, [\"sigma\", \"theta0\", \"fc\"]],"
     "[ \"dihedral_trig\", \"bond\",4, [\"phi0\",\"fc0\",\"fc1\",\"fc2\",\"fc3\",\"fc4\",\"fc5\",\"fc6\"]],"
     "[ \"dihedral6_trig\",\"bond\",6, [\"phi0\",\"fc0\",\"fc2\",\"fc4\"]],"
     "[ \"improper_anharm\", \"bond\",4, [\"fc2\",\"fc4\"]],"

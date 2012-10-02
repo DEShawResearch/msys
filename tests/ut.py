@@ -1162,5 +1162,13 @@ class TestMain(unittest.TestCase):
         self.assertEqual(res.term(0)['fcx'], 0.25)
         self.assertEqual(res.term(1)['fcy'], 0.35)
 
+    def testMaeFBHW(self):
+        d=os.path.dirname(__file__)
+        m=msys.Load(os.path.join(d, 'mae/fbhw.mae'))
+        posre=m.table('posre_fbhw')
+        self.assertEqual(posre.params.nparams, 1)
+        self.assertEqual(posre.nterms, 32)
+
+
 if __name__=="__main__":
     unittest.main()
