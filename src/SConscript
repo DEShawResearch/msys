@@ -78,6 +78,7 @@ mae/ff/constraints.cxx
 mae/ff/dihedrals.cxx
 mae/ff/dihedrals6atom.cxx
 mae/ff/exclusions.cxx
+mae/ff/fbhw.cxx
 mae/ff/inplanewags.cxx
 mae/ff/pairs.cxx
 mae/ff/pseudopol.cxx
