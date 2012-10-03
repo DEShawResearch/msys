@@ -8,6 +8,8 @@
 #include <boost/algorithm/string.hpp> /* for boost::trim */
 #include <stdio.h>
 
+#include <sys/time.h>
+
 using namespace desres::msys;
 
 IdList System::_empty;
@@ -892,5 +894,13 @@ void System::analyze() {
     for (Id res=0; res<maxResidueId(); res++) {
         if (hasResidue(res)) analyze_residue(this,res);
     }
+}
+
+double desres::msys::now() {
+  struct timeval tm;
+  struct timezone tz;
+
+  gettimeofday(&tm, &tz);
+  return((double)(tm.tv_sec) + (double)(tm.tv_usec)/1000000.0);
 }
 

@@ -51,6 +51,9 @@ namespace desres { namespace msys {
         return oldsize - t.size();
     }
 
+    /* gettimeofday() */
+    double now();
+
 }}
 
 #define MSYS_FAIL(args) do { \
