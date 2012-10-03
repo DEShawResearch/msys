@@ -810,7 +810,7 @@ namespace {
             "H5T", "H3T"
         };
         typedef std::map<std::string,AtomType> NameMap;
-        static NameMap types, terms;
+        NameMap types, terms;
         if (types.empty()) {
             for (unsigned i=0; i<sizeof(protypes)/sizeof(protypes[0]); i++) {
                 types[protypes[i]]=AtomProBack;
