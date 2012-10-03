@@ -1,3 +1,5 @@
+1.6.10 FIXED: CreateSystem() is thread-safe again.
+
 1.6.9  FIXED: System.atoms is now (amortized) constant time.
        NEW: dms-select now reads any msys-supported file type, not just dms.
        NEW: mae2dms supports fbhw terms.
