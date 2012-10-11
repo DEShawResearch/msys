@@ -22,6 +22,12 @@ namespace {
         for (unsigned i=0; i<rings.size(); i++) L.append(rings[i]);
         return L;
     }
+    list find_distinct_fragments(SystemPtr mol) {
+        IdList frags = FindDistinctFragments(mol);
+        list L;
+        BOOST_FOREACH(Id frag, frags) L.append(frag);
+        return L;
+    }
 }
 
 namespace desres { namespace msys { 
@@ -33,6 +39,7 @@ namespace desres { namespace msys {
         def("AssignSybylTypes", AssignSybylTypes);
         def("GetSSSR", get_sssr);
         def("GuessBondConnectivity", GuessBondConnectivity);
+        def("FindDistinctFragments", find_distinct_fragments);
     }
 }}
 

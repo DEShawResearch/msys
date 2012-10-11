@@ -1,6 +1,7 @@
 #include "analyze.hxx"
 #include "analyze/bond_orders.hxx"
 #include "elements.hxx"
+#include "graph.hxx"
 #include <periodicfix/contacts.hxx>
 #include <stdio.h>
 
@@ -77,5 +78,46 @@ namespace desres { namespace msys {
                                    atoms.begin(), atoms.end(),
                                    atoms.begin(), atoms.end(),
                                    finder);
+    }
+
+    IdList FindDistinctFragments(SystemPtr mol) {
+        IdList result;
+        MultiIdList fragments;
+        mol->updateFragids(&fragments);
+        /* will compute graphs lazily */
+        std::vector<GraphPtr> graphs(fragments.size());
+        typedef std::map<std::string, IdList> FragmentHash;
+        FragmentHash fragment_hash;
+        for (Id i=0; i<fragments.size(); i++) {
+            fragment_hash[Graph::hash(mol, fragments[i])].push_back(i);
+        }
+        FragmentHash::iterator it;
+        for (it=fragment_hash.begin(); it!=fragment_hash.end(); ++it) {
+            /* unique formula -> unique fragment */
+            IdList& frags = it->second;
+            if (frags.size()==1) {
+                result.push_back(frags[0]);
+                continue;
+            }
+            /* must do isomorphism checks. */
+            BOOST_FOREACH(Id frag, frags) {
+                graphs[frag] = Graph::create(mol, fragments[frag]);
+            }
+            std::vector<IdPair> perm;
+            while (!frags.empty()) {
+                result.push_back(frags[0]);
+                IdList unmatched;
+                GraphPtr ref = graphs[frags[0]];
+                for (Id i=1; i<frags.size(); i++) {
+                    GraphPtr sel = graphs[frags[i]];
+                    if (!ref->match(sel, perm)) {
+                        unmatched.push_back(frags[i]);
+                    }
+                }
+                frags.swap(unmatched);
+            }
+        }
+        std::sort(result.begin(), result.end());
+        return result;
     }
 }}

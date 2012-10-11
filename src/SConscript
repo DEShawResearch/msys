@@ -138,6 +138,7 @@ schema/schema.cxx
 
 append.cxx
 clone.cxx
+graph.cxx
 override.cxx
 param_table.cxx
 provenance.cxx
