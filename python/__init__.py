@@ -1267,6 +1267,22 @@ def SaveMol2(system, path):
     prov=_msys.Provenance.fromArgs(sys.argv)
     _msys.ExportMOL2(ptr,path,prov)
 
+def SaveSDF(system, path_or_file):
+    ''' Export the system to the given path or file.  If path_or_file is
+    a string, it is assumed to be a path; if None, the bytes are returned;
+    otherwise, it is assumed to be a file object implementing the write()
+    method.
+    '''
+    s = _msys.ExportSDFBytes(system._ptr)
+    if path_or_file is None:
+        return s
+    if isinstance(path_or_file, str):
+        f = file(path_or_file, 'w')
+    else:
+        f = path_or_file
+    f.write(s)
+    f.flush()
+
 def TableSchemas():
     ''' available schemas for System.addTableFromSchema '''
     return [s for s in _msys.TableSchemas()]

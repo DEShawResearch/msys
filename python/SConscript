@@ -17,6 +17,7 @@ param.cxx
 system.cxx
 term.cxx
 vector.cxx
+io.cxx
 pymod.cxx
 '''.split()
 

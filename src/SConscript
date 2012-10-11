@@ -141,6 +141,7 @@ clone.cxx
 override.cxx
 param_table.cxx
 provenance.cxx
+sdf.cxx
 sssr.cxx
 system.cxx
 term_table.cxx

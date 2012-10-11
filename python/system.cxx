@@ -3,15 +3,7 @@
 #include "atomsel.hxx"
 #include "append.hxx"
 #include "clone.hxx"
-#include "mae.hxx"
-#include "dms.hxx"
-#include "pdb.hxx"
-#include "mol2.hxx"
-#include "xyz.hxx"
-#include "load.hxx"
-#include "amber.hxx"
 
-#include <fstream>
 #include <numpy/ndarrayobject.h>
 
 using namespace desres::msys;
@@ -140,26 +132,6 @@ namespace {
             L.append(object(prov[i]));
         }
         return L;
-    }
-
-    SystemPtr import_mae_from_buffer(PyObject* obj, bool ignore_unrecognized) {
-        Py_buffer view[1];
-        if (PyObject_GetBuffer(obj, view, PyBUF_ND)) {
-            throw_error_already_set();
-        }
-        boost::shared_ptr<Py_buffer> ptr(view, PyBuffer_Release);
-        const char* bytes = reinterpret_cast<const char *>(view->buf);
-        return ImportMAEFromBytes(bytes, view->len, ignore_unrecognized);
-    }
-
-    SystemPtr import_dms_from_buffer( PyObject* obj, bool structure_only ) {
-        Py_buffer view[1];
-        if (PyObject_GetBuffer(obj, view, PyBUF_ND)) {
-            throw_error_already_set();
-        }
-        boost::shared_ptr<Py_buffer> ptr(view, PyBuffer_Release);
-        char* bytes = reinterpret_cast<char *>(view->buf);
-        return ImportDMSFromBytes(bytes, view->len, structure_only);
     }
 
     PyObject* sys_getpos(System const& sys, object idobj) {
@@ -422,14 +394,6 @@ namespace {
         return L;
     }
 
-    list import_mol2_many(std::string const& path) {
-        std::vector<SystemPtr> mols = ImportMol2Many(path);
-        list L;
-        for (unsigned i=0; i<mols.size(); i++) {
-            L.append(object(mols[i]));
-        }
-        return L;
-    }
 }
 
 namespace desres { namespace msys { 
@@ -461,24 +425,6 @@ namespace desres { namespace msys {
             .def_readwrite("cmdline", &Provenance::cmdline)
             .def_readwrite("executable", &Provenance::executable)
             ;
-
-        def("ImportDMS", ImportDMS);
-        def("ImportDMSFromBuffer", import_dms_from_buffer);
-        def("ExportDMS", ExportDMS);
-        def("ImportMAE", ImportMAE);
-        def("ImportMAEFromBuffer", import_mae_from_buffer);
-        def("ExportMAE", ExportMAE);
-        def("ImportPDB", ImportPDB);
-        def("ExportPDB", ExportPDB);
-        def("ImportPrmTop", ImportPrmTop);
-        def("ImportCrdCoordinates", ImportCrdCoordinates);
-        def("ImportMOL2", ImportMol2);
-        def("ImportMOL2Many", import_mol2_many);
-        def("ExportMOL2", ExportMol2);
-        def("ImportXYZ", ImportXYZ);
-        def("Load", Load,
-                (arg("path"),
-                 arg("opt_format")=object()));
 
         def("Clone", Clone);
 
