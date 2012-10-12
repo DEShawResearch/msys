@@ -1347,6 +1347,10 @@ def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge = None):
     else:
         _msys.AssignBondOrderAndFormalCharge(ptr, ids, int(total_charge))
 
+def FindDistinctFragments(system):
+    ''' Return fragids of representative fragments.  '''
+    return _msys.FindDistinctFragments(system._ptr)
+
 ''' customize Vec3 '''
 from _msys import Vec3
 def __vec3_getitem(self, key):

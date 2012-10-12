@@ -46,6 +46,7 @@ env.AddScript('validate/dms-find-knot')
 # info
 env.AddScript('info/dms-diff')
 env.AddScript('info/dms-dump')
+env.AddScript('info/dms-inchi')
 env.AddScript('info/dms-info')
 
 # vdw

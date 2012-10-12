@@ -1,0 +1,55 @@
+#!/usr/bin/env desres-exec
+# -*- python -*-
+#{
+# desres-cleanenv $MSYS_CLEANENV \
+# -m inchi/1.04-04 \
+# -- python $0 "$@"
+#}
+
+'''
+dms-inchi [ options ] system.dms
+
+Write distinct InChI strings derived from dms components to stdout.
+
+Only connected components (fragments) of size 999 atoms or less will be
+written, due to current limitations in the inchi-1 program.  
+
+Note that covalently attached components will not be recognized or reported
+as separate InChI strings.  
+
+'''
+
+import sys
+import msys
+import subprocess as SP
+from time import time
+
+def print_inchi(mol, add_hydrogen=False):
+    args='inchi-1 -STDIO -AuxNone -NoLabels'.split()
+    if not add_hydrogen:
+        args.append('-DoNotAddH')
+    p = SP.Popen(args, stdin=SP.PIPE, stderr=SP.PIPE)
+    for fragid in msys.FindDistinctFragments(mol):
+        frag = mol.clone('fragid %d' % fragid)
+        if frag.natoms > 999:
+            continue
+        msys.SaveSDF(frag, p.stdin)
+    p.stdin.close()
+    if p.wait():
+        print >> sys.stderr, p.stderr.read()
+    return p.returncode
+
+def main():
+    import optparse
+    parser = optparse.OptionParser(__doc__)
+    parser.add_option('--add-hydrogen', action='store_true', default=False,
+        help='add H according to usual valences (default, all H are explicit)')
+
+    opts, args = parser.parse_args()
+    for path in args:
+        mol = msys.Load(path)
+        print_inchi(mol, **opts.__dict__)
+
+if __name__=="__main__": exit(main())
+
+# vim: filetype=python
