@@ -61,18 +61,27 @@ def print_info(mol):
                     table.nterms, o)
 
     nbinfo=mol.nonbonded_info
-    print "\n%12s:" % "Nonbonded Info"
+    print "\n%s:" % "Nonbonded Info"
     print "%20s: %s" % ("vdw_funct", nbinfo.vdw_funct)
     print "%20s: %s" % ("vdw_rule", nbinfo.vdw_rule)
 
-    print "\n%12s:" % "Glue"
+    print "\n%s:" % "Glue"
     for g in mol.gluePairs():
         print "\t%8d%8d" % g
 
-    print "\n%12s:" % "Auxiliary Tables"
+    print "\n%s:" % "Auxiliary Tables"
     for name in mol.auxtable_names:
+        if name=='forcefield':
+            continue
         aux=mol.auxtable(name)
         print "%28s: %d properties, %6d rows" % (name, aux.nprops, aux.nparams)
+
+    print "\n%s:" % "Forcefields"
+    if 'forcefield' in mol.auxtable_names:
+        ff=mol.auxtable('forcefield')
+        for p in ff.params:
+            path = '<no path>' if 'path' not in ff.props else p['path']
+            print "%4d) %s" % (p.id+1, path)
 
     print "\n%s:" % "Provenance"
     for i, p in enumerate(mol.provenance):

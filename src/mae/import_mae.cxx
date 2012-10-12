@@ -200,18 +200,50 @@ namespace {
             extra->addProp( "info", StringType);
             h->addAuxTable("forcefield", extra);
         }
-        std::string info;
-        info += ff.get("viparr_command").as_string("");
-        info += "\n";
-        const Json& arr = ff.get("viparr_info").get("viparr_section");
-        if (arr.valid()) for (int i=0; i<arr.size(); i++) {
-            info += arr.elem(i).as_string("");
-            info += "\n";
+        /* hash by path so we don't add duplicates */
+        std::map<std::string,Id> pathmap;
+        for (Id i=0; i<extra->paramCount(); i++) {
+            pathmap[extra->value(i,1).asString()] = i;
         }
-        Id row = extra->addParam();
-        extra->value(row,0) = row;
-        extra->value(row,1) = ff.get("viparr_workdir").as_string("");
-        extra->value(row,2) = info;
+        /* parse the viparr command to get the forcefield paths */
+        std::string cmd = ff.get("viparr_command").as_string("");
+        std::string workdir = ff.get("viparr_workdir").as_string(".");
+        workdir += "/";
+        std::vector<std::string> tokens;
+        boost::split(tokens, cmd, boost::is_any_of(" "));
+        if (tokens.size()>2) {
+            for (unsigned i=1; i<tokens.size()-1; i++) {
+                if (tokens[i]=="-f") {
+                    std::string const& path = tokens.at(i+1);
+                    if (!pathmap.count(path)) {
+                        Id row = extra->addParam();
+                        extra->value(row,0) = row;
+                        extra->value(row,1) = path;
+                        pathmap[path] = row;
+                    }
+                } else if (tokens[i]=="-d" || tokens[i]=="-m") {
+                    std::string path = tokens.at(i+1);
+                    if (path.substr(0,1)!="/") {
+                        path = workdir + path;
+                    }
+                    if (!pathmap.count(path)) {
+                        Id row = extra->addParam();
+                        extra->value(row,0) = row;
+                        extra->value(row,1) = path;
+                        pathmap[path] = row;
+                    }
+                }
+            }
+        }
+        /* add a provenance entry */
+        if (h->provenance().empty()) {
+            Provenance p;
+            p.timestamp = ff.get("date").as_string("");
+            p.user = ff.get("user").as_string("");
+            p.workdir = ff.get("viparr_workdir").as_string("");
+            p.cmdline = ff.get("viparr_command").as_string("");
+            h->addProvenance(p);
+        }
     }
 
     bool skippable(const std::string& s) {
