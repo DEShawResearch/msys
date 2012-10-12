@@ -24,10 +24,17 @@ import msys
 import subprocess as SP
 from time import time
 
-def print_inchi(mol, add_hydrogen=False):
+def print_inchi(mol, add_hydrogen=False, include_stereo=False,
+                     without_fixed_hydrogen=False):
     args='inchi-1 -STDIO -AuxNone -NoLabels'.split()
+
     if not add_hydrogen:
         args.append('-DoNotAddH')
+    if not include_stereo:
+        args.append('-SNon')
+    if not without_fixed_hydrogen:
+        args.append('-FixedH')
+
     p = SP.Popen(args, stdin=SP.PIPE, stderr=SP.PIPE)
     for fragid in msys.FindDistinctFragments(mol):
         frag = mol.clone('fragid %d' % fragid)
@@ -44,6 +51,10 @@ def main():
     parser = optparse.OptionParser(__doc__)
     parser.add_option('--add-hydrogen', action='store_true', default=False,
         help='add H according to usual valences (default, all H are explicit)')
+    parser.add_option('--include-stereo', action='store_true', default=False,
+        help='include absolute stereo (default, exclude stereo)')
+    parser.add_option('--without-fixed-hydrogen', action='store_true', 
+        default=False, help='do not include fixed H layer')
 
     opts, args = parser.parse_args()
     for path in args:
