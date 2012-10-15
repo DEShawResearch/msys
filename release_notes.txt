@@ -1,3 +1,9 @@
+1.6.11 NEW: SDF export.
+       NEW: RadiusForElement() function.
+       NEW: FindDistinctFragments() function.
+       NEW: dms-inchi tool.
+       FIXED: LoadMAE handles forcefield provenance better.
+
 1.6.10 FIXED: CreateSystem() is thread-safe again.
 
 1.6.9  FIXED: System.atoms is now (amortized) constant time.
