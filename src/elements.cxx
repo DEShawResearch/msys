@@ -6,31 +6,132 @@
 
 using namespace desres::msys;
 
-static const char *ename[] = {
-    "X",  "H",  "He", "Li", "Be", "B",  "C",  "N",  "O",  "F",  "Ne",
-    "Na", "Mg", "Al", "Si", "P" , "S",  "Cl", "Ar", "K",  "Ca", "Sc",
-    "Ti", "V",  "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn", "Ga", "Ge",
-    "As", "Se", "Br", "Kr", "Rb", "Sr", "Y",  "Zr", "Nb", "Mo", "Tc",
-    "Ru", "Rh", "Pd", "Ag", "Cd", "In", "Sn", "Sb", "Te", "I",  "Xe",
-    "Cs", "Ba", "La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd", "Tb",
-    "Dy", "Ho", "Er", "Tm", "Yb", "Lu", "Hf", "Ta", "W",  "Re", "Os",
-    "Ir", "Pt", "Au", "Hg", "Tl", "Pb", "Bi", "Po", "At", "Rn", "Fr",
-    "Ra", "Ac", "Th", "Pa", "U",  "Np", "Pu", "Am", "Cm", "Bk", "Cf",
-    "Es", "Fm", "Md", "No", "Lr", "Rf", "Db", "Sg", "Bh", "Hs", "Mt",
-    "Ds", "Rg"
-};
+namespace {
+    struct Radius {
+        const char *name;
+        double      radius;
+    };
+}
 
-static double eradius[] = {
-    0.00, 1.10, 1.40, 1.81, 1.53, 1.92, 1.70, 1.55, 1.52, 1.47, 1.54,
-    1.81, 1.73, 1.84, 2.10, 1.80, 1.80, 1.75, 1.88, 2.75, 2.31, 2,
-    2,    2,    2,    2,    2,    2,    2,    2,    2,    1.87, 2.11,
-    1.85, 1.90, 1.83, 2.02, 3.03, 2.49, 2,    2,    2,    2,    2,
-    2,    2,    2,    2,    2,    1.93, 2.17, 2.06, 2.06, 1.98, 2.16,
-    3.43, 2.68, 2,    2,    2,    2,    2,    2,    2,    2,    2,
-    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
-    2,    2,    2,    2,    1.96, 2.02, 2.07, 1.97, 2.02, 2.20, 3.48,
-    2.83, 2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
-    2,    2
+/* All data from Bondi 1964, except as noted.  Values of 2.0 by default.
+ * a) Rowland and Taylor 1996
+ * b) Mantina 2009
+ * c) Charmm36 ion radii
+ * d) VMD/molfile (unknown provenance)
+ */
+static Radius radii[] = {
+  { "X",   0.00 },
+  { "H",   1.10 },  // a
+  { "He",  1.40 },
+  { "Li",  1.30 },  // c
+  { "Be",  1.53 },  // b
+  { "B",   1.92 },  // b
+  { "C",   1.70 },
+  { "N",   1.55 },
+  { "O",   1.52 },
+  { "F",   1.47 },
+  { "Ne",  1.54 },
+  { "Na",  1.41 },  // c
+  { "Mg",  1.18 },  // c
+  { "Al",  1.84 },  // b
+  { "Si",  2.10 },
+  { "P",   1.80 },
+  { "S",   1.80 },
+  { "Cl",  2.27 },  // c
+  { "Ar",  1.88 },
+  { "K",   1.76 },  // c
+  { "Ca",  1.37 },  // c
+  { "Sc",  2.00 },
+  { "Ti",  2.00 },
+  { "V",   2.00 },
+  { "Cr",  2.00 },
+  { "Mn",  2.00 },
+  { "Fe",  2.00 },
+  { "Co",  2.00 },
+  { "Ni",  1.09 },  // copied from Zn
+  { "Cu",  1.09 },  // copied from Zn
+  { "Zn",  1.09 },  // c
+  { "Ga",  1.87 },  // b
+  { "Ge",  2.11 },  // b
+  { "As",  1.85 },
+  { "Se",  1.90 },
+  { "Br",  1.83 },  // b
+  { "Kr",  2.02 },
+  { "Rb",  1.90 },  // c
+  { "Sr",  2.49 },  // b
+  { "Y",   2.00 },
+  { "Zr",  2.00 },
+  { "Nb",  2.00 },
+  { "Mo",  2.00 },
+  { "Tc",  2.00 },
+  { "Ru",  2.00 },
+  { "Rh",  2.00 },
+  { "Pd",  1.63 },
+  { "Ag",  1.72 },
+  { "Cd",  1.36 },  // c
+  { "In",  1.93 },
+  { "Sn",  2.17 },
+  { "Sb",  2.06 },  // b
+  { "Te",  2.06 },
+  { "I",   1.98 },
+  { "Xe",  2.16 },
+  { "Cs",  2.10 },  // c
+  { "Ba",  1.89 },  // c
+  { "La",  2.00 },
+  { "Ce",  2.00 },
+  { "Pr",  2.00 },
+  { "Nd",  2.00 },
+  { "Pm",  2.00 },
+  { "Sm",  2.00 },
+  { "Eu",  2.00 },
+  { "Gd",  2.00 },
+  { "Tb",  2.00 },
+  { "Dy",  2.00 },
+  { "Ho",  2.00 },
+  { "Er",  2.00 },
+  { "Tm",  2.00 },
+  { "Yb",  2.00 },
+  { "Lu",  2.00 },
+  { "Hf",  2.00 },
+  { "Ta",  2.00 },
+  { "W",   2.00 },
+  { "Re",  2.00 },
+  { "Os",  2.00 },
+  { "Ir",  2.00 },
+  { "Pt",  1.72 },  // d
+  { "Au",  1.66 },  // d
+  { "Hg",  1.55 },  // d
+  { "Tl",  1.96 },  // d
+  { "Pb",  2.02 },  // d
+  { "Bi",  2.07 },  // b
+  { "Po",  1.97 },  // b
+  { "At",  2.02 },  // b
+  { "Rn",  2.20 },  // b
+  { "Fr",  3.48 },  // b
+  { "Ra",  2.83 },  // b
+  { "Ac",  2.00 },
+  { "Th",  2.00 },
+  { "Pa",  2.00 },
+  { "U",   2.00 },
+  { "Np",  2.00 },
+  { "Pu",  2.00 },
+  { "Am",  2.00 },
+  { "Cm",  2.00 },
+  { "Bk",  2.00 },
+  { "Cf",  2.00 },
+  { "Es",  2.00 },
+  { "Fm",  2.00 },
+  { "Md",  2.00 },
+  { "No",  2.00 },
+  { "Lr",  2.00 },
+  { "Rf",  2.00 },
+  { "Db",  2.00 },
+  { "Sg",  2.00 },
+  { "Bh",  2.00 },
+  { "Hs",  2.00 },
+  { "Mt",  2.00 },
+  { "Ds",  2.00 },
+  { "Rg",  2.00 }
 };
 
 /* atomic weights do not increase monotonically!  I'm writing down
@@ -205,23 +306,23 @@ int desres::msys::GuessAtomicNumber( double mass ) {
 }
 
 const char* desres::msys::AbbreviationForElement(int anum) {
-    int n = sizeof(ename)/sizeof(ename[0]);
+    int n = sizeof(radii)/sizeof(radii[0]);
     if (anum<0 || anum>=n) return "";
-    return ename[anum];
+    return radii[anum].name;
 }
 
 double desres::msys::RadiusForElement(int anum) {
-    int n = sizeof(eradius)/sizeof(eradius[0]);
+    int n = sizeof(radii)/sizeof(radii[0]);
     if (anum<0) return 0;
     if (anum>=n) return 2.0;
-    return eradius[anum];
+    return radii[anum].radius;
 }
 
 int desres::msys::ElementForAbbreviation(const char* abbr) {
     std::string src(abbr);
     boost::to_upper(src);
     for (unsigned i=1; i<nelems; i++) {
-        std::string ref(ename[i]);
+        std::string ref(radii[i].name);
         boost::to_upper(ref);
         if (ref==src) return i;
     }
