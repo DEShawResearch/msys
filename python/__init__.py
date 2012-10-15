@@ -9,6 +9,7 @@ import numpy
 import sys
 
 from _msys import GlobalCell, NonbondedInfo, version, hexversion
+from _msys import RadiusForElement
 
 class Handle(object):
     __slots__ = ('_ptr', '_id')

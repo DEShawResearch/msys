@@ -25,6 +25,10 @@ class TestMain(unittest.TestCase):
             #mol.select('residue -99999999')
 
 
+    def testRadius(self):
+        for i,r in (1,1.1), (6,1.7), (19, 1.76):
+            self.assertEqual(msys.RadiusForElement(i), r)
+
     def testSSSR(self):
         sys = msys.LoadDMS('/d/en/gregerse-0/p4/sw/forcefields/viparr4/cubane.dms', True)
         rings = msys.GetSSSR(sys.atoms, False)

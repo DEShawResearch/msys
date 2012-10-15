@@ -1,6 +1,7 @@
 #include "analyze.hxx"
 #include "sssr.hxx"
 #include "mol2.hxx"
+#include "elements.hxx"
 #include <boost/python.hpp>
 
 using namespace desres::msys;
@@ -40,6 +41,7 @@ namespace desres { namespace msys {
         def("GetSSSR", get_sssr);
         def("GuessBondConnectivity", GuessBondConnectivity);
         def("FindDistinctFragments", find_distinct_fragments);
+        def("RadiusForElement", RadiusForElement);
     }
 }}
 
