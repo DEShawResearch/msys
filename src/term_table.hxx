@@ -227,7 +227,8 @@ namespace desres { namespace msys {
 namespace boost {
     template<>
     struct range_const_iterator<desres::msys::TermTable> {
-        typedef typename desres::msys::TermTable::const_iterator type;
+        //typedef typename desres::msys::TermTable::const_iterator type;
+        typedef desres::msys::TermTable::const_iterator type;
     };
 }
 

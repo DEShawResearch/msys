@@ -7,7 +7,11 @@
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp> /* for boost::trim */
 #include <stdio.h>
-
+#ifdef DESRES_OS_Darwin
+#ifndef _DARWIN_C_SOURCE
+#define _DARWIN_C_SOURCE
+#endif
+#endif
 #include <sys/time.h>
 
 using namespace desres::msys;
