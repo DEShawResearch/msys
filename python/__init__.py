@@ -254,6 +254,10 @@ class Param(Handle):
         ''' parent ParamTable '''
         return ParamTable(self._ptr)
 
+    def keys(self):
+        ''' sorted list of available properties '''
+        return sorted(self.table.props)
+
     def __setitem__(self, prop, val):
         ''' update the value of prop with val '''
         p=self._ptr
@@ -393,6 +397,10 @@ class Term(Handle):
     def table(self): 
         ''' parent TermTable '''
         return TermTable(self._ptr)
+
+    def keys(self):
+        ''' union of table.params.props and table.term_props '''
+        return sorted(set(self.table.params.props).union(self.table.term_props))
 
     def __getitem__(self, prop):
         ''' get the value of property prop '''

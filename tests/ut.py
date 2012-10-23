@@ -959,6 +959,20 @@ class TestMain(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             msys.CloneSystem([m.atom(0), m.atom(1), m.atom(2)])
 
+    def testKeys(self):
+        m=msys.CreateSystem()
+        T=m.addTable('foo', 1)
+        P=T.params
+        P.addProp('x', float)
+        T.addTermProp('y', int)
+
+        a0=m.addAtom()
+        p=T.params.addParam()
+        t=T.addTerm([a0],p)
+        self.assertEqual(t.keys(), ['x', 'y'])
+        self.assertEqual(p.keys(), ['x'])
+
+
     def testAppend(self):
         m=msys.CreateSystem()
         a0=m.addAtom()
