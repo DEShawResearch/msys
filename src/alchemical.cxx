@@ -659,7 +659,14 @@ namespace {
                     //printf("\n");
 
                     std::stringstream ss;
-                    ss << "constraint_ah" << ids.size()-1;
+                    if (atable->name()=="constraint_hoh") {
+                        if (btable->name()!="constraint_hoh") {
+                            MSYS_FAIL("atom map maps water constraint to non-water constraint: A=" << atable->name() << ", B=" << btable->name());
+                        }
+                        ss << "constraint_hoh";
+                    } else {
+                        ss << "constraint_ah" << ids.size()-1;
+                    }
                     TermTablePtr c = AddTable(A,ss.str());
                     Id cparam = c->params()->addParam();
                     c->addTerm(ids, cparam);
