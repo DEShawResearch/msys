@@ -340,14 +340,12 @@ IdList TermTable::findWithAny(IdList const& ids) {
     return terms;
 }
 
-IdList TermTable::findWithOnly(IdList const& ids) {
+IdList TermTable::findWithOnly(IdList const& _ids) {
     update_index();
+    IdList ids(_ids);
+    sort_unique(ids);
     IdList terms;
     for (unsigned i=0; i<ids.size(); i++) {
-        /* ensure that ids are sorted */
-        if (i!=0 && (ids[i-1] >= ids[i])) {
-            MSYS_FAIL("ids must be sorted and unique: failed at position " << i);
-        }
         IdList const& q = _index.at(ids[i]);
         IdList p;
         BOOST_FOREACH(Id t, q) {
