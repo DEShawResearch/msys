@@ -7,7 +7,8 @@
 '''
 dms-set input.dms output.dms [-s selection] atomprop=FOO \\
                                             residue.resprop=BAR \\
-                                            chain.chainprop=BAZ
+                                            chain.chainprop=BAZ \\
+                                            box.[xyzd]=LENGTH
 
 Updates the atom, residue, and/or chain properties of the particles
 in input.dms; writes result to output.dms.

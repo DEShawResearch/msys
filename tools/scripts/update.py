@@ -43,6 +43,19 @@ def dms_set_chains( atoms, attr, val ):
             setattr(chn, attr, val)
             chains.add(chn)
 
+def dms_set_box(mol, attr, val):
+    val=float(val)
+    box=mol.cell
+    if attr=='d':
+        for i in range(3):
+            box[i][i] = val
+    else:
+        try:
+            i={'x':0, 'y':1, 'z':2}[attr]
+        except KeyError:
+            raise ValueError, "Box attribute must be x, y, z or d, got '%s'" % attr
+        box[i][i]=val
+
 def dms_set_term( atoms, table, attr, val ):
     if attr in table.term_props:
         val = table.termPropType(attr)(val)
@@ -65,6 +78,7 @@ def Update(mol, atoms, key, val):
     3) residue.foo  -- residue property foo
     4) chain.foo    -- chain property foo
     5) table.foo    -- property foo of all terms
+    6) box.foo      -- where foo is x, y, z, or d (sets all three)
     '''
     ndots=key.count('.')
     if ndots==0: 
@@ -78,6 +92,8 @@ def Update(mol, atoms, key, val):
         dms_set_residues(atoms, prop, val)
     elif target=='chain':
         dms_set_chains(atoms, prop, val)
+    elif target=='box':
+        dms_set_box(mol, prop, val)
     elif target in mol.table_names:
         dms_set_term(atoms, mol.table(target), prop, val)
     else:
