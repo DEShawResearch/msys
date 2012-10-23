@@ -1,3 +1,6 @@
+1.6.12 FIXED: TermTable.findOnly() makes its input sorted and unique.
+       NEW: Param.keys() and Term.keys()
+
 1.6.11 NEW: SDF export.
        NEW: RadiusForElement() function.
        NEW: FindDistinctFragments() function.
