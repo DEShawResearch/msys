@@ -14,8 +14,8 @@ VERSION=`src/version.py`
 DESCRIPTION="Biomolecular Structure Library"
 
 # shared library dependencies
-GCC=$(treetop gcc)
-BOOST=$(treetop boost)
+GCC=gcc/4.7.2-23A
+BOOST=boost/1_51_0-27
 PYTHON=$(treetop Python)
 SQLITE=$(treetop sqlite)
 PCRE=$(treetop pcre)
