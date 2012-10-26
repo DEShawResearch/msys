@@ -15,15 +15,15 @@ DESCRIPTION="Biomolecular Structure Library"
 
 # shared library dependencies
 GCC=gcc/4.7.2-23A
-BOOST=boost/1_51_0-27
-PYTHON=$(treetop Python)
+BOOST=boost/1_51_0-28A
+PYTHON=Python/2.7.3-07A
 SQLITE=$(treetop sqlite)
 PCRE=$(treetop pcre)
 ANTLR=$(treetop antlr)
-JSON=$(treetop fastjson)
-MOLFILE=$(treetop molfile)
-PERIODICFIX=periodicfix/2.4.1
-NUMPY=$(treetop numpy)
+JSON=fastjson/1.4.7
+MOLFILE=molfile/1.10.4
+PERIODICFIX=periodicfix/2.4.3
+NUMPY=numpy/1.6.2-31A
 LPSOLVE=$(treetop lp_solve)
 
 # build and documentation
