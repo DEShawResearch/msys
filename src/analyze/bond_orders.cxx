@@ -94,7 +94,7 @@ namespace desres { namespace msys {
                 planar_atoms.insert(bonded.begin(),bonded.end());
             }
             std::vector<Id> check(planar_atoms.begin(),planar_atoms.end());
-            double planarity=ring_planarity_descriptor(boa->_mol, check);
+            double planarity=ComputeRingPlanarity(boa->_mol, check);
             /* Algorithms in the bond order assigner are simplified if ring cycle 
                is closed, ie ring[0]==ring[-1] */
             size_t nratoms=ring.size();
@@ -604,7 +604,7 @@ namespace desres { namespace msys {
            1) sum of aromaticity constants should be -200< k[A] <200
            2) adjacent atoms of same type (for X and Z) destabilize the ring 
         */
-        std::vector<unsigned> typecounts(AromaticAtomClassification::INVALID);
+        std::vector<unsigned> typecounts(AromaticAtom::INVALID);
 
         BOOST_FOREACH(ringAtomInfo const& atomInfo,ringdata){
             // Total Number of Bonds
@@ -618,17 +618,18 @@ namespace desres { namespace msys {
             // Bond Order from carbon to less electronegative exocyclic atom
             unsigned be=atomInfo.bondIdxExoCyclic==MIN_INVALID_ILP_COL ? 0 : soln[atomInfo.bondIdxExoCyclic];
 
-            unsigned atype=classify_ring_atom(nb,a0,b0,b1,be);
-            if(atype>=AromaticAtomClassification::INVALID){
-                return AromaticRingClassification::NONAROMATIC;
+            AromaticAtom::Type atype=AromaticAtom::Classify(nb,a0,b0,b1,be);
+            if(atype>=AromaticAtom::INVALID){
+                return AromaticRing::NONAROMATIC;
             }
             typecounts[atype]++;
         }
 
-        unsigned Aromaticity=classify_ring_aromaticity(typecounts[AromaticAtomClassification::X_TYPE],
-                                                       typecounts[AromaticAtomClassification::Y_TYPE],
-                                                       typecounts[AromaticAtomClassification::YEXT_TYPE],
-                                                       typecounts[AromaticAtomClassification::Z_TYPE]);
+        AromaticRing::Type aro = AromaticRing::Classify(
+                typecounts[AromaticAtom::X_TYPE],
+                typecounts[AromaticAtom::Y_TYPE],
+                typecounts[AromaticAtom::YEXT_TYPE],
+                typecounts[AromaticAtom::Z_TYPE]);
 
         /* Try to generate new resonance structure if:
            1) ring is "aromatic", 
@@ -636,10 +637,10 @@ namespace desres { namespace msys {
            3) has no C=X external bonds(nYe==0), 
            4) no noncontributing atoms (nZ==0)
            This is equivalent to the below */
-        if(Aromaticity==AromaticRingClassification::AROMATIC && 
-           typecounts[AromaticAtomClassification::X_TYPE]==0 &&
-           typecounts[AromaticAtomClassification::YEXT_TYPE]==0 &&         
-           typecounts[AromaticAtomClassification::Z_TYPE]==0 ){
+        if(aro==AromaticRing::AROMATIC && 
+           typecounts[AromaticAtom::X_TYPE]==0 &&
+           typecounts[AromaticAtom::YEXT_TYPE]==0 &&         
+           typecounts[AromaticAtom::Z_TYPE]==0 ){
             int neworder=1; // flip flops between 1 & 2
             newsoln=soln;
             if(newsoln[ringdata[0].bondIdxNext]==1) neworder=2;
@@ -655,7 +656,7 @@ namespace desres { namespace msys {
                 neworder=3-neworder;
             }
         }
-        return Aromaticity;
+        return aro;
     }
 
 
