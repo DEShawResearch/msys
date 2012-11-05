@@ -208,6 +208,14 @@ class Residue(Handle):
         self.data().name = val
 
     @property
+    def insertion(self):
+        ''' insertion code '''
+        return self.data().insertion
+    @insertion.setter
+    def insertion(self, val):
+        self.data().insertion = val
+
+    @property
     def center(self):
         ''' return geometric center of positions of atoms in residue '''
         pos=self._ptr.getPositions(self._ptr.atomsForResidue(self._id))

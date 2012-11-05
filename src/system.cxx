@@ -641,7 +641,7 @@ void SystemImporter::initialize(IdList const& atoms) {
         BOOST_FOREACH(Id res, sys->residuesForChain(chn)) {
             if (std::binary_search(reslist.begin(), reslist.end(), res)) {
                 residue_t const& residue = sys->residue(res);
-                resmap[ResKey(chn, residue.resid, residue.name)] = res;
+                resmap[ResKey(chn, residue.resid, residue.name, residue.insertion)] = res;
             }
         }
     }
@@ -649,11 +649,13 @@ void SystemImporter::initialize(IdList const& atoms) {
 
 Id SystemImporter::addAtom(std::string chain, std::string segid,
                            int resnum, std::string resname,
-                           std::string aname) {
+                           std::string aname,
+                           std::string insertion) {
 
     boost::trim(chain);
     boost::trim(segid);
     boost::trim(resname);
+    boost::trim(insertion);
     boost::trim(aname);
 
     /* start a new chain if necessary */
@@ -673,13 +675,14 @@ Id SystemImporter::addAtom(std::string chain, std::string segid,
 
     /* start a new residue if necessary */
     std::pair<ResMap::iterator,bool> p;
-    p = resmap.insert(std::make_pair(ResKey(chnid,resnum,resname), resid));
+    p = resmap.insert(std::make_pair(ResKey(chnid,resnum,resname,insertion), 
+                resid));
     if (p.second) {
         /* new resname/resnum in this chain, so start a new residue. */
         resid = sys->addResidue(chnid);
-        sys->residue(resid).name = resname;
         sys->residue(resid).resid = resnum;
-        boost::trim(sys->residue(resid).name);
+        sys->residue(resid).name = resname;
+        sys->residue(resid).insertion = insertion;
         p.first->second = resid;
     } else {
         /* use existing residue */

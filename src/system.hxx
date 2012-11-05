@@ -128,6 +128,7 @@ namespace desres { namespace msys {
         Id      chain;
         int     resid;
         String  name;
+        String insertion;
         ResidueType type;
     
         residue_t() : chain(BadId), resid(), type() {}
@@ -496,15 +497,17 @@ namespace desres { namespace msys {
             Id      chain;
             int     resnum;
             String  resname;
+            String  insertion;
 
             ResKey() {}
-            ResKey(Id chn, int num, String const& name) 
-            : chain(chn), resnum(num), resname(name) {}
+            ResKey(Id chn, int num, String const& name, String const& insert) 
+            : chain(chn), resnum(num), resname(name), insertion(insert) {}
 
             bool operator<(const ResKey& r) const {
                 if (chain!=r.chain) return chain<r.chain;
                 if (resnum!=r.resnum) return resnum<r.resnum;
-                return resname.compare(r.resname)<0;
+                if (resname!=r.resname) return resname<r.resname;
+                return insertion.compare(r.insertion)<0;
             }
         };
 
@@ -527,8 +530,9 @@ namespace desres { namespace msys {
          * chain and/or residue object.  All string inputs will
          * have leading and trailing whitespace removed. */
         Id addAtom(std::string chain, std::string segid, 
-                   int resnum, std::string resname,
-                   std::string atomname);
+                   int resnum, std::string resname, 
+                   std::string atomname,
+                   std::string insertion="");
     };
 
 }}

@@ -53,7 +53,8 @@ SystemPtr desres::msys::ImportPDB( std::string const& path ) {
             strip_whitespace(element);
             resid = atoi(residstr);
 
-            Id atm = imp.addAtom(chainname, segid, resid, resname, name);
+            Id atm = imp.addAtom(chainname, segid, resid, resname, 
+                    name, insertion);
             atom_t& atom = mol->atom(atm);
             atom.x = x;
             atom.y = y;

@@ -123,6 +123,7 @@ DBL_KEY(vz,atom(i).vz)
 STR_KEY(chain,sys->chain(sys->residue(sys->atom(i).residue).chain).name)
 STR_KEY(name,sys->atom(i).name)
 STR_KEY(resname,sys->residue(sys->atom(i).residue).name)
+STR_KEY(insertion,sys->residue(sys->atom(i).residue).insertion)
 STR_KEY(element,desres::msys::AbbreviationForElement(sys->atom(i).atomic_number))
 
 KeywordPtr desres::msys::atomsel::keyword_atomprop( 
