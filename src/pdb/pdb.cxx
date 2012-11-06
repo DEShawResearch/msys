@@ -51,6 +51,7 @@ SystemPtr desres::msys::ImportPDB( std::string const& path ) {
             strip_whitespace(chainname);
             strip_whitespace(segid);
             strip_whitespace(element);
+            strip_whitespace(altloc);
             resid = atoi(residstr);
 
             Id atm = imp.addAtom(chainname, segid, resid, resname, 
@@ -60,6 +61,10 @@ SystemPtr desres::msys::ImportPDB( std::string const& path ) {
             atom.y = y;
             atom.z = z;
             atom.atomic_number = ElementForAbbreviation(element);
+            if (strlen(altloc)) {
+                Id altlocid = mol->addAtomProp("altloc", StringType);
+                mol->atomPropValue(atm,altlocid) = altloc;
+            }
 
         } else if (indx==PDB_CRYST1) {
             double alpha, beta, gamma, a, b, c;
