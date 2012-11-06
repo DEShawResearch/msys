@@ -825,6 +825,24 @@ class System(object):
         ''' type of the given atom property '''
         return self._ptr.atomPropType(self._ptr.atomPropIndex(name))
 
+    def atomsGroupedBy(self, prop):
+        ''' Return dictionary mapping representative values of the given
+        atom property to lists of atoms having that property.  If the
+        property does not exist in this system, returns an empty dictionary.
+        '''
+        d=dict()
+        if hasattr(Atom, prop):
+            getter=lambda x: getattr(x,prop)
+        elif prop in self.atom_props:
+            getter=lambda x: x[prop]
+        else:
+            return d
+        atms=self._update_atoms()
+        for a in atms:
+            key = getter(a)
+            d.setdefault(key,[]).append(a)
+        return d
+
     @property
     def positions(self):
         ''' Nx3 list of lists of positions of all atoms '''
