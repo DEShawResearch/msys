@@ -167,4 +167,12 @@ namespace desres { namespace msys {
         //printf("planarity descriptor for %zu atoms = %f  (Eigenvalues= %f %f %f for %zu atoms)\n",nids,planar,v[0],v[1],v[2],nids);
         return planar;
     }
+
+    AromaticRing::Type ClassifyAromaticRing(SystemPtr mol, IdList const& atms) {
+        int nx, ny, nyext, nz;
+        if (ClassifyAromaticAtoms(mol, atms, nx, ny, nyext, nz)) {
+            return AromaticRing::Classify(nx, ny, nyext, nz);
+        }
+        return AromaticRing::NONAROMATIC;
+    }
 }}

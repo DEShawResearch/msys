@@ -51,6 +51,8 @@ namespace desres { namespace msys {
     bool ClassifyAromaticAtoms(SystemPtr mol, IdList const& atoms,
                                int& nx, int& ny, int& nyext, int& nz);
 
+    /* Get the aromatic ring type of the given atoms. */
+    AromaticRing::Type ClassifyAromaticRing(SystemPtr mol, IdList const& atms);
 
     /* Compute ring planarity. */
     double ComputeRingPlanarity(SystemPtr mol, IdList const& atoms);
