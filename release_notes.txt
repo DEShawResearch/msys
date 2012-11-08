@@ -1,3 +1,9 @@
+1.6.15 NEW: Added 'insertion' as a residue property.
+       NEW: PDB reader reads 'altloc' as extra atom property.
+       NEW: Added System.atomsGroupedBy(prop) convenience method.
+       NEW: dms-posre learned --reference-structure and --reference-selection
+       C++: aromatic.hxx is visible.
+       
 1.6.14 NEW: Using gcc/4.7.2, Python/2.7.3, and numpy/1.6.2.
 
 1.6.13 FIXED: dms-alchemical handles hoh constraints in the atom map.
