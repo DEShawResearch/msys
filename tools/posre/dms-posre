@@ -33,6 +33,10 @@ def main():
             help="selection for restrained atoms")
     parser.add_option('--replace', action="store_true", default=False,
             help='replace any existing harmonic position restraints')
+    parser.add_option('--reference-structure', default=None,
+            help='get equilibrium positions from reference structure')
+    parser.add_option('--reference-selection', default=None,
+            help='selection for reference structure [default: selection]')
     parser.add_option('-q', '--quiet', action='store_true', default=False)
 
     opts, args = parser.parse_args()
@@ -52,8 +56,34 @@ def main():
     if not opts.quiet: print "Using force constant (%s, %s, %s)" % (
             fcx,fcy,fcz)
 
+    ref=opts.reference_structure
+    if ref:
+        if not opts.quiet: print "Loading reference file <%s>" % ref
+        ref_mol = msys.LoadDMS(ref)
+        if not opts.quiet: print "Restraining atoms to reference positions"
+        if opts.reference_selection:
+            ref_selection = opts.reference_selection
+        else:
+            ref_selection = opts.selection
+        ref_sel = ref_mol.clone(ref_selection)
+        cur_sel = mol.clone(opts.selection)
+        assert len(ref_sel.atoms) == len(atoms)
+        for a, p in zip(atoms, ref_sel.positions):
+            a.pos = p
+        if not opts.quiet:
+            displacements = ref_sel.positions - cur_sel.positions
+            E_restr = ((displacements**2)*(fcx, fcy, fcz)).sum(-1)
+            a = atoms[E_restr.argmax()]
+            r = a.residue
+            a_name = 'chain %s %s%d:%s' % (r.chain.name,r.name,r.resid,a.name)
+            fmt = "Most energetic restraint: %s (%.1f kcal/mol)"
+            print fmt % (a_name, E_restr.max())
+    else:
+        if not opts.quiet: print "Restraining atoms to current positions"
     n=posre.apply(mol, atoms, fcx, fcy, fcz, replace=opts.replace)
-
+    if ref:
+        for a, p in zip(atoms, cur_sel.positions):
+            a.pos = p
     if not opts.quiet: print "Now have restraints on %d atoms" % n
 
     if not opts.quiet: print "Writing DMS file <%s>" % args[1]
