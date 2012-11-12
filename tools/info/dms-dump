@@ -163,25 +163,28 @@ def dmsdump(ipath, out, without_provenance = False,
         subprocess.check_call(cmd+[sql], stdout=out, stderr=subprocess.PIPE)
 
     # nonbonded
-    sql='select "nonbonded_info", vdw_funct, vdw_rule from nonbonded_info'
-    subprocess.check_call(cmd+[sql], stdout=out, stderr=subprocess.PIPE)
+    if(has_table(ipath,"nonbonded_info")):
+       sql='select "nonbonded_info", vdw_funct, vdw_rule from nonbonded_info'
+       subprocess.check_call(cmd+[sql], stdout=out, stderr=subprocess.PIPE)
 
-    atoms, params = get_columns(ipath, 'nonbonded_param')
-    if without_paraminfo:
-        for p in ( 'ff', 'type', 'typekey', 'memo', 'comment', 'override',
-                   'ffA', 'typeA', 'typekeyA', 'memoA', 'commentA', 'overrideA',
-                   'ffB', 'typeB', 'typekeyB', 'memoB', 'commentB', 'overrideB',
-                      ):
-            if p in params:
-                params.remove(p)
-    params.remove('id')
-    params.sort()
-    s=''
-    if not without_paraminfo:
-        s = 'nb.id as param, '
-    s += ','.join(['nb.%s as %s' % (p,p) for p in params])
-    sql='select "nonbonded", p.id, %s from particle as p join nonbonded_param as nb on p.nbtype = nb.id' % s
-    subprocess.check_call(cmd+[sql], stdout=out, stderr=subprocess.PIPE)
+    if(has_table(ipath,'nonbonded_param')):
+        atoms, params = get_columns(ipath, 'nonbonded_param')
+        if without_paraminfo:
+            for p in ( 'ff', 'type', 'typekey', 'memo', 'comment', 'override',
+                       'ffA', 'typeA', 'typekeyA', 'memoA', 'commentA', 'overrideA',
+                       'ffB', 'typeB', 'typekeyB', 'memoB', 'commentB', 'overrideB',
+                          ):
+                if p in params:
+                    params.remove(p)
+        params.remove('id')
+        params.sort()
+ 
+        s=''
+        if not without_paraminfo:
+            s = 'nb.id as param, '
+        s += ','.join(['nb.%s as %s' % (p,p) for p in params])
+        sql='select "nonbonded", p.id, %s from particle as p join nonbonded_param as nb on p.nbtype = nb.id' % s
+        subprocess.check_call(cmd+[sql], stdout=out, stderr=subprocess.PIPE)
 
     # nonbonded combined
     if has_table(ipath, "nonbonded_combined_param"):
@@ -195,10 +198,11 @@ def dmsdump(ipath, out, without_provenance = False,
         subprocess.check_call(cmd+[sql], stdout=out, stderr=subprocess.PIPE)
 
     # exclusions
-    sql='select "exclusion", * from exclusion'
-    if reorder:
-        sql += ' order by p0,p1'
-    subprocess.check_call(cmd+[sql], stdout=out, stderr=subprocess.PIPE)
+    if(has_table(ipath, 'exclusion')):
+        sql='select "exclusion", * from exclusion'
+        if reorder:
+            sql += ' order by p0,p1'
+        subprocess.check_call(cmd+[sql], stdout=out, stderr=subprocess.PIPE)
 
     # alchemical_particle
     if has_table(ipath, 'alchemical_particle'):
