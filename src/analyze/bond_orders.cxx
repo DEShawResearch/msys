@@ -13,7 +13,7 @@
 #include "../sssr.hxx"
 #include "aromatic.hxx"
 #include "get_fragments.hxx"
-#include "quadsum.hxx"
+#include "../quadsum.hxx"
 #include "eigensystem.hxx"
 #include "../elements.hxx"
 #include "filtered_bonds.hxx"
