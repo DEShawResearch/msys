@@ -29,6 +29,10 @@ class TestMain(unittest.TestCase):
         for i,r in (1,1.1), (6,1.7), (19, 1.76):
             self.assertEqual(msys.RadiusForElement(i), r)
 
+    def testMass(self):
+        for i,m in (-1,0), (0,0), (1,1.00794), (19,39.0983):
+            self.assertEqual(msys.MassForElement(i), m)
+
     def testSSSR(self):
         sys = msys.LoadDMS('/d/en/gregerse-0/p4/sw/forcefields/viparr4/cubane.dms', True)
         rings = msys.GetSSSR(sys.atoms, False)

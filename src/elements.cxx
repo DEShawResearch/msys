@@ -311,6 +311,14 @@ const char* desres::msys::AbbreviationForElement(int anum) {
     return radii[anum].name;
 }
 
+double desres::msys::MassForElement(int anum) {
+    if (anum<=0 || anum>=(int)nelems) return 0;
+    for (unsigned i=0; i<nelems; i++) {
+        if (elems[i].anum==anum) return elems[i].mass;
+    }
+    return 0;
+}
+
 double desres::msys::RadiusForElement(int anum) {
     int n = sizeof(radii)/sizeof(radii[0]);
     if (anum<0) return 0;

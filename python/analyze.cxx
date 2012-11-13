@@ -42,6 +42,7 @@ namespace desres { namespace msys {
         def("GuessBondConnectivity", GuessBondConnectivity);
         def("FindDistinctFragments", find_distinct_fragments);
         def("RadiusForElement", RadiusForElement);
+        def("MassForElement", MassForElement);
     }
 }}
 
