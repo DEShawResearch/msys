@@ -6,9 +6,6 @@
 #include <deque>
 #include <boost/foreach.hpp>
 
-//#include <profiler/profiler.hxx>
-
-#include "manymap.hxx"
 #include "bond_orders.hxx"
 #include "../sssr.hxx"
 #include "aromatic.hxx"
@@ -1435,7 +1432,6 @@ namespace desres { namespace msys {
                 }
                 if(!purturbRing) continue;
                 
-                /* this is a case where multimap is prefered to manymap */
                 std::multimap<float,Id> distanceMap;
                 for(IdList::const_iterator miter=ring.begin(); miter != ring.end()-1; ++miter){
                     Id current = *miter;
@@ -1836,8 +1832,14 @@ namespace desres { namespace msys {
          * the total charge solver 
          */
         
-        typedef desres::manymap<Id, std::pair<int, double> > lpInfo;
-        lpInfo solutions;
+        typedef Id                                      key_type;
+        typedef std::pair<int,double>                   entry_type;
+        typedef std::vector<entry_type>                 mapped_type;
+        typedef std::pair<const key_type, mapped_type>  value_type;
+        typedef std::map<key_type,mapped_type>          LpInfo;
+
+        LpInfo solutions;
+
         /* Find reasonable # of valid component solutions */
         static const size_t _ndelta=4;
         static const int deltas[_ndelta]={-2,2,-4,4};
@@ -1845,14 +1847,14 @@ namespace desres { namespace msys {
         BOOST_FOREACH(Id cid, active){
             int q0=_component_assigners[cid]->getSolvedComponentCharge();
             double obj=_component_assigners[cid]->getSolvedComponentObjective();
-            solutions.insert(lpInfo::insert_type(cid,lpInfo::entry_type(q0,obj)));
+            solutions[cid].push_back(entry_type(q0,obj));
             ncols++;
             for (size_t i=0;i<_ndelta;++i){
                 int qtarget=q0+deltas[i];
                 _component_assigners[cid]->setComponentCharge(qtarget);
                 if(!_component_assigners[cid]->solveComponentIntegerLinearProgram()) continue;
                 obj=_component_assigners[cid]->getSolvedComponentObjective();
-                solutions.insert(lpInfo::insert_type(cid, lpInfo::entry_type(qtarget,obj)));
+                solutions[cid].push_back(entry_type(qtarget,obj));
                 ncols++;
             }
         }
@@ -1870,13 +1872,13 @@ namespace desres { namespace msys {
         std::ostringstream ss;
         std::vector<std::vector<double> > cons;
         std::vector<double> globalCons(ncols+1,0);
-        BOOST_FOREACH(lpInfo::value_type const& cadata, solutions){
+        BOOST_FOREACH(value_type const& cadata, solutions){
             cons.push_back(std::vector<double>());
             std::vector<double> &rowdata=cons.back();
             rowdata.resize(ncols+1,0);
             Id caidx=cadata.first;
             /* add new columns */
-            BOOST_FOREACH(lpInfo::entry_type const& soldata, cadata.second){
+            BOOST_FOREACH(entry_type const& soldata, cadata.second){
                 ss.str("");
                 ss << "ca_"<<caidx<<".q_"<<soldata.first;
                 int cid=ComponentAssigner::add_column_to_ilp(qtotlp,ss.str(), soldata.second, 0, 1);
@@ -1905,10 +1907,10 @@ namespace desres { namespace msys {
             std::vector<int> solution;
             ComponentAssigner::get_ilp_solution(qtotlp,solution);
             unsigned cid=1;
-            BOOST_FOREACH(lpInfo::value_type const& cadata, solutions){
+            BOOST_FOREACH(value_type const& cadata, solutions){
                 Id caidx=cadata.first;
                 int nset=0;
-                BOOST_FOREACH(lpInfo::entry_type const& soldata, cadata.second){
+                BOOST_FOREACH(entry_type const& soldata, cadata.second){
                     int sol=solution.at(cid);
                     if(sol!=0){
                         assert(sol==1);
