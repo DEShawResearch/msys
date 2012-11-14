@@ -1966,9 +1966,13 @@ namespace desres { namespace msys {
         /* Assign the final charges and bond orders (both formal and resonant)
            Formal Charges are given by: fc[i]= ValenceElectrons[i] - freeElectrons[i] - 0.5*Sum_j ( BondElectrons[ij] )
         */
+        Id lp_col=_mol->addAtomProp("lonepair_count",  IntType);
+        Id reslp_col=_mol->addAtomProp("resonant_lonepair_count", FloatType);
         BOOST_FOREACH(Id aid1, _fragatoms){
             _mol->atom(aid1).formal_charge=0;
             _mol->atom(aid1).resonant_charge=0.0;
+            _mol->atomPropValue(aid1, lp_col)=0;
+            _mol->atomPropValue(aid1, reslp_col)=0.0;
         }
 
 
@@ -2000,7 +2004,10 @@ namespace desres { namespace msys {
         BOOST_FOREACH(solutionMap::value_type const& apair, atominfo){
             Id aid=apair.first;
             solutionValues const& adata=apair.second;
-    
+            
+            _mol->atomPropValue(aid, lp_col)=adata.nonresonant;
+            _mol->atomPropValue(aid, reslp_col)=adata.resonant;
+
             atom_t& atm=_mol->atom(aid);
             int nValence=DataForElement(atm.atomic_number).nValence;
 
