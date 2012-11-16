@@ -143,6 +143,7 @@ override.cxx
 param_table.cxx
 provenance.cxx
 sdf.cxx
+smarts.cxx
 sssr.cxx
 system.cxx
 term_table.cxx
