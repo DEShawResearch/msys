@@ -33,6 +33,7 @@ double calc_vec_angle( const double* r1, const double* r2 ) {
     return atan2(psin,pcos);
 }
 
+static
 double calc_angle( const double* A, const double* B, const double* C ) {
     int i;
     double r1[3], r2[3];
