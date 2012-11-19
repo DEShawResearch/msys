@@ -88,6 +88,8 @@ namespace desres { namespace msys {
             return SmartsPatternImplPtr(new SmartsPatternImpl(pat, log));
         }
 
+        Id atomCount() const { return _atoms.size(); }
+
         /* Helper function to match a SMARTS pattern starting at a given
          * atom and append matches to a given list. Has option of returning
          * after finding a single match. Returns true if any match is found,
@@ -745,6 +747,10 @@ SmartsPattern::SmartsPattern(std::string const& pattern)
     std::stringstream ss;
     _impl = SmartsPatternImpl::create(pattern, ss);
     _warnings = ss.str();
+}
+
+Id SmartsPattern::atomCount() const {
+    return _impl->atomCount();
 }
 
 /* Constructor uses grammar to create a recursive smarts_pattern_ object, then
