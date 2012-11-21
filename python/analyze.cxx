@@ -2,6 +2,7 @@
 #include "sssr.hxx"
 #include "mol2.hxx"
 #include "elements.hxx"
+#include "smarts.hxx"
 #include <boost/python.hpp>
 
 using namespace desres::msys;
@@ -29,6 +30,20 @@ namespace {
         BOOST_FOREACH(Id frag, frags) L.append(frag);
         return L;
     }
+
+    list find_matches(SmartsPattern const& s, SystemPtr sys, 
+                                              IdList const& starts)
+    {
+        MultiIdList results = s.findMatches(sys, starts);
+        list L;
+        BOOST_FOREACH(IdList const& ids, results) {
+            list m;
+            BOOST_FOREACH(Id id, ids) m.append(id);
+            L.append(m);
+        }
+        return L;
+    }
+
 }
 
 namespace desres { namespace msys { 
@@ -43,6 +58,17 @@ namespace desres { namespace msys {
         def("FindDistinctFragments", find_distinct_fragments);
         def("RadiusForElement", RadiusForElement);
         def("MassForElement", MassForElement);
+
+        class_<SmartsPattern>("SmartsPattern", init<std::string const&>())
+            .def("atomCount", &SmartsPattern::atomCount)
+            .def("pattern",   &SmartsPattern::pattern,
+                    return_value_policy<copy_const_reference>())
+            .def("warnings",  &SmartsPattern::warnings,
+                    return_value_policy<copy_const_reference>())
+            .def("findMatches",     &find_matches)
+            .def("Annotate",  &SmartsPattern::Annotate)
+            .staticmethod("Annotate")
+            ;
     }
 }}
 

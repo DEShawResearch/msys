@@ -1150,6 +1150,51 @@ class System(object):
         ''' Remove a pair of atoms from the glue.  '''
         return self._ptr.delGluePair(p0,p1)
 
+class SmartsPattern(object):
+    ''' A class representing a compiled SMARTS pattern '''
+    def __init__(self, pattern):
+        ''' Initialize with SMARTS pattern '''
+        self._pat = _msys.SmartsPattern(str(pattern))
+
+    @property
+    def natoms(self):
+        ''' Number of atoms in the compiled smarts pattern '''
+        return self._pat.atomCount()
+
+    @property
+    def pattern(self):
+        ''' The pattern used to initialize the object '''
+        return self._pat.pattern()
+
+    @property
+    def warnings(self):
+        ''' Warnings, if any, emitted during compilation '''
+        return self._pat.warnings()
+
+    def __repr__(self):
+        return "<SmartsPattern '%s'>" % self.pattern
+
+    @staticmethod
+    def Annotate(system_or_atoms):
+        ''' add atom properties to the given atoms; these must be 
+        present before calling match().
+        '''
+        if isinstance(system_or_atoms, System):
+            ptr = system_or_atoms._ptr
+            ids = ptr.atoms()
+        else:
+            ptr, ids = _find_ids(system_or_atoms)
+        _msys.SmartsPattern.Annotate(ptr, ids)
+
+    def findMatches(self, system_or_atoms):
+        ''' return list of lists representing ids of matches of this
+        pattern that start with the given set of atoms.  '''
+        if isinstance(system_or_atoms, System):
+            ptr = system_or_atoms._ptr
+            ids = ptr.atoms()
+        else:
+            ptr, ids = _find_ids(system_or_atoms)
+        return self._pat.findMatches(ptr, ids)
 
 def CreateSystem():
     ''' Create a new, empty System '''

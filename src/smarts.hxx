@@ -38,11 +38,12 @@ namespace desres { namespace msys {
          */
         static void Annotate(SystemPtr sys, IdList const& atoms);
 
-        /* Match SMARTS pattern to a given system. System must have atom
+        /* Find matches of the SMARTS pattern that start with the given
+         * set of atoms; usually sys->atoms().  System must have atom
          * and bond properties populated by GenerateAtomAndBondProperties.
          * Will give duplicate matches for '*~*' in forward and reverse
          * ordering, etc. */
-         MultiIdList match(SystemPtr sys) const;
+         MultiIdList findMatches(SystemPtr sys, IdList const& starts) const;
     };
 
 }}

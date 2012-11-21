@@ -94,7 +94,7 @@ namespace desres { namespace msys {
          * atom and append matches to a given list. Has option of returning
          * after finding a single match. Returns true if any match is found,
          * false otherwise. */
-        bool matchSmartsPattern(Id atom, SystemPtr sys,
+        bool matchSmartsPattern(SystemPtr sys, Id atom,
                 MultiIdList& matches, bool match_single=false) const;
     };
 
@@ -489,7 +489,7 @@ bool match_atom_spec(Id atom, SystemPtr sys, const atom_spec_&
             = boost::get<SmartsPatternImplPtr>(&aspec)) {
         /* Recursive SMARTS */
         std::vector<IdList> matches;
-        return (*pattern)->matchSmartsPattern(atom, sys, matches, true);
+        return (*pattern)->matchSmartsPattern(sys, atom, matches, true);
     } else if (const element_* elem = boost::get<element_>(&aspec))
         /* Element */
         return match_element(atom, sys, *elem);
@@ -870,7 +870,7 @@ bool SmartsPatternImpl::convertSmarts(const smarts_pattern_& smarts,
     return true;
 }
 
-MultiIdList SmartsPattern::match(SystemPtr sys) const {
+MultiIdList SmartsPattern::findMatches(SystemPtr sys, IdList const& atoms) const {
     /* Check system has all necessary atom and bond props */
     std::string msg
         = "Cannot match SMARTS pattern: system is missing ";
@@ -894,13 +894,13 @@ MultiIdList SmartsPattern::match(SystemPtr sys) const {
         msg += "ring_bond bond property"; MSYS_FAIL(msg); }
 
     MultiIdList matches;
-    IdList atoms = sys->atoms();
-    for (unsigned i = 0; i < atoms.size(); ++i)
-        _impl->matchSmartsPattern(atoms[i], sys, matches);
+    BOOST_FOREACH(Id id, atoms) {
+        _impl->matchSmartsPattern(sys, id, matches);
+    }
     return matches;
 }
 
-bool SmartsPatternImpl::matchSmartsPattern(Id atom, SystemPtr sys,
+bool SmartsPatternImpl::matchSmartsPattern(SystemPtr sys, Id atom,
         std::vector<IdList>& matches, bool match_single) const {
     if (_atoms.size() == 0)
         return false;
