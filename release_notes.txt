@@ -1,3 +1,6 @@
+1.6.16 NEW: class SmartsPattern.
+       NEW: MassForElement() function.
+
 1.6.15 NEW: Added 'insertion' as a residue property.
        NEW: PDB reader reads 'altloc' as extra atom property.
        NEW: Added System.atomsGroupedBy(prop) convenience method.
