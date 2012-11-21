@@ -1,4 +1,4 @@
-1.6.16 NEW: class SmartsPattern.
+1.6.17 NEW: class SmartsPattern.
        NEW: MassForElement() function.
 
 1.6.15 NEW: Added 'insertion' as a residue property.

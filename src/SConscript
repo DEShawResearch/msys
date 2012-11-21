@@ -144,7 +144,6 @@ param_table.cxx
 provenance.cxx
 sdf.cxx
 smarts.cxx
-simple.cxx
 sssr.cxx
 system.cxx
 term_table.cxx
