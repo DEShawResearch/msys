@@ -540,6 +540,9 @@ class TestMain(unittest.TestCase):
         self.assertEqual(t.findWithAll([a5]), [t.term(6)])
         self.assertEqual(t.findWithAll([a3]), [t.term(x) for x in (3,5,6)])
         self.assertEqual(t.findWithAny([a3,a5]), [t.term(x) for x in (3,5,6)])
+        t.addTerm((a5,a5))
+        self.assertEqual(t.findWithAny([a5]), [t.term(x) for x in (6,7)])
+        self.assertEqual(t.findWithAll([a5]), [t.term(x) for x in (6,7)])
 
     def testParamIndex(self):
         params=msys.CreateParamTable()

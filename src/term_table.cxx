@@ -290,11 +290,18 @@ void TermTable::update_index() {
     if (_terms.empty()) return;
     const Id natoms=atomCount();
     Id i=_maxIndexId, n=maxTermId();
+    std::vector<bool> found(system()->maxAtomId(), false);
     for (; i<n; i++) {
         if (!hasTerm(i)) continue;
         for (Id j=0; j<natoms; j++) {
             Id atm = atom(i,j);
-            _index.at(atm).push_back(i);
+            if (!found.at(atm))
+                _index.at(atm).push_back(i);
+            found.at(atm)=true;
+        }
+        for (Id j=0; j<natoms; j++) {
+            Id atm = atom(i,j);
+            found.at(atm)=false;
         }
     }
     _maxIndexId = n;
