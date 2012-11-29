@@ -1,4 +1,5 @@
-#include "sssr.hxx"
+#include "../sssr.hxx"
+#include "filtered_bonds.hxx"
 #include <stack>
 #include <queue>
 #include <set>
@@ -32,6 +33,9 @@ void desres::msys::SSSR::get_biconnected_components(const GraphRepr& graph,
 
     /* Loop over connected components */
     for (unsigned root = 0; root < graph.v_to_e.size(); ++root) {
+        /* Ignore empty vertex indices and vertices that have already been
+         * processed */
+        if (graph.v_to_e[root].size() == 0) continue;
         if (depths[root] >= 0) continue;
         /* Stack of vertices (and other info in BCCItem) maintained in a DFS */
         std::stack<BCCItem> DFS_stack;
@@ -559,20 +563,25 @@ desres::msys::GetSSSR(SystemPtr mol, IdList const& atoms,
     MultiIdList sssr;
 
     /* Create GraphRepr with reindexed atoms (vertices) and bonds (edges) */
-    std::map<Id, int> atom_idx_map;
-    for (unsigned i = 0; i < atoms.size(); ++i)
-        atom_idx_map[atoms[i]] = i;
+    std::vector<int> atom_idx_map(mol->maxAtomId(), -1);
+    for (unsigned i = 0; i < atoms.size(); ++i) {
+        if (mol->atom(atoms[i]).atomic_number >= 1)
+            atom_idx_map[atoms[i]] = i;
+    }
     GraphRepr graph;
     graph.v_to_e.resize(atoms.size(), std::vector<int>());
     for (unsigned i = 0; i < atoms.size(); ++i) {
-        IdList bonded = mol->bondedAtoms(atoms[i]);
+        /* If i is a pseudo atom, graph.v_to_e[i] remains empty. These graph
+         * vertex indices are ignored by get_biconnected_components. */
+        if (mol->atom(atoms[i]).atomic_number < 1)
+            continue;
+        IdList bonded = filteredBondedAtoms(mol, atoms[i]);
         for (unsigned j = 0; j < bonded.size(); ++j) {
-            std::map<Id, int>::iterator iter
-                = atom_idx_map.find(bonded[j]);
-            if (atoms[i] < bonded[j] && iter != atom_idx_map.end()) {
-                graph.edges.push_back(Edge(i, iter->second));
+            if (atoms[i] < bonded[j] && atom_idx_map[bonded[j]] != -1) {
+                graph.edges.push_back(Edge(i, atom_idx_map[bonded[j]]));
                 graph.v_to_e[i].push_back(graph.edges.size()-1);
-                graph.v_to_e[iter->second].push_back(graph.edges.size()-1);
+                graph.v_to_e[atom_idx_map[bonded[j]]].push_back(
+                        graph.edges.size()-1);
             }
         }
     }

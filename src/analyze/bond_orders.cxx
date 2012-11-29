@@ -73,10 +73,9 @@ namespace desres { namespace msys {
                 boa->_mol->bond(bid).order=1;
                 boa->_mol->bond(bid).resonant_order=1.0;
             }
-            if(boa->_mol->atom(aid).atomic_number<1){
-                printf("BondOrderAssigner::create - Skipping atomid=%u with atomic_number<1\n",aid);
+            if(boa->_mol->atom(aid).atomic_number<1)
+                //printf("BondOrderAssigner::create - Skipping atomid=%u with atomic_number<1\n",aid);
                 continue;
-            }
             boa->_fragatoms.push_back(aid);
         }
 

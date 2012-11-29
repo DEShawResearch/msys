@@ -264,15 +264,15 @@ int parse_closure_ind(const closure_ind_& closure_ind) {
     if (const char* c = boost::get<char>(&closure_ind)) {
         closure_id = *c - '0';
         if (closure_id < 0 || closure_id > 9)
-            MSYS_FAIL("VIPARR BUG: invalid closure id");
+            MSYS_FAIL("SMARTS BUG: invalid closure id");
     } else if (const bf::vector2<char, char>* v
             = boost::get<bf::vector2<char, char> >(&closure_ind)) {
         if (bf::at_c<0>(*v) < '0' || bf::at_c<0>(*v) > '9'
                 || bf::at_c<1>(*v) < '0' || bf::at_c<1>(*v) > '9')
-            MSYS_FAIL("VIPARR BUG: invalid closure id");
+            MSYS_FAIL("SMARTS BUG: invalid closure id");
         closure_id = (bf::at_c<0>(*v)-'0') * 10 + (bf::at_c<1>(*v)-'0');
     } else
-        MSYS_FAIL("VIPARR BUG: invalid closure id");
+        MSYS_FAIL("SMARTS BUG: invalid closure id");
     return closure_id;
 }
 
@@ -467,11 +467,11 @@ bool match_charge(Id atom, SystemPtr sys, const charge_& charge) {
         else if (bf::at_c<0>(*tmp) == '-')
             return (-int(bf::at_c<1>(*tmp)) == sys->atom(atom).formal_charge);
         else
-            MSYS_FAIL("VIPARR BUG; unrecognized charge");
+            MSYS_FAIL("SMARTS BUG; unrecognized charge");
     } else if (const std::vector<char>* tmp
             = boost::get<std::vector<char> >(&charge)) {
         if (tmp->size() == 0)
-            MSYS_FAIL("VIPARR BUG; unrecognized charge");
+            MSYS_FAIL("SMARTS BUG; unrecognized charge");
         if (tmp->at(0) == '+')
             /* Assume remaining characters are all '+' */
             return (int(tmp->size()) == sys->atom(atom).formal_charge);
@@ -479,9 +479,9 @@ bool match_charge(Id atom, SystemPtr sys, const charge_& charge) {
             /* Assume remaining characters are all '-' */
             return (-int(tmp->size()) == sys->atom(atom).formal_charge);
         else
-            MSYS_FAIL("VIPARR BUG; unrecognized charge");
+            MSYS_FAIL("SMARTS BUG; unrecognized charge");
     } else
-        MSYS_FAIL("VIPARR BUG; unrecognized charge");
+        MSYS_FAIL("SMARTS BUG; unrecognized charge");
 }
 bool match_atom_spec(Id atom, SystemPtr sys, const atom_spec_&
         aspec) {
@@ -509,7 +509,7 @@ bool match_atom_spec(Id atom, SystemPtr sys, const atom_spec_&
             case 'D':
                 /* Total connections */
                 if (val == -1) val = 1;
-                return (int(sys->bondedAtoms(atom).size()) == val);
+                return (sys->atomPropValue(atom, "degree").asInt() == val);
             case 'H':
             case 'h':
                 /* Hydrogen connections */
@@ -554,18 +554,17 @@ bool match_atom_spec(Id atom, SystemPtr sys, const atom_spec_&
                     }
                     return false;
                 }
-            /*case '^':
+            case '^':
                 if (val == -1) val = 1;
-                return (int(sys->bondedAtoms(atom).size() +
-                            sys->atomPropValue(atom, "lonepair_count").asInt())
-                        == val + 1);*/
+                return (sys->atomPropValue(atom,
+                            "hybridization").asInt() == val);
             default:
-                MSYS_FAIL("VIPARR BUG; unrecognized numeric property");
+                MSYS_FAIL("SMARTS BUG; unrecognized numeric property");
         }
     } else
         /* Includes smarts_pattern_ case, which should have already been
          * converted to SMARTS_pattern type */
-        MSYS_FAIL("VIPARR BUG; unrecognized atom spec");
+        MSYS_FAIL("SMARTS BUG; unrecognized atom spec");
 }
 bool match_not_atom_spec(Id atom, SystemPtr sys,
         const not_atom_spec_& spec) {
@@ -604,9 +603,9 @@ bool match_raw_atom(Id atom, SystemPtr sys,
         if (*R == 'R')
             return (sys->atomPropValue(atom, "ring_count").asInt() > 0);
         else
-            MSYS_FAIL("VIPARR BUG; unrecognized raw element");
+            MSYS_FAIL("SMARTS BUG; unrecognized raw element");
     } else
-        MSYS_FAIL("VIPARR BUG; unrecognized raw element");
+        MSYS_FAIL("SMARTS BUG; unrecognized raw element");
 }
 bool match_hydrogen_expression(Id atom, SystemPtr sys,
         const hydrogen_expression_& hexpr) {
@@ -626,7 +625,7 @@ bool match_atom(Id atom, SystemPtr sys, const atom_& a) {
             = boost::get<atom_expression_>(&a))
         return match_atom_expression(atom, sys, *expr);
     else
-        MSYS_FAIL("VIPARR BUG: unrecognized atom");
+        MSYS_FAIL("SMARTS BUG: unrecognized atom");
 }
 bool match_bond_spec(Id bond, SystemPtr sys,
         const bond_spec_& spec) {
@@ -650,7 +649,7 @@ bool match_bond_spec(Id bond, SystemPtr sys,
                                   "ring_bond").asInt() != 1));
         case ':': return (reverse ^ (sys->bondPropValue(bond,
                                   "aromatic").asInt() != 1));
-        default: MSYS_FAIL("VIPARR BUG; unrecognized bond spec");
+        default: MSYS_FAIL("SMARTS BUG; unrecognized bond spec");
     }
 }
 bool match_and_bond_spec(Id bond, SystemPtr sys,
@@ -712,6 +711,7 @@ void SmartsPattern::Annotate(SystemPtr sys, IdList const& atoms) {
     }
     sys->addAtomProp("hcount", IntType);
     sys->addAtomProp("valence", IntType);
+    sys->addAtomProp("degree", IntType);
     sys->addAtomProp("ring_bond_count", IntType);
     sys->addAtomProp("ring_size_string", StringType);
     for (unsigned i = 0; i < atoms.size(); ++i) {
@@ -727,17 +727,52 @@ void SmartsPattern::Annotate(SystemPtr sys, IdList const& atoms) {
         const IdList& bonds = sys->bondsForAtom(atoms[i]);
         unsigned hcount = 0;
         unsigned valence = 0;
+        unsigned degree = 0;
         unsigned ring_bonds = 0;
         for (unsigned j = 0; j < bonds.size(); ++j) {
+            Id other = sys->bond(bonds[j]).other(atoms[i]);
+            if (sys->atom(other).atomic_number < 1)
+                continue;
             valence += sys->bond(bonds[j]).order;
+            ++degree;
             ring_bonds += sys->bondPropValue(bonds[j], "ring_bond").asInt();
-            if (sys->atom(sys->bond(bonds[j]).other(atoms[i])).atomic_number
-                    == 1)
+            if (sys->atom(other).atomic_number == 1)
                 ++hcount;
         }
         sys->atomPropValue(atoms[i], "hcount") = hcount;
         sys->atomPropValue(atoms[i], "valence") = valence;
+        sys->atomPropValue(atoms[i], "degree") = degree;
         sys->atomPropValue(atoms[i], "ring_bond_count") = ring_bonds;
+    }
+    sys->addAtomProp("hybridization", IntType);
+    for (unsigned i = 0; i < atoms.size(); ++i) {
+        /* Hybridization = # bonded atoms + # lone pairs - 1 */
+        int hyb = sys->atomPropValue(atoms[i], "degree").asInt() +
+            sys->atomPropValue(atoms[i], "lonepair_count").asInt() - 1;
+        /* If sp3 AND (aromatic OR (have lone pairs and are bonded to an atom
+         * that has double bonds)): become sp2 */
+        if (hyb == 3) {
+            if (sys->atomPropValue(atoms[i], "aromatic") == 1)
+                hyb = 2;
+            else if (sys->atomPropValue(atoms[i],
+                        "lonepair_count").asInt() > 0) {
+                IdList bonded = sys->bondedAtoms(atoms[i]);
+                for (unsigned j = 0; j < bonded.size(); ++j) {
+                    if (sys->atom(bonded[j]).atomic_number == 0)
+                        continue;
+                    IdList bonds = sys->bondsForAtom(bonded[j]);
+                    for (unsigned k = 0; k < bonds.size(); ++k) {
+                        if (sys->bond(bonds[k]).order == 2) {
+                            hyb = 2;
+                            break;
+                        }
+                    }
+                    if (hyb == 2)
+                        break;
+                }
+            }
+        }
+        sys->atomPropValue(atoms[i], "hybridization") = hyb;
     }
 }
 
@@ -882,12 +917,16 @@ MultiIdList SmartsPattern::findMatches(SystemPtr sys, IdList const& atoms) const
         msg += "ring_count atom property"; MSYS_FAIL(msg); }
     if (sys->atomPropIndex("valence") == BadId) {
         msg += "valence atom property"; MSYS_FAIL(msg); }
+    if (sys->atomPropIndex("degree") == BadId) {
+        msg += "degree atom property"; MSYS_FAIL(msg); }
+    if (sys->atomPropIndex("hybridization") == BadId) {
+        msg += "hybridization atom property"; MSYS_FAIL(msg); }
     if (sys->atomPropIndex("ring_size_string") == BadId) {
         msg += "ring_size_string atom property"; MSYS_FAIL(msg); }
     if (sys->atomPropIndex("aromatic") == BadId) {
         msg += "aromatic atom property"; MSYS_FAIL(msg); }
-    /* if (sys->atomPropIndex("lonepair_count") == BadId) {
-        msg += "lonepair_count atom property"; MSYS_FAIL(msg); } */
+    if (sys->atomPropIndex("lonepair_count") == BadId) {
+        msg += "lonepair_count atom property"; MSYS_FAIL(msg); }
     if (sys->bondPropIndex("aromatic") == BadId) {
         msg += "aromatic bond property"; MSYS_FAIL(msg); }
     if (sys->bondPropIndex("ring_bond") == BadId) {
@@ -895,6 +934,8 @@ MultiIdList SmartsPattern::findMatches(SystemPtr sys, IdList const& atoms) const
 
     MultiIdList matches;
     BOOST_FOREACH(Id id, atoms) {
+        if (sys->atom(id).atomic_number < 1)
+            continue;
         _impl->matchSmartsPattern(sys, id, matches);
     }
     return matches;
@@ -902,6 +943,17 @@ MultiIdList SmartsPattern::findMatches(SystemPtr sys, IdList const& atoms) const
 
 bool SmartsPatternImpl::matchSmartsPattern(SystemPtr sys, Id atom,
         std::vector<IdList>& matches, bool match_single) const {
+    /* Use this with filteredBondsPerAtom to obtain non-pseudo bonds for
+     * atoms */
+    struct filter_t {
+        filter_t(SystemPtr sys) : _sys(sys) { }
+        bool operator()(const msys::bond_t& b) const {
+            return (_sys->atom(b.i).atomic_number > 0
+                    && _sys->atom(b.j).atomic_number > 0);
+        }
+        SystemPtr _sys;
+    } filter(sys);
+
     if (_atoms.size() == 0)
         return false;
     if (!match_atom(atom, sys, _atoms[0]))
@@ -910,7 +962,7 @@ bool SmartsPatternImpl::matchSmartsPattern(SystemPtr sys, Id atom,
         matches.push_back(IdList(1, atom));
         return true;
     }
-    if (sys->bondsForAtom(atom).size() == 0)
+    if (sys->filteredBondsForAtom(atom, filter).size() == 0)
         return false;
 
     /* Two-way maps of currently matched atom expressions and atoms in system */
@@ -937,10 +989,10 @@ bool SmartsPatternImpl::matchSmartsPattern(SystemPtr sys, Id atom,
             MSYS_FAIL("VIPARR_BUG: Bond refers to unmatched atom");
         if (closure && aj == BadId)
             MSYS_FAIL("VIPARR_BUG: Closure bond refers to unmatched atom");
-        if (bond_choices.top() >= sys->bondsForAtom(ai).size())
-            MSYS_FAIL("VIPARR BUG: Bond choice exceeds number of bonds");
+        if (bond_choices.top() >= sys->filteredBondsForAtom(ai, filter).size())
+            MSYS_FAIL("SMARTS BUG: Bond choice exceeds number of bonds");
         /* Try matching to the system bond indicated by the top of the stack */
-        Id bond = sys->bondsForAtom(ai)[bond_choices.top()];
+        Id bond = sys->filteredBondsForAtom(ai, filter)[bond_choices.top()];
         if (!match_bond_expression(bond, sys, bond_tuple.get<1>())
                 || (closure && sys->bond(bond).other(ai) != aj)
                 || (!closure
@@ -950,7 +1002,8 @@ bool SmartsPatternImpl::matchSmartsPattern(SystemPtr sys, Id atom,
             /* Bond does not match */
             Id top_atom = smarts_to_sys[_bonds[
                 bond_choices.size()-1].get<0>()];
-            while (bond_choices.top() == sys->bondsForAtom(top_atom).size()-1) {
+            while (bond_choices.top() == sys->filteredBondsForAtom(top_atom,
+                        filter).size()-1) {
                 /* Have tried all possible system bonds for this atom; pop top
                  * bond choice off of the stack */
                 bond_choices.pop();
@@ -992,7 +1045,8 @@ bool SmartsPatternImpl::matchSmartsPattern(SystemPtr sys, Id atom,
                 Id top_atom = smarts_to_sys[_bonds[
                     bond_choices.size()-1].get<0>()];
                 while (bond_choices.top()
-                        == sys->bondsForAtom(top_atom).size()-1) {
+                        == sys->filteredBondsForAtom(top_atom,
+                            filter).size()-1) {
                     /* Have tried all possible system bonds for this atom; pop
                      * top bond choice off of the stack */
                     bond_choices.pop();

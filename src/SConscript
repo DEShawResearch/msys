@@ -144,7 +144,7 @@ param_table.cxx
 provenance.cxx
 sdf.cxx
 smarts.cxx
-sssr.cxx
+analyze/sssr.cxx
 system.cxx
 term_table.cxx
 value.cxx
