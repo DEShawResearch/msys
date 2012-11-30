@@ -77,11 +77,9 @@ namespace desres { namespace msys {
         SystemPtr m;
         switch (format) {
             case DmsFileFormat: 
-                printf("load dms %s structure_only %d\n", path.c_str(), structure_only);
                 m=ImportDMS(path, structure_only); 
                 break;
             case MaeFileFormat: 
-                printf("load mae %s structure_only %d\n", path.c_str(), structure_only);
                 m=ImportMAE(path, false, structure_only); 
                 break;
             case PdbFileFormat: 
