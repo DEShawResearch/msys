@@ -374,7 +374,8 @@ static void parse_exclusions(SystemPtr mol, SectionMap const& map, int n) {
     }
 }
 
-SystemPtr desres::msys::ImportPrmTop( std::string const& path ) {
+SystemPtr desres::msys::ImportPrmTop( std::string const& path,
+                                      bool structure_only ) {
 
     std::string line, flag;
     std::ifstream in(path.c_str());
@@ -450,12 +451,14 @@ SystemPtr desres::msys::ImportPrmTop( std::string const& path ) {
         mol->atom(atm).atomic_number = GuessAtomicNumber(masses.at(atm));
     }
 
-    parse_stretch(mol, section, ptrs[Numbnd], ptrs[Nbonh], ptrs[Nbona]);
-    parse_angle(mol, section, ptrs[Numang], ptrs[Ntheth], ptrs[Ntheta]);
-    PairList pairs = parse_torsion(mol, section, 
-                                  ptrs[Nptra], ptrs[Nphih], ptrs[Nphia]);
-    parse_nonbonded(mol, section, ptrs[Ntypes], pairs);
-    parse_exclusions(mol, section, ptrs[Nnb]);
+    if (!structure_only) {
+        parse_stretch(mol, section, ptrs[Numbnd], ptrs[Nbonh], ptrs[Nbona]);
+        parse_angle(mol, section, ptrs[Numang], ptrs[Ntheth], ptrs[Ntheta]);
+        PairList pairs = parse_torsion(mol, section, 
+                                      ptrs[Nptra], ptrs[Nphih], ptrs[Nphia]);
+        parse_nonbonded(mol, section, ptrs[Ntypes], pairs);
+        parse_exclusions(mol, section, ptrs[Nnb]);
+    }
 
     mol->analyze();
     mol->coalesceTables();

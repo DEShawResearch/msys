@@ -30,7 +30,8 @@ namespace desres { namespace msys {
 
     /* Load using the specified format with default options.  Returns
      * NULL SystemPtr if format is UnrecognizedFileFormat */
-    SystemPtr LoadWithFormat(std::string const& path, FileFormat format);
+    SystemPtr LoadWithFormat(std::string const& path, FileFormat format,
+                             bool structure_only = false);
 
     /* Try to guess the file type from the path, and load the system
      * using default options.  Returns NULL SystemPtr if file type could
@@ -38,7 +39,9 @@ namespace desres { namespace msys {
      * between errors due to filename and errors due to failure to import
      * the file).  If optional format pointer is supplied, stores 
      * format which was guessed based on the path.  */
-    SystemPtr Load(std::string const& path, FileFormat* opt_format = NULL);
+    SystemPtr Load(std::string const& path, 
+                   bool structure_only = false,
+                   FileFormat* opt_format = NULL);
 
 }}
 

@@ -72,20 +72,23 @@ namespace desres { namespace msys {
         return UnrecognizedFileFormat;
     }
 
-    SystemPtr LoadWithFormat(std::string const& path, FileFormat format) {
+    SystemPtr LoadWithFormat(std::string const& path, FileFormat format,
+                             bool structure_only) {
         SystemPtr m;
         switch (format) {
             case DmsFileFormat: 
-                m=ImportDMS(path); 
+                printf("load dms %s structure_only %d\n", path.c_str(), structure_only);
+                m=ImportDMS(path, structure_only); 
                 break;
             case MaeFileFormat: 
-                m=ImportMAE(path); 
+                printf("load mae %s structure_only %d\n", path.c_str(), structure_only);
+                m=ImportMAE(path, false, structure_only); 
                 break;
             case PdbFileFormat: 
                 m=ImportPDB(path); 
                 break;
             case ParmTopFileFormat: 
-                m=ImportPrmTop(path); 
+                m=ImportPrmTop(path, structure_only); 
                 break;
             case Mol2FileFormat: 
                 m=ImportMol2(path); 
@@ -99,10 +102,11 @@ namespace desres { namespace msys {
         return m;
     }
 
-    SystemPtr Load(std::string const& path, FileFormat* opt_format) {
+    SystemPtr Load(std::string const& path, bool structure_only,
+                   FileFormat* opt_format) {
         FileFormat format = GuessFileFormat(path);
         if (opt_format) *opt_format = format;
-        return LoadWithFormat(path, format);
+        return LoadWithFormat(path, format, structure_only);
     }
 
 }}

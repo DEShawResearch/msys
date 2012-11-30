@@ -1314,11 +1314,11 @@ def LoadXYZ(path):
     return System(_msys.ImportXYZ(path))
 
 
-def Load(path):
+def Load(path, structure_only = False):
     ''' Infer the file type of path and load the file.
     Returns a new System.
     '''
-    ptr = _msys.Load(path)
+    ptr = _msys.Load(path, bool(structure_only))
     if not ptr:
         raise ValueError, "Could not guess file type of '%s'" % path
     return System(ptr)

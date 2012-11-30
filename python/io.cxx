@@ -71,6 +71,7 @@ namespace desres { namespace msys {
         def("ExportSDFBytes", export_sdf_bytes);
         def("Load", Load,
                 (arg("path"),
+                 arg("structure_only")=false,
                  arg("opt_format")=object()));
 
     }
