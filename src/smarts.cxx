@@ -343,8 +343,11 @@ struct SMARTS_grammar : qi::grammar<Iterator, smarts_pattern_(), ascii::space_ty
             | charge
             | implicith
             | explicitD
-            | chirality
-            | hybridization)
+            | chirality)
+        /* To disable support for hybridization, uncomment the below line and
+         * remove '^' from character set "XHxvRr^" in definition of
+         * optional_numeric_property below */
+        //    | hybridization)
             >> qi::omit[-atomclass];
 
         recursive_pattern %= "$(" >> smarts_pattern >> ")";
@@ -354,7 +357,7 @@ struct SMARTS_grammar : qi::grammar<Iterator, smarts_pattern_(), ascii::space_ty
         element %= double_sym | raw_double_sym | single_sym | raw_single_sym;
 
         atomic_number %= qi::char_("#") >> qi::uint_;
-        optional_numeric_property %= qi::char_("XHxvRr") >> -qi::uint_;
+        optional_numeric_property %= qi::char_("XHxvRr^") >> -qi::uint_;
         charge %= qi::char_('+') >> qi::uint_ | qi::char_('-') >> qi::uint_
             | +qi::char_('+') | +qi::char_('-');
 
@@ -749,7 +752,7 @@ void SmartsPattern::Annotate(SystemPtr sys, IdList const& atoms) {
         /* Hybridization = # bonded atoms + # lone pairs - 1 */
         int hyb = sys->atomPropValue(atoms[i], "degree").asInt() +
             sys->atomPropValue(atoms[i], "lonepair_count").asInt() - 1;
-        /* If sp3 AND (aromatic OR (have lone pairs and are bonded to an atom
+        /* If sp3 AND (aromatic OR (have lone pairs and are bonded to C or N
          * that has double bonds)): become sp2 */
         if (hyb == 3) {
             if (sys->atomPropValue(atoms[i], "aromatic") == 1)
@@ -758,7 +761,8 @@ void SmartsPattern::Annotate(SystemPtr sys, IdList const& atoms) {
                         "lonepair_count").asInt() > 0) {
                 IdList bonded = sys->bondedAtoms(atoms[i]);
                 for (unsigned j = 0; j < bonded.size(); ++j) {
-                    if (sys->atom(bonded[j]).atomic_number == 0)
+                    if (sys->atom(bonded[j]).atomic_number != 6
+                            && sys->atom(bonded[j]).atomic_number != 7)
                         continue;
                     IdList bonds = sys->bondsForAtom(bonded[j]);
                     for (unsigned k = 0; k < bonds.size(); ++k) {
