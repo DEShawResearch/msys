@@ -265,7 +265,8 @@ namespace {
 namespace desres { namespace msys {
 
     SystemPtr ImportMAE( std::string const& path,
-                         bool ignore_unrecognized ) {
+                         bool ignore_unrecognized,
+                         bool structure_only ) {
 
         /* slurp in the file */
         std::ifstream file(path.c_str());
@@ -275,22 +276,25 @@ namespace desres { namespace msys {
             throw std::runtime_error(ss.str());
         }
 
-        SystemPtr sys = ImportMAEFromStream(file, ignore_unrecognized);
+        SystemPtr sys = ImportMAEFromStream(file, 
+                                            ignore_unrecognized,
+                                            structure_only);
         sys->name = path;
 
         return sys;
     }
 
     SystemPtr ImportMAEFromBytes( const char* bytes, int64_t len,
-                         bool ignore_unrecognized ) {
+                         bool ignore_unrecognized, bool structure_only ) {
         std::istringstream in;
         /* behold the lameness that is std::stringstream */
         in.rdbuf()->pubsetbuf(const_cast<char *>(bytes), len);
-        return ImportMAEFromStream(in,ignore_unrecognized);
+        return ImportMAEFromStream(in,ignore_unrecognized,structure_only);
     }
 
     SystemPtr ImportMAEFromStream( std::istream& file,
-                                   bool ignore_unrecognized ) {
+                                   bool ignore_unrecognized,
+                                   bool structure_only) {
 
         bio::filtering_istream in;
         /* check for gzip magic number */
@@ -335,6 +339,7 @@ namespace desres { namespace msys {
             int natoms=0, npseudos=0;
             import_cell( ct, h );
             import_particles( ct, h, atoms, &natoms, &npseudos );
+            if (structure_only) continue;
 
             const Json& ff = ct.get("ffio_ff");
             if (ff.valid()) {

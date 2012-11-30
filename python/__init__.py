@@ -1251,7 +1251,8 @@ def LoadDMS(path=None, structure_only=False, buffer=None ):
     return System(ptr)
 
 
-def LoadMAE(path=None, ignore_unrecognized = False, buffer=None):
+def LoadMAE(path=None, ignore_unrecognized = False, buffer=None,
+                       structure_only = False):
     ''' load the MAE file at the given path and return a System containing it.
     Forcefield tables will be created that attempt to match as closely as
     possible the force terms in the MAE file; numerical differences are bound
@@ -1263,17 +1264,22 @@ def LoadMAE(path=None, ignore_unrecognized = False, buffer=None):
 
     If the contents of the file specified by path, or the contents of buffer,
     are recognized as being gzip-compressed, they will be decompressed on
-    the fly. '''
+    the fly.
+    
+    If structure_only is True, no forcefield components will be loaded.  '''
 
     if buffer is None and path is None:
         raise ValueError, "Must provide either path or buffer"
     if buffer is not None and path is not None:
         raise ValueError, "Must provide either path or buffer"
+    ignore_unrecognized = bool(ignore_unrecognized)
+    structure_only = bool(structure_only)
 
     if path is not None:
-        ptr = _msys.ImportMAE(path, ignore_unrecognized )
+        ptr = _msys.ImportMAE(path, ignore_unrecognized, structure_only )
     else:
-        ptr = _msys.ImportMAEFromBuffer( buffer, ignore_unrecognized )
+        ptr = _msys.ImportMAEFromBuffer( buffer, ignore_unrecognized, 
+                                                 structure_only )
     return System(ptr)
 
 def LoadPDB(path):

@@ -11,14 +11,17 @@
 
 namespace {
 
-    SystemPtr import_mae_from_buffer(PyObject* obj, bool ignore_unrecognized) {
+    SystemPtr import_mae_from_buffer(PyObject* obj, bool ignore_unrecognized,
+                                                    bool structure_only) {
         Py_buffer view[1];
         if (PyObject_GetBuffer(obj, view, PyBUF_ND)) {
             throw_error_already_set();
         }
         boost::shared_ptr<Py_buffer> ptr(view, PyBuffer_Release);
         const char* bytes = reinterpret_cast<const char *>(view->buf);
-        return ImportMAEFromBytes(bytes, view->len, ignore_unrecognized);
+        return ImportMAEFromBytes(bytes, view->len, 
+                                  ignore_unrecognized,
+                                  structure_only);
     }
 
     SystemPtr import_dms_from_buffer( PyObject* obj, bool structure_only ) {
