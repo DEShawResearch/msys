@@ -1,5 +1,10 @@
+1.6.18 FIXED: SmartsMatcher for systems with pseudos.
+       FIXED: TermTable find methods don't return duplicate terms when
+              the terms contain duplicate atoms.
+
 1.6.17 NEW: class SmartsPattern.
        NEW: MassForElement() function.
+       FIXED: dms-dump handles systems with missing expected tables.
 
 1.6.15 NEW: Added 'insertion' as a residue property.
        NEW: PDB reader reads 'altloc' as extra atom property.
