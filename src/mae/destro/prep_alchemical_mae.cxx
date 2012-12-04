@@ -1,6 +1,8 @@
 // @COPYRIGHT@
 
 #include "prep_alchemical_mae.hxx"
+#include "../../types.hxx"
+
 #include <sstream>
 
 #include "destro/Destro.hxx"
@@ -12,13 +14,6 @@
 #include <cmath>
 #include <stdexcept>
 #include <cstring>
-
-#define THROW_FAILURE(args) do { \
-  printf("ERROR: "); \
-  printf args; \
-  printf("\n"); \
-  throw std::runtime_error("Bad input file."); \
-} while (0) 
 
 namespace {
   /*! size of subblock, or zero if not present
@@ -260,7 +255,7 @@ namespace {
           if (b2.has_value(Cj)) b1.setattr(CjB,b2[Cj]);
         }
 
-      } else THROW_FAILURE(("Unsupported mapping of %s, line ta(%d) and tb(%d)", blk.c_str(), ta, tb));
+      } else MSYS_FAIL("Unsupported mapping of " << blk << ", line ta(" << ta << ") and tb(" << tb << ")");
     }
     // remove the rows that were copied into the alchemical state
     for (std::set<int>::const_reverse_iterator i=remove.rbegin(); 
@@ -321,8 +316,7 @@ namespace {
       return;
     if (oldnumH < 1 || newnumH < 1 ||
         oldnumH > (int)a2c_size || newnumH > (int)a2c_size) 
-      THROW_FAILURE(( "Unsupported constraint type: %s, %s",
-             oldfunct.c_str(), newfunct.c_str()));
+      MSYS_FAIL("Unsupported constraint type: " << oldfunct << ", " << newfunct);
 
     // cache the non-ai indices in a set
     std::set<int> indices;
@@ -345,7 +339,7 @@ namespace {
     }
     if (!coeffs.size()) return;
     if (indices.size() + coeffs.size() > a2c_size)
-      THROW_FAILURE(("Too many atoms in a constraint term"));
+      MSYS_FAIL("Too many atoms in a constraint term");
 
     unsigned ind = indices.size();
     for (std::map<int,double>::const_iterator i=coeffs.begin();
@@ -369,7 +363,7 @@ namespace {
 
       int natoms=atoms.size();
       int nsites=sites.size();
-      if (!nsites) THROW_FAILURE(("Invalid ct: Empty ffio_sites block"));
+      if (!nsites) MSYS_FAIL("Invalid ct: Empty ffio_sites block");
       int npseudos = 0;
       if (ffio_ff.has_block("ffio_pseudo")) {
           npseudos = ffio_ff.block("ffio_pseudo").size();
@@ -377,8 +371,7 @@ namespace {
       int nparticles=natoms+npseudos;
       int nblocks=nparticles/nsites;
       if (nblocks * nsites != nparticles) {
-          THROW_FAILURE(("Invalid ct: %d atoms, %d pseudos,%d sites",
-                      natoms, npseudos, nsites));
+          MSYS_FAIL("Invalid ct: " << natoms << " atoms, " << npseudos << " pseudos, " << nsites << " sites");
       }
   }
   /*! combine vdw tables from stage 1 and 2.
@@ -479,8 +472,7 @@ namespace {
       std::map<int,int>::const_iterator to_iter   = a2inv.find(to);
       if (from_iter == a2inv.end() ||
           to_iter == a2inv.end()) 
-        THROW_FAILURE((
-            "Missing entry in fepio_atommap for %d %d", from, to ));
+        MSYS_FAIL("Missing entry in fepio_atommap for " << from << " " << to);
 
       BondSet::value_type p(from_iter->second, to_iter->second);
       if (bondset.find(p) != bondset.end()) continue;
@@ -504,9 +496,9 @@ namespace {
       for (unsigned i=0; i<cons1.size(); i++) {
         desres::msys::Destro &c = cons1[i+1];
         int ai = c("ffio_ai").or_else(0);
-        if (ai<1) THROW_FAILURE(("Invalid %s term found in stage 1",blk.c_str()));
+        if (ai<1) MSYS_FAIL("Invalid " << blk << " term found in stage 1");
         if (stage1constraints.find(ai) != stage1constraints.end())
-          THROW_FAILURE(("Found overlapping %s for atom %d",blk.c_str(), ai));
+          MSYS_FAIL("Found overlapping " << blk << " for atom " << ai);
         stage1constraints[ai] = &c;
       }
   
@@ -514,7 +506,7 @@ namespace {
       for (unsigned i=0; i<cons2.size(); i++) {
         const desres::msys::Destro &c = cons2[i+1];
         int ai = c("ffio_ai").or_else(0);
-        if (!ai) THROW_FAILURE(("Invalid %s term in stage 2", blk.c_str()));
+        if (!ai) MSYS_FAIL("Invalid " << blk << " term in stage 2");
         int mapped_ai = a2_inv_map[ai];
 
         if (stage1constraints.find(mapped_ai) == stage1constraints.end()) {
@@ -583,7 +575,7 @@ namespace {
 	  ns1.setattr("ffio_chargeB", b2["ffio_charge"]);
 	  ns1.setattr("ffio_vdwtype", "DMY");
 	  ns1.setattr("ffio_vdwtypeB", b2["ffio_vdwtype"]);
-	} else THROW_FAILURE(("ai(%d) and aj(%d) < 0 in atommap", ai, aj));
+	} else MSYS_FAIL("ai(" << ai << ") and aj(" << aj << ") < 0 in atommap");
       }
     }
 
@@ -630,7 +622,7 @@ namespace {
 	  b1.setattr("ffio_aj", aj);
 	} else if ( ta > 0 && tb > 0 ) {
 	  // nothing
-	} else THROW_FAILURE(("Unsupported exclusion line ta(%d) and tb(%d)", ta, tb));
+	} else MSYS_FAIL("Unsupported exclusion line ta(" << ta << ") and tb(" << tb << ")");
       }
     }
 

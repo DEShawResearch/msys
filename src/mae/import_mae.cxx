@@ -296,8 +296,6 @@ namespace desres { namespace msys {
                                    bool ignore_unrecognized,
                                    bool structure_only) {
 
-        printf("mae: structure_only %d\n", structure_only);
-
         bio::filtering_istream in;
         /* check for gzip magic number */
         if (file.get()==0x1f && file.get()==0x8b) {
