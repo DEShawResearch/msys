@@ -1,3 +1,6 @@
+1.6.20 NEW: Enable support for hybridization matching in SMARTS matcher.
+       FIXED: Deleted printf chatter.
+
 1.6.19 NEW: Load() has a structure_only option.
 
 1.6.18 FIXED: SmartsMatcher for systems with pseudos.
