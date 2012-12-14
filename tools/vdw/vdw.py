@@ -1,6 +1,17 @@
 
 import msys, sys, math
 
+def count_overrides(nb):
+    ''' return the number of pairwise nonbonded interactions which 
+    are affected by the overrides in the given term table. '''
+    # count the number of atoms for each nonbonded param
+    nparams = nb.params.nparams
+    pcount = [0] * nparams
+    for t in nb.terms:
+        pcount[t.param.id] += 1
+    cnt = sum(pcount[pi.id] * pcount[pj.id] for pi, pj in nb.overrides())
+    return cnt * 2
+        
 def duplicate_overrides(nb, pdict):
     # duplicate the overridden parameters and reassign while disambiguating
     nb.params.addProp('override', int)

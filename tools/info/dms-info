@@ -13,6 +13,7 @@ Write information about a dms file to stdout.
 
 import sys
 import msys
+from msys import vdw
 
 def print_info(mol):
     print "Structure:"
@@ -52,13 +53,12 @@ def print_info(mol):
 
         for table in tables:
             n = table.noverrides
-            if n:
-                o = ", %d overrides" % n
-            else:
-                o = ""
-            print "%28s: %d sites, %6d params, %6d terms%s" % (
+            print "%28s: %d sites, %6d params, %6d terms" % (
                     table.name, table.natoms, table.params.nparams, 
-                    table.nterms, o)
+                    table.nterms)
+            if table.noverrides:
+                print "%27s overrides: %6d params, %6d pairs" %(
+                        '', table.noverrides, vdw.count_overrides(table))
 
     nbinfo=mol.nonbonded_info
     print "\n%s:" % "Nonbonded Info"
