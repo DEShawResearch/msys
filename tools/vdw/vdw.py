@@ -10,7 +10,7 @@ def count_overrides(nb):
     for t in nb.terms:
         pcount[t.param.id] += 1
     cnt = sum(pcount[pi.id] * pcount[pj.id] for pi, pj in nb.overrides())
-    return cnt * 2
+    return cnt
         
 def duplicate_overrides(nb, pdict):
     # duplicate the overridden parameters and reassign while disambiguating
