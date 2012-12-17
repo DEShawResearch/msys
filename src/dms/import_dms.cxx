@@ -391,6 +391,7 @@ read_nbinfo(Sqlite dms, System& sys, KnownSet& known) {
     if (r) {
         int funct_col = r.column("vdw_funct");
         int rule_col = r.column( "vdw_rule");
+        int esfunct_col = r.column("es_funct");
         if (funct_col>=0) {
             sys.nonbonded_info.vdw_funct = 
                 r.get_str(funct_col);
@@ -398,6 +399,10 @@ read_nbinfo(Sqlite dms, System& sys, KnownSet& known) {
         if (rule_col>=0) {
             sys.nonbonded_info.vdw_rule =
                 r.get_str(rule_col);
+        }
+        if (esfunct_col>=0) {
+            sys.nonbonded_info.es_funct = 
+                r.get_str(esfunct_col);
         }
     }
 }

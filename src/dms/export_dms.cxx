@@ -447,10 +447,15 @@ static void export_aux(const System& sys, Sqlite dms) {
 }
 
 static void export_nbinfo(const System& sys, Sqlite dms) {
-    dms.exec("create table nonbonded_info (vdw_funct text, vdw_rule text)");
+    dms.exec(
+            "create table nonbonded_info (\n"
+            "  vdw_funct text,\n"
+            "  vdw_rule text,\n"
+            "  es_funct text)");
     Writer w = dms.insert("nonbonded_info");
     w.bind_str(0,sys.nonbonded_info.vdw_funct.c_str());
     w.bind_str(1,sys.nonbonded_info.vdw_rule.c_str());
+    w.bind_str(2,sys.nonbonded_info.es_funct.c_str());
     w.next();
 }
 

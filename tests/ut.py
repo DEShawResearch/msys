@@ -890,8 +890,6 @@ class TestMain(unittest.TestCase):
         finally:
             pass
         
-
-
     def testGlobalCell(self):
         m=msys.CreateSystem()
         m.cell.A.x=32
@@ -916,8 +914,11 @@ class TestMain(unittest.TestCase):
         nb=m.nonbonded_info
         nb.vdw_funct = "justinrocks"
         nb.vdw_rule = "yep"
-        self.assertEqual(nb.vdw_funct , "justinrocks")
-        self.assertEqual(nb.vdw_rule , "yep")
+        nb.es_funct = "oh yeah"
+        self.assertEqual(nb.vdw_funct, "justinrocks")
+        self.assertEqual(nb.vdw_rule,  "yep")
+        self.assertEqual(nb.es_funct,  "oh yeah")
+
 
     def testClone2(self):
         m=msys.CreateSystem()

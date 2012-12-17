@@ -75,6 +75,7 @@ namespace desres { namespace msys {
     struct NonbondedInfo {
         String vdw_funct;
         String vdw_rule;
+        String es_funct;
     };
 
     enum AtomType {
