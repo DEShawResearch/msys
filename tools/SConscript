@@ -20,6 +20,9 @@ env.AddScript('glue/dms-glue')
 env.AddPythonModule('grease/grease.py', prefix='msys')
 env.AddScript('grease/dms-grease')
 
+## mview
+env.AddScript('mview', src='mview/mview.py')
+
 ## psfgen
 psfenv=env.Clone()
 psfenv.Append(
