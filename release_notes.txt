@@ -1,3 +1,7 @@
+1.6.21 NEW: Print count of override pairs in dms-info.
+       NEW: mview tool for viewing dms file contents.
+       NEW: Added es_funct field to nonbonded_info.
+
 1.6.20 NEW: Enable support for hybridization matching in SMARTS matcher.
        FIXED: Deleted printf chatter.
 
