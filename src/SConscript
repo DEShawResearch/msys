@@ -131,6 +131,9 @@ mol2/assign.cxx
 mol2/export.cxx
 mol2/import.cxx
 
+sdf/export.cxx
+sdf/import.cxx
+
 pdb/pdb.cxx
 
 schema.cxx
@@ -142,7 +145,6 @@ graph.cxx
 override.cxx
 param_table.cxx
 provenance.cxx
-sdf.cxx
 smarts.cxx
 analyze/sssr.cxx
 system.cxx
