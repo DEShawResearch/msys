@@ -17,6 +17,8 @@ namespace desres { namespace msys {
                                         IdList const& atoms,
                                         int total_charge = INT_MAX);
 
+    /* Compute topology ids.  FIXME definition please */
+    IdList ComputeTopologicalIds(SystemPtr mol);
 
     /* Add bonds based on estimated VDW radii determined from atomic
      * number (Bondi radii). */
