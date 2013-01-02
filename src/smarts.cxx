@@ -2,6 +2,7 @@
 #include "analyze.hxx"
 #include "sssr.hxx"
 #include "aromatic.hxx"
+#include "elements.hxx"
 
 #include <boost/fusion/adapted/struct/adapt_struct.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
@@ -52,6 +53,53 @@ namespace {
         std::vector<bond_> bonds;
         boost::optional<bond_> last_bond;
     };
+}
+
+static int ComputeHybridization(SystemPtr sys, int i) {
+    int anum = sys->atom(i).atomic_number;
+    if (anum<1) return 0;
+
+    /* Hybridization = # bonded atoms + # lone pairs - 1 */
+    int degree = 0;
+    int valence = 0;
+    int formal_charge = sys->atom(i).formal_charge;
+
+    BOOST_FOREACH(Id bid, sys->bondsForAtom(i)) {
+        bond_t const& bnd = sys->bond(bid);
+        Id other = bnd.other(i);
+        if (sys->atom(other).atomic_number<1) continue;
+        valence += bnd.order;
+        ++degree;
+    }
+    int nValence = DataForElement(anum).nValence;
+    int lonepairs = (nValence - valence - formal_charge)/2;
+    int hyb = degree + lonepairs - 1;
+
+    /* If sp3 AND (aromatic OR (have lone pairs and are bonded to C or N
+     * that has double bonds)): become sp2 */
+    if (hyb == 3) {
+        if (sys->atomPropValue(i, "aromatic") == 1)
+            hyb = 2;
+        else if (lonepairs > 0) {
+            IdList bonded = sys->bondedAtoms(i);
+            for (unsigned j = 0; j < bonded.size(); ++j) {
+                if (sys->atom(bonded[j]).atomic_number != 6
+                        && sys->atom(bonded[j]).atomic_number != 7)
+                    continue;
+                IdList bonds = sys->bondsForAtom(bonded[j]);
+                for (unsigned k = 0; k < bonds.size(); ++k) {
+                    if (sys->bond(bonds[k]).order == 2) {
+                        hyb = 2;
+                        break;
+                    }
+                }
+                if (hyb == 2)
+                    break;
+            }
+        }
+    }
+    return hyb;
+
 }
 
 namespace desres { namespace msys {
@@ -559,8 +607,7 @@ bool match_atom_spec(Id atom, SystemPtr sys, const atom_spec_&
                 }
             case '^':
                 if (val == -1) val = 1;
-                return (sys->atomPropValue(atom,
-                            "hybridization").asInt() == val);
+                return val==ComputeHybridization(sys, atom);
             default:
                 MSYS_FAIL("SMARTS BUG; unrecognized numeric property");
         }
@@ -747,38 +794,8 @@ void SmartsPattern::Annotate(SystemPtr sys, IdList const& atoms) {
         sys->atomPropValue(atoms[i], "degree") = degree;
         sys->atomPropValue(atoms[i], "ring_bond_count") = ring_bonds;
     }
-    sys->addAtomProp("hybridization", IntType);
-    for (unsigned i = 0; i < atoms.size(); ++i) {
-        /* Hybridization = # bonded atoms + # lone pairs - 1 */
-        int hyb = sys->atomPropValue(atoms[i], "degree").asInt() +
-            sys->atomPropValue(atoms[i], "lonepair_count").asInt() - 1;
-        /* If sp3 AND (aromatic OR (have lone pairs and are bonded to C or N
-         * that has double bonds)): become sp2 */
-        if (hyb == 3) {
-            if (sys->atomPropValue(atoms[i], "aromatic") == 1)
-                hyb = 2;
-            else if (sys->atomPropValue(atoms[i],
-                        "lonepair_count").asInt() > 0) {
-                IdList bonded = sys->bondedAtoms(atoms[i]);
-                for (unsigned j = 0; j < bonded.size(); ++j) {
-                    if (sys->atom(bonded[j]).atomic_number != 6
-                            && sys->atom(bonded[j]).atomic_number != 7)
-                        continue;
-                    IdList bonds = sys->bondsForAtom(bonded[j]);
-                    for (unsigned k = 0; k < bonds.size(); ++k) {
-                        if (sys->bond(bonds[k]).order == 2) {
-                            hyb = 2;
-                            break;
-                        }
-                    }
-                    if (hyb == 2)
-                        break;
-                }
-            }
-        }
-        sys->atomPropValue(atoms[i], "hybridization") = hyb;
-    }
 }
+
 
 /****************** Implementation of SmartsPattern class ********************/
 SmartsPattern::SmartsPattern(std::string const& pattern)
@@ -923,14 +940,10 @@ MultiIdList SmartsPattern::findMatches(SystemPtr sys, IdList const& atoms) const
         msg += "valence atom property"; MSYS_FAIL(msg); }
     if (sys->atomPropIndex("degree") == BadId) {
         msg += "degree atom property"; MSYS_FAIL(msg); }
-    if (sys->atomPropIndex("hybridization") == BadId) {
-        msg += "hybridization atom property"; MSYS_FAIL(msg); }
     if (sys->atomPropIndex("ring_size_string") == BadId) {
         msg += "ring_size_string atom property"; MSYS_FAIL(msg); }
     if (sys->atomPropIndex("aromatic") == BadId) {
         msg += "aromatic atom property"; MSYS_FAIL(msg); }
-    if (sys->atomPropIndex("lonepair_count") == BadId) {
-        msg += "lonepair_count atom property"; MSYS_FAIL(msg); }
     if (sys->bondPropIndex("aromatic") == BadId) {
         msg += "aromatic bond property"; MSYS_FAIL(msg); }
     if (sys->bondPropIndex("ring_bond") == BadId) {
