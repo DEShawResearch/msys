@@ -107,8 +107,9 @@ namespace desres { namespace msys {
                     be=bond.order;
                 }
             }
-            assert(b0!=0 && b1!=0);
-            assert(a0>=0 && a0%2==0);
+            if (b0==0 || b1==0 || a0<0 || a0%2) {
+                MSYS_FAIL("Invalid formal charge or bond orders for atom " << current << " of system " << mol->name);
+            }
             a0/=2;
 
             AromaticAtom::Type atype=AromaticAtom::Classify(nb,a0,b0,b1,be);

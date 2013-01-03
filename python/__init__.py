@@ -1188,7 +1188,9 @@ class SmartsPattern(object):
 
     def findMatches(self, system_or_atoms):
         ''' return list of lists representing ids of matches of this
-        pattern that start with the given set of atoms.  '''
+        pattern that start with the given set of atoms.  Formal charges
+        and bond orders must already be present in the system; use
+        AssignBondOrderAndFormalCharge to let msys do the assignment.  '''
         if isinstance(system_or_atoms, System):
             ptr = system_or_atoms._ptr
             ids = ptr.atoms()
