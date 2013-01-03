@@ -1280,12 +1280,12 @@ def LoadPDB(path):
     ptr = _msys.ImportPDB(path)
     return System(ptr)
 
-def LoadPrmTop(path):
+def LoadPrmTop(path, structure_only = False):
     ''' Load an Amber7 prmtop file at the given path and return a System.
     Coordinates and global cell information are not present in the file.
     '''
     path=str(path)
-    ptr = _msys.ImportPrmTop(path)
+    ptr = _msys.ImportPrmTop(path, bool(structure_only))
     return System(ptr)
 
 def LoadMol2(path, multiple=False):

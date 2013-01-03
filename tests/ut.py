@@ -88,6 +88,11 @@ class TestMain(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             msys.SavePDB(m,'/root/nono.pdb')
 
+    def testPrmTop(self):
+        d=os.path.dirname(__file__)
+        msys.LoadPrmTop(os.path.join(d,'molecule.prmtop'))
+
+
     def xxtestFailedWrite(self):
         print "building big system..."
         m=msys.CreateSystem()
