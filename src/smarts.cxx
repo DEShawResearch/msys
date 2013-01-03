@@ -735,7 +735,8 @@ bool match_bond_expression(Id bond, SystemPtr sys,
 void SmartsPattern::Annotate(SystemPtr sys, IdList const& atoms) {
 
     AssignBondOrderAndFormalCharge(sys, atoms);
-    MultiIdList rings = GetSSSR(sys, atoms, true);
+    boost::shared_ptr<MultiIdList> ringsptr = sys->allRelevantSSSR();
+    MultiIdList const& rings = *ringsptr;
     sys->addAtomProp("aromatic", IntType);
     sys->addAtomProp("ring_count", IntType);
     sys->addBondProp("aromatic", IntType);
