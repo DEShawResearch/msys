@@ -562,7 +562,9 @@ ValueRef System::atomPropValue(Id term, Id index) {
 }
 
 ValueRef System::atomPropValue(Id term, String const& name) {
-    return _atomprops->value(term, atomPropIndex(name));
+    Id col = atomPropIndex(name);
+    if (bad(col)) MSYS_FAIL("No such atom property '" << name << "'");
+    return atomPropValue(term, col);
 }
 
 Id System::bondPropCount() const {
@@ -593,7 +595,9 @@ ValueRef System::bondPropValue(Id term, Id index) {
 }
 
 ValueRef System::bondPropValue(Id term, String const& name) {
-    return _bondprops->value(term, bondPropIndex(name));
+    Id col = bondPropIndex(name);
+    if (bad(col)) MSYS_FAIL("No such bond property '" << name << "'");
+    return bondPropValue(term, col);
 }
 
 void System::addSelectionMacro(std::string const& macro,
