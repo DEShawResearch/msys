@@ -1,11 +1,9 @@
 #!/usr/bin/env desres-exec
 #{
 # desres-cleanenv --user-env \
-# -m Python/2.7.1-06A/bin \
-# -m numpy/1.5.1-29A/lib-python \
-# -m msys/1.6.2/lib-python \
-# -m sip/4.9-03A/lib-python \
-# -m PyQt4/4.6-03A/lib-python \
+# -m msys/1.6.22/lib-python \
+# -m sip/4.14.1-04A/lib-python \
+# -m PyQt4/4.9.5-05A/lib-python \
 # -- python $0 "$@"
 #}
 
