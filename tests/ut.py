@@ -1203,11 +1203,9 @@ class TestMain(unittest.TestCase):
         tests = json.loads(open(os.path.join(d, 'smarts_tests.json')).read())
         ww = msys.LoadDMS('/proj/desres/root/Linux/x86_64/dms_inputs/1.5.4/share/ww.dms', True)
         msys.AssignBondOrderAndFormalCharge(ww)
-        msys.SmartsPattern.Annotate(ww)
         ww_atoms = ww.select('not water')
         membrane = msys.LoadDMS('/proj/desres/root/Linux/x86_64/dms_inputs/1.5.4/share/membrane.dms', True)
         msys.AssignBondOrderAndFormalCharge(membrane)
-        msys.SmartsPattern.Annotate(membrane)
         membrane_atoms = membrane.select('not water')
         for smarts, ww_matches, membrane_matches in zip(tests['smarts'], tests['ww_matches'], tests['membrane_matches']):
             sp = msys.SmartsPattern(smarts)

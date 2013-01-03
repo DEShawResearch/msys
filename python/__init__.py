@@ -1174,18 +1174,6 @@ class SmartsPattern(object):
     def __repr__(self):
         return "<SmartsPattern '%s'>" % self.pattern
 
-    @staticmethod
-    def Annotate(system_or_atoms):
-        ''' add atom properties to the given atoms; these must be 
-        present before calling match().
-        '''
-        if isinstance(system_or_atoms, System):
-            ptr = system_or_atoms._ptr
-            ids = ptr.atoms()
-        else:
-            ptr, ids = _find_ids(system_or_atoms)
-        _msys.SmartsPattern.Annotate(ptr, ids)
-
     def findMatches(self, system_or_atoms):
         ''' return list of lists representing ids of matches of this
         pattern that start with the given set of atoms.  Formal charges

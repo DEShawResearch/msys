@@ -30,14 +30,6 @@ namespace desres { namespace msys {
         /* any warning messages encountered during processing of the pattern */
         std::string const& warnings() const { return _warnings; }
 
-        /* add atom and properties to the given system; these must be
-         * present before calling match().  
-         *
-         * Assigns bond orders, formal charges, aromaticity, ring sizes, ring 
-         * counts, hydrogen counts, bond degrees.
-         */
-        static void Annotate(SystemPtr sys, IdList const& atoms);
-
         /* Find matches of the SMARTS pattern that start with the given
          * set of atoms; usually sys->atoms().  System must have atom
          * and bond properties populated by GenerateAtomAndBondProperties.
