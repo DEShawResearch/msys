@@ -2,7 +2,9 @@
 #define desres_msys_analyze_bond_orders_hxx
 
 #include "../system.hxx"
+#include "bondFilters.hxx"
 #include <boost/noncopyable.hpp>
+
 
 /* forward declare so we dont pollute the rest of our code with lpsolves excessive #defines */
 namespace lpsolve{
@@ -73,8 +75,9 @@ namespace desres { namespace msys {
             atom_hextet_penalty=50.0;
             max_atom_charge=2;
             max_component_charge=6; 
+            _filter=NULL;
         };
-        ~BondOrderAssigner(){};
+        ~BondOrderAssigner(){ delete _filter;};
 
 
         static boost::shared_ptr<BondOrderAssigner> create(SystemPtr sys, 
@@ -110,6 +113,8 @@ namespace desres { namespace msys {
         int _presolved_charge;  // charge of presolved components
         bool _total_charge_set; // did we set the total charge?
         SystemPtr _mol; 
+        bondFilter *_filter;
+
         IdList _fragatoms;
         /* These contain the presolved atom lp, bond orders and atomic charges */
         solutionMap _atominfo;
@@ -117,7 +122,6 @@ namespace desres { namespace msys {
         solutionMap _chargeinfo;
         electronMap _atom_lp;
         electronMap _bond_order;
-
 
         /* filled during rebuild */
         typedef std::pair<double, IdList> RingPair;
@@ -266,6 +270,7 @@ namespace desres { namespace msys {
     int double_to_int(double val, double tol);
 
 }}
-#define DEBUGPRINT 0
+#define DEBUGPRINT  0
+#define DEBUGPRINT1 0
 #define DEBUGPRINT2 0
 #endif

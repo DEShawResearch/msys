@@ -6,7 +6,7 @@
 //#include <profiler/profiler.hxx>
 #include "eigensystem.hxx"
 #include "../elements.hxx"
-#include "filtered_bonds.hxx"
+#include "bondFilters.hxx"
 
 namespace desres { namespace msys {
 
@@ -66,6 +66,8 @@ namespace desres { namespace msys {
     bool ClassifyAromaticAtoms(SystemPtr mol, IdList const& atoms, 
                                int& nx, int& ny, int& nyext, int& nz) {
 
+        bondedVirtualsFilter filter(mol);
+
         nx=0;
         ny=0;
         nyext=0;
@@ -87,7 +89,7 @@ namespace desres { namespace msys {
             Id current = ringAtoms[iatom];
             Id next =  ringAtoms[iatom+1];
             
-            IdList bonds=filteredBondsForAtom(mol,current);
+            IdList bonds=mol->filteredBondsForAtom(current,filter);
             Id nb=bonds.size();
 
             atom_t & atm=mol->atom(current);

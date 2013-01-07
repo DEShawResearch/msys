@@ -13,7 +13,6 @@
 #include "../quadsum.hxx"
 #include "eigensystem.hxx"
 #include "../elements.hxx"
-#include "filtered_bonds.hxx"
 
 using namespace desres::msys;
 
@@ -30,7 +29,10 @@ namespace {
     typename C::mapped_type& asserted_find(C &container, typename C::key_type const& key){
         typename C::iterator iter=container.find(key);
         if(iter == container.end()){
-            throw std::runtime_error("Key not found in container");
+            std::stringstream msg;
+            msg << "BondOrderAssigner: Programming error in call to asserted_find. " 
+                << "Specified key was not found in container: " << key;
+            throw std::runtime_error(msg.str());
         }
         return iter->second;
     }
@@ -39,7 +41,10 @@ namespace {
     typename C::mapped_type const& asserted_find(C const& container, typename C::key_type const& key){
         typename C::const_iterator iter=container.find(key);
         if(iter == container.end()){
-            throw std::runtime_error("Key not found in container");
+            std::stringstream msg;
+            msg << "BondOrderAssigner: Programming error in call to asserted_find. " 
+                << "Specified key was not found in container: " << key;
+            throw std::runtime_error(msg.str());
         }
         return iter->second;
     }
@@ -47,7 +52,7 @@ namespace {
     template<typename C>
     void print_Map(C const& m, std::string const& s){
         BOOST_FOREACH(typename C::value_type const& p,m){
-            printf("%s: %u %d\n",s.c_str(),p.first,p.second); 
+            std::cout << s.c_str() << ": " << p.first << " " << p.second << std::endl;
         }
     }
 }
@@ -58,20 +63,30 @@ namespace desres { namespace msys {
     BondOrderAssignerPtr BondOrderAssigner::create(SystemPtr sys,  
                                                    IdList const& fragment){
 
+
+
         BondOrderAssignerPtr boa(new BondOrderAssigner);
         boa->_needRebuild=true;
         boa->_valid=false;
         boa->_total_charge_set=false;
         boa->_total_charge=0;
         boa->_mol=sys;
+        boa->_filter=new bondedVirtualsAndMetalsFilter(sys);
 
         BOOST_FOREACH(Id aid, fragment){
             assert(boa->_mol->hasAtom(aid));
-            boa->_mol->atom(aid).formal_charge=0;
+            boa->_mol->atom(aid).formal_charge=0; 
             boa->_mol->atom(aid).resonant_charge=0.0;
             BOOST_FOREACH(Id bid, boa->_mol->bondsForAtom(aid)){
-                boa->_mol->bond(bid).order=1;
-                boa->_mol->bond(bid).resonant_order=1.0;
+                msys::bond_t &bond=boa->_mol->bond(bid);
+                /* Initially, set kept bond orders=1.0, removed=0.0 */
+                if((*boa->_filter)(bond)){
+                    bond.order=1;
+                    bond.resonant_order=1.0;
+                }else{
+                    bond.order=0;
+                    bond.resonant_order=0.0;                    
+                }
             }
             if(boa->_mol->atom(aid).atomic_number<1)
                 //printf("BondOrderAssigner::create - Skipping atomid=%u with atomic_number<1\n",aid);
@@ -86,7 +101,7 @@ namespace desres { namespace msys {
         BOOST_FOREACH(IdList & ring, allRings){
             std::set<Id> planar_atoms;
             BOOST_FOREACH(Id  aid1, ring){
-                IdList bonded=filteredBondedAtoms(boa->_mol, aid1);
+                IdList bonded=boa->_mol->filteredBondedAtoms(aid1, *boa->_filter);
                 planar_atoms.insert(bonded.begin(),bonded.end());
             }
             std::vector<Id> check(planar_atoms.begin(),planar_atoms.end());
@@ -113,29 +128,33 @@ namespace desres { namespace msys {
         BOOST_FOREACH(Id aid1,boa->_fragatoms){
             atom_t& atm1=boa->_mol->atom(aid1);
             int anum1=atm1.atomic_number;
-#if 0
-            if(anum1>maxAtomicNum){
-                std::stringstream msg;
-                msg << "Atomic Number " << anum1 << " exceeds maximum allowed (" << maxAtomicNum << ")";
-                throw std::runtime_error(msg.str());
-            }
 
-            IdList bonds=filteredBondsForAtom(boa->_mol,aid1);
             ChemData const& adata = DataForElement(anum1);
-            if(adata==NODATA){
-                printf("Warning: No property information available for Atomic Number %d",anum1);
-                /* make sure missing data is for an ion */
-                assert(bonds.size()==0);
-            }
-#else
-            ChemData const& adata = DataForElement(anum1);
-            IdList bonds=filteredBondsForAtom(boa->_mol,aid1);
-#endif
+            IdList bonds=boa->_mol->filteredBondsForAtom(aid1, *boa->_filter);
 
+            if(bonds.size()!=0){
+                if(adata.nodata()){
+                    std::cout << "Warning: No property information available for"
+                              << " Atomic Number "<< anum1 
+                              <<" with "<< bonds.size()<<" bonds"<<std::endl;;
+                }
+                if(bonds.size()>adata.maxCoord){
+                    std::stringstream msg;
+                    msg << "BondOrderAssigner: Something is wrong with atom " << aid1 
+                        << " - Atom has " << bonds.size() 
+                        << " connections. Max allowed for element " 
+                        << AbbreviationForElement(anum1)
+                        << " is "<< adata.maxCoord << std::endl;
+                    throw std::runtime_error(msg.str());
+                }
+            }
+  
             boa->_totalValence+=adata.nValence;
-
             tmprange.lb=0;
             tmprange.ub=adata.maxFree;
+#if DEBUGPRINT1
+            printf("Max lone pairs for Aid %u : maxLP = %d %d\n",aid1,tmprange.lb,tmprange.ub);
+#endif
             boa->_atom_lp.insert(std::make_pair(aid1,tmprange));
 
             BOOST_FOREACH(Id bid, bonds){
@@ -145,7 +164,9 @@ namespace desres { namespace msys {
                 int maxbo1=boa->max_bond_order(aid1);
                 int maxbo2=boa->max_bond_order(aid2);
                 if(maxbo1>maxbo2) maxbo1=maxbo2;
-
+#if DEBUGPRINT1
+                printf("Max Bond Orders for Bid %u (Aids %u %u): maxBO = %d %d\n",bid,aid1,aid2,maxbo1,maxbo2);
+#endif
                 tmprange.lb=1;
                 tmprange.ub=maxbo1;
                 boa->_bond_order.insert(std::make_pair(bid,tmprange));
@@ -168,6 +189,9 @@ namespace desres { namespace msys {
         /* Fill in bondinfo with presolved values */
         BOOST_FOREACH(electronMap::value_type const& epair, boa->_bond_order){
             int val=epair.second.lb;
+#if DEBUGPRINT1
+            printf("After presolve bond order ranges for bond %u: %d %d\n",epair.first,val,epair.second.ub);
+#endif
             if(val!=epair.second.ub) continue;
             boa->_bondinfo.insert(solutionMap::value_type(epair.first, solutionValues(val,val)));
         }
@@ -176,23 +200,30 @@ namespace desres { namespace msys {
         boa->_presolved_charge=0;
         BOOST_FOREACH(electronMap::value_type const& epair, boa->_atom_lp){
             int val=epair.second.lb;
+#if DEBUGPRINT1
+            printf("After presolve atom lp ranges for atom %u: %d %d\n",epair.first,val,epair.second.ub);
+#endif
             if(val!=epair.second.ub) continue;
             Id aid=epair.first;
             boa->_atominfo.insert(solutionMap::value_type(aid, solutionValues(val,val)));
             /* Formal Charges are given by: fc[i]= ValenceElectrons[i] - freeElectrons[i] - 0.5*Sum_j ( BondElectrons[j] )
                'val' is free electron PAIRS, so multiply by 2 */
             int qtot=DataForElement(boa->_mol->atom(aid).atomic_number).nValence - 2*val;
-            BOOST_FOREACH(Id const& bid, filteredBondsForAtom(boa->_mol,aid)){
+            BOOST_FOREACH(Id const& bid, boa->_mol->filteredBondsForAtom(aid, *boa->_filter)){
                 /* This should always be possible given how we determine atom lp data.
                  * If we know the lp's we also know all the bonds
                  * 'nonresonant' is the bond electron PAIRS, so no factor of 0.5 needed */
-                qtot-=asserted_find(boa->_bondinfo, bid).nonresonant;
+                try{
+                    qtot-=asserted_find(boa->_bondinfo, bid).nonresonant;
+                }catch(std::runtime_error &E){
+                    std::cerr<< "Lp count was known but bond orders were not... This shouldnt happen"<<std::endl;
+                    throw;
+                }
             }
             boa->_chargeinfo.insert(solutionMap::value_type(epair.first, solutionValues(qtot,qtot)));
             boa->_presolved_charge+=qtot;
         }
-        
-#if DEBUGPRINT
+#if DEBUGPRINT1
         printf("AfterPresolve: total_valence=%d for %zu atoms (%zu finalized,  q_of_finalized=%d)\n",
                boa->_totalValence, boa->_fragatoms.size(), boa->_atominfo.size(), boa->_presolved_charge);
 
@@ -229,43 +260,54 @@ namespace desres { namespace msys {
     }
 
 
-    /* This seemingly simple function is important for 2 things... */
+    /* Cap bond orders for each bond connected to an atom */
     int BondOrderAssigner::max_bond_order(const Id aid){
-        /* default maximum bond order allowed per bond */
-        static const int defmax=3;
+        
         int maxbo;
-        Id nbonds=filteredBondCountForAtom(_mol,aid);
+        Id nbonds=_mol->filteredBondsForAtom(aid,*_filter).size();
         switch (_mol->atom(aid).atomic_number){
             case 1:  // H
             case 9:  // F
+                // single bond max to hydrogen, flourine
+                maxbo=1;
+                break;
+                // other halogens (per[chlor,brom,iod]ates)
             case 17: // Cl
             case 35: // Br
             case 53: // I
-                // single bond max to hydrogen, halogens
-                maxbo=1;
+                maxbo=2;
                 break;
+            case 5: // B
             case 6: // C
             case 7: // N
                 if(nbonds == 4){
-                    // single bond max to saturated carbon, Nitrogen+
+                    // single bond max to boron-, saturated carbon, nitrogen+
                     maxbo=1;
                 }else if(nbonds == 3){
-                    // double bond max to carbon, Nitrogen+ w/3 bonds
+                    // double bond max to boron-, carbon, nitrogen+ w/3 bonds
                     maxbo=2;
                 }else{
-                    maxbo=defmax;
+                    maxbo=3;
                 }
                 break;
-            case 8: // O
-                /* double bond max for all oxygens, allows [O+](-R)(=R)  */
-                maxbo=2;
+            case 8:  // O
+                if(nbonds == 1){
+                    maxbo=3;
+                }else{
+                /* allows [O+](-R)(=R)  */
+                    maxbo=2;
+                }
                 break;
             default:
-                maxbo=defmax;
+                /* Catch all... Should be fairly conservative */
+                if(nbonds<3){
+                    maxbo=3;
+                }else{
+                    maxbo=2;
+                }
         }
         return maxbo;
     }
-
 
     /* Function that trys to presolve for unknown bond orders / lp counts 
        Its can only presolve for cases where there is a single unknown.
@@ -287,6 +329,17 @@ namespace desres { namespace msys {
             BOOST_FOREACH(Id aid1, unsolved){
                 atom_t const& atm1=_mol->atom(aid1);
                 int octval=DataForElement(atm1.atomic_number).maxOct/2;
+
+                IdList bonds=_mol->filteredBondsForAtom(aid1, *_filter);
+                if(octval>4){
+                    if(bonds.size()==0){
+                        /* no bonds, assume octet should be used */
+                        octval=4;
+                    }else{
+                        keep.push_back(aid1);
+                        continue;
+                    }
+                } 
                 if(octval>4){
                     keep.push_back(aid1);
                     continue;
@@ -296,13 +349,17 @@ namespace desres { namespace msys {
                 electronMap::iterator lastbond=_bond_order.end();
 
                 electronMap::iterator aiter=_atom_lp.find(aid1);
+#if DEBUGPRINT1
+                printf("Presolving around atom %u: octval= %d   lonepair ub= %d  lb= %d\n",
+                       aid1, octval, aiter->second.lb, aiter->second.ub);
+#endif      
                 if(aiter->second.lb==aiter->second.ub){
                     octval-=aiter->second.lb;
                 }else{
                     unkcount++;
                     lastatom=aiter;
                 } 
-                IdList bonds=filteredBondsForAtom(_mol,aid1);
+
                 BOOST_FOREACH(Id bid, bonds){
                     electronMap::iterator biter=_bond_order.find(bid);
                     if (biter->second.lb==biter->second.ub){
@@ -326,7 +383,7 @@ namespace desres { namespace msys {
 
                         /* Only solve if possible lp count==0 or cant form hextet */
                         if(octval==0 || !allow_hextet_for_atom(aid1) ){
-#if DEBUGPRINT
+#if DEBUGPRINT1
                             printf("AtomSolved: %d %d %d\n",lastatom->first,octval,fixrange.ub);
 #endif
                             fixrange.lb=octval;
@@ -339,7 +396,7 @@ namespace desres { namespace msys {
                         }
                     }else{
                         electronRange &fixrange= lastbond->second;
-#if DEBUGPRINT
+#if DEBUGPRINT1
                         bond_t const& _tmpbond=_mol->bond(lastbond->first);
                         printf("BondSolved: %d %d %d %d\n",_tmpbond.i,_tmpbond.j,octval,fixrange.ub);
 #endif
@@ -524,7 +581,7 @@ namespace desres { namespace msys {
             aqcol   =respath.atom0_qcol; 
         }
 
-#if DEBUGPRINT
+#if DEBUGPRINT1
         printf("found donor/acceptor path from %s to %s via:",
                lpsolve::get_origcol_name(_component_lp, dcol),
                lpsolve::get_origcol_name(_component_lp, acol));
@@ -546,7 +603,7 @@ namespace desres { namespace msys {
             newsoln[bcol] += deltab;
             deltab *= -1;
         }
-#if DEBUGPRINT
+#if DEBUGPRINT1
         for (size_t idx=0; idx<respath.bondColsMaxOrders.size(); ++idx){
             std::pair<int,int> const& bdata=respath.bondColsMaxOrders[idx];
             int bcol = bdata.first;
@@ -704,7 +761,7 @@ namespace desres { namespace msys {
                 int anum=da_data[idx][0];
                 int nlp=da_data[idx][1];
                 Id nbonds=da_data[idx][2];
-                IdList bonds=filteredBondsForAtom(parent->_mol,aid);
+                IdList bonds=parent->_mol->filteredBondsForAtom(aid, *parent->_filter);
                 if (!(ai.atomic_number == anum && bonds.size() == nbonds )) continue;
                 int datype=da_data[idx][3];
                 orders.clear();
@@ -811,7 +868,7 @@ namespace desres { namespace msys {
                             }
                         }
                     }else{
-                        IdList bonded=filteredBondedAtoms(parent->_mol, curatom);
+                        IdList bonded=parent->_mol->filteredBondedAtoms(curatom,*parent->_filter);
                         BOOST_FOREACH( Id nextatom, bonded){
                             /* A resonance path can only exist where the initial bond orders were indeterminate */
                             if(visited.count(nextatom) > 0 || 
@@ -869,7 +926,7 @@ namespace desres { namespace msys {
                 Id current = parent->_planar_rings[rid].second[iatom];
                 Id next =  parent->_planar_rings[rid].second[iatom+1];
 
-                IdList bonds=filteredBondsForAtom(parent->_mol,current);
+                IdList bonds=parent->_mol->filteredBondsForAtom(current, *parent->_filter);
                 Id nbonds=bonds.size();
                 assert(nbonds<4);
                 atomInfo.aid=current;
@@ -987,7 +1044,7 @@ namespace desres { namespace msys {
 
         rforms.clear();
         while(!rforms_to_process.empty()){
-#if DEBUGPRINT
+#if DEBUGPRINT1
             printf("Processing new primary rform\n");
 #endif
             // pull first value from map
@@ -1228,7 +1285,7 @@ namespace desres { namespace msys {
         std::ostringstream ss;
         BOOST_FOREACH(Id aid1, _component_atoms_present){
             int anum1=parent->_mol->atom(aid1).atomic_number;
-            IdList bonds=filteredBondsForAtom(parent->_mol,aid1);
+            IdList bonds=parent->_mol->filteredBondsForAtom(aid1, *parent->_filter);
             BOOST_FOREACH(Id bid, bonds){
                 electronRange const& range= asserted_find(parent->_bond_order,bid);
                 // Have we already added this bond? 
@@ -1257,7 +1314,7 @@ namespace desres { namespace msys {
 
     bool BondOrderAssigner::allow_hextet_for_atom(Id aid1){
         int anum1=_mol->atom(aid1).atomic_number;
-        Id nbonds=filteredBondCountForAtom(_mol, aid1);
+        Id nbonds=_mol->filteredBondsForAtom(aid1, *_filter).size();
         /* Allow hextets for unsaturated carbon, nitrogen and oxygen */
         if ( (anum1==6 && (nbonds==3 || nbonds==2)) || 
              (anum1==7 && (nbonds==2 || nbonds==1)) ||
@@ -1290,7 +1347,7 @@ namespace desres { namespace msys {
     bool ComponentAssigner::gen_charge_penalty_for_atom(Id aid1){
         BondOrderAssignerPtr parent=_parent.lock();
         int anum1=parent->_mol->atom(aid1).atomic_number;
-        Id nbonds=filteredBondCountForAtom(parent->_mol, aid1);
+        Id nbonds=parent->_mol->filteredBondsForAtom(aid1, *parent->_filter).size();
         /* no charge penalty necessary for ions, hydrogen, saturated carbons/nitrogen
            since charge is predetermined */
         if ( nbonds==0 || anum1==1 || (nbonds==4 && (anum1==6 || anum1==7)) ) return false;
@@ -1350,7 +1407,8 @@ namespace desres { namespace msys {
             IdList const& ring=parent->_planar_rings[ridx].second;
             bool addRing=true;
             BOOST_FOREACH(Id aid1, ring){
-                if(filteredBondCountForAtom(parent->_mol,aid1) >3 || _component_atoms_present.count(aid1)==0){
+                if(parent->_mol->filteredBondsForAtom(aid1, *parent->_filter).size() >3 || 
+                   _component_atoms_present.count(aid1)==0){
                     addRing=false;
                     break;
                 }
@@ -1422,7 +1480,7 @@ namespace desres { namespace msys {
                 bool purturbRing=true;
                 int targetanum=parent->_mol->atom(ring[0]).atomic_number;
                 BOOST_FOREACH(Id  aid1, ring){
-                    if(filteredBondCountForAtom(parent->_mol,aid1) >3 || 
+                    if(parent->_mol->filteredBondsForAtom(aid1,*parent->_filter).size() >3 || 
                        _component_atoms_present.count(aid1)==0 ||
                        parent->_mol->atom(aid1).atomic_number != targetanum){
                         purturbRing=false;
@@ -1472,7 +1530,7 @@ namespace desres { namespace msys {
         IdList::const_iterator miter;
         for(miter=ring.begin(); miter != ring.end()-1; ++miter){
             Id current = *miter;
-            IdList bonds=filteredBondsForAtom(parent->_mol, current);
+            IdList bonds=parent->_mol->filteredBondsForAtom(current, *parent->_filter);
             Id nbonds=bonds.size();
             assert(nbonds<4);
             
@@ -1548,7 +1606,7 @@ namespace desres { namespace msys {
         BOOST_FOREACH(ilpMap::value_type const& apair, _component_atom_cols){
             rowdata.assign(ncols+1,0);
             Id aid1 = apair.first;
-            IdList bonds=filteredBondsForAtom(parent->_mol, aid1);
+            IdList bonds=parent->_mol->filteredBondsForAtom(aid1,*parent->_filter);
             Id nbonds=bonds.size();
 
             atom_t const& atm1=parent->_mol->atom(aid1);
@@ -1637,7 +1695,7 @@ namespace desres { namespace msys {
             
             rowdata.at(acol)=2;
             
-            IdList bonds=filteredBondsForAtom(parent->_mol, aid);
+            IdList bonds=parent->_mol->filteredBondsForAtom(aid, *parent->_filter);
             BOOST_FOREACH(Id bid, bonds){
                 rowdata.at(asserted_find(_component_bond_cols,bid))+=1;
                 Id other=parent->_mol->bond(bid).other(aid);
@@ -1970,7 +2028,6 @@ namespace desres { namespace msys {
             _mol->atom(aid1).resonant_charge=0.0;
         }
 
-
         /* Assign bond orders and bond electron charge part here "- 0.5*Sum_j ( BondElectrons[ij] )" */
         BOOST_FOREACH(solutionMap::value_type const& bpair, bondinfo){
             Id bid=bpair.first;
@@ -1987,6 +2044,10 @@ namespace desres { namespace msys {
             bond.order=order;
             double resorder=bdata.resonant;
             bond.resonant_order=resorder;
+
+#if DEBUGPRINT
+            printf("Bond Order for bond %u ( %u %u ): %d %f\n",bid, aid1, aid2, order, resorder );
+#endif
 
             /* Charges */
             atm1.formal_charge-=order;
@@ -2025,7 +2086,7 @@ namespace desres { namespace msys {
                 dqtarget=qdata.resonant;
             }
 #if DEBUGPRINT
-            printf("Charge for %u: %d %d  ( %f %f )\n",aid, atm.formal_charge, iqtarget, resq, dqtarget );
+            printf("Charge for atom %u: %d %d  ( %f %f )\n",aid, atm.formal_charge, iqtarget, resq, dqtarget );
 #endif
             assert(atm.formal_charge == iqtarget);
             assert(fabs(resq - dqtarget)<1E-8);

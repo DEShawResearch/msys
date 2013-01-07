@@ -12,16 +12,18 @@ namespace desres { namespace msys {
 
     struct ChemData {
         float eneg;    // Electronegativities (Allen Scale)
-        int nValence;  // Number of valence electrons present in atom
-        int maxOct;    // max electrons for 'satisfied' octet (hypervalent>8)
-        int maxFree;   // max free (non-bonding) electron pairs allowed...
+        unsigned nValence;  // Number of valence electrons present in atom
+        unsigned maxOct;    // max electrons for 'satisfied' octet (hypervalent>8)
+        unsigned maxFree;   // max free (non-bonding) electron pairs allowed...
+        unsigned maxCoord;  // max coordinated atoms (prevent over-bonding of 1-2 row elements)
 
         ChemData() 
-        : eneg(), nValence(), maxOct(), maxFree() 
+        : eneg(), nValence(), maxOct(), maxFree(), maxCoord()
         {}
 
-        ChemData(float const& e, int const& v, int const& o, int const& f)
-        : eneg(e), nValence(v), maxOct(o), maxFree(f) 
+        ChemData(float const& e, unsigned const& v, unsigned const& o, 
+                 unsigned const& f, unsigned const& c)
+        : eneg(e), nValence(v), maxOct(o), maxFree(f), maxCoord(c)
         {}
 
         bool nodata() const { return eneg==0; }

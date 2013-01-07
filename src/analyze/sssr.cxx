@@ -1,5 +1,5 @@
 #include "../sssr.hxx"
-#include "filtered_bonds.hxx"
+#include "bondFilters.hxx"
 #include <stack>
 #include <queue>
 #include <set>
@@ -562,6 +562,9 @@ desres::msys::GetSSSR(SystemPtr mol, IdList const& atoms,
 
     MultiIdList sssr;
 
+    /* keep atoms that are not virtuals or transistion metals */
+    bondedVirtualsAndMetalsFilter keep(mol);
+
     /* Create GraphRepr with reindexed atoms (vertices) and bonds (edges) */
     std::vector<int> atom_idx_map(mol->maxAtomId(), -1);
     for (unsigned i = 0; i < atoms.size(); ++i) {
@@ -571,11 +574,10 @@ desres::msys::GetSSSR(SystemPtr mol, IdList const& atoms,
     GraphRepr graph;
     graph.v_to_e.resize(atoms.size(), std::vector<int>());
     for (unsigned i = 0; i < atoms.size(); ++i) {
-        /* If i is a pseudo atom, graph.v_to_e[i] remains empty. These graph
+        /* If i is a pseudo atom or metal, graph.v_to_e[i] remains empty. These graph
          * vertex indices are ignored by get_biconnected_components. */
-        if (mol->atom(atoms[i]).atomic_number < 1)
-            continue;
-        IdList bonded = filteredBondedAtoms(mol, atoms[i]);
+        if (!keep(mol->atom(atoms[i]))) continue;
+        IdList bonded = mol->filteredBondedAtoms(atoms[i],keep);
         for (unsigned j = 0; j < bonded.size(); ++j) {
             if (atoms[i] < bonded[j] && atom_idx_map[bonded[j]] != -1) {
                 graph.edges.push_back(Edge(i, atom_idx_map[bonded[j]]));

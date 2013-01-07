@@ -109,7 +109,6 @@ analyze.cxx
 analyze/aromatic.cxx
 analyze/bond_orders.cxx
 analyze/eigensystem.cxx
-analyze/filtered_bonds.cxx
 analyze/get_fragments.cxx
 analyze/topological_ids.cxx
 '''))
