@@ -121,7 +121,7 @@ static void build_m_atom( SystemPtr mol, Destro& M ) {
         rec["m_charge2"] = 0.;
         rec["m_mmod_res"] = blank;
         rec["m_grow_name"] = blank;
-        rec["m_insertion_code"] = " ";
+        rec["m_insertion_code"] = pad(res.insertion, 1);
         rec["m_formal_charge"] = atm.formal_charge;
 
         static const char * entprops[] = {
