@@ -21,30 +21,7 @@ as separate InChI strings.
 
 import sys
 import msys
-import subprocess as SP
-from time import time
-
-def print_inchi(mol, add_hydrogen=False, include_stereo=False,
-                     without_fixed_hydrogen=False):
-    args='inchi-1 -STDIO -AuxNone -NoLabels'.split()
-
-    if not add_hydrogen:
-        args.append('-DoNotAddH')
-    if not include_stereo:
-        args.append('-SNon')
-    if not without_fixed_hydrogen:
-        args.append('-FixedH')
-
-    p = SP.Popen(args, stdin=SP.PIPE, stderr=SP.PIPE)
-    for fragid in msys.FindDistinctFragments(mol):
-        frag = mol.clone('fragid %d' % fragid)
-        if frag.natoms > 999:
-            continue
-        msys.SaveSDF(frag, p.stdin)
-    p.stdin.close()
-    if p.wait():
-        print >> sys.stderr, p.stderr.read()
-    return p.returncode
+from msys import inchi
 
 def main():
     import optparse
@@ -59,7 +36,7 @@ def main():
     opts, args = parser.parse_args()
     for path in args:
         mol = msys.Load(path)
-        print_inchi(mol, **opts.__dict__)
+        print '\n'.join(inchi.Strings(mol, **opts.__dict__))
 
 if __name__=="__main__": exit(main())
 

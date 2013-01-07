@@ -51,6 +51,7 @@ env.AddScript('info/dms-diff')
 env.AddScript('info/dms-dump')
 env.AddScript('info/dms-inchi')
 env.AddScript('info/dms-info')
+env.AddPythonModule('info/inchi.py', prefix='msys')
 
 # vdw
 env.AddPythonModule('vdw/vdw.py', prefix='msys')
