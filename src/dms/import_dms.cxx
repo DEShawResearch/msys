@@ -556,6 +556,7 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
     int CHARGE = r.column("charge");
     int FORMAL = r.column("formal_charge");
     int RESCHG = r.column("resonant_charge");
+    int INSERT = r.column("insertion");
     
     /* the rest of the columns are extra atom properties */
     std::set<int> handled;
@@ -577,6 +578,7 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
     handled.insert(CHARGE);
     handled.insert(FORMAL);
     handled.insert(RESCHG);
+    handled.insert(INSERT);
 
     typedef std::map<int,ValueType> ExtraMap;
     ExtraMap extra;
@@ -600,8 +602,9 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
         const char * segid = SEGID<0 ? "" : r.get_str( SEGID);
         const char * resname = RESNAME<0 ? "" : r.get_str( RESNAME);
         const char * aname = NAME<0 ? "" : r.get_str( NAME);
+        const char * insert = INSERT<0 ? "" : r.get_str(INSERT);
         int resnum = RESID<0 ? 0 : r.get_int( RESID);
-        Id atmid = imp.addAtom(chainname, segid, resnum, resname, aname);
+        Id atmid = imp.addAtom(chainname, segid, resnum, resname, aname,insert);
 
         /* add atom properties */
         atom_t& atm = sys.atom(atmid);

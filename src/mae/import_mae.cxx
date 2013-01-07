@@ -36,6 +36,7 @@ namespace {
     const char * GRP_BIAS   = "ffio_grp_cm_moi";
     const char * GRP_FROZEN = "ffio_grp_frozen";
     const char * FORMAL_CHG = "m_formal_charge";
+    const char * INSERTION =  "m_insertion_code";
 
     const std::string empty;
 
@@ -83,6 +84,7 @@ namespace {
         const Json& bias = m_atom.get(GRP_BIAS);
         const Json& frz = m_atom.get(GRP_FROZEN);
         const Json& formals = m_atom.get(FORMAL_CHG);
+        const Json& inserts = m_atom.get(INSERTION);
         Id gtmp=BadId, gene=BadId, glig=BadId, gbias=BadId, gfrz=BadId;
 
         if (!!temp) gtmp=h->addAtomProp("grp_temperature", IntType);
@@ -101,8 +103,9 @@ namespace {
             std::string resname=resnames.elem(j).as_string("UNK");
             std::string name=names.elem(j).as_string("");
             std::string segid=segids.elem(j).as_string("");
+            const char* insert=inserts.elem(j).as_string("");
 
-            Id id = imp.addAtom(chainname, segid, resid, resname, name);
+            Id id = imp.addAtom(chainname, segid, resid, resname, name, insert);
 
             atom_t& atm = h->atom(id);
             atm.atomic_number = anum;
