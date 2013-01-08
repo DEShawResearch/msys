@@ -1,8 +1,7 @@
 #!/usr/bin/env desres-exec
 # -*- python -*-
 #{
-# desres-cleanenv $MSYS_CLEANENV \
-# -- python $0 "$@"
+# desres-cleanenv -m molfile/1.10.4/lib-python -- python $0 "$@" 
 #}
 
 '''
@@ -11,6 +10,9 @@ dms-frame input.dms output.dms [ options ]
     centering and periodic wrapping.
                     
 '''
+
+import sys, os
+sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
 
 import msys
 import molfile

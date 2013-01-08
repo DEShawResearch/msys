@@ -1,7 +1,8 @@
 #!/usr/bin/env desres-exec
 # -*- python -*-
 #{
-# desres-cleanenv $MSYS_CLEANENV -- python $0 "$@"
+# desres-cleanenv -m numpy/1.6.2-31A/lib-python \
+# -- python $0 "$@" 
 #}
 
 '''
@@ -11,7 +12,9 @@ Write information about a dms file to stdout.
 
 '''
 
-import sys
+import sys, os
+sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
+
 import msys
 from msys import vdw
 

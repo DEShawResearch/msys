@@ -1,17 +1,20 @@
 #!/usr/bin/env desres-exec
 # -*- python -*-
 #{
-# desres-cleanenv $MSYS_CLEANENV -- python $0 "$@"
+# desres-cleanenv -m numpy/1.6.2-31A/lib-python \
+# -- python $0 "$@"
 #}
 
 '''
 dms-find-knot system.dms [ options ]
 '''
 
+import sys, os
+sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
+
 import msys
 from msys import knot
 from optparse import OptionParser
-import sys
 
 if __name__ == "__main__":
     knot.ut_intersection()

@@ -1,7 +1,7 @@
 #!/usr/bin/env desres-exec
 # -*- python -*-
 #{
-# desres-cleanenv $MSYS_CLEANENV -- python $0 "$@"
+# desres-cleanenv -m numpy/1.6.2-31A/lib-python -- python $0 "$@"
 #}
 
 '''
@@ -13,7 +13,8 @@ Write or append a selection from input_file to an output dms file.
 The input file can be any file type supported by msys.Load.
 '''
 
-import sys
+import sys, os
+sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
 import msys
 
 def main():

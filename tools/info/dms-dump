@@ -1,7 +1,8 @@
 #!/usr/bin/env desres-exec
 # -*- python -*-
 #{
-# desres-cleanenv $MSYS_CLEANENV -- python $0 "$@"
+# desres-cleanenv -m Python/2.7.3-07A/bin -m sqlite/3.6.23.1-02A/bin \
+# -- python $0 "$@"
 #}
 
 '''

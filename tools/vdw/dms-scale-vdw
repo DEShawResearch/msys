@@ -1,6 +1,7 @@
 #!/usr/bin/env desres-exec
 #{
-# desres-cleanenv $MSYS_CLEANENV -- python $0 "$@"
+# desres-cleanenv -m numpy/1.6.2-31A/lib-python \
+# -- python $0 "$@"
 #}
 
 '''
@@ -14,7 +15,10 @@ Restrictions: produces a nonbonded_scaled_param table and therefore
               Works for vdw_funct=vdw_12_6 only.
 '''
 
-import msys, sys
+import sys, os
+sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
+
+import msys
 from msys import vdw
 
 def main():
