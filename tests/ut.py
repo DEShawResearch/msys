@@ -1181,6 +1181,28 @@ class TestMain(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             m.select('foo')
 
+    def testSelectChain(self):
+        m=msys.CreateSystem()
+        c0=m.addChain()
+        c1=m.addChain()
+        c2=m.addChain()
+        c0.name='A'
+        c1.name='A'
+        c1.segid='PRO'
+        c2.name='B'
+        self.assertEqual(m.selectChain('B'), c2)
+        self.assertEqual(m.selectChain(segid='PRO'), c1)
+        self.assertEqual(m.selectChain('A', 'PRO'), c1)
+        self.assertEqual(m.selectChain('C'), None)
+        self.assertEqual(m.selectChain(segid='foo'), None)
+        with self.assertRaises(ValueError):
+            m.selectChain('A')
+        c0.remove()
+        c2.remove()
+        self.assertEqual(m.selectChain(), c1)
+        c1.remove()
+        self.assertEqual(m.selectChain(), None)
+
     def testAlchemicalMaeRestraint(self):
         d=os.path.dirname(__file__)
         m=msys.Load(os.path.join(d, 'mae/alchemical_restraint.mae'))

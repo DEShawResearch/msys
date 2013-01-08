@@ -1040,6 +1040,17 @@ class System(object):
         '''
         return self._ptr.selectAsList(seltext)
 
+    def selectChain(self, name=None, segid=None):
+        ''' Returns a single Chain with the matching name and/or segid,
+        or raises an exception if no single such chain is present.
+        '''
+        chains = [c for c in self.chains if 
+                    (name is None or c.name==name) and
+                    (segid is None or c.segid==segid)]
+        if not chains: return None
+        if len(chains) is 1: return chains[0]
+        raise ValueError, "Found %d chains with given name and segid" % (len(chains))
+
     def append(self, system):
         ''' Appends atoms and forcefield from system to self.  Returns
         a list of of the new created atoms in self.  Systems must have
