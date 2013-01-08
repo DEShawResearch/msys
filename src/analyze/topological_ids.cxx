@@ -255,9 +255,6 @@ namespace desres { namespace msys {
        J. Chem. Inf Comput. Sci., Vol. 29, No. 2, 1989
     */
     IdList ComputeTopologicalIds(SystemPtr mol) {
-#ifdef MSYS_WITHOUT_LPSOLVE
-        MSYS_FAIL("LPSOLVE functionality was not included.");
-#endif
         Id maxaid=mol->maxAtomId();
         if(maxaid==0) return IdList();
 
