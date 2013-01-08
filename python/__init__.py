@@ -221,6 +221,15 @@ class Residue(Handle):
         pos=self._ptr.getPositions(self._ptr.atomsForResidue(self._id))
         return numpy.mean(pos,axis=0)
 
+    def selectAtom(self, name=None):
+        ''' Returns a single Atom from this residue with the given name,
+        or None if no such atom is present.  If multiple atoms in the
+        residue have that name, raise an exception. '''
+        atoms = [a for a in self.atoms if (name is None or a.name==name)]
+        if not atoms: return None
+        if len(atoms) is 1: return atoms[0]
+        raise ValueError, "Found %d atoms with given name" % (len(atoms))
+
 class Chain(Handle):
     __slots__ = ()
 

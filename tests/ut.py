@@ -1227,6 +1227,20 @@ class TestMain(unittest.TestCase):
         r1.remove()
         self.assertEqual(c.selectResidue(), None)
 
+    def testSelectAtom(self):
+        m=msys.CreateSystem()
+        r=m.addResidue()
+        a0=r.addAtom()
+        a1=r.addAtom()
+        a2=r.addAtom()
+        a0.name='C'
+        a1.name='CB'
+        a2.name='C'
+        self.assertEqual(r.selectAtom('CB'), a1)
+        self.assertEqual(r.selectAtom('CA'), None)
+        with self.assertRaises(ValueError):
+            r.selectAtom('C')
+
 
     def testAlchemicalMaeRestraint(self):
         d=os.path.dirname(__file__)
