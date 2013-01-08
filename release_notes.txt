@@ -1,3 +1,5 @@
+1.6.24 REMOVED: mview is now in its own mview module.
+
 1.6.23 NEW: inchi.Strings python interface.
        FIXED: mae and dms read and write insertion code.
 
