@@ -1,3 +1,6 @@
+1.6.25 REMOVED: msys.glue module and dms-glue program.
+       FIXED: No more MSYS_CLEANENV.
+
 1.6.24 REMOVED: mview is now in its own mview module.
 
 1.6.23 NEW: inchi.Strings python interface.
