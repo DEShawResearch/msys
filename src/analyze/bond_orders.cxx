@@ -744,9 +744,26 @@ namespace desres { namespace msys {
             };
         
         da_state.clear();
-        transfertype.clear();
         resonance_paths.clear();
 
+        transfertype.clear();
+        transfertype.reserve(25);
+        for (int i=0;i<5;++i){
+            for(int j=0;j<5;++j){
+                if ( ((i==0 || i==2) && (j==1 || j==3)) || (i==3 && j==4) ) {
+                    // Atom i donor, atom j acceptor
+                    transfertype.push_back(1);
+                }else if ( ((j==0 || j==2) && (i==1 || i==3)) || (j==3 && i==4) ) {
+                    // Atom j donor, atom i acceptor
+                    transfertype.push_back(-1);
+                }else{
+                    // Invalid donor/acceptor combination
+                    transfertype.push_back(0);          
+                }
+            }
+        }
+
+        static const unsigned maxPaths=10000;
         bool allow_hextet_resonance=false;
 
         BondOrderAssignerPtr parent=_parent.lock();
@@ -842,8 +859,14 @@ namespace desres { namespace msys {
                         assert(apath.front()==donor && apath.back()==acceptor);
                         // path length (# of atoms in path) must be odd for valid electron transfer
                         if(apath.size()%2 == 1){
+
+                            if(maxPaths==resonance_paths.size()){
+                                printf("BondOrderAssigner: Aborting resonance path generation. Number of generated paths exceeds %u\n",maxPaths);
+                                resonance_paths.clear();
+                                return;
+                            }
 #if DEBUGPRINT2
-                            printf("Possible Atom Resonance Path from %u to %u\n",donor,acceptor);
+                            printf("Possible Atom Resonance Path from %u to %u (length= %lu)\n",donor,acceptor,apath.size());
 #endif
                             resonance_paths.push_back(resPathInfo());
                             resPathInfo &resPath=resonance_paths.back();
@@ -866,6 +889,7 @@ namespace desres { namespace msys {
                                 if(maxbo>maxbo2) maxbo=maxbo2;
                                 bondData.second=maxbo;
                             }
+
                         }
                     }else{
                         IdList bonded=parent->_mol->filteredBondedAtoms(curatom,*parent->_filter);
@@ -887,21 +911,6 @@ namespace desres { namespace msys {
         printf("Found %zu resonance path candidates\n", resonance_paths.size());
 #endif
         
-        transfertype.reserve(25);
-        for (int i=0;i<5;++i){
-            for(int j=0;j<5;++j){
-                if ( ((i==0 || i==2) && (j==1 || j==3)) || (i==3 && j==4) ) {
-                    // Atom i donor, atom j acceptor
-                    transfertype.push_back(1);
-                }else if ( ((j==0 || j==2) && (i==1 || i==3)) || (j==3 && i==4) ) {
-                    // Atom j donor, atom i acceptor
-                    transfertype.push_back(-1);
-                }else{
-                    // Invalid donor/acceptor combination
-                    transfertype.push_back(0);          
-                }
-            }
-        }
     }
 
     void ComponentAssigner::initialize_aromatic_ringdata(std::vector< std::vector< ringAtomInfo > > &rings_to_process){
@@ -1032,6 +1041,9 @@ namespace desres { namespace msys {
         std::vector< std::vector< ringAtomInfo > >ringPaths;
         initialize_aromatic_ringdata(ringPaths);
 
+#if DEBUGPRINT
+        printf("Found %lu resonancePaths and %lu ringPaths\n",resonancePaths.size(),ringPaths.size());
+#endif
         typedef std::map< std::vector<int>, std::vector<unsigned> > resformMap;
         resformMap rforms_to_process;
         resformMap::iterator rform,rformtmp;
