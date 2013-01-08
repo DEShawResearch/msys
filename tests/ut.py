@@ -1203,6 +1203,31 @@ class TestMain(unittest.TestCase):
         c1.remove()
         self.assertEqual(m.selectChain(), None)
 
+    def testSelectResidue(self):
+        m=msys.CreateSystem()
+        c=m.addChain()
+        r0=c.addResidue()
+        r1=c.addResidue()
+        r2=c.addResidue()
+        r0.name='A'
+        r1.name='A'
+        r1.resid=1
+        r2.name='B'
+        r2.insertion='A'
+        self.assertEqual(c.selectResidue(name='B'), r2)
+        self.assertEqual(c.selectResidue(resid=1), r1)
+        self.assertEqual(c.selectResidue(1, 'A'), r1)
+        self.assertEqual(c.selectResidue(3), None)
+        self.assertEqual(c.selectResidue(resid=4), None)
+        with self.assertRaises(ValueError):
+            c.selectResidue(name='A')
+        r0.remove()
+        r2.remove()
+        self.assertEqual(c.selectResidue(), r1)
+        r1.remove()
+        self.assertEqual(c.selectResidue(), None)
+
+
     def testAlchemicalMaeRestraint(self):
         d=os.path.dirname(__file__)
         m=msys.Load(os.path.join(d, 'mae/alchemical_restraint.mae'))

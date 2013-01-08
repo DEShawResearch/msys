@@ -244,6 +244,19 @@ class Chain(Handle):
         ''' number of residues in this chain '''
         return self._ptr.residueCountForChain(self._id)
 
+    def selectResidue(self, resid=None, name=None, insertion=None):
+        ''' Returns a single Residue with the given resid, name, and/or
+        insertion code.  If no such residue is found, returns None.  If
+        multiple such residues are found within this chain, raises an
+        exception. '''
+        residues = [r for r in self.residues if 
+                    (resid is None or r.resid==resid) and
+                    (name is None or r.name==name) and
+                    (insertion is None or r.insertion==insertion)]
+        if not residues: return None
+        if len(residues) is 1: return residues[0]
+        raise ValueError, "Found %d residues with given resid, name or insertion" % (len(residues))
+
 __add_properties(Chain, 'name', 'segid')
 
 
