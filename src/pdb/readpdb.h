@@ -357,6 +357,7 @@ static int desres_msys_write_raw_pdb_record(FILE *fd, const char *recordname,
   char resnamebuf[5];
   char altlocchar;
   char chainchar;
+  char namebuf[5];
 
   /* XXX                                                          */
   /* if the atom or residue indices exceed the legal PDB spec, we */
@@ -397,10 +398,23 @@ static int desres_msys_write_raw_pdb_record(FILE *fd, const char *recordname,
   strncpy(resnamebuf,resname,4);
   resnamebuf[4] = '\0';
 
- 
+  switch (strlen(atomname)) {
+      case 0:
+      case 4:
+          sprintf(namebuf, "%s", atomname); break;
+      case 1:
+      case 2:
+      case 3:
+          sprintf(namebuf, " %s", atomname); break;
+      default:
+          snprintf(namebuf, 4, "%s", atomname);
+          namebuf[4]=0;
+          break;
+  };
+
   rc = fprintf(fd,
-         "%-6s%5s %4s%c%-4s%c%4s%c   %8.3f%8.3f%8.3f%6.2f%6.2f      %-4s%2s\n",
-         recordname, indexbuf, atomname, altlocchar, resnamebuf, chainchar, 
+         "%-6s%5s %-4s%c%-4s%c%4s%c   %8.3f%8.3f%8.3f%6.2f%6.2f      %-4s%2s\n",
+         recordname, indexbuf, namebuf, altlocchar, resnamebuf, chainchar, 
          residbuf, insertion[0], x, y, z, occ, beta, segnamebuf, elementsymbol);
 
   return (rc > 0);
