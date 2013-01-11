@@ -6,6 +6,7 @@
 
 namespace desres { namespace msys {
 
+    std::vector<SystemPtr> ImportMAEMany(std::string const& path);
     SystemPtr ImportMAE( std::string const& path,
                          bool ignore_unrecognized = false,
                          bool structure_only = false);

@@ -337,6 +337,8 @@ namespace desres { namespace msys {
             if (type.valid() && !strcmp(type.as_string(), "full_system")) {
                 continue;
             }
+            Json const& title = ct.get("m_title");
+            h->name = title.as_string("");
             
             IdList atoms;
             int natoms=0, npseudos=0;
