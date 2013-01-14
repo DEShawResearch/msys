@@ -78,6 +78,36 @@ namespace desres { namespace msys {
                                    atoms.begin(), atoms.end(),
                                    atoms.begin(), atoms.end(),
                                    finder);
+        /* if a hydrogen has multiple bonds, keep the shortest one */
+        for (Id i=0; i<mol->maxAtomId(); i++) {
+            if (!mol->hasAtom(i)) continue;
+            if (mol->atom(i).atomic_number!=1) continue;
+            if (mol->bondCountForAtom(i)<=1) continue;
+            Id shortest_bond = BadId;
+            double shortest_dist = HUGE_VAL;
+            const double* pi = &pos[3*i];
+            const double x=pi[0];
+            const double y=pi[1];
+            const double z=pi[2];
+            IdList bonds = mol->bondsForAtom(i);
+            BOOST_FOREACH(Id b, bonds) {
+                Id j = mol->bond(b).other(i);
+                if (j>i) continue;
+                const double* pj = &pos[3*j];
+                const double dx = pj[0]-x;
+                const double dy = pj[1]-y;
+                const double dz = pj[2]-z;
+                const double d2 = dx*dx + dy*dy + dz*dz;
+                if (d2<shortest_dist) {
+                    shortest_bond = b;
+                    shortest_dist = d2;
+                }
+            }
+            assert(!bad(shortest_bond));
+            BOOST_FOREACH(Id b, bonds) {
+                if (b!=shortest_bond) mol->delBond(b);
+            }
+        }
     }
 
     IdList FindDistinctFragments(SystemPtr mol) {
