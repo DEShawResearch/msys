@@ -25,11 +25,11 @@ def main():
     import optparse
     parser = optparse.OptionParser(__doc__)
 
-    parser.add_option('-s', '--scale-sigma', type='float', 
-            help='scale factor for sigma', default=1)
-    parser.add_option('-e', '--scale-epsilon', type='float', 
-            help='scale factor for epsilon', default=1)
-    parser.add_option('-l', '--ligand', action='append', 
+    parser.add_option('-s', '--scale-sigma', 
+            help='scale factor for sigma')
+    parser.add_option('-e', '--scale-epsilon',
+            help='scale factor for epsilon')
+    parser.add_option('-l', '--ligand', action='append', default=[],
             help='atom selection for a ligand')
 
     opts, args = parser.parse_args()
@@ -39,8 +39,14 @@ def main():
     n=len(opts.ligand)
     if n<2:
         parser.error("need at least 2 ligand selections")
-    print "Sigma scale:   %s" % opts.scale_sigma
-    print "Epsilon scale: %s" % opts.scale_epsilon
+
+    if opts.scale_sigma is None: parser.error("--scale-sigma is required")
+    if opts.scale_epsilon is None: parser.error("--scale-epsilon is required")
+    sig = float(opts.scale_sigma)
+    eps = float(opts.scale_epsilon)
+
+    print "Sigma scale:   %f" % sig
+    print "Epsilon scale: %f" % eps
 
     ifile, ofile = args
     print "Loading DMS file <%s>" % ifile
@@ -58,7 +64,7 @@ def main():
             print "Selected %d atoms with %s selection" % (len(s1), name)
         for j in range(i+1,n):
             s2 = mol.select(opts.ligand[j])
-            vdw.Scale(mol, s1, s2, opts.scale_sigma, opts.scale_epsilon)
+            vdw.Scale(mol, s1, s2, sig, eps)
 
     mol.coalesceTables()
     mol = mol.clone()
