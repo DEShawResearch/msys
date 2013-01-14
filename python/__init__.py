@@ -1489,22 +1489,27 @@ class Graph(object):
         else:
             ptr, ids = _find_ids(system_or_atoms)
         self._ptr = _msys.GraphPtr.create(ptr,ids)
+        self._sys = ptr
 
     def size(self):
         ''' number of atoms in graph '''
         return self._ptr.size()
 
+    def atoms(self):
+        ''' ordered atoms in graph '''
+        return [Atom(self._sys, i) for i in self._ptr.atoms()]
+
     def match(self, graph):
         ''' Find a graph isomorphism between self and the given Graph.
-        If no isomorphism could be found, return None; otherwise return
-        the ids of atoms in self that correspond to the given graph.
+        If no isomorphism could be found, return empty dict; otherwise return
+        mapping from atoms in this graph to atoms in that graph.
         '''
         if not isinstance(graph, Graph):
             raise TypeError, "graph argument must be an instance of msys.Graph"
-        result = self._ptr.match(graph._ptr)
-        if result is not None:
-            assert None not in result
-        return result
+        t = self._ptr.match(graph._ptr)
+        if t is not None:
+            t=dict((Atom(self._sys, i), Atom(graph._sys,j)) for i,j in t)
+        return t 
 
 def FindDistinctFragments(system):
     ''' Return fragids of representative fragments.  '''
