@@ -394,6 +394,15 @@ namespace {
         return L;
     }
 
+    bool valid_permutation(SystemPtr mol, IdList ids) {
+        /* check for duplicates */
+        if (sort_unique(ids)) return false;
+        /* check for dead atoms */
+        BOOST_FOREACH(Id id, ids) if (!mol->hasAtom(id)) return false;
+        /* check size */
+        return ids.size() == mol->atomCount();
+    }
+
 }
 
 namespace desres { namespace msys { 
@@ -571,6 +580,7 @@ namespace desres { namespace msys {
             .def("delGluePair", &System::delGluePair)
 
             /* miscellaneous */
+            .def("validPermutation", valid_permutation)
             .def("orderedIds",    &System::orderedIds)
             .def("updateFragids", update_fragids)
             .def("analyze",     &System::analyze)

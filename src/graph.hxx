@@ -4,11 +4,12 @@
 #include "system.hxx"
 #include <vector>
 #include <map>
+#include <boost/noncopyable.hpp>
 
 namespace desres { namespace msys {
 
     /* Checks graph isomorphism for two sets of atoms */ 
-    class Graph {
+    class Graph : boost::noncopyable {
 
     private:
         struct Node {
@@ -29,10 +30,6 @@ namespace desres { namespace msys {
 
         /* Constructor is private; must use create() function */
         Graph(SystemPtr sys, const IdList& atoms);
-
-        /* Cannot copy Graph objects */
-        Graph(const Graph& other);
-        Graph& operator=(const Graph& other);
 
     public:
         /* string hash of attributes in the nodes of the graph */

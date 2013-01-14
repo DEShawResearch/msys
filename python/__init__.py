@@ -163,6 +163,10 @@ __add_properties(Atom,
 class Residue(Handle):
     __slots__ = ()
 
+    def __repr__(self):
+        d=self.data()
+        return '<Residue %s %d%s>' % (d.name, d.resid, d.insertion)
+
     def data(self): 
         return self._ptr.residue(self._id)
 
@@ -1104,6 +1108,27 @@ class System(object):
         ptr=self._ptr
         return System(_msys.Clone(ptr, ptr.orderedIds()))
 
+    def permuted(self, perm):
+        ''' Return a permutation of the atoms in the system.  perm should
+        be either a permutation of range(natoms), or a permutation of the
+        atoms in the system.
+        '''
+        if len(perm)!=self.natoms:
+            raise ValueError, "perm has %d elements, expected natoms=%d" % (
+                    len(perm), self.natoms)
+        if isinstance(perm[0], Atom):
+            ptr, ids = _find_ids(perm)
+            if ptr != self._ptr:
+                raise ValueError, "Atoms in perm are not from this System"
+        else:
+            ptr = self._ptr
+            ids = _msys.IdList()
+            for p in perm: ids.append(perm.id)
+        if not ptr.validPermutation(ids):
+            raise ValueError, "Not a valid permutation"
+        return System(_msys.Clone(self._ptr, ids))
+
+
     def guessBonds(self, replace=True, reanalyze=True):
         ''' Guess bond connectivity based on an atomic-number based
         atom radius.  
@@ -1455,6 +1480,31 @@ def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge = None):
         _msys.AssignBondOrderAndFormalCharge(ptr, ids)
     else:
         _msys.AssignBondOrderAndFormalCharge(ptr, ids, int(total_charge))
+
+class Graph(object):
+    def __init__(self, system_or_atoms):
+        if isinstance(system_or_atoms, System):
+            ptr = system_or_atoms._ptr
+            ids = ptr.atoms()
+        else:
+            ptr, ids = _find_ids(system_or_atoms)
+        self._ptr = _msys.GraphPtr.create(ptr,ids)
+
+    def size(self):
+        ''' number of atoms in graph '''
+        return self._ptr.size()
+
+    def match(self, graph):
+        ''' Find a graph isomorphism between self and the given Graph.
+        If no isomorphism could be found, return None; otherwise return
+        the ids of atoms in self that correspond to the given graph.
+        '''
+        if not isinstance(graph, Graph):
+            raise TypeError, "graph argument must be an instance of msys.Graph"
+        result = self._ptr.match(graph._ptr)
+        if result is not None:
+            assert None not in result
+        return result
 
 def FindDistinctFragments(system):
     ''' Return fragids of representative fragments.  '''

@@ -18,6 +18,7 @@ system.cxx
 term.cxx
 vector.cxx
 io.cxx
+graph.cxx
 pymod.cxx
 '''.split()
 
