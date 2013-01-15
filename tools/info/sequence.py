@@ -3,39 +3,39 @@ import msys
 # convert residue name to one-letter code
 code = {
         "ALA" : 'A',
+        "ARG" : 'R',
+        "ASH" : 'D',    # neutral Asp
+        "ASN" : 'N',
+        "ASP" : 'D',
         "ASX" : 'B',    # Asn/Asp
         "CYM" : 'C',    # Negative Cys
         "CYS" : 'C',
         "CYX" : 'C',    # S-S bonded Cys
-        "ASH" : 'D',    # neutral Asp
-        "ASP" : 'D',
         "GLH" : 'E',    # neutral Glu
+        "GLN" : 'Q',
         "GLU" : 'E',
-        "PHE" : 'F',
+        "GLX" : 'Z',    # Gln/Glu
         "GLY" : 'G',
-        "HSD" : 'H',    # Delta His
-        "HSE" : 'H',    # Epsilon His
         "HID" : 'H',    # Delta His
         "HIE" : 'H',    # Epsilon His
         "HIP" : 'H',    # Positive His
         "HIS" : 'H',
+        "HSD" : 'H',    # Delta His
+        "HSE" : 'H',    # Epsilon His
         "ILE" : 'I',
+        "LEU" : 'L',
         "LYN" : 'K',    # neutral Lys
         "LYS" : 'K',
-        "LEU" : 'L',
         "MET" : 'M',
-        "ASN" : 'N',
+        "PHE" : 'F',
         "PRO" : 'P',
-        "GLN" : 'Q',
-        "ARG" : 'R',
         "SER" : 'S',
         "THR" : 'T',
-        "VAL" : 'V',
         "TRP" : 'W',
-        "UNK" : 'X',
-        "TYM" : 'Y',    # neutral Tyr
+        "TYM" : 'Y',    # Negative Tyr
         "TYR" : 'Y',
-        "GLX" : 'Z',    # Gln/Glu
+        "UNK" : 'X',
+        "VAL" : 'V',
         }
 
 def Sequences(system_or_chain, distinct=True):
