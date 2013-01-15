@@ -64,6 +64,15 @@ msys2mol2
 Information
 -----------
 
+dms-inchi
+---------
+.. program:: dms-inchi
+
+.. describe:: dms-inchi [ options ] system.dms
+
+Write distinct InChI strings derived from dms components to stdout.
+
+
 dms-info
 --------
 .. program:: dms-info
@@ -320,6 +329,13 @@ options:
 *dms-select* takes the selected atoms in ``input.dms`` and either writes
 or appends them to ``output.dms``, depending on the supplied options.
 
+dms-sequence
+------------
+.. program:: dms-sequence
+
+.. describe:: dms-sequence [ options ] system.dms
+
+Write sequences in a dms file to stdout.
 
 dms-set
 -------
