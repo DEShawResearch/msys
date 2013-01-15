@@ -15,6 +15,19 @@ namespace {
         }
         return object();
     }
+
+    object matchAll(Graph const& self, GraphPtr other) {
+        std::vector<std::vector<IdPair> > matches;
+        self.matchAll(other, matches);
+        list outer_L;
+        BOOST_FOREACH(std::vector<IdPair> const& v, matches) {
+            list L;
+            BOOST_FOREACH(IdPair const& p, v)
+                L.append(make_tuple(p.first, p.second));
+            outer_L.append(L);
+        }
+        return outer_L;
+    }
 }
 
 namespace desres { namespace msys { 
@@ -30,6 +43,7 @@ namespace desres { namespace msys {
             .def("size", &Graph::size)
             .def("atoms", &Graph::atoms, return_const())
             .def("match", match)
+            .def("matchAll", matchAll)
             ;
     }
 }}

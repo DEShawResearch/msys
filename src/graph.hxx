@@ -32,6 +32,9 @@ namespace desres { namespace msys {
         Graph(SystemPtr sys, const IdList& atoms);
 
     public:
+
+        typedef std::vector<IdPair> MatchList;
+
         /* string hash of attributes in the nodes of the graph */
         static std::string hash(SystemPtr sys, IdList const& atoms);
 
@@ -50,12 +53,17 @@ namespace desres { namespace msys {
          * in the two systems, and external atoms (with atomic number 0) are not
          * included. */
         bool match(const boost::shared_ptr<Graph> other,
-                std::vector<IdPair>& matches) const;
+                MatchList& matches) const;
 
         /* Match under the constraint that atom this_root of this graph must
          * match atom other_root of other graph */
         bool match(const boost::shared_ptr<Graph> other, Id this_root,
-                Id other_root, std::vector<IdPair>& matches) const;
+                Id other_root, MatchList& matches) const;
+
+        /* Find all permutations that match, returning the number of matches
+         * and storing list of all matched permutations. */
+        unsigned matchAll(const boost::shared_ptr<Graph> other,
+                std::vector<MatchList>& matches) const;
         
         /* Ordering of atoms in the graph structure... Used in conjuntion with 
          * setNodeAttributes */

@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.7
 
 import os, sys, unittest
-TMPDIR=os.getenv('TMPDIR', 'objs/Linux/x86_64')
+TMPDIR=os.getenv('TMPDIR', '../objs/Linux/x86_64')
 sys.path.insert(0,os.path.join(TMPDIR, 'lib', 'python'))
 import msys
 import numpy as NP
@@ -1277,6 +1277,110 @@ class TestMain(unittest.TestCase):
             sp = msys.SmartsPattern(smarts)
             self.assertEqual(sp.findMatches(ww_atoms), ww_matches)
             self.assertEqual(sp.findMatches(membrane_atoms), membrane_matches)
+
+    def testGraph(self):
+        sys_A = msys.CreateSystem()
+        res = sys_A.addResidue()
+        a0 = res.addAtom()
+        a1 = res.addAtom()
+        a2 = res.addAtom()
+        a3 = res.addAtom()
+        a4 = res.addAtom()
+        a5 = res.addAtom()
+        a6 = res.addAtom()
+        a7 = res.addAtom()
+        a8 = res.addAtom()
+        a0.addBond(a5)
+        a0.addBond(a6)
+        a0.addBond(a7)
+        a0.addBond(a8)
+        a1.addBond(a2)
+        a2.addBond(a3)
+        a2.addBond(a4)
+        a3.addBond(a6)
+        a4.addBond(a5)
+        a0.atomic_number = 4
+        a1.atomic_number = 1
+        a2.atomic_number = 4
+        a3.atomic_number = 3
+        a4.atomic_number = 2
+        a5.atomic_number = 4
+        a6.atomic_number = 4
+        a7.atomic_number = 1
+        a8.atomic_number = 1
+        atoms_A = [a0,a2,a3,a4,a5,a6,a7,a8]
+        sys_B = msys.CreateSystem()
+        res = sys_B.addResidue()
+        b0 = res.addAtom()
+        b1 = res.addAtom()
+        b2 = res.addAtom()
+        b3 = res.addAtom()
+        b4 = res.addAtom()
+        b5 = res.addAtom()
+        b6 = res.addAtom()
+        b7 = res.addAtom()
+        b8 = res.addAtom()
+        b0.addBond(b1)
+        b0.addBond(b2)
+        b1.addBond(b3)
+        b1.addBond(b5)
+        b1.addBond(b7)
+        b2.addBond(b6)
+        b4.addBond(b6)
+        b4.addBond(b7)
+        b6.addBond(b8)
+        b0.atomic_number = 4
+        b1.atomic_number = 4
+        b2.atomic_number = 3
+        b3.atomic_number = 1
+        b4.atomic_number = 2
+        b5.atomic_number = 1
+        b6.atomic_number = 4
+        b7.atomic_number = 4
+        b8.atomic_number = 1
+        atoms_B = [b0,b1,b2,b3,b4,b5,b6,b7]
+        graph_A = msys.Graph(atoms_A)
+        graph_B = msys.Graph(atoms_B)
+        self.assertTrue(graph_A != graph_B)
+        # Test match
+        matches = graph_A.match(graph_B)
+        match1 = {a0: b1, a2: b6, a3: b2, a4: b4, a5: b7, a6: b0, a7: b3, a8: b5}
+        match2 = {a0: b1, a2: b6, a3: b2, a4: b4, a5: b7, a6: b0, a7: b5, a8: b3}
+        self.assertTrue(matches == match1 or matches == match2)
+        all_matches = graph_A.matchAll(graph_B)
+        self.assertTrue(len(all_matches) == 2)
+        self.assertTrue(match1 in all_matches and match2 in all_matches)
+        a0.atomic_number = 3
+        graph_A = msys.Graph(atoms_A)
+        # Test no match because of atomic number
+        self.assertTrue(graph_A.match(graph_B) is None)
+        self.assertTrue(len(graph_A.matchAll(graph_B)) == 0)
+        a0.atomic_number = 4
+        bond = sys_A.findBond(a1,a2)
+        sys_A.delBonds([bond])
+        graph_A = msys.Graph(atoms_A)
+        # Test no match because of bond topology
+        self.assertTrue(graph_A.match(graph_B) is None)
+        self.assertTrue(len(graph_A.matchAll(graph_B)) == 0)
+
+        # Test matchAll on cube graph---8 atoms connected as a cube, plus
+        # two extra atoms attached to each of these 8 vertices
+        sys_A = msys.CreateSystem()
+        res = sys_A.addResidue()
+        a = [res.addAtom() for i in range(24)]
+        for i in range(24):
+            a[i].atomic_number = 1
+        for i in range(4):
+            a[i].addBond(a[(i+1)%4])
+            a[i+4].addBond(a[(i+1)%4+4])
+        for i in range(4):
+            a[i].addBond(a[i+4])
+        for i in range(8):
+            a[i].addBond(a[8+2*i])
+            a[i].addBond(a[8+2*i+1])
+        graph_A = msys.Graph(sys_A.atoms)
+        all_matches = graph_A.matchAll(graph_A)
+        self.assertTrue(len(all_matches) == 8 * 6 * 2**8)
 
 if __name__=="__main__":
     unittest.main()

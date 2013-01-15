@@ -2,6 +2,7 @@
 //#include "../base.hxx"
 #include <boost/foreach.hpp>
 #include <stack>
+#include <queue>
 #include <sstream> // for ostringstream
 #include <iostream> // for debugging
 
@@ -336,4 +337,92 @@ bool Graph::match_common(const GraphPtr other, int this_root, int other_root,
             progress.pop();
         }
     }
+}
+
+unsigned Graph::matchAll(const GraphPtr other, std::vector<MatchList>&
+        perms) const {
+    perms.clear();
+    if (size() != other->size())
+        return 0;
+    if (size() == 0) {
+        perms.push_back(MatchList());
+        return 1;
+    }
+    
+    /* Nodes of this graph G in BFS order from node 0 */
+    std::vector<bool> visited(size(), false);
+    std::queue<int> Q;
+    std::vector<int> nodes_bfs;
+    nodes_bfs.reserve(size());
+    Q.push(0);
+    nodes_bfs.push_back(0);
+    visited[0] = true;
+    while (Q.size() > 0) {
+        int front = Q.front();
+        Q.pop();
+        for (int i = 0; i < _nodes[front].nnbr; ++i) {
+            if (!visited[_nodes[front].nbr[i]]) {
+                Q.push(_nodes[front].nbr[i]);
+                nodes_bfs.push_back(_nodes[front].nbr[i]);
+                visited[_nodes[front].nbr[i]] = true;
+            }
+        }
+    }
+    if (nodes_bfs.size() != size())
+        MSYS_FAIL("Graph isomorphism error---check that graph is connected");
+
+    /* Maintain the following: For all but top element of matches, matches[i] of
+     * H matches nodes_bfs[i] of G. Top element of matches indicates the node in
+     * H we are currently trying to match to nodes_bfs[i] of G. */
+    std::stack<unsigned> matches;
+    matches.push(0);
+    std::vector<int> GtoH(size(), -1);
+    std::vector<int> HtoG(size(), -1);
+    while (matches.size() > 0) {
+        int g = nodes_bfs[matches.size() - 1];
+        int h = matches.top();
+        if (HtoG[h] == -1 && match_node(_nodes[g],
+                    other->_nodes[h], GtoH, HtoG)) {
+            /* Matches; try to match next node of G in nodes_bfs */
+            GtoH[g] = h;
+            HtoG[h] = g;
+            matches.push(0);
+        } else {
+            /* Does not match; increment top element of matches */
+            matches.pop();
+            matches.push(h+1);
+        }
+        if (matches.size() == size() + 1) {
+            /* Have matched all nodes in G */
+            MatchList perm;
+            for (unsigned i = 0; i < size(); ++i)
+                perm.push_back(std::make_pair(_ids[i],
+                            other->_ids[GtoH[i]]));
+            perms.push_back(perm);
+
+            /* Top element is the placeholder 0; remove it */
+            matches.pop();
+
+            /* Undo top match and increment */
+            h = matches.top();
+            GtoH[HtoG[h]] = -1;
+            HtoG[h] = -1;
+            matches.pop();
+            matches.push(h+1);
+        }
+        while (matches.top() == size()) {
+            /* Top element is size(); remove it to return to previous node of
+             * G in nodes_bfs */
+            matches.pop();
+            if (matches.size() == 0)
+                break;
+            /* Undo top match and increment */
+            h = matches.top();
+            GtoH[HtoG[h]] = -1;
+            HtoG[h] = -1;
+            matches.pop();
+            matches.push(h+1);
+        }
+    }
+    return perms.size();
 }

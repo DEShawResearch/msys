@@ -1501,7 +1501,7 @@ class Graph(object):
 
     def match(self, graph):
         ''' Find a graph isomorphism between self and the given Graph.
-        If no isomorphism could be found, return empty dict; otherwise return
+        If no isomorphism could be found, return None; otherwise return
         mapping from atoms in this graph to atoms in that graph.
         '''
         if not isinstance(graph, Graph):
@@ -1509,7 +1509,18 @@ class Graph(object):
         t = self._ptr.match(graph._ptr)
         if t is not None:
             t=dict((Atom(self._sys, i), Atom(graph._sys,j)) for i,j in t)
-        return t 
+        return t
+
+    def matchAll(self, graph):
+        ''' Find all graph isomorphisms between self and the given Graph.
+        If no isomorphism could be found, return empty list; otherwise return
+        list of dicts mapping atoms in this graph to atoms in that graph.
+        '''
+        if not isinstance(graph, Graph):
+            raise TypeError, "graph argument must be an instance of msys.Graph"
+        t = self._ptr.matchAll(graph._ptr)
+        return [dict((Atom(self._sys, i), Atom(graph._sys, j)) for i,j in item)
+                for item in t]
 
 def FindDistinctFragments(system):
     ''' Return fragids of representative fragments.  '''
