@@ -299,6 +299,12 @@ Velocities will be copied from the input frame if they are present; if
 not, the velocities in the input dms file will be used.  Specifying 
 `--zero-velocities` makes the velocities zero in the output file.
 
+dms-reorder-atoms
+-----------------
+.. describe:: dms-reorder-atoms reference input output [ options ]
+
+   Reorder atoms to make one system topologically equivalent to another.
+
 
 dms-select  
 ----------

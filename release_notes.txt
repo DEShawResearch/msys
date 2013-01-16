@@ -1,7 +1,9 @@
 1.6.28 NEW: dms-sequence tool and msys.sequence.Sequences() function.
+       NEW: dms-reorder-atoms
        FIXED: dms-scale-vdw now requires --scale options.
        FIXED: Bond guesser keeps only the shortest bond to hydrogens.
        FIXED: Make PDB output more conformant.
+       FIXED: ExportMAE no longer writes 0-length chain names.
 
 1.6.25 REMOVED: msys.glue module and dms-glue program.
        FIXED: No more MSYS_CLEANENV.
