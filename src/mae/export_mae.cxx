@@ -105,7 +105,7 @@ static void build_m_atom( SystemPtr mol, Destro& M ) {
 
         rec["m_pdb_atom_name"] = pad(atm.name, 4);
         rec["m_pdb_residue_name"] = pad(res.name, 4);
-        rec["m_chain_name"] = chn.name;
+        rec["m_chain_name"] = pad(chn.name, 1);
         rec["m_residue_number"] = res.resid;
         rec["m_x_coord"] = atm.x;
         rec["m_y_coord"] = atm.y;
