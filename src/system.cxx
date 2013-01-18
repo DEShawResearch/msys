@@ -868,6 +868,8 @@ namespace {
         std::set<std::string> names;
 
         Id ca_atm = BadId;
+        Id c_atm = BadId;
+        Id n_atm = BadId;
         for (Id i=0; i<atoms.size(); i++) {
             Id id = atoms[i];
             const atom_t& atm = sys->atom(id);
@@ -878,7 +880,11 @@ namespace {
             AtomType atype=AtomOther;
             if (iter!=types.end()) {
                 atype=iter->second;
-                if (atype==AtomProBack && aname=="CA") ca_atm=id;
+                if (atype==AtomProBack) {
+                    if (aname=="CA") ca_atm = id;
+                    else if (aname=="C") c_atm = id;
+                    else if (aname=="N") n_atm = id;
+                }
             } else {
                 /* try terminal names */
                 iter=terms.find(aname);
@@ -900,9 +906,15 @@ namespace {
             if (atype==AtomNucBack) ++nnuc;
         }
         ResidueType rtype=ResidueOther;
-        if      (npro>=4 && ca_atm!=BadId) rtype=ResidueProtein;
-        else if (nnuc>=4) rtype=ResidueNucleic;
-        else for (Id i=0; i<atoms.size(); i++) {
+        if (npro>=4 && 
+            ca_atm!=BadId && c_atm!=BadId && n_atm != BadId &&
+            !bad(sys->findBond(ca_atm,n_atm)) &&
+            !bad(sys->findBond(ca_atm,c_atm)) &&
+             bad(sys->findBond(c_atm,n_atm))) {
+            rtype=ResidueProtein;
+        } else if (nnuc>=4) {
+            rtype=ResidueNucleic;
+        } else for (Id i=0; i<atoms.size(); i++) {
             sys->atom(atoms[i]).type = AtomOther;
         }
         if (rtype==ResidueProtein) {
