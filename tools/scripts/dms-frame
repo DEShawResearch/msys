@@ -1,8 +1,12 @@
 #!/usr/bin/env desres-exec
 # -*- python -*-
 #{
-# desres-cleanenv -m molfile/1.10.4/lib-python -- python $0 "$@" 
+# desres-cleanenv \
+# -m molfile/1.10.4/lib-python \
+# -m periodicfix/2.4.3/lib-python \
+# -- python $0 "$@" 
 #}
+
 
 '''
 dms-frame input.dms output.dms [ options ]
@@ -15,6 +19,7 @@ import sys, os
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
 
 import msys
+from msys.wrap import Wrapper
 import molfile
 from molfile import findframe
 
@@ -96,7 +101,6 @@ def main():
 
     if opts.wrap or opts.center:
         print "Applying periodic wrapping"
-        from msys.wrap import Wrapper
         w=Wrapper(mol, center=opts.center, glue=opts.glue)
         w.wrap()
 
