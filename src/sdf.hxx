@@ -14,7 +14,7 @@ namespace desres { namespace msys {
 
     /* Write the structure to the given stream.  A single molecule
      * entry wil be created. */
-    void ExportSDF( SystemPtr mol, std::ostream& out );
+    void ExportSdf( SystemPtr mol, std::ostream& out );
 
 }}
 

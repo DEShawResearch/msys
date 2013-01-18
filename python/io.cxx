@@ -45,7 +45,7 @@ namespace {
 
     std::string export_sdf_bytes(SystemPtr mol) {
         std::stringstream ss;
-        ExportSDF(mol,ss);
+        ExportSdf(mol,ss);
         return ss.str();
     }
 }

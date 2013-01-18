@@ -6,7 +6,7 @@ using boost::format;
 
 namespace desres { namespace msys {
 
-    void ExportSDF( SystemPtr mol, std::ostream& out ) {
+    void ExportSdf( SystemPtr mol, std::ostream& out ) {
 
         if (mol->atomCount() > 999) {
             MSYS_FAIL("SDF export not support for > 999 atoms, have " << 
