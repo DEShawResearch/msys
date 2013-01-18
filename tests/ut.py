@@ -1,7 +1,9 @@
 #!/usr/bin/env python2.7
 
 import os, sys, unittest
-TMPDIR=os.getenv('TMPDIR', '../objs/Linux/x86_64')
+
+# DON'T CHANGE THIS! RUN ut.py out of the base directory.  -- JRG
+TMPDIR=os.getenv('TMPDIR', 'objs/Linux/x86_64')
 sys.path.insert(0,os.path.join(TMPDIR, 'lib', 'python'))
 import msys
 import numpy as NP

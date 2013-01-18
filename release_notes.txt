@@ -1,4 +1,4 @@
-1.6.29 FIXED: dms-frame was broken.
+1.6.30 FIXED: dms-frame was broken.
        FIXED: protein backbone must have minimally correct bond topology.
 
 1.6.28 NEW: dms-sequence tool and msys.sequence.Sequences() function.
