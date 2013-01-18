@@ -37,6 +37,7 @@ namespace {
     const char * GRP_FROZEN = "ffio_grp_frozen";
     const char * FORMAL_CHG = "m_formal_charge";
     const char * INSERTION =  "m_insertion_code";
+    const char * GROW_NAME =  "m_grow_name";
 
     const std::string empty;
 
@@ -85,13 +86,17 @@ namespace {
         const Json& frz = m_atom.get(GRP_FROZEN);
         const Json& formals = m_atom.get(FORMAL_CHG);
         const Json& inserts = m_atom.get(INSERTION);
+        const Json& grow = m_atom.get(GROW_NAME);
+
         Id gtmp=BadId, gene=BadId, glig=BadId, gbias=BadId, gfrz=BadId;
+        Id growcol=BadId;
 
         if (!!temp) gtmp=h->addAtomProp("grp_temperature", IntType);
         if (!!nrg)  gene=h->addAtomProp("grp_energy", IntType);
         if (!!lig)  glig=h->addAtomProp("grp_ligand", IntType);
         if (!!bias) gbias=h->addAtomProp("grp_bias", IntType);
         if (!!frz)  gfrz=h->addAtomProp("grp_frozen", IntType);
+        if (!!grow) growcol=h->addAtomProp("m_grow_name", StringType);
 
         SystemImporter imp(h);
 
@@ -121,6 +126,11 @@ namespace {
             if (!!lig)  h->atomPropValue(id,glig)=lig.elem(j).as_int(0);
             if (!!bias) h->atomPropValue(id,gbias)=bias.elem(j).as_int(0);
             if (!!frz)  h->atomPropValue(id,gfrz)=frz.elem(j).as_int(0);
+            if (!!grow) {
+                std::string g(grow.elem(j).as_string(""));
+                boost::trim(g);
+                h->atomPropValue(id,growcol)=g;
+            }
             atoms.push_back(id);
             *natoms += 1;
         }
