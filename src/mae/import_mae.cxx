@@ -96,7 +96,6 @@ namespace {
         if (!!lig)  glig=h->addAtomProp("grp_ligand", IntType);
         if (!!bias) gbias=h->addAtomProp("grp_bias", IntType);
         if (!!frz)  gfrz=h->addAtomProp("grp_frozen", IntType);
-        if (!!grow) growcol=h->addAtomProp("m_grow_name", StringType);
 
         SystemImporter imp(h);
 
@@ -129,7 +128,12 @@ namespace {
             if (!!grow) {
                 std::string g(grow.elem(j).as_string(""));
                 boost::trim(g);
-                h->atomPropValue(id,growcol)=g;
+                if (!g.empty()) {
+                    if (bad(growcol)) {
+                        growcol=h->addAtomProp("m_grow_name", StringType);
+                    }
+                    h->atomPropValue(id,growcol)=g;
+                }
             }
             atoms.push_back(id);
             *natoms += 1;
