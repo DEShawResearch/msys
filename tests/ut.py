@@ -1385,4 +1385,4 @@ class TestMain(unittest.TestCase):
         self.assertTrue(len(all_matches) == 8 * 6 * 2**8)
 
 if __name__=="__main__":
-    unittest.main()
+    unittest.main(verbosity=2)
