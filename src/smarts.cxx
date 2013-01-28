@@ -55,111 +55,6 @@ namespace {
     };
 }
 
-typedef boost::shared_ptr<std::vector<int> > IntListPtr;
-struct atom_data_t {
-    unsigned char   aromatic;
-    unsigned char   hcount;
-    unsigned char   valence;
-    unsigned char   degree;
-    IntListPtr      ring_sizes;
-    unsigned char   ring_bonds;
-
-    atom_data_t() : aromatic(), hcount(), valence(), degree(), ring_bonds() {}
-
-    int ring_count() const { return ring_sizes ? ring_sizes->size() : 0; }
-};
-
-struct bond_data_t {
-    bool    aromatic;
-    bool    in_ring;
-
-    bond_data_t() : aromatic(), in_ring() {}
-};
-
-struct annotation_t : boost::noncopyable {
-    std::vector<atom_data_t> atoms;
-    std::vector<bond_data_t> bonds;
-
-    SystemPtr _sys;
-
-    explicit annotation_t(SystemPtr sys);
-
-    /* automatic conversion */
-    operator SystemPtr() const { return _sys; }
-    System* operator->() const { return _sys.get(); }
-
-    int hybridization(int ai) const {
-        System& sys = *_sys;
-        int anum = sys.atom(ai).atomic_number;
-        if (anum<1) return 0;
-
-        /* Hybridization = # bonded atoms + # lone pairs - 1 */
-        int degree = atoms[ai].degree;
-        int valence = atoms[ai].valence;
-        int formal_charge = sys.atom(ai).formal_charge;
-        int nValence = DataForElement(anum).nValence;
-        int lonepairs = (nValence - valence - formal_charge)/2;
-        int hyb = degree + lonepairs - 1;
-
-        /* If sp3 AND (aromatic OR (have lone pairs and are bonded to C or N
-         * that has double bonds)): become sp2 */
-        if (hyb == 3) {
-            if (atoms[ai].aromatic) return 2;
-            if (lonepairs > 0) {
-                BOOST_FOREACH(Id aj, sys.bondedAtoms(ai)) {
-                    int nj = sys.atom(aj).atomic_number;
-                    if (!(nj==6 || nj==7)) continue;
-                    BOOST_FOREACH(Id bj, sys.bondsForAtom(aj)) {
-                        if (sys.bond(bj).order==2) return 2;
-                    }
-                }
-            }
-        }
-        return hyb;
-    }
-};
-
-annotation_t::annotation_t(SystemPtr sys) 
-: atoms(sys->maxAtomId()), bonds(sys->maxBondId()), _sys(sys) {
-
-    /* fetch ring structure */
-    boost::shared_ptr<MultiIdList> ringsptr = sys->allRelevantSSSR();
-    MultiIdList const& rings = *ringsptr;
-
-    /* cache ring data */
-    BOOST_FOREACH(IdList const& ring, rings) {
-        bool aromatic = ClassifyAromaticRing(sys, ring)==AromaticRing::AROMATIC;
-        for (unsigned i=0; i<ring.size(); i++) {
-            Id ai = ring[i];
-            Id aj = ring[(i+1)%ring.size()];
-            atom_data_t& a = atoms[ai];
-            if (!a.ring_sizes) a.ring_sizes.reset(new std::vector<int>);
-            a.ring_sizes->push_back(ring.size());
-            a.aromatic |= aromatic;
-
-            bond_data_t& b = bonds.at(sys->findBond(ai,aj));
-            b.in_ring = 1;
-            b.aromatic |= aromatic;
-        }
-    }
-
-    /* cache other structure data */
-    for (Id ai=0; ai<sys->maxAtomId(); ai++) {
-        if (!sys->hasAtom(ai)) continue;
-        atom_data_t& a = atoms[ai];
-        BOOST_FOREACH(Id bi, sys->bondsForAtom(ai)) {
-            bond_t const& bnd = sys->bond(bi);
-            Id aj = bnd.other(ai);
-            int anum_j = sys->atom(aj).atomic_number;
-            if (anum_j < 1) continue;
-            if (anum_j == 1) ++a.hcount;
-            a.valence += bnd.order;
-            a.degree += 1;
-            a.ring_bonds += bonds[bi].in_ring;
-        }
-    }
-}
-
 namespace desres { namespace msys {
 
     class SmartsPatternImpl {
@@ -648,14 +543,7 @@ bool match_atom_spec(Id atom, annotation_t const& sys, const atom_spec_&
                     return sys.atoms[atom].ring_count() == val;
             case 'r':
                 /* In ring of given size */
-                if (val == -1)
-                    return sys.atoms[atom].ring_count();
-                else if (!sys.atoms[atom].ring_sizes)
-                    return false;
-                else {
-                    IntListPtr p = sys.atoms[atom].ring_sizes;
-                    return std::find(p->begin(), p->end(), val)!=p->end();
-                }
+                return sys.atoms[atom].in_ring(val);
             case '^':
                 if (val == -1) val = 1;
                 return val==sys.hybridization(atom);

@@ -106,15 +106,16 @@ if env.get('MSYS_WITHOUT_LPSOLVE'):
 else:
     lpobjs=env.AddObject(Split('''
 analyze.cxx
-analyze/aromatic.cxx
 analyze/bond_orders.cxx
-analyze/eigensystem.cxx
-analyze/get_fragments.cxx
 analyze/topological_ids.cxx
 '''))
 
 libmsys=env.AddLibrary('msys', selobjs + maeobjs + lpobjs + Split('''
 alchemical.cxx
+
+analyze/aromatic.cxx
+analyze/eigensystem.cxx
+analyze/get_fragments.cxx
 
 amber/import_crd.cxx
 amber/import_prmtop.cxx

@@ -179,3 +179,77 @@ namespace desres { namespace msys {
         return AromaticRing::NONAROMATIC;
     }
 }}
+
+using namespace desres::msys;
+
+annotation_t::annotation_t(SystemPtr sys) 
+: _sys(sys), atoms(sys->maxAtomId()), bonds(sys->maxBondId()) {
+
+    /* fetch ring structure */
+    boost::shared_ptr<MultiIdList> ringsptr = sys->allRelevantSSSR();
+    MultiIdList const& rings = *ringsptr;
+
+    /* cache ring data */
+    BOOST_FOREACH(IdList const& ring, rings) {
+        bool aromatic = ClassifyAromaticRing(sys, ring)==AromaticRing::AROMATIC;
+        for (unsigned i=0; i<ring.size(); i++) {
+            Id ai = ring[i];
+            Id aj = ring[(i+1)%ring.size()];
+            atom_data_t& a = atoms[ai];
+            if (!a.ring_sizes) a.ring_sizes.reset(new std::vector<int>);
+            a.ring_sizes->push_back(ring.size());
+            a.aromatic |= aromatic;
+
+            bond_data_t& b = bonds.at(sys->findBond(ai,aj));
+            b.in_ring = 1;
+            b.aromatic |= aromatic;
+        }
+    }
+
+    /* cache other structure data */
+    for (Id ai=0; ai<sys->maxAtomId(); ai++) {
+        if (!sys->hasAtom(ai)) continue;
+        atom_data_t& a = atoms[ai];
+        BOOST_FOREACH(Id bi, sys->bondsForAtom(ai)) {
+            bond_t const& bnd = sys->bond(bi);
+            Id aj = bnd.other(ai);
+            int anum_j = sys->atom(aj).atomic_number;
+            if (anum_j < 1) continue;
+            if (anum_j == 1) ++a.hcount;
+            a.valence += bnd.order;
+            a.degree += 1;
+            a.ring_bonds += bonds[bi].in_ring;
+        }
+    }
+}
+
+int annotation_t::hybridization(int ai) const {
+    System& sys = *_sys;
+    int anum = sys.atom(ai).atomic_number;
+    if (anum<1) return 0;
+
+    /* Hybridization = # bonded atoms + # lone pairs - 1 */
+    int degree = atoms[ai].degree;
+    int valence = atoms[ai].valence;
+    int formal_charge = sys.atom(ai).formal_charge;
+    int nValence = DataForElement(anum).nValence;
+    int lonepairs = (nValence - valence - formal_charge)/2;
+    int hyb = degree + lonepairs - 1;
+
+    /* If sp3 AND (aromatic OR (have lone pairs and are bonded to C or N
+     * that has double bonds)): become sp2 */
+    if (hyb == 3) {
+        if (atoms[ai].aromatic) return 2;
+        if (lonepairs > 0) {
+            BOOST_FOREACH(Id aj, sys.bondedAtoms(ai)) {
+                int nj = sys.atom(aj).atomic_number;
+                if (!(nj==6 || nj==7)) continue;
+                BOOST_FOREACH(Id bj, sys.bondsForAtom(aj)) {
+                    if (sys.bond(bj).order==2) return 2;
+                }
+            }
+        }
+    }
+    return hyb;
+}
+
