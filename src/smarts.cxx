@@ -87,6 +87,36 @@ struct annotation_t : boost::noncopyable {
     /* automatic conversion */
     operator SystemPtr() const { return _sys; }
     System* operator->() const { return _sys.get(); }
+
+    int hybridization(int ai) const {
+        System& sys = *_sys;
+        int anum = sys.atom(ai).atomic_number;
+        if (anum<1) return 0;
+
+        /* Hybridization = # bonded atoms + # lone pairs - 1 */
+        int degree = atoms[ai].degree;
+        int valence = atoms[ai].valence;
+        int formal_charge = sys.atom(ai).formal_charge;
+        int nValence = DataForElement(anum).nValence;
+        int lonepairs = (nValence - valence - formal_charge)/2;
+        int hyb = degree + lonepairs - 1;
+
+        /* If sp3 AND (aromatic OR (have lone pairs and are bonded to C or N
+         * that has double bonds)): become sp2 */
+        if (hyb == 3) {
+            if (atoms[ai].aromatic) return 2;
+            if (lonepairs > 0) {
+                BOOST_FOREACH(Id aj, sys.bondedAtoms(ai)) {
+                    int nj = sys.atom(aj).atomic_number;
+                    if (!(nj==6 || nj==7)) continue;
+                    BOOST_FOREACH(Id bj, sys.bondsForAtom(aj)) {
+                        if (sys.bond(bj).order==2) return 2;
+                    }
+                }
+            }
+        }
+        return hyb;
+    }
 };
 
 annotation_t::annotation_t(SystemPtr sys) 
@@ -129,54 +159,6 @@ annotation_t::annotation_t(SystemPtr sys)
         }
     }
 }
-
-static int ComputeHybridization(annotation_t const& sys, int i) {
-    int anum = sys->atom(i).atomic_number;
-    if (anum<1) return 0;
-
-    /* Hybridization = # bonded atoms + # lone pairs - 1 */
-    int degree = 0;
-    int valence = 0;
-    int formal_charge = sys->atom(i).formal_charge;
-
-    BOOST_FOREACH(Id bid, sys->bondsForAtom(i)) {
-        bond_t const& bnd = sys->bond(bid);
-        Id other = bnd.other(i);
-        if (sys->atom(other).atomic_number<1) continue;
-        valence += bnd.order;
-        ++degree;
-    }
-    int nValence = DataForElement(anum).nValence;
-    int lonepairs = (nValence - valence - formal_charge)/2;
-    int hyb = degree + lonepairs - 1;
-
-    /* If sp3 AND (aromatic OR (have lone pairs and are bonded to C or N
-     * that has double bonds)): become sp2 */
-    if (hyb == 3) {
-        if (sys.atoms[i].aromatic) {
-            hyb = 2;
-        } else if (lonepairs > 0) {
-            IdList bonded = sys->bondedAtoms(i);
-            for (unsigned j = 0; j < bonded.size(); ++j) {
-                if (sys->atom(bonded[j]).atomic_number != 6
-                        && sys->atom(bonded[j]).atomic_number != 7)
-                    continue;
-                IdList bonds = sys->bondsForAtom(bonded[j]);
-                for (unsigned k = 0; k < bonds.size(); ++k) {
-                    if (sys->bond(bonds[k]).order == 2) {
-                        hyb = 2;
-                        break;
-                    }
-                }
-                if (hyb == 2)
-                    break;
-            }
-        }
-    }
-    return hyb;
-
-}
-
 
 namespace desres { namespace msys {
 
@@ -676,7 +658,7 @@ bool match_atom_spec(Id atom, annotation_t const& sys, const atom_spec_&
                 }
             case '^':
                 if (val == -1) val = 1;
-                return val==ComputeHybridization(sys, atom);
+                return val==sys.hybridization(atom);
             default:
                 MSYS_FAIL("SMARTS BUG; unrecognized numeric property");
         }
