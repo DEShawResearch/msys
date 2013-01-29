@@ -1371,6 +1371,19 @@ def Load(path, structure_only = False):
         raise ValueError, "Could not guess file type of '%s'" % path
     return System(ptr)
 
+def LoadMany(path):
+    ''' Iterate over structures in a file, if the file type supports
+    iteration.  
+
+    for mol in LoadMany('input.mol2'): ...
+    '''
+    it = _msys.LoadIterator.create(str(path))
+    while True:
+        mol = it.next()
+        if mol is None:
+            break
+        yield System(mol)
+
 def ReadCrdCoordinates(mol, path):
     ''' Read coordinates from the given Amber crd file into the given 
     System. 

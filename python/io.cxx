@@ -48,12 +48,24 @@ namespace {
         ExportSdf(mol,ss);
         return ss.str();
     }
+
+    LoadIteratorPtr load_iterator_create(std::string const& path) {
+        return LoadIterator::create(path);
+    }
+    SystemPtr load_iterator_next(LoadIterator& iter) {
+        return iter.next();
+    }
 }
 
 namespace desres { namespace msys { 
 
     void export_io() {
         
+        class_<LoadIterator, LoadIteratorPtr, boost::noncopyable>("LoadIterator", no_init)
+            .def("create", load_iterator_create).staticmethod("create")
+            .def("next", load_iterator_next)
+            ;
+
         def("ImportDMS", ImportDMS);
         def("ImportDMSFromBuffer", import_dms_from_buffer);
         def("ExportDMS", ExportDMS);
