@@ -44,6 +44,20 @@ namespace desres { namespace msys {
                    bool structure_only = false,
                    FileFormat* opt_format = NULL);
 
+
+    /* Interface class to iterate over structures */
+    class LoadIterator;
+    typedef boost::shared_ptr<LoadIterator> LoadIteratorPtr;
+
+    class LoadIterator {
+    public:
+        virtual ~LoadIterator() {}
+        static LoadIteratorPtr create(
+                std::string const& path,
+                FileFormat format = UnrecognizedFileFormat);
+
+        virtual SystemPtr next() = 0;
+    };
 }}
 
 #endif

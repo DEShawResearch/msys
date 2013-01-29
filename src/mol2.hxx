@@ -1,7 +1,7 @@
 #ifndef desres_msys_mol2_hxx
 #define desres_msys_mol2_hxx
 
-#include "system.hxx"
+#include "load.hxx"
 
 namespace desres { namespace msys {
 
@@ -13,6 +13,9 @@ namespace desres { namespace msys {
      * property "sybyl_type", and the bond type in the bond property
      * "sybyl_type".  */
     std::vector<SystemPtr> ImportMol2Many(std::string const& path);
+
+    /* Iterator for mol2 files */
+    LoadIteratorPtr Mol2Iterator(std::string const& path);
 
     /* Assign sybyl atom and bond types to the given system.  Be sure
      * bond order and resonant bond order are valid; use 

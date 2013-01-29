@@ -114,4 +114,17 @@ namespace desres { namespace msys {
         return LoadWithFormat(path, format, structure_only);
     }
 
+    LoadIteratorPtr LoadIterator::create(std::string const& path,
+                                         FileFormat format) {
+
+        if (!format) format=GuessFileFormat(path);
+        switch(format) {
+            default: MSYS_FAIL("No iterator support for file '" << path 
+                             << "' with presumed format "
+                             << FileFormatAsString(format));
+            case Mol2FileFormat:
+                     return Mol2Iterator(path);
+        }
+    }
+
 }}

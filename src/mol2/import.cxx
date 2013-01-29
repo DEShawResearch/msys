@@ -10,33 +10,91 @@
 using namespace desres::msys;
 
 namespace {
-    enum State { Start, Skip, Molecule, Atom, Bond, Substructure };
+    class iterator : public LoadIterator {
+        FILE* fd;
+        enum State { Skip, Molecule, Atom, Bond, Substructure } state;
+        char buf[256];
+
+        /* go to next molecule */
+        void advance();
+    public:
+        ~iterator() {
+            if (fd) fclose(fd);
+        }
+        explicit iterator(std::string const& path) : fd() {
+            fd = fopen(path.c_str(), "rb");
+            if (!fd) {
+                MSYS_FAIL("Could not open mol2 file for reading at " << path);
+            }
+            advance();
+        }
+        SystemPtr next();
+    };
 }
 
 SystemPtr desres::msys::ImportMol2(std::string const& path) {
-    std::vector<SystemPtr> mols = ImportMol2Many(path);
-    if (mols.empty()) return SystemPtr();
-    return mols[0];
+    return iterator(path).next();
 }
 
 std::vector<SystemPtr>
 desres::msys::ImportMol2Many(std::string const& path) {
-    FILE* fd = fopen(path.c_str(), "rb");
-    if (!fd) MSYS_FAIL("Could not open mol2 file for reading at " << path);
-    boost::shared_ptr<FILE> dtor(fd, fclose);
-
+    iterator iter(path);
     std::vector<SystemPtr> mols;
-    char buf[256];
-    State state = Start;
+    SystemPtr mol;
+    while ((mol=iter.next())) {
+        mols.push_back(mol);
+    }
+    return mols;
+}
+
+LoadIteratorPtr desres::msys::Mol2Iterator(std::string const& path) {
+    return LoadIteratorPtr(new iterator(path));
+}
+
+void iterator::advance() {
+    while (fgets(buf, sizeof(buf), fd)) {
+        if (!strncmp(buf, "@<TRIPOS>MOLECULE", 17)) {
+            state = Molecule;
+            break;
+        }
+    }
+}
+
+SystemPtr iterator::next() {
+
+    /* if we hit eof before reaching a Molecule section last time,
+     * then return nothing but empty systems */
+    if (state!=Molecule) return SystemPtr();
+
     IdList atoms;
     int natoms, nbonds, nsub;
-    SystemPtr mol;
-    Id chn = BadId;
-    Id atype=BadId, btype=BadId;
+
+    SystemPtr mol = System::create();
+    Id atype=mol->addAtomProp("sybyl_type", StringType);
+    Id btype=mol->addBondProp("sybyl_type", StringType);
+    Id chn = mol->addChain();
+
+    /* read mol_name */
+    fgets(buf, sizeof(buf), fd); 
+    mol->name = buf;
+    boost::trim(mol->name);
+    /* read natoms, nbonds, nsub */
+    natoms = nbonds = 0;
+    nsub = 0;
+    fgets(buf, sizeof(buf), fd);
+    if (sscanf(buf, "%d %d %d", &natoms, &nbonds, &nsub)<1) {
+        MSYS_FAIL("Could not parse num_atoms from line:\n" << buf);
+    }
+    /* read mol_type and ignore */
+    fgets(buf, sizeof(buf), fd);
+    /* read charge_type and ignore */
+    fgets(buf, sizeof(buf), fd);
+
     while (fgets(buf, sizeof(buf), fd)) {
         if (buf[0]=='@') {
             if (!strncmp(buf, "@<TRIPOS>MOLECULE", 17)) {
                 state = Molecule;
+                break;
             } else if (!strncmp(buf, "@<TRIPOS>ATOM", 13)) {
                 state = Atom;
             } else if (!strncmp(buf, "@<TRIPOS>BOND", 13)) {
@@ -44,38 +102,12 @@ desres::msys::ImportMol2Many(std::string const& path) {
             } else if (!strncmp(buf, "@<TRIPOS>SUBSTRUCTURE", 21)) {
                 state = Substructure;
             } else {
-                state = Start;
+                state = Skip;
             }
         }
         switch (state) {
-            case Molecule: 
-                mol = System::create();
-                atype=mol->addAtomProp("sybyl_type", StringType);
-                btype=mol->addBondProp("sybyl_type", StringType);
-                mols.push_back(mol);
-                chn = mol->addChain();
-                atoms.clear();
-                /* read mol_name */
-                fgets(buf, sizeof(buf), fd); 
-                mol->name = buf;
-                boost::trim(mol->name);
-                /* read natoms, nbonds, nsub */
-                natoms = nbonds = 0;
-                nsub = 0;
-                fgets(buf, sizeof(buf), fd);
-                if (sscanf(buf, "%d %d %d", &natoms, &nbonds, &nsub)<1) {
-                    MSYS_FAIL("Could not parse num_atoms from line:\n" << buf);
-                }
-                /* read mol_type and ignore */
-                fgets(buf, sizeof(buf), fd);
-                /* read charge_type and ignore */
-                fgets(buf, sizeof(buf), fd);
-                /* skip the rest */
-                state = Skip;
+            case Skip: 
                 break;
-
-            case Skip: break;
-
             case Atom:
                 for (int i=0; i<natoms; i++) {
                     int id, resid=0;
@@ -178,6 +210,5 @@ desres::msys::ImportMol2Many(std::string const& path) {
             default: ;
         }
     }
-    if (!feof(fd)) MSYS_FAIL("Error reading from " << path << ": " << strerror(errno));
-    return mols;
+    return mol;
 }
