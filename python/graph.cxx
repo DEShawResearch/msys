@@ -4,6 +4,11 @@
 using namespace desres::msys;
 
 namespace {
+
+    std::string hash(Graph const& self) {
+        return Graph::hash(self.system(), self.atoms());
+    }
+
     object match(Graph const& self, GraphPtr other) {
         std::vector<IdPair> matches;
         if (self.match(other, matches)) {
@@ -39,9 +44,10 @@ namespace desres { namespace msys {
             .def("__ne__",      list_ne<GraphPtr>)
             .def("__hash__",    obj_hash<GraphPtr>)
             .def("create",  &Graph::create).staticmethod("create")
-            .def("hash", &Graph::hash)
+            .def("hash", hash)
             .def("size", &Graph::size)
             .def("atoms", &Graph::atoms, return_const())
+            .def("system", &Graph::system)
             .def("match", match)
             .def("matchAll", matchAll)
             ;

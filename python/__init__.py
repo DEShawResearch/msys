@@ -1482,6 +1482,13 @@ def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge = None):
         _msys.AssignBondOrderAndFormalCharge(ptr, ids, int(total_charge))
 
 class Graph(object):
+    @classmethod
+    def _from_boost(cls, _ptr, _sys):
+        graph = cls(CreateSystem())
+        graph._ptr = _ptr
+        graph._sys = _sys
+        return graph
+
     def __init__(self, system_or_atoms):
         if isinstance(system_or_atoms, System):
             ptr = system_or_atoms._ptr
@@ -1498,6 +1505,10 @@ class Graph(object):
     def atoms(self):
         ''' ordered atoms in graph '''
         return [Atom(self._sys, i) for i in self._ptr.atoms()]
+
+    def hash(self):
+        ''' string hash of atoms and bonds in graph '''
+        return self._ptr.hash()
 
     def match(self, graph):
         ''' Find a graph isomorphism between self and the given Graph.

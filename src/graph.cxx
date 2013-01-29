@@ -45,6 +45,7 @@ Graph::Graph(SystemPtr sys, const IdList& atoms) {
     typedef std::map<std::pair<int,Id>, Id> attrHash;
     typedef std::multimap<Id,Id> countMap;
 
+    _sys = sys;
     attrHash hash_to_idx;
     countMap count_to_idx;
     msys::MultiIdList freq_partition;

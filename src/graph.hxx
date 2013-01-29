@@ -21,6 +21,7 @@ namespace desres { namespace msys {
         std::vector<Node> _nodes; /* nodes */
         std::vector<int> _nbrs;  /* storage for neighbors */
         IdList _ids; /* keep track of original IDs */
+        SystemPtr _sys; /* keep track of original system */
 
         /* Helper functions for isomorphism match */
         static bool match_node(const Node& g, const Node& h,
@@ -68,6 +69,7 @@ namespace desres { namespace msys {
         /* Ordering of atoms in the graph structure... Used in conjuntion with 
          * setNodeAttributes */
         IdList const& atoms() const {return _ids;}
+        SystemPtr system() const {return _sys;}
 
         /* Overides the default node attribute (int) with user supplied value.
          * Must specify attributes for all atoms in the same order as returned 
