@@ -124,6 +124,8 @@ namespace desres { namespace msys {
                              << FileFormatAsString(format));
             case Mol2FileFormat:
                      return Mol2Iterator(path);
+            case MaeFileFormat:
+                     return MaeIterator(path);
         }
     }
 

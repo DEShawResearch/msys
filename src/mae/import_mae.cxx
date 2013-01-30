@@ -277,56 +277,120 @@ namespace {
         size_t startlen = a-word;
         return startlen + strlen(suffix) == strlen(word);
     }
-}
-                           
-namespace desres { namespace msys {
 
-    SystemPtr ImportMAE( std::string const& path,
-                         bool ignore_unrecognized,
-                         bool structure_only ) {
-
-        /* slurp in the file */
-        std::ifstream file(path.c_str());
-        if (!file) {
-            std::stringstream ss;
-            ss << "Failed opening MAE file at '" << path << "'";
-            throw std::runtime_error(ss.str());
-        }
-
-        SystemPtr sys = ImportMAEFromStream(file, 
-                                            ignore_unrecognized,
-                                            structure_only);
-        sys->name = path;
-
-        return sys;
+    bool is_full_system_or_meta(Json const& ct) {
+        const Json& type = ct.get("ffio_ct_type");
+        const Json& name = ct.get("__name__");
+        return (type.valid() && !strcmp(type.as_string(), "full_system")) ||
+               (name.valid() && !strcmp(name.as_string(), "meta"));
     }
 
-    SystemPtr ImportMAEFromBytes( const char* bytes, int64_t len,
-                         bool ignore_unrecognized, bool structure_only ) {
-        std::istringstream in;
-        /* behold the lameness that is std::stringstream */
-        in.rdbuf()->pubsetbuf(const_cast<char *>(bytes), len);
-        return ImportMAEFromStream(in,ignore_unrecognized,structure_only);
-    }
-
-    SystemPtr ImportMAEFromStream( std::istream& file,
-                                   bool ignore_unrecognized,
-                                   bool structure_only) {
-
-        bio::filtering_istream in;
-        /* check for gzip magic number */
-        if (file.get()==0x1f && file.get()==0x8b) {
-            in.push(bio::gzip_decompressor());
-        }
-        file.seekg(0);
-        in.push(file);
-
+    struct iterator : public LoadIterator {
         std::stringstream buf;
-        buf << in.rdbuf();
-
-        /* create a json representation */
         Json M;
-        mae::import_mae( buf, M );
+        int ctnumber;
+        const bool ignore_unrecognized;
+        const bool structure_only;
+
+
+        iterator(bool _ignore_unrecognized, bool _structure_only)
+        : ctnumber(), 
+          ignore_unrecognized(_ignore_unrecognized), 
+          structure_only(_structure_only)
+        {}
+
+        void append_system(SystemPtr h, Json const& ct) const;
+        SystemPtr next();
+        SystemPtr read_all();
+
+        void init(std::string const& path) {
+            std::ifstream file(path.c_str());
+            if (!file) {
+                MSYS_FAIL("Failed opening MAE file at '" << path << "'");
+            }
+            init(file);
+        }
+
+        void init(const char* bytes, int64_t len) {
+            std::istringstream in;
+            in.rdbuf()->pubsetbuf(const_cast<char *>(bytes), len);
+            init(in);
+        }
+
+        void init(std::istream& file) {
+            bio::filtering_istream in;
+            /* check for gzip magic number */
+            if (file.get()==0x1f && file.get()==0x8b) {
+                in.push(bio::gzip_decompressor());
+            }
+            file.seekg(0);
+            in.push(file);
+
+            buf << in.rdbuf();
+
+            /* create a json representation */
+            mae::import_mae( buf, M );
+            ctnumber=0;
+        }
+    };
+
+    void iterator::append_system(SystemPtr h, Json const& ct) const {
+        h->name = ct.get("m_title").as_string("");
+
+        IdList atoms;
+        int natoms=0, npseudos=0;
+        import_cell( ct, h );
+        import_particles( ct, h, atoms, &natoms, &npseudos );
+        if (structure_only) return;
+
+        const Json& ff = ct.get("ffio_ff");
+        if (ff.valid()) {
+            write_ffinfo(ff, h);
+
+            const Json& sites = ff.get("ffio_atoms").valid() ?
+                ff.get("ffio_atoms") : ff.get("ffio_sites");
+
+            mae::SiteMap sitemap( h, sites, atoms, natoms, npseudos );
+            mae::VdwMap vdwmap( ff );
+
+            int j,n = ff.size();
+            for (j=0; j<n; j++) {
+                const Json& blk = ff.elem(j);
+                if (blk.kind()!=Json::Object) continue;
+                if (!blk.get("__size__").as_int()) continue;
+                std::string name = ff.key(j);
+                if (skippable(name)) continue;
+                const mae::Ffio * imp = mae::Ffio::get(name);
+                if (!imp) {
+                    if (ignore_unrecognized) {
+                        std::cerr << "skipping unrecognized block '" 
+                                << name << "'" << std::endl;
+                    } else {
+                        std::stringstream ss;
+                        ss << "No handler for block '" << name << "'";
+                        throw std::runtime_error(ss.str());
+                    }
+                } else if (imp->wants_all()) {
+                    imp->apply( h, ff,  sitemap, vdwmap );
+                } else {
+                    imp->apply( h, blk, sitemap, vdwmap );
+                }
+            }
+        }
+    }
+
+    SystemPtr iterator::next() {
+        for (; ctnumber<M.size(); ++ctnumber) {
+            if (is_full_system_or_meta(M.elem(ctnumber))) continue;
+            SystemPtr h = System::create();
+            append_system(h, M.elem(ctnumber++));
+            h->analyze();
+            return h;
+        }
+        return SystemPtr();
+    }
+
+    SystemPtr iterator::read_all() {
 
         /* if alchemical, do the conversion on the original mae contents,
          * then recreate the json */
@@ -343,60 +407,55 @@ namespace desres { namespace msys {
             mae::import_mae( in, M );
         }
 
+        /* read all ct blocks into the same system */
         SystemPtr h = System::create();
-
         for (int i=0; i<M.size(); i++) {
             const Json& ct = M.elem(i);
-            const Json& type = ct.get("ffio_ct_type");
-            if (type.valid() && !strcmp(type.as_string(), "full_system")) {
-                continue;
-            }
-            Json const& title = ct.get("m_title");
-            h->name = title.as_string("");
-            
-            IdList atoms;
-            int natoms=0, npseudos=0;
-            import_cell( ct, h );
-            import_particles( ct, h, atoms, &natoms, &npseudos );
-            if (structure_only) continue;
-
-            const Json& ff = ct.get("ffio_ff");
-            if (ff.valid()) {
-                write_ffinfo(ff, h);
-
-                const Json& sites = ff.get("ffio_atoms").valid() ?
-                    ff.get("ffio_atoms") : ff.get("ffio_sites");
-
-                mae::SiteMap sitemap( h, sites, atoms, natoms, npseudos );
-                mae::VdwMap vdwmap( ff );
-
-                int j,n = ff.size();
-                for (j=0; j<n; j++) {
-                    const Json& blk = ff.elem(j);
-                    if (blk.kind()!=Json::Object) continue;
-                    if (!blk.get("__size__").as_int()) continue;
-                    std::string name = ff.key(j);
-                    if (skippable(name)) continue;
-                    const mae::Ffio * imp = mae::Ffio::get(name);
-                    if (!imp) {
-                        if (ignore_unrecognized) {
-                            std::cerr << "skipping unrecognized block '" 
-                                    << name << "'" << std::endl;
-                        } else {
-                            std::stringstream ss;
-                            ss << "No handler for block '" << name << "'";
-                            throw std::runtime_error(ss.str());
-                        }
-                    } else if (imp->wants_all()) {
-                        imp->apply( h, ff,  sitemap, vdwmap );
-                    } else {
-                        imp->apply( h, blk, sitemap, vdwmap );
-                    }
-                }
-            }
+            if (is_full_system_or_meta(ct)) continue;
+            append_system(h, ct);
         }
         h->analyze();
         return h;
+    }
+}
+                           
+namespace desres { namespace msys {
+
+    SystemPtr ImportMAE( std::string const& path,
+                         bool ignore_unrecognized,
+                         bool structure_only ) {
+
+        iterator it(ignore_unrecognized, structure_only);
+        it.init(path);
+        SystemPtr sys = it.read_all();
+        sys->name = path;
+        return sys;
+    }
+
+    SystemPtr ImportMAEFromBytes( const char* bytes, int64_t len,
+                         bool ignore_unrecognized, bool structure_only ) {
+
+        iterator it(ignore_unrecognized, structure_only);
+        it.init(bytes, len);
+        return it.read_all();
+    }
+
+    SystemPtr ImportMAEFromStream( std::istream& file,
+                                   bool ignore_unrecognized,
+                                   bool structure_only) {
+
+        iterator it(ignore_unrecognized, structure_only);
+        it.init(file);
+        return it.read_all();
+    }
+
+    LoadIteratorPtr MaeIterator(std::string const& path) {
+        bool ignore_unrecognized = false;
+        bool structure_only = false;
+        iterator *it = new iterator(ignore_unrecognized, structure_only);
+        LoadIteratorPtr L(it);
+        it->init(path); /* may throw, but shared_ptr will clean up */
+        return L;
     }
 
 }}

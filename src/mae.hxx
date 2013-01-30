@@ -1,12 +1,13 @@
 #ifndef desres_msys_mae_hxx
 #define desres_msys_mae_hxx
 
-#include "system.hxx"
+#include "load.hxx"
 #include <iostream>
 
 namespace desres { namespace msys {
 
-    std::vector<SystemPtr> ImportMAEMany(std::string const& path);
+    LoadIteratorPtr MaeIterator(std::string const& path);
+
     SystemPtr ImportMAE( std::string const& path,
                          bool ignore_unrecognized = false,
                          bool structure_only = false);
