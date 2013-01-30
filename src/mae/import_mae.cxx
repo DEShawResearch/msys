@@ -278,11 +278,9 @@ namespace {
         return startlen + strlen(suffix) == strlen(word);
     }
 
-    bool is_full_system_or_meta(Json const& ct) {
+    bool is_full_system(Json const& ct) {
         const Json& type = ct.get("ffio_ct_type");
-        const Json& name = ct.get("__name__");
-        return (type.valid() && !strcmp(type.as_string(), "full_system")) ||
-               (name.valid() && !strcmp(name.as_string(), "meta"));
+        return type.valid() && !strcmp(type.as_string(), "full_system");
     }
 
     struct iterator : public LoadIterator {
@@ -381,7 +379,7 @@ namespace {
 
     SystemPtr iterator::next() {
         for (; ctnumber<M.size(); ++ctnumber) {
-            if (is_full_system_or_meta(M.elem(ctnumber))) continue;
+            if (is_full_system(M.elem(ctnumber))) continue;
             SystemPtr h = System::create();
             append_system(h, M.elem(ctnumber++));
             h->analyze();
@@ -411,7 +409,7 @@ namespace {
         SystemPtr h = System::create();
         for (int i=0; i<M.size(); i++) {
             const Json& ct = M.elem(i);
-            if (is_full_system_or_meta(ct)) continue;
+            if (is_full_system(ct)) continue;
             append_system(h, ct);
         }
         h->analyze();

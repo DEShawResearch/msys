@@ -34,8 +34,23 @@
 
 namespace desres { namespace msys { namespace mae {
 
-    void import_mae( std::istream& in, fastjson::Json& js );
-    void export_mae( const fastjson::Json& js, std::ostream& out );
+    using fastjson::Json;
+
+    void import_mae( std::istream& in, Json& js );
+    void export_mae( const Json& js, std::ostream& out );
+
+    struct tokenizer;
+
+    class import_iterator {
+        tokenizer* tk;
+
+    public:
+        explicit import_iterator(std::istream& in);
+        ~import_iterator();
+
+        /* read the next ct block; return true on success or false on EOF */
+        bool next(Json& js) const;
+    };
 
 }}}
 

@@ -20,38 +20,40 @@ using desres::fastjson::Json;
  * finite state automata to construct a token
  */
 
-namespace {
-typedef struct tokenizer_t {
+namespace desres { namespace msys { namespace mae {
 
-  char buf[256];
+    struct tokenizer {
 
-  /*! \brief The current character */
-  char m_c;
+        char buf[256];
+  
+        /*! \brief The current character */
+        char m_c;
+  
+        std::streamsize bufpos;
+        std::streamsize bufsize;
+  
+        /*! \brief the stream for the file we're parsing */
+        std::istream * m_input;
+  
+        /*! \brief The current token */
+        char * m_token;
+  
+        /*! \brief number of malloc'ed bytes in m_token */
+        ssize_t max_token_size;
+  
+        /*! \brief True iff the token is already read */
+        int m_isfresh;
+  
+        /*! \brief Current line in file */
+        unsigned m_line;
+  
+        /*! \brief Line where token starts */
+        unsigned m_tokenline;
 
-  std::streamsize bufpos;
-  std::streamsize bufsize;
+    };
+}}}
 
-  /*! \brief the stream for the file we're parsing */
-  std::istream * m_input;
-
-  /*! \brief The current token */
-  char * m_token;
-
-  /*! \brief number of malloc'ed bytes in m_token */
-  ssize_t max_token_size;
-
-  /*! \brief True iff the token is already read */
-  int m_isfresh;
-
-  /*! \brief Current line in file */
-  unsigned m_line;
-
-  /*! \brief Line where token starts */
-  unsigned m_tokenline;
-
-} tokenizer;
-
-}
+using desres::msys::mae::tokenizer;
 
 /*! \brief Get current character */
 /*!
@@ -698,26 +700,38 @@ static void write_values( const Json& ct, int depth, FILE * fd ) {
 
 namespace desres { namespace msys { namespace mae {
 
-    void import_mae( std::istream& input, Json& js ) {
-    
+    import_iterator::import_iterator(std::istream& in) : tk() {
+        tk = new tokenizer;
+        tokenizer_init(tk, in);
+
+        /* eat the meta block */
         Json block;
-        js.to_array();
-    
-        tokenizer tk[1];
-        tokenizer_init(tk, input);
-    
         block.to_object();
         fill_nameless( block, "meta", tk );
-        js.append(block);
-    
-        while (tokenizer_not_a(tk, END_OF_FILE)) {
+    }
+
+    import_iterator::~import_iterator() {
+        tokenizer_release(tk);
+        delete tk;
+    }
+
+    bool import_iterator::next(Json& block) const {
+        if (tokenizer_not_a(tk, END_OF_FILE)) {
             const char * name = tokenizer_predict(tk, END_OF_FILE);
             block.to_object();
             fill_nameless( block, name, tk );
-            js.append(block);
+            return true;
         }
-    
-        tokenizer_release(tk);
+        return false;
+    }
+
+    void import_mae( std::istream& input, Json& js ) {
+
+        Json block;
+        js.to_array();
+        import_iterator it(input);
+
+        while (it.next(block)) js.append(block);
     }
 
     void export_mae( const Json& js, FILE * fd ) {
