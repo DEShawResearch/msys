@@ -491,6 +491,7 @@ static void predict_nameless_block( Json& js, const char * name,
         predict_blockbody( subblock, tk );
     }
     js.append(key, subblock);
+    free(key);
 }
 
 static void predict_block(Json& js, tokenizer * tk ) {
