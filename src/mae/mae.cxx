@@ -12,6 +12,8 @@
 #include <sstream>
 #include <stdexcept>
 
+#include <boost/iostreams/filter/gzip.hpp>
+
 using desres::fastjson::Json;
 
 /*!
@@ -700,7 +702,15 @@ static void write_values( const Json& ct, int depth, FILE * fd ) {
 
 namespace desres { namespace msys { namespace mae {
 
-    import_iterator::import_iterator(std::istream& in) : tk() {
+    import_iterator::import_iterator(std::istream& file) : tk() {
+
+        /* check for gzip magic number */
+        if (file.get()==0x1f && file.get()==0x8b) {
+            in.push(boost::iostreams::gzip_decompressor());
+        }
+        file.seekg(0);
+        in.push(file);
+
         tk = new tokenizer;
         tokenizer_init(tk, in);
 
@@ -726,13 +736,12 @@ namespace desres { namespace msys { namespace mae {
     }
 
     void import_mae( std::istream& input, Json& js ) {
-
         Json block;
         js.to_array();
         import_iterator it(input);
-
         while (it.next(block)) js.append(block);
     }
+
 
     void export_mae( const Json& js, FILE * fd ) {
         int depth=0;

@@ -2,6 +2,7 @@
 
 #include <fastjson/fastjson.hxx>
 #include <iostream>
+#include <boost/iostreams/filtering_stream.hpp>
 
 /* Import an mae file into a json.  Both blocks and array blocks are 
  * represented as objects (dictionaries); array blocks are dictionaries
@@ -42,10 +43,11 @@ namespace desres { namespace msys { namespace mae {
     struct tokenizer;
 
     class import_iterator {
+        boost::iostreams::filtering_istream in;
         tokenizer* tk;
 
     public:
-        explicit import_iterator(std::istream& in);
+        explicit import_iterator(std::istream& file);
         ~import_iterator();
 
         /* read the next ct block; return true on success or false on EOF */

@@ -9,8 +9,6 @@
 
 #include <cstdio>
 #include <fstream>
-#include <boost/iostreams/filtering_stream.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
 
 using desres::fastjson::Json;
 using namespace desres::msys;
@@ -332,51 +330,53 @@ namespace {
     }
 
     class iterator : public LoadIterator {
-        std::stringstream buf;
-        Json M;
-        int ctnumber;
         const bool ignore_unrecognized;
         const bool structure_only;
 
+        std::ifstream in;
+        mae::import_iterator *it;
+
     public:
-        iterator(std::istream& file,
-                 bool _ignore_unrecognized, bool _structure_only)
-        : ctnumber(), 
-          ignore_unrecognized(_ignore_unrecognized), 
-          structure_only(_structure_only) {
+        iterator(bool _ignore_unrecognized, bool _structure_only)
+        : ignore_unrecognized(_ignore_unrecognized), 
+          structure_only(_structure_only),
+          it()
+          {}
 
-            bio::filtering_istream in;
-            /* check for gzip magic number */
-            if (file.get()==0x1f && file.get()==0x8b) {
-                in.push(bio::gzip_decompressor());
+        void init(std::string const& path) {
+            in.open(path);
+            if (!in) {
+                MSYS_FAIL("Failed opening MAE file at '" << path << "'");
             }
-            file.seekg(0);
-            in.push(file);
-
-            buf << in.rdbuf();
-
-            /* create a json representation */
-            mae::import_mae( buf, M );
-            ctnumber=0;
+            it = new mae::import_iterator(in);
         }
 
-        SystemPtr next();
-        SystemPtr read_all();
+        ~iterator() {
+            delete it;
+        }
+
+        SystemPtr next() {
+            Json block;
+            while (it->next(block)) {
+                if (is_full_system(block)) continue;
+                SystemPtr h = System::create();
+                append_system(h, block, ignore_unrecognized, structure_only);
+                h->analyze();
+                return h;
+            }
+            return SystemPtr();
+        }
     };
 
-    SystemPtr iterator::next() {
-        for (; ctnumber<M.size(); ++ctnumber) {
-            if (is_full_system(M.elem(ctnumber))) continue;
-            SystemPtr h = System::create();
-            append_system(h, M.elem(ctnumber++), 
-                    ignore_unrecognized, structure_only);
-            h->analyze();
-            return h;
-        }
-        return SystemPtr();
-    }
+    SystemPtr read_all(std::istream& file, 
+                       bool ignore_unrecognized,
+                       bool structure_only ) {
 
-    SystemPtr iterator::read_all() {
+        std::stringstream buf;
+        buf << file.rdbuf();
+
+        Json M;
+        mae::import_mae(buf, M);
 
         /* if alchemical, do the conversion on the original mae contents,
          * then recreate the json */
@@ -415,8 +415,7 @@ namespace desres { namespace msys {
         if (!file) {
             MSYS_FAIL("Failed opening MAE file at '" << path << "'");
         }
-        iterator it(file, ignore_unrecognized, structure_only);
-        SystemPtr sys = it.read_all();
+        SystemPtr sys = read_all(file, ignore_unrecognized, structure_only);
         sys->name = path;
         return sys;
     }
@@ -426,25 +425,23 @@ namespace desres { namespace msys {
 
         std::istringstream file;
         file.rdbuf()->pubsetbuf(const_cast<char *>(bytes), len);
-        return iterator (file, ignore_unrecognized, structure_only).read_all();
+        return read_all(file, ignore_unrecognized, structure_only);
     }
 
     SystemPtr ImportMAEFromStream( std::istream& file,
                                    bool ignore_unrecognized,
                                    bool structure_only) {
 
-        return iterator (file, ignore_unrecognized, structure_only).read_all();
+        return read_all(file, ignore_unrecognized, structure_only);
     }
 
     LoadIteratorPtr MaeIterator(std::string const& path) {
         const bool ignore_unrecognized = false;
         const bool structure_only = false;
-        std::ifstream file(path.c_str());
-        if (!file) {
-            MSYS_FAIL("Failed opening MAE file at '" << path << "'");
-        }
-        return LoadIteratorPtr(
-                new iterator(file, ignore_unrecognized, structure_only));
+        iterator* it = new iterator(ignore_unrecognized, structure_only);
+        LoadIteratorPtr ptr(it);
+        it->init(path);
+        return ptr;
     }
 
 }}
