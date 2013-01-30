@@ -283,42 +283,10 @@ namespace {
         return type.valid() && !strcmp(type.as_string(), "full_system");
     }
 
-    class iterator : public LoadIterator {
-        std::stringstream buf;
-        Json M;
-        int ctnumber;
-        const bool ignore_unrecognized;
-        const bool structure_only;
+    void append_system(SystemPtr h, Json const& ct,
+                       const bool ignore_unrecognized,
+                       const bool structure_only) {
 
-        void append_system(SystemPtr h, Json const& ct) const;
-
-    public:
-        iterator(std::istream& file,
-                 bool _ignore_unrecognized, bool _structure_only)
-        : ctnumber(), 
-          ignore_unrecognized(_ignore_unrecognized), 
-          structure_only(_structure_only) {
-
-            bio::filtering_istream in;
-            /* check for gzip magic number */
-            if (file.get()==0x1f && file.get()==0x8b) {
-                in.push(bio::gzip_decompressor());
-            }
-            file.seekg(0);
-            in.push(file);
-
-            buf << in.rdbuf();
-
-            /* create a json representation */
-            mae::import_mae( buf, M );
-            ctnumber=0;
-        }
-
-        SystemPtr next();
-        SystemPtr read_all();
-    };
-
-    void iterator::append_system(SystemPtr h, Json const& ct) const {
         h->name = ct.get("m_title").as_string("");
 
         IdList atoms;
@@ -363,11 +331,45 @@ namespace {
         }
     }
 
+    class iterator : public LoadIterator {
+        std::stringstream buf;
+        Json M;
+        int ctnumber;
+        const bool ignore_unrecognized;
+        const bool structure_only;
+
+    public:
+        iterator(std::istream& file,
+                 bool _ignore_unrecognized, bool _structure_only)
+        : ctnumber(), 
+          ignore_unrecognized(_ignore_unrecognized), 
+          structure_only(_structure_only) {
+
+            bio::filtering_istream in;
+            /* check for gzip magic number */
+            if (file.get()==0x1f && file.get()==0x8b) {
+                in.push(bio::gzip_decompressor());
+            }
+            file.seekg(0);
+            in.push(file);
+
+            buf << in.rdbuf();
+
+            /* create a json representation */
+            mae::import_mae( buf, M );
+            ctnumber=0;
+        }
+
+        SystemPtr next();
+        SystemPtr read_all();
+    };
+
     SystemPtr iterator::next() {
         for (; ctnumber<M.size(); ++ctnumber) {
             if (is_full_system(M.elem(ctnumber))) continue;
             SystemPtr h = System::create();
-            append_system(h, M.elem(ctnumber++));
+            append_system(h, M.elem(ctnumber++), 
+                    ignore_unrecognized, structure_only);
             h->analyze();
             return h;
         }
@@ -396,7 +398,7 @@ namespace {
         for (int i=0; i<M.size(); i++) {
             const Json& ct = M.elem(i);
             if (is_full_system(ct)) continue;
-            append_system(h, ct);
+            append_system(h, ct, ignore_unrecognized, structure_only);
         }
         h->analyze();
         return h;
