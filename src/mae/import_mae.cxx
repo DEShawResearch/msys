@@ -283,39 +283,22 @@ namespace {
         return type.valid() && !strcmp(type.as_string(), "full_system");
     }
 
-    struct iterator : public LoadIterator {
+    class iterator : public LoadIterator {
         std::stringstream buf;
         Json M;
         int ctnumber;
         const bool ignore_unrecognized;
         const bool structure_only;
 
+        void append_system(SystemPtr h, Json const& ct) const;
 
-        iterator(bool _ignore_unrecognized, bool _structure_only)
+    public:
+        iterator(std::istream& file,
+                 bool _ignore_unrecognized, bool _structure_only)
         : ctnumber(), 
           ignore_unrecognized(_ignore_unrecognized), 
-          structure_only(_structure_only)
-        {}
+          structure_only(_structure_only) {
 
-        void append_system(SystemPtr h, Json const& ct) const;
-        SystemPtr next();
-        SystemPtr read_all();
-
-        void init(std::string const& path) {
-            std::ifstream file(path.c_str());
-            if (!file) {
-                MSYS_FAIL("Failed opening MAE file at '" << path << "'");
-            }
-            init(file);
-        }
-
-        void init(const char* bytes, int64_t len) {
-            std::istringstream in;
-            in.rdbuf()->pubsetbuf(const_cast<char *>(bytes), len);
-            init(in);
-        }
-
-        void init(std::istream& file) {
             bio::filtering_istream in;
             /* check for gzip magic number */
             if (file.get()==0x1f && file.get()==0x8b) {
@@ -330,6 +313,9 @@ namespace {
             mae::import_mae( buf, M );
             ctnumber=0;
         }
+
+        SystemPtr next();
+        SystemPtr read_all();
     };
 
     void iterator::append_system(SystemPtr h, Json const& ct) const {
@@ -423,8 +409,11 @@ namespace desres { namespace msys {
                          bool ignore_unrecognized,
                          bool structure_only ) {
 
-        iterator it(ignore_unrecognized, structure_only);
-        it.init(path);
+        std::ifstream file(path.c_str());
+        if (!file) {
+            MSYS_FAIL("Failed opening MAE file at '" << path << "'");
+        }
+        iterator it(file, ignore_unrecognized, structure_only);
         SystemPtr sys = it.read_all();
         sys->name = path;
         return sys;
@@ -433,27 +422,27 @@ namespace desres { namespace msys {
     SystemPtr ImportMAEFromBytes( const char* bytes, int64_t len,
                          bool ignore_unrecognized, bool structure_only ) {
 
-        iterator it(ignore_unrecognized, structure_only);
-        it.init(bytes, len);
-        return it.read_all();
+        std::istringstream file;
+        file.rdbuf()->pubsetbuf(const_cast<char *>(bytes), len);
+        return iterator (file, ignore_unrecognized, structure_only).read_all();
     }
 
     SystemPtr ImportMAEFromStream( std::istream& file,
                                    bool ignore_unrecognized,
                                    bool structure_only) {
 
-        iterator it(ignore_unrecognized, structure_only);
-        it.init(file);
-        return it.read_all();
+        return iterator (file, ignore_unrecognized, structure_only).read_all();
     }
 
     LoadIteratorPtr MaeIterator(std::string const& path) {
-        bool ignore_unrecognized = false;
-        bool structure_only = false;
-        iterator *it = new iterator(ignore_unrecognized, structure_only);
-        LoadIteratorPtr L(it);
-        it->init(path); /* may throw, but shared_ptr will clean up */
-        return L;
+        const bool ignore_unrecognized = false;
+        const bool structure_only = false;
+        std::ifstream file(path.c_str());
+        if (!file) {
+            MSYS_FAIL("Failed opening MAE file at '" << path << "'");
+        }
+        return LoadIteratorPtr(
+                new iterator(file, ignore_unrecognized, structure_only));
     }
 
 }}
