@@ -50,7 +50,7 @@ namespace desres { namespace msys {
         const char* PRM = "prmtop,prm7";
         const char* MOL2= "mol2";
         const char* XYZ = "xyz";
-        const char* SDF = "sdf";
+        const char* SDF = "sdf,sdf.gz,sdfgz";
 
         if (match(path, DMS)) return DmsFileFormat;
         if (match(path, MAE)) return MaeFileFormat;
@@ -126,6 +126,8 @@ namespace desres { namespace msys {
                      return Mol2Iterator(path);
             case MaeFileFormat:
                      return MaeIterator(path);
+            case SdfFileFormat:
+                     return SdfIterator(path);
         }
     }
 
