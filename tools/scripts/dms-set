@@ -17,6 +17,7 @@ in input.dms; writes result to output.dms.
 import sys, os
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
 import msys
+from msys import update
 
 def main():
     import optparse
