@@ -26,6 +26,30 @@ class TestMain(unittest.TestCase):
         #with self.assertRaises(RuntimeError):
             #mol.select('residue -99999999')
 
+    def testAtomsel(self):
+        ww='/proj/desres/root/Linux/x86_64/dms_inputs/1.5.4/share/ww.dms'
+        mol=msys.Load(ww)
+        ref=mol.atomsel('residue 1')
+        sel=mol.atomsel('residue 3')
+        oldrms=6.0121471906466164
+        newrms=0.85438972060921559
+        pos=sel.getPositions()
+        self.assertAlmostEqual(ref.currentRMSD(sel), oldrms)
+        self.assertAlmostEqual(ref.currentRMSD(pos), oldrms)
+        self.assertAlmostEqual(ref.alignedRMSD(sel), newrms)
+
+        ref.alignCoordinates(pos)
+        self.assertAlmostEqual(ref.currentRMSD(pos), newrms)
+        self.assertAlmostEqual(ref.currentRMSD(sel), oldrms)
+        self.assertAlmostEqual(ref.alignedRMSD(pos), newrms)
+
+        mol2=msys.Load(ww)
+        sel2=mol2.atomsel('residue 3')
+        self.assertAlmostEqual(ref.currentRMSD(sel2), oldrms)
+        ref.alignCoordinates(sel2)
+        self.assertAlmostEqual(ref.currentRMSD(sel2), newrms)
+
+
 
     def testRadius(self):
         for i,r in (1,1.1), (6,1.7), (19, 1.76):

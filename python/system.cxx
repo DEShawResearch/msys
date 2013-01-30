@@ -134,6 +134,10 @@ namespace {
         return L;
     }
 
+    void destructor(PyObject* obj) { 
+        Py_DECREF(obj); 
+    }
+
     PyObject* sys_getpos(System const& sys, object idobj) {
         npy_intp dims[2];
         dims[1] = 3;
@@ -151,6 +155,38 @@ namespace {
                 ptr[2] = atm.z;
                 ptr += 3;
             }
+        } else if (PyArray_Check(idobj.ptr())) {
+            /* convert to int64 */
+            PyObject* idarr = PyArray_FromAny(
+                idobj.ptr(),
+                PyArray_DescrFromType(NPY_INT64),
+                1, 1,   /* must be 1-dimensional */
+                NPY_C_CONTIGUOUS | NPY_ALIGNED,
+                NULL);
+            if (!idarr) throw_error_already_set();
+            const int64_t* ids = (const int64_t *)PyArray_DATA(idarr);
+            boost::shared_ptr<PyObject> _(idarr, destructor);
+
+            /* allocate return array */
+            dims[0] = PyArray_DIM(idarr,0);
+            arr = PyArray_SimpleNew(2,dims,NPY_FLOAT64);
+            if (!arr) throw_error_already_set();
+            double* ptr = (double *)PyArray_DATA(arr);
+            Py_ssize_t i,n = dims[0];
+            for (i=0; i<n; i++) {
+                Id id = ids[i];
+                if (!sys.hasAtom(id)) {
+                    Py_DECREF(arr);
+                    PyErr_Format(PyExc_ValueError, "Invalid id %u", id);
+                    throw_error_already_set();
+                }
+                atom_t const& atm = sys.atom(id);
+                ptr[0] = atm.x;
+                ptr[1] = atm.y;
+                ptr[2] = atm.z;
+                ptr += 3;
+            }
+
         } else {
             IdList const& ids = extract<IdList const&>(idobj);
             dims[0] = ids.size();
@@ -212,10 +248,6 @@ namespace {
             }
         }
         return arr;
-    }
-
-    void destructor(PyObject* obj) { 
-        Py_DECREF(obj); 
     }
 
     void sys_setpos(System& sys, PyObject* obj, object idobj) {

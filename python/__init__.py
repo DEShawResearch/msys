@@ -10,6 +10,7 @@ import sys
 
 from _msys import GlobalCell, NonbondedInfo, version, hexversion
 from _msys import RadiusForElement, MassForElement
+from atomsel import Atomsel
 
 class Handle(object):
     __slots__ = ('_ptr', '_id')
@@ -1053,6 +1054,10 @@ class System(object):
         for i in xrange(n,p.maxAtomId()):
             atms.append(A(p,i))
         return atms
+
+    def atomsel(self, seltext):
+        ''' Create and return an atom selection object (Atomsel). '''
+        return Atomsel(self._ptr, self._ptr.select(seltext))
 
     def select(self, seltext):
         ''' return a list of Atoms satisfying the given VMD atom selection. '''
