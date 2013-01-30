@@ -1,3 +1,8 @@
+1.6.32 NEW: msys.LoadMany and C++ LoadIterator interface for working with
+            multi-structure files.
+       NEW: msys.Atomsel class with RMSD calculation and superposition.
+       FIXED: dms-set was broken.
+
 1.6.31 FIXED: Read m_grow_name in ImportMAE.
 
 1.6.30 FIXED: dms-frame was broken.
