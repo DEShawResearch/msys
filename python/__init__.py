@@ -1376,13 +1376,13 @@ def Load(path, structure_only = False):
         raise ValueError, "Could not guess file type of '%s'" % path
     return System(ptr)
 
-def LoadMany(path):
+def LoadMany(path, structure_only=False):
     ''' Iterate over structures in a file, if the file type supports
     iteration.  
 
     for mol in LoadMany('input.mol2'): ...
     '''
-    it = _msys.LoadIterator.create(str(path))
+    it = _msys.LoadIterator.create(str(path), bool(structure_only))
     while True:
         mol = it.next()
         if mol is None:

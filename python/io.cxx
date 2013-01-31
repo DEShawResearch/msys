@@ -49,8 +49,9 @@ namespace {
         return ss.str();
     }
 
-    LoadIteratorPtr load_iterator_create(std::string const& path) {
-        return LoadIterator::create(path);
+    LoadIteratorPtr load_iterator_create(std::string const& path,
+                                         bool structure_only) {
+        return LoadIterator::create(path, structure_only);
     }
     SystemPtr load_iterator_next(LoadIterator& iter) {
         return iter.next();
