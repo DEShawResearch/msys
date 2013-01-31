@@ -435,9 +435,9 @@ namespace desres { namespace msys {
         return read_all(file, ignore_unrecognized, structure_only);
     }
 
-    LoadIteratorPtr MaeIterator(std::string const& path) {
+    LoadIteratorPtr MaeIterator(std::string const& path,
+                                bool structure_only) {
         const bool ignore_unrecognized = false;
-        const bool structure_only = false;
         iterator* it = new iterator(ignore_unrecognized, structure_only);
         LoadIteratorPtr ptr(it);
         it->init(path);

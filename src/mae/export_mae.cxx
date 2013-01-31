@@ -4,6 +4,7 @@
 #include "../schema.hxx"
 #include "../term_table.hxx"
 #include "../clone.hxx"
+#include "../override.hxx"
 #include "destro/destro/Destro.hxx"
 
 #include <fstream>
@@ -565,6 +566,28 @@ static void build_nonbonded(SystemPtr mol, TermTablePtr table, Destro& ffio_ff) 
         Id param = table->param(id);
         Id atom = table->atoms(id)[0];
         sites[atom+1]["ffio_vdwtype"] = vdwtypes[param];
+    }
+
+    /* handle vdw overrides (nbfix) */
+    OverrideTablePtr overrides = table->overrides();
+    if (overrides->count()) {
+        if (vdwprops != vdw_12_6) {
+            MSYS_FAIL("override params supported only for vdw_12_6; got " << funct);
+        }
+        DestroArray& combined = ffio_ff.new_array("ffio_vdwtypes_combined");
+        combined.add_schema('s', "ffio_name1");
+        combined.add_schema('s', "ffio_name2");
+        combined.add_schema('r', "ffio_c1");
+        combined.add_schema('r', "ffio_c2");
+        ParamTablePtr oparams = overrides->params();
+        BOOST_FOREACH(IdPair pair, overrides->list()) {
+            Id param = overrides->get(pair);
+            Destro& row = combined.append();
+            row["ffio_name1"] = vdwtypes.at(pair.first);
+            row["ffio_name2"] = vdwtypes.at(pair.second);
+            row["ffio_c1"] = oparams->value(param, "sigma").asFloat();
+            row["ffio_c2"] = oparams->value(param, "epsilon").asFloat();
+        }
     }
 }
 

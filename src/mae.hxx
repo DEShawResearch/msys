@@ -6,7 +6,8 @@
 
 namespace desres { namespace msys {
 
-    LoadIteratorPtr MaeIterator(std::string const& path);
+    LoadIteratorPtr MaeIterator(std::string const& path,
+                                bool structure_only = false);
 
     SystemPtr ImportMAE( std::string const& path,
                          bool ignore_unrecognized = false,

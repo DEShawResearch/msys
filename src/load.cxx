@@ -115,6 +115,7 @@ namespace desres { namespace msys {
     }
 
     LoadIteratorPtr LoadIterator::create(std::string const& path,
+                                         bool structure_only,
                                          FileFormat format) {
 
         if (!format) format=GuessFileFormat(path);
@@ -125,7 +126,7 @@ namespace desres { namespace msys {
             case Mol2FileFormat:
                      return Mol2Iterator(path);
             case MaeFileFormat:
-                     return MaeIterator(path);
+                     return MaeIterator(path, structure_only);
             case SdfFileFormat:
                      return SdfIterator(path);
         }
