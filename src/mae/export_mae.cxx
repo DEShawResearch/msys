@@ -584,8 +584,34 @@ static void build_ff( SystemPtr mol, Destro& ffio_ff ) {
     build_extra( mol, ffio_ff );
 }
 
+static void write_ct(Maeff& M, SystemPtr mol, bool with_forcefield) {
+    /* create a single ct for the entire dms file */
+    Destro& ct = M.new_block("f_m_ct");
+
+    /* Get rid of any gaps in the atom list */
+    if (mol->atomCount() != mol->maxAtomId()) mol=Clone(mol, mol->atoms());
+
+    /* fill in the top-level ct stuff */
+    build_ct_fields( mol, ct );
+
+    /* add the atoms to the ct */
+    build_m_atom( mol, ct );
+
+    /* add the bonds to the ct */
+    build_m_bond( mol, ct );
+
+    if (with_forcefield){
+        Destro& ffio_ff = ct.new_block("ffio_ff");
+        build_sites( mol, ffio_ff );
+        build_pseudos( mol, ffio_ff );
+        build_ff( mol, ffio_ff );
+    }
+}
+
 namespace desres { namespace msys {
-    void ExportMAE( SystemPtr mol, String const& path, bool with_forcefield ) {
+    void ExportMAEMany( std::vector<SystemPtr> const& cts, 
+                        std::string const& path,
+                        bool with_forcefield ) {
 
         Maeff M;
         std::ofstream out(path.c_str());
@@ -594,33 +620,8 @@ namespace desres { namespace msys {
                     << strerror(errno));
         }
 
-        /* create a single ct for the entire dms file */
-        Destro& ct = M.new_block("f_m_ct");
-
-        /* Get rid of any gaps in the atom list */
-        if (mol->atomCount() != mol->maxAtomId()) mol=Clone(mol, mol->atoms());
-
-        /* fill in the top-level ct stuff */
-        build_ct_fields( mol, ct );
-
-        /* add the atoms to the ct */
-        //printf("processing atoms\n");
-        build_m_atom( mol, ct );
-
-
-        /* add the bonds to the ct */
-        //printf("processing bonds\n");
-        build_m_bond( mol, ct );
-
-        if (with_forcefield){
-            /* build sites and pseudos */
-            Destro& ffio_ff = ct.new_block("ffio_ff");
-            //printf("processing sites\n");
-            build_sites( mol, ffio_ff );
-            //printf("processing pseudos\n");
-            build_pseudos( mol, ffio_ff );
-
-            build_ff( mol, ffio_ff );
+        BOOST_FOREACH(SystemPtr ct, cts) {
+            write_ct(M,ct,with_forcefield);
         }
 
         out << M;
@@ -634,5 +635,6 @@ namespace desres { namespace msys {
                     << strerror(errno));
         }
     }
+
 }}
 

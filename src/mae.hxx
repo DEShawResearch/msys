@@ -20,8 +20,15 @@ namespace desres { namespace msys {
                          bool ignore_unrecognized = false,
                          bool structure_only = false);
 
-    void ExportMAE( SystemPtr h, std::string const& path,
-                    bool with_forcefield = true );
+    void ExportMAEMany( std::vector<SystemPtr> const& cts, 
+                        std::string const& path,
+                        bool with_forcefield = true );
+
+    inline void ExportMAE( SystemPtr h, std::string const& path,
+                    bool with_forcefield = true ) {
+        ExportMAEMany(std::vector<SystemPtr>(1,h), path, with_forcefield);
+    }
+    
     
 }}
 
