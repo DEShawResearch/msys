@@ -38,6 +38,21 @@ namespace {
         "XYZ",
         "SDF"
     };
+
+    class DefaultIterator : public LoadIterator {
+        SystemPtr mol;
+    public:
+        DefaultIterator(std::string const& path, FileFormat format,
+                        bool structure_only) {
+            mol = LoadWithFormat(path, format, structure_only);
+        }
+        SystemPtr next() {
+            /* returns original mol the first time, then NULL */
+            SystemPtr ptr;
+            ptr.swap(mol);
+            return ptr;
+        }
+    };
 }
 
 namespace desres { namespace msys {
@@ -116,19 +131,23 @@ namespace desres { namespace msys {
 
     LoadIteratorPtr LoadIterator::create(std::string const& path,
                                          bool structure_only,
-                                         FileFormat format) {
+                                         FileFormat* opt_format) {
 
+        FileFormat format = opt_format ? *opt_format : UnrecognizedFileFormat;
         if (!format) format=GuessFileFormat(path);
+        if (opt_format) *opt_format = format;
         switch(format) {
-            default: MSYS_FAIL("No iterator support for file '" << path 
-                             << "' with presumed format "
-                             << FileFormatAsString(format));
+            default:
+                return LoadIteratorPtr(
+                        new DefaultIterator(path, format, structure_only));
             case Mol2FileFormat:
                      return Mol2Iterator(path);
             case MaeFileFormat:
                      return MaeIterator(path, structure_only);
             case SdfFileFormat:
                      return SdfIterator(path);
+            case UnrecognizedFileFormat:
+                MSYS_FAIL("Unable to determine format of '" << path << "'");
         }
     }
 

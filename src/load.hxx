@@ -55,7 +55,7 @@ namespace desres { namespace msys {
         static LoadIteratorPtr create(
                 std::string const& path,
                 bool structure_only = false,
-                FileFormat format = UnrecognizedFileFormat);
+                FileFormat* opt_format = NULL);
 
         virtual SystemPtr next() = 0;
     };
