@@ -605,6 +605,33 @@ static void build_ff( SystemPtr mol, Destro& ffio_ff ) {
     }
     /* special case for cmap tables */
     build_extra( mol, ffio_ff );
+
+    /* forcefield info table */
+    ParamTablePtr ffinfo = mol->auxTable("forcefield");
+    if (ffinfo) {
+        DestroArray& arr = ffio_ff.new_array("msys_forcefield");
+        arr.add_schema('s', "path");
+        arr.add_schema('s', "info");
+        Id pathcol = ffinfo->propIndex("path");
+        Id infocol = ffinfo->propIndex("info");
+        BOOST_FOREACH(Id i, ffinfo->params()) {
+            Destro& row = arr.append();
+            if (!bad(pathcol)) row["path"]=ffinfo->value(i,pathcol).asString();
+            if (!bad(infocol)) {
+                std::string info = ffinfo->value(i,infocol).asString();
+                /* remove trailing newline */
+                if (info.size() && info[info.size()-1]=='\n') {
+                    info.resize(info.size()-1);
+                }
+                /* escape newlines */
+                size_t pos=0;
+                while ((pos=info.find('\n', pos))!=std::string::npos) {
+                    info.replace(pos,1,"\\n");
+                }
+                row["info"]=info;
+            }
+        }
+    }
 }
 
 static void write_provenance(Destro& ct, SystemPtr sys, 

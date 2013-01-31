@@ -220,7 +220,7 @@ namespace {
         for (Id i=0; i<extra->paramCount(); i++) {
             pathmap[extra->value(i,1).asString()] = i;
         }
-        /* parse the viparr command to get the forcefield paths */
+        /* parse the viparr 1.x command to get the forcefield paths */
         std::string cmd = ff.get("viparr_command").as_string("");
         std::string workdir = ff.get("viparr_workdir").as_string(".");
         workdir += "/";
@@ -250,6 +250,28 @@ namespace {
                 }
             }
         }
+
+        /* We use a different table in viparr 4.x */
+        const Json& ffinfo = ff.get("msys_forcefield");
+        if (ffinfo.valid()) {
+            int i,n = ffinfo.get("__size__").as_int();
+            for (i=0; i<n; i++) {
+                std::string path = ffinfo.get("path").elem(i).as_string("");
+                std::string info = ffinfo.get("info").elem(i).as_string("");
+                if (path.empty() && info.empty()) continue;
+                if (pathmap.count(path)) continue;
+                /* convert escaped newlines in info back into newlines */
+                size_t pos = 0;
+                while ((pos=info.find("\\n", pos))!=std::string::npos) {
+                    info.replace(pos,2,"\n");
+                }
+                Id row = extra->addParam();
+                extra->value(row,0) = row;
+                extra->value(row,1) = path;
+                extra->value(row,2) = info;
+            }
+        }
+
         /* add a provenance entry */
         if (h->provenance().empty()) {
             Provenance p;
@@ -265,6 +287,7 @@ namespace {
         return s=="ffio_sites"
             || s=="ffio_atoms" 
             || s=="viparr_info"
+            || s=="msys_forcefield"
             || s=="ffio_pseudo"
             ;
     }
