@@ -607,12 +607,43 @@ static void build_ff( SystemPtr mol, Destro& ffio_ff ) {
     build_extra( mol, ffio_ff );
 }
 
-static void write_ct(Maeff& M, SystemPtr mol, bool with_forcefield) {
+static void write_provenance(Destro& ct, SystemPtr sys, 
+                             Provenance const& provenance) {
+
+    DestroArray& arr = ct.new_array("msys_provenance");
+    arr.add_schema('s', "version");
+    arr.add_schema('s', "timestamp");
+    arr.add_schema('s', "user");
+    arr.add_schema('s', "workdir");
+    arr.add_schema('s', "cmdline");
+    arr.add_schema('s', "executable");
+
+    std::vector<Provenance> prov = sys->provenance();
+    prov.push_back(provenance);
+
+    BOOST_FOREACH(Provenance const& p, prov) {
+        Destro& row = arr.append();
+        row["version"] = p.version;
+        row["timestamp"] = p.timestamp;
+        row["user"] = p.user;
+        row["workdir"] = p.workdir;
+        row["cmdline"] = p.cmdline;
+        row["executable"] = p.executable;
+    }
+}
+
+static void write_ct(Maeff& M, SystemPtr mol, 
+                     Provenance const& provenance,
+                     bool with_forcefield) {
+
     /* create a single ct for the entire dms file */
     Destro& ct = M.new_block("f_m_ct");
 
     /* Get rid of any gaps in the atom list */
     if (mol->atomCount() != mol->maxAtomId()) mol=Clone(mol, mol->atoms());
+
+    /* provenance */
+    write_provenance(ct, mol, provenance);
 
     /* fill in the top-level ct stuff */
     build_ct_fields( mol, ct );
@@ -634,6 +665,7 @@ static void write_ct(Maeff& M, SystemPtr mol, bool with_forcefield) {
 namespace desres { namespace msys {
     void ExportMAEMany( std::vector<SystemPtr> const& cts, 
                         std::string const& path,
+                        Provenance const& provenance,
                         bool with_forcefield ) {
 
         Maeff M;
@@ -644,7 +676,7 @@ namespace desres { namespace msys {
         }
 
         BOOST_FOREACH(SystemPtr ct, cts) {
-            write_ct(M,ct,with_forcefield);
+            write_ct(M,ct,provenance,with_forcefield);
         }
 
         out << M;

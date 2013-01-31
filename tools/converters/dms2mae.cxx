@@ -10,6 +10,6 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     SystemPtr h = ImportDMS(argv[1]);
-    ExportMAE(h, argv[2]);
+    ExportMAE(h, argv[2], Provenance::fromArgs(argc,argv));
     return 0;
 }

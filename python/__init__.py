@@ -1404,7 +1404,9 @@ def SaveDMS(system, path):
 
 def SaveMAE(system, path, with_forcefield = True ):
     ''' Export the System to an MAE file at the given path. '''
-    _msys.ExportMAE(system._ptr, str(path), bool(with_forcefield) )
+    _msys.ExportMAE(system._ptr, str(path), 
+            _msys.Provenance.fromArgs(sys.argv),
+            bool(with_forcefield) )
 
 def SavePDB(system, path):
     ''' Export the System to a PDB file at the given path. '''

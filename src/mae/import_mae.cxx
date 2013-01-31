@@ -281,6 +281,25 @@ namespace {
         return type.valid() && !strcmp(type.as_string(), "full_system");
     }
 
+    void import_provenance(Json const& ct, SystemPtr h) {
+        if (!h->provenance().empty()) return;
+        const Json& prov = ct.get("msys_provenance");
+        if (prov.valid()) {
+            int i,n = prov.get("__size__").as_int();
+            for (i=0; i<n; i++) {
+                Provenance p;
+                p.version = prov.get("version").elem(i).as_string("");
+                p.timestamp = prov.get("timestamp").elem(i).as_string("");
+                p.user = prov.get("user").elem(i).as_string("");
+                p.workdir = prov.get("workdir").elem(i).as_string("");
+                p.cmdline = prov.get("cmdline").elem(i).as_string("");
+                p.executable = prov.get("executable").elem(i).as_string("");
+
+                h->addProvenance(p);
+            }
+        }
+    }
+
     void append_system(SystemPtr h, Json const& ct,
                        const bool ignore_unrecognized,
                        const bool structure_only) {
@@ -291,6 +310,7 @@ namespace {
         int natoms=0, npseudos=0;
         import_cell( ct, h );
         import_particles( ct, h, atoms, &natoms, &npseudos );
+        import_provenance(ct, h);
         if (structure_only) return;
 
         const Json& ff = ct.get("ffio_ff");
