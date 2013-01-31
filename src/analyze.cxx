@@ -110,10 +110,8 @@ namespace desres { namespace msys {
         }
     }
 
-    IdList FindDistinctFragments(SystemPtr mol) {
+    IdList FindDistinctFragments(SystemPtr mol, MultiIdList const& fragments) {
         IdList result;
-        MultiIdList fragments;
-        mol->updateFragids(&fragments);
         /* will compute graphs lazily */
         std::vector<GraphPtr> graphs(fragments.size());
         typedef std::map<std::string, IdList> FragmentHash;

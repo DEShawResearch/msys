@@ -26,7 +26,7 @@ namespace desres { namespace msys {
 
     /* Find representative fragments representing the complete set of
      * topologically distinct fragments, as determined by atomic number. */
-    IdList FindDistinctFragments(SystemPtr mol);
+    IdList FindDistinctFragments(SystemPtr mol, MultiIdList const& fragments);
 }}
 
 #endif

@@ -24,13 +24,15 @@ namespace desres { namespace msys {
     void ExportMAEMany( std::vector<SystemPtr> const& cts, 
                         std::string const& path,
                         Provenance const& provenance,
-                        bool with_forcefield = true );
+                        bool with_forcefield = true,
+                        bool with_compression = false);
 
     inline void ExportMAE( SystemPtr h, std::string const& path,
                            Provenance const& provenance,
-                           bool with_forcefield = true ) {
+                           bool with_forcefield = true,
+                           bool with_compression = false) {
         ExportMAEMany(std::vector<SystemPtr>(1,h), 
-                      path, provenance, with_forcefield);
+                      path, provenance, with_forcefield, with_compression);
     }
     
     

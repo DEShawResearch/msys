@@ -25,7 +25,9 @@ namespace {
         return L;
     }
     list find_distinct_fragments(SystemPtr mol) {
-        IdList frags = FindDistinctFragments(mol);
+        MultiIdList fragments;
+        mol->updateFragids(&fragments);
+        IdList frags = FindDistinctFragments(mol, fragments);
         list L;
         BOOST_FOREACH(Id frag, frags) L.append(frag);
         return L;

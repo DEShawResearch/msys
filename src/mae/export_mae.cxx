@@ -1,6 +1,7 @@
 /* @COPYRIGHT@ */
 
 #include "../mae.hxx"
+#include "../analyze.hxx"
 #include "../schema.hxx"
 #include "../term_table.hxx"
 #include "../clone.hxx"
@@ -177,10 +178,10 @@ static void build_m_bond( SystemPtr mol, Destro& M ) {
     }
 }
 
-static void build_sites( SystemPtr mol, Destro& M) {
+static void build_sites( SystemPtr mol, IdList const& compress, Destro& M) {
     static const std::string ATOM("atom");
     static const std::string PSEUDO("pseudo");
-    IdList ids=mol->atoms();
+    IdList ids = compress.size() ? compress : mol->atoms();
     DestroArray& ffio_sites = M.new_array("ffio_sites");
     ffio_sites.add_schema('s', "ffio_type");
     ffio_sites.add_schema('r', "ffio_charge");
@@ -409,6 +410,7 @@ static dms_to_mae dtm_map[] = {
 
 static 
 void build_tuple_table( SystemPtr mol, TermTablePtr table, 
+                        IdList const& compress,
                         const std::string& name, Destro& ffio_ff ) {
 
     int handled = false;
@@ -440,7 +442,8 @@ void build_tuple_table( SystemPtr mol, TermTablePtr table,
         }
 
         /* iterate over terms */
-        IdList terms = table->terms();
+        IdList terms = compress.size() ? table->findWithOnly(compress) 
+                                       : table->terms();
         for (unsigned i=0; i<terms.size(); i++) {
             Destro& row = arr->append();
             Id term = terms[i];
@@ -474,7 +477,9 @@ void build_tuple_table( SystemPtr mol, TermTablePtr table,
     }
 }
 
-static void build_nonbonded(SystemPtr mol, TermTablePtr table, Destro& ffio_ff) {
+static void build_nonbonded(SystemPtr mol, TermTablePtr table, 
+        IdList const& compress, Destro& ffio_ff) {
+
     /* grab nonbonded info for combining rule and funct */
     std::string funct = mol->nonbonded_info.vdw_funct;
     std::string rule = mol->nonbonded_info.vdw_rule;
@@ -561,7 +566,14 @@ static void build_nonbonded(SystemPtr mol, TermTablePtr table, Destro& ffio_ff) 
 
     /* now go back and updates ffio_sites */
     IdList terms = table->terms();
-    for (unsigned i=0; i<terms.size(); i++) {
+    if (compress.size()) {
+        Id index=0;
+        BOOST_FOREACH(Id atom, compress) {
+            Id id = table->findWithAny(IdList(1,atom)).at(0);
+            Id param = table->param(id);
+            sites[++index]["ffio_vdwtype"] = vdwtypes[param];
+        }
+    } else for (unsigned i=0; i<terms.size(); i++) {
         Id id = terms[i];
         Id param = table->param(id);
         Id atom = table->atoms(id)[0];
@@ -591,16 +603,16 @@ static void build_nonbonded(SystemPtr mol, TermTablePtr table, Destro& ffio_ff) 
     }
 }
 
-static void build_ff( SystemPtr mol, Destro& ffio_ff ) {
+static void build_ff( SystemPtr mol, IdList const& compress, Destro& ffio_ff ) {
     std::vector<std::string> tables = mol->tableNames();
     for (unsigned i=0; i<tables.size(); i++) {
         const std::string& name = tables[i];
         //printf("processing %s\n", tables[i].c_str());
         TermTablePtr table = mol->table(name);
         if (name=="nonbonded") {
-            build_nonbonded( mol, table, ffio_ff );
+            build_nonbonded( mol, table, compress, ffio_ff );
         } else { 
-            build_tuple_table( mol, table, name, ffio_ff );
+            build_tuple_table( mol, table, compress, name, ffio_ff );
         }
     }
     /* special case for cmap tables */
@@ -661,7 +673,10 @@ static void write_provenance(Destro& ct, SystemPtr sys,
 
 static void write_ct(Maeff& M, SystemPtr mol, 
                      Provenance const& provenance,
-                     bool with_forcefield) {
+                     bool with_forcefield,
+                     bool with_compression) {
+
+    if (!mol->atomCount()) return;
 
     /* create a single ct for the entire dms file */
     Destro& ct = M.new_block("f_m_ct");
@@ -681,11 +696,22 @@ static void write_ct(Maeff& M, SystemPtr mol,
     /* add the bonds to the ct */
     build_m_bond( mol, ct );
 
-    if (with_forcefield){
+    if (with_forcefield) {
         Destro& ffio_ff = ct.new_block("ffio_ff");
-        build_sites( mol, ffio_ff );
+
+        IdList compress;
+        if (with_compression) {
+            MultiIdList fragments;
+            mol->updateFragids(&fragments);
+            IdList frags = FindDistinctFragments(mol,fragments);
+            if (frags.size()==1) {
+                compress = fragments[0];
+            }
+        }
+
+        build_sites( mol, compress, ffio_ff );
         build_pseudos( mol, ffio_ff );
-        build_ff( mol, ffio_ff );
+        build_ff( mol, compress, ffio_ff );
     }
 }
 
@@ -693,7 +719,8 @@ namespace desres { namespace msys {
     void ExportMAEMany( std::vector<SystemPtr> const& cts, 
                         std::string const& path,
                         Provenance const& provenance,
-                        bool with_forcefield ) {
+                        bool with_forcefield,
+                        bool with_compression ) {
 
         Maeff M;
         std::ofstream out(path.c_str());
@@ -703,7 +730,7 @@ namespace desres { namespace msys {
         }
 
         BOOST_FOREACH(SystemPtr ct, cts) {
-            write_ct(M,ct,provenance,with_forcefield);
+            write_ct(M,ct,provenance,with_forcefield,with_compression);
         }
 
         out << M;
