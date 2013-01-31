@@ -59,6 +59,16 @@ The preferred file format for Msys structures is the DMS file.
    dms
 
 
+MAE files
+=========
+
+Msys tries to support MAE files to the extent possible.
+
+.. toctree::
+
+   mae
+
+
 Indices and tables
 ==================
 
