@@ -2,6 +2,7 @@
        NEW: ExportMAEMany.  msys.SaveMAE accepts list of Systems.
        NEW: msys_provenance and msys_forcefield blocks in exported MAE systems.
        NEW: msys.LoadMany works with all filetypes.
+       NEW: msys.Graph.matchAll can do substructure searches.
 
 1.6.32 NEW: msys.LoadMany and C++ LoadIterator interface for working with
             multi-structure files.
