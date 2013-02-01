@@ -56,6 +56,17 @@ namespace {
     SystemPtr load_iterator_next(LoadIterator& iter) {
         return iter.next();
     }
+
+    void export_mae_many(object ctarr, std::string const& path,
+                         Provenance const& prov,
+                         bool with_forcefield,
+                         bool with_compression) {
+        std::vector<SystemPtr> ctlist;
+        for (Py_ssize_t i=0; i<len(ctarr); i++) {
+            ctlist.push_back(extract<SystemPtr>(ctarr[i]));
+        }
+        ExportMAEMany(ctlist, path, prov, with_forcefield, with_compression);
+    }
 }
 
 namespace desres { namespace msys { 
@@ -73,6 +84,7 @@ namespace desres { namespace msys {
         def("ImportMAE", ImportMAE);
         def("ImportMAEFromBuffer", import_mae_from_buffer);
         def("ExportMAE", ExportMAE);
+        def("ExportMAEMany", export_mae_many);
         def("ImportPDB", ImportPDB);
         def("ExportPDB", ExportPDB);
         def("ImportPrmTop", ImportPrmTop);

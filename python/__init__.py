@@ -1403,11 +1403,19 @@ def SaveDMS(system, path):
 
 
 def SaveMAE(system, path, with_forcefield = True, with_compression=False ):
-    ''' Export the System to an MAE file at the given path. '''
-    _msys.ExportMAE(system._ptr, str(path), 
-            _msys.Provenance.fromArgs(sys.argv),
-            bool(with_forcefield),
-            bool(with_compression))
+    ''' Export the System to an MAE file at the given path. 
+    If system is a list, then each element should be a system, and a multi-
+    ct MAE file will be written.  '''
+    path = str(path)
+    prov = _msys.Provenance.fromArgs(sys.argv)
+    ff = bool(with_forcefield)
+    compress = bool(with_compression)
+    try:
+        cts = list(system)
+    except TypeError:
+        _msys.ExportMAE(system._ptr, path, prov, ff, compress) 
+    else:
+        _msys.ExportMAEMany([x._ptr for x in cts], path, prov, ff, compress)
 
 def SavePDB(system, path):
     ''' Export the System to a PDB file at the given path. '''

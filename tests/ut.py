@@ -16,6 +16,18 @@ def vsize():
 
 class TestMain(unittest.TestCase):
 
+    def testMaeMany(self):
+        ct1=msys.CreateSystem()
+        ct2=msys.CreateSystem()
+        ct1.addAtom().atomic_number=1
+        ct2.addAtom().atomic_number=2
+        ct2.addAtom().atomic_number=3
+        msys.SaveMAE([ct1,ct2], '/tmp/multi.mae')
+        cts=[x for x in msys.LoadMany('/tmp/multi.mae')]
+        self.assertEqual(len(cts), 2)
+        self.assertEqual(cts[0].natoms, 1)
+        self.assertEqual(cts[1].natoms, 2)
+
     def testBadAtomsel(self):
         mol=msys.CreateSystem()
         mol.addAtom()
