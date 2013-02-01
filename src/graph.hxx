@@ -13,8 +13,9 @@ namespace desres { namespace msys {
 
     private:
         struct Node {
-            int attr;   /* two bytes for atomic number, two for degree */
-            int nnbr;   /* bonds within the template */
+            int attr;   /* two bytes for atomic number, two for
+                           degree (including external bonds) */
+            int nnbr;   /* number of bonds within the template */
             int* nbr;   /* 0-based index of neighbors */
         };
 
@@ -25,7 +26,8 @@ namespace desres { namespace msys {
 
         /* Helper functions for isomorphism match */
         static bool match_node(const Node& g, const Node& h,
-                const std::vector<int>& GtoH, const std::vector<int>& HtoG);
+                const std::vector<int>& GtoH, const std::vector<int>& HtoG,
+                bool include_nnbr=true);
         bool match_common(const boost::shared_ptr<Graph> other, int this_root,
                 int other_root, std::vector<IdPair>& matches) const;
 
@@ -62,9 +64,12 @@ namespace desres { namespace msys {
                 Id other_root, MatchList& matches) const;
 
         /* Find all permutations that match, returning the number of matches
-         * and storing list of all matched permutations. */
+         * and storing list of all matched permutations. If substructure is
+         * true, will return matches of this graph to all matching subgraphs
+         * of other without requiring that this graph and the other graph are of
+         * the same size. */
         unsigned matchAll(const boost::shared_ptr<Graph> other,
-                std::vector<MatchList>& matches) const;
+                std::vector<MatchList>& matches, bool substructure=false) const;
         
         /* Ordering of atoms in the graph structure... Used in conjuntion with 
          * setNodeAttributes */

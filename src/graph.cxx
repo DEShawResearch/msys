@@ -157,12 +157,14 @@ bool Graph::match(const GraphPtr other, msys::Id this_root, msys::Id other_root,
 }
 
 
-/* Match whether (1) node g of Graph G matches node h of Graph h in degree and
- * attribute, (2) already matched neighbors of g correspond with neighbors of
- * h, and (3) already matched neighbors of h correspond with neighbors of g */
+/* Match whether (1) node g of Graph G matches node h of Graph h in attribute,
+ * (2) already matched neighbors of g correspond with neighbors of h, and
+ * (3) already matched neighbors of h correspond with neighbors of g */
 bool Graph::match_node(const Node& g, const Node& h, const std::vector<int>&
-       GtoH, const std::vector<int>& HtoG) {
-   if (g.nnbr != h.nnbr || g.attr != h.attr)
+       GtoH, const std::vector<int>& HtoG, bool include_nnbr) {
+   if (g.attr != h.attr)
+       return false;
+   if (include_nnbr && g.nnbr != h.nnbr)
        return false;
    for (int i = 0; i < g.nnbr; ++i) {
        int hnbr = GtoH[g.nbr[i]];
@@ -340,10 +342,13 @@ bool Graph::match_common(const GraphPtr other, int this_root, int other_root,
     }
 }
 
+/* In principle a small modification of matchAll can implement match and
+ * matchCommon above, but this matchAll algorithm is slower than the algorithm
+ * of matchCommon */
 unsigned Graph::matchAll(const GraphPtr other, std::vector<MatchList>&
-        perms) const {
+        perms, bool substructure) const {
     perms.clear();
-    if (size() != other->size())
+    if (size() != other->size() && !substructure)
         return 0;
     if (size() == 0) {
         perms.push_back(MatchList());
@@ -378,12 +383,14 @@ unsigned Graph::matchAll(const GraphPtr other, std::vector<MatchList>&
     std::stack<unsigned> matches;
     matches.push(0);
     std::vector<int> GtoH(size(), -1);
-    std::vector<int> HtoG(size(), -1);
+    std::vector<int> HtoG(other->size(), -1);
     while (matches.size() > 0) {
         int g = nodes_bfs[matches.size() - 1];
         int h = matches.top();
+        /* If we are matching a substructure, we do not require the number of
+         * internal bonds of g and h (nnbr) to match. Otherwise we do. */
         if (HtoG[h] == -1 && match_node(_nodes[g],
-                    other->_nodes[h], GtoH, HtoG)) {
+                    other->_nodes[h], GtoH, HtoG, !substructure)) {
             /* Matches; try to match next node of G in nodes_bfs */
             GtoH[g] = h;
             HtoG[h] = g;
@@ -411,8 +418,8 @@ unsigned Graph::matchAll(const GraphPtr other, std::vector<MatchList>&
             matches.pop();
             matches.push(h+1);
         }
-        while (matches.top() == size()) {
-            /* Top element is size(); remove it to return to previous node of
+        while (matches.top() == other->size()) {
+            /* Top element is size of H; remove it to return to previous node of
              * G in nodes_bfs */
             matches.pop();
             if (matches.size() == 0)

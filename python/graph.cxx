@@ -21,9 +21,9 @@ namespace {
         return object();
     }
 
-    object matchAll(Graph const& self, GraphPtr other) {
+    object matchAll(Graph const& self, GraphPtr other, bool substructure) {
         std::vector<std::vector<IdPair> > matches;
-        self.matchAll(other, matches);
+        self.matchAll(other, matches, substructure);
         list outer_L;
         BOOST_FOREACH(std::vector<IdPair> const& v, matches) {
             list L;

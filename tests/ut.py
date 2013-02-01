@@ -1408,5 +1408,11 @@ class TestMain(unittest.TestCase):
         all_matches = graph_A.matchAll(graph_A)
         self.assertTrue(len(all_matches) == 8 * 6 * 2**8)
 
+        # Test matchAll substructure search
+        graph_B = msys.Graph([a[0], a[1], a[3], a[4]])
+        all_matches = graph_B.matchAll(graph_A, substructure=True)
+        self.assertTrue(len(all_matches) == 8 * 6)
+        self.assertTrue(len(all_matches[0]) == 4)
+
 if __name__=="__main__":
     unittest.main(verbosity=2)

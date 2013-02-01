@@ -1543,14 +1543,16 @@ class Graph(object):
             t=dict((Atom(self._sys, i), Atom(graph._sys,j)) for i,j in t)
         return t
 
-    def matchAll(self, graph):
+    def matchAll(self, graph, substructure=False):
         ''' Find all graph isomorphisms between self and the given Graph.
         If no isomorphism could be found, return empty list; otherwise return
-        list of dicts mapping atoms in this graph to atoms in that graph.
+        list of dicts mapping atoms in this graph to atoms in that graph. If
+        substructure is True, return isomorphisms between self and any subgraph
+        of the given Graph.
         '''
         if not isinstance(graph, Graph):
             raise TypeError, "graph argument must be an instance of msys.Graph"
-        t = self._ptr.matchAll(graph._ptr)
+        t = self._ptr.matchAll(graph._ptr, substructure)
         return [dict((Atom(self._sys, i), Atom(graph._sys, j)) for i,j in item)
                 for item in t]
 
