@@ -9,7 +9,7 @@ import numpy
 import sys
 
 from _msys import GlobalCell, NonbondedInfo, version, hexversion
-from _msys import RadiusForElement, MassForElement
+from _msys import RadiusForElement, MassForElement, ElementForAbbreviation
 from atomsel import Atomsel
 
 class Handle(object):

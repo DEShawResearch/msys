@@ -60,6 +60,7 @@ namespace desres { namespace msys {
         def("FindDistinctFragments", find_distinct_fragments);
         def("RadiusForElement", RadiusForElement);
         def("MassForElement", MassForElement);
+        def("ElementForAbbreviation", ElementForAbbreviation);
 
         class_<SmartsPattern>("SmartsPattern", init<std::string const&>())
             .def("atomCount", &SmartsPattern::atomCount)
