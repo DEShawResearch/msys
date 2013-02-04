@@ -70,12 +70,22 @@ namespace desres { namespace msys {
         Vec3 const& operator[](unsigned i) const { 
           return i==0 ? A : i==1 ? B : C;
         }
+
+        /* Allow merge when corresponding fields are equal, or when
+         * self or other is identically 0, in which case the non-zero
+         * cell is adopted. */
+        void merge(GlobalCell const& other);
     };
 
     struct NonbondedInfo {
         String vdw_funct;
         String vdw_rule;
         String es_funct;
+
+        /* Allow merge when corresponding fields are equal, or when one
+         * of them is empty, in which case the non-empty value is adopted.
+         */
+        void merge(NonbondedInfo const& other);
     };
 
     enum AtomType {

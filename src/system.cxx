@@ -939,3 +939,25 @@ double desres::msys::now() {
   return((double)(tm.tv_sec) + (double)(tm.tv_usec)/1000000.0);
 }
 
+#define MERGE_NONBONDED_INFO(field) do { \
+    if (field.size() && nb.field.size() && field != nb.field) { \
+        MSYS_FAIL("incompatible " << field << ": '" << field \
+        << "' != '" << nb.field << "'"); \
+    } \
+    if (field.empty()) field = nb.field; \
+} while (0)
+void NonbondedInfo::merge(NonbondedInfo const& nb) {
+    MERGE_NONBONDED_INFO(vdw_funct);
+    MERGE_NONBONDED_INFO(vdw_rule);
+    MERGE_NONBONDED_INFO(es_funct);
+}
+#undef MERGE_NONBONDED_INFO
+
+void GlobalCell::merge(GlobalCell const& gc) {
+    const Vec3 zero;
+    if (A==zero && B==zero && C==zero) {
+        *this = gc;
+    } else if (A!=gc.A || B!=gc.B || C != gc.C) {
+        MSYS_FAIL("Incompatible global cells");
+    }
+}

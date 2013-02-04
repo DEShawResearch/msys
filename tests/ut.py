@@ -1088,6 +1088,22 @@ class TestMain(unittest.TestCase):
         alc=m2.table('alchemical_nonbonded')
         self.assertEqual(alc.term(0)['chargeC'], 0.5)
 
+    def testSaveDmsMany(self):
+        mol = msys.LoadDMS('/proj/desres/root/Linux/x86_64/dms_inputs/1.5.4/share/small_vancomycin_complex.dms')
+        pro = mol.clone('protein')
+        wat = mol.clone('water')
+        ion = mol.clone('ion')
+        lip = mol.clone('lipid')
+        het = mol.clone('not (protein or water or ion or lipid)')
+        cts = [pro,wat,ion,lip,het]
+
+        tmp = '/tmp/_tmp_.dms'
+        msys.SaveDMS(cts, tmp)
+        new = msys.Load(tmp)
+        for i, ct in enumerate(cts):
+            sel = 'msys_ct %d' % i
+            self.assertEqual(len(new.select(sel)), ct.natoms)
+
 
     def testUpdateFragids(self):
         m=msys.CreateSystem()

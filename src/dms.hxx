@@ -16,6 +16,10 @@ namespace desres { namespace msys {
     void ExportDMS(SystemPtr sys, const std::string& path, 
                    Provenance const& provenance);
 
+    void ExportDMSMany(std::vector<SystemPtr> const& cts,
+                       std::string const& path,
+                       Provenance const& provenance);
+
     namespace sqlite {
         SystemPtr ImportDMS(sqlite3* db, bool structure_only=false);
         void ExportDMS(SystemPtr sys, sqlite3* db,

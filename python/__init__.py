@@ -1399,8 +1399,12 @@ def ReadCrdCoordinates(mol, path):
 
 def SaveDMS(system, path):
     ''' Export the System to a DMS file at the given path. '''
-    _msys.ExportDMS(system._ptr, path, _msys.Provenance.fromArgs(sys.argv))
-
+    path = str(path)
+    prov = _msys.Provenance.fromArgs(sys.argv)
+    if isinstance(system, System):
+        _msys.ExportDMS(system._ptr, path, prov)
+    else:
+        _msys.ExportDMSMany([x._ptr for x in system], path, prov)
 
 def SaveMAE(system, path, with_forcefield = True, with_compression=False ):
     ''' Export the System to an MAE file at the given path. 

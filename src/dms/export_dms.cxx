@@ -2,6 +2,8 @@
 #include "../dms.hxx"
 #include "../term_table.hxx"
 #include "../override.hxx"
+#include "../clone.hxx"
+#include "../append.hxx"
 
 #include <sstream>
 #include <stdio.h>
@@ -10,7 +12,9 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/foreach.hpp>
 
+
 using namespace desres::msys;
+typedef std::vector<SystemPtr> SystemList;
 
 static const char* str(const ValueType& t) {
     return t==IntType   ? "integer" :
@@ -95,7 +99,8 @@ static void export_alchemical_particles(const System& sys,
     }
 }
 
-static void export_particles(const System& sys, const IdList& map, Sqlite dms) {
+static void export_atoms(const System& sys, const IdList& map, 
+                         const IdList& ctsizes, Sqlite dms) {
 
     IdList nbtypes = fetch_nbtypes(sys);
     IdList ids = sys.atoms();
@@ -119,10 +124,15 @@ static void export_particles(const System& sys, const IdList& map, Sqlite dms) {
         "  charge float,\n" 
         "  formal_charge integer,\n"
         "  resonant_charge float,\n"
-        "  insertion text not null,\n";
+        "  insertion text not null,\n"
+        "  msys_ct integer not null,\n";
 
-    const Id nprops = sys.atomPropCount();
-    for (Id i=0; i<nprops; i++) {
+    /* Ignore msys_ct if it is encountered as a custom atom property.
+     * We reserve msys_ct to assign atoms to cts. */
+    IdList atomprops;
+    for (Id i=0; i<sys.atomPropCount(); i++) {
+        if (sys.atomPropName(i)=="msys_ct") continue;
+        atomprops.push_back(i);
         sql += "  '" + sys.atomPropName(i) + "' ";
         sql += str(sys.atomPropType(i));
         sql += ",\n";
@@ -135,6 +145,9 @@ static void export_particles(const System& sys, const IdList& map, Sqlite dms) {
     }
     dms.exec( sql.c_str());
 
+    Id ctsize = ctsizes.at(0);
+    Id ct = 0;
+
     Writer w = dms.insert("particle");
     dms.exec("begin");
     for (Id i=0, n=ids.size(); i<n; i++) {
@@ -145,7 +158,12 @@ static void export_particles(const System& sys, const IdList& map, Sqlite dms) {
         Id chn = residue.chain;
         const chain_t& chain = sys.chain(chn);
 
-        w.bind_int( 0, map[atm]);
+        Id gid = map[atm];
+        while (gid>=ctsize) {
+            ctsize = ctsizes.at(++ct);
+        }
+
+        w.bind_int( 0, gid);
         w.bind_int( 1, atom.atomic_number);
         w.bind_str( 2, atom.name.c_str());
         w.bind_flt( 3, atom.x);
@@ -163,14 +181,16 @@ static void export_particles(const System& sys, const IdList& map, Sqlite dms) {
         w.bind_int(15, atom.formal_charge);
         w.bind_int(16, atom.resonant_charge);
         w.bind_str(17, residue.insertion.c_str());
+        w.bind_int(18, ct);
 
-        for (Id j=0; j<nprops; j++) {
-            int col=18+j;
+        for (Id j=0; j<atomprops.size(); j++) {
+            int col=19+j;
+            Id propid = atomprops[j];
 
             /* *sigh* - the ParamTable::value() method is non-const,
              * and I don't feel like making a const version; thus this
              * hack. */
-            ValueRef ref = const_cast<System&>(sys).atomPropValue(atm,j);
+            ValueRef ref = const_cast<System&>(sys).atomPropValue(atm,propid);
             write(ref, col, w);
         }
         if (nbtypes.size()) {
@@ -178,7 +198,7 @@ static void export_particles(const System& sys, const IdList& map, Sqlite dms) {
             if (bad(param)) {
                 MSYS_FAIL("Missing nonbonded param for particle " << atm);
             }
-            w.bind_int(18+nprops,param);
+            w.bind_int(19+atomprops.size(),param);
         }
         try {
             w.next();
@@ -186,7 +206,7 @@ static void export_particles(const System& sys, const IdList& map, Sqlite dms) {
         catch (std::exception& e) {
             std::stringstream ss;
             ss << "Error writing particle table for atom id " << atm 
-               << " gid " << map[atm] << ": " << e.what();
+               << " gid " << gid << ": " << e.what();
             throw std::runtime_error(ss.str());
         }
     }
@@ -449,21 +469,20 @@ static void export_aux(const System& sys, Sqlite dms) {
     }
 }
 
-static void export_nbinfo(const System& sys, Sqlite dms) {
+static void export_nbinfo(NonbondedInfo const& nb, Sqlite dms) {
     dms.exec(
             "create table nonbonded_info (\n"
             "  vdw_funct text,\n"
             "  vdw_rule text,\n"
             "  es_funct text)");
     Writer w = dms.insert("nonbonded_info");
-    w.bind_str(0,sys.nonbonded_info.vdw_funct.c_str());
-    w.bind_str(1,sys.nonbonded_info.vdw_rule.c_str());
-    w.bind_str(2,sys.nonbonded_info.es_funct.c_str());
+    w.bind_str(0,nb.vdw_funct.c_str());
+    w.bind_str(1,nb.vdw_rule.c_str());
+    w.bind_str(2,nb.es_funct.c_str());
     w.next();
 }
 
-static void export_cell(const System& sys, Sqlite dms) {
-    const GlobalCell& cell = sys.global_cell;
+static void export_cell(GlobalCell const& cell, Sqlite dms) {
     dms.exec( 
             "create table global_cell (\n"
             "  id integer primary key,\n"
@@ -479,19 +498,21 @@ static void export_cell(const System& sys, Sqlite dms) {
     dms.exec( "commit");
 }
 
-static void export_provenance(System const& sys, Provenance const& provenance, 
+static void export_provenance(System const& sys, Id ct, 
+                              Provenance const& provenance, 
                               Sqlite dms) {
     std::vector<Provenance> prov = sys.provenance();
     prov.push_back(provenance);
     dms.exec(
-            "create table provenance (\n"
+            "create table if not exists provenance (\n"
             "  id integer primary key,\n"
             "  version text,\n"
             "  timestamp text,\n"
             "  user text,\n"
             "  workdir text,\n"
             "  cmdline text,\n"
-            "  executable text)");
+            "  executable text,\n"
+            "  msys_ct integer not null)");
     Writer w = dms.insert("provenance");
     dms.exec( "begin");
     for (unsigned i=0; i<prov.size(); i++) {
@@ -501,44 +522,30 @@ static void export_provenance(System const& sys, Provenance const& provenance,
         w.bind_str( 4, prov[i].workdir.c_str());
         w.bind_str( 5, prov[i].cmdline.c_str());
         w.bind_str( 6, prov[i].executable.c_str());
+        w.bind_int( 7, ct);
         w.next();
     }
     dms.exec( "commit");
 }
 
-static void export_macros(System const& sys, Sqlite dms) {
+static void export_macros(System const& sys, Id ct, Sqlite dms) {
     /* always create the selection_macro table, even if no macros are defined,
      * so that we can distinguish between dms files written by older versions
      * of msys that don't contain a selection_macro table and need the default
      * macros installed, and dms files whose macros have all been deleted. */
     dms.exec(
-            "create table msys_selection_macro (\n"
-            "  macro text primary key,\n"
-            "  definition text)");
+            "create table if not exists msys_selection_macro (\n"
+            "  macro text,\n"
+            "  msys_ct integer not null,\n"
+            "  definition text,\n"
+            "  primary key (macro,msys_ct))");
     Writer w = dms.insert("msys_selection_macro");
     dms.exec( "begin");
     std::vector<std::string> v = sys.selectionMacros();
     for (unsigned i=0; i<v.size(); i++) {
         w.bind_str( 0, v[i].c_str());
-        w.bind_str( 1, sys.selectionMacroDefinition(v[i]).c_str());
-        w.next();
-    }
-    dms.exec( "commit");
-}
-
-static void export_glue(System const& sys, Sqlite dms) {
-    if (!sys.glueCount()) return;
-    dms.exec(
-            "create table glue (\n"
-            "  id integer primary key,\n"
-            "  p0 integer not null,\n"
-            "  p1 integer not null)");
-    Writer w = dms.insert("glue");
-    dms.exec( "begin");
-    std::vector<glue_t> glue = sys.gluePairs();
-    for (unsigned i=0; i<glue.size(); i++) {
-        w.bind_int(1,glue[i].first);
-        w.bind_int(2,glue[i].second);
+        w.bind_int( 1, ct);
+        w.bind_str( 2, sys.selectionMacroDefinition(v[i]).c_str());
         w.next();
     }
     dms.exec( "commit");
@@ -556,22 +563,67 @@ static IdList map_gids(System const& sys) {
     return ids;
 }
 
-static void export_dms(SystemPtr h, Sqlite dms, Provenance const& provenance) {
-    System& sys = *h;
-    IdList atomidmap = map_gids(sys);
-    export_particles(sys, atomidmap, dms);
-    export_bonds(    sys, atomidmap, dms);
-    export_tables(   sys, atomidmap, dms);
-    export_aux(      sys,            dms);
-    export_nbinfo(   sys,            dms);
-    export_cell(     sys,            dms);
-    export_provenance(sys,provenance,dms);
-    export_macros(   sys,            dms);
-    export_glue(     sys,            dms);
+static void export_dms(SystemList const& cts, 
+                       Sqlite dms, 
+                       Provenance const& provenance) {
+
+    if (cts.empty()) MSYS_FAIL("Empty system list");
+
+    /* There can be only one nonbonded_info and global_cell table */
+    NonbondedInfo nb;
+    GlobalCell cell;
+
+    for (Id ct=0; ct<cts.size(); ct++) {
+        System const& sys = *cts[ct];
+        nb.merge(sys.nonbonded_info);
+        cell.merge(sys.global_cell);
+
+        /* Provenance and atom selection macros for each system get tracked
+         * and written separately. */
+        export_provenance( sys, ct, provenance, dms);
+        export_macros( sys, ct, dms);
+    }
+
+    /* Write the merged sections */
+    export_nbinfo(nb,dms);
+    export_cell(cell,dms);
+
+    /* At this point we have just the atom, bond, and forcefield information.
+     * If there is only one system, avoid making a copy, and just export it
+     * as is.  Otherwise, we merge the systems together by making a copy
+     * of the first one and then appending the others.  This does not preserve
+     * all the provenance and selection macro information, which is why we
+     * wrote them out separately earlier. */
+    SystemPtr mol = cts[0];
+    IdList idmap, ctsizes;
+    ctsizes.push_back(mol->atomCount());
+    if (cts.size()==1) {
+        IdList tmp = map_gids(*mol);
+        idmap.swap(tmp);
+    } else {
+        mol = Clone(mol, mol->atoms());
+        for (Id i=1; i<cts.size(); i++) {
+            AppendSystem(mol, cts[i]);
+            ctsizes.push_back(ctsizes[i-1] + cts[i]->atomCount());
+        }
+        idmap.resize(mol->atomCount());
+        for (Id i=0; i<mol->atomCount(); i++) idmap[i]=i;
+    }
+    export_atoms( *mol, idmap, ctsizes, dms);
+    export_bonds( *mol, idmap,          dms);
+    export_tables(*mol, idmap,          dms);
+    export_aux(   *mol,                 dms);
 }
 
 void desres::msys::ExportDMS(SystemPtr h, const std::string& path,
                              Provenance const& provenance) {
+
+    ExportDMSMany(SystemList(1,h), path, provenance);
+}
+
+void desres::msys::ExportDMSMany(SystemList const& cts,
+                                 std::string const& path,
+                                 Provenance const& provenance) {
     unlink(path.c_str());
     Sqlite dms;
     try {
@@ -579,13 +631,14 @@ void desres::msys::ExportDMS(SystemPtr h, const std::string& path,
     } catch (std::exception& e) {
         MSYS_FAIL("Could not create dms file at " << path << ": " << e.what());
     }
-    export_dms(h, dms, provenance);
+    export_dms(cts, dms, provenance);
 }
 
 static void no_close(sqlite3* db) {}
 
 void desres::msys::sqlite::ExportDMS(SystemPtr h, sqlite3* db,
                                      Provenance const& provenance) {
-    export_dms(h, boost::shared_ptr<sqlite3>(db,no_close), provenance);
+    export_dms(SystemList(1,h), 
+               boost::shared_ptr<sqlite3>(db,no_close), provenance);
 }
 
