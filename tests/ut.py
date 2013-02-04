@@ -1108,6 +1108,13 @@ class TestMain(unittest.TestCase):
             sel = 'msys_ct %d' % i
             self.assertEqual(len(new.select(sel)), ct.natoms)
 
+        # make sure coalesced
+        msys.SaveDMS([mol,mol], tmp)
+        new = msys.Load(tmp)
+        self.assertEqual(
+                mol.table('stretch_harm').params.nparams,
+                new.table('stretch_harm').params.nparams)
+
 
     def testUpdateFragids(self):
         m=msys.CreateSystem()

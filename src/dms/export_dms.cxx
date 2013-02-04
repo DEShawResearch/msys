@@ -608,6 +608,14 @@ static void export_dms(SystemList const& cts,
         }
         idmap.resize(mol->atomCount());
         for (Id i=0; i<mol->atomCount(); i++) idmap[i]=i;
+
+        /* This is the only chance we get to coalesce all the parameter
+         * tables.  There's no way to coalesce tables from separate
+         * systems.  */
+        mol->coalesceTables();
+        /* FIXME: It would be nice to know if another clone was actually
+         * needed */
+        mol = Clone(mol, mol->atoms());
     }
     export_atoms( *mol, idmap, ctsizes, dms);
     export_bonds( *mol, idmap,          dms);
