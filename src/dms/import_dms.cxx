@@ -2,6 +2,7 @@
 #include "../dms.hxx"
 #include "../term_table.hxx"
 #include "../override.hxx"
+#include "../clone.hxx"
 
 #include <sstream>
 #include <stdio.h>
@@ -454,10 +455,113 @@ static void read_extra( Sqlite dms, System& sys, const KnownSet& known) {
     }
 }
 
-static void read_provenance( Sqlite dms, System& sys, KnownSet& known) {
+
+namespace {
+
+    /* all the per-system data that can't be assimilated into a single
+     * system. */
+
+    typedef std::map<String,String> KeyValMap;
+    typedef std::vector<Provenance> ProvenanceList;
+
+    struct system_data {
+        String          name;
+        KeyValMap       keyvals;
+        KeyValMap       macros;
+        ProvenanceList  provlist;
+        IdList          atoms;
+
+        SystemPtr annotate(SystemPtr h) const {
+            /* system name */
+            h->name = name;
+            /* atom selection macros */
+            if (!macros.empty()) {
+                KeyValMap::const_iterator it;
+                for (it=macros.begin(); it!=macros.end(); ++it) {
+                    h->addSelectionMacro(it->first, it->second);
+                }
+            }
+            /* provenance */
+            BOOST_FOREACH(Provenance const& p, provlist) {
+                h->addProvenance(p);
+            }
+            return h;
+        }
+
+        SystemPtr split(SystemPtr h) {
+            return annotate(Clone(h,atoms));
+        }
+    };
+
+    class iterator : public LoadIterator {
+        Id _ct;
+        std::vector<system_data> _cts;
+        SystemPtr _mol;
+
+        void read_all(Sqlite dms, bool structure_only);
+        void read_keyvals(Sqlite dms, KnownSet& known);
+        void read_provenance(Sqlite dms, KnownSet& known);
+        void read_macros(Sqlite dms, KnownSet& known);
+
+    public:
+        iterator(Sqlite dms, bool structure_only) 
+        : _ct(0), _cts(1) {
+            read_all(dms, structure_only);
+        }
+        SystemPtr all() {
+            if (!_mol) return _mol;
+            SystemPtr h;
+            h.swap(_mol);
+            return _cts.at(0).annotate(h);
+        }
+        SystemPtr next() {
+            if (!_mol) return _mol;
+            const Id ct = _ct++;
+            if (ct>=_cts.size()) {
+                _mol.reset();
+                return _mol;
+            }
+            return _cts.at(ct).split(_mol);
+        }
+    };
+}
+
+LoadIteratorPtr desres::msys::DmsIterator(const std::string& path, 
+                            bool structure_only) {
+    return LoadIteratorPtr(new iterator(Sqlite::read(path), structure_only));
+}
+
+static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
+    return iterator(dms, structure_only).all();
+}
+
+
+void iterator::read_keyvals(Sqlite dms, KnownSet& known) {
+    known.insert("msys_system");
+    Reader r = dms.fetch("msys_system");
+    if (r.size()) {
+        int CT = r.column("ct");
+        int KEY = r.column("key");
+        int VAL = r.column("value");
+        for (; r; r.next()) {
+            Id ct = r.get_int(CT);
+            const char* key = r.get_str(KEY);
+            const char* val = r.get_str(VAL);
+            if (ct>=_cts.size()) _cts.resize(ct+1);
+            if (!strcmp(key,"name")) {
+                _cts.at(ct).name = val;
+            } else {
+                _cts.at(ct).keyvals[key] = val;
+            }
+        }
+    }
+}
+
+void iterator::read_provenance(Sqlite dms, KnownSet& known) {
     known.insert("provenance");
     Reader r = dms.fetch( "provenance");
     if (r) {
+        int CT = r.column("msys_ct");
         int version = r.column( "version");
         int timestamp = r.column( "timestamp");
         int user = r.column( "user");
@@ -473,85 +577,45 @@ static void read_provenance( Sqlite dms, System& sys, KnownSet& known) {
             if (workdir>=0)   p.workdir   = r.get_str( workdir);
             if (cmdline>=0)   p.cmdline   = r.get_str( cmdline);
             if (executable>=0) p.executable=r.get_str(executable);
-            sys.addProvenance(p);
+            Id ct = CT<0 ? 0 : r.get_int(CT);
+            _cts.at(ct).provlist.push_back(p);
         }
     }
 }
 
-static void read_macros(Sqlite dms, System& sys, KnownSet& known) {
+void iterator::read_macros(Sqlite dms, KnownSet& known) {
     static const char MACRO_TABLE[] = "msys_selection_macro";
     if (!dms.has( MACRO_TABLE)) return;
-    sys.clearSelectionMacros();
     known.insert(MACRO_TABLE);
     Reader r = dms.fetch( MACRO_TABLE);
     if (r) {
+        int CT = r.column("msys_ct");
         int mac = r.column( "macro");
         int def = r.column( "definition");
-        if (mac<0 || def<0) {
-            sys.initSelectionMacros();
+        if (CT<0 || mac<0 || def<0) {
             return;
         }
         for (; r; r.next()) {
-            sys.addSelectionMacro(r.get_str( mac),
-                                  r.get_str( def));
+            Id ct = CT<0 ? 0 : r.get_int(CT);
+            _cts.at(ct).macros[r.get_str( mac)] = r.get_str( def);
         }
     }
+
 }
 
-static void read_glue(Sqlite dms, System& sys, KnownSet& known) {
-    /* read and merge glue and msys_glue */
-    static const char* tables[] = {"glue", "msys_glue"};
-    for (int i=0; i<2; i++) {
-        const char* table = tables[i];
-        known.insert(table);
-        Reader r = dms.fetch(table);
-        if (r) {
-            int p0 = r.column( "p0");
-            int p1 = r.column( "p1");
-            if (p0<0 || p1<0) {
-                MSYS_FAIL("'" << table << "' table is missing p0 or p1 columns");
-            }
-            if (r.type(p0) != IntType ||
-                r.type(p1) != IntType) {
-                MSYS_FAIL("'" << table << "' table is misformatted: p0 and p1 must be integer");
-            }
-            for (; r; r.next()) {
-                sys.addGluePair(r.get_int( p0),
-                                r.get_int( p1));
-            }
-        }
-    }
-}
+void iterator::read_all(Sqlite dms, bool structure_only) {
+    
+    KnownSet known;
+    known.insert("particle");
+    known.insert("bond");
 
-namespace {
-    class iterator : public LoadIterator {
-        Sqlite dms;
-        const bool structure_only;
-        Id _ct;
+    read_keyvals(dms, known);
+    read_provenance(dms, known);
+    read_macros(dms, known);
 
-    public:
-        iterator(Sqlite _dms, bool _structure_only) 
-        : dms(_dms), structure_only(_structure_only), _ct(0) {
-        }
-        SystemPtr next();
-    };
-}
-
-LoadIteratorPtr DmsIterator(const std::string& path, 
-                            bool structure_only=false) {
-    return LoadIteratorPtr(new iterator(Sqlite::read(path), structure_only));
-}
-
-static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
-    return iterator(dms, structure_only).next();
-}
-
-SystemPtr iterator::next() {
-
-    SystemPtr h = System::create();
-    System& sys = *h;
-
-    SystemImporter imp(h);
+    _mol = System::create();
+    System& sys = *_mol;
+    SystemImporter imp(_mol);
 
     IdList nbtypes;
     IdList gidmap; /* map dms gids to msys ids */
@@ -561,6 +625,7 @@ SystemPtr iterator::next() {
     Reader r = dms.fetch("particle", false); /* no strict typing */
     if (!r.size()) MSYS_FAIL("Missing particle table");
 
+    int CT    = r.column("msys_ct");
     int SEGID = r.column("segid");
     int CHAIN = r.column("chain");
     int RESNAME = r.column("resname");
@@ -580,6 +645,10 @@ SystemPtr iterator::next() {
     int FORMAL = r.column("formal_charge");
     int RESCHG = r.column("resonant_charge");
     int INSERT = r.column("insertion");
+
+    if (_cts.size()>1 && CT<0) {
+        MSYS_FAIL("Multiple systems in dms file, but no msys_ct atom property");
+    }
     
     /* the rest of the columns are extra atom properties */
     std::set<int> handled;
@@ -602,6 +671,7 @@ SystemPtr iterator::next() {
     handled.insert(FORMAL);
     handled.insert(RESCHG);
     handled.insert(INSERT);
+    handled.insert(CT);
 
     typedef std::map<int,ValueType> ExtraMap;
     ExtraMap extra;
@@ -644,6 +714,8 @@ SystemPtr iterator::next() {
         atm.resonant_charge = RESCHG<0 ? 0 : r.get_flt(RESCHG);
         while (gidmap.size()<gid) gidmap.push_back(BadId);
         gidmap.push_back(atmid);
+        int ct = CT<0 ? 0 : r.get_int(CT);
+        _cts.at(ct).atoms.push_back(atmid);
 
         /* extra atom properties */
         Id propcol=0;
@@ -701,14 +773,7 @@ SystemPtr iterator::next() {
 
     sys.analyze();
 
-    KnownSet known;
-    known.insert("particle");
-    known.insert("bond");
-
     read_cell(dms, sys, known);
-    read_provenance(dms, sys, known);
-    read_macros(dms, sys, known);
-    read_glue(dms, sys, known);
 
     if (!structure_only) {
         read_metatables(dms, gidmap, sys, known);
@@ -718,8 +783,6 @@ SystemPtr iterator::next() {
         read_nbinfo(dms, sys, known);
         read_extra(dms, sys, known);
     }
-
-    return h;
 }
 
 SystemPtr desres::msys::ImportDMS(const std::string& path, 

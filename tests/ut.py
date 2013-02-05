@@ -1100,15 +1100,17 @@ class TestMain(unittest.TestCase):
         lip = mol.clone('lipid')
         het = mol.clone('not (protein or water or ion or lipid)')
         cts = [pro,wat,ion,lip,het]
+        names = 'protein', 'wat', 'ion', 'lipid', 'hetero'
+        for name, ct in zip(names, cts): ct.name=name
 
         tmp = '/tmp/_tmp_.dms'
         msys.SaveDMS(cts, tmp)
-        new = msys.Load(tmp)
-        for i, ct in enumerate(cts):
-            sel = 'msys_ct %d' % i
-            self.assertEqual(len(new.select(sel)), ct.natoms)
+        for i, ct in enumerate(msys.LoadMany(tmp)):
+            self.assertEqual(cts[i].natoms, ct.natoms)
+            self.assertEqual(names[i], ct.name)
 
         # make sure coalesced
+        tmp = '/tmp/_tmp2_.dms'
         msys.SaveDMS([mol,mol], tmp)
         new = msys.Load(tmp)
         self.assertEqual(

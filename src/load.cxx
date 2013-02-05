@@ -140,12 +140,14 @@ namespace desres { namespace msys {
             default:
                 return LoadIteratorPtr(
                         new DefaultIterator(path, format, structure_only));
+            case DmsFileFormat:
+                    return DmsIterator(path, structure_only);
             case Mol2FileFormat:
-                     return Mol2Iterator(path);
+                    return Mol2Iterator(path);
             case MaeFileFormat:
-                     return MaeIterator(path, structure_only);
+                    return MaeIterator(path, structure_only);
             case SdfFileFormat:
-                     return SdfIterator(path);
+                    return SdfIterator(path);
             case UnrecognizedFileFormat:
                 MSYS_FAIL("Unable to determine format of '" << path << "'");
         }

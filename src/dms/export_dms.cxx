@@ -563,6 +563,25 @@ static IdList map_gids(System const& sys) {
     return ids;
 }
 
+static void export_system( System const& sys, int ct, Sqlite dms) {
+    dms.exec(
+            "create table if not exists msys_system (\n"
+            "  ct integer not null,\n"
+            "  key text not null,\n"
+            "  value text not null,\n"
+            "  primary key (ct,key,value))");
+    Writer w = dms.insert("msys_system");
+    w.bind_int(0,ct);
+
+    dms.exec("begin");
+
+    w.bind_str(1,"name");
+    w.bind_str(2,sys.name);
+    w.next();
+
+    dms.exec("commit");
+}
+
 static void export_dms(SystemList const& cts, 
                        Sqlite dms, 
                        Provenance const& provenance) {
@@ -578,8 +597,7 @@ static void export_dms(SystemList const& cts,
         nb.merge(sys.nonbonded_info);
         cell.merge(sys.global_cell);
 
-        /* Provenance and atom selection macros for each system get tracked
-         * and written separately. */
+        export_system( sys, ct, dms);
         export_provenance( sys, ct, provenance, dms);
         export_macros( sys, ct, dms);
     }
