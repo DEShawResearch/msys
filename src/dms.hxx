@@ -1,12 +1,15 @@
 #ifndef msys_dms_hxx
 #define msys_dms_hxx
 
-#include "system.hxx"
+#include "load.hxx"
 #include <iostream>
 
 struct sqlite3;
 
 namespace desres { namespace msys {
+
+    LoadIteratorPtr DmsIterator(const std::string& path, 
+                             bool structure_only=false);
 
     SystemPtr ImportDMS(const std::string& path, bool structure_only=false);
 

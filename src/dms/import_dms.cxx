@@ -523,7 +523,30 @@ static void read_glue(Sqlite dms, System& sys, KnownSet& known) {
     }
 }
 
+namespace {
+    class iterator : public LoadIterator {
+        Sqlite dms;
+        const bool structure_only;
+        Id _ct;
+
+    public:
+        iterator(Sqlite _dms, bool _structure_only) 
+        : dms(_dms), structure_only(_structure_only), _ct(0) {
+        }
+        SystemPtr next();
+    };
+}
+
+LoadIteratorPtr DmsIterator(const std::string& path, 
+                            bool structure_only=false) {
+    return LoadIteratorPtr(new iterator(Sqlite::read(path), structure_only));
+}
+
 static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
+    return iterator(dms, structure_only).next();
+}
+
+SystemPtr iterator::next() {
 
     SystemPtr h = System::create();
     System& sys = *h;
@@ -737,4 +760,5 @@ SystemPtr desres::msys::sqlite::ImportDMS(sqlite3* db,
     Sqlite dms(boost::shared_ptr<sqlite3>(db,no_close));
     return import_dms(dms, structure_only);
 }
+
 
