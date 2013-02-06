@@ -114,6 +114,7 @@ libmsys=env.AddLibrary('msys', selobjs + maeobjs + lpobjs + Split('''
 alchemical.cxx
 
 analyze/aromatic.cxx
+analyze/aromatic_new.cxx
 analyze/eigensystem.cxx
 analyze/get_fragments.cxx
 

@@ -3,6 +3,7 @@
 #include "mol2.hxx"
 #include "elements.hxx"
 #include "smarts.hxx"
+#include "aromatic_new.hxx"
 #include <boost/python.hpp>
 
 using namespace desres::msys;
@@ -45,7 +46,6 @@ namespace {
         }
         return L;
     }
-
 }
 
 namespace desres { namespace msys { 
@@ -56,6 +56,8 @@ namespace desres { namespace msys {
         def("AssignBondOrderAndFormalCharge", assign_3);
         def("AssignSybylTypes", AssignSybylTypes);
         def("GetSSSR", get_sssr);
+        def("IsAromaticAtom", IsAromaticAtom);
+        def("IsAromaticBond", IsAromaticBond);
         def("GuessBondConnectivity", GuessBondConnectivity);
         def("FindDistinctFragments", find_distinct_fragments);
         def("RadiusForElement", RadiusForElement);

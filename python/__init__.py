@@ -1475,6 +1475,24 @@ def GetSSSR(atoms, all_relevant=False):
     rings = _msys.GetSSSR(ptr, ids, all_relevant)
     return [[Atom(ptr, id) for id in ring] for ring in rings]
 
+def IsAromaticAtom(atom):
+    """Determine if a given atom is aromatic.
+
+    Arguments:
+    atom -- msys.Atom
+    Returns: bool
+    """
+    return _msys.IsAromaticAtom(atom.system._ptr, atom.id)
+
+def IsAromaticBond(bond):
+    """Determine if a given bond is aromatic.
+
+    Arguments:
+    bond -- msys.Bond
+    Returns: bool
+    """
+    return _msys.IsAromaticBond(bond.system._ptr, bond.id)
+
 def AssignSybylTypes(system):
     ''' Assign Sybyl atom and bond types to the given system.  
     Types will be stored in the "sybyl_type" property of each atom and bond.

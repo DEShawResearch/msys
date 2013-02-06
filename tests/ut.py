@@ -1455,5 +1455,30 @@ class TestMain(unittest.TestCase):
         self.assertTrue(len(all_matches) == 8 * 6)
         self.assertTrue(len(all_matches[0]) == 4)
 
+    def testAromatic(self):
+        sys = msys.CreateSystem()
+        res = sys.addChain().addResidue()
+        c = [res.addAtom() for i in range(6)]
+        h = [res.addAtom() for i in range(6)]
+        cc = []
+        ch = []
+        for i in range(6):
+            c[i].atomic_number = 6
+            cc.append(c[i].addBond(c[(i+1)%6]))
+            h[i].atomic_number = 1
+            ch.append(h[i].addBond(c[i]))
+        msys.AssignBondOrderAndFormalCharge(sys)
+        for i in range(6):
+            self.assertTrue(msys.IsAromaticAtom(c[i]))
+            self.assertTrue(msys.IsAromaticBond(cc[i]))
+        new_h = [res.addAtom() for i in range(2)]
+        for i in range(2):
+            new_h[i].atomic_number = 1
+            new_h[i].addBond(c[i])
+        msys.AssignBondOrderAndFormalCharge(sys)
+        for i in range(6):
+            self.assertTrue(not msys.IsAromaticAtom(c[i]))
+            self.assertTrue(not msys.IsAromaticBond(cc[i]))
+
 if __name__=="__main__":
     unittest.main(verbosity=2)
