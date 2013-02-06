@@ -18,8 +18,9 @@ sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
 import msys
 from msys import vdw
 
-def print_info(mol):
-    print "Structure:"
+def print_info(mol, ct=None):
+    ctname = ':' if ct is None else "%d: %s" % (ct, mol.name)
+    print "Structure", ctname
     print "%12s: %8d" % ("Atoms", mol.natoms)
     print "%12s: %8d" % ("Bonds", mol.nbonds)
     print "%12s: %8d" % ("Residues", mol.nresidues)
@@ -68,10 +69,6 @@ def print_info(mol):
     print "%20s: %s" % ("vdw_funct", nbinfo.vdw_funct)
     print "%20s: %s" % ("vdw_rule", nbinfo.vdw_rule)
 
-    print "\n%s:" % "Glue"
-    for g in mol.gluePairs():
-        print "\t%8d%8d" % g
-
     print "\n%s:" % "Auxiliary Tables"
     for name in mol.auxtable_names:
         if name=='forcefield':
@@ -99,14 +96,26 @@ def print_info(mol):
 def main():
     import optparse
     parser = optparse.OptionParser(__doc__)
+    parser.add_option('-m', '--multi-ct', action='store_true', default=False,
+            help="Analyze each substructure (ct), instead of the full system")
+    parser.add_option('--ignore-empty', action='store_true', default=False,
+            help="Skip over empty systems")
 
     opts, args = parser.parse_args()
     for path in args:
-        mol = msys.Load(path)
+        if opts.multi_ct:
+            it = msys.LoadMany(path)
+        else:
+            it = [msys.Load(path)]
         print "-" * 75
         print path
         print
-        print_info(mol)
+        for i, mol in enumerate(it):
+            if opts.ignore_empty and mol.natoms==0: continue
+            print_info(mol, ct=i if opts.multi_ct else None)
+            print
+            if opts.multi_ct:
+                print "." * 75
 
 if __name__=="__main__": exit(main())
 
