@@ -37,6 +37,9 @@ requirements must be satisfied on the input blocks:
    rule, must be the same in all blocks.  If the rule is left blank,
    rules in prior blocks takes precedence.
 
+Note that the mapping of atoms to ct block is preserved.
+
+
 
 Ct-level attributes
 -------------------
@@ -48,8 +51,9 @@ System name to the path name of the MAE file.
 Msys reads and writes a ct-level array called "msys_provenance" in order
 to track the history of its files.
 
-No other Ct-level attributes are stored or read by Msys, other than 
-global cell data.
+Msys reads all the key-value pairs at the top level of the f_m_ct block, 
+and the attributes in the m_depend subblock if it exists.  These attributes
+are stored in the Ct structure of the Systems.
 
 Pair terms
 ----------

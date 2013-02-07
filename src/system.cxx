@@ -263,6 +263,17 @@ IdList System::atomsForCt(Id ct) const {
     return ids;
 }
 
+Id System::atomCountForCt(Id ct) const {
+    Id n=0;
+    BOOST_FOREACH(Id const& chn, chainsForCt(ct)) {
+        BOOST_FOREACH(Id const& res, residuesForChain(chn)) {
+            n += atomCountForResidue(res);
+        }
+    }
+    return n;
+}
+
+
 
 void System::delResidue(Id id) {
     /* nothing to do if invalid residue */

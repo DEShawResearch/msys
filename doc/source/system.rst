@@ -82,6 +82,16 @@ Chain
 .. autoattribute:: msys.Chain.system
 
 
+Ct
+==
+
+.. autoclass:: msys.Ct
+   :members:
+   :special-members:
+
+.. autoattribute:: msys.Ct.id
+.. autoattribute:: msys.Ct.system
+
 GlobalCell
 ==========
 

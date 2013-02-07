@@ -12,6 +12,12 @@ as `Atoms`.  Bonds between `Atoms` are represented by a `Bond`
 structure.  `Atoms` are grouped into `Residues`, and `Residues`
 are grouped into `Chains`.
 
+Every `System` also groups its `Chains` into one or more higher-level 
+structures called "components", or `Cts` for short.  `Cts` have a name 
+as well as arbitrary key-value pairs of integer, real, or string type.  
+You don't need to concern yourself with `Cts`, but they can be convenient
+for grouping logical components of your chemical system.
+
 A `System` also holds a set of `TermTables` representing the interactions
 between `Atoms`.  A `TermTable` can be thought of as a particular kind
 of interaction; for example, a fully parameterized system would likely

@@ -546,12 +546,14 @@ namespace desres { namespace msys {
             .def("bondCountForAtom",    &System::bondCountForAtom)
             .def("residueCountForChain",&System::residueCountForChain)
             .def("chainCountForCt",     &System::chainCountForCt)
+            .def("atomCountForCt",      &System::atomCountForCt)
             
             /* list of subelements */
             .def("atomsForResidue", &System::atomsForResidue, return_const() )
             .def("bondsForAtom",    &System::bondsForAtom, return_const())
             .def("residuesForChain",&System::residuesForChain, return_const())
             .def("chainsForCt",     &System::chainsForCt, return_const())
+            .def("atomsForCt",      &System::atomsForCt)
 
             /* tables */
             .def("tableNames",  table_names)

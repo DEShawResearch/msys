@@ -383,6 +383,7 @@ namespace desres { namespace msys {
         }
 
         IdList atomsForCt(Id id) const;
+        Id atomCountForCt(Id id) const;
 
 
         /* is the the given element id valid? */
