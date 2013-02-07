@@ -133,38 +133,47 @@ IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr ) {
         bpropmap[i] = dst.addBondProp(src.bondPropName(i), src.bondPropType(i));
     }
 
-    /* add chains */
-    IdList chains = src.chains();
-    for (Id i=0; i<chains.size(); i++) {
-        Id srcchn = chains[i];
-        Id dstchn = dst.addChain();
-        /* copy attributes from src chain to dst chain */
-        dst.chain(dstchn) = src.chain(srcchn);
+    /* add cts */
+    IdList cts = src.cts();
+    for (Id c=0; c<cts.size(); c++) {
+        Id srcct = cts[c];
+        Id dstct = dst.addCt();
+        dst.ct(dstct) = src.ct(srcct);
 
-        /* add residues */
-        IdList const& residues = src.residuesForChain(srcchn);
-        for (Id j=0; j<residues.size(); j++) {
-            Id srcres = residues[j];
-            Id dstres = dst.addResidue(dstchn);
-            /* copy attributes from src residue to dst residue */
-            dst.residue(dstres) = src.residue(srcres);
-            dst.residue(dstres).chain = dstchn;
+        /* add chains */
+        IdList const& chains = src.chainsForCt(srcct);
+        for (Id i=0; i<chains.size(); i++) {
+            Id srcchn = chains[i];
+            Id dstchn = dst.addChain(dstct);
+            /* copy attributes from src chain to dst chain */
+            dst.chain(dstchn) = src.chain(srcchn);
+            dst.chain(dstchn).ct = dstct;
 
-            /* add atoms */
-            IdList const& atoms = src.atomsForResidue(srcres);
-            for (Id k=0; k<atoms.size(); k++) {
-                Id srcatm = atoms[k];
-                Id dstatm = dst.addAtom(dstres);
-                /* copy attributes from src atom to dst atom */
-                dst.atom(dstatm) = src.atom(srcatm);
-                dst.atom(dstatm).residue = dstres;
-                /* Copy additional atom properties */
-                for (Id p=0; p<nprops; p++) {
-                    dst.atomPropValue(dstatm,propmap[p]) = 
-                    srcptr->atomPropValue(srcatm, p);
+            /* add residues */
+            IdList const& residues = src.residuesForChain(srcchn);
+            for (Id j=0; j<residues.size(); j++) {
+                Id srcres = residues[j];
+                Id dstres = dst.addResidue(dstchn);
+                /* copy attributes from src residue to dst residue */
+                dst.residue(dstres) = src.residue(srcres);
+                dst.residue(dstres).chain = dstchn;
+
+                /* add atoms */
+                IdList const& atoms = src.atomsForResidue(srcres);
+                for (Id k=0; k<atoms.size(); k++) {
+                    Id srcatm = atoms[k];
+                    Id dstatm = dst.addAtom(dstres);
+                    /* copy attributes from src atom to dst atom */
+                    dst.atom(dstatm) = src.atom(srcatm);
+                    dst.atom(dstatm).residue = dstres;
+                    /* Copy additional atom properties */
+                    for (Id p=0; p<nprops; p++) {
+                        dst.atomPropValue(dstatm,propmap[p]) = 
+                        srcptr->atomPropValue(srcatm, p);
+                    }
+                    /* map src to dst atoms so we can add bonds */
+                    src2dst[srcatm] = dstatm;
                 }
-                /* map src to dst atoms so we can add bonds */
-                src2dst[srcatm] = dstatm;
             }
         }
     }

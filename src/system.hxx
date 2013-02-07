@@ -146,10 +146,52 @@ namespace desres { namespace msys {
     };
     
     struct chain_t {
+        Id      ct;
         String  name;
         String  segid;
     
-        chain_t() {}
+        chain_t() : ct(BadId) {}
+    };
+
+    class component_t {
+        ParamTablePtr _kv;
+
+    public:
+        /* constructor: maintain a single row with msys_name as the first
+         * property. */
+        component_t() : _kv(ParamTable::create()) {
+            _kv->addParam();
+            _kv->addProp("msys_name", StringType);
+        }
+
+        /* getter/setter for name */
+        String name() const { return _kv->value(0,0); }
+        void setName(String const& s) { _kv->value(0,0) = s; }
+
+        /* other keys besides name */
+        std::vector<String> keys() const {
+            std::vector<String> k;
+            for (Id i=1; i<_kv->propCount(); i++) {
+                k.push_back(_kv->propName(i));
+            }
+            return k;
+        }
+
+        void add(String const& key, ValueType type) {
+            _kv->addProp(key,type);
+        }
+
+        ValueType type(String const& key) const {
+            return _kv->propType(_kv->propIndex(key));
+        }
+
+        bool has(String const& key) const {
+            return !bad(_kv->propIndex(key));
+        }
+
+        ValueRef value(String const& key) {
+            return _kv->value(0,key);
+        }
     };
 
     typedef std::pair<Id,Id> glue_t;
@@ -187,6 +229,11 @@ namespace desres { namespace msys {
         ChainList   _chains;
         IdSet       _deadchains;
         MultiIdList   _chainresidues; /* chain id -> residue id */
+    
+        typedef std::vector<component_t> CtList;
+        CtList      _cts;
+        IdSet       _deadcts;
+        MultiIdList _ctchains; /* ct id -> chain id */
     
         typedef std::map<String,TermTablePtr> TableMap;
         TableMap    _tables;
@@ -237,41 +284,51 @@ namespace desres { namespace msys {
         bond_t& bond(Id id) { return _bonds.at(id); }
         residue_t& residue(Id id) { return _residues.at(id); }
         chain_t& chain(Id id) { return _chains.at(id); }
+        component_t& ct(Id id) { return _cts.at(id); }
     
         const atom_t& atom(Id id) const { return _atoms.at(id); }
         const bond_t& bond(Id id) const { return _bonds.at(id); }
         const residue_t& residue(Id id) const { return _residues.at(id); }
         const chain_t& chain(Id id) const { return _chains.at(id); }
+        const component_t& ct(Id id) const { return _cts.at(id); }
 
         /* add an element */
         Id addAtom(Id residue);
         Id addBond(Id i, Id j);
         Id addResidue(Id chain);
-        Id addChain();
+
+        /* If ct is not supplied, add chain to first ct, creating a new one
+         * if necessary */
+        Id addChain(Id ct=BadId);
+        Id addCt();
 
         /* delete an element */
         void delAtom(Id id);
         void delBond(Id id);
         void delResidue(Id id);
         void delChain(Id id);
+        void delCt(Id id);
 
         /* One more than highest valid id */
         Id maxAtomId() const;
         Id maxBondId() const;
         Id maxResidueId() const;
         Id maxChainId() const;
+        Id maxCtId() const;
 
         /* list of elements ids */
         IdList atoms() const;
         IdList bonds() const;
         IdList residues() const;
         IdList chains() const;
+        IdList cts() const;
 
         /* number of elements */
         Id atomCount() const { return _atoms.size() - _deadatoms.size(); }
         Id bondCount() const { return _bonds.size() - _deadbonds.size(); }
         Id residueCount() const {return _residues.size()-_deadresidues.size();}
         Id chainCount() const { return _chains.size() - _deadchains.size(); }
+        Id ctCount() const { return _cts.size() - _deadcts.size(); }
 
         /* count of subelements */
         Id bondCountForAtom(Id id) const {
@@ -285,6 +342,10 @@ namespace desres { namespace msys {
         Id residueCountForChain(Id id) const {
             if (id>=_chainresidues.size()) return 0;
             return _chainresidues[id].size();
+        }
+        Id chainCountForCt(Id id) const {
+            if (id>=_ctchains.size()) return 0;
+            return _ctchains[id].size();
         }
 
         /* list of subelements */
@@ -316,6 +377,13 @@ namespace desres { namespace msys {
             if (id>=_chainresidues.size()) return _empty;
             return _chainresidues[id];
         }
+        IdList const& chainsForCt(Id id) const {
+            if (id>=_ctchains.size()) return _empty;
+            return _ctchains[id];
+        }
+
+        IdList atomsForCt(Id id) const;
+
 
         /* is the the given element id valid? */
         bool hasAtom(Id id) const {
@@ -329,6 +397,9 @@ namespace desres { namespace msys {
         }
         bool hasChain(Id id) const {
             return id<_chains.size() && !_deadchains.count(id);
+        }
+        bool hasCt(Id id) const {
+            return id<_cts.size() && !_deadcts.count(id);
         }
 
 
@@ -348,6 +419,10 @@ namespace desres { namespace msys {
         template <typename T> void delChains(const T& ids) {
             typedef typename T::const_iterator iterator;
             for (iterator i=ids.begin(), e=ids.end(); i!=e; ++i) delChain(*i);
+        }
+        template <typename T> void delCts(const T& ids) {
+            typedef typename T::const_iterator iterator;
+            for (iterator i=ids.begin(), e=ids.end(); i!=e; ++i) delCt(*i);
         }
 
         /* operations on term tables */
@@ -390,6 +465,9 @@ namespace desres { namespace msys {
 
         /* assign the residue to the given chain */
         void setChain(Id residue, Id chain);
+
+        /* assign the chain to the given ct */
+        void setCt(Id chain, Id ct);
 
         /* extended atom properties */
         Id atomPropCount() const;
@@ -517,14 +595,16 @@ namespace desres { namespace msys {
         SystemPtr sys;
 
         struct ChnKey {
+            Id     ct;
             String name;
             String segid;
 
             ChnKey() {}
-            ChnKey(String const& nm, String const& seg)
-            : name(nm), segid(seg) {}
+            ChnKey(Id c, String const& nm, String const& seg)
+            : ct(c), name(nm), segid(seg) {}
 
             bool operator<(ChnKey const& c) const {
+                if (ct<c.ct) return true;
                 int rc = name.compare(c.name);
                 if (rc) return rc<0;
                 return segid.compare(c.segid)<0;
@@ -570,7 +650,8 @@ namespace desres { namespace msys {
         Id addAtom(std::string chain, std::string segid, 
                    int resnum, std::string resname, 
                    std::string atomname,
-                   std::string insertion="");
+                   std::string insertion="",
+                   Id ct=0);
     };
 
 }}

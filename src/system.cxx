@@ -135,6 +135,9 @@ IdList System::residues() const {
 IdList System::chains() const {
     return get_ids(_chains, _deadchains);
 }
+IdList System::cts() const {
+    return get_ids(_cts, _deadcts);
+}
 
 Id System::findBond( Id i, Id j) const {
     Id n = _bondindex.size();
@@ -178,11 +181,27 @@ Id System::addResidue(Id chain) {
     return id;
 }
 
-Id System::addChain() {
+Id System::addChain(Id ct) {
+    if (bad(ct)) {
+        if (ctCount()) {
+            ct = cts().at(0);
+        } else {
+            ct = addCt();
+        }
+    }
     Id id = _chains.size();
     chain_t v;
+    v.ct = ct;
+    _ctchains.at(ct).push_back(id);
     _chains.push_back(v);
     _chainresidues.push_back(IdList());
+    return id;
+}
+
+Id System::addCt() {
+    Id id = _cts.size();
+    _cts.push_back(component_t());
+    _ctchains.push_back(IdList());
     return id;
 }
 
@@ -224,6 +243,27 @@ void System::setChain(Id res, Id chn) {
     _residues.at(res).chain = chn;
 }
 
+void System::setCt(Id chn, Id ct) {
+    Id oldct = _chains.at(chn).ct;
+    if (oldct == ct) return;
+    /* remove from previous ct */
+    find_and_remove(_ctchains.at(oldct), chn);
+    _ctchains.at(ct).push_back(chn);
+    _chains.at(chn).ct = ct;
+}
+
+IdList System::atomsForCt(Id ct) const {
+    IdList ids;
+    BOOST_FOREACH(Id const& chn, chainsForCt(ct)) {
+        BOOST_FOREACH(Id const& res, residuesForChain(chn)) {
+            IdList const& atms = atomsForResidue(res);
+            ids.insert(ids.end(), atms.begin(), atms.end());
+        }
+    }
+    return ids;
+}
+
+
 void System::delResidue(Id id) {
     /* nothing to do if invalid residue */
     if (id>=_residues.size()) return;
@@ -249,11 +289,29 @@ void System::delChain(Id id) {
     /* nothing to do if already deleted */
     if (!_deadchains.insert(id).second) return;
 
+    /* remove from parent ct */
+    find_and_remove(_ctchains.at(_chains[id].ct), id);
+
     /* remove child residues.  Clear the index first to avoid O(N) lookups */
     IdList ids;
     ids.swap(_chainresidues.at(id));
     for (IdList::const_iterator iter=ids.begin(); iter!=ids.end(); ++iter) {
         delResidue(*iter);
+    }
+}
+
+void System::delCt(Id id) {
+    /* nothing to do if invalid ct */
+    if (id>=_cts.size()) return;
+
+    /* nothing to do if already deleted */
+    if (!_deadcts.insert(id).second) return;
+
+    /* remove child chains .  Clear the index first to avoid O(N) lookups */
+    IdList ids;
+    ids.swap(_ctchains.at(id));
+    for (IdList::const_iterator iter=ids.begin(); iter!=ids.end(); ++iter) {
+        delChain(*iter);
     }
 }
 
@@ -522,6 +580,9 @@ Id System::maxResidueId() const {
 Id System::maxChainId() const {
     return _chains.size();
 }
+Id System::maxCtId() const {
+    return _cts.size();
+}
 
 Id System::atomPropCount() const {
     return _atomprops->propCount();
@@ -653,7 +714,7 @@ void SystemImporter::initialize(IdList const& atoms) {
 
     BOOST_FOREACH(Id chn, chnlist) {
         chain_t const& chain = sys->chain(chn);
-        chnmap[ChnKey(chain.name, chain.segid)] = chn;
+        chnmap[ChnKey(chain.ct, chain.name, chain.segid)] = chn;
         BOOST_FOREACH(Id res, sys->residuesForChain(chn)) {
             if (std::binary_search(reslist.begin(), reslist.end(), res)) {
                 residue_t const& residue = sys->residue(res);
@@ -666,7 +727,8 @@ void SystemImporter::initialize(IdList const& atoms) {
 Id SystemImporter::addAtom(std::string chain, std::string segid,
                            int resnum, std::string resname,
                            std::string aname,
-                           std::string insertion) {
+                           std::string insertion,
+                           Id ct) {
 
     boost::trim(chain);
     boost::trim(segid);
@@ -674,12 +736,19 @@ Id SystemImporter::addAtom(std::string chain, std::string segid,
     boost::trim(insertion);
     boost::trim(aname);
 
+    if (bad(ct)) MSYS_FAIL("Got ct=BadId");
+
+    /* start a new ct if necessary */
+    while (!sys->hasCt(ct)) {
+        sys->addCt();
+    }
+
     /* start a new chain if necessary */
     std::pair<ChnMap::iterator,bool> cp;
-    cp = chnmap.insert(std::make_pair(ChnKey(chain,segid),chnid));
+    cp = chnmap.insert(std::make_pair(ChnKey(ct,chain,segid),chnid));
     if (cp.second) {
         /* new chain/segid pair found, so start a new chain */
-        chnid = sys->addChain();
+        chnid = sys->addChain(ct);
         sys->chain(chnid).name = chain;
         sys->chain(chnid).segid = segid;
         resid = BadId;

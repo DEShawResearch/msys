@@ -28,9 +28,12 @@ namespace desres { namespace msys {
 
     /* Append structure and term tables from src into dst, using 
      * AppendParams to extend the parameter tables, and expanding
-     * the set of term properties as necessary.  Extra tables in src
-     * replace those with the same name in dst.  Return the ids
-     * of the newly added atoms. */
+     * the set of term properties as necessary.  
+     *
+     * Auxiliary tables in src are added to dst if there is no name clash;
+     * otherwise the dst tables are kept.
+     *
+     * Returns the ids of the newly added atoms. */
     IdList AppendSystem( SystemPtr dst, SystemPtr src );
 
 }}

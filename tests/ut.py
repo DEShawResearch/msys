@@ -14,7 +14,91 @@ def vsize():
     return int(s)
 
 
+
+
 class TestMain(unittest.TestCase):
+
+    def testCt(self):
+        m=msys.CreateSystem()
+        self.assertEqual(m.cts, [])
+        self.assertEqual(m.ncts, 0)
+    
+        ct1=m.addCt()
+        self.assertEqual(ct1.id, 0)
+        self.assertEqual(m.cts, [ct1])
+        self.assertEqual(m.ncts, 1)
+
+        ct2=m.addCt()
+        self.assertEqual(ct2.id, 1)
+        self.assertEqual(m.cts, [ct1,ct2])
+        self.assertEqual(m.ncts, 2)
+
+        ct1.remove()
+        self.assertEqual(m.cts, [ct2])
+        self.assertEqual(m.ncts, 1)
+
+        self.assertEqual(ct2.name, '')
+        ct2.name='jrg'
+        self.assertEqual(ct2.name, 'jrg')
+
+        # newly added chains get added to the first ct
+        chn = m.addChain()
+        self.assertEqual(chn.ct, ct2)
+
+        # newly added atoms get added to the first ct
+        atm = m.addAtom()
+        self.assertEqual(atm.residue.chain.ct, ct2)
+
+        ct2.remove()
+        chn = m.addChain()
+        ct3 = m.addCt()
+        self.assertEqual(chn.ct, m.cts[0])
+        self.assertEqual(m.cts, [chn.ct, ct3])
+
+    def testCtAppend(self):
+        m=msys.CreateSystem()
+        m.addCt().name='a'
+        m2=msys.CreateSystem()
+        ct=m2.addCt()
+        ct.name='b'
+        ct.addChain().name = 'c'
+        m3=msys.CreateSystem()
+        m4=msys.CreateSystem()
+        m4.addCt().name='d'
+
+        m.append(m2)
+        m.append(m3)
+        m.append(m4)
+        self.assertEqual(m.ncts, 3)
+        self.assertEqual([c.name for c in m.cts], ['a', 'b', 'd'])
+        self.assertEqual(m.ct(1).chains[0].name, 'c')
+
+    def testCtClone(self):
+        m1=msys.CreateSystem()
+        m2=msys.CreateSystem()
+        m3=msys.CreateSystem()
+        for i in range(4):
+            m1.addAtom().name=("%d" % i)
+            m2.addAtom().name=("%d" % (i+4))
+            m3.addAtom().name=("%d" % (i+8))
+        m1.append(m2)
+        m1.append(m3)
+        m=m1.clone()
+        self.assertEqual(m1.ncts, 3)
+        self.assertEqual(m.ncts, 3)
+        m=m1.clone('index 0 1 9')
+        self.assertEqual(m.ncts, 2)
+        self.assertEqual([x.name for x in m.atoms], ['0', '1', '9'])
+
+        # merge cts
+        self.assertEqual(m.ct(0).nchains, 2)
+        self.assertEqual(m.ct(1).nchains, 1)
+        for chn in m.ct(0).chains:
+            chn.ct = m.ct(1)
+        self.assertEqual(m.ct(0).nchains, 0)
+        self.assertEqual(m.ct(1).nchains, 3)
+        m=m.clone()
+        self.assertEqual(m.ncts, 1)
 
     def testMaeMany(self):
         ct1=msys.CreateSystem()
@@ -1091,32 +1175,6 @@ class TestMain(unittest.TestCase):
         msys.SaveDMS(m2, 'foo.dms')
         alc=m2.table('alchemical_nonbonded')
         self.assertEqual(alc.term(0)['chargeC'], 0.5)
-
-    def testSaveDmsMany(self):
-        mol = msys.LoadDMS('/proj/desres/root/Linux/x86_64/dms_inputs/1.5.4/share/small_vancomycin_complex.dms')
-        pro = mol.clone('protein')
-        wat = mol.clone('water')
-        ion = mol.clone('ion')
-        lip = mol.clone('lipid')
-        het = mol.clone('not (protein or water or ion or lipid)')
-        cts = [pro,wat,ion,lip,het]
-        names = 'protein', 'wat', 'ion', 'lipid', 'hetero'
-        for name, ct in zip(names, cts): ct.name=name
-
-        tmp = '/tmp/_tmp_.dms'
-        msys.SaveDMS(cts, tmp)
-        for i, ct in enumerate(msys.LoadMany(tmp)):
-            self.assertEqual(cts[i].natoms, ct.natoms)
-            self.assertEqual(names[i], ct.name)
-
-        # make sure coalesced
-        tmp = '/tmp/_tmp2_.dms'
-        msys.SaveDMS([mol,mol], tmp)
-        new = msys.Load(tmp)
-        self.assertEqual(
-                mol.table('stretch_harm').params.nparams,
-                new.table('stretch_harm').params.nparams)
-
 
     def testUpdateFragids(self):
         m=msys.CreateSystem()

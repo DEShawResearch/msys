@@ -26,6 +26,7 @@ namespace {
     bond_t& system_bond(System& m, Id id) { return m.bond(id); }
     residue_t& system_residue(System& m, Id id) { return m.residue(id); }
     chain_t& system_chain(System& m, Id id) { return m.chain(id); }
+    component_t& system_ct(System& m, Id id) { return m.ct(id); }
 
     void del_atoms(System& sys, object elems) {
         list L(elems);
@@ -488,24 +489,28 @@ namespace desres { namespace msys {
             .def("bond",        system_bond, return_ptr())
             .def("residue",     system_residue, return_ptr())
             .def("chain",       system_chain, return_ptr())
+            .def("ct",          system_ct, return_ptr())
 
             /* add element */
             .def("addAtom",     &System::addAtom)
             .def("addBond",     &System::addBond)
             .def("addResidue",  &System::addResidue)
             .def("addChain",    &System::addChain)
+            .def("addCt",       &System::addCt)
 
             /* has element */
             .def("hasAtom",     &System::hasAtom)
             .def("hasBond",     &System::hasBond)
             .def("hasResidue",  &System::hasResidue)
             .def("hasChain",    &System::hasChain)
+            .def("hasCt",       &System::hasCt)
 
             /* del element */
             .def("delAtom",     &System::delAtom)
             .def("delBond",     &System::delBond)
             .def("delResidue",  &System::delResidue)
             .def("delChain",    &System::delChain)
+            .def("delCt",       &System::delCt)
 
             /* delete list of elements */
             .def("delAtoms",    del_atoms)
@@ -518,6 +523,7 @@ namespace desres { namespace msys {
             .def("maxBondId",   &System::maxBondId)
             .def("maxResidueId",&System::maxResidueId)
             .def("maxChainId",  &System::maxChainId)
+            .def("maxCtId",     &System::maxCtId)
 
             /* list of element ids */
             .def("atoms",       &System::atoms)
@@ -525,6 +531,7 @@ namespace desres { namespace msys {
             .def("bonds",       &System::bonds)
             .def("residues",    &System::residues)
             .def("chains",      &System::chains)
+            .def("cts",         &System::cts)
 
 
             /* count of elements */
@@ -532,16 +539,19 @@ namespace desres { namespace msys {
             .def("bondCount",   &System::bondCount)
             .def("residueCount",&System::residueCount)
             .def("chainCount",  &System::chainCount)
+            .def("ctCount",     &System::ctCount)
 
             /* count of subelements */
             .def("atomCountForResidue", &System::atomCountForResidue)
             .def("bondCountForAtom",    &System::bondCountForAtom)
             .def("residueCountForChain",&System::residueCountForChain)
+            .def("chainCountForCt",     &System::chainCountForCt)
             
             /* list of subelements */
             .def("atomsForResidue", &System::atomsForResidue, return_const() )
             .def("bondsForAtom",    &System::bondsForAtom, return_const())
             .def("residuesForChain",&System::residuesForChain, return_const())
+            .def("chainsForCt",     &System::chainsForCt, return_const())
 
             /* tables */
             .def("tableNames",  table_names)
@@ -558,6 +568,9 @@ namespace desres { namespace msys {
 
             /* residue props */
             .def("setChain",    &System::setChain)
+
+            /* chain props */
+            .def("setCt",       &System::setCt)
 
             /* extended atom props */
             .def("atomPropCount",&System::atomPropCount)

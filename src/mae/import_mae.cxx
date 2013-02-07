@@ -56,6 +56,21 @@ namespace {
         h->global_cell.C[2]=ct.get("chorus_box_cz").as_float(0);
     }
 
+    void add_keyval(component_t& ct, std::string const& key, Json const& blk) {
+        Json::kind_t kind = blk.kind();
+        ValueType type = kind==Json::Int ? IntType :
+                         kind==Json::Float ? FloatType :
+                                             StringType;
+        ct.add(key,type);
+        ValueRef val = ct.value(key);
+        switch (kind) {
+            case Json::Int: val=blk.as_int(0); break;
+            case Json::Float: val=blk.as_float(0); break;
+            case Json::String: val=blk.as_string(""); break;
+            default: ;
+        }
+    }
+
     void import_particles( const Json& ct, SystemPtr h,
                            IdList& atoms,
                            int * natoms,
@@ -64,6 +79,32 @@ namespace {
         *npseudos=0;
         const Json& m_atom = ct.get("m_atom");
         if (!m_atom) return;
+
+        Id ctid = h->addCt();
+        h->ct(ctid).setName(ct.get("m_title").as_string(""));
+        /* other keyvals */
+        for (int i=0; i<ct.size(); i++) {
+            const char* key = ct.key(i);
+            if (!strncmp(key, "chorus_box_", 11)) continue;
+            if (!strcmp(key, "m_title")) continue;
+            if (!strcmp(key, "__name__")) continue;
+            Json const& blk = ct.elem(i);
+            Json::kind_t kind = blk.kind();
+            if (kind==Json::Int || kind==Json::Float || kind==Json::String) {
+                add_keyval(h->ct(ctid), key, blk);
+            } else if (!strcmp(key, "m_depend")) {
+                Json const& prop = blk.get("m_depend_property");
+                Json const& dep = blk.get("m_depend_dependency");
+                int n = blk.get("__size__").as_int(0);
+                if (prop.kind()==Json::Array && dep.kind()==Json::Array) {
+                    for (int j=0; j<n; j++) {
+                        std::string hkey("m_depend/");
+                        hkey += prop.elem(j).as_string("");
+                        add_keyval(h->ct(ctid), hkey, dep.elem(j));
+                    }
+                }
+            }
+        }
 
         const Json& anums = m_atom.get(ANUMS);
         const Json& resids = m_atom.get(RESIDS);
@@ -107,7 +148,7 @@ namespace {
             std::string segid=segids.elem(j).as_string("");
             const char* insert=inserts.elem(j).as_string("");
 
-            Id id = imp.addAtom(chainname, segid, resid, resname, name, insert);
+            Id id = imp.addAtom(chainname, segid, resid, resname, name, insert, ctid);
 
             atom_t& atm = h->atom(id);
             atm.atomic_number = anum;
@@ -192,7 +233,7 @@ namespace {
                 std::string resname=resnames.elem(j).as_string("UNK");
                 std::string name=names.elem(j).as_string("");
 
-                Id id = imp.addAtom(chainname, segid, resid, resname, name);
+                Id id = imp.addAtom(chainname, segid, resid, resname, name, "", ctid);
                 atom_t& atom = h->atom(id);
                 atom.x = x.elem(j).as_float(0);
                 atom.y = y.elem(j).as_float(0);

@@ -68,14 +68,6 @@ namespace {
         ExportMAEMany(ctlist, path, prov, with_forcefield, with_compression);
     }
 
-    void export_dms_many(object ctarr, std::string const& path,
-                         Provenance const& prov) {
-        std::vector<SystemPtr> ctlist;
-        for (Py_ssize_t i=0; i<len(ctarr); i++) {
-            ctlist.push_back(extract<SystemPtr>(ctarr[i]));
-        }
-        ExportDMSMany(ctlist, path, prov);
-    }
 }
 
 namespace desres { namespace msys { 
@@ -90,7 +82,6 @@ namespace desres { namespace msys {
         def("ImportDMS", ImportDMS);
         def("ImportDMSFromBuffer", import_dms_from_buffer);
         def("ExportDMS", ExportDMS);
-        def("ExportDMSMany", export_dms_many);
         def("ImportMAE", ImportMAE);
         def("ImportMAEFromBuffer", import_mae_from_buffer);
         def("ExportMAE", ExportMAE);

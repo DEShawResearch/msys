@@ -271,8 +271,61 @@ class Chain(Handle):
         if len(residues) is 1: return residues[0]
         raise ValueError, "Found %d residues with given resid, name or insertion" % (len(residues))
 
+    @property
+    def ct(self):
+        ''' Return the Ct for this chain '''
+        return Ct(self._ptr, self.data().ct)
+    @ct.setter
+    def ct(self, ct): self._ptr.setCt(self._id, ct.id)
+
 __add_properties(Chain, 'name', 'segid')
 
+class Ct(Handle):
+    __slots__ = ()
+    def data(self): return self._ptr.ct(self._id)
+
+    def remove(self):
+        ''' remove this Ct from the System '''
+        self._ptr.delCt(self._id)
+
+    def addChain(self):
+        ''' append a new Chain to this Ct and return it '''
+        return Chain(self._ptr, self._ptr.addChain(self._id))
+
+    @property
+    def chains(self):
+        ''' list of Chains in this Ct '''
+        return [Chain(self._ptr, i) for i in self._ptr.chainsForCt(self._id)]
+
+    @property
+    def nchains(self):
+        ''' number of Chains in this Ct '''
+        return self._ptr.chainCountForCt(self._id)
+
+    ### TODO: selectChain()
+
+    @property
+    def name(self):
+        return self.data().name
+    @name.setter
+    def name(self, s):
+        self.data().name = s
+
+    def keys(self):
+        ''' available Ct properties '''
+        return self.data().keys()
+
+    def __setitem__(self, key, val):
+        ''' set ct property key to val '''
+        t = self.data().type(key)
+        if t is None:
+            t = type(val)
+            self.data().add(key, t)
+        self.data().set(str(key), t(val))
+
+    def __getitem__(self, key):
+        ''' get ct property key '''
+        return self.data().get(str(key))
 
 class Param(Handle):
     __slots__=()
@@ -726,9 +779,15 @@ class System(object):
         ''' add and return a new Residue in its own chain '''
         return self.addChain().addResidue()
 
-    def addChain(self):
-        ''' add and return a new Chain '''
-        return Chain(self._ptr, self._ptr.addChain())
+    def addChain(self, ct=_msys.BadId):
+        ''' add and return a new Chain.
+        If no ct is given, the chain will be added to the first ct,
+        creating one if necessary. '''
+        return Chain(self._ptr, self._ptr.addChain(ct))
+
+    def addCt(self):
+        ''' add and return a new Ct '''
+        return Ct(self._ptr, self._ptr.addCt())
 
     def delAtoms(self, elems):
         ''' remove all Atoms in elems from the System '''
@@ -761,6 +820,10 @@ class System(object):
     def chain(self, id):
         ''' return the chain with the specified id '''
         return Chain(self._ptr, id)
+
+    def ct(self, id):
+        ''' return the Ct with the specified id '''
+        return Ct(self._ptr, id)
 
     def findBond(self, a1, a2):
         ''' return the bond between the specified atoms, or None if not found
@@ -802,6 +865,11 @@ class System(object):
         return self._ptr.chainCount()
 
     @property
+    def ncts(self):
+        ''' number of Cts '''
+        return self._ptr.ctCount()
+
+    @property
     def atoms(self):
         ''' return list of all atoms in the system '''
         atms=self._update_atoms()
@@ -824,6 +892,12 @@ class System(object):
         ''' return list of all chains in the system '''
         ptr=self._ptr
         return [Chain(ptr, i) for i in ptr.chains()]
+
+    @property
+    def cts(self):
+        ''' return list of all cts in the system '''
+        ptr = self._ptr
+        return [Ct(ptr, i) for i in ptr.cts()]
 
     @property
     def residues(self):

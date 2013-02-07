@@ -27,13 +27,10 @@ namespace desres { namespace msys {
                         bool with_forcefield = true,
                         bool with_compression = false);
 
-    inline void ExportMAE( SystemPtr h, std::string const& path,
+    void ExportMAE( SystemPtr h, std::string const& path,
                            Provenance const& provenance,
                            bool with_forcefield = true,
-                           bool with_compression = false) {
-        ExportMAEMany(std::vector<SystemPtr>(1,h), 
-                      path, provenance, with_forcefield, with_compression);
-    }
+                           bool with_compression = false);
     
     
 }}

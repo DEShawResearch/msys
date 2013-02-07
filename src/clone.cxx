@@ -42,6 +42,7 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms ) {
     IdList atmmap(src->maxAtomId(), BadId);
     IdList resmap(src->maxResidueId(), BadId);
     IdList chnmap(src->maxChainId(), BadId);
+    IdList ctmap(src->maxCtId(), BadId);
 
     /* copy atom properties */
     Id nprops = src->atomPropCount();
@@ -64,21 +65,25 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms ) {
         Id srcatm = atoms[i];
         Id srcres = src->atom(srcatm).residue;
         Id srcchn = src->residue(srcres).chain;
+        Id srcct  = src->chain(srcchn).ct;
 
         if (!src->hasAtom(srcatm)) {
-            std::stringstream ss;
-            ss << "Clone: atoms argument contains deleted atom id " 
-               << srcatm;
-            throw std::runtime_error(ss.str());
+            MSYS_FAIL("atoms argument contains deleted atom id " << srcatm);
         }
 
+        Id dstct  = ctmap[srcct];
         Id dstchn = chnmap[srcchn];
         Id dstres = resmap[srcres];
 
         if (bad(dstres)) {
             if (bad(dstchn)) {
-                dstchn = chnmap[srcchn] = dst->addChain();
+                if (bad(dstct)) {
+                    dstct = ctmap[srcct] = dst->addCt();
+                    dst->ct(dstct) = src->ct(srcct);
+                }
+                dstchn = chnmap[srcchn] = dst->addChain(dstct);
                 dst->chain(dstchn) = src->chain(srcchn);
+                dst->chain(dstchn).ct = dstct;
             }
             dstres = resmap[srcres] = dst->addResidue(dstchn);
             dst->residue(dstres) = src->residue(srcres);

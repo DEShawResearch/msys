@@ -44,6 +44,37 @@ static void build_ct_fields( SystemPtr mol, Destro& M ) {
             M[schema] = mol->global_cell[i][j];
         }
     }
+    /* msys_name -> m_title */
+    M.add_schema('s', "m_title");
+    M["m_title"] = mol->ct(0).name();
+
+    /* special case for m_depend attributes */
+    std::map<String,Int> m_depends;
+
+    /* other fields */
+    BOOST_FOREACH(String key, mol->ct(0).keys()) {
+        ValueRef val = mol->ct(0).value(key);
+        char type = "irs"[val.type()];
+        if (!strncmp(key.c_str(), "m_depend/", 9)) {
+            m_depends[key.substr(9)] = val.asInt();
+        } else {
+            M.add_schema(type, key);
+            if (type=='i') M[key]=val.asInt();
+            if (type=='r') M[key]=val.asFloat();
+            if (type=='s') M[key]=val.asString();
+        }
+    }
+    if (!m_depends.empty()) {
+        DestroArray& arr = M.new_array("m_depend");
+        arr.add_schema('i', "m_depend_dependency");
+        arr.add_schema('s', "m_depend_property");
+        std::map<String,Int>::const_iterator it;
+        for (it=m_depends.begin(); it!=m_depends.end(); ++it) {
+            Destro& row = arr.append();
+            row["m_depend_property"] = it->first;
+            row["m_depend_dependency"] = it->second;
+        }
+    }
 }
 
 static void build_m_atom( SystemPtr mol, Destro& M ) {
@@ -716,6 +747,18 @@ static void write_ct(Maeff& M, SystemPtr mol,
 }
 
 namespace desres { namespace msys {
+    void ExportMAE( SystemPtr h, std::string const& path,
+                           Provenance const& provenance,
+                           bool with_forcefield,
+                           bool with_compression) {
+        
+        std::vector<SystemPtr> cts;
+        BOOST_FOREACH(Id ct, h->cts()) {
+            cts.push_back(Clone(h, h->atomsForCt(ct)));
+        }
+        ExportMAEMany(cts, path, provenance, with_forcefield, with_compression);
+    }
+
     void ExportMAEMany( std::vector<SystemPtr> const& cts, 
                         std::string const& path,
                         Provenance const& provenance,
