@@ -1207,7 +1207,7 @@ class System(object):
         else:
             ptr = self._ptr
             ids = _msys.IdList()
-            for p in perm: ids.append(perm.id)
+            for p in perm: ids.append(p)
         if not ptr.validPermutation(ids):
             raise ValueError, "Not a valid permutation"
         return System(_msys.Clone(self._ptr, ids))
