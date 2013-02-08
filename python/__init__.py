@@ -332,6 +332,14 @@ class Ct(Handle):
         ''' get ct property key '''
         return self.data().get(str(key))
 
+    def get(self, key, d=None):
+        ''' get ct property key, else d, which defaults to None '''
+        try:
+            return self.data().get(str(key))
+        except KeyError:
+            return d
+
+
 class Param(Handle):
     __slots__=()
 

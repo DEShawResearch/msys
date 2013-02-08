@@ -9,7 +9,10 @@ namespace {
         return L;
     }
     object ct_get(component_t& ct, String const& key) {
-        if (!ct.has(key)) return object();
+        if (!ct.has(key)) {
+            PyErr_Format(PyExc_KeyError, "No property '%s' in ct", key.c_str());
+            throw_error_already_set();
+        }
         return from_value_ref(ct.value(key));
     }
 
