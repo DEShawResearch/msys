@@ -1366,6 +1366,12 @@ class TestMain(unittest.TestCase):
         with self.assertRaises(ValueError):
             r.selectAtom('C')
 
+    def testConcatenatedMae(self):
+        d=os.path.dirname(__file__)
+        m=msys.Load(os.path.join(d, 'mae/two.mae'))
+        self.assertEqual(m.ncts, 4)
+        self.assertEqual(m.nchains, 4)
+        self.assertEqual(m.natoms, 9498)
 
     def testAlchemicalMaeRestraint(self):
         d=os.path.dirname(__file__)

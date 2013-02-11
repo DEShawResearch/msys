@@ -714,11 +714,6 @@ namespace desres { namespace msys { namespace mae {
 
         tk = new tokenizer;
         tokenizer_init(tk, in);
-
-        /* eat the meta block */
-        Json block;
-        block.to_object();
-        fill_nameless( block, "meta", tk );
     }
 
     import_iterator::~import_iterator() {
@@ -728,6 +723,13 @@ namespace desres { namespace msys { namespace mae {
 
     bool import_iterator::next(Json& block) const {
         if (tokenizer_not_a(tk, END_OF_FILE)) {
+            /* eat the meta block, if any */
+            if (!strcmp("{", tokenizer_token(tk,0))) {
+                tokenizer_predict(tk, "{");
+                block.to_object();
+                predict_schema_and_values(block, tk);
+                tokenizer_predict(tk, "}");
+            }
             const char * name = tokenizer_predict(tk, END_OF_FILE);
             block.to_object();
             fill_nameless( block, name, tk );
