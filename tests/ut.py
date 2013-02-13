@@ -1405,6 +1405,19 @@ class TestMain(unittest.TestCase):
             self.assertEqual(m.natoms, 1)
         self.assertEqual(i,1)
 
+    def testAppendSDF(self):
+        m=msys.CreateSystem()
+        m.addAtom().atomic_number=1
+        path="/tmp/app.sdf"
+
+        try: os.unlink(path)
+        except: pass
+        msys.SaveSDF(m,path, append=True)
+        msys.SaveSDF(m,path, append=True)
+        for i,m in enumerate(msys.LoadMany(path)):
+            self.assertEqual(m.natoms, 1)
+        self.assertEqual(i,1)
+
     def testAlchemicalMaeRestraint(self):
         d=os.path.dirname(__file__)
         m=msys.Load(os.path.join(d, 'mae/alchemical_restraint.mae'))

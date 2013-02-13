@@ -1532,7 +1532,7 @@ def SaveMol2(system, path, append=False):
         flags |= _msys.Mol2ExportFlags.Append
     _msys.ExportMOL2(ptr,path,prov,flags)
 
-def SaveSDF(system, path_or_file):
+def SaveSDF(system, path_or_file, append=False):
     ''' Export the system to the given path or file.  If path_or_file is
     a string, it is assumed to be a path; if None, the bytes are returned;
     otherwise, it is assumed to be a file object implementing the write()
@@ -1542,7 +1542,8 @@ def SaveSDF(system, path_or_file):
     if path_or_file is None:
         return s
     if isinstance(path_or_file, str):
-        f = file(path_or_file, 'w')
+        mode = 'a' if append else 'w'
+        f = file(path_or_file, mode)
     else:
         f = path_or_file
     f.write(s)
