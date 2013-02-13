@@ -1366,6 +1366,19 @@ class TestMain(unittest.TestCase):
         with self.assertRaises(ValueError):
             r.selectAtom('C')
 
+    def testSelectCt(self):
+        m=msys.CreateSystem()
+        c0=m.addCt()
+        c1=m.addCt()
+        c2=m.addCt()
+        c0.name='C'
+        c1.name='CB'
+        c2.name='C'
+        self.assertEqual(m.selectCt('CB'), c1)
+        self.assertEqual(m.selectCt('CA'), None)
+        with self.assertRaises(ValueError):
+            m.selectCt('C')
+
     def testConcatenatedMae(self):
         d=os.path.dirname(__file__)
         m=msys.Load(os.path.join(d, 'mae/two.mae'))

@@ -1169,6 +1169,14 @@ class System(object):
         if len(chains) is 1: return chains[0]
         raise ValueError, "Found %d chains with given name and segid" % (len(chains))
 
+    def selectCt(self, name=None):
+        ''' Return a single Ct with the matching name, or raises an
+        exception if no single such Ct is present '''
+        cts = [c for c in self.cts if (name is None or c.name==name)]
+        if not cts: return None
+        if len(cts) is 1: return cts[0]
+        raise ValueError, "Found %d cts with given name" % (len(cts))
+
     def append(self, system):
         ''' Appends atoms and forcefield from system to self.  Returns
         a list of of the new created atoms in self.  Systems must have
