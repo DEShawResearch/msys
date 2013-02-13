@@ -80,6 +80,11 @@ namespace desres { namespace msys {
             .value("Append",            MaeExport::Append)
             ;
 
+        enum_<Mol2Export::Flags>("Mol2ExportFlags")
+            .value("Default",           Mol2Export::Default)
+            .value("Append",            Mol2Export::Append)
+            ;
+
         class_<LoadIterator, LoadIteratorPtr, boost::noncopyable>("LoadIterator", no_init)
             .def("create", load_iterator_create).staticmethod("create")
             .def("next", load_iterator_next)

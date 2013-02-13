@@ -22,6 +22,13 @@ namespace desres { namespace msys {
      * AssignBondOrderAndFormalCharge to do this analysis.  */
     void AssignSybylTypes(SystemPtr mol);
 
+    struct Mol2Export {
+        enum Flags {
+            Default     = 0,
+            Append      = 1 << 0
+        };
+    };
+
     /* Write the given system as a mol2 file to the given path.  A single
      * MOLECULE entry will be created.  Substructure ids will be numbered
      * from 1 based on the residue id.  No chain information will be 
@@ -31,7 +38,8 @@ namespace desres { namespace msys {
      * bond properties, it will be used for the bond type; otherwise,
      * the bond type will be "1", "2", etc. according to the bond order. */
     void ExportMol2( SystemPtr mol, std::string const& path,
-                     Provenance const& provenance);
+                     Provenance const& provenance,
+                     unsigned flags=0);
 
 }}
 

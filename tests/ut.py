@@ -1392,6 +1392,18 @@ class TestMain(unittest.TestCase):
         m2=msys.Load(path)
         self.assertEqual(m2.natoms, 2)
 
+    def testAppendMol2(self):
+        m=msys.CreateSystem()
+        m.addAtom().atomic_number=1
+        path="/tmp/app.mol2"
+
+        try: os.unlink(path)
+        except: pass
+        msys.SaveMol2(m,path, append=True)
+        msys.SaveMol2(m,path, append=True)
+        for i,m in enumerate(msys.LoadMany(path)):
+            self.assertEqual(m.natoms, 1)
+        self.assertEqual(i,1)
 
     def testAlchemicalMaeRestraint(self):
         d=os.path.dirname(__file__)

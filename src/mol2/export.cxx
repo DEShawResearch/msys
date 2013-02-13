@@ -7,9 +7,11 @@
 using namespace desres::msys;
 
 void desres::msys::ExportMol2( SystemPtr mol, std::string const& path,
-                               Provenance const& provenance) {
+                               Provenance const& provenance,
+                               unsigned flags) {
 
-    FILE* fd = fopen(path.c_str(), "wb");
+    const char* mode = flags & Mol2Export::Append ? "ab" : "wb";
+    FILE* fd = fopen(path.c_str(), mode);
     if (!fd) MSYS_FAIL("Could not open '" << "' for writing.");
     boost::shared_ptr<FILE> dtor(fd, fclose);
 
