@@ -540,6 +540,27 @@ static void read_cts(Sqlite dms, System& sys, KnownSet& known) {
     }
 }
 
+static void check_dms_version(Sqlite dms, KnownSet& known) {
+    known.insert("dms_version");
+    Reader r = dms.fetch("dms_version");
+    if (!r.size()) return;
+    int MAJOR = r.column("major");
+    int MINOR = r.column("minor");
+    if (MAJOR<0 || MINOR<0) {
+        MSYS_FAIL("dms_version table is malformatted");
+    }
+    for (; r; r.next()) {
+        int major = r.get_int(MAJOR);
+        int minor = r.get_int(MINOR);
+        if (major > MSYS_MAJOR_VERSION ||
+            minor > MSYS_MINOR_VERSION) {
+            MSYS_FAIL("Application compiled with msys " << MSYS_VERSION 
+                    << " is too old to read dms file with version " 
+                    << major << "." << minor);
+        }
+    }
+}
+
 static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
 
     SystemPtr h = System::create();
@@ -548,6 +569,8 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
     KnownSet known;
     known.insert("particle");
     known.insert("bond");
+    
+    check_dms_version(dms, known);
 
     read_cts(dms, sys, known);
 

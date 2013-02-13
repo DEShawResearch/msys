@@ -526,6 +526,17 @@ static void export_provenance(System const& sys, Provenance const& provenance,
     dms.exec( "commit");
 }
 
+static void export_version(Sqlite dms) {
+    dms.exec(
+            "create table dms_version (\n"
+            "  major integer not null,\n"
+            "  minor integer not null)");
+    Writer w = dms.insert("dms_version");
+    w.bind_int(0,MSYS_MAJOR_VERSION);
+    w.bind_int(1,MSYS_MINOR_VERSION);
+    w.next();
+}
+
 static void export_macros(System const& sys, Sqlite dms) {
     /* always create the selection_macro table, even if no macros are defined,
      * so that we can distinguish between dms files written by older versions
@@ -589,6 +600,7 @@ static void export_dms(SystemPtr h, Sqlite dms, Provenance const& provenance) {
     export_provenance(sys,provenance,dms);
     export_macros(   sys,            dms);
     export_glue(     sys,            dms);
+    export_version(                  dms);
 }
 
 void desres::msys::ExportDMS(SystemPtr h, const std::string& path,
