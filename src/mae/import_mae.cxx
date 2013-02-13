@@ -12,7 +12,6 @@
 
 using desres::fastjson::Json;
 using namespace desres::msys;
-namespace bio = boost::iostreams;
 
 namespace {
 

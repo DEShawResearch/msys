@@ -26,6 +26,7 @@ PERIODICFIX=periodicfix/2.4.3
 NUMPY=numpy/1.6.2-32A
 LPSOLVE=$(treetop lp_solve)
 PRIMEGEN=primegen/0.97-05
+ZLIB=zlib/1.2.4-10A
 
 # build and documentation
 SCONS=$(treetop scons)
@@ -50,6 +51,7 @@ loadmodules() {
         $MOLFILE/lib \
         $LPSOLVE/lib \
         $PRIMEGEN/lib \
+        $ZLIB/lib \
         $SPHINX/bin 
     
    export MSYS_VERSION=$VERSION
