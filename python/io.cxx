@@ -59,13 +59,12 @@ namespace {
 
     void export_mae_many(object ctarr, std::string const& path,
                          Provenance const& prov,
-                         bool with_forcefield,
-                         bool with_compression) {
+                         unsigned flags) {
         std::vector<SystemPtr> ctlist;
         for (Py_ssize_t i=0; i<len(ctarr); i++) {
             ctlist.push_back(extract<SystemPtr>(ctarr[i]));
         }
-        ExportMAEMany(ctlist, path, prov, with_forcefield, with_compression);
+        ExportMAEMany(ctlist, path, prov, flags);
     }
 
 }
@@ -74,6 +73,13 @@ namespace desres { namespace msys {
 
     void export_io() {
         
+        enum_<MaeExport::Flags>("MaeExportFlags")
+            .value("Default",           MaeExport::Default)
+            .value("StructureOnly",     MaeExport::StructureOnly)
+            .value("CompressForcefield",MaeExport::CompressForcefield)
+            .value("Append",            MaeExport::Append)
+            ;
+
         class_<LoadIterator, LoadIteratorPtr, boost::noncopyable>("LoadIterator", no_init)
             .def("create", load_iterator_create).staticmethod("create")
             .def("next", load_iterator_next)

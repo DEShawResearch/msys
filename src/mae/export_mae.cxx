@@ -704,8 +704,7 @@ static void write_provenance(Destro& ct, SystemPtr sys,
 
 static void write_ct(Maeff& M, SystemPtr mol, 
                      Provenance const& provenance,
-                     bool with_forcefield,
-                     bool with_compression) {
+                     unsigned flags) {
 
     if (!mol->atomCount()) return;
 
@@ -727,53 +726,55 @@ static void write_ct(Maeff& M, SystemPtr mol,
     /* add the bonds to the ct */
     build_m_bond( mol, ct );
 
-    if (with_forcefield) {
-        Destro& ffio_ff = ct.new_block("ffio_ff");
+    if (flags & MaeExport::StructureOnly) return;
 
-        IdList compress;
-        if (with_compression) {
-            MultiIdList fragments;
-            mol->updateFragids(&fragments);
-            IdList frags = FindDistinctFragments(mol,fragments);
-            if (frags.size()==1) {
-                compress = fragments[0];
-            }
+    Destro& ffio_ff = ct.new_block("ffio_ff");
+
+    IdList compress;
+    if (flags & MaeExport::CompressForcefield) {
+        MultiIdList fragments;
+        mol->updateFragids(&fragments);
+        IdList frags = FindDistinctFragments(mol,fragments);
+        if (frags.size()==1) {
+            compress = fragments[0];
         }
-
-        build_sites( mol, compress, ffio_ff );
-        build_pseudos( mol, ffio_ff );
-        build_ff( mol, compress, ffio_ff );
     }
+
+    build_sites( mol, compress, ffio_ff );
+    build_pseudos( mol, ffio_ff );
+    build_ff( mol, compress, ffio_ff );
 }
 
 namespace desres { namespace msys {
     void ExportMAE( SystemPtr h, std::string const& path,
                            Provenance const& provenance,
-                           bool with_forcefield,
-                           bool with_compression) {
+                           unsigned flags) {
         
         std::vector<SystemPtr> cts;
         BOOST_FOREACH(Id ct, h->cts()) {
             cts.push_back(Clone(h, h->atomsForCt(ct)));
         }
-        ExportMAEMany(cts, path, provenance, with_forcefield, with_compression);
+        ExportMAEMany(cts, path, provenance, flags);
     }
 
     void ExportMAEMany( std::vector<SystemPtr> const& cts, 
                         std::string const& path,
                         Provenance const& provenance,
-                        bool with_forcefield,
-                        bool with_compression ) {
+                        unsigned flags) {
 
-        Maeff M;
-        std::ofstream out(path.c_str());
+        std::ios_base::openmode mode = std::ofstream::out;
+        if (flags & MaeExport::Append) {
+            mode |= std::ofstream::app;
+        }
+        std::ofstream out(path.c_str(), mode);
         if (!out) {
             MSYS_FAIL("Error opening " << path << " for writing: "
                     << strerror(errno));
         }
 
+        Maeff M;
         BOOST_FOREACH(SystemPtr ct, cts) {
-            write_ct(M,ct,provenance,with_forcefield,with_compression);
+            write_ct(M,ct,provenance,flags);
         }
 
         out << M;

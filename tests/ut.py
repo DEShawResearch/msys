@@ -1373,6 +1373,26 @@ class TestMain(unittest.TestCase):
         self.assertEqual(m.nchains, 4)
         self.assertEqual(m.natoms, 9498)
 
+    def testAppendMae(self):
+        m=msys.CreateSystem()
+        m.addAtom().atomic_number=1
+        path="/tmp/app.mae"
+
+        try: os.unlink(path)
+        except: pass
+        msys.SaveMAE(m,path, append=True)
+        msys.SaveMAE(m,path, append=True)
+        m2=msys.Load(path)
+        self.assertEqual(m2.natoms, 2)
+
+        path="/tmp/app2.mae"
+        try: os.unlink(path)
+        except: pass
+        msys.SaveMAE([m,m],path, append=True)
+        m2=msys.Load(path)
+        self.assertEqual(m2.natoms, 2)
+
+
     def testAlchemicalMaeRestraint(self):
         d=os.path.dirname(__file__)
         m=msys.Load(os.path.join(d, 'mae/alchemical_restraint.mae'))
