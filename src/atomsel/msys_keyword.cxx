@@ -110,6 +110,9 @@ INT_KEY(water,sys->residue(sys->atom(i).residue).type==ResidueWater)
 INT_KEY(protein,sys->residue(sys->atom(i).residue).type==ResidueProtein)
 INT_KEY(nucleic,sys->residue(sys->atom(i).residue).type==ResidueNucleic)
 
+/* add 1 to ct to match VMD :(  */
+INT_KEY(ctnumber,1+sys->chain(sys->residue(sys->atom(i).residue).chain).ct)
+
 
 DBL_KEY(charge,atom(i).charge)
 DBL_KEY(mass,atom(i).mass)

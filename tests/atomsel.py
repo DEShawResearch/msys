@@ -54,6 +54,10 @@ coord_ent = msys.Load(path)
 coord_ent.select('none')
 
 
+compare_atomsel(coord_ent,"ctnumber 1")
+compare_atomsel(coord_ent,"ctnumber 2")
+compare_atomsel(coord_ent,"ctnumber 3")
+compare_atomsel(coord_ent,"ctnumber 4")
 compare_atomsel(coord_ent,"all")
 compare_atomsel(coord_ent,"none")
 compare_atomsel(coord_ent,"index 10 20 30",perf=True)

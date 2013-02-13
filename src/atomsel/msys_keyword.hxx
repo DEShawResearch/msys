@@ -46,6 +46,7 @@ KeywordPtr keyword_backbone( SystemPtr sys );
 KeywordPtr keyword_sidechain( SystemPtr sys );
 KeywordPtr keyword_protein( SystemPtr sys );
 KeywordPtr keyword_nucleic( SystemPtr sys );
+KeywordPtr keyword_ctnumber( SystemPtr sys );
 
 KeywordPtr keyword_atomprop( SystemPtr ent, String const& prop );
 

@@ -113,6 +113,7 @@ namespace {
     KeywordPtr key = 
       !strcmp(id,"atomicnumber") ? keyword_anum(ent) :
       !strcmp(id,"chain") ? keyword_chain(ent) :
+      !strcmp(id,"ctnumber") ? keyword_ctnumber(ent) :
       !strcmp(id,"charge") ? keyword_charge(ent) :
       !strcmp(id,"element") ? keyword_element(ent) :
       !strcmp(id,"fragment") ? keyword_fragment(ent) :
