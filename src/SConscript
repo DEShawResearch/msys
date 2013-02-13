@@ -114,7 +114,6 @@ libmsys=env.AddLibrary('msys', selobjs + maeobjs + lpobjs + Split('''
 alchemical.cxx
 
 analyze/aromatic.cxx
-analyze/aromatic_new.cxx
 analyze/eigensystem.cxx
 analyze/get_fragments.cxx
 
@@ -141,6 +140,7 @@ pdb/pdb.cxx
 schema.cxx
 schema/schema.cxx
 
+annotated_system.cxx
 append.cxx
 clone.cxx
 graph.cxx

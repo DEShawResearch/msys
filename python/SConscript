@@ -8,6 +8,7 @@ env.Append(
 
 pymodfiles='''
 analyze.cxx
+annotated_system.cxx
 atom.cxx
 bond.cxx
 residue.cxx

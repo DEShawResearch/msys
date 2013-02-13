@@ -159,25 +159,6 @@ class TestMain(unittest.TestCase):
         for i,a in (1,'H'), (2,'He'), (19,'K'):
             self.assertEqual(msys.ElementForAbbreviation(a), i)
 
-    def testSSSR(self):
-        sys = msys.LoadDMS('/d/en/gregerse-0/p4/sw/forcefields/viparr4/cubane.dms', True)
-        rings = msys.GetSSSR(sys.atoms, False)
-        self.assertTrue(len(rings) == 5)
-        for ring in rings:
-            self.assertTrue(len(ring) == 4)
-            for ring2 in rings:
-                if ring != ring2:
-                    intersect = set([a.id for a in ring]) & set([a.id for a in ring2])
-                    self.assertTrue(len(intersect) == 2 or len(intersect) == 0)
-        rings = msys.GetSSSR(sys.atoms, True)
-        self.assertTrue(len(rings) == 6)
-        for ring in rings:
-            self.assertTrue(len(ring) == 4)
-            for ring2 in rings:
-                if ring != ring2:
-                    intersect = set([a.id for a in ring]) & set([a.id for a in ring2])
-                    self.assertTrue(len(intersect) == 2 or len(intersect) == 0)
-
     def testAssignBondOrdersAndFormalCharges(self):
         # Smoke test only
         sys = msys.LoadDMS('/proj/desres/root/Linux/x86_64/dms_inputs/1.5.4/share/ww.dms')
@@ -1452,20 +1433,108 @@ class TestMain(unittest.TestCase):
         self.assertEqual(posre.params.nparams, 1)
         self.assertEqual(posre.nterms, 32)
 
+    def testAnnotatedSystem(self):
+        # Test rings
+        sys = msys.LoadDMS('/d/en/gregerse-0/p4/sw/forcefields/viparr4/cubane.dms', True)
+        with self.assertRaises(RuntimeError):
+            annot_sys = msys.AnnotatedSystem(sys)
+        msys.AssignBondOrderAndFormalCharge(sys)
+        annot_sys = msys.AnnotatedSystem(sys)
+        assert(annot_sys.system == sys)
+        rings = annot_sys.rings()
+        self.assertTrue(len(rings) == 6)
+        for ring in rings:
+            self.assertTrue(len(ring) == 4)
+            for ring2 in rings:
+                if ring != ring2:
+                    intersect = set([a.id for a in ring]) & set([a.id for a in ring2])
+                    self.assertTrue(len(intersect) == 2 or len(intersect) == 0)
+        rings = annot_sys.rings(sys.atom(0))
+        self.assertTrue(len(rings) == 3)
+        self.assertTrue(sys.atom(0) in rings[0])
+        self.assertTrue(sys.atom(0) in rings[1])
+        self.assertTrue(sys.atom(0) in rings[1])
+        rings = annot_sys.rings(sys.bond(0))
+        self.assertTrue(len(rings) == 2)
+        self.assertTrue(sys.bond(0).atoms[0] in rings[0])
+        self.assertTrue(sys.bond(0).atoms[1] in rings[0])
+        self.assertTrue(sys.bond(0).atoms[0] in rings[1])
+        self.assertTrue(sys.bond(0).atoms[1] in rings[1])
+        # Test aromaticity and atom props
+        sys = msys.CreateSystem()
+        res = sys.addChain().addResidue()
+        c = [res.addAtom() for i in range(6)]
+        h = [res.addAtom() for i in range(6)]
+        cc = []
+        ch = []
+        for i in range(6):
+            c[i].atomic_number = 6
+            cc.append(c[i].addBond(c[(i+1)%6]))
+            h[i].atomic_number = 1
+            ch.append(h[i].addBond(c[i]))
+        with self.assertRaises(RuntimeError):
+            annot_sys = msys.AnnotatedSystem(sys)
+        msys.AssignBondOrderAndFormalCharge(sys)
+        annot_sys = msys.AnnotatedSystem(sys)
+        assert(annot_sys.system == sys)
+        for i in range(6):
+            self.assertTrue(annot_sys.aromatic(c[i]))
+            self.assertTrue(annot_sys.aromatic(cc[i]))
+            self.assertTrue(not annot_sys.aromatic(h[i]))
+            self.assertTrue(not annot_sys.aromatic(ch[i]))
+            self.assertTrue(annot_sys.hcount(c[i]) == 1)
+            self.assertTrue(annot_sys.degree(c[i]) == 3)
+            self.assertTrue(annot_sys.valence(c[i]) == 4)
+            self.assertTrue(annot_sys.lonepairs(c[i]) == 0)
+            self.assertTrue(annot_sys.hybridization(c[i]) == 2)
+            self.assertTrue(annot_sys.ringbondcount(c[i]) == 2)
+            self.assertTrue(annot_sys.hcount(h[i]) == 0)
+            self.assertTrue(annot_sys.degree(h[i]) == 1)
+            self.assertTrue(annot_sys.valence(h[i]) == 1)
+            self.assertTrue(annot_sys.lonepairs(h[i]) == 0)
+            self.assertTrue(annot_sys.ringbondcount(h[i]) == 0)
+        h[5].remove()
+        o = res.addAtom()
+        o.atomic_number = 8
+        co = c[5].addBond(o)
+        h[5] = res.addAtom()
+        h[5].atomic_number = 1
+        oh = h[5].addBond(o)
+        msys.AssignBondOrderAndFormalCharge(sys)
+        annot_sys = msys.AnnotatedSystem(sys)
+        for i in range(6):
+            self.assertTrue(annot_sys.aromatic(c[i]))
+            self.assertTrue(annot_sys.aromatic(cc[i]))
+        self.assertTrue(not annot_sys.aromatic(co))
+        self.assertTrue(not annot_sys.aromatic(o))
+        new_h = [res.addAtom() for i in range(2)]
+        for i in range(2):
+            new_h[i].atomic_number = 1
+            new_h[i].addBond(c[i])
+        msys.AssignBondOrderAndFormalCharge(sys)
+        annot_sys = msys.AnnotatedSystem(sys)
+        for i in range(6):
+            self.assertTrue(not annot_sys.aromatic(c[i]))
+            self.assertTrue(not annot_sys.aromatic(cc[i]))
+
     def testSmartsPattern(self):
         import json
         d=os.path.dirname(__file__)
         tests = json.loads(open(os.path.join(d, 'smarts_tests.json')).read())
         ww = msys.LoadDMS('/proj/desres/root/Linux/x86_64/dms_inputs/1.5.4/share/ww.dms', True)
         msys.AssignBondOrderAndFormalCharge(ww)
+        ww_annot = msys.AnnotatedSystem(ww)
         ww_atoms = ww.select('not water')
         membrane = msys.LoadDMS('/proj/desres/root/Linux/x86_64/dms_inputs/1.5.4/share/membrane.dms', True)
         msys.AssignBondOrderAndFormalCharge(membrane)
+        membrane_annot = msys.AnnotatedSystem(membrane)
         membrane_atoms = membrane.select('not water')
         for smarts, ww_matches, membrane_matches in zip(tests['smarts'], tests['ww_matches'], tests['membrane_matches']):
             sp = msys.SmartsPattern(smarts)
-            self.assertEqual(sp.findMatches(ww_atoms), ww_matches)
-            self.assertEqual(sp.findMatches(membrane_atoms), membrane_matches)
+            self.assertEqual(sp.findMatches(ww_annot, ww_atoms), ww_matches)
+            self.assertEqual(sp.findMatches(membrane_annot, membrane_atoms), membrane_matches)
+        sp = msys.SmartsPattern(tests['smarts'][0])
+        self.assertTrue(len(sp.findMatches(ww_annot)) > 0)
 
     def testGraph(self):
         sys_A = msys.CreateSystem()
@@ -1576,31 +1645,6 @@ class TestMain(unittest.TestCase):
         all_matches = graph_B.matchAll(graph_A, substructure=True)
         self.assertTrue(len(all_matches) == 8 * 6)
         self.assertTrue(len(all_matches[0]) == 4)
-
-    def testAromatic(self):
-        sys = msys.CreateSystem()
-        res = sys.addChain().addResidue()
-        c = [res.addAtom() for i in range(6)]
-        h = [res.addAtom() for i in range(6)]
-        cc = []
-        ch = []
-        for i in range(6):
-            c[i].atomic_number = 6
-            cc.append(c[i].addBond(c[(i+1)%6]))
-            h[i].atomic_number = 1
-            ch.append(h[i].addBond(c[i]))
-        msys.AssignBondOrderAndFormalCharge(sys)
-        for i in range(6):
-            self.assertTrue(msys.IsAromaticAtom(c[i]))
-            self.assertTrue(msys.IsAromaticBond(cc[i]))
-        new_h = [res.addAtom() for i in range(2)]
-        for i in range(2):
-            new_h[i].atomic_number = 1
-            new_h[i].addBond(c[i])
-        msys.AssignBondOrderAndFormalCharge(sys)
-        for i in range(6):
-            self.assertTrue(not msys.IsAromaticAtom(c[i]))
-            self.assertTrue(not msys.IsAromaticBond(cc[i]))
 
 if __name__=="__main__":
     unittest.main(verbosity=2)

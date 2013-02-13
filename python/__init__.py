@@ -1308,6 +1308,95 @@ class System(object):
         ''' Remove a pair of atoms from the glue.  '''
         return self._ptr.delGluePair(p0,p1)
 
+class AnnotatedSystem(object):
+    ''' System that has been annotated with additional chemical information '''
+
+    def __init__(self, sys):
+        ''' Construct from System. AnnotatedSystem is not updated if System is
+        subsequently modified. '''
+        self._ptr = _msys.AnnotatedSystemPtr(sys._ptr)
+
+    def __eq__(self, x): 
+        return self.__class__==type(x) and self._ptr==x._ptr
+
+    def __ne__(self, x): 
+        return self.__class__!=type(x) or self._ptr!=x._ptr
+
+    def __hash__(self): return self._ptr.__hash__()
+
+    def __repr__(self): return "<AnnotatedSystem '%s'>" % self.system.name
+
+    @property
+    def system(self):
+        ''' Contained System object '''
+        return System(self._ptr.system())
+
+    def aromatic(self, atom_or_bond):
+        ''' Is atom or bond aromatic '''
+        if type(atom_or_bond) == Atom:
+            return self._ptr.atomAromatic(atom_or_bond.id)
+        elif type(atom_or_bond) == Bond:
+            return self._ptr.bondAromatic(atom_or_bond.id)
+        else:
+            raise TypeError, \
+                    "atom_or_bond must be of type msys.Atom or msys.Bond"
+
+    def rings(self, atom_or_bond=None):
+        ''' All SSSR rings containing atom or bond. If atom/bond is not
+        specified, returns all SSSR rings in the system. '''
+        if atom_or_bond is None:
+            rings = self._ptr.rings()
+        elif type(atom_or_bond) == Atom:
+            rings = self._ptr.atomRings(atom_or_bond.id)
+        elif type(atom_or_bond) == Bond:
+            rings = self._ptr.bondRings(atom_or_bond.id)
+        else:
+            raise TypeError, \
+                    "atom_or_bond must be of type msys.Atom or msys.Bond"
+        return [[Atom(self.system._ptr, i) for i in r] for r in rings]
+
+    def hcount(self, atom):
+        ''' Number of bonded hydrogens '''
+        if type(atom) == Atom:
+            return self._ptr.atomHcount(atom.id)
+        else:
+            raise TypeError, "atom must be of type msys.Atom"
+
+    def degree(self, atom):
+        ''' Number of (non-pseudo) bonds '''
+        if type(atom) == Atom:
+            return self._ptr.atomDegree(atom.id)
+        else:
+            raise TypeError, "atom must be of type msys.Atom"
+
+    def valence(self, atom):
+        ''' Sum of bond orders of all (non-pseudo) bonds '''
+        if type(atom) == Atom:
+            return self._ptr.atomValence(atom.id)
+        else:
+            raise TypeError, "atom must be of type msys.Atom"
+
+    def lonepairs(self, atom):
+        ''' Number of lone pairs of electrons '''
+        if type(atom) == Atom:
+            return self._ptr.atomLonePairs(atom.id)
+        else:
+            raise TypeError, "atom must be of type msys.Atom"
+
+    def hybridization(self, atom):
+        ''' Atom hybridization -- 1=sp, 2=sp2, 3=sp3, 4=sp3d, etc. '''
+        if type(atom) == Atom:
+            return self._ptr.atomHybridization(atom.id)
+        else:
+            raise TypeError, "atom must be of type msys.Atom"
+
+    def ringbondcount(self, atom):
+        ''' Number of ring bonds '''
+        if type(atom) == Atom:
+            return self._ptr.atomRingBonds(atom.id)
+        else:
+            raise TypeError, "atom must be of type msys.Atom"
+
 class SmartsPattern(object):
     ''' A class representing a compiled SMARTS pattern '''
     def __init__(self, pattern):
@@ -1332,17 +1421,15 @@ class SmartsPattern(object):
     def __repr__(self):
         return "<SmartsPattern '%s'>" % self.pattern
 
-    def findMatches(self, system_or_atoms):
-        ''' return list of lists representing ids of matches of this
-        pattern that start with the given set of atoms.  Formal charges
-        and bond orders must already be present in the system; use
-        AssignBondOrderAndFormalCharge to let msys do the assignment.  '''
-        if isinstance(system_or_atoms, System):
-            ptr = system_or_atoms._ptr
-            ids = ptr.atoms()
-        else:
-            ptr, ids = _find_ids(system_or_atoms)
-        return self._pat.findMatches(ptr, ids)
+    def findMatches(self, annotated_system, atoms=None):
+        ''' Return list of lists representing ids of matches of this pattern in
+        this system, optionally requiring that the first atom match belongs to
+        the given set of atoms. An AnnotatedSystem must be used here, which can
+        be constructed from a System after calling
+        AssignBondOrderAndFormalCharge. '''
+        if atoms is None:
+            atoms = annotated_system.system.atoms
+        return self._pat.findMatches(annotated_system._ptr, _find_ids(atoms)[1])
 
 def CreateSystem():
     ''' Create a new, empty System '''
@@ -1565,41 +1652,6 @@ def NonbondedSchemas():
     ''' available nonbonded schemas for System.addNonbondedFromSchema '''
     return [s for s in _msys.NonbondedSchemas()]
 
-def GetSSSR(atoms, all_relevant=False):
-    """Get smallest set of smallest rings (SSSR) for a system fragment.
-
-    The SSSR is in general not unique; the SSSR of a tetrahedron is any
-    three of its four triangular faces. The set of rings that is the
-    union of all SSSR's (all relevant rings) may be obtained by setting
-    all_relevant to True.
-
-    Arguments:
-    atoms -- [msys.Atom, ..., msys.Atom] from a single system
-    all_relevant -- bool
-    Returns: [[msys.Atom, ..., msys.Atom], ..., [msys.Atom, ..., msys.Atom]]
-    """
-    ptr, ids = _find_ids(atoms)
-    rings = _msys.GetSSSR(ptr, ids, all_relevant)
-    return [[Atom(ptr, id) for id in ring] for ring in rings]
-
-def IsAromaticAtom(atom):
-    """Determine if a given atom is aromatic.
-
-    Arguments:
-    atom -- msys.Atom
-    Returns: bool
-    """
-    return _msys.IsAromaticAtom(atom.system._ptr, atom.id)
-
-def IsAromaticBond(bond):
-    """Determine if a given bond is aromatic.
-
-    Arguments:
-    bond -- msys.Bond
-    Returns: bool
-    """
-    return _msys.IsAromaticBond(bond.system._ptr, bond.id)
-
 def AssignSybylTypes(system):
     ''' Assign Sybyl atom and bond types to the given system.  
     Types will be stored in the "sybyl_type" property of each atom and bond.
@@ -1718,7 +1770,3 @@ def __globalcell_str(self):
     C=[x for x in self.C]
     return str([A,B,C])
 GlobalCell.__str__ = __globalcell_str
-
-
-
-

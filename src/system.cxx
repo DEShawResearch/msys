@@ -328,8 +328,6 @@ void System::delCt(Id id) {
 
 Id System::updateFragids(MultiIdList* fragments) {
 
-    _allRelevantSSSR.reset();
-
     /* Create local storage for all atoms (even deleted)
      * this simplifies and speeds up the code below. */
     IdList assignments(_atoms.size(),BadId);
@@ -374,15 +372,6 @@ Id System::updateFragids(MultiIdList* fragments) {
     }
     return fragid;
 }
-
-boost::shared_ptr<MultiIdList> System::allRelevantSSSR() {
-    if (!_allRelevantSSSR) {
-        _allRelevantSSSR.reset(new MultiIdList(GetSSSR(
-                        shared_from_this(), atoms(), true)));
-    }
-    return _allRelevantSSSR;
-}
-
 
 IdList System::orderedIds() const {
     IdList ids;

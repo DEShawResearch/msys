@@ -12,10 +12,11 @@ int main(int argc, char *argv[]) {
     }
     SystemPtr mol = Load(argv[1]);
     AssignBondOrderAndFormalCharge(mol);
+    AnnotatedSystemPtr annot_mol = AnnotatedSystem::create(mol);
     IdList sel = Atomselect(mol, "not water");
     for (int i=2; i<argc; i++) {
         printf("%s\n", argv[i]);
-        SmartsPattern(argv[i]).findMatches(mol, sel);
+        SmartsPattern(argv[i]).findMatches(annot_mol, sel);
     }
     return 0;
 }

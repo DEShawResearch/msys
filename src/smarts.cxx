@@ -1,15 +1,9 @@
 #include "smarts.hxx"
-#include "analyze.hxx"
-#include "sssr.hxx"
-#include "aromatic.hxx"
-#include "elements.hxx"
-
 #include <boost/fusion/adapted/struct/adapt_struct.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/tuple/tuple.hpp>
-
 #include <stack>
 
 namespace qi = boost::spirit::qi;
@@ -95,7 +89,7 @@ namespace desres { namespace msys {
          * atom and append matches to a given list. Has option of returning
          * after finding a single match. Returns true if any match is found,
          * false otherwise. */
-        bool matchSmartsPattern(annotation_t const& sys, Id atom,
+        bool matchSmartsPattern(AnnotatedSystemPtr sys, Id atom,
                 MultiIdList& matches, bool match_single=false) const;
     };
 
@@ -451,29 +445,29 @@ struct SMARTS_grammar : qi::grammar<Iterator, smarts_pattern_(), ascii::space_ty
 /******************* Helper functions for SMARTS matching *********************/
 
 static
-bool match_element(Id atom, annotation_t const& sys, const element_& elem) {
+bool match_element(Id atom, AnnotatedSystemPtr sys, const element_& elem) {
     if (elem.first != 0
-            && sys->atom(atom).atomic_number != elem.first)
+            && sys->system()->atom(atom).atomic_number != elem.first)
         return false;
     if (elem.second == NONE)
         return true;
-    if (elem.second == AROM
-            && sys.atoms[atom].aromatic)
+    if (elem.second == AROM && sys->atomAromatic(atom))
         return true;
-    if (elem.second == ALIPH
-            && !sys.atoms[atom].aromatic)
+    if (elem.second == ALIPH && !sys->atomAromatic(atom))
         return true;
     return false;
 }
 
 static
-bool match_charge(Id atom, annotation_t const&sys, const charge_& charge) {
+bool match_charge(Id atom, AnnotatedSystemPtr sys, const charge_& charge) {
     if (const bf::vector2<char, unsigned>* tmp
             = boost::get<bf::vector2<char, unsigned> >(&charge)) {
         if (bf::at_c<0>(*tmp) == '+')
-            return (int(bf::at_c<1>(*tmp)) == sys->atom(atom).formal_charge);
+            return (int(bf::at_c<1>(*tmp))
+                    == sys->system()->atom(atom).formal_charge);
         else if (bf::at_c<0>(*tmp) == '-')
-            return (-int(bf::at_c<1>(*tmp)) == sys->atom(atom).formal_charge);
+            return (-int(bf::at_c<1>(*tmp))
+                    == sys->system()->atom(atom).formal_charge);
         else
             MSYS_FAIL("SMARTS BUG; unrecognized charge");
     } else if (const std::vector<char>* tmp
@@ -482,10 +476,12 @@ bool match_charge(Id atom, annotation_t const&sys, const charge_& charge) {
             MSYS_FAIL("SMARTS BUG; unrecognized charge");
         if (tmp->at(0) == '+')
             /* Assume remaining characters are all '+' */
-            return (int(tmp->size()) == sys->atom(atom).formal_charge);
+            return (int(tmp->size())
+                    == sys->system()->atom(atom).formal_charge);
         else if (tmp->at(0) == '-')
             /* Assume remaining characters are all '-' */
-            return (-int(tmp->size()) == sys->atom(atom).formal_charge);
+            return (-int(tmp->size())
+                    == sys->system()->atom(atom).formal_charge);
         else
             MSYS_FAIL("SMARTS BUG; unrecognized charge");
     } else
@@ -493,7 +489,7 @@ bool match_charge(Id atom, annotation_t const&sys, const charge_& charge) {
 }
 
 static
-bool match_atom_spec(Id atom, annotation_t const& sys, const atom_spec_&
+bool match_atom_spec(Id atom, AnnotatedSystemPtr sys, const atom_spec_&
         aspec) {
     if (const SmartsPatternImplPtr* pattern
             = boost::get<SmartsPatternImplPtr>(&aspec)) {
@@ -505,7 +501,8 @@ bool match_atom_spec(Id atom, annotation_t const& sys, const atom_spec_&
         return match_element(atom, sys, *elem);
     else if (const atomic_number_* anum = boost::get<atomic_number_>(&aspec))
         /* Atomic number */
-        return (int(bf::at_c<1>(*anum)) == sys->atom(atom).atomic_number);
+        return (int(bf::at_c<1>(*anum))
+                == sys->system()->atom(atom).atomic_number);
     else if (const charge_* charge = boost::get<charge_>(&aspec))
         /* Charge */
         return match_charge(atom, sys, *charge);
@@ -519,34 +516,37 @@ bool match_atom_spec(Id atom, annotation_t const& sys, const atom_spec_&
             case 'D':
                 /* Total connections */
                 if (val == -1) val = 1;
-                return sys.atoms[atom].degree == val;
+                return sys->atomDegree(atom) == val;
             case 'H':
             case 'h':
                 /* Hydrogen connections */
                 if (val == -1) val = 1;
-                return sys.atoms[atom].hcount == val;
+                return sys->atomHcount(atom) == val;
             case 'x':
                 /* Ring connections */
                 if (val == -1)
-                    return sys.atoms[atom].ring_bonds > 0;
+                    return sys->atomRingBonds(atom) > 0;
                 else
-                    return sys.atoms[atom].ring_bonds == val;
+                    return sys->atomRingBonds(atom) == val;
             case 'v':
                 /* Total connections counting multiplicity from bond orders */
                 if (val == -1) val = 1;
-                return sys.atoms[atom].valence == val;
+                return sys->atomValence(atom) == val;
             case 'R':
                 /* In given number of rings */
                 if (val == -1)
-                    return sys.atoms[atom].ring_count();
+                    return sys->atomRingCount(atom);
                 else
-                    return sys.atoms[atom].ring_count() == val;
+                    return sys->atomRingCount(atom) == val;
             case 'r':
                 /* In ring of given size */
-                return sys.atoms[atom].in_ring(val);
+                if (val == -1)
+                    return sys->atomRingCount(atom);
+                else
+                    return sys->atomInRingSize(atom, val);
             case '^':
                 if (val == -1) val = 1;
-                return val==sys.hybridization(atom);
+                return sys->atomHybridization(atom) == val;
             default:
                 MSYS_FAIL("SMARTS BUG; unrecognized numeric property");
         }
@@ -557,7 +557,7 @@ bool match_atom_spec(Id atom, annotation_t const& sys, const atom_spec_&
 }
 
 static
-bool match_not_atom_spec(Id atom, annotation_t const& sys,
+bool match_not_atom_spec(Id atom, AnnotatedSystemPtr sys,
         const not_atom_spec_& spec) {
     if (bf::at_c<0>(spec).size() % 2 == 0)
         return match_atom_spec(atom, sys, bf::at_c<1>(spec));
@@ -566,7 +566,7 @@ bool match_not_atom_spec(Id atom, annotation_t const& sys,
 }
 
 static
-bool match_and_atom_spec(Id atom, annotation_t const& sys,
+bool match_and_atom_spec(Id atom, AnnotatedSystemPtr sys,
         const and_atom_spec_& spec) {
     for (unsigned i = 0; i < spec.size(); ++i)
         for (unsigned j = 0; j < spec[i].size(); ++j)
@@ -576,7 +576,7 @@ bool match_and_atom_spec(Id atom, annotation_t const& sys,
 }
 
 static
-bool match_or_atom_spec(Id atom, annotation_t const& sys,
+bool match_or_atom_spec(Id atom, AnnotatedSystemPtr sys,
         const or_atom_spec_& spec) {
     for (unsigned i = 0; i < spec.size(); ++i)
         if (match_and_atom_spec(atom, sys, spec[i]))
@@ -585,7 +585,7 @@ bool match_or_atom_spec(Id atom, annotation_t const& sys,
 }
 
 static
-bool match_atom_expression(Id atom, annotation_t const& sys,
+bool match_atom_expression(Id atom, AnnotatedSystemPtr sys,
         const atom_expression_& expr) {
     for (unsigned i = 0; i < expr.size(); ++i)
         if (!match_or_atom_spec(atom, sys, expr[i]))
@@ -594,13 +594,13 @@ bool match_atom_expression(Id atom, annotation_t const& sys,
 }
 
 static
-bool match_raw_atom(Id atom, annotation_t const& sys,
+bool match_raw_atom(Id atom, AnnotatedSystemPtr sys,
         const raw_atom_& raw) {
     if (const element_* elem = boost::get<element_>(&raw))
         return match_element(atom, sys, *elem);
     else if (const char* R = boost::get<char>(&raw)) {
         if (*R == 'R')
-            return sys.atoms[atom].ring_count() > 0;
+            return sys->atomRingCount(atom) > 0;
         else
             MSYS_FAIL("SMARTS BUG; unrecognized raw element");
     } else
@@ -608,9 +608,9 @@ bool match_raw_atom(Id atom, annotation_t const& sys,
 }
 
 static
-bool match_hydrogen_expression(Id atom, annotation_t const&sys,
+bool match_hydrogen_expression(Id atom, AnnotatedSystemPtr sys,
         const hydrogen_expression_& hexpr) {
-    if (sys->atom(atom).atomic_number != 1)
+    if (sys->system()->atom(atom).atomic_number != 1)
         return false;
     if (!bf::at_c<1>(hexpr))
         return true;
@@ -618,7 +618,7 @@ bool match_hydrogen_expression(Id atom, annotation_t const&sys,
 }
 
 static
-bool match_atom(Id atom, annotation_t const&sys, const atom_& a) {
+bool match_atom(Id atom, AnnotatedSystemPtr sys, const atom_& a) {
     if (const raw_atom_* raw = boost::get<raw_atom_>(&a))
         return match_raw_atom(atom, sys, *raw);
     else if (const hydrogen_expression_* hexpr
@@ -632,28 +632,28 @@ bool match_atom(Id atom, annotation_t const&sys, const atom_& a) {
 }
 
 static
-bool match_bond_spec(Id bond, annotation_t const& sys,
+bool match_bond_spec(Id bond, AnnotatedSystemPtr sys,
         const bond_spec_& spec) {
     /* Assume all characters of spec other than the last are '!' */
     bool reverse = (spec.size() % 2 == 1);
     switch (spec[spec.size()-1]) {
         case '~': return (reverse ^ false);
-        case '-': return (reverse ^ (sys->bond(bond).order != 1
-                              || sys.bonds[bond].aromatic));
-        case '=': return (reverse ^ (sys->bond(bond).order != 2
-                              || sys.bonds[bond].aromatic));
-        case '#': return (reverse ^ (sys->bond(bond).order != 3
-                              || sys.bonds[bond].aromatic));
-        case '$': return (reverse ^ (sys->bond(bond).order != 4
-                              || sys.bonds[bond].aromatic));
-        case '@': return (reverse ^ (!sys.bonds[bond].in_ring));
-        case ':': return (reverse ^ (!sys.bonds[bond].aromatic));
+        case '-': return (reverse ^ (sys->system()->bond(bond).order != 1
+                              || sys->bondAromatic(bond)));
+        case '=': return (reverse ^ (sys->system()->bond(bond).order != 2
+                              || sys->bondAromatic(bond)));
+        case '#': return (reverse ^ (sys->system()->bond(bond).order != 3
+                              || sys->bondAromatic(bond)));
+        case '$': return (reverse ^ (sys->system()->bond(bond).order != 4
+                              || sys->bondAromatic(bond)));
+        case '@': return (reverse ^ (sys->bondRingCount(bond) == 0));
+        case ':': return (reverse ^ (!sys->bondAromatic(bond)));
         default: MSYS_FAIL("SMARTS BUG; unrecognized bond spec");
     }
 }
 
 static
-bool match_and_bond_spec(Id bond, annotation_t const& sys,
+bool match_and_bond_spec(Id bond, AnnotatedSystemPtr sys,
         const and_bond_spec_& spec) {
     for (unsigned i = 0; i < spec.size(); ++i)
         for (unsigned j = 0; j < spec[i].size(); ++j)
@@ -663,7 +663,7 @@ bool match_and_bond_spec(Id bond, annotation_t const& sys,
 }
 
 static
-bool match_or_bond_spec(Id bond, annotation_t const& sys,
+bool match_or_bond_spec(Id bond, AnnotatedSystemPtr sys,
         const or_bond_spec_& spec) {
     for (unsigned i = 0; i < spec.size(); ++i)
         if (match_and_bond_spec(bond, sys, spec[i]))
@@ -672,15 +672,15 @@ bool match_or_bond_spec(Id bond, annotation_t const& sys,
 }
 
 static
-bool match_bond_expression(Id bond, annotation_t const& sys,
+bool match_bond_expression(Id bond, AnnotatedSystemPtr sys,
         const bond_expression_& expr) {
     if (expr) {
         for (unsigned i = 0; i < expr->size(); ++i)
             if (!match_or_bond_spec(bond, sys, expr->at(i)))
                 return false;
         return true;
-    } else if (sys->bond(bond).order == 1
-            || sys.bonds[bond].aromatic)
+    } else if (sys->system()->bond(bond).order == 1
+            || sys->bondAromatic(bond))
         /* If bond is unspecified, match single and aromatic bonds */
         return true;
     else
@@ -818,19 +818,19 @@ bool SmartsPatternImpl::convertSmarts(const smarts_pattern_& smarts,
 }
 
 
-MultiIdList SmartsPattern::findMatches(SystemPtr sys, IdList const& atoms) const {
+MultiIdList SmartsPattern::findMatches(AnnotatedSystemPtr sys,
+        IdList const& atoms) const {
 
-    annotation_t A(sys);
     MultiIdList matches;
     BOOST_FOREACH(Id id, atoms) {
-        if (sys->atom(id).atomic_number < 1)
+        if (sys->system()->atom(id).atomic_number < 1)
             continue;
-        _impl->matchSmartsPattern(A, id, matches);
+        _impl->matchSmartsPattern(sys, id, matches);
     }
     return matches;
 }
 
-bool SmartsPatternImpl::matchSmartsPattern(annotation_t const& sys, Id atom,
+bool SmartsPatternImpl::matchSmartsPattern(AnnotatedSystemPtr sys, Id atom,
         std::vector<IdList>& matches, bool match_single) const {
     /* Use this with filteredBondsPerAtom to obtain non-pseudo bonds for
      * atoms */
@@ -841,7 +841,7 @@ bool SmartsPatternImpl::matchSmartsPattern(annotation_t const& sys, Id atom,
                     && _sys->atom(b.j).atomic_number > 0);
         }
         SystemPtr _sys;
-    } filter(sys);
+    } filter(sys->system());
 
     if (_atoms.size() == 0)
         return false;
@@ -851,12 +851,12 @@ bool SmartsPatternImpl::matchSmartsPattern(annotation_t const& sys, Id atom,
         matches.push_back(IdList(1, atom));
         return true;
     }
-    if (sys->filteredBondsForAtom(atom, filter).size() == 0)
+    if (sys->system()->filteredBondsForAtom(atom, filter).size() == 0)
         return false;
 
     /* Two-way maps of currently matched atom expressions and atoms in system */
     IdList smarts_to_sys(_atoms.size(), BadId);
-    IdList sys_to_smarts(sys->maxAtomId(), BadId);
+    IdList sys_to_smarts(sys->system()->maxAtomId(), BadId);
 
     /* Stack keeps track of the choice of system bond for each matched bond
      * expression. The next bond expression to match is
@@ -878,21 +878,24 @@ bool SmartsPatternImpl::matchSmartsPattern(annotation_t const& sys, Id atom,
             MSYS_FAIL("VIPARR_BUG: Bond refers to unmatched atom");
         if (closure && aj == BadId)
             MSYS_FAIL("VIPARR_BUG: Closure bond refers to unmatched atom");
-        if (bond_choices.top() >= sys->filteredBondsForAtom(ai, filter).size())
+        if (bond_choices.top() >= sys->system()->filteredBondsForAtom(ai,
+                    filter).size())
             MSYS_FAIL("SMARTS BUG: Bond choice exceeds number of bonds");
         /* Try matching to the system bond indicated by the top of the stack */
-        Id bond = sys->filteredBondsForAtom(ai, filter)[bond_choices.top()];
+        Id bond = sys->system()->filteredBondsForAtom(ai,
+                filter)[bond_choices.top()];
         if (!match_bond_expression(bond, sys, bond_tuple.get<1>())
-                || (closure && sys->bond(bond).other(ai) != aj)
+                || (closure && sys->system()->bond(bond).other(ai) != aj)
                 || (!closure
-                    && (sys_to_smarts[sys->bond(bond).other(ai)] != BadId
-                        || !match_atom(sys->bond(bond).other(ai), sys,
+                    && (sys_to_smarts[sys->system()->bond(bond).other(ai)]
+                        != BadId || !match_atom(
+                            sys->system()->bond(bond).other(ai), sys,
                         _atoms[bond_tuple.get<2>()])))) {
             /* Bond does not match */
             Id top_atom = smarts_to_sys[_bonds[
                 bond_choices.size()-1].get<0>()];
-            while (bond_choices.top() == sys->filteredBondsForAtom(top_atom,
-                        filter).size()-1) {
+            while (bond_choices.top() == sys->system()->filteredBondsForAtom(
+                        top_atom, filter).size()-1) {
                 /* Have tried all possible system bonds for this atom; pop top
                  * bond choice off of the stack */
                 bond_choices.pop();
@@ -917,8 +920,10 @@ bool SmartsPatternImpl::matchSmartsPattern(annotation_t const& sys, Id atom,
             /* Bond matches */
             if (!closure) {
                 /* If bond is not a closure bond, save the matched atom */
-                smarts_to_sys[bond_tuple.get<2>()] = sys->bond(bond).other(ai);
-                sys_to_smarts[sys->bond(bond).other(ai)] = bond_tuple.get<2>();
+                smarts_to_sys[bond_tuple.get<2>()] = sys->system()->bond(
+                        bond).other(ai);
+                sys_to_smarts[sys->system()->bond(bond).other(ai)]
+                    = bond_tuple.get<2>();
             }
             if (bond_choices.size() == _bonds.size()) {
                 /* Found complete match for SMARTS pattern */
@@ -929,12 +934,12 @@ bool SmartsPatternImpl::matchSmartsPattern(annotation_t const& sys, Id atom,
                 if (!closure) {
                     /* If bond is not a closure bond, undo this last match */
                     smarts_to_sys[bond_tuple.get<2>()] = BadId;
-                    sys_to_smarts[sys->bond(bond).other(ai)] = BadId;
+                    sys_to_smarts[sys->system()->bond(bond).other(ai)] = BadId;
                 }
                 Id top_atom = smarts_to_sys[_bonds[
                     bond_choices.size()-1].get<0>()];
                 while (bond_choices.top()
-                        == sys->filteredBondsForAtom(top_atom,
+                        == sys->system()->filteredBondsForAtom(top_atom,
                             filter).size()-1) {
                     /* Have tried all possible system bonds for this atom; pop
                      * top bond choice off of the stack */

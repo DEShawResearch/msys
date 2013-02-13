@@ -254,9 +254,6 @@ namespace desres { namespace msys {
          * serializing to disk. */
         std::vector<Provenance> _provenance;
 
-        /* cached SSSR */
-        boost::shared_ptr<MultiIdList> _allRelevantSSSR;
-
         std::set<String> _marked_used_tables;
         std::set<String> _marked_used_aux_tables;
         /* create only as shared pointer. */
@@ -524,10 +521,6 @@ namespace desres { namespace msys {
          * bonded atoms share the same fragid.  Return the number of
          * frags found, and atomid to fragment partitioning if requested */
         Id updateFragids(MultiIdList* fragments=NULL);
-
-        /* return the cached result of a call to GetSSSR(this, atoms(), true).
-         * The cache will be invalidated only by a call to updateFragids(). */
-        boost::shared_ptr<MultiIdList> allRelevantSSSR();
 
         /* Return ids of atoms based on their order of appearance in
          * a depth-first traversal of the structure hierarchy. */

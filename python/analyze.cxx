@@ -1,9 +1,7 @@
 #include "analyze.hxx"
-#include "sssr.hxx"
 #include "mol2.hxx"
 #include "elements.hxx"
 #include "smarts.hxx"
-#include "aromatic_new.hxx"
 #include <boost/python.hpp>
 
 using namespace desres::msys;
@@ -19,12 +17,6 @@ namespace {
     void assign_3(SystemPtr mol, IdList const& ids, int total_charge) {
         AssignBondOrderAndFormalCharge(mol, ids, total_charge);
     }
-    list get_sssr(SystemPtr mol, IdList const& ids, bool all_relevant) {
-        MultiIdList rings = GetSSSR(mol, ids, all_relevant);
-        list L;
-        for (unsigned i=0; i<rings.size(); i++) L.append(rings[i]);
-        return L;
-    }
     list find_distinct_fragments(SystemPtr mol) {
         MultiIdList fragments;
         mol->updateFragids(&fragments);
@@ -34,7 +26,7 @@ namespace {
         return L;
     }
 
-    list find_matches(SmartsPattern const& s, SystemPtr sys, 
+    list find_matches(SmartsPattern const& s, AnnotatedSystemPtr sys, 
                                               IdList const& starts)
     {
         MultiIdList results = s.findMatches(sys, starts);
@@ -55,9 +47,6 @@ namespace desres { namespace msys {
         def("AssignBondOrderAndFormalCharge", assign_2);
         def("AssignBondOrderAndFormalCharge", assign_3);
         def("AssignSybylTypes", AssignSybylTypes);
-        def("GetSSSR", get_sssr);
-        def("IsAromaticAtom", IsAromaticAtom);
-        def("IsAromaticBond", IsAromaticBond);
         def("GuessBondConnectivity", GuessBondConnectivity);
         def("FindDistinctFragments", find_distinct_fragments);
         def("RadiusForElement", RadiusForElement);

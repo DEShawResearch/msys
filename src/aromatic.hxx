@@ -56,56 +56,6 @@ namespace desres { namespace msys {
 
     /* Compute ring planarity. */
     double ComputeRingPlanarity(SystemPtr mol, IdList const& atoms);
-
-    /* A an object which caches structure perception data.
-     * For developer use only: Unstable and subject to change without notice.
-     */
-    class annotation_t : boost::noncopyable {
-
-        SystemPtr _sys;
-
-    public:
-        explicit annotation_t(SystemPtr sys);
-
-        /* automatic conversion */
-        operator SystemPtr() const { return _sys; }
-        System* operator->() const { return _sys.get(); }
-
-        typedef boost::shared_ptr<std::vector<int> > IntListPtr;
-
-        struct atom_data_t {
-            unsigned char   aromatic;
-            unsigned char   hcount;
-            unsigned char   valence;
-            unsigned char   degree;
-            IntListPtr      ring_sizes;
-            unsigned char   ring_bonds;
-        
-            atom_data_t() 
-            : aromatic(), hcount(), valence(), degree(), ring_bonds() {}
-        
-            int ring_count() const { 
-                return ring_sizes ? ring_sizes->size() : 0; 
-            }
-            bool in_ring(int size = -1) const {
-                if (size==-1) return ring_count();
-                IntListPtr p = ring_sizes;
-                return p && std::find(p->begin(), p->end(), size)!=p->end();
-            }
-        };
-        
-        struct bond_data_t {
-            bool    aromatic;
-            bool    in_ring;
-        
-            bond_data_t() : aromatic(), in_ring() {}
-        };
-
-        std::vector<atom_data_t> atoms;
-        std::vector<bond_data_t> bonds;
-    
-        int hybridization(int ai) const;
-    };
 }}
 
 #endif

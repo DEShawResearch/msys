@@ -1,7 +1,7 @@
 #ifndef desres_msys_smarts_hxx
 #define desres_msys_smarts_hxx
 
-#include "system.hxx"
+#include "annotated_system.hxx"
 
 namespace desres { namespace msys {
 
@@ -31,11 +31,10 @@ namespace desres { namespace msys {
         std::string const& warnings() const { return _warnings; }
 
         /* Find matches of the SMARTS pattern that start with the given
-         * set of atoms; usually sys->atoms().  System must have atom
-         * and bond properties populated by GenerateAtomAndBondProperties.
-         * Will give duplicate matches for '*~*' in forward and reverse
-         * ordering, etc. */
-         MultiIdList findMatches(SystemPtr sys, IdList const& starts) const;
+         * set of atoms; usually sys->system()->atoms(). Will give duplicate
+         * matches for '*~*' in forward and reverse ordering, etc. */
+         MultiIdList findMatches(AnnotatedSystemPtr sys,
+                 IdList const& starts) const;
     };
 
 }}

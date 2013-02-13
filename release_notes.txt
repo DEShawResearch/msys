@@ -1,3 +1,8 @@
+1.6.35 NEW: Class AnnotatedSystem to cache rings and aromaticity
+       FIXED: Aromaticity detection now operates on entire ring systems
+       REMOVED: SSSR/ring aromaticity global functions in Python interface
+       REMOVED: SSSR cache and AllRelevantSSSR function in System
+
 1.6.33 NEW: NBFix support in ExportMAE.
        NEW: ExportMAEMany.  msys.SaveMAE accepts list of Systems.
        NEW: msys_provenance and msys_forcefield blocks in exported MAE systems.
