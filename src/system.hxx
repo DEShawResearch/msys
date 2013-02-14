@@ -254,8 +254,6 @@ namespace desres { namespace msys {
          * serializing to disk. */
         std::vector<Provenance> _provenance;
 
-        std::set<String> _marked_used_tables;
-        std::set<String> _marked_used_aux_tables;
         /* create only as shared pointer. */
         System();
     public:
@@ -427,11 +425,6 @@ namespace desres { namespace msys {
         std::vector<String> tableNames() const;
         /* fetch the table with the given name; return NULL if not present */
         TermTablePtr table(const String& name) const;
-        /* Get the auxTable and mark it as "used" */
-        TermTablePtr tableMarkUsed(const String& name) {
-            _marked_used_tables.insert(name);
-            return table(name);
-        }
         /* get the name of the table; throw if table doesn't belong to this */
         String tableName(boost::shared_ptr<TermTable const> table) const;
         /* rename the table with the given name; throw if no such table,
@@ -449,11 +442,6 @@ namespace desres { namespace msys {
         /* operations on auxiliary tables */
         std::vector<String> auxTableNames() const;
         ParamTablePtr auxTable(String const& name) const;
-        /* Get the auxTable and mark it as "used" */
-        ParamTablePtr auxTableMarkUsed(String const& name) {
-            _marked_used_aux_tables.insert(name);
-            return auxTable(name);
-        }
         void addAuxTable(String const& name, ParamTablePtr aux);
         void delAuxTable(String const& name);
         void removeAuxTable(ParamTablePtr aux);
@@ -571,14 +559,6 @@ namespace desres { namespace msys {
 
         /* remove a glue pair.  Return true if found, false if not. */
         bool delGluePair(Id p0, Id p1);
-
-        /**** table usage tracking ***/
-        const std::set<String> getMarkedUsedTables() const {
-            return _marked_used_tables;
-        }
-        const std::set<String> getMarkedUsedAuxTables() const {
-            return _marked_used_aux_tables;
-        }
     };
 
     typedef boost::shared_ptr<System> SystemPtr;
