@@ -40,6 +40,7 @@ env.AddScript('validate/dms-validate')
 env.AddScript('validate/dms-find-knot')
 
 # info
+env.AddProgram('dms-version', ['info/dms-version.cxx'])
 env.AddScript('info/dms-diff')
 env.AddScript('info/dms-dump')
 env.AddScript('info/dms-inchi')

@@ -64,6 +64,14 @@ msys2mol2
 Information
 -----------
 
+dms-version
+-----------
+.. program:: dms-version
+
+.. describe:: dms-version input.dms [input2.dms ...]
+
+For each DMS file on the command line, print its path and its DMS version.
+
 dms-inchi
 ---------
 .. program:: dms-inchi
