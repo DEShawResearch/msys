@@ -1,3 +1,8 @@
+1.7.0  NEW: Ct class for multiple components and system attributes.
+       NEW: ctnumber atom selection keyword (matches VMD's).
+       NEW: dms_version in the DMS file.
+       FIXED: Load[Many] failed on some compressed MAE files.
+       
 1.6.35 NEW: Class AnnotatedSystem to cache rings and aromaticity
        FIXED: Aromaticity detection now operates on entire ring systems
        REMOVED: SSSR/ring aromaticity global functions in Python interface
