@@ -2,6 +2,7 @@
        NEW: ctnumber atom selection keyword (matches VMD's).
        NEW: dms_version in the DMS file.
        FIXED: Load[Many] failed on some compressed MAE files.
+       DEPRECATED: all glue functionality (modern periodicfix doesn't need it).
        
 1.6.35 NEW: Class AnnotatedSystem to cache rings and aromaticity
        FIXED: Aromaticity detection now operates on entire ring systems
