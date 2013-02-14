@@ -277,6 +277,66 @@ particles appear in the `System`, even if the ``ids`` of the atoms in the
 if the primary keys happen to be noncontiguous, Msys will still create a
 `System` with the usual contiguous ids.
 
+Files with multiple components
+==============================
+
+Many chemical file formats, including MAE, MOL2, SDF, as well as DMS,
+can contain multiple, logically distinct chemical groups or components.
+In some contexts, such as an MD simulation, it makes sense to consider
+all the components as part of a single system.  In other contexts,
+such as processing a large batch of ligand structures, one wants to
+consider the components one at a time.  Beginning with version 1.7,
+msys supports the concept of multiple chemical components in several ways.
+
+The first way is with a new Python function called LoadMany.  Unlike the
+Load function, which always returns one System, LoadMany is a generator
+which iterates over molecular structures in the input file::
+
+  for mol in msys.LoadMany('input.mol2'):
+     print mol.name
+
+Not every file format supports LoadMany; in cases where it doesn't, LoadMany
+will stop after a single iteration, yielding just one `System`.
+
+Msys also lets you append chemical systems to an existing file, for certain
+file formats.  The supported Save methods will have an 'append' option in
+their function signatures.
+
+Within a single System, msys has a new object called a `Ct`.  A `Ct`
+is a named set of `Chains` within the `System`.  If you use LoadMany to
+load a file, each `System` will have only one `Ct`.  However, if you
+use Load to import an MAE or DMS file, and the file contains multiple
+components, the new `System` will contain `Ct` elements corresponding
+to those components::
+
+  mol = msys.Load('small_vancomycin_complex.mae')
+  for ct in mol.cts:
+     print ct.name
+
+  # prints:
+  # vancomycin_diala_complex
+  # SPC water box
+
+The ct information wil be preserved when saving the System back to an MAE
+or DMS file.  
+
+You can create a multi-ct system from existing `Systems` using the
+``append`` method::
+
+  pro = msys.Load('protein.dms')
+  pro.ct(0).name = 'protein'
+  wat = msys.Load('water.dms')
+  wat.ct(0).name = 'water'
+  pro.append(wat)
+  assert pro.ncts == 2     # assuming there was 1 ct in protein.dms and wat.dms
+  assert pro.ct(1).name == 'water'
+  msys.Save(pro, 'combined.dms')
+
+
+Finally, each `Ct` can have arbitrary attributes assigned to it.  You can
+use these attributes to annotate your system as you see fit.
+
+
 Notes on loading chemical systems
 =================================
 
