@@ -159,9 +159,9 @@ bool desres::msys::AnnotatedSystem::flag_aromatic(const IdList& atoms,
                     ++electron_count;
             }
         }
-        /* If no double bonds, must have lone pair in ring--add 2 to
+        /* If no double bonds and has lone pair, lone pair is in ring--add 2 to
          * electron count */
-        if (!has_double) electron_count += 2;
+        if (!has_double && _atoms[atom].lone_pairs > 0) electron_count += 2;
     }
     /* Use Huckel's rule */
     if (electron_count % 4 == 2) {
