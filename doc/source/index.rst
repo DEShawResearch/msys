@@ -56,6 +56,7 @@ The preferred file format for Msys structures is the DMS file.
 
 .. toctree::
 
+   dmsversion
    dms
 
 
