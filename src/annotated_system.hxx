@@ -1,7 +1,7 @@
 #ifndef desres_msys_annotated_system_hxx
 #define desres_msys_annotated_system_hxx
 
-#include <system.hxx>
+#include "system.hxx"
 
 namespace desres { namespace msys {
 
