@@ -42,7 +42,6 @@ namespace desres { namespace msys {
         virtual bool atomValid(const msys::atom_t& a) const {
             bool virtualOrMetal=(
                                   (a.atomic_number < 1) ||
-                                  (a.atomic_number == 13) ||
                                   (a.atomic_number >= 21 && a.atomic_number <= 32) ||
                                   (a.atomic_number >= 39 && a.atomic_number <= 51) ||
                                   (a.atomic_number >= 57 && a.atomic_number <= 84) ||
