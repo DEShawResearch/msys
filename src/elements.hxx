@@ -6,7 +6,21 @@ namespace desres { namespace msys {
     int GuessAtomicNumber( double mass );
     const char* AbbreviationForElement(int anum);
     double MassForElement(int anum);
-    int ElementForAbbreviation(const char* abbr);
+
+    int ElementForAbbreviationSlow(const char* abbr);
+
+    inline int ElementForAbbreviation(const char* abbr) {
+        const char c0 = *abbr;
+        if (abbr[1]==0) switch (c0) { 
+            case 'H': return 1;
+            case 'C': return 6;
+            case 'N': return 7;
+            case 'O': return 8;
+            case 'P': return 15;
+        };
+        return ElementForAbbreviationSlow(abbr);
+    }
+
 
     double RadiusForElement(int anum);
 

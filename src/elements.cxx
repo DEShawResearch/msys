@@ -326,7 +326,7 @@ double desres::msys::RadiusForElement(int anum) {
     return radii[anum].radius;
 }
 
-int desres::msys::ElementForAbbreviation(const char* abbr) {
+int desres::msys::ElementForAbbreviationSlow(const char* abbr) {
     std::string src(abbr);
     boost::to_upper(src);
     for (unsigned i=1; i<nelems; i++) {
