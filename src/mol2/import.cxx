@@ -66,7 +66,6 @@ SystemPtr iterator::next() {
      * then return nothing but empty systems */
     if (state!=Molecule) return SystemPtr();
 
-    IdList atoms;
     int natoms, nbonds, nsub;
 
     SystemPtr mol = System::create();
@@ -121,11 +120,6 @@ SystemPtr iterator::next() {
                     if (rc<6) {
                         MSYS_FAIL("Could not parse Atom record:\n" << buf);
                     }
-                    if (rc>=7 && (resid<1)) {
-                        fprintf(stderr, "WARNING: Invalid subst_id %d will be assumed to be 1 in:\n%s\n",
-                                resid, buf);
-                        resid=1;
-                    }
                     int nres = mol->residueCountForChain(chn);
                     for (; nres<resid; ++nres) {
                         Id res = mol->addResidue(chn);
@@ -135,7 +129,6 @@ SystemPtr iterator::next() {
                     Id res = mol->residuesForChain(chn).at(resid-1);
                     Id atm = mol->addAtom(res);
                     mol->atomPropValue(atm,atype)=type;
-                    atoms.push_back(atm);
                     atom_t& atom = mol->atom(atm);
                     atom.name = name;
                     atom.x = x;
@@ -145,7 +138,6 @@ SystemPtr iterator::next() {
                     char* dot = strchr(type, '.');
                     if (dot) *dot='\0';
                     atom.atomic_number = ElementForAbbreviation(type);
-                    mol->residue(res).name = resname;
                 }
                 state = Skip;
                 break;
@@ -163,7 +155,7 @@ SystemPtr iterator::next() {
                     if (ai<1 || aj<1 || ai>natoms || aj>natoms) {
                         MSYS_FAIL("Invalid atoms in Bond record:\n" << buf);
                     }
-                    Id bnd = mol->addBond(atoms.at(ai-1), atoms.at(aj-1));
+                    Id bnd = mol->addBond(ai-1, aj-1);
                     mol->bondPropValue(bnd,btype)=type;
                     bond_t& bond = mol->bond(bnd);
                     if (!strcmp(type, "1")) {
@@ -177,24 +169,6 @@ SystemPtr iterator::next() {
                     } else if (!strcmp(type, "ar")) {
                         bond.order = 1;
                         bond.resonant_order = 1.5;
-                    }
-                }
-                BOOST_FOREACH(IdList const& ring, 
-                              GetSSSR(mol, mol->atoms())) {
-                    bool all_resonant = true;
-                    for (Id i=1; i<ring.size(); i++) {
-                        Id bid = mol->findBond(ring[i-1], ring[i]);
-                        if (bad(bid)) MSYS_FAIL("Missing bond!");
-                        if (mol->bond(bid).resonant_order!=1.5) {
-                            all_resonant = false;
-                            break;
-                        }
-                    }
-                    if (all_resonant) {
-                        for (Id i=1; i<ring.size(); i++) {
-                            Id bid = mol->findBond(ring[i-1], ring[i]);
-                            mol->bond(bid).order = i % 2;
-                        }
                     }
                 }
                 state = Skip;
