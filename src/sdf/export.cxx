@@ -1,10 +1,24 @@
 #include "sdf.hxx"
 #include "elements.hxx"
 #include <boost/format.hpp>
+#include <fstream>
 
 using boost::format;
 
 namespace desres { namespace msys {
+
+    void ExportSdf( SystemPtr mol, std::string const& path, unsigned flags) {
+        std::ios_base::openmode mode = std::ofstream::out;
+        if (flags & SdfExport::Append) {
+            mode |= std::ofstream::app;
+        }
+        std::ofstream out(path.c_str(), mode);
+        if (!out) {
+            MSYS_FAIL("Error opening " << path << " for writing: "
+                    << strerror(errno));
+        }
+        ExportSdf(mol, out);
+    }
 
     void ExportSdf( SystemPtr mol, std::ostream& out ) {
 

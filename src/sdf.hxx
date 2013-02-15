@@ -15,9 +15,19 @@ namespace desres { namespace msys {
      * each MOLECULE record. */
     std::vector<SystemPtr> ImportSdfMany(std::string const& path);
 
+    struct SdfExport {
+        enum Flags {
+            Default = 0,
+            Append  = 1 << 0
+        };
+    };
+
     /* Write the structure to the given stream.  A single molecule
      * entry wil be created. */
     void ExportSdf( SystemPtr mol, std::ostream& out );
+    
+    /* For commonality with other Export functions */
+    void ExportSdf( SystemPtr mol, std::string const& path, unsigned flags=0);
 
 }}
 
