@@ -65,6 +65,9 @@ namespace desres { namespace msys { namespace mae {
   
         /*! \brief Current line in file */
         unsigned m_line;
+
+        /* current position in file */
+        std::streamsize m_offset;
   
         /*! \brief Line where token starts */
         unsigned m_tokenline;
@@ -90,6 +93,7 @@ static inline char tokenizer_peek(const tokenizer * tk) { return tk->m_c; }
 */
 static inline char tokenizer_read(tokenizer * tk) {
   if (tk->bufpos==tk->bufsize) {
+      tk->m_offset += tk->bufsize;
       //printf("tokenizer_read %lu\n", sizeof(tk->buf));
       tk->m_input->read(tk->buf, sizeof(tk->buf));
       tk->bufpos = 0;
@@ -820,6 +824,8 @@ namespace desres { namespace msys { namespace mae {
     }
 
     bool import_iterator::next(Json& block) const {
+        Json size;
+        size.to_float(tk->m_offset + tk->bufpos);
         if (tokenizer_not_a(tk, END_OF_FILE)) {
             /* eat the meta block, if any */
             if (!strcmp("{", tokenizer_token(tk,0))) {
@@ -827,9 +833,11 @@ namespace desres { namespace msys { namespace mae {
                 block.to_object();
                 predict_schema_and_values(block, tk);
                 tokenizer_predict(tk, "}");
+                size.to_float(tk->m_offset + tk->bufpos);
             }
-            const char * name = tokenizer_predict(tk, END_OF_FILE);
             block.to_object();
+            block.append("__offset__", size);
+            const char * name = tokenizer_predict(tk, END_OF_FILE);
             fill_nameless( block, name, tk );
             return true;
         }
