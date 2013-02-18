@@ -444,6 +444,8 @@ namespace {
                 if (is_full_system(block)) continue;
                 SystemPtr h = System::create();
                 append_system(h, block, ignore_unrecognized, structure_only);
+                h->ct(0).add("msys_file_offset", IntType);
+                h->ct(0).value("msys_file_offset") = it->offset();
                 h->analyze();
                 return h;
             }

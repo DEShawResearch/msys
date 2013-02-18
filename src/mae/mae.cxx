@@ -803,7 +803,7 @@ namespace {
 namespace desres { namespace msys { namespace mae {
 
     import_iterator::import_iterator(std::istream& file) 
-    : in(), tk() {
+    : in(), tk(), _offset() {
 
         /* check for gzip magic number */
         bool is_gzipped = file.get()==0x1f && file.get()==0x8b;
@@ -823,9 +823,8 @@ namespace desres { namespace msys { namespace mae {
         delete in;
     }
 
-    bool import_iterator::next(Json& block) const {
-        Json size;
-        size.to_float(tk->m_offset + tk->bufpos);
+    bool import_iterator::next(Json& block) {
+        _offset = tk->m_offset + tk->bufpos;
         if (tokenizer_not_a(tk, END_OF_FILE)) {
             /* eat the meta block, if any */
             if (!strcmp("{", tokenizer_token(tk,0))) {
@@ -833,10 +832,9 @@ namespace desres { namespace msys { namespace mae {
                 block.to_object();
                 predict_schema_and_values(block, tk);
                 tokenizer_predict(tk, "}");
-                size.to_float(tk->m_offset + tk->bufpos);
+                _offset = tk->m_offset + tk->bufpos;
             }
             block.to_object();
-            block.append("__offset__", size);
             const char * name = tokenizer_predict(tk, END_OF_FILE);
             fill_nameless( block, name, tk );
             return true;

@@ -45,13 +45,15 @@ namespace desres { namespace msys { namespace mae {
     class import_iterator {
         istream* in;
         tokenizer* tk;
+        std::streamsize _offset;
 
     public:
         explicit import_iterator(std::istream& file);
         ~import_iterator();
 
         /* read the next ct block; return true on success or false on EOF */
-        bool next(Json& js) const;
+        bool next(Json& js);
+        std::streamsize offset() const { return _offset; }
     };
 
 }}}
