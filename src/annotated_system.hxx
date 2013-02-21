@@ -15,6 +15,7 @@ namespace desres { namespace msys {
                 unsigned char valence;
                 unsigned char degree;
                 unsigned char lone_pairs;
+                double resonant_lone_pairs;
                 unsigned char ring_bonds;
                 unsigned char hybridization;
                 IdList rings_idx;
