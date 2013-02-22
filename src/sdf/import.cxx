@@ -171,25 +171,6 @@ SystemPtr iterator::next() {
             bond.order = bond.resonant_order = type;
         }
     }
-    BOOST_FOREACH(IdList const& ring, 
-                  GetSSSR(mol, mol->atoms())) {
-        bool all_resonant = true;
-        for (Id i=1; i<ring.size(); i++) {
-            Id bid = mol->findBond(ring[i-1], ring[i]);
-            if (bad(bid)) MSYS_FAIL("Missing bond!");
-            if (mol->bond(bid).resonant_order!=1.5) {
-                all_resonant = false;
-                break;
-            }
-        }
-        if (all_resonant) {
-            for (Id i=1; i<ring.size(); i++) {
-                Id bid = mol->findBond(ring[i-1], ring[i]);
-                mol->bond(bid).order = i % 2;
-            }
-        }
-    }
-
     /* properties, data and end of molecule delimeter scanning 
        Currently not parsed */
     while (std::getline(in, line)) {
