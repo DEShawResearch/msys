@@ -1,6 +1,6 @@
 #include "../sdf.hxx"
-#include "../sssr.hxx"
 #include "elements.hxx"
+#include "../append.hxx"
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp> /* for boost::trim */
 #include <boost/iostreams/filtering_stream.hpp>
@@ -230,7 +230,10 @@ SystemPtr iterator::next() {
 }
 
 SystemPtr desres::msys::ImportSdf(std::string const& path) {
-    return iterator(path).next();
+    SystemPtr ct, mol = System::create();
+    iterator it(path);
+    while ((ct=it.next())) AppendSystem(mol,ct);
+    return mol;
 }
 
 std::vector<SystemPtr>
