@@ -2,7 +2,6 @@
 # -*- python -*-
 #{
 # desres-cleanenv -m numpy/1.6.2-31A/lib-python \
-# -m inchi/1.04-04 \
 # -- python $0 "$@"
 #}
 
