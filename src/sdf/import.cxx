@@ -20,8 +20,7 @@ namespace {
     int stringToInt(std::string const& str){
         char* stop;
         int res = strtol( str.c_str(), &stop, 10 );
-        if ( *stop != 0 ) MSYS_FAIL("Bad int Specification:\n" << str);
-        // printf("stringToInt: '%s' -> %d\n",str.c_str(),res);
+        if ( *stop != 0 ) MSYS_FAIL("Bad int Specification: '" << str << "'");
         return res;
     }
     
@@ -29,8 +28,27 @@ namespace {
         char* stop;
         double res = strtod( str.c_str(), &stop );
         if ( *stop != 0 ) MSYS_FAIL("Bad double Specification:\n" << str);
-        // printf("stringToDouble: '%s' -> %f\n",str.c_str(),res);
         return res;
+    }
+
+    void add_typed_keyval(String const& key, String const& val, 
+                          component_t& ct) {
+        try {
+            int v = stringToInt(val);
+            ct.add(key,IntType);
+            ct.value(key)=v;
+            return;
+        } catch (Failure& e) {
+        }
+        try {
+            double v = stringToDouble(val);
+            ct.add(key,FloatType);
+            ct.value(key)=v;
+            return;
+        } catch (Failure& e) {
+        }
+        ct.add(key,StringType);
+        ct.value(key)=val;
     }
 
     class iterator : public LoadIterator {
@@ -184,10 +202,20 @@ SystemPtr iterator::next() {
             std::getline(in, line);
         }else if(line.compare(0,3,"V  ")==0){
         }else if(line.compare(0,2,"> ")==0){
-            while (std::getline(in, line)){
-                boost::trim(line);
-                if(line=="")break;
+            /* If <xxx> is found on the line, use xxx as the key value */
+            std::string key,val;
+            size_t langle = line.find('<', 2);
+            size_t rangle = line.find('>', langle+1);
+            if (langle!=std::string::npos &&
+                rangle!=std::string::npos) {
+                key = line.substr(langle+1, rangle-langle-1);
             }
+            while (std::getline(in, line)) {
+                boost::trim(line);
+                if (line.empty()) break;
+                val=line;
+            }
+            add_typed_keyval(key,val,mol->ct(0));
         }else if (line.compare(0,4,"$$$$")==0){
             // End of molecule
             break;
