@@ -142,7 +142,7 @@ SystemPtr iterator::next() {
             if(q==4){
                 fprintf(stderr, "WARNING: Treating doublet radical charge specification as q=0\n");
             }
-            atom.charge = q==0 ? 0 : 4-q;
+            atom.formal_charge = atom.charge = q==0 ? 0 : 4-q;
             
             if(line.size()>=51){
                 int v=stringToInt(line.substr(48,3));
