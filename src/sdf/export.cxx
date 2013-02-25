@@ -46,11 +46,15 @@ namespace desres { namespace msys {
             idmap[i] = ++lid;
             atom_t const& atm = mol->atom(i);
             const char* elem = AbbreviationForElement(atm.atomic_number);
+            int fc=atm.formal_charge;
+            fc=(fc<-3 || fc>3) ? 0 : 4-fc;
             out << format("%10.4f") % atm.x
                 << format("%10.4f") % atm.y
                 << format("%10.4f ") % atm.z
                 << format("%-3s")   % elem
-                << " 0  0  0  0  0  0"
+                << " 0"
+                << format("%3d") % fc
+                << "  0  0  0  0"
                 << std::endl;
         }
 
