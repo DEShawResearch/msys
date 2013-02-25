@@ -11,6 +11,7 @@
 #include <string>
 
 #include <fstream>
+#include <sstream>
 
 
 using namespace desres::msys;
@@ -191,13 +192,30 @@ SystemPtr iterator::next() {
             bond.order = bond.resonant_order = type;
         }
     }
-    /* properties, data and end of molecule delimeter scanning 
-       Currently not parsed */
+    /* properties, data and end of molecule delimeter scanning.
+     * Incompletely parsed. */
+    bool cleared_m_chg = false;
     while (std::getline(in, line)) {
-        if(line.compare(0,3,"M  ")==0){
-            if(line.compare(3,3,"CHG")==0){
-                // Atom Charge Info
-            }else if(line.compare(3,3,"END")==0){
+        if (line.compare(0,3,"M  ")==0){
+            if (line.compare(3,3,"CHG")==0){
+                /* Atom Charge Info supersedes atom record lines */
+                if (!cleared_m_chg) {
+                    cleared_m_chg = true;
+                    for (Id i=0; i<mol->atomCount(); i++) {
+                        mol->atom(i).formal_charge=0;
+                    }
+                }
+                std::istringstream ss(line.substr(6));
+                int i, n;
+                ss >> n;
+                for (i=0; i<n; i++) {
+                    int ai,fc;
+                    ss >> ai >> fc;
+                    if (!ss) MSYS_FAIL("Failed parsing CHG line " << line);
+                    mol->atom(ai-1).formal_charge = fc;
+                }
+
+            } else if(line.compare(3,3,"END")==0){
                 // End of molecule properties block
             }
         }else if(line.compare(0,3,"A  ")==0 || line.compare(0,3,"G  ")==0){

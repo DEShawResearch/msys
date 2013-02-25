@@ -13,8 +13,15 @@ def vsize():
     s=os.popen(cmd).read()
     return int(s)
 
+class TestSdf(unittest.TestCase):
+    def setUp(self):
+        self.mol=msys.Load('tests/files/lig.sdf')
 
-
+    def testFormalCharge(self):
+        self.assertEqual(self.mol.atom(12).formal_charge,1)
+        self.assertEqual(self.mol.atom(19).formal_charge,1)
+        self.assertEqual(self.mol.atom(20).formal_charge,0)
+        self.assertEqual(self.mol.atom(21).formal_charge,0)
 
 class TestMain(unittest.TestCase):
 
