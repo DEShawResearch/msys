@@ -24,8 +24,8 @@ namespace {
 
         Element() {}
         Element(double m) : mass(m) {}
-        Element(int n, const char* a, double r, double m)
-        : anum(n), abbr(a), radius(r), mass(m) {}
+        Element(int n, const char* a, double r, double m, int p, int g)
+        : anum(n), abbr(a), radius(r), mass(m), period(p), group(g) {}
         bool operator<(Element const& e) const { return mass<e.mass; }
     };
 }
