@@ -17,12 +17,16 @@ namespace desres { namespace msys {
             case 'N': return 7;
             case 'O': return 8;
             case 'P': return 15;
+            case 'S': return 16;
         };
         return ElementForAbbreviationSlow(abbr);
     }
 
-
     double RadiusForElement(int anum);
+
+    int PeriodForElement(int anum);
+    int GroupForElement(int anum);
+
 
     struct ChemData {
         float eneg;    // Electronegativities (Allen Scale)
