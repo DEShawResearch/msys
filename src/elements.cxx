@@ -6,292 +6,158 @@
 
 using namespace desres::msys;
 
-namespace {
-    struct Radius {
-        const char *name;
-        double      radius;
-    };
-}
-
-/* All data from Bondi 1964, except as noted.  Values of 2.0 by default.
+/* All radius data from Bondi 1964, except as noted.  Values of 2.0 by default.
  * a) Rowland and Taylor 1996
  * b) Mantina 2009
  * c) Charmm36 ion radii
  * d) VMD/molfile (unknown provenance)
  */
-static Radius radii[] = {
-  { "X",   0.00 },
-  { "H",   1.10 },  // a
-  { "He",  1.40 },
-  { "Li",  1.30 },  // c
-  { "Be",  1.53 },  // b
-  { "B",   1.92 },  // b
-  { "C",   1.70 },
-  { "N",   1.55 },
-  { "O",   1.52 },
-  { "F",   1.47 },
-  { "Ne",  1.54 },
-  { "Na",  1.41 },  // c
-  { "Mg",  1.18 },  // c
-  { "Al",  1.84 },  // b
-  { "Si",  2.10 },
-  { "P",   1.80 },
-  { "S",   1.80 },
-  { "Cl",  2.27 },  // c
-  { "Ar",  1.88 },
-  { "K",   1.76 },  // c
-  { "Ca",  1.37 },  // c
-  { "Sc",  2.00 },
-  { "Ti",  2.00 },
-  { "V",   2.00 },
-  { "Cr",  2.00 },
-  { "Mn",  2.00 },
-  { "Fe",  2.00 },
-  { "Co",  2.00 },
-  { "Ni",  1.09 },  // copied from Zn
-  { "Cu",  1.09 },  // copied from Zn
-  { "Zn",  1.09 },  // c
-  { "Ga",  1.87 },  // b
-  { "Ge",  2.11 },  // b
-  { "As",  1.85 },
-  { "Se",  1.90 },
-  { "Br",  1.83 },  // b
-  { "Kr",  2.02 },
-  { "Rb",  1.90 },  // c
-  { "Sr",  2.49 },  // b
-  { "Y",   2.00 },
-  { "Zr",  2.00 },
-  { "Nb",  2.00 },
-  { "Mo",  2.00 },
-  { "Tc",  2.00 },
-  { "Ru",  2.00 },
-  { "Rh",  2.00 },
-  { "Pd",  1.63 },
-  { "Ag",  1.72 },
-  { "Cd",  1.36 },  // c
-  { "In",  1.93 },
-  { "Sn",  2.17 },
-  { "Sb",  2.06 },  // b
-  { "Te",  2.06 },
-  { "I",   1.98 },
-  { "Xe",  2.16 },
-  { "Cs",  2.10 },  // c
-  { "Ba",  1.89 },  // c
-  { "La",  2.00 },
-  { "Ce",  2.00 },
-  { "Pr",  2.00 },
-  { "Nd",  2.00 },
-  { "Pm",  2.00 },
-  { "Sm",  2.00 },
-  { "Eu",  2.00 },
-  { "Gd",  2.00 },
-  { "Tb",  2.00 },
-  { "Dy",  2.00 },
-  { "Ho",  2.00 },
-  { "Er",  2.00 },
-  { "Tm",  2.00 },
-  { "Yb",  2.00 },
-  { "Lu",  2.00 },
-  { "Hf",  2.00 },
-  { "Ta",  2.00 },
-  { "W",   2.00 },
-  { "Re",  2.00 },
-  { "Os",  2.00 },
-  { "Ir",  2.00 },
-  { "Pt",  1.72 },  // d
-  { "Au",  1.66 },  // d
-  { "Hg",  1.55 },  // d
-  { "Tl",  1.96 },  // d
-  { "Pb",  2.02 },  // d
-  { "Bi",  2.07 },  // b
-  { "Po",  1.97 },  // b
-  { "At",  2.02 },  // b
-  { "Rn",  2.20 },  // b
-  { "Fr",  3.48 },  // b
-  { "Ra",  2.83 },  // b
-  { "Ac",  2.00 },
-  { "Th",  2.00 },
-  { "Pa",  2.00 },
-  { "U",   2.00 },
-  { "Np",  2.00 },
-  { "Pu",  2.00 },
-  { "Am",  2.00 },
-  { "Cm",  2.00 },
-  { "Bk",  2.00 },
-  { "Cf",  2.00 },
-  { "Es",  2.00 },
-  { "Fm",  2.00 },
-  { "Md",  2.00 },
-  { "No",  2.00 },
-  { "Lr",  2.00 },
-  { "Rf",  2.00 },
-  { "Db",  2.00 },
-  { "Sg",  2.00 },
-  { "Bh",  2.00 },
-  { "Hs",  2.00 },
-  { "Mt",  2.00 },
-  { "Ds",  2.00 },
-  { "Rg",  2.00 }
-};
 
-/* atomic weights do not increase monotonically!  I'm writing down
- * the masses in order of atomic number, and I'll then assign
- * atomic number and then sort by mass. */
 namespace {
     struct Element {
-        double  mass;
-        int     anum;
+        int         anum;
+        const char* abbr;
+        double      radius;
+        double      mass;
+
         Element() {}
-        explicit Element(double m) : mass(m), anum(0) {}
-        Element(double m, int a) : mass(m), anum(a) {}
+        Element(double m) : mass(m) {}
+        Element(int n, const char* a, double r, double m)
+        : anum(n), abbr(a), radius(r), mass(m) {}
         bool operator<(Element const& e) const { return mass<e.mass; }
     };
+}
 
-    static Element elems[] = {
-        Element(0.00000,    0),
-        Element(1.00794,    0),
-        Element(4.00260,    0),
-        Element(6.941,      0),
-        Element(9.012182,   0),
-        Element(10.811,     0),
+static const Element elems[] = {
+  {   0, "X",  0.00, 0.000000  },
+  {   1, "H",  1.10, 1.007940  },   // a
+  {   2, "He", 1.40, 4.002600  },
+  {   3, "Li", 1.30, 6.941000  },   // c
+  {   4, "Be", 1.53, 9.012182  },   // b
+  {   5, "B",  1.92, 10.811000 },   // b
+  {   6, "C",  1.70, 12.010700 },
+  {   7, "N",  1.55, 14.006700 },
+  {   8, "O",  1.52, 15.999400 },
+  {   9, "F",  1.47, 18.998403 },
+  {  10, "Ne", 1.54, 20.179700 },
+  {  11, "Na", 1.41, 22.989770 },   // c
+  {  12, "Mg", 1.18, 24.305000 },   // c
+  {  13, "Al", 1.84, 26.981538 },   // b
+  {  14, "Si", 2.10, 28.085500 },
+  {  15, "P",  1.80, 30.973761 },
+  {  16, "S",  1.80, 32.065000 },
+  {  17, "Cl", 2.27, 35.453000 },   // c
+  {  18, "Ar", 1.88, 39.948000 },
+  {  19, "K",  1.76, 39.098300 },   // c
+  {  20, "Ca", 1.37, 40.078000 },   // c
+  {  21, "Sc", 2.00, 44.955910 },
+  {  22, "Ti", 2.00, 47.867000 },
+  {  23, "V",  2.00, 50.941500 },
+  {  24, "Cr", 2.00, 51.996100 },
+  {  25, "Mn", 2.00, 54.938049 },
+  {  26, "Fe", 2.00, 55.845000 },
+  {  27, "Co", 2.00, 58.933200 },
+  {  28, "Ni", 1.09, 58.693400 },   // copied from Zn
+  {  29, "Cu", 1.09, 63.546000 },   // copied from Zn
+  {  30, "Zn", 1.09, 65.409000 },   // c
+  {  31, "Ga", 1.87, 69.723000 },   // b
+  {  32, "Ge", 2.11, 72.640000 },   // b
+  {  33, "As", 1.85, 74.921600 },
+  {  34, "Se", 1.90, 78.960000 },
+  {  35, "Br", 1.83, 79.904000 },   // b
+  {  36, "Kr", 2.02, 83.798000 },
+  {  37, "Rb", 1.90, 85.467800 },   // c
+  {  38, "Sr", 2.49, 87.620000 },   // b
+  {  39, "Y",  2.00, 88.905850 },
+  {  40, "Zr", 2.00, 91.224000 },
+  {  41, "Nb", 2.00, 92.906380 },
+  {  42, "Mo", 2.00, 95.940000 },
+  {  43, "Tc", 2.00, 98.000000 },
+  {  44, "Ru", 2.00, 101.070000 },
+  {  45, "Rh", 2.00, 102.905500 },
+  {  46, "Pd", 1.63, 106.420000 },
+  {  47, "Ag", 1.72, 107.868200 },
+  {  48, "Cd", 1.36, 112.411000 },  // c
+  {  49, "In", 1.93, 114.818000 },
+  {  50, "Sn", 2.17, 118.710000 },
+  {  51, "Sb", 2.06, 121.760000 },  // b
+  {  52, "Te", 2.06, 127.600000 },
+  {  53, "I",  1.98, 126.904470 },
+  {  54, "Xe", 2.16, 131.293000 },
+  {  55, "Cs", 2.10, 132.905450 },  // c
+  {  56, "Ba", 1.89, 137.327000 },  // c
+  {  57, "La", 2.00, 138.905500 },
+  {  58, "Ce", 2.00, 140.116000 },
+  {  59, "Pr", 2.00, 140.907650 },
+  {  60, "Nd", 2.00, 144.240000 },
+  {  61, "Pm", 2.00, 145.000000 },
+  {  62, "Sm", 2.00, 150.360000 },
+  {  63, "Eu", 2.00, 151.964000 },
+  {  64, "Gd", 2.00, 157.250000 },
+  {  65, "Tb", 2.00, 158.925340 },
+  {  66, "Dy", 2.00, 162.500000 },
+  {  67, "Ho", 2.00, 164.930320 },
+  {  68, "Er", 2.00, 167.259000 },
+  {  69, "Tm", 2.00, 168.934210 },
+  {  70, "Yb", 2.00, 173.040000 },
+  {  71, "Lu", 2.00, 174.967000 },
+  {  72, "Hf", 2.00, 178.490000 },
+  {  73, "Ta", 2.00, 180.947900 },
+  {  74, "W",  2.00, 183.840000 },
+  {  75, "Re", 2.00, 186.207000 },
+  {  76, "Os", 2.00, 190.230000 },
+  {  77, "Ir", 2.00, 192.217000 },
+  {  78, "Pt", 1.72, 195.078000 },  // d
+  {  79, "Au", 1.66, 196.966550 },  // d
+  {  80, "Hg", 1.55, 200.590000 },  // d
+  {  81, "Tl", 1.96, 204.383300 },  // d
+  {  82, "Pb", 2.02, 207.200000 },  // d
+  {  83, "Bi", 2.07, 208.980380 },  // b
+  {  84, "Po", 1.97, 209.000000 },  // b
+  {  85, "At", 2.02, 210.000000 },  // b
+  {  86, "Rn", 2.20, 222.000000 },  // b
+  {  87, "Fr", 3.48, 223.000000 },  // b
+  {  88, "Ra", 2.83, 226.000000 },  // b
+  {  89, "Ac", 2.00, 227.000000 },
+  {  90, "Th", 2.00, 232.038100 },
+  {  91, "Pa", 2.00, 231.035880 },
+  {  92, "U",  2.00, 238.028910 },
+  {  93, "Np", 2.00, 237.000000 },
+  {  94, "Pu", 2.00, 244.000000 },
+  {  95, "Am", 2.00, 243.000000 },
+  {  96, "Cm", 2.00, 247.000000 },
+  {  97, "Bk", 2.00, 247.000000 },
+  {  98, "Cf", 2.00, 251.000000 },
+  {  99, "Es", 2.00, 252.000000 },
+  { 100, "Fm", 2.00, 257.000000 },
+  { 101, "Md", 2.00, 258.000000 },
+  { 102, "No", 2.00, 259.000000 },
+  { 103, "Lr", 2.00, 262.000000 },
+  { 104, "Rf", 2.00, 261.000000 },
+  { 105, "Db", 2.00, 262.000000 },
+  { 106, "Sg", 2.00, 266.000000 },
+  { 107, "Bh", 2.00, 264.000000 },
+  { 108, "Hs", 2.00, 269.000000 },
+  { 109, "Mt", 2.00, 268.000000 },
+  { 110, "Ds", 2.00, 271.000000 },
+  { 111, "Rg", 2.00, 272.000000 }
+};
 
-        Element(12.0107,    0),
-        Element(14.0067,    0),
-        Element(15.9994,    0),
-        Element(18.9984032, 0),
-        Element(20.1797,    0),
+static const int nelems = sizeof(elems)/sizeof(elems[0]);
 
-        Element(22.989770,  0),
-        Element(24.3050,    0),
-        Element(26.981538,  0),
-        Element(28.0855,    0),
-        Element(30.973761,  0),
+static Element sorted_elems[nelems];
 
-        Element(32.065,     0),
-        Element(35.453,     0),
-        Element(39.948,     0),
-        Element(39.0983,    0),
-        Element(40.078,     0),
-        Element(44.955910,  0),
-
-        Element(47.867,     0),
-        Element(50.9415,    0),
-        Element(51.9961,    0),
-        Element(54.938049,  0),
-        Element(55.845,     0),
-        Element(58.9332,    0),
-
-        Element(58.6934,    0),
-        Element(63.546,     0),
-        Element(65.409,     0),
-        Element(69.723,     0),
-        Element(72.64,      0),
-        Element(74.92160,   0),
-
-        Element(78.96,  0),
-        Element(79.904, 0),
-        Element(83.798, 0),
-        Element(85.4678,    0),
-        Element(87.62,  0),
-        Element(88.90585,   0),
-
-        Element(91.224, 0),
-        Element(92.90638,   0),
-        Element(95.94,  0),
-        Element(98.0,   0),
-        Element(101.07, 0),
-        Element(102.90550,  0),
-
-        Element(106.42, 0),
-        Element(107.8682,   0),
-        Element(112.411,    0),
-        Element(114.818,    0),
-        Element(118.710,    0),
-        Element(121.760,    0),
-
-        Element(127.60, 0),
-        Element(126.90447,  0),
-        Element(131.293,    0),
-        Element(132.90545,  0),
-        Element(137.327,    0),
-
-        Element(138.9055,   0),
-        Element(140.116,    0),
-        Element(140.90765,  0),
-        Element(144.24, 0),
-        Element(145.0,  0),
-        Element(150.36, 0),
-
-        Element(151.964,    0),
-        Element(157.25, 0),
-        Element(158.92534,  0),
-        Element(162.500,    0),
-        Element(164.93032,  0),
-
-        Element(167.259,    0),
-        Element(168.93421,  0),
-        Element(173.04, 0),
-        Element(174.967,    0),
-        Element(178.49, 0),
-        Element(180.9479,   0),
-
-        Element(183.84, 0),
-        Element(186.207,    0),
-        Element(190.23, 0),
-        Element(192.217,    0),
-        Element(195.078,    0),
-        Element(196.96655,  0),
-
-        Element(200.59, 0),
-        Element(204.3833,   0),
-        Element(207.2,  0),
-        Element(208.98038,  0),
-        Element(209.0,  0),
-        Element(210.0,  0),
-        Element(222.0,  0),
-
-        Element(223.0,  0),
-        Element(226.0,  0),
-        Element(227.0,  0),
-        Element(232.0381,   0),
-        Element(231.03588,  0),
-        Element(238.02891,  0),
-
-        Element(237.0,  0),
-        Element(244.0,  0),
-        Element(243.0,  0),
-        Element(247.0,  0),
-        Element(247.0,  0),
-        Element(251.0,  0),
-        Element(252.0,  0),
-        Element(257.0,  0),
-
-        Element(258.0,  0),
-        Element(259.0,  0),
-        Element(262.0,  0),
-        Element(261.0,  0),
-        Element(262.0,  0),
-        Element(266.0,  0),
-        Element(264.0,  0),
-        Element(269.0,  0),
-
-        Element(268.0,  0),
-        Element(271.0,  0),
-        Element(272.0,  0)
-    };
-
-    static const unsigned nelems = sizeof(elems)/sizeof(elems[0]);
-
-    struct eleminit {
-        eleminit() {
-            for (unsigned i=0; i<nelems; i++) elems[i].anum=i;
-            std::sort(elems, elems+nelems);
+namespace {
+    struct _ {
+        _() {
+            std::copy(elems, elems+nelems, sorted_elems);
+            std::sort(sorted_elems, sorted_elems+nelems);
         }
-    } ini;
+    } sort_elems;
 }
 
 int desres::msys::GuessAtomicNumber( double mass ) {
-    const Element* begin=elems, *end = elems+nelems;
+    const Element* begin=sorted_elems, *end = sorted_elems+nelems;
     /* first element which is not less than mass */
     const Element* rhs = std::lower_bound(begin, end, Element(mass));
     /* greater than last value */
@@ -306,31 +172,26 @@ int desres::msys::GuessAtomicNumber( double mass ) {
 }
 
 const char* desres::msys::AbbreviationForElement(int anum) {
-    int n = sizeof(radii)/sizeof(radii[0]);
-    if (anum<0 || anum>=n) return "";
-    return radii[anum].name;
+    if (anum<0 || anum>=nelems) return "";
+    return elems[anum].abbr;
 }
 
 double desres::msys::MassForElement(int anum) {
-    if (anum<=0 || anum>=(int)nelems) return 0;
-    for (unsigned i=0; i<nelems; i++) {
-        if (elems[i].anum==anum) return elems[i].mass;
-    }
-    return 0;
+    if (anum<=0 || anum>=nelems) return 0;
+    return elems[anum].mass;
 }
 
 double desres::msys::RadiusForElement(int anum) {
-    int n = sizeof(radii)/sizeof(radii[0]);
     if (anum<0) return 0;
-    if (anum>=n) return 2.0;
-    return radii[anum].radius;
+    if (anum>=nelems) return 2.0;
+    return elems[anum].radius;
 }
 
 int desres::msys::ElementForAbbreviationSlow(const char* abbr) {
     std::string src(abbr);
     boost::to_upper(src);
-    for (unsigned i=1; i<nelems; i++) {
-        std::string ref(radii[i].name);
+    for (int i=1; i<nelems; i++) {
+        std::string ref(elems[i].abbr);
         boost::to_upper(ref);
         if (ref==src) return i;
     }
@@ -417,5 +278,4 @@ ChemData const& desres::msys::DataForElement(int anum) {
     if (anum<0 || anum>=maxData) return NODATA;
     return atomInfo[anum];
 }
-
 
