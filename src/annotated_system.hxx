@@ -43,7 +43,6 @@ namespace desres { namespace msys {
             AnnotatedSystem(SystemPtr sys);
 
             /* Helper functions for constructor */
-            void compute_SSSR_rings();
             void compute_ring_systems();
             bool flag_aromatic(const IdList& atoms, const IdList& bonds);
             void compute_aromaticity();

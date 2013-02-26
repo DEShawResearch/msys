@@ -630,3 +630,53 @@ desres::msys::GetSSSR(SystemPtr mol, IdList const& atoms,
     }
     return sssr;
 }
+
+desres::msys::MultiIdList desres::msys::FusedRingSystems(SystemPtr mol,
+        MultiIdList const& rings) {
+
+    MultiIdList bond_to_rings(mol->maxBondId());
+    for (unsigned i = 0; i < rings.size(); ++i) {
+        for (unsigned j = 0; j < rings[i].size(); ++j) {
+            Id bond = mol->findBond(rings[i][j],
+                    rings[i][(j+1)%rings[i].size()]);
+            if (bond == msys::BadId)
+                MSYS_FAIL("Ring bond not found in system");
+            bond_to_rings[bond].push_back(i);
+        }
+    }
+
+    std::vector<bool> processed_bonds(mol->maxBondId(), false);
+    MultiIdList ring_systems;
+    BOOST_FOREACH(Id bond, mol->bonds()) {
+        if (processed_bonds[bond]) continue;
+        processed_bonds[bond] = true;
+        if (bond_to_rings[bond].size() == 0) continue;
+        /* Get the ring system containing this bond */
+        std::set<Id> bond_set;
+        std::set<Id> ring_set;
+        std::queue<Id> unprocessed_bonds;
+        bond_set.insert(bond);
+        unprocessed_bonds.push(bond);
+        while (unprocessed_bonds.size() > 0) {
+            Id front = unprocessed_bonds.front();
+            unprocessed_bonds.pop();
+            /* Loop through all potentially aromatic SSSR rings containing
+             * bond 'front' */
+            BOOST_FOREACH(Id ring, bond_to_rings[front]) {
+                ring_set.insert(ring);
+                for (unsigned i = 0; i < rings[ring].size(); ++i) {
+                    Id ring_bond = mol->findBond(rings[ring][i],
+                            rings[ring][(i+1)%rings[ring].size()]);
+                    /* If ring bond is new, add to unprocessed bond queue */
+                    if (bond_set.insert(ring_bond).second) {
+                        unprocessed_bonds.push(ring_bond);
+                        processed_bonds[ring_bond] = true;
+                    }
+                }
+            }
+        }
+        /* Add this ring system */
+        ring_systems.push_back(IdList(ring_set.begin(), ring_set.end()));
+    }
+    return ring_systems;
+}

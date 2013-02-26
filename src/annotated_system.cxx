@@ -47,7 +47,6 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys)
                     int(a.degree + a.resonant_lone_pairs + 0.00001 - 1)));
     }
     /* Get rings and ring systems, assign ring_bonds and rings_idx */
-    compute_SSSR_rings();
     compute_ring_systems();
     /* Assign aromatic */
     compute_aromaticity();
@@ -72,7 +71,7 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys)
     }
 }
 
-void desres::msys::AnnotatedSystem::compute_SSSR_rings() {
+void desres::msys::AnnotatedSystem::compute_ring_systems() {
     MultiIdList SSSR = GetSSSR(_sys, _sys->atoms(), true);
     std::vector<IdSet> ring_bonds(_sys->maxAtomId());
     BOOST_FOREACH(const IdList& ring, SSSR) {
@@ -92,17 +91,14 @@ void desres::msys::AnnotatedSystem::compute_SSSR_rings() {
     for (unsigned i = 0; i < ring_bonds.size(); ++i)
         if (ring_bonds[i].size() > 0)
             _atoms[i].ring_bonds = ring_bonds[i].size();
-}
 
-void desres::msys::AnnotatedSystem::compute_ring_systems() {
-    /* Map from bond to list of potentially aromatic SSSR rings containing that
-     * bond */
-    MultiIdList bond_to_rings(_sys->maxBondId());
-    for (unsigned i = 0; i < _rings.size(); ++i) {
+    MultiIdList SSSR_possibly_aromatic;
+    IdList rid_map;
+    for (unsigned i = 0; i < SSSR.size(); ++i) {
         bool possibly_aromatic = true;
         /* All atoms in aromatic ring must be potentially sp2 (meaning sp2 or
          * hybridization greater than 2 with free electrons) */
-        BOOST_FOREACH(Id atom, _rings[i].atoms) {
+        BOOST_FOREACH(Id atom, SSSR[i]) {
             /* Check against 0.00001 instead of 0 to prevent possible floating
              * point error */
             if (_atoms[atom].hybridization != 2 &&
@@ -110,44 +106,26 @@ void desres::msys::AnnotatedSystem::compute_ring_systems() {
                      || _atoms[atom].resonant_lone_pairs < 0.00001))
                 possibly_aromatic = false;
         }
-        if (!possibly_aromatic) continue;
-        BOOST_FOREACH(Id bond, _rings[i].bonds)
-            bond_to_rings[bond].push_back(i);
+        if (possibly_aromatic) {
+            SSSR_possibly_aromatic.push_back(SSSR[i]);
+            rid_map.push_back(i);
+        }
     }
 
-    std::vector<bool> processed_bonds(_sys->maxBondId(), false);
-    BOOST_FOREACH(Id bond, _sys->bonds()) {
-        if (processed_bonds[bond]) continue;
-        processed_bonds[bond] = true;
-        if (bond_to_rings[bond].size() == 0) continue;
-        /* Get the ring system containing this bond */
+    MultiIdList ring_systems = FusedRingSystems(_sys, SSSR_possibly_aromatic);
+    BOOST_FOREACH(const IdList& ring_sys, ring_systems) {
         std::set<Id> atom_set;
         std::set<Id> bond_set;
         std::set<Id> ring_set;
-        std::queue<Id> unprocessed_bonds;
-        bond_set.insert(bond);
-        atom_set.insert(_sys->bond(bond).i);
-        atom_set.insert(_sys->bond(bond).j);
-        unprocessed_bonds.push(bond);
-        while (unprocessed_bonds.size() > 0) {
-            Id front = unprocessed_bonds.front();
-            unprocessed_bonds.pop();
-            /* Loop through all potentially aromatic SSSR rings containing
-             * bond 'front' */
-            BOOST_FOREACH(Id ring, bond_to_rings[front]) {
-                ring_set.insert(ring);
-                BOOST_FOREACH(Id ring_bond, _rings[ring].bonds) {
-                    /* If ring bond is new, add to unprocessed bond queue */
-                    if (bond_set.insert(ring_bond).second) {
-                        unprocessed_bonds.push(ring_bond);
-                        atom_set.insert(_sys->bond(ring_bond).i);
-                        atom_set.insert(_sys->bond(ring_bond).j);
-                        processed_bonds[ring_bond] = true;
-                    }
-                }
+        BOOST_FOREACH(Id rid, ring_sys) {
+            const IdList& ring = SSSR_possibly_aromatic[rid];
+            for (unsigned i = 0; i < ring.size(); ++i) {
+                atom_set.insert(ring[i]);
+                Id bond = _sys->findBond(ring[i], ring[(i+1)%ring.size()]);
+                bond_set.insert(bond);
             }
+            ring_set.insert(rid_map[rid]);
         }
-        /* Add this ring system */
         _ring_systems.push_back(ring_system_t());
         _ring_systems.back().atoms = IdList(atom_set.begin(), atom_set.end());
         _ring_systems.back().bonds = IdList(bond_set.begin(), bond_set.end());
