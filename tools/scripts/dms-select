@@ -7,6 +7,7 @@
 '''
 dms-select input_file [-s | --selection seltext] [-o | --output dstfile]
                                                  [-a | --append dstfile]
+                                                 [-c | --coalesce]
 
 Write or append a selection from input_file to an output dms file.
 
@@ -25,6 +26,8 @@ def main():
     parser.add_option('-a', '--append', default=None)
     parser.add_option('-o', '--output', default=None)
     parser.add_option('-v', '--verbose', action='store_true', default=False)
+    parser.add_option('-c', '--coalesce', action='store_true', default=False,
+            help='Coalesce parameters before saving')
 
     opts, args = parser.parse_args()
     if len(args)!=1:
@@ -32,26 +35,40 @@ def main():
 
     if opts.output and opts.append:
         raise ValueError, "Cannot specify both --append and --output"
+    elif opts.output:
+        ofile = opts.output
+    elif opts.append:
+        ofile = opts.append
+    else:
+        ofile = None
 
+    if opts.verbose:
+        print "Loading", args[0]
     mol=msys.Load(args[0])
+
     if opts.selection:
         mol=mol.clone(opts.selection)
-
 
     if opts.verbose:
         print "dms-select: %d chain(s), %d residue(s), %d atom(s)" % (
                 len(mol.chains), len(mol.residues), len(mol.atoms))
 
-    if opts.output:
-        msys.SaveDMS(mol, opts.output)
-
-    elif opts.append:
+    if opts.append:
+        if opts.verbose:
+            print "Loading", opts.append
         old=msys.LoadDMS(opts.append)
         old.append(mol)
-        msys.SaveDMS(old, opts.append)
+        mol=old
 
-    return 0
+    if ofile:
+        if opts.coalesce:
+            if opts.verbose: print "Coalescing tables"
+            mol.coalesceTables()
+            mol = mol.clone()
 
-if __name__=="__main__": exit(main())
+        if opts.verbose: print "Saving", ofile
+        msys.SaveDMS(mol, ofile)
+
+if __name__=="__main__": main()
 
 # vim: filetype=python
