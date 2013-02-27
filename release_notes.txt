@@ -1,3 +1,9 @@
+1.7.1  NEW: dms-select learned --coalesce.
+       NEW: inchi.InChI function.
+       FIXED: SDF reader handles formal charge and some keyvals
+       FIXED: bond order assigner gives up instead of hanging
+       FIXED: Improved aromaticity and hybridization detection.
+
 1.7.0  NEW: Ct class for multiple components and system attributes.
        NEW: ctnumber atom selection keyword (matches VMD's).
        NEW: dms_version in the DMS file.
