@@ -55,7 +55,12 @@ namespace {
             std::cout << s.c_str() << ": " << p.first << " " << p.second << std::endl;
         }
     }
+
 }
+
+
+
+
 
 
 namespace desres { namespace msys {
@@ -94,8 +99,7 @@ namespace desres { namespace msys {
             boa->_fragatoms.push_back(aid);
         }
 
-        MultiIdList allRings = GetSSSR(
-                boa->_mol, boa->_fragatoms, true);
+        MultiIdList allRings = GetSSSR(boa->_mol, boa->_fragatoms, true);
         /* FIXME: Add generator for fused rings <10 atoms from the above ssr ring set */ 
         
         BOOST_FOREACH(IdList & ring, allRings){
@@ -151,7 +155,7 @@ namespace desres { namespace msys {
   
             boa->_totalValence+=adata.nValence;
             tmprange.lb=0;
-            tmprange.ub=adata.maxFree;
+            tmprange.ub=boa->max_free_pairs(aid1);
 #if DEBUGPRINT1
             printf("Max lone pairs for Aid %u : maxLP = %d %d\n",aid1,tmprange.lb,tmprange.ub);
 #endif
@@ -206,22 +210,27 @@ namespace desres { namespace msys {
             if(val!=epair.second.ub) continue;
             Id aid=epair.first;
             boa->_atominfo.insert(solutionMap::value_type(aid, solutionValues(val,val)));
-            /* Formal Charges are given by: fc[i]= ValenceElectrons[i] - freeElectrons[i] - 0.5*Sum_j ( BondElectrons[j] )
-               'val' is free electron PAIRS, so multiply by 2 */
+
+            /* Check to see if atom was completly determined and compute charge if yes. 
+             * Formal Charges are given by:  
+             *    fc[i]= ValenceElectrons[i] - freeElectrons[i] - 0.5*Sum_j ( BondElectrons[j] )
+             * 'val' is free electron PAIRS, so multiply by 2 */
             int qtot=DataForElement(boa->_mol->atom(aid).atomic_number).nValence - 2*val;
+            bool good=true;
             BOOST_FOREACH(Id const& bid, boa->_mol->filteredBondsForAtom(aid, *boa->_filter)){
-                /* This should always be possible given how we determine atom lp data.
-                 * If we know the lp's we also know all the bonds
-                 * 'nonresonant' is the bond electron PAIRS, so no factor of 0.5 needed */
-                try{
-                    qtot-=asserted_find(boa->_bondinfo, bid).nonresonant;
-                }catch(std::runtime_error &E){
-                    std::cerr<< "Lp count was known but bond orders were not... This shouldnt happen"<<std::endl;
-                    throw;
+                solutionMap::const_iterator iter=boa->_bondinfo.find(bid);
+                if(iter == boa->_bondinfo.end()){
+                    good=false;
+                    break;
+                }else{
+                    /* 'nonresonant' is the bond electron PAIRS, so no factor of 0.5 needed */
+                    qtot-=iter->second.nonresonant;
                 }
             }
-            boa->_chargeinfo.insert(solutionMap::value_type(epair.first, solutionValues(qtot,qtot)));
-            boa->_presolved_charge+=qtot;
+            if(good){
+                boa->_chargeinfo.insert(solutionMap::value_type(epair.first, solutionValues(qtot,qtot)));
+                boa->_presolved_charge+=qtot;
+            }
         }
 #if DEBUGPRINT1
         printf("AfterPresolve: total_valence=%d for %zu atoms (%zu finalized,  q_of_finalized=%d)\n",
@@ -259,12 +268,36 @@ namespace desres { namespace msys {
         _needRebuild=false;
     }
 
+    /* Cap LP counts for each atom based on group and number of bonds */
+    int BondOrderAssigner::max_free_pairs(const Id aid){
+
+        int maxFree;
+        int nbonds=_mol->filteredBondsForAtom(aid,*_filter).size();
+        int anum=_mol->atom(aid).atomic_number;
+        int group=GroupForElement(anum);
+        if(anum<3){
+            /* hydrogen and helium */
+            maxFree=1-nbonds;
+        }else if(group>=1 && group <=12){
+            /* metals / transition metals */
+            maxFree=0;
+        }else{
+            /* Everything else */
+            maxFree=4-nbonds;
+        }
+        return std::max(0,maxFree);
+    }
+
 
     /* Cap bond orders for each bond connected to an atom */
     int BondOrderAssigner::max_bond_order(const Id aid){
         
         int maxbo;
         Id nbonds=_mol->filteredBondsForAtom(aid,*_filter).size();
+
+        /* FIXME: Enable when expanded octet sillyness is removed
+           if(nbonds>=4) return 1;
+        */
         switch (_mol->atom(aid).atomic_number){
             case 1:  // H
             case 9:  // F
@@ -302,8 +335,10 @@ namespace desres { namespace msys {
                 /* Catch all... Should be fairly conservative */
                 if(nbonds<3){
                     maxbo=3;
-                }else{
+                }else if (nbonds==4){
                     maxbo=2;
+                }else{
+                    maxbo=1;
                 }
         }
         return maxbo;
@@ -1253,14 +1288,18 @@ namespace desres { namespace msys {
         lpsolve::add_column(lp,coldata);
         int colid=lpsolve::get_Norig_columns(lp);
         assert(colid>MIN_INVALID_ILP_COL);
-        lpsolve::set_bounds(lp,colid,lb,ub);
-        lpsolve::set_int(lp,colid,true);
+        if(lb==0 && ub==1){
+            lpsolve::set_binary(lp,colid,true);
+        }else{
+            lpsolve::set_bounds(lp,colid,lb,ub);
+            lpsolve::set_int(lp,colid,true);
+        }
         lpsolve::set_col_name(lp,colid,const_cast<char*>(colname.c_str()));
         return colid;
     }
 
 
-    /* prefer lone pairs on more electronegative atom */
+    /* lone pair electronegativites */
     void ComponentAssigner::set_atom_lonepair_penalties(){
         //static desres::profiler::Symbol _("ComponentAssigner::set_atom_penalties");
         //desres::profiler::Clock __(_);
@@ -1269,14 +1308,17 @@ namespace desres { namespace msys {
         BondOrderAssignerPtr parent=_parent.lock();
         std::ostringstream ss;
         BOOST_FOREACH(Id aid1, _component_atoms_present){
-            atom_t const& atm1=parent->_mol->atom(aid1);
-            int anum1=atm1.atomic_number;
             electronRange const& range= asserted_find(parent->_atom_lp,aid1);
             std::ostringstream ss;
             ss.str("");
             ss << "a_"<<aid1;
-            /* factor of 2 since there are 2 electrons per lp */
-            double objv=-1*DataForElement(anum1).eneg;
+#if 0
+            atom_t const& atm1=parent->_mol->atom(aid1);
+            double objv=-DataForElement(atm1.atomic_number).eneg;
+#else
+            /* "Natural" electronegativity for lp */
+            double objv=-0.56;
+#endif
             int colid=add_column_to_ilp(_component_lp,ss.str(),objv, range.lb, range.ub);
             _component_atom_cols.insert(std::make_pair(aid1,colid)); 
             
@@ -1318,7 +1360,6 @@ namespace desres { namespace msys {
                 }
                 int colid=add_column_to_ilp(_component_lp,ss.str(),objv,range.lb,range.ub);
                 _component_bond_cols.insert(std::make_pair(bid,colid));
-                
             }
         }
     }
@@ -1327,10 +1368,13 @@ namespace desres { namespace msys {
     bool BondOrderAssigner::allow_hextet_for_atom(Id aid1){
         int anum1=_mol->atom(aid1).atomic_number;
         Id nbonds=_mol->filteredBondsForAtom(aid1, *_filter).size();
-        /* Allow hextets for unsaturated carbon, nitrogen and oxygen */
-        if ( (anum1==6 && (nbonds==3 || nbonds==2)) || 
-             (anum1==7 && (nbonds==2 || nbonds==1)) ||
-             (anum1==8 && (nbonds==1             ))) return true;
+        /* Allow hextets for Al, B, unsaturated carbon, nitrogen and oxygen */
+        if ( 
+            ( (anum1==5 || anum1==13) && (nbonds<4)             ) || 
+            (anum1==6               && (nbonds==3 || nbonds==2) ) || 
+            (anum1==7               && (nbonds==2 || nbonds==1) ) ||
+            (anum1==8               && (nbonds==1             ) )
+            ) return true;
         return false;
     }
 
@@ -1344,12 +1388,11 @@ namespace desres { namespace msys {
 
         std::ostringstream ss;
         BOOST_FOREACH(Id aid1, _component_atoms_present){
-
             if ( !parent->allow_hextet_for_atom(aid1) ) continue;
             ss.str("");
             ss << "hex_"<<aid1;
-            int colid=add_column_to_ilp(_component_lp,ss.str(),parent->atom_hextet_penalty,0,1);
-
+            // int colid=add_column_to_ilp(_component_lp,ss.str(),parent->atom_hextet_penalty,0,1);
+            int colid=add_column_to_ilp(_component_lp,ss.str(),0,0,1);
             _component_atom_hextet_cols.insert(std::make_pair(aid1,colid));
       
         }
@@ -1360,7 +1403,7 @@ namespace desres { namespace msys {
         BondOrderAssignerPtr parent=_parent.lock();
         int anum1=parent->_mol->atom(aid1).atomic_number;
         Id nbonds=parent->_mol->filteredBondsForAtom(aid1, *parent->_filter).size();
-        /* no charge penalty necessary for ions, hydrogen, saturated carbons/nitrogen
+        /* no charge penalty necessary for ions, hydrogen, saturated boron/carbons/nitrogen
            since charge is predetermined */
         if ( nbonds==0 || anum1==1 || (nbonds==4 && (anum1==6 || anum1==7)) ) return false;
         return true;
@@ -1561,6 +1604,7 @@ namespace desres { namespace msys {
                     rowdata.at(asserted_find(_component_bond_cols,bid))=2;
                     /* corrected for how many are available in the pi system */
                     target+=2;
+#if 0
                 }else if(parent->_mol->atom(current).atomic_number==6 && 
                          DataForElement(6).eneg >= DataForElement(parent->_mol->atom(other).atomic_number).eneg){
                     /* endocyclic carbon to exocyclic atom (could be double bond)
@@ -1570,6 +1614,7 @@ namespace desres { namespace msys {
                     rowdata.at(asserted_find(_component_bond_cols, bid))+=1;
                     /* corrected by how many are available to the pi system */
                     target+=1;        
+#endif
                 }
             }
             previous=current;

@@ -101,7 +101,9 @@ namespace desres { namespace msys {
         double getSolvedObjective();
 
     protected:
+        int max_free_pairs(const Id aid);
         int max_bond_order(const Id aid);
+      
         void presolve_octets(IdList& unsolved);
         void rebuild();
 
