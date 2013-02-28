@@ -76,7 +76,7 @@ namespace {
                     table=dihedrals;
                     A=dmap->add(i);
 
-                } else if (f=="improper_harm") {
+                } else if (f=="proper_harm" || f=="improper_harm") {
                     if (!impropers) {
                         impropers = AddTable(h,prefix+"improper_harm");
                         StrList cols = make_columns(2);
