@@ -38,6 +38,7 @@ Contents:
    system
    nonbonded
 
+
 Command line tools
 ==================
 
@@ -47,6 +48,17 @@ present in the Python interface.
 .. toctree::
 
    tools
+
+
+Recipes
+=======
+
+Here are some illustrative Python scripts for situations when a command line 
+tool isn't available.
+
+.. toctree::
+
+   recipes
 
 
 DMS files
