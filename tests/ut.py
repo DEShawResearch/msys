@@ -1445,6 +1445,10 @@ class TestMain(unittest.TestCase):
                 'tests/files/fused.sdf' : [[0,1]],
                 'tests/files/noFused1.mae' : [],
                 'tests/files/noFused2.mae' : [],
+                'tests/files/jandor.sdf'   : [[2,3]],
+                'tests/files/colzuy.mae.gz': [[0,1,2]],
+                'tests/files/kanzoo.mae.gz': [[0,1],[2,3]],
+                
                 }.items():
 
             mol=msys.Load(path)
@@ -1452,7 +1456,7 @@ class TestMain(unittest.TestCase):
             amol=msys.AnnotatedSystem(mol)
             fused=[]
             rings=amol.rings(return_fused=fused)
-            self.assertEqual(fused, match_fused)
+            self.assertEqual(sorted(fused), match_fused, (path,fused,rings))
 
     def testAnnotatedSystem(self):
         # Test rings
