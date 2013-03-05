@@ -1190,14 +1190,20 @@ class System(object):
         it should be a valid VMD atom selection, and only the selected atoms 
         will be cloned.
 
+        If seltext is a sequence (and not a string), it will be treated as 
+        a list of atom ids.
+
         This operation is equivalent to "msys.CloneSystem(self.select(seltext))"
         where seltext defaults to 'all'.
         '''
         ptr = self._ptr
         if seltext is None:
             ids = ptr.atoms()
-        else:
+        elif isinstance(seltext, str):
             ids = ptr.select(seltext)
+        else:
+            ids = _msys.IdList()
+            for a in seltext: ids.append(a)
         return System( _msys.Clone(ptr, ids))
 
     def sorted(self):
