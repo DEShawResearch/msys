@@ -269,8 +269,6 @@ namespace desres { namespace msys {
         
     };
 
-    int double_to_int(double val, double tol);
-
 }}
 #define DEBUGPRINT  0
 #define DEBUGPRINT1 0

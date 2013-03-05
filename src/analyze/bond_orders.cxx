@@ -24,6 +24,19 @@ namespace lpsolve {
 
 
 namespace {
+
+    static inline int double_to_int(double dval) {
+        int ival=static_cast<int>(dval+(dval<0 ? -0.5 : 0.5));
+#if DEBUGPRINT
+        double delta=fabs(static_cast<double>(ival)-dval);
+        if(delta>abstol){
+            printf("  WARNING: Inexact integer conversion diff = %e   tol = %e\n",
+                   delta,abstol);
+        }
+#endif
+        return ival;
+    }
+
     /* simple helper function to extract a value from a map (and assert that its found) */
     template<typename C>
     typename C::mapped_type& asserted_find(C &container, typename C::key_type const& key){
@@ -1023,7 +1036,7 @@ namespace desres { namespace msys {
                 newsum+=new_soln[vidx]*vals[vidx];
             }
             /* number of electrons gained/lost in this ring versus initial solution */
-            int delta=double_to_int(newsum-oldsum,0.0);
+            int delta=double_to_int(newsum-oldsum);
 
             int colid=rpair.second;
             int nearest_n=old_soln[colid];
@@ -1245,7 +1258,7 @@ namespace desres { namespace msys {
         solution.assign(solsize,0);
         for (unsigned idx=1; idx<solsize;++idx){
             double result=lpsolve::get_var_primalresult(lp, nrows + idx);
-            solution[idx]=double_to_int(result, 0.0);
+            solution[idx]=double_to_int(result);
         }
     }
 
@@ -2149,17 +2162,6 @@ namespace desres { namespace msys {
             assert(fabs(resq - dqtarget)<1E-8);
             
         }
-    }
-
-    int double_to_int(double dval, double tol){
-        int ival=static_cast<int>(dval+(dval<0 ? -0.5 : 0.5));
-        double delta=fabs(static_cast<double>(ival)-dval);
-        double abstol=fabs(tol);
-        if(delta>abstol){
-            printf("  WARNING: Inexact integer conversion diff = %e   tol = %e\n",
-                   delta,abstol);
-        }
-        return ival;
     }
 
 
