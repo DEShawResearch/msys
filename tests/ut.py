@@ -1440,6 +1440,15 @@ class TestMain(unittest.TestCase):
         self.assertEqual(posre.params.nparams, 1)
         self.assertEqual(posre.nterms, 32)
 
+    def testFusedRings(self):
+        mol=msys.Load('tests/files/noFused1.mae')
+        msys.AssignBondOrderAndFormalCharge(mol)
+        amol=msys.AnnotatedSystem(mol)
+        fused=[]
+        rings=amol.rings(return_fused=fused)
+        #print "rings:", rings
+        #print "fused:", fused
+
     def testAnnotatedSystem(self):
         # Test rings
         sys = msys.LoadDMS('/d/en/gregerse-0/p4/sw/forcefields/viparr4/cubane.dms', True)

@@ -1347,7 +1347,7 @@ class AnnotatedSystem(object):
             raise TypeError, \
                     "atom_or_bond must be of type msys.Atom or msys.Bond"
 
-    def rings(self, atom_or_bond=None):
+    def rings(self, atom_or_bond=None, return_fused=None):
         ''' All SSSR rings containing atom or bond. If atom/bond is not
         specified, returns all SSSR rings in the system. '''
         if atom_or_bond is None:
@@ -1359,6 +1359,9 @@ class AnnotatedSystem(object):
         else:
             raise TypeError, \
                     "atom_or_bond must be of type msys.Atom or msys.Bond"
+        if return_fused is not None:
+            fused = _msys.FusedRingSystems(self._ptr.system(), rings)
+            return_fused[:] = [[x for x in y] for y in fused]
         return [[Atom(self.system._ptr, i) for i in r] for r in rings]
 
     def hcount(self, atom):
@@ -1750,6 +1753,10 @@ class Graph(object):
         t = self._ptr.matchAll(graph._ptr, substructure)
         return [dict((Atom(self._sys, i), Atom(graph._sys, j)) for i,j in item)
                 for item in t]
+
+def GuessHydrogenPositions(atoms):
+    ptr, ids = _find_ids(atoms)
+    _msys.GuessHydrogenPositions(ptr, ids)
 
 def FindDistinctFragments(system):
     ''' Return fragids of representative fragments.  '''

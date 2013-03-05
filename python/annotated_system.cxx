@@ -1,47 +1,27 @@
 #include "wrap_obj.hxx"
 #include "annotated_system.hxx"
+#include "sssr.hxx"
 
 using namespace desres::msys;
 
 namespace {
 
-    list atom_rings(const AnnotatedSystem& sys, Id atom) {
+    MultiIdList atom_rings(const AnnotatedSystem& sys, Id atom) {
         MultiIdList rings;
         sys.atomRings(atom, rings);
-        list L;
-        BOOST_FOREACH(const IdList& ring, rings) {
-            list L_in;
-            BOOST_FOREACH(Id a, ring)
-                L_in.append(a);
-            L.append(L_in);
-        }
-        return L;
+        return rings;
     }
 
-    list bond_rings(const AnnotatedSystem& sys, Id bond) {
+    MultiIdList bond_rings(const AnnotatedSystem& sys, Id bond) {
         MultiIdList rings;
         sys.bondRings(bond, rings);
-        list L;
-        BOOST_FOREACH(const IdList& ring, rings) {
-            list L_in;
-            BOOST_FOREACH(Id a, ring)
-                L_in.append(a);
-            L.append(L_in);
-        }
-        return L;
+        return rings;
     }
 
-    list rings(const AnnotatedSystem& sys) {
+    MultiIdList rings(const AnnotatedSystem& sys) {
         MultiIdList rings;
         sys.rings(rings);
-        list L;
-        BOOST_FOREACH(const IdList& ring, rings) {
-            list L_in;
-            BOOST_FOREACH(Id a, ring)
-                L_in.append(a);
-            L.append(L_in);
-        }
-        return L;
+        return rings;
     }
 }
 
@@ -71,5 +51,7 @@ namespace desres { namespace msys {
             .def("ringCount", &AnnotatedSystem::ringCount)
             .def("rings", rings)
             ;
+
+        def("FusedRingSystems", FusedRingSystems);
     }
 }}
