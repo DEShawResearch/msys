@@ -1441,13 +1441,18 @@ class TestMain(unittest.TestCase):
         self.assertEqual(posre.nterms, 32)
 
     def testFusedRings(self):
-        mol=msys.Load('tests/files/noFused1.mae')
-        msys.AssignBondOrderAndFormalCharge(mol)
-        amol=msys.AnnotatedSystem(mol)
-        fused=[]
-        rings=amol.rings(return_fused=fused)
-        #print "rings:", rings
-        #print "fused:", fused
+        for path, match_fused in {
+                'tests/files/fused.sdf' : [[0,1]],
+                'tests/files/noFused1.mae' : [],
+                'tests/files/noFused2.mae' : [],
+                }.items():
+
+            mol=msys.Load(path)
+            msys.AssignBondOrderAndFormalCharge(mol)
+            amol=msys.AnnotatedSystem(mol)
+            fused=[]
+            rings=amol.rings(return_fused=fused)
+            self.assertEqual(fused, match_fused)
 
     def testAnnotatedSystem(self):
         # Test rings

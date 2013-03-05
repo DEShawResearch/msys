@@ -675,8 +675,10 @@ desres::msys::MultiIdList desres::msys::FusedRingSystems(SystemPtr mol,
                 }
             }
         }
-        /* Add this ring system */
-        ring_systems.push_back(IdList(ring_set.begin(), ring_set.end()));
+        /* Add this ring system if it contains multiple rings */
+        if (ring_set.size()>1) {
+            ring_systems.push_back(IdList(ring_set.begin(), ring_set.end()));
+        }
     }
     return ring_systems;
 }
