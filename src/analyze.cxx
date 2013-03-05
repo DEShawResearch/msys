@@ -2,6 +2,7 @@
 #include "analyze/bond_orders.hxx"
 #include "elements.hxx"
 #include "graph.hxx"
+#include "geom.hxx"
 #include <periodicfix/contacts.hxx>
 #include <stdio.h>
 
@@ -147,5 +148,124 @@ namespace desres { namespace msys {
         }
         std::sort(result.begin(), result.end());
         return result;
+    }
+
+    static const double def_bond = 1.0;
+    static const double def_angle = 109.5 * M_PI/180;
+    static const double def_dihedral = -120.0 * M_PI/180;
+
+    void GuessHydrogenPositions(SystemPtr mol, IdList const& hatoms) {
+        /* partition by root atom */
+        typedef std::map<Id,IdList> RootMap;
+        RootMap map;
+        BOOST_FOREACH(Id h, hatoms) {
+            if (mol->bondCountForAtom(h)!=1) continue;
+            map[mol->bondedAtoms(h).at(0)].push_back(h);
+        }
+
+        /* process each root atom */
+        for (RootMap::iterator it=map.begin(); it!=map.end(); ++it) {
+            const Id r = it->first;
+            const atom_t& root = mol->atom(r);
+            IdList& hlist = it->second;
+            std::sort(hlist.begin(), hlist.end());
+
+            /* get other atoms bonded to root. */
+            IdList c;
+            BOOST_FOREACH(Id b, mol->bondedAtoms(r)) {
+                if (!std::binary_search(hlist.begin(), hlist.end(), b)) {
+                    c.push_back(b);
+                }
+            }
+
+            if (hlist.size()==2) {
+                atom_t& hyd1 = mol->atom(hlist[0]);
+                atom_t& hyd2 = mol->atom(hlist[1]);
+                if (c.empty()) {
+                    /* water */
+                    hyd1.x = root.x;
+                    hyd1.y = root.y;
+                    hyd1.z = root.z + def_bond;
+                    Vec3 pos = apply_dihedral_geometry(
+                            Vec3(&mol->atom(hlist[0]).x),
+                            Vec3(&mol->atom(hlist[0]).x),
+                            Vec3(&mol->atom(r).x),
+                            def_bond, def_angle, 0);
+                    hyd2.x = pos.x;
+                    hyd2.y = pos.y;
+                    hyd2.z = pos.z;
+
+                } else if (c.size()==1) {
+                    Id C = c[0];
+                    Id A = C;
+                    if (mol->bondCountForAtom(C)>1) {
+                        BOOST_FOREACH(A, mol->bondedAtoms(C)) {
+                            if (A!=r) break;
+                        }
+                    }
+                    Vec3 pos = apply_dihedral_geometry(
+                            Vec3(&mol->atom(A).x),
+                            Vec3(&mol->atom(C).x),
+                            Vec3(&mol->atom(r).x),
+                            def_bond, def_angle, def_dihedral);
+                    hyd1.x = pos.x;
+                    hyd1.y = pos.y;
+                    hyd1.z = pos.z;
+
+                    pos = apply_dihedral_geometry(
+                            Vec3(&mol->atom(A).x),
+                            Vec3(&mol->atom(C).x),
+                            Vec3(&mol->atom(r).x),
+                            def_bond, def_angle, -def_dihedral);
+                    hyd2.x = pos.x;
+                    hyd2.y = pos.y;
+                    hyd2.z = pos.z;
+                }
+
+            } else if (hlist.size()==1) {
+                atom_t& hyd1 = mol->atom(hlist[0]);
+
+                if (c.empty()) {
+                    hyd1.x = root.x;
+                    hyd1.y = root.y;
+                    hyd1.z = root.z + def_bond;
+
+                } else if (c.size()==1) {
+                    /* find another atom bonded to c to define the plane */
+                    Id C = c[0];
+                    Id A = C;
+                    if (mol->bondCountForAtom(C)>1) {
+                        BOOST_FOREACH(A, mol->bondedAtoms(C)) {
+                            if (A!=r) break;
+                        }
+                    }
+                    Vec3 pos = apply_dihedral_geometry(
+                            Vec3(&mol->atom(A).x),
+                            Vec3(&mol->atom(C).x),
+                            Vec3(&mol->atom(r).x),
+                            def_bond, def_angle, 0);
+                    hyd1.x = pos.x;
+                    hyd1.y = pos.y;
+                    hyd1.z = pos.z;
+
+                } else {
+                    Float ux=0, uy=0, uz=0;
+                    BOOST_FOREACH(Id b, c) {
+                        ux += mol->atom(r).x - mol->atom(b).x;
+                        uy += mol->atom(r).y - mol->atom(b).y;
+                        uz += mol->atom(r).z - mol->atom(b).z;
+                    }
+                    Float len = sqrt(ux*ux + uy*uy + uz*uz);
+                    if (len) {
+                        ux /= len;
+                        uy /= len;
+                        uz /= len;
+                    }
+                    hyd1.x = root.x + def_bond*ux;
+                    hyd1.y = root.y + def_bond*uy;
+                    hyd1.z = root.z + def_bond*uz;
+                }
+            }
+        }
     }
 }}

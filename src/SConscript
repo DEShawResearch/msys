@@ -125,6 +125,7 @@ dms/export_dms.cxx
 dms/import_dms.cxx
 
 elements.cxx
+geom.cxx
 
 load.cxx
 
