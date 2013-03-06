@@ -207,7 +207,7 @@ namespace desres { namespace msys {
                             Vec3(&mol->atom(A).x),
                             Vec3(&mol->atom(C).x),
                             Vec3(&mol->atom(r).x),
-                            def_bond, def_angle, def_dihedral);
+                            def_bond, def_angle, -M_PI/2+def_dihedral);
                     hyd1.x = pos.x;
                     hyd1.y = pos.y;
                     hyd1.z = pos.z;
@@ -216,7 +216,7 @@ namespace desres { namespace msys {
                             Vec3(&mol->atom(A).x),
                             Vec3(&mol->atom(C).x),
                             Vec3(&mol->atom(r).x),
-                            def_bond, def_angle, -def_dihedral);
+                            def_bond, def_angle, -M_PI/2-def_dihedral);
                     hyd2.x = pos.x;
                     hyd2.y = pos.y;
                     hyd2.z = pos.z;
