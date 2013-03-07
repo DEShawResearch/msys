@@ -39,6 +39,172 @@ namespace {
 
 namespace desres { namespace msys {
 
+    int FragmentChargeFromAtomicCharge(SystemPtr mol,
+                                        IdList const& atoms){
+        
+        double qSum=0;
+        double qMax=0;
+        for(Id a : atoms) {
+            double aq=mol->atom(a).charge;
+            qSum+=aq;
+            aq=fabs(aq);
+            if(aq>qMax) qMax=aq;
+        }
+
+        if(qMax!=0) return int(qSum);
+        return INT_MAX;
+    }
+
+
+    int FragmentChargeFromFormalCharge(SystemPtr mol,
+                                       IdList const& atoms){
+        
+        int fcSum=0;
+        int fcMax=0;
+        for(Id a : atoms) {
+            int fq=mol->atom(a).formal_charge;
+            fcSum+=fq;
+            fq=abs(fq);
+            if(fq>fcMax) fcMax=fq;
+        }
+
+        if(fcMax) return fcSum;
+        return INT_MAX;
+    }
+
+    int FragmentChargeFromBondOrders(SystemPtr mol,
+                                     IdList const& atoms){
+        
+        int bqSum=0;
+        int bqMax=0;
+        bool hasBO=false;
+        bool fullOctet=true;
+        for(Id a : atoms) {
+            atom_t const& atom = mol->atom(a);
+            int anum=atom.atomic_number;
+            int group=GroupForElement(anum);
+
+            IdList bonds = mol->bondsForAtom(a);
+
+            int boSum=0;
+            bool hasPolar=false;
+            bool hasN4=false;
+            if(anum!=6){
+                for(Id b : bonds) {
+                    bond_t const& bond = mol->bond(b);
+                    boSum+=bond.order;
+                }
+            }else{
+                std::vector<Id> otherN;
+                for(Id b : bonds) {
+                    bond_t const& bond = mol->bond(b);
+                    boSum+=bond.order;
+                    Id a2=bond.other(a);
+                    int anum2=mol->atom(a2).atomic_number;
+                    if(anum2==7){
+                        hasPolar=true;
+                        otherN.push_back(a2);
+                    }else if(anum2==8 || anum2==16 || anum2==9 || anum2==17){
+                        hasPolar=true;
+                    }
+                }
+                if(boSum==3){
+                    for(Id a2 : otherN){
+                        int boSum2=0;
+                        for(Id b : mol->bondsForAtom(a2)) {
+                            boSum2+= mol->bond(b).order;
+                        }
+                        if(boSum2==4){
+                            hasN4=true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            int nbonds=bonds.size();
+            hasBO |= (boSum!=nbonds);
+            
+            int q=0;
+            if(anum==1 && boSum!=1){
+                q=1;
+            }else if( (anum==5 || anum==13) && boSum==4){
+                q=1;
+            }else if(anum==6 && boSum==3){
+                if(nbonds==1 || hasN4){
+                    q=-1;
+                }else{
+                    q= hasPolar ? 1 : -1;
+                }
+            }else if(anum==7){
+                if(boSum==2){
+                    q=-1;
+                }else if(boSum==4){
+                    q=1;
+                }
+            }else if(anum==8){
+                if(boSum==1){
+                    q=-1;
+                }else if(boSum==3){
+                    q=1;
+                }
+            }else if(anum==15){
+                if(boSum==4){
+                    q=1;
+                }else if(boSum==2){
+                    q=-1;
+                }
+            }else if(anum==16){
+                if(boSum==1 || boSum==5){
+                    q=-1;
+                }else if(boSum==3){
+                    q=1;
+                }
+            }else if(anum==17){
+                if(boSum==0){
+                    q=-1;
+                }else if(boSum==4){
+                    q=3;
+                }
+            }else if(boSum==0){
+                if(group==1){
+                    q=1;
+                }else if(group==2 || anum==30){
+                    q=2;
+                }else if(group==17){
+                    q=-1;
+                }
+            }
+
+            int electrons = DataForElement(anum).nValence - boSum - q;
+            if (electrons < 0 || electrons % 2){
+                fullOctet=false;
+            }else if(anum==1){
+                fullOctet &= (2*boSum+electrons==2);
+            }else{
+                fullOctet &= (2*boSum+electrons==8);               
+            }
+
+            bqSum+=q;
+            q=abs(q);
+            if(q>bqMax)bqMax=q;
+        }
+
+        if(hasBO || fullOctet) return bqSum;
+        return INT_MAX;
+    }
+
+
+    int GuessBestFragmentCharge(SystemPtr mol,
+                                IdList const& atoms){
+
+        int qTot=FragmentChargeFromFormalCharge(mol, atoms);
+        if(qTot!=INT_MAX) return qTot;
+        qTot=FragmentChargeFromAtomicCharge(mol, atoms);
+        if(qTot!=INT_MAX) return qTot;        
+        return FragmentChargeFromBondOrders(mol, atoms);
+    }
+
     void AssignBondOrderAndFormalCharge(SystemPtr mol) {
         MultiIdList frags;
         mol->updateFragids(&frags);

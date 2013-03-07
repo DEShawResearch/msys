@@ -6,6 +6,15 @@
 
 namespace desres { namespace msys {
 
+    int GuessBestFragmentCharge(SystemPtr mol,
+                                IdList const& atoms);
+    int FragmentChargeFromAtomicCharge(SystemPtr mol,
+                                       IdList const& atoms);
+    int FragmentChargeFromFormalCharge(SystemPtr mol,
+                                       IdList const& atoms);
+    int FragmentChargeFromBondOrders(SystemPtr mol,
+                                     IdList const& atoms);
+
     /* Assign bond order and formal charges to all fragments */
     void AssignBondOrderAndFormalCharge(SystemPtr mol);
 
