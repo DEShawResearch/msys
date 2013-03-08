@@ -11,8 +11,6 @@ namespace lpsolve{
     class _lprec;
 }
 
-#define USEHEXTET 0
-
 namespace desres { namespace msys {
 
     struct electronRange {
@@ -61,11 +59,6 @@ namespace desres { namespace msys {
         /* penalty for removing bond to "hypervalent" atoms. 
            Set to 0.0 to remove penalty for removing bonds to hypervalent atoms */
         GETSETREBUILDVAR(double, bond_fisure_penalty);
-#if USEHEXTET
-        /* Penalty for forming a hextet atom.      
-           Set to 0.0 to remove penalty for not forming hextets */
-        GETSETREBUILDVAR(double, atom_hextet_penalty);
-#endif
         /* penalty for positivly charged components.  
            Set to 0.0 to remove penalty for forming positivly charged components  */
         GETSETREBUILDVAR(double, component_plus_charge_penalty);
@@ -93,13 +86,6 @@ namespace desres { namespace msys {
             atom_charge_scale=1.50;
             atom_terminal_charge_penalty=1.0;
             bond_fisure_penalty=2.0;
-#if USEHEXTET
-#if 1
-            atom_hextet_penalty=0.0;
-#else
-            atom_hextet_penalty=1.0;
-#endif
-#endif
             component_plus_charge_penalty=0.75;
             component_minus_charge_penalty=0.25;
             aromatic_ring_penalty=0.25;
@@ -207,18 +193,9 @@ namespace desres { namespace msys {
             int qCol;
             int qCtr;
             std::set<int> qTerm;
-#if USEHEXTET
-            int octetViolationCol;
-            int vLB;
-            int vUB;
-#endif
             ilpAtom(){};
             ilpAtom(int c,int l, int u):ilpCol(c),ilpLB(l),ilpUB(u),
-                                        qCol(0),qCtr(0)
-#if USEHEXTET
-                                       ,octetViolationCol(0)
-#endif
-            {};
+                                        qCol(0),qCtr(0){};
         };
         typedef std::map<Id, ilpAtom> ilpAtomMap;
         
@@ -256,9 +233,6 @@ namespace desres { namespace msys {
         lpsolve::_lprec *_component_lpcopy;
         lpsolve::_lprec *_component_reslp;      
 
-#if USEHEXTET
-        void set_atom_hextet_penalties();
-#endif
         void set_atom_charge_penalties();
         void set_atom_terminal_charge_penalties();
         void set_atom_lonepair_penalties();

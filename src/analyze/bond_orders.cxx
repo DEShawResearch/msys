@@ -856,25 +856,6 @@ namespace desres { namespace msys {
         return false;
     }
 
-#if USEHEXTET
-    /* penalize atoms for having a hextet */
-    void ComponentAssigner::set_atom_hextet_penalties(){
-
-        BondOrderAssignerPtr parent=_parent.lock();
-
-        std::ostringstream ss;
-        for(auto & kv: _component_atom_cols){
-            Id aid1=kv.first;
-            if ( !parent->allow_hextet_for_atom(aid1) ) continue;
-            ss.str("");
-            ss << "hex_"<<aid1;
-            kv.second.octetViolationCol=add_column_to_ilp(_component_lp,ss.str(),parent->atom_hextet_penalty,0,1);
-            kv.second.vLB=-1;
-            kv.second.vUB=-1;
-        }
-    }
-#endif
-
     /* penalize atoms for having a charge */
     void ComponentAssigner::set_atom_charge_penalties(){
 
@@ -1108,13 +1089,6 @@ namespace desres { namespace msys {
                 /* Do Nothing (Dont add octet or charge constraints for ions) */
             }else{
                 std::vector<double> rowcopy(rowdata);
-#if USEHEXTET
-                if(iatom.octetViolationCol){
-                    rowcopy.at(iatom.octetViolationCol)=1;
-                }
-                /* equality constraint */
-                lpsolve::add_constraint(_component_lp,&rowcopy[0],ROWTYPE_EQ,atomoct);
-#else
                 if(parent->allow_hextet_for_atom(aid0)){
                     /* bound constraint */
                     lpsolve::add_constraint(_component_lp,&rowcopy[0],ROWTYPE_LE,atomoct); 
@@ -1123,8 +1097,6 @@ namespace desres { namespace msys {
                     /* equality constraint */
                     lpsolve::add_constraint(_component_lp,&rowcopy[0],ROWTYPE_EQ,atomoct);               
                 }
-#endif
-
             }
             
             if ( iatom.qCol ){
@@ -1273,8 +1245,6 @@ namespace desres { namespace msys {
         }
     }
 
-
-
     void ComponentAssigner::build_integer_linear_program(){
 
         lpsolve::delete_lp(_component_lp);
@@ -1297,9 +1267,6 @@ namespace desres { namespace msys {
         set_bond_penalties();
         set_atom_charge_penalties();
         set_atom_terminal_charge_penalties();
-#if USEHEXTET
-        set_atom_hextet_penalties();
-#endif
         set_aromatic_ring_penalties();
         set_component_charge_penalty();
 
