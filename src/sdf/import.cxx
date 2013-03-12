@@ -58,7 +58,7 @@ namespace {
 
     public:
         explicit iterator(std::string const& path)
-        : file(path) {
+        : file(path.c_str()) {
             if (!file) {
                 MSYS_FAIL("Failed opening SDF file for reading at " << path);
             }

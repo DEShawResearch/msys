@@ -13,7 +13,7 @@ env.Append(CFLAGS=flg, CXXFLAGS=flg)
 
 env.Append(
         CFLAGS='-O2 -g',
-        CXXFLAGS='-std=c++11 -O2 -Wall -Werror -g',
+        CXXFLAGS='-std=c++03 -O2 -Wall -Werror -g',
         )
 
 env.SConsignFile('%s/.sconsign' % (env['OBJDIR'].strip('#')))

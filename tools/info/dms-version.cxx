@@ -1,4 +1,5 @@
 #include <dms/dms.hxx>
+#include <stdio.h>
 
 using namespace desres::msys;
 

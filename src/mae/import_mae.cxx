@@ -427,7 +427,7 @@ namespace {
           {}
 
         void init(std::string const& path) {
-            in.open(path);
+            in.open(path.c_str());
             if (!in) {
                 MSYS_FAIL("Failed opening MAE file at '" << path << "'");
             }

@@ -830,18 +830,21 @@ MultiIdList SmartsPattern::findMatches(AnnotatedSystemPtr sys,
     return matches;
 }
 
-bool SmartsPatternImpl::matchSmartsPattern(AnnotatedSystemPtr sys, Id atom,
-        std::vector<IdList>& matches, bool match_single) const {
+namespace {
     /* Use this with filteredBondsPerAtom to obtain non-pseudo bonds for
      * atoms */
     struct filter_t {
         filter_t(SystemPtr sys) : _sys(sys) { }
-        bool operator()(const msys::bond_t& b) const {
+        bool operator()(const bond_t& b) const {
             return (_sys->atom(b.i).atomic_number > 0
                     && _sys->atom(b.j).atomic_number > 0);
         }
         SystemPtr _sys;
-    } filter(sys->system());
+    };
+}
+
+bool SmartsPatternImpl::matchSmartsPattern(AnnotatedSystemPtr sys, Id atom,
+        std::vector<IdList>& matches, bool match_single) const {
 
     if (_atoms.size() == 0)
         return false;
@@ -851,6 +854,9 @@ bool SmartsPatternImpl::matchSmartsPattern(AnnotatedSystemPtr sys, Id atom,
         matches.push_back(IdList(1, atom));
         return true;
     }
+
+    filter_t filter(sys->system());
+
     if (sys->system()->filteredBondsForAtom(atom, filter).size() == 0)
         return false;
 

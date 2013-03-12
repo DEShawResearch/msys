@@ -3,6 +3,8 @@
 #include "analyze.hxx"
 #include "atomsel.hxx"
 
+#include <stdio.h>
+
 using namespace desres::msys;
 
 int main(int argc, char *argv[]) {

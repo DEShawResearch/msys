@@ -2,6 +2,7 @@
 #include "elements.hxx"
 #include <boost/format.hpp>
 #include <fstream>
+#include <errno.h>
 
 using boost::format;
 
