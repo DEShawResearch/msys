@@ -41,17 +41,20 @@ namespace desres { namespace msys {
         const vtype& get_##name() const { return name; }               \
         void set_##name(const vtype& newval) { _needRebuild=true; _valid=false; name = newval; }
         /* scale for atoms lone pair electronegativity. 
-           Set to 0.0 to remove penalty for forming positivly charged atoms  */
+           Set to 0.0 to remove lone pairs from objective */
         GETSETREBUILDVAR(double, atom_lone_pair_scale);
         /* penalty for positivly charged atoms. 
            Set to 0.0 to remove penalty for forming positivly charged atoms  */
         GETSETREBUILDVAR(double, atom_plus_charge_penalty);
+        /* scale factor for positivly charged atoms. 
+           Set to 0.0 to remove scale factor forming positivly charged atoms  */
+        GETSETREBUILDVAR(double, atom_plus_charge_scale);
         /* penalty for negativly charged atoms. 
            Set to 0.0 to remove penalty for forming negativly charged atoms  */
         GETSETREBUILDVAR(double, atom_minus_charge_penalty);
-        /* scale factor for charged atoms. 
-           Set to 0.0 to remove scale factor forming  charged atoms  */
-        GETSETREBUILDVAR(double, atom_charge_scale);
+        /* scale factor for negativly charged atoms. 
+           Set to 0.0 to remove scale factor forming negativly charged atoms  */
+        GETSETREBUILDVAR(double, atom_minus_charge_scale);
         /* penalty for charged terminal atoms. 
            Set to 0.0 to remove penalty for forming charged terminal atoms
            without adjacent compensating charge */
@@ -68,8 +71,6 @@ namespace desres { namespace msys {
         /* penalty for not forming aromatic rings. 
            Set to 0.0 to remove penalty for not forming aromatic rings */
         GETSETREBUILDVAR(double, aromatic_ring_penalty);
-
-
         /* largest allowed absolute atom charge (if gen_charge_penalty_for_atom) */
         GETSETREBUILDVAR(unsigned, absmax_atom_charge);
         /* largest allowed absolute component (resonant system) charge */
@@ -80,15 +81,16 @@ namespace desres { namespace msys {
         BondOrderAssigner(){
             _needRebuild=true; 
             _valid=false;
-            atom_lone_pair_scale=0.5;
-            atom_plus_charge_penalty=0.25;
-            atom_minus_charge_penalty=0.50;
-            atom_charge_scale=1.50;
-            atom_terminal_charge_penalty=1.0;
-            bond_fisure_penalty=2.0;
+            atom_lone_pair_scale=0.60;
+            atom_plus_charge_penalty=1.00;
+            atom_plus_charge_scale=1.75;
+            atom_minus_charge_penalty=1.25;
+            atom_minus_charge_scale=1.25;
+            atom_terminal_charge_penalty=1.25;
+            bond_fisure_penalty=2.75;
             component_plus_charge_penalty=0.75;
-            component_minus_charge_penalty=0.25;
-            aromatic_ring_penalty=0.25;
+            component_minus_charge_penalty=1.00;
+            aromatic_ring_penalty=0.00;
             absmax_atom_charge=2;
             max_component_charge=6; 
             _filter=NULL;
@@ -154,7 +156,6 @@ namespace desres { namespace msys {
 
 
     class ComponentAssigner : public boost::noncopyable {
-        static const int MIN_INVALID_ILP_COL=0;
         ComponentAssigner(): _component_lp(NULL), _component_lpcopy(NULL), _component_reslp(NULL){};
     public:
 
@@ -163,11 +164,6 @@ namespace desres { namespace msys {
         static boost::shared_ptr<ComponentAssigner> create(BondOrderAssignerPtr boa,
                                                            IdList const& comp, 
                                                            Id cid );
-        /* lpsolve helper routines */
-        static int add_column_to_ilp(lpsolve::_lprec *lp, std::string const& colname, 
-                                     double penalty, double lb, double ub);
-        static void get_ilp_solution(lpsolve::_lprec *lp, std::vector<int> &solution);
-        double get_ilp_objective(std::vector<int> const& solution);
 
         void build_integer_linear_program();
 
@@ -192,7 +188,7 @@ namespace desres { namespace msys {
             int ilpUB;
             int qCol;
             int qCtr;
-            std::set<int> qTerm;
+            std::set<Id> qTerm;
             ilpAtom(){};
             ilpAtom(int c,int l, int u):ilpCol(c),ilpLB(l),ilpUB(u),
                                         qCol(0),qCtr(0){};
@@ -241,14 +237,15 @@ namespace desres { namespace msys {
         void set_component_charge_penalty();
         
         void add_charge_vector_for_atom(BondOrderAssignerPtr parent,
-                                        Id aid, std::vector<double> &row);        void add_indicator_constraints();
+                                        Id aid, std::vector<double> &row);
+        void add_indicator_constraints();
         void add_atom_octet_and_charge_constraints();
         void add_aromatic_ring_constraints();
         void add_component_electron_constraint();
         
         /* Resonance Generation */
         void generate_resonance_forms();
-          
+
     };
 
 }}

@@ -55,6 +55,50 @@ namespace {
 #endif
         return ival;
     }
+
+    /* Helper function for adding a column to the integer linear program
+       Sets bounds and objective function contribution (as well as column 
+       label for debugging) */
+    int add_column_to_ilp(lpsolve::_lprec *lp, std::string const& colname, 
+                                             double penalty, double lb, double ub){
+        double coldata[1]={penalty};
+        lpsolve::add_column(lp,coldata);
+        int colid=lpsolve::get_Norig_columns(lp);
+        assert(colid>0);
+        if(lb==0 && ub==1){
+            lpsolve::set_binary(lp,colid,true);
+        }else{
+            lpsolve::set_bounds(lp,colid,lb,ub);
+            lpsolve::set_int(lp,colid,true);
+        }
+        lpsolve::set_col_name(lp,colid,const_cast<char*>(colname.c_str()));
+        return colid;
+    }
+
+    void get_ilp_solution(lpsolve::_lprec *lp, std::vector<int> &solution){
+
+        int nrows=lpsolve::get_Norig_rows(lp);
+        int ncols=lpsolve::get_Norig_columns(lp);
+        unsigned solsize=ncols+1;
+
+        solution.assign(solsize,0);
+        for (unsigned idx=1; idx<solsize;++idx){
+            double result=lpsolve::get_var_primalresult(lp, nrows + idx);
+            solution[idx]=double_to_int(result);
+        }
+    }
+
+    double get_ilp_objective(std::vector<double> const& objf, 
+                             std::vector<int> const& solution){
+        assert(solution.size()==objf.size());
+        Quadsum obj=0.0;
+        for (unsigned idx=1; idx<solution.size();++idx){
+            obj += objf[idx]*solution[idx];
+        }
+        return obj.result();
+    }
+
+
 }
 
 namespace desres { namespace msys {
@@ -196,17 +240,7 @@ namespace desres { namespace msys {
 
         IdList unsolved;
         boa->presolve_octets(unsolved);
-        if(unsolved.size()!=0){
-            MultiIdList components;
-            get_fragments(boa->_mol, unsolved, components);
-#if DEBUGPRINT
-            printf("Found %zu seperable components in fragment\n",components.size());
-#endif
-            for(Id cid=0;cid<components.size();++cid){
-                boa->_component_assigners.push_back(ComponentAssigner::create(boa, components[cid], cid));
-            }
-        }
-
+ 
         /* Fill in bondinfo with presolved values */
         for(electronMap::value_type const& epair : boa->_bond_order){
             int val=epair.second.lb;
@@ -249,6 +283,19 @@ namespace desres { namespace msys {
                 boa->_presolved_charge+=qtot;
             }
         }
+
+        /* Split into components */
+       if(unsolved.size()!=0){
+            MultiIdList components;
+            get_fragments(boa->_mol, unsolved, components);
+#if DEBUGPRINT
+            printf("Found %zu seperable components in fragment\n",components.size());
+#endif
+            for(Id cid=0;cid<components.size();++cid){
+                boa->_component_assigners.push_back(ComponentAssigner::create(boa, components[cid], cid));
+            }
+        }
+
 #if DEBUGPRINT
         printf("AfterPresolve: total_valence=%d for %zu atoms (%zu finalized,  q_of_finalized=%d)\n",
                boa->_totalValence, boa->_fragatoms.size(), boa->_atominfo.size(), boa->_presolved_charge);
@@ -591,28 +638,6 @@ namespace desres { namespace msys {
     }
 
 
-    void ComponentAssigner::get_ilp_solution(lpsolve::_lprec *lp, std::vector<int> &solution){
-
-        int nrows=lpsolve::get_Norig_rows(lp);
-        int ncols=lpsolve::get_Norig_columns(lp);
-        unsigned solsize=ncols+1;
-
-        solution.assign(solsize,0);
-        for (unsigned idx=1; idx<solsize;++idx){
-            double result=lpsolve::get_var_primalresult(lp, nrows + idx);
-            solution[idx]=double_to_int(result);
-        }
-    }
-
-    double ComponentAssigner::get_ilp_objective(std::vector<int> const& solution){
-        assert(solution.size()==_component_objf.size());
-        Quadsum obj=0.0;
-        for (unsigned idx=1; idx<solution.size();++idx){
-            obj += _component_objf[idx]*solution[idx];
-        }
-        return obj.result();
-    }
-
 
     void ComponentAssigner::generate_resonance_forms(){
         int ncols=lpsolve::get_Norig_columns(_component_lp);
@@ -620,7 +645,7 @@ namespace desres { namespace msys {
 
         std::vector<int> last_solution;
         get_ilp_solution(_component_lp, last_solution);
-        double objf=get_ilp_objective(last_solution);
+        double objf=get_ilp_objective(_component_objf,last_solution);
 
         _component_resonant_solution.assign(nvars,0);
         std::vector<double> ones(nvars,1.0);
@@ -657,7 +682,7 @@ namespace desres { namespace msys {
             int status=lpsolve::solve(resLP);
             if(status==OPTIMAL || status==PRESOLVED){
                 get_ilp_solution(resLP, last_solution);
-                double newObjf=get_ilp_objective(last_solution);
+                double newObjf=get_ilp_objective(_component_objf,last_solution);
 #if DEBUGPRINT
                 printf("Resonance Solution was found for component %u objf= %6.3f\n",
                        _component_id, newObjf);
@@ -697,7 +722,7 @@ namespace desres { namespace msys {
 
         assert(_component_solution_valid);
 
-        ComponentAssigner::get_ilp_solution(_component_lp,_component_solution);
+        get_ilp_solution(_component_lp,_component_solution);
         
         generate_resonance_forms();
 
@@ -757,26 +782,6 @@ namespace desres { namespace msys {
         }
     }
 
-
-    /* Helper function for adding a column to the integer linear program
-       Sets bounds and objective function contribution (as well as column 
-       label for debugging) */
-    int ComponentAssigner::add_column_to_ilp(lpsolve::_lprec *lp, std::string const& colname, double penalty, double lb, double ub){
-        double coldata[1]={penalty};
-        lpsolve::add_column(lp,coldata);
-        int colid=lpsolve::get_Norig_columns(lp);
-        assert(colid>MIN_INVALID_ILP_COL);
-        if(lb==0 && ub==1){
-            lpsolve::set_binary(lp,colid,true);
-        }else{
-            lpsolve::set_bounds(lp,colid,lb,ub);
-            lpsolve::set_int(lp,colid,true);
-        }
-        lpsolve::set_col_name(lp,colid,const_cast<char*>(colname.c_str()));
-        return colid;
-    }
-
-
     /* lone pair electronegativites */
     void ComponentAssigner::set_atom_lonepair_penalties(){
 
@@ -788,12 +793,9 @@ namespace desres { namespace msys {
             electronRange const& range= asserted_find(parent->_atom_lp,aid1);
             ss.str("");
             ss << "a_"<<aid1 << ":"<<range.lb;
-#if 1
+
             double objv=-parent->atom_lone_pair_scale*DataForElement(parent->_mol->atom(aid1).atomic_number).eneg;
-#else
-            /* "Natural" electronegativity for lp */
-            double objv=-0.56;
-#endif
+
             int colid=add_column_to_ilp(_component_lp,ss.str(),range.lb*objv, 0, 1);
             _component_atom_cols.insert(ilpAtomMap::value_type(aid1,{colid,range.lb,range.ub})); 
             for(int i=range.lb+1; i<=range.ub;++i){
@@ -824,11 +826,8 @@ namespace desres { namespace msys {
                 Id aid2=parent->_mol->bond(bid).other(aid1);
                 ss.str("");
                 ss << "b_"<<aid1<<"_"<<aid2<<":"<<range.lb;
-#if 0
-                double objv = -std::max(eneg1,DataForElement(parent->_mol->atom(aid2).atomic_number).eneg);
-#else
+
                 double objv = -0.5*(eneg1+DataForElement(parent->_mol->atom(aid2).atomic_number).eneg);
-#endif
                 
                 int colid=add_column_to_ilp(_component_lp,ss.str(),range.lb==0 ? parent->bond_fisure_penalty : range.lb*objv ,0,1);
 
@@ -869,15 +868,11 @@ namespace desres { namespace msys {
             // if (parent->_chargeinfo.find(aid1) != parent->_chargeinfo.end()) continue;
            
             int anum=parent->_mol->atom(aid1).atomic_number;
-            int group=GroupForElement(anum);
-            double qPlus=parent->atom_plus_charge_penalty;
-            double qMinus=parent->atom_minus_charge_penalty;
-            double scale=parent->atom_charge_scale;
-            if(group>=13 && group<=17){
-                int delta=abs(group-15);
-                qPlus+=scale*abs(delta);
-                qMinus+=scale*(2-delta);
-            }
+            double eneg=DataForElement(anum).eneg;
+            double qPlus=parent->atom_plus_charge_penalty+
+                parent->atom_plus_charge_scale*fabs(DataForElement(7).eneg-eneg);
+            double qMinus=parent->atom_minus_charge_penalty +
+                parent->atom_minus_charge_scale*fabs(DataForElement(9).eneg-eneg);
 
             ss.str("");
             ss << "qM_"<<aid1;
@@ -898,7 +893,7 @@ namespace desres { namespace msys {
         std::ostringstream ss;
         
         /* find possibly charged terminal atoms, and adjacent atoms */
-        std::map<Id,std::set<int> > central;
+        std::map<Id,std::set<Id> > central;
         for(auto & kv: _component_atom_cols){
             if(kv.second.qCol==0) continue;
             Id aid1=kv.first;
@@ -908,8 +903,12 @@ namespace desres { namespace msys {
                 Id aid2=parent->_mol->bond(bid).other(aid1);
                 if(parent->_mol->atom(aid2).atomic_number>1) adjacent.push_back(aid2);
             }
-            if(!(adjacent.size()==1 && _component_atoms_present.count(adjacent[0]))) continue;
-            central[adjacent[0]].insert(aid1);
+            if(adjacent.size()!=1) continue;
+            if(_component_atoms_present.count(adjacent[0])){
+                central[adjacent[0]].insert(aid1);
+            }else{
+                central[aid1].insert(adjacent[0]);
+            }
         }
 
         for(auto & kv: central){
@@ -917,7 +916,7 @@ namespace desres { namespace msys {
             ilpAtom & iatom= _component_atom_cols.find(aid1)->second;
             if(!iatom.qCol) continue;
             assert(kv.second.size() && !iatom.qTerm.size());
-            iatom.qTerm=kv.second;
+            iatom.qTerm.swap(kv.second);
 
             ss.str("");
             ss << "qCtrM_"<<aid1;
@@ -1117,8 +1116,12 @@ namespace desres { namespace msys {
 
                 if( iatom.qCtr){
                     for(Id aid1: iatom.qTerm){
-                        atomvalence+= DataForElement(parent->_mol->atom(aid1).atomic_number).nValence;
-                        add_charge_vector_for_atom(parent,aid1,rowdata);
+                        if(_component_atoms_present.count(aid1)){
+                            atomvalence+= DataForElement(parent->_mol->atom(aid1).atomic_number).nValence;
+                            add_charge_vector_for_atom(parent,aid1,rowdata);
+                        }else{
+                            atomvalence+=asserted_find(parent->_chargeinfo,aid1).nonresonant;
+                        }
                     }
                     /* Negative charge constraint */
                     rowdata.at(iatom.qCtr)=-1;
@@ -1451,7 +1454,7 @@ namespace desres { namespace msys {
             BOOST_FOREACH(entry_type const& soldata, cadata.second){
                 ss.str("");
                 ss << "ca_"<<caidx<<".q_"<<soldata.first;
-                int cid=ComponentAssigner::add_column_to_ilp(qtotlp,ss.str(), soldata.second, 0, 1);
+                int cid=add_column_to_ilp(qtotlp,ss.str(), soldata.second, 0, 1);
                 lpsolve::set_binary(qtotlp, cid, true); // redundant?
                 globalCons.at(cid)=soldata.first;
                 rowdata.at(cid)=1;
@@ -1477,7 +1480,7 @@ namespace desres { namespace msys {
             lpsolve::print_solution(qtotlp,1);
 #endif
             std::vector<int> solution;
-            ComponentAssigner::get_ilp_solution(qtotlp,solution);
+            get_ilp_solution(qtotlp,solution);
             unsigned cid=1;
             BOOST_FOREACH(value_type const& cadata, solutions){
                 Id caidx=cadata.first;
@@ -1608,7 +1611,27 @@ namespace desres { namespace msys {
             if((atm.formal_charge != iqtarget) || fabs(resq - dqtarget)>1E-8 ){
                 throw std::runtime_error("SolutionToAtoms failed. atm.formal_charge != iqtarget or fabs(resq - dqtarget)>1E-8");
             }
-            
+        }
+
+        /* Convert dative bonds to hypervalent */
+        for(Id aid0: _fragatoms){
+            atom_t& atm0=_mol->atom(aid0);
+            if(PeriodForElement(atm0.atomic_number)<3 || atm0.formal_charge<=0) continue;
+            IdList bonds=_mol->filteredBondsForAtom(aid0, *_filter);
+            for(Id bid: bonds){
+                bond_t & bond=_mol->bond(bid);
+                Id aid1=bond.other(aid0);
+                atom_t& atm1=_mol->atom(aid1);
+                if(bond.order >1 || atm1.formal_charge>=0) continue;
+                solutionMap::iterator iter=atominfo.find(aid1);
+                assert(iter!=atominfo.end());
+                if(iter->second.nonresonant<1) continue;
+                iter->second.nonresonant-=1;
+                atm0.formal_charge-=1;
+                bond.order+=1;
+                atm1.formal_charge+=1;
+                if(atm0.formal_charge==0) break;
+            }
         }
     }
 
