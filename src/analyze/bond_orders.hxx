@@ -4,7 +4,7 @@
 #include "../system.hxx"
 #include "bondFilters.hxx"
 #include <boost/noncopyable.hpp>
-#include <array>
+
 
 /* forward declare so we dont pollute the rest of our code with lpsolves excessive #defines */
 namespace lpsolve{
@@ -120,7 +120,7 @@ namespace desres { namespace msys {
 
     protected:
         int max_free_pairs(const Id aid);
-        std::array<int,3> minmax_bond_order(const Id aid0, const Id aid1);
+        std::vector<int> minmax_bond_order(const Id aid0, const Id aid1);
       
         void presolve_octets(IdList& unsolved);
         void rebuild();

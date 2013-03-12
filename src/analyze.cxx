@@ -44,7 +44,7 @@ namespace desres { namespace msys {
         
         double qSum=0;
         double qMax=0;
-        for(Id a : atoms) {
+        BOOST_FOREACH(Id a, atoms) {
             double aq=mol->atom(a).charge;
             qSum+=aq;
             aq=fabs(aq);
@@ -61,7 +61,7 @@ namespace desres { namespace msys {
         
         int fcSum=0;
         int fcMax=0;
-        for(Id a : atoms) {
+        BOOST_FOREACH(Id a, atoms) {
             int fq=mol->atom(a).formal_charge;
             fcSum+=fq;
             fq=abs(fq);
@@ -79,7 +79,7 @@ namespace desres { namespace msys {
         int bqMax=0;
         bool hasBO=false;
         bool fullOctet=true;
-        for(Id a : atoms) {
+        BOOST_FOREACH(Id a, atoms) {
             atom_t const& atom = mol->atom(a);
             int anum=atom.atomic_number;
             int group=GroupForElement(anum);
@@ -90,13 +90,13 @@ namespace desres { namespace msys {
             bool hasPolar=false;
             bool hasN4=false;
             if(anum!=6){
-                for(Id b : bonds) {
+                BOOST_FOREACH(Id b, bonds) {
                     bond_t const& bond = mol->bond(b);
                     boSum+=bond.order;
                 }
             }else{
                 std::vector<Id> otherN;
-                for(Id b : bonds) {
+                BOOST_FOREACH(Id b, bonds) {
                     bond_t const& bond = mol->bond(b);
                     boSum+=bond.order;
                     Id a2=bond.other(a);
@@ -109,9 +109,9 @@ namespace desres { namespace msys {
                     }
                 }
                 if(boSum==3){
-                    for(Id a2 : otherN){
+                    BOOST_FOREACH(Id a2, otherN){
                         int boSum2=0;
-                        for(Id b : mol->bondsForAtom(a2)) {
+                        BOOST_FOREACH(Id b, mol->bondsForAtom(a2)) {
                             boSum2+= mol->bond(b).order;
                         }
                         if(boSum2==4){
