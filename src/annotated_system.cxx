@@ -112,7 +112,7 @@ void desres::msys::AnnotatedSystem::compute_ring_systems() {
         }
     }
 
-    MultiIdList ring_systems = FusedRingSystems(_sys, SSSR_possibly_aromatic);
+    MultiIdList ring_systems = RingSystems(_sys, SSSR_possibly_aromatic);
     BOOST_FOREACH(const IdList& ring_sys, ring_systems) {
         std::set<Id> atom_set;
         std::set<Id> bond_set;

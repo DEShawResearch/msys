@@ -52,6 +52,6 @@ namespace desres { namespace msys {
             .def("rings", rings)
             ;
 
-        def("FusedRingSystems", FusedRingSystems);
+        def("RingSystems", RingSystems);
     }
 }}

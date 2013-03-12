@@ -1440,12 +1440,12 @@ class TestMain(unittest.TestCase):
         self.assertEqual(posre.params.nparams, 1)
         self.assertEqual(posre.nterms, 32)
 
-    def testFusedRings(self):
-        for path, match_fused in {
+    def testRingSystems(self):
+        for path, match_systems in {
                 'tests/files/fused.sdf' : [[0,1]],
-                'tests/files/noFused1.mae' : [],
-                'tests/files/noFused2.mae' : [],
-                'tests/files/jandor.sdf'   : [[2,3]],
+                'tests/files/noFused1.mae' : [[0]],
+                'tests/files/noFused2.mae' : [[0], [1], [2]],
+                'tests/files/jandor.sdf'   : [[0], [1], [2,3]],
                 'tests/files/colzuy.mae.gz': [[0,1,2]],
                 'tests/files/kanzoo.mae.gz': [[0,1],[2,3]],
                 
@@ -1454,9 +1454,9 @@ class TestMain(unittest.TestCase):
             mol=msys.Load(path)
             msys.AssignBondOrderAndFormalCharge(mol)
             amol=msys.AnnotatedSystem(mol)
-            fused=[]
-            rings=amol.rings(return_fused=fused)
-            self.assertEqual(sorted(fused), match_fused, (path,fused,rings))
+            systems=[]
+            rings=amol.rings(return_systems=systems)
+            self.assertEqual(sorted(systems), match_systems, (path,systems,rings))
 
     def testAnnotatedSystem(self):
         # Test rings

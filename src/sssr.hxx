@@ -11,10 +11,10 @@ namespace desres { namespace msys {
     MultiIdList GetSSSR(SystemPtr mol, IdList const& atoms,
             bool all_relevant=false);
 
-    /* Each IdList in the returned MultiIdList is a vector of indices into the
-     * input 'rings' MultiIdList corresponding to a set of rings belonging to
-     * a single fused ring system. */
-    MultiIdList FusedRingSystems(SystemPtr mol, MultiIdList const& rings);
+    /* Partition the input rings into 'ring systems' such that members of
+     * the same system are connected by shared bonds.  Single-ring systems
+     * will be returned as well.  Return the list of ring systems. */
+    MultiIdList RingSystems(SystemPtr mol, MultiIdList const& rings);
 
     /* Helper functions and data structures for SSSR determination, exposed here
      * for testing/debugging purposes */

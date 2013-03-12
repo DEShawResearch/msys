@@ -161,9 +161,8 @@ namespace desres { namespace msys {
             }
         }
         /* this is now a MultiIdList of [rings[keepRingIds]] */
-        rings=FusedRingSystems(boa->_mol, keepRings);
+        rings=RingSystems(boa->_mol, keepRings);
         for(IdList const& ring: rings){
-            /* FIXME: remove check when FusedRingSystems is fixed */
             if(ring.size()==1) continue;
             std::set<Id> touched;
             for(Id rid: ring){

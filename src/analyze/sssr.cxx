@@ -5,6 +5,7 @@
 #include <set>
 #include <algorithm>
 
+using namespace desres::msys;
 using namespace desres::msys::SSSR;
 
 namespace {
@@ -631,8 +632,7 @@ desres::msys::GetSSSR(SystemPtr mol, IdList const& atoms,
     return sssr;
 }
 
-desres::msys::MultiIdList desres::msys::FusedRingSystems(SystemPtr mol,
-        MultiIdList const& rings) {
+MultiIdList desres::msys::RingSystems(SystemPtr mol, MultiIdList const& rings) {
 
     MultiIdList bond_to_rings(mol->maxBondId());
     for (unsigned i = 0; i < rings.size(); ++i) {
@@ -675,10 +675,7 @@ desres::msys::MultiIdList desres::msys::FusedRingSystems(SystemPtr mol,
                 }
             }
         }
-        /* Add this ring system if it contains multiple rings */
-        if (ring_set.size()>1) {
-            ring_systems.push_back(IdList(ring_set.begin(), ring_set.end()));
-        }
+        ring_systems.push_back(IdList(ring_set.begin(), ring_set.end()));
     }
     return ring_systems;
 }

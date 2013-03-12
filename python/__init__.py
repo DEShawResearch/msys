@@ -1347,7 +1347,7 @@ class AnnotatedSystem(object):
             raise TypeError, \
                     "atom_or_bond must be of type msys.Atom or msys.Bond"
 
-    def rings(self, atom_or_bond=None, return_fused=None):
+    def rings(self, atom_or_bond=None, return_systems=None):
         ''' All SSSR rings containing atom or bond. If atom/bond is not
         specified, returns all SSSR rings in the system. '''
         if atom_or_bond is None:
@@ -1359,9 +1359,9 @@ class AnnotatedSystem(object):
         else:
             raise TypeError, \
                     "atom_or_bond must be of type msys.Atom or msys.Bond"
-        if return_fused is not None:
-            fused = _msys.FusedRingSystems(self._ptr.system(), rings)
-            return_fused[:] = [[x for x in y] for y in fused]
+        if return_systems is not None:
+            systems = _msys.RingSystems(self._ptr.system(), rings)
+            return_systems[:] = [[x for x in y] for y in systems]
         return [[Atom(self.system._ptr, i) for i in r] for r in rings]
 
     def hcount(self, atom):
