@@ -1,3 +1,8 @@
+1.7.2  NEW:   System.clone() accepts a list of atom ids.
+       NEW:   Recipes section in the documentation.
+       FIXED: Better bond order assigner.
+       FIXED: Read proper_harm in MAE files.
+       
 1.7.1  NEW: dms-select learned --coalesce.
        NEW: inchi.InChI function.
        FIXED: SDF reader handles formal charge and some keyvals
