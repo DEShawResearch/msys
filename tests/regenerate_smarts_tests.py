@@ -27,6 +27,4 @@ for patt in d['smarts']:
 
 d['ww_matches'] = matches[0]
 d['membrane_matches'] = matches[1]
-f = open('tests/smarts_tests.json', 'w')
-f.write(json.dumps(d))
-f.close()
+json.dump(d, file('tests/smarts_tests.json', 'w'), separators=(', \n', ': '))
