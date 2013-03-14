@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <fstream>
+#include <cerrno>
 
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
