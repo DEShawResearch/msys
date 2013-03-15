@@ -27,6 +27,7 @@ NUMPY=numpy/1.6.2-32A
 LPSOLVE=$(treetop lp_solve)
 PRIMEGEN=primegen/0.97-05
 ZLIB=zlib/1.2.4-10A
+TEXLIVE=texlive/20120701-03
 
 # build and documentation
 SCONS=$(treetop scons)
@@ -52,7 +53,8 @@ loadmodules() {
         $LPSOLVE/lib \
         $PRIMEGEN/lib \
         $ZLIB/lib \
-        $SPHINX/bin 
+        $SPHINX/bin \
+	$TEXLIVE/bin
     
    export MSYS_VERSION=$VERSION
 
@@ -106,9 +108,10 @@ EOF
 }
 
 gendocs() {
-    (cd doc && VERSION=$VERSION make man html)
+    (cd doc && VERSION=$VERSION make man html latexpdf)
     mkdir -p $PREFIX/doc/man/man1
     cp -r doc/build/html $PREFIX/doc/
+    cp doc/build/latex/Msys.pdf $PREFIX/doc/
     cp doc/build/man/*.1 $PREFIX/doc/man/man1
 }
 
