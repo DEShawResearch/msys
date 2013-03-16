@@ -191,7 +191,10 @@ namespace {
                     const VdwType& jtype = vdwmap.type(indj);
                     if (vdwmap.has_combined(itype, jtype)) {
                         const VdwParam& p = vdwmap.param(itype,jtype);
-                        combine( p, p, 1.0, params );
+                        /* DESRESCode#1634 - apply the LJ scale factor to
+                         * the combined LJ parameter */
+                        double lscale = c1.elem(i).as_float();
+                        combine( p, p, lscale, params );
                     } else {
                         const VdwParam& iparam = vdwmap.param(itype);
                         const VdwParam& jparam = vdwmap.param(jtype);
@@ -204,7 +207,8 @@ namespace {
                         const VdwType& jtypeB = vdwmap.typeB(indj);
                         if (vdwmap.has_combined(itypeB, jtypeB)) {
                             const VdwParam& p = vdwmap.param(itypeB,jtypeB);
-                            combine( p, p, 1.0, *paramsB );
+                            double lscale = c1B.elem(i).as_float();
+                            combine( p, p, lscale, *paramsB );
                         } else {
                             const VdwParam& iparam = 
                                 itypeB.size() ? vdwmap.param(itypeB)
