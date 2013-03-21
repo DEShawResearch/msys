@@ -6,11 +6,12 @@
 using namespace desres::msys;
 
 int main(int argc, char *argv[]) {
-    if (argc<2) {
-        fprintf(stderr, "Usage: %s input.dms output.mol2\n", argv[0]);
+    if (argc!=3) {
+        fprintf(stderr, "Usage: %s input output.sdf\n", argv[0]);
         return 1;
     }
-    std::vector<SystemPtr> sdfs= ImportSdfMany(argv[1]);
+    SystemPtr mol=Load(argv[1]);
+    ExportSdf(mol, argv[2]);
     return 0;
 }
 
