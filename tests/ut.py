@@ -25,6 +25,15 @@ class TestSdf(unittest.TestCase):
 
 class TestMain(unittest.TestCase):
 
+    def testBadId(self):
+        m=msys.CreateSystem()
+        with self.assertRaises(ValueError):
+            m.chain('A')
+        with self.assertRaises(ValueError):
+            m.residue('A')
+        with self.assertRaises(ValueError):
+            m.atom('A')
+
     def testCt(self):
         m=msys.CreateSystem()
         self.assertEqual(m.cts, [])

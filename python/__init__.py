@@ -17,7 +17,7 @@ class Handle(object):
 
     def __init__(self, _ptr, _id):
         self._ptr = _ptr
-        self._id = _id
+        self._id = int(_id)
 
     def __eq__(self, x): 
         return self.__class__==type(x) and self._id==x._id and self._ptr==x._ptr
