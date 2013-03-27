@@ -14,14 +14,14 @@
 using namespace desres::msys;
 
 namespace {
-    bool match(std::string const& path, std::string const& expr) {
+    bool match(std::string path, std::string const& expr) {
         std::vector<std::string> endings;
         boost::split(endings, expr, boost::is_any_of(","));
+        boost::to_lower(path);
         for (unsigned i=0; i<endings.size(); i++) {
             std::string p(".+\\.");
             p += endings[i];
-            atomsel::Regex regex(p, PCRE_CASELESS);
-            if (regex.match(path)) {
+            if (regex_match(path,atomsel::Regex(p))) {
                 return true;
             }
         }

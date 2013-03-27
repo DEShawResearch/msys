@@ -8,7 +8,8 @@ opts.Add("MSYS_WITHOUT_LPSOLVE", "without lpsolve support?")
 opts.Update(env)
 
 env.Append(LIBS=[
-    'boost_iostreams', 'boost_filesystem', 'boost_system', 'boost_thread'])
+    'boost_iostreams', 'boost_filesystem', 'boost_system', 'boost_thread',
+    'boost_regex'])
 env.Append(CPPPATH=['$OBJDIR/src'])
 
 def build_version_hxx( target, source, env ):
@@ -50,7 +51,6 @@ atomsel/keyword_predicate.cxx
 atomsel/msys_keyword.cxx
 atomsel/selection.cxx
 atomsel/predicate.cxx
-atomsel/regex.cxx
 atomsel/vmd.cxx
 atomsel/vmd_keyword.cxx
 atomsel/VmdLexer.c

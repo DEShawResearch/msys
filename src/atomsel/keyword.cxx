@@ -122,7 +122,7 @@ namespace {
     for (i=0; i<n; i++) {
       if (s[i]) continue;
       for (unsigned j=0; j<regexes.size(); j++) {
-        s[i] |= regexes[j].match(v[i]);
+        s[i] |= boost::regex_match(v[i], regexes[j]);
       }
     }
   }
