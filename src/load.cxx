@@ -9,7 +9,6 @@
 #include "sdf.hxx"
 
 #include <boost/algorithm/string.hpp>
-#include <pcre.h>
 
 using namespace desres::msys;
 
