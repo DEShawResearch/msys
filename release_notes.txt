@@ -1,3 +1,6 @@
+1.7.4  FIXED: SaveMAE puts quotes around strings containing braces.
+       FIXED: Catch misuse of System.chain(<string>), etc.
+
 1.7.3  FIXED: maedms didn't apply LJ scale to pair terms with vdw overrides.
 
 1.7.2  NEW:   System.clone() accepts a list of atom ids.
