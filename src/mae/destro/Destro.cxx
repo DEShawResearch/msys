@@ -312,10 +312,11 @@ std::string desres::msys::Destro::quotify(desres::msys::Zing z, const desres::ms
   if (raw == "") return "\"\"";
 
 
-  // Check for non-printable characters and "
+  // Check for non-printable characters and " and curly braces
   for(std::string::iterator p=raw.begin(), en=raw.end();
       p != en; ++p) {
-    if (isspace(*p) || !isprint(*p) || *p == '"' || *p == '<' || *p == '\\') {
+    if (isspace(*p) || !isprint(*p) || *p == '"' || *p == '<' || *p == '\\'
+        || *p=='{' || *p=='}' ) {
       std::string escaped(raw.begin(),p);
       //std::cerr << '?' << raw << "?" << escaped << '?' << std::endl;
       for(;p!=en;++p) {
