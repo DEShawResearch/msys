@@ -1,3 +1,4 @@
+import sys
 import msys
 import subprocess as SP
 import collections
@@ -26,7 +27,7 @@ def Strings(mol, add_hydrogen=False, include_stereo=False,
     p = SP.Popen(args, stdin=SP.PIPE, stdout=SP.PIPE, stderr=SP.PIPE,
             bufsize=4096)
     for fragid in msys.FindDistinctFragments(mol):
-        frag = mol.clone('fragid %d' % fragid)
+        frag = mol.clone('fragid %d and atomicnumber>0' % fragid)
         if frag.natoms > 999:
             continue
         msys.SaveSDF(frag, p.stdin)
