@@ -5,10 +5,11 @@ from msys import knot
 
 _mol = None
 
-class TestStrict(UT.TestCase):
+class TestCase(UT.TestCase):
     def setUp(self):
         self.mol=_mol
 
+class TestAnton(TestCase):
     def testKnots(self):
         ''' the system must not contain knots for rings of size <= 10 '''
         knots = knot.FindKnots(self.mol, max_cycle_size=10)
@@ -31,6 +32,7 @@ class TestStrict(UT.TestCase):
                     "Multiple masses for atomic number %s: \n\t%s" % (
                         anum, list(masses)))
 
+class TestStrict(TestCase):
     def testSparsify(self):
         ''' molecule must have all 1-4 exclusions.  '''
         # hash the exclusions and pairs
@@ -58,10 +60,7 @@ class TestStrict(UT.TestCase):
         ediff=p14.difference(excls)
         self.assertFalse(ediff, "%d 1-4 bonds not found in exclusions - is the file sparsified?" % len(ediff))
 
-class TestBasic(UT.TestCase):
-    def setUp(self):
-        self.mol=_mol
-
+class TestBasic(TestCase):
     def testHasNonbonded(self):
         ''' Every particle must have a nonbonded param assignment '''
         self.assertTrue('nonbonded' in self.mol.table_names)
@@ -72,10 +71,7 @@ class TestBasic(UT.TestCase):
                     t.atoms[0].id)
 
 
-class TestDesmond(UT.TestCase):
-    def setUp(self):
-        self.mol=_mol
-
+class TestDesmond(TestCase):
     def testBondsBetweenNonbonded(self):
         ''' Flag bond terms or exclusions between atoms in different fragments.
         These atoms cannot be guaranteed to remain within a clone buffer
@@ -88,15 +84,26 @@ class TestDesmond(UT.TestCase):
                             "Atoms %s form a term in the %s table but are not connected by bonds" % (t.atoms, table.name))
     
 
-def Validate(mol, strict=False, desmond=False, verbose=False):
+def Validate(mol, strict=False, desmond=False, verbose=False, anton=False,
+        all=False):
     global _mol
     _mol=mol
 
     verbosity = 2 if verbose else 1
+    if all:
+        strict = True
+        desmond = True
+    if strict:
+        anton = True
+
 
     tests=[UT.TestLoader().loadTestsFromTestCase(TestBasic)]
+    if anton:
+        tests.append(UT.TestLoader().loadTestsFromTestCase(TestAnton))
+
     if strict: 
         tests.append(UT.TestLoader().loadTestsFromTestCase(TestStrict))
+
     if desmond:
         tests.append(UT.TestLoader().loadTestsFromTestCase(TestDesmond))
 

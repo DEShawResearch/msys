@@ -24,6 +24,8 @@ def main():
     parser.add_option('--strict', action='store_true', default=False)
     parser.add_option('--desmond', action='store_true', default=False)
     parser.add_option('--verbose', action='store_true', default=False)
+    parser.add_option('--all', action='store_true', default=False)
+    parser.add_option('--anton', action='store_true', default=False)
 
     opts, args = parser.parse_args()
     if len(args)!=1:
