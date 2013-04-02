@@ -1661,6 +1661,23 @@ def NonbondedSchemas():
     ''' available nonbonded schemas for System.addNonbondedFromSchema '''
     return [s for s in _msys.NonbondedSchemas()]
 
+def GetSSSR(atoms, all_relevant=False):
+    """Get smallest set of smallest rings (SSSR) for a system fragment.
+
+    The SSSR is in general not unique; the SSSR of a tetrahedron is any
+    three of its four triangular faces. The set of rings that is the
+    union of all SSSR's (all relevant rings) may be obtained by setting
+    all_relevant to True.
+
+    Arguments:
+    atoms -- [msys.Atom, ..., msys.Atom] from a single system
+    all_relevant -- bool
+    Returns: [[msys.Atom, ..., msys.Atom], ..., [msys.Atom, ..., msys.Atom]]
+    """
+    ptr, ids = _find_ids(atoms)
+    rings = _msys.GetSSSR(ptr, ids, all_relevant)
+    return [[Atom(ptr, id) for id in ring] for ring in rings]
+
 def AssignSybylTypes(system):
     ''' Assign Sybyl atom and bond types to the given system.  
     Types will be stored in the "sybyl_type" property of each atom and bond.

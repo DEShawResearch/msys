@@ -6,6 +6,7 @@ import os, sys, unittest
 TMPDIR=os.getenv('TMPDIR', 'objs/Linux/x86_64')
 sys.path.insert(0,os.path.join(TMPDIR, 'lib', 'python'))
 import msys
+from msys import knot
 import numpy as NP
 
 def vsize():
@@ -22,6 +23,11 @@ class TestSdf(unittest.TestCase):
         self.assertEqual(self.mol.atom(19).formal_charge,1)
         self.assertEqual(self.mol.atom(20).formal_charge,0)
         self.assertEqual(self.mol.atom(21).formal_charge,0)
+
+class TestValidate(unittest.TestCase):
+    def testKnot(self):
+        mol=msys.Load('tests/files/jandor.sdf')
+        knot.FindKnots(mol)
 
 class TestMain(unittest.TestCase):
 

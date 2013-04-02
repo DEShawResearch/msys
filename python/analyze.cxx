@@ -1,4 +1,5 @@
 #include "analyze.hxx"
+#include "sssr.hxx"
 #include "mol2.hxx"
 #include "elements.hxx"
 #include "smarts.hxx"
@@ -17,6 +18,14 @@ namespace {
     void assign_3(SystemPtr mol, IdList const& ids, int total_charge) {
         AssignBondOrderAndFormalCharge(mol, ids, total_charge);
     }
+
+    list get_sssr(SystemPtr mol, IdList const& ids, bool all_relevant) {
+        MultiIdList rings = GetSSSR(mol, ids, all_relevant);
+        list L;
+        for (unsigned i=0; i<rings.size(); i++) L.append(rings[i]);
+        return L;
+    }
+
     list find_distinct_fragments(SystemPtr mol) {
         MultiIdList fragments;
         mol->updateFragids(&fragments);
@@ -47,6 +56,13 @@ namespace desres { namespace msys {
         def("AssignBondOrderAndFormalCharge", assign_2);
         def("AssignBondOrderAndFormalCharge", assign_3);
         def("AssignSybylTypes", AssignSybylTypes);
+        /* Yes, we have two interfaces for SSSR, this one and the one in
+         * AnnotatedSystem.  This one lets you specify which atoms you
+         * want the rings for, and doesn't force you to do any annotation, 
+         * which is what we want.  AnnotatedSystem's rings() method only
+         * lets you find rings connected to specific atoms or bonds. 
+         */
+        def("GetSSSR", get_sssr);
         def("GuessBondConnectivity", GuessBondConnectivity);
         def("FindDistinctFragments", find_distinct_fragments);
         def("RadiusForElement", RadiusForElement);
