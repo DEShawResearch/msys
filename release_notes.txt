@@ -1,3 +1,8 @@
+1.7.6  FIXED: msys.knots was broken, which broke dms-validate.
+       FIXED: dms-validate didn't properly handle systems with pseudos.
+       FIXED: Read occupancy and bfactor from PDB files.
+       FIXED: Bring back msys.GetSSSR.
+   
 1.7.5  FIXED: SaveMAE puts quotes around strings containing braces.
        FIXED: Catch misuse of System.chain(<string>), etc.
 
