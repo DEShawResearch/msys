@@ -24,6 +24,26 @@ class TestSdf(unittest.TestCase):
         self.assertEqual(self.mol.atom(20).formal_charge,0)
         self.assertEqual(self.mol.atom(21).formal_charge,0)
 
+class TestPdb(unittest.TestCase):
+    def setUp(self):
+        self.mol=msys.Load('tests/files/3RYZ.pdb')
+
+    def testOccupancy(self):
+        ids=self.mol.selectIds('occupancy < 0.3')
+        self.assertEqual(ids, [490,494,496,498,500,502,504])
+
+    def testBfactor(self):
+        ids=self.mol.selectIds('bfactor > 50')
+        self.assertEqual(ids, [2182, 2191, 2208, 2211, 2223, 2259, 2264, 
+                               2279, 2393, 2400, 2441])
+
+    def testAltloc(self):
+        self.assertEqual(
+                self.mol.selectIds('altloc A'),
+                [161,165,167,169,171,489,493,495,497,499,501,
+                 503,1448,1452,1454,1456,1458,1460,1698,1702,1704])
+
+
 class TestValidate(unittest.TestCase):
     def testKnot(self):
         mol=msys.Load('tests/files/jandor.sdf')

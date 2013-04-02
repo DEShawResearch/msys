@@ -32,6 +32,8 @@ SystemPtr desres::msys::ImportPDB( std::string const& path ) {
 
     SystemPtr mol = System::create();
     SystemImporter imp(mol);
+    Id occup_id = mol->addAtomProp("occupancy", FloatType);
+    Id bfactor_id = mol->addAtomProp("bfactor", FloatType);
 
     int indx=PDB_EOF;
     do {
@@ -65,6 +67,8 @@ SystemPtr desres::msys::ImportPDB( std::string const& path ) {
                 Id altlocid = mol->addAtomProp("altloc", StringType);
                 mol->atomPropValue(atm,altlocid) = altloc;
             }
+            mol->atomPropValue(atm,occup_id) = occup;
+            mol->atomPropValue(atm,bfactor_id) = beta;
 
         } else if (indx==PDB_CRYST1) {
             double alpha, beta, gamma, a, b, c;
