@@ -700,6 +700,11 @@ SystemPtr desres::msys::MakeAlchemical( SystemPtr A, SystemPtr B,
     /* configure alchemical nonbonded table */
     TermTablePtr nbA = A->table("nonbonded");
     TermTablePtr nbB = B->table("nonbonded");
+    if (!nbA || nbA->termCount() != A->atomCount()) 
+        MSYS_FAIL("System A is not full paramterized");
+    if (!nbB || nbB->termCount() != B->atomCount()) 
+        MSYS_FAIL("System B is not full paramterized");
+
     TermTablePtr alc = A->addTable("alchemical_nonbonded", 1, nbA->params());
     alc->category = NONBONDED;
     alc->addTermProp("chargeB", FloatType);
