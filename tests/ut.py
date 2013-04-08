@@ -8,11 +8,22 @@ sys.path.insert(0,os.path.join(TMPDIR, 'lib', 'python'))
 import msys
 from msys import knot
 import numpy as NP
+import json
 
 def vsize():
     cmd='ps -p %d h -o vsz' % os.getpid()
     s=os.popen(cmd).read()
     return int(s)
+
+class TestAtomsel(unittest.TestCase):
+    def testBaselines(self):
+        with open('tests/atomsel_tests.json') as f:
+            d=json.load(f)
+        for p, base in d.items():
+            mol = msys.Load(str(p))
+            for sel, old in base:
+                new = mol.selectIds(str(sel))
+                self.assertEqual(old, new)
 
 class TestSdf(unittest.TestCase):
     def setUp(self):
@@ -1578,7 +1589,6 @@ class TestMain(unittest.TestCase):
             self.assertTrue(not annot_sys.aromatic(cc[i]))
 
     def testSmartsPattern(self):
-        import json
         d=os.path.dirname(__file__)
         tests = json.loads(open(os.path.join(d, 'smarts_tests.json')).read())
         ww = msys.LoadDMS('/proj/desres/root/Linux/x86_64/dms_inputs/1.5.4/share/ww.dms', True)
