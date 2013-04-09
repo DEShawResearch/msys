@@ -1,3 +1,10 @@
+1.7.7  NEW: New atom selection parser based on flex/yacc.
+       NEW: smarts atom selection keyword.
+       NEW: ParamTable.addParam() takes keyword arguments.
+       FIXED: msys.AssignBondOrderAndFormalCharges(mol) is now much faster.
+       FIXED: dms-validate has more useful options.
+       FIXED: dms-alchemical does a sanity check.
+
 1.7.6  FIXED: msys.knots was broken, which broke dms-validate.
        FIXED: dms-validate didn't properly handle systems with pseudos.
        FIXED: Read occupancy and bfactor from PDB files.
