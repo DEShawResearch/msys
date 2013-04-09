@@ -2,7 +2,6 @@ Import('env')
 env=env.Clone()
 
 opts=Variables()
-opts.Add("MSYS_WITHOUT_ATOMSEL", "without atom selections?")
 opts.Add("MSYS_WITHOUT_MAE", "without mae file support?")
 opts.Add("MSYS_WITHOUT_LPSOLVE", "without lpsolve support?")
 opts.Update(env)
@@ -37,12 +36,7 @@ def build_version_hxx( target, source, env ):
 
 env.Command('version.hxx', 'version.py', build_version_hxx )
 
-if env.get("MSYS_WITHOUT_ATOMSEL"):
-    selenv=env.Clone()
-    selenv.Append(CPPDEFINES=['MSYS_WITHOUT_ATOMSEL'])
-    selobjs = selenv.AddObject("atomsel.cxx")
-else:
-    selobjs = env.AddObject(Split('''
+selobjs = env.AddObject(Split('''
 atomsel.cxx
 atomsel/expression.cxx
 atomsel/k-nearest.cxx
