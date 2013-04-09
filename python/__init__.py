@@ -396,9 +396,15 @@ class ParamTable(object):
 
     def __hash__(self): return self._ptr.__hash__()
 
-    def addParam(self):
-        ''' add and return a new Param() '''
-        return Param(self._ptr, self._ptr.addParam())
+    def addParam(self, **kwds):
+        ''' add and return a new Param().
+        
+        If keyword arguments are supplied, they will be assigned to the
+        newly created Param before returning it.'''
+        p=Param(self._ptr, self._ptr.addParam())
+        for k,v in kwds.items():
+            p[k]=v
+        return p
 
     def addProp(self, name, type):
         ''' add a new property of the given type, which must be int,
