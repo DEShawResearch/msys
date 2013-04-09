@@ -1708,6 +1708,8 @@ def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge = None):
     """
     if isinstance(system_or_atoms, System):
         ptr = system_or_atoms._ptr
+        if total_charge is None:
+            return _msys.AssignBondOrderAndFormalCharge(ptr)
         ids = ptr.atoms()
     else:
         ptr, ids = _find_ids(system_or_atoms)

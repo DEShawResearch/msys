@@ -206,10 +206,70 @@ namespace desres { namespace msys {
     }
 
     void AssignBondOrderAndFormalCharge(SystemPtr mol) {
-        MultiIdList frags;
-        mol->updateFragids(&frags);
-        BOOST_FOREACH(IdList const& frag, frags) {
-            AssignBondOrderAndFormalCharge(mol, frag);
+        MultiIdList fragments;
+        mol->updateFragids(&fragments);
+        IdList pmap(mol->maxAtomId(), BadId);
+
+        /* will compute graphs lazily */
+        std::vector<GraphPtr> graphs(fragments.size());
+        typedef std::map<std::string, IdList> FragmentHash;
+        FragmentHash fragment_hash;
+
+        for (Id i=0; i<fragments.size(); i++) {
+            fragment_hash[Graph::hash(mol, fragments[i])].push_back(i);
+        }
+        FragmentHash::iterator it;
+        for (it=fragment_hash.begin(); it!=fragment_hash.end(); ++it) {
+            /* fetch fragments with the same formula */
+            IdList& frags = it->second;
+            /* unique formula -> unique fragment */
+            if (frags.size()==1) {
+                AssignBondOrderAndFormalCharge(mol, fragments[frags[0]]);
+                continue;
+            }
+
+            /* We have multiple fragments with the same formula.  */
+            BOOST_FOREACH(Id frag, frags) {
+                graphs[frag] = Graph::create(mol, fragments[frag]);
+            }
+            std::vector<IdPair> perm;
+            while (!frags.empty()) {
+                AssignBondOrderAndFormalCharge(mol, fragments[frags[0]]);
+                IdList unmatched;
+                GraphPtr ref = graphs[frags[0]];
+                for (Id i=1; i<frags.size(); i++) {
+                    GraphPtr sel = graphs[frags[i]];
+                    if (!ref->match(sel, perm)) {
+                        /* didn't match, so push into the next iteration 
+                         * for another bond order calculation */
+                        unmatched.push_back(frags[i]);
+                    } else {
+                        /* map atom properties */
+                        BOOST_FOREACH(IdPair const&p, perm) {
+                            const Id ai = p.first;
+                            const Id bi = p.second;
+                            mol->atom(bi).formal_charge = mol->atom(ai).formal_charge;
+                            mol->atom(bi).resonant_charge = mol->atom(ai).resonant_charge;
+                            pmap.at(ai) = bi;
+                        }
+                        /* map bond properties */
+                        BOOST_FOREACH(IdPair const&p, perm) {
+                            const Id ai = p.first;
+                            const Id bi = p.second;
+                            BOOST_FOREACH(Id bnd, mol->bondsForAtom(ai)) {
+                                bond_t const& src = mol->bond(bnd);
+                                const Id aj = src.other(ai);
+                                if (ai>aj) continue;
+                                const Id bj = pmap.at(aj);
+                                bond_t& dst = mol->bond(mol->findBond(bi,bj));
+                                dst.order = src.order;
+                                dst.resonant_order = src.resonant_order;
+                            }
+                        }
+                    }
+                }
+                frags.swap(unmatched);
+            }
         }
     }
     
