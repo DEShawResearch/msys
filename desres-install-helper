@@ -18,7 +18,6 @@ GCC=gcc/4.7.2-23A
 BOOST=boost/1_51_0-28A
 PYTHON=Python/2.7.3-07A
 SQLITE=$(treetop sqlite)
-ANTLR=$(treetop antlr)
 JSON=fastjson/1.4.7
 MOLFILE=molfile/1.10.4
 PERIODICFIX=periodicfix/2.4.3
@@ -44,7 +43,6 @@ loadmodules() {
         $SCONSUTILS/lib-python \
         $BOOST/Release/lib \
         $SQLITE/lib \
-        $ANTLR/lib \
         $JSON/lib \
         $PERIODICFIX/lib \
         $MOLFILE/lib \

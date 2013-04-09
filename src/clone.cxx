@@ -35,9 +35,6 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms ) {
     }
     SystemPtr dst = System::create();
 
-    /* copy selection macros */
-    dst->copySelectionMacros(*src);
-
     /* Mappings from src ids to dst ids */
     IdList atmmap(src->maxAtomId(), BadId);
     IdList resmap(src->maxResidueId(), BadId);

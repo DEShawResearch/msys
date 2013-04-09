@@ -537,26 +537,6 @@ static void export_version(Sqlite dms) {
     w.next();
 }
 
-static void export_macros(System const& sys, Sqlite dms) {
-    /* always create the selection_macro table, even if no macros are defined,
-     * so that we can distinguish between dms files written by older versions
-     * of msys that don't contain a selection_macro table and need the default
-     * macros installed, and dms files whose macros have all been deleted. */
-    dms.exec(
-            "create table msys_selection_macro (\n"
-            "  macro text primary key,\n"
-            "  definition text)");
-    Writer w = dms.insert("msys_selection_macro");
-    dms.exec( "begin");
-    std::vector<std::string> v = sys.selectionMacros();
-    for (unsigned i=0; i<v.size(); i++) {
-        w.bind_str( 0, v[i].c_str());
-        w.bind_str( 1, sys.selectionMacroDefinition(v[i]).c_str());
-        w.next();
-    }
-    dms.exec( "commit");
-}
-
 static void export_glue(System const& sys, Sqlite dms) {
     if (!sys.glueCount()) return;
     dms.exec(
@@ -598,7 +578,6 @@ static void export_dms(SystemPtr h, Sqlite dms, Provenance const& provenance) {
     export_nbinfo(   sys,            dms);
     export_cell(     sys,            dms);
     export_provenance(sys,provenance,dms);
-    export_macros(   sys,            dms);
     export_glue(     sys,            dms);
     export_version(                  dms);
 }

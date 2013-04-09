@@ -4,12 +4,13 @@
 #include "selection.hxx"
 #include <ostream>
 #include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 namespace desres { namespace msys { namespace atomsel {
 
   /* a predicate ANDs the items in the input selection with a condition
    * in a particular context. */
-  class Predicate {
+  class Predicate : public boost::enable_shared_from_this<Predicate> {
   public:
     virtual ~Predicate() {}
     virtual void eval( Selection& s ) = 0;
@@ -17,6 +18,11 @@ namespace desres { namespace msys { namespace atomsel {
   };
 
   typedef boost::shared_ptr<Predicate> PredicatePtr;
+
+  class StringPredicate : public Predicate {
+    public:
+        virtual void add( std::string const& elem ) = 0;
+  };
 
   /* All flags true */
   PredicatePtr all_predicate();

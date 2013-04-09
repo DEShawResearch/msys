@@ -3,6 +3,26 @@
 
 namespace {
   using namespace desres::msys::atomsel;
+
+  class KeywordPredicate : public Predicate {
+    KeywordPtr key;
+    TargetList* targets;
+
+  public:
+    KeywordPredicate(KeywordPtr key, TargetList* targets) 
+    : key(key), targets(targets) {}
+
+    ~KeywordPredicate() { delete targets; }
+
+    void eval(Selection& s) {
+      targets->select(s, key);
+    }
+
+    void dump(std::ostream& str) const {
+      str << key->name << " <values>"; 
+    }
+  };
+
   class SamePredicate : public Predicate {
     KeywordPtr key;
     Selection all;
@@ -58,21 +78,12 @@ void SamePredicate::eval( Selection& s ) {
 
 namespace desres { namespace msys { namespace atomsel {
 
-  void KeywordPredicate::dump(std::ostream& str) const {
-    str << key->name << " ";
-    for (std::set<Literal>::const_iterator i=literals.begin();
-        i!=literals.end(); ++i) {
-      str << *i << " ";
-    }
-    for (std::set<Range>::const_iterator i=ranges.begin();
-        i!=ranges.end(); ++i) {
-      str << i->first << " to " << i->second << " ";
-    }
+  PredicatePtr keyword_predicate(KeywordPtr key, TargetList* targets) {
+    return PredicatePtr(new KeywordPredicate(key,targets));
   }
 
   PredicatePtr boolean_predicate( KeywordPtr key ) {
-    KeywordPredicate * pred = new KeywordPredicate(key);
-    pred->addLiteral("1");
+    KeywordPredicate * pred = new KeywordPredicate(key, new IntList(1));
     return PredicatePtr(pred);
   }
 

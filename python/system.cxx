@@ -385,12 +385,6 @@ namespace {
         for (unsigned i=0; i<names.size(); i++) L.append(object(names[i]));
         return L;
     }
-    list selection_macros(System const& sys) {
-        std::vector<std::string> names = sys.selectionMacros();
-        list L;
-        for (unsigned i=0; i<names.size(); i++) L.append(object(names[i]));
-        return L;
-    }
     list table_schemas() {
         std::vector<std::string> names = TableSchemas();
         list L;
@@ -600,13 +594,6 @@ namespace desres { namespace msys {
             .def("addAuxTable",  &System::addAuxTable)
             .def("delAuxTable",  &System::delAuxTable)
             .def("removeAuxTable",&System::removeAuxTable)
-
-            /* selection macros */
-            .def("addSelectionMacro", &System::addSelectionMacro)
-            .def("delSelectionMacro", &System::delSelectionMacro)
-            .def("selectionMacroDefinition", &System::selectionMacroDefinition, return_const())
-            .def("selectionMacroCount", &System::selectionMacroCount)
-            .def("selectionMacros", selection_macros)
 
             /* schemas */
             .def("addTableFromSchema", AddTable)

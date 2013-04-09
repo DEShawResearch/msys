@@ -13,10 +13,10 @@ namespace desres { namespace msys { namespace atomsel {
 Selection full_selection(SystemPtr sys);
 
 /* all true */
-KeywordPtr keyword_all( SystemPtr ent );
+KeywordPtr keyword_all();
 
 /* all false */
-KeywordPtr keyword_none( SystemPtr ent );
+KeywordPtr keyword_none();
 
 
 KeywordPtr keyword_alchemical( SystemPtr ent );

@@ -24,11 +24,9 @@ undiscovered bugs in Msys!) fall into the following categories:
     name "C.*" and not ion
   
 
-  It was felt that, rather than slavishly follow VMD in this respect, Msys
+  It was felt that, rather than follow VMD in this respect, Msys
   should try to get the correct answer.  Do you really want your "nitrogen"
-  atom selection to include sodium (NA)?  If you do wish to recover the
-  original VMD behavior, you can always redefine any of the atom selection
-  macros as described below.
+  atom selection to include sodium (NA)?  
 
 * Implicit 'and': in VMD, selections can sometimes be concatenated with
   an implicit 'and'; e.g. "water within 3 of protein" will be parsed by
@@ -77,7 +75,7 @@ selections.
   as macros, such as ``hydrogen`` ::
 
     protein             # selects atoms identified as protein
-    hydrogen            # defined by default as 'atomicnumber 1'
+    hydrogen            # defined as 'atomicnumber 1'
 
 * Comparisons: An inequality formed by two expressions, at least one of which
   should be a function of atom attributes:: 
@@ -147,9 +145,7 @@ The following selection keywords are available:
   ================  =========== ===========================================
 
 
-The following selection singlewords are available.  Note that these
-are not implemented as macros and thus cannot be overridden or removed
-by the user.
+The following selection singlewords are available.  
 
   ===============   ==========================================================
   singleword        definition
@@ -180,8 +176,7 @@ by the user.
   ===============   ==========================================================
 
 
-The following built-in macros are defined when a System is first created.
-Users are free to override or delete them.
+The following are implemented as macros.
 
   ===========   ==========
   macro         definition
@@ -262,28 +257,5 @@ also be used as an atom selection keyword.  For example::
 User-defined atom selection macros
 ----------------------------------
 
-The atom selection language can be extended on a per-System basis with
-macros.  A macro must be a single word, and cannot conflict with existing
-selection keywords such as ``name``.  There are a number of pre-defined atom selection macros,
-which you can list with `Selection.selection_macros`.  Other methods
-in `System` let you view or change the definition of a macro, or remove
-it altogether from the language.  Your changes to the selection macros
-are saved in DMS files.
-
-One use case for atom selection macros is when you have to work with
-multiple related chemical systems with different atom selections for
-corresponding functional groups. For example, the "active site" may
-correspond to residues 32, 40, 48 for one chemical system, but residues
-30, 31, 43, and 47 in another system.  If you define the atom selection
-macro appropriately for each system and save it in the DMS file, you
-will be able to simply select "active_site" when working with either
-file and it will just work::
-
-    mol.addSelectionMacro('active_site', 'chain A and resid 32 40 48')
-    sel=mol.select('same residue as water and within 3 of active_site')
-
-Atom selection macros can also be listed and updated using the 
-``dms-macro`` command line tool.
-
-
+This feature was removed in msys 1.7.7.
 

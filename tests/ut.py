@@ -16,13 +16,19 @@ def vsize():
     return int(s)
 
 class TestAtomsel(unittest.TestCase):
+    def testSpaces(self):
+        mol=msys.CreateSystem()
+        for i in range(2):
+            mol.selectIds('name CA')
+
     def testBaselines(self):
         with open('tests/atomsel_tests.json') as f:
             d=json.load(f)
         for p, base in d.items():
             mol = msys.Load(str(p))
             for sel, old in base:
-                new = mol.selectIds(str(sel))
+                sel = str(sel)
+                new = mol.selectIds(sel)
                 self.assertEqual(old, new)
 
 class TestSdf(unittest.TestCase):
@@ -1330,29 +1336,6 @@ class TestMain(unittest.TestCase):
         m._ptr.setVelocities([[8,9,10]], ids)
         self.assertEqual(list(m.getVelocities()[1]), [8,9,10])
         self.assertEqual(list(m._ptr.getVelocities(ids)[0]), [8,9,10])
-
-    def testMacros(self):
-        m=msys.CreateSystem()
-        m.addAtom().name='CA'
-        m.addAtom().name='CB'
-        self.assertFalse('foobar' in m.selection_macros)
-        with self.assertRaises(RuntimeError): m.select('foobar')
-        m.addSelectionMacro('foobar', 'name CB')
-        self.assertEqual(m.selectionMacroDefinition('foobar'), 'name CB')
-        self.assertTrue('foobar' in m.selection_macros)
-        self.assertEqual(m.select('foobar')[0].id, 1)
-
-        m2=m.clone()
-        self.assertEqual(m2.select('foobar')[0].id, 1)
-
-        m.delSelectionMacro('foobar')
-        with self.assertRaises(RuntimeError): m.select('foobar')
-
-        m.addSelectionMacro('foo', 'name CA')
-        m.addSelectionMacro('bar', 'foo')
-        m.addSelectionMacro('foo', 'bar')
-        with self.assertRaises(RuntimeError):
-            m.select('foo')
 
     def testSelectChain(self):
         m=msys.CreateSystem()

@@ -19,66 +19,6 @@ using namespace desres::msys;
 
 IdList System::_empty;
 
-namespace {
-  struct atomsel_macro {
-      const char * name;
-      const char * text;
-  };
-
-  atomsel_macro builtin_macros[] = {
-      {"at","resname ADE A THY T"},
-      {"acidic","resname ASP GLU"},
-      {"cyclic","resname HIS PHE PRO TRP TYR"},
-      {"acyclic","protein and not cyclic"},
-      {"aliphatic","resname ALA GLY ILE LEU VAL"},
-      {"alpha","protein and name CA"},
-      {"amino","protein"},
-      {"aromatic","resname HIS PHE TRP TYR"},
-      {"basic","resname ARG HIS LYS HSP"},
-      {"bonded","numbonds > 0"},
-      {"buried"," resname ALA LEU VAL ILE PHE CYS MET TRP"},
-      {"cg","resname CYT C GUA G"},
-      {"charged","basic or acidic"},
-      {"hetero","not (protein or nucleic)"},
-
-    // APD's hydrophobic residue list, from Branden and Tooze (pp6-7).
-      {"hydrophobic","resname ALA LEU VAL ILE PRO PHE MET TRP"},
-    
-      {"small","resname ALA GLY SER"},
-      {"medium","resname VAL THR ASP ASN PRO CYS ASX PCA HYP"},
-      {"large","protein and not (small or medium)"},
-      {"neutral","resname VAL PHE GLN TYR HIS CYS MET TRP ASX GLX PCA HYP"},
-      {"polar","protein and not hydrophobic"},
-      {"purine","resname ADE A GUA G"},
-      {"pyrimidine","resname CYT C THY T URA U"},
-      {"surface","protein and not buried"},
-      {"lipid","resname DLPE DMPC DPPC GPC LPPC PALM PC PGCL POPC POPE"},
-      {"lipids","lipid"},
-      {"ion","resname AL BA CA Ca CAL CD CES CLA CL Cl CO CS CU Cu CU1 CUA HG IN IOD K MG MN3 MO3 MO4 MO5 MO6 NA Na NAW OC7 PB POT PT RB SOD TB TL WO4 YB ZN ZN1 ZN2"},
-      {"ions","ion"},
-      {"sugar","resname AGLC"},
-      {"solvent","not (protein or sugar or nucleic or lipid)"},
-      /* for carbon, nitrogen, oxygen, and sulfur (and hydrogen), VMD
-       * uses a name-based regex; e.g. 'name "N.*"' for nitrogen.  This
-       * is just silly, and gets things like Na and Cl wrong.  We refuse
-       * to reproduce this buggy behavior and intead look to the atomic
-       * number. */
-      {"carbon","atomicnumber 6"},
-      {"nitrogen","atomicnumber 7"},
-      {"oxygen","atomicnumber 8"},
-      {"sulfur","atomicnumber 16"},
-      {"noh","not hydrogen"},
-      {"heme","resname HEM HEME"}
-  };
-}
-
-void System::initSelectionMacros() {
-    const unsigned n=sizeof(builtin_macros)/sizeof(builtin_macros[0]);
-    for (unsigned i=0; i<n; i++) {
-        addSelectionMacro(builtin_macros[i].name, builtin_macros[i].text);
-    }
-}
-
 System::System() 
 : _atomprops(ParamTable::create()), _bondprops(ParamTable::create()) {
     //printf("hello structure %p\n", (void *)this);
@@ -556,7 +496,6 @@ void System::removeAuxTable(ParamTablePtr aux) {
 
 SystemPtr System::create() {
     SystemPtr sys(new System);
-    sys->initSelectionMacros();
     return sys;
 }
 
@@ -659,44 +598,6 @@ ValueRef System::bondPropValue(Id term, String const& name) {
     Id col = bondPropIndex(name);
     if (bad(col)) MSYS_FAIL("No such bond property '" << name << "'");
     return bondPropValue(term, col);
-}
-
-void System::addSelectionMacro(std::string const& macro,
-                               std::string const& definition) {
-    _macros[macro]=definition;
-}
-
-std::string const& System::selectionMacroDefinition(std::string const& m) const {
-    MacroMap::const_iterator it=_macros.find(m);
-    if (it==_macros.end()) {
-        static const std::string _empty;
-        return _empty;
-    }
-    return it->second;
-}
-
-Id System::selectionMacroCount() const {
-    return _macros.size();
-}
-
-std::vector<std::string> System::selectionMacros() const {
-    std::vector<std::string> v;
-    for (MacroMap::const_iterator it=_macros.begin(); it!=_macros.end(); ++it) {
-        v.push_back(it->first);
-    }
-    return v;
-}
-
-void System::delSelectionMacro(std::string const& macro) {
-    _macros.erase(macro);
-}
-
-void System::clearSelectionMacros() {
-    _macros.clear();
-}
-
-void System::copySelectionMacros(System const& m) {
-    _macros = m._macros;
 }
 
 void SystemImporter::initialize(IdList const& atoms) {

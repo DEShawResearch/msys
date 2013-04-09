@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <stdexcept>
 #include <errno.h>
-#include <boost/static_assert.hpp>
 
 using namespace desres::msys::atomsel;
 
@@ -93,20 +92,22 @@ void Keyword::sget( const Selection& s, std::vector<Str>& v ) const {
 namespace {
   template <typename T>
     void compare_literals( const std::vector<T>& v,
-        const std::set<T>& lits,
-        Selection& s ) {
+                           const std::vector<T>& lits,
+                           Selection& s ) {
       int i,n=s.size();
-      for (i=0; i<n; i++) s[i] |= lits.count(v[i]);
+      for (i=0; i<n; i++) {
+          s[i] |= std::binary_search(lits.begin(), lits.end(), v[i]);
+      }
     }
 
   template <typename T>
     void compare_ranges( const std::vector<T>& v,
-        const std::set<std::pair<T,T> >& ranges,
-        Selection& s ) {
+                         const std::vector<std::pair<T,T> >& ranges,
+                           Selection& s ) {
       int i,n=s.size();
       for (i=0; i<n; i++) {
         if (s[i]) continue;
-        typedef typename std::set<std::pair<T,T> >::const_iterator iter;
+        typedef typename std::vector<std::pair<T,T> >::const_iterator iter;
         for (iter r=ranges.begin(); r!=ranges.end(); ++r) {
           const T& min=r->first;
           const T& max=r->second;
@@ -116,79 +117,88 @@ namespace {
     }
 
   void compare_regexes( const std::vector<std::string>& v,
-                        const std::vector<Regex>& regexes,
+                        const std::vector<Regex*>& regexes,
                         Selection& s ) {
     int i,n=s.size();
     for (i=0; i<n; i++) {
       if (s[i]) continue;
       for (unsigned j=0; j<regexes.size(); j++) {
-        s[i] |= boost::regex_match(v[i], regexes[j]);
+        s[i] |= boost::regex_match(v[i], *regexes[j]);
       }
     }
   }
 }
 
-void Keyword::select( Selection& s,
-    const std::set<Literal>& literals,
-    const std::set<Range>&   ranges,
-    const std::vector<Regex>& regexes) const {
+void IntList::select(Selection& s, KeywordPtr k) {
+    /* fetch values for current selection */
+    std::vector<Int> v(s.size());
+    k->iget(s,v);
 
-  Selection s2(s);
-  s2.clear();
-  switch (type) {
-    case KEY_INT:
-      {
-        if (regexes.size())
-            MSYS_FAIL("cannot select on regex for keyword '" << name << "' of integer type");
+    /* compute the size of a perfect hash table */
+    Int imin=0, imax=0;
+    bool have_first = false;
+    for (Id i=0; i<values.size(); i++) {
+        Int const& v = values[i];
+        if (have_first) {
+            imin = std::min(imin,v);
+            imax = std::max(imax,v);
+        } else {
+            have_first = true;
+            imin = v;
+            imax = v;
+        }
+    }
 
-        std::vector<Int> v(s.size());
-        iget(s,v);
-        std::set<Int> lit;
-        std::set<std::pair<Int,Int> > ran;
-        for (std::set<Literal>::const_iterator i=literals.begin();
-            i!=literals.end(); i++) {
-          lit.insert(parse_int(*i));
+    /* add selected values */
+    std::vector<bool> table(1+imax-imin);
+    for (Id i=0; i<values.size(); i++) {
+        Int const& v = values[i];
+        if (v >= imin && v<= imax) {
+            table[v-imin] = true;
         }
-        for (std::set<Range>::const_iterator i=ranges.begin();
-            i!=ranges.end(); i++) {
-          ran.insert(std::make_pair(parse_int(i->first),parse_int(i->second)));
-        }
-        compare_literals( v, lit, s2 );
-        compare_ranges(   v, ran, s2 );
-      }
-      break;
-    case KEY_DBL:
-      {
-        if (regexes.size())
-          MSYS_FAIL("cannot select on regex for keyword '" << name << "' of float type");
+    }
 
-        std::vector<Dbl> v(s.size());
-        dget(s,v);
-        std::set<Dbl> lit;
-        std::set<std::pair<Dbl,Dbl> > ran;
-        for (std::set<Literal>::const_iterator i=literals.begin();
-            i!=literals.end(); i++) {
-          lit.insert(parse_dbl(*i));
+    /* update selection */
+    for (Id i=0; i<s.size(); i++) {
+        if (s[i]) {
+            Int x = v[i];
+            s[i] = x >= imin && x<= imax && table[x-imin];
+            if (!s[i]) {
+                bool on = false;
+                for (Id j=0; j<ranges.size(); j++) {
+                    if (x >= ranges[j].first && x <= ranges[j].second) {
+                        on = true;
+                        break;
+                    }
+                }
+                s[i] = on;
+            }
         }
-        for (std::set<Range>::const_iterator i=ranges.begin();
-            i!=ranges.end(); i++) {
-          ran.insert(std::make_pair(parse_dbl(i->first),parse_dbl(i->second)));
-        }
-        compare_literals( v, lit, s2 );
-        compare_ranges(   v, ran, s2 );
-      }
-      break;
-    case KEY_STR:
-      {
-        std::vector<Str> v(s.size());
-        sget(s,v);
-        compare_literals( v, literals, s2 );
-        compare_ranges(   v, ranges,   s2 );
-        compare_regexes(  v, regexes,  s2 );
-      }
-      break;
-    default:
-      throw std::runtime_error("Unsupported key type");
-  }
-  s.intersect(s2);
+    }
 }
+
+void FloatList::select(Selection& s, KeywordPtr k) {
+    /* FIXME lots of extra work here */
+    Selection s2(s);
+    s2.clear();
+    std::vector<Dbl> v(s.size());
+    k->dget(s,v);
+    sort_unique(values);
+    compare_literals(v, values, s2);
+    compare_ranges(  v, ranges, s2);
+    s.intersect(s2);
+}
+
+void StringList::select(Selection& s, KeywordPtr k) {
+    /* FIXME lots of extra work here */
+    Selection s2(s);
+    s2.clear();
+    std::vector<Str> v(s.size());
+    k->sget(s,v);
+    sort_unique(values);
+    compare_literals(v, values, s2);
+    //compare_ranges(  v, ran, s2);
+    compare_regexes( v, regexes,s2 );
+    s.intersect(s2);
+}
+

@@ -242,10 +242,6 @@ namespace desres { namespace msys {
         typedef std::map<String, ParamTablePtr> AuxTableMap;
         AuxTableMap _auxtables;
 
-        /* atom selection macros */
-        typedef std::map<String, String> MacroMap;
-        MacroMap    _macros;
-
         /* the glue table */
         typedef std::set<glue_t> GlueSet;
         GlueSet     _glue;
@@ -513,34 +509,6 @@ namespace desres { namespace msys {
         /* Return ids of atoms based on their order of appearance in
          * a depth-first traversal of the structure hierarchy. */
         IdList orderedIds() const;
-
-        /* atom selection macros are strings that are expanded at parse time
-         * into longer strings.  */
-        void addSelectionMacro(std::string const& macro,
-                               std::string const& definition);
-
-        /* Remove the given macro */
-        void delSelectionMacro(std::string const& macro);
-
-        /* Get the definition corresponding to the given macro.  Returns empty
-         * string if not found. */
-        std::string const& selectionMacroDefinition(std::string const& m) const;
-
-        /* number of defined selection macros */
-        Id selectionMacroCount() const;
-
-        /* Return a list of all the selection macros */
-        std::vector<std::string> selectionMacros() const;
-
-        /* Remove all macros */
-        void clearSelectionMacros();
-
-        /* Assign the default selection macros */
-        void initSelectionMacros();
-
-        /* copy macros from another system */
-        void copySelectionMacros(System const& m);
-
 
         /**** glue ***/
 

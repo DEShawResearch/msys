@@ -27,11 +27,11 @@ namespace desres { namespace msys { namespace atomsel {
         Id count() const;
 
         /* total number of flags */
-        Id size() const { return flags.size(); }
+        inline Id size() const { return flags.size(); }
 
         /* accessors */
-        Id&        operator[](Id i)       { return flags[i]; }
-        Id  const& operator[](Id i) const { return flags[i]; }
+        inline Id&        operator[](Id i)       { return flags[i]; }
+        inline Id  const& operator[](Id i) const { return flags[i]; }
 
         /* return the selected ids */
         IdList ids() const;

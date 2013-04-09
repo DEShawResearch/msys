@@ -478,26 +478,6 @@ static void read_provenance( Sqlite dms, System& sys, KnownSet& known) {
     }
 }
 
-static void read_macros(Sqlite dms, System& sys, KnownSet& known) {
-    static const char MACRO_TABLE[] = "msys_selection_macro";
-    if (!dms.has( MACRO_TABLE)) return;
-    sys.clearSelectionMacros();
-    known.insert(MACRO_TABLE);
-    Reader r = dms.fetch( MACRO_TABLE);
-    if (r) {
-        int mac = r.column( "macro");
-        int def = r.column( "definition");
-        if (mac<0 || def<0) {
-            sys.initSelectionMacros();
-            return;
-        }
-        for (; r; r.next()) {
-            sys.addSelectionMacro(r.get_str( mac),
-                                  r.get_str( def));
-        }
-    }
-}
-
 static void read_glue(Sqlite dms, System& sys, KnownSet& known) {
     /* read and merge glue and msys_glue */
     static const char* tables[] = {"glue", "msys_glue"};
@@ -729,7 +709,6 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
 
     read_cell(dms, sys, known);
     read_provenance(dms, sys, known);
-    read_macros(dms, sys, known);
     read_glue(dms, sys, known);
 
     if (!structure_only) {

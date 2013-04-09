@@ -8,7 +8,7 @@ namespace desres { namespace msys { namespace atomsel {
 
   /* an expression holds a floating point value for each element in 
    * a selection. */
-  struct Expression {
+  struct Expression : public boost::enable_shared_from_this<Expression> {
     virtual ~Expression() {}
     virtual void eval( const Selection& s, std::vector<Dbl>& v ) = 0;
     virtual void dump(std::ostream& str) const = 0;

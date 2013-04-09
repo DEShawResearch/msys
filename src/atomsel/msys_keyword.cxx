@@ -24,6 +24,22 @@ namespace desres { namespace msys { namespace atomsel {
 
 namespace {
   using namespace desres::msys::atomsel;
+
+  struct AllKeyword : Keyword {
+      AllKeyword() : Keyword("all", KEY_INT) {}
+      void iget(const Selection& s, std::vector<Int>& v) const {
+        Id i,n=s.size();
+        for (i=0; i<n; i++) if (s[i]) v[i]=1;
+      }
+  };
+  struct NoneKeyword : Keyword {
+      NoneKeyword() : Keyword("none", KEY_INT) {}
+      void iget(const Selection& s, std::vector<Int>& v) const {
+        Id i,n=s.size();
+        for (i=0; i<n; i++) if (s[i]) v[i]=0;
+      }
+  };
+
   struct MsysKeyword : Keyword {
     MsysKeyword( const std::string& n, KeywordType t, SystemPtr _sys)
       : Keyword(n,t), sys(_sys) {}
@@ -142,4 +158,9 @@ KeywordPtr desres::msys::atomsel::keyword_atomprop(
     return KeywordPtr(new AtomPropKeyword(prop, t, ent));
 }
 
-
+KeywordPtr desres::msys::atomsel::keyword_all() {
+    return KeywordPtr(new AllKeyword);
+}
+KeywordPtr desres::msys::atomsel::keyword_none() {
+    return KeywordPtr(new NoneKeyword);
+}

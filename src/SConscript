@@ -53,8 +53,8 @@ atomsel/selection.cxx
 atomsel/predicate.cxx
 atomsel/vmd.cxx
 atomsel/vmd_keyword.cxx
-atomsel/VmdLexer.c
-atomsel/VmdParser.c
+atomsel/lexer.cxx
+atomsel/parser.cxx
 atomsel/within_predicate.cxx
 '''))
 

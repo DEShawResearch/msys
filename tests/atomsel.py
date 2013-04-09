@@ -10,7 +10,11 @@ import atomsel
 from time import time
 
 def compare_atomsel(coord_ent,sel, dump=False, perf=False):
-  ent_gids = coord_ent.selectIds(sel)
+  try:
+    ent_gids = coord_ent.selectIds(sel)
+  except RuntimeError:
+    print "MSYS failed to parse %s" % sel
+    return
   vmd_atomsel = atomsel.atomsel(sel)
   vmd_gids = vmd_atomsel.get("index")
 
@@ -53,6 +57,10 @@ coord_vmd=molecule.load(path.split('.')[-1], path)
 coord_ent = msys.Load(path)
 coord_ent.select('none')
 
+compare_atomsel(coord_ent,"protein or water and element O")
+compare_atomsel(coord_ent,"protein and water or element O")
+compare_atomsel(coord_ent,"protein or (water and element O)")
+compare_atomsel(coord_ent,"(protein and water) or element O")
 
 compare_atomsel(coord_ent,"ctnumber 1")
 compare_atomsel(coord_ent,"ctnumber 2")
@@ -102,6 +110,7 @@ compare_atomsel(coord_ent,"sqrt(sqr(x)+sqr(y))<5")
 compare_atomsel(coord_ent,"abs(x-y)<5")
 
 compare_atomsel(coord_ent,"residue % 10 == 0")
+compare_atomsel(coord_ent,"residue^3 == 125")
 
 # nearest
 compare_atomsel(coord_ent,"water and noh")
