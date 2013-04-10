@@ -213,6 +213,7 @@ class TestMain(unittest.TestCase):
     def testMass(self):
         for i,m in (-1,0), (0,0), (1,1.00794), (19,39.0983):
             self.assertEqual(msys.MassForElement(i), m)
+            self.assertEqual(msys.GuessAtomicNumber(m), max(i,0))
 
     def testElement(self):
         for i,a in (1,'H'), (2,'He'), (19,'K'):

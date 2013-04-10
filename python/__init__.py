@@ -10,6 +10,7 @@ import sys
 
 from _msys import GlobalCell, NonbondedInfo, version, hexversion
 from _msys import RadiusForElement, MassForElement, ElementForAbbreviation
+from _msys import GuessAtomicNumber
 from atomsel import Atomsel
 
 class Handle(object):

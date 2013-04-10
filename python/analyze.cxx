@@ -69,6 +69,7 @@ namespace desres { namespace msys {
         def("MassForElement", MassForElement);
         def("ElementForAbbreviation", ElementForAbbreviation);
         def("GuessHydrogenPositions", GuessHydrogenPositions);
+        def("GuessAtomicNumber", GuessAtomicNumber);
 
         class_<SmartsPattern>("SmartsPattern", init<std::string const&>())
             .def("atomCount", &SmartsPattern::atomCount)
