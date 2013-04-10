@@ -1503,7 +1503,7 @@ class TestMain(unittest.TestCase):
 
     def testAnnotatedSystem(self):
         # Test rings
-        sys = msys.LoadDMS('/d/en/gregerse-0/p4/sw/forcefields/viparr4/cubane.dms', True)
+        sys = msys.Load('tests/files/cubane.dms')
         with self.assertRaises(RuntimeError):
             annot_sys = msys.AnnotatedSystem(sys)
         msys.AssignBondOrderAndFormalCharge(sys)
