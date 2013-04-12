@@ -15,6 +15,16 @@ def vsize():
     s=os.popen(cmd).read()
     return int(s)
 
+class TestFbhw(unittest.TestCase):
+    def testMae(self):
+        mol=msys.Load('tests/files/noe.mae')
+        fbhw=mol.table('stretch_fbhw')
+        self.assertEqual(set(fbhw.params.props), 
+                         set(('lower', 'upper', 'sigma', 'beta', 'fc')))
+        self.assertEqual(fbhw.term_props, ['group'])
+        self.assertEqual([t.atoms[0].id for t in fbhw.terms], range(6))
+        self.assertEqual([t['group'] for t in fbhw.terms], [0]*3+[1]*3)
+
 class TestAtomsel(unittest.TestCase):
     def testSpaces(self):
         mol=msys.CreateSystem()
