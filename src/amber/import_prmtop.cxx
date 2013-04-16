@@ -258,7 +258,7 @@ namespace {
     };
 }
     
-static void merge_torsion(ParamTablePtr params, Id id, 
+static void merge_torsion(ParamTablePtr params, Id id, bool first,
                           double phase_in_radians, const double fc_orig, 
                           double period) {
 
@@ -274,10 +274,12 @@ static void merge_torsion(ParamTablePtr params, Id id,
     } else if (phase==180) {
         /* just invert the term */
         fc_phased *= -1;
-    } else if (phase != params->value(id, "phi0").asFloat()) {
-        MSYS_FAIL("multiple dihedral term contains conflicting multiplicity");
-    } else {
+    } else if (first) {
         params->value(id, "phi0") = phase;
+    } else if (phase != params->value(id, "phi0").asFloat()) {
+        double old = params->value(id, "phi0").asFloat();
+        double cur = phase;
+        MSYS_FAIL("multiple dihedral term contains conflicting phase: " << old << " != " << cur);
     }
     double oldval = params->value(id, 1+period);
     if (oldval==0) {
@@ -320,7 +322,7 @@ static PairList parse_torsion(SystemPtr mol, SectionMap const& map,
     TorsionHash hash;
     IdList ids(4);
     TermTablePtr tb = AddTable(mol, "dihedral_trig");
-    
+
     for (int i=0; i<nbonh+nbona; i++) {
         int ai = bonh[5*i  ]/3;
         int aj = bonh[5*i+1]/3;
@@ -356,7 +358,7 @@ static PairList parse_torsion(SystemPtr mol, SectionMap const& map,
             if (pi>pj) std::swap(pi,pj);
             pairs.push_back(Pair(pi,pj,scee.at(ind), scnb.at(ind)));
         }
-        merge_torsion(tb->params(), param, phase.at(ind), fc.at(ind), period.at(ind));
+        merge_torsion(tb->params(), param, r.second, phase.at(ind), fc.at(ind), period.at(ind));
     }
     return pairs;
 } 
