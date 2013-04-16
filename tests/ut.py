@@ -15,6 +15,14 @@ def vsize():
     s=os.popen(cmd).read()
     return int(s)
 
+class TestAmber(unittest.TestCase):
+    def testStructureOnly(self):
+        m1=msys.LoadPrmTop('tests/files/molecule.prmtop')
+        m2=msys.LoadPrmTop('tests/files/molecule.prmtop', structure_only=True)
+        self.assertEqual(
+                [(b.first.id, b.second.id) for b in m1.bonds],
+                [(b.first.id, b.second.id) for b in m2.bonds])
+
 class TestFbhw(unittest.TestCase):
     def testMae(self):
         mol=msys.Load('tests/files/noe.mae')
@@ -264,11 +272,6 @@ class TestMain(unittest.TestCase):
             msys.SaveMAE(m,'/root/nono.mae')
         with self.assertRaises(RuntimeError):
             msys.SavePDB(m,'/root/nono.pdb')
-
-    def testPrmTop(self):
-        d=os.path.dirname(__file__)
-        msys.LoadPrmTop(os.path.join(d,'molecule.prmtop'))
-
 
     def xxtestFailedWrite(self):
         print "building big system..."

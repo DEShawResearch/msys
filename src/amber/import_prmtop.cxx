@@ -177,6 +177,7 @@ static void parse_nonbonded(SystemPtr mol, SectionMap const& map, int ntypes,
 }
 
 static void parse_stretch(SystemPtr mol, SectionMap const& map,
+                          bool structure_only,
                           int ntypes, int nbonh, int nbona) {
     
     std::vector<double> r0(ntypes), fc(ntypes);
@@ -187,24 +188,29 @@ static void parse_stretch(SystemPtr mol, SectionMap const& map,
     parse_ints(map, "BONDS_INC_HYDROGEN", bonh);
     parse_ints(map, "BONDS_WITHOUT_HYDROGEN", bona);
 
-    TermTablePtr tb = AddTable(mol, "stretch_harm");
-    for (int i=0; i<ntypes; i++) {
-        Id param = tb->params()->addParam();
-        tb->params()->value(param, "fc") = fc[i];
-        tb->params()->value(param, "r0") = r0[i];
+    TermTablePtr tb;
+    if (!structure_only) {
+        tb = AddTable(mol, "stretch_harm");
+        for (int i=0; i<ntypes; i++) {
+            Id param = tb->params()->addParam();
+            tb->params()->value(param, "fc") = fc[i];
+            tb->params()->value(param, "r0") = r0[i];
+        }
     }
     IdList ids(2);
     for (int i=0; i<nbonh; i++) {
         ids[0] = bonh[3*i  ]/3;
         ids[1] = bonh[3*i+1]/3;
-        tb->addTerm(ids, bonh[3*i+2]-1);
         mol->addBond(ids[0], ids[1]);
+        if (structure_only) continue;
+        tb->addTerm(ids, bonh[3*i+2]-1);
     }
     for (int i=0; i<nbona; i++) {
         ids[0] = bona[3*i  ]/3;
         ids[1] = bona[3*i+1]/3;
-        tb->addTerm(ids, bona[3*i+2]-1);
         mol->addBond(ids[0], ids[1]);
+        if (structure_only) continue;
+        tb->addTerm(ids, bona[3*i+2]-1);
     }
 }
  
@@ -451,8 +457,10 @@ SystemPtr desres::msys::ImportPrmTop( std::string const& path,
         mol->atom(atm).atomic_number = GuessAtomicNumber(masses.at(atm));
     }
 
+    parse_stretch(mol, section, structure_only,
+                  ptrs[Numbnd], ptrs[Nbonh], ptrs[Nbona]);
+
     if (!structure_only) {
-        parse_stretch(mol, section, ptrs[Numbnd], ptrs[Nbonh], ptrs[Nbona]);
         parse_angle(mol, section, ptrs[Numang], ptrs[Ntheth], ptrs[Ntheta]);
         PairList pairs = parse_torsion(mol, section, 
                                       ptrs[Nptra], ptrs[Nphih], ptrs[Nphia]);
