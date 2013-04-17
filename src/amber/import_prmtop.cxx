@@ -258,39 +258,6 @@ namespace {
     };
 }
     
-static void merge_torsion(ParamTablePtr params, Id id, bool first,
-                          double phase_in_radians, const double fc_orig, 
-                          double period) {
-
-    double phase = phase_in_radians * 180 / M_PI;
-    /* Amber files approximate pi by 3.141594 */
-    if (fabs(phase)>179.9) {
-             phase = 180;
-        if (phase_in_radians<0) phase *= -1;
-    }
-    double fc_phased = fc_orig;
-    if (phase==0) {
-        /* great, nothing to do */
-    } else if (phase==180) {
-        /* just invert the term */
-        fc_phased *= -1;
-    } else if (first) {
-        params->value(id, "phi0") = phase;
-    } else if (phase != params->value(id, "phi0").asFloat()) {
-        double old = params->value(id, "phi0").asFloat();
-        double cur = phase;
-        MSYS_FAIL("multiple dihedral term contains conflicting phase: " << old << " != " << cur);
-    }
-    double oldval = params->value(id, 1+period);
-    if (oldval==0) {
-        params->value(id, 1+period) = fc_phased;
-    } else if (oldval != fc_phased) {
-        MSYS_FAIL("multiple dihedral term contains conflicting force constant for period " << period);
-    }
-    double oldsum = params->value(id, 1);
-    params->value(id, 1) = oldsum + fc_orig;
-}
- 
 static PairList parse_torsion(SystemPtr mol, SectionMap const& map,
                           int ntypes, int nbonh, int nbona) {
     
@@ -322,6 +289,7 @@ static PairList parse_torsion(SystemPtr mol, SectionMap const& map,
     TorsionHash hash;
     IdList ids(4);
     TermTablePtr tb = AddTable(mol, "dihedral_trig");
+    ParamTablePtr params = tb->params();
 
     for (int i=0; i<nbonh+nbona; i++) {
         int ai = bonh[5*i  ]/3;
@@ -342,23 +310,55 @@ static PairList parse_torsion(SystemPtr mol, SectionMap const& map,
         ids[1]=aj;
         ids[2]=ak;
         ids[3]=al;
-        std::pair<TorsionHash::iterator, bool> r;
-        r = hash.insert(std::make_pair(ids, BadId ));
-        Id param = BadId;
-        if (r.second) {
-            /* new term, so create a Term and Param entry */
-            param = tb->params()->addParam();
-            tb->addTerm(ids, param);
-            r.first->second = param;
-        } else {
-            param = r.first->second;
-        }
+
+        /* add pair if needed */
         if (needs_pair) {
             Id pi=ai, pj=al;
             if (pi>pj) std::swap(pi,pj);
             pairs.push_back(Pair(pi,pj,scee.at(ind), scnb.at(ind)));
         }
-        merge_torsion(tb->params(), param, r.second, phase.at(ind), fc.at(ind), period.at(ind));
+
+        /* extract and canonicalize force constant and phase */
+        double fc_orig = fc.at(ind);
+        double fc_phased = fc_orig;
+        double phase_in_radians = phase.at(ind);
+        double phase_in_degrees = phase_in_radians * 180 / M_PI;
+        /* Amber files approximate pi by 3.141594 */
+        if (fabs(phase_in_degrees)>179.9 && fabs(phase_in_degrees)<180.1) {
+            phase_in_degrees = 0;
+            fc_phased *= -1;
+        }
+
+        /* create or fetch parameter entry */
+        Id param = BadId;
+        if (phase_in_degrees==0) {
+            /* try to merge terms together */
+            std::pair<TorsionHash::iterator, bool> r;
+            r = hash.insert(std::make_pair(ids, BadId ));
+            if (r.second) {
+                param = params->addParam();
+                tb->addTerm(ids, param);
+                r.first->second = param;
+            } else {
+                param = r.first->second;
+            }
+        } else {
+            /* give it its own term */
+            param = params->addParam();
+            params->value(param, "phi0") = phase_in_degrees;
+            tb->addTerm(ids, param);
+        }
+
+        /* update values */
+        Id col = 1+period.at(ind);
+        double oldval = params->value(param, col);
+        if (oldval==0) {
+            params->value(param, col) = fc_phased;
+        } else if (oldval != fc_phased) {
+            MSYS_FAIL("multiple dihedral term contains conflicting force constant for period " << period.at(ind));
+        }
+        double oldsum = params->value(param, 1);
+        params->value(param, 1) = oldsum + fc_orig;
     }
     return pairs;
 } 
