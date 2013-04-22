@@ -28,6 +28,10 @@ digit           [0-9]
 alpha           [a-zA-Z_]
 alphanum        ({alpha}|{digit})
 
+weird           [\'\"]
+like_1A         {digit}+({alpha}|{weird})+({alphanum}|{weird})*
+like_C5prime    {alpha}+{alphanum}*{weird}+({alphanum}|{weird})*
+
 %%
 
 \(                      { return '('; }
@@ -96,6 +100,12 @@ of                      { return OF;  }
 "**"                { return EXP; }
                           
 [ \t\n]             ;
+
+{like_1A}|{like_C5prime} { /* catch raw names like: 5' 1A C4' 3'A */
+                           yylval->sval = strdup(yytext);
+                           return SVAL;
+                        }
+
 
 {digit}+            { try {
                         yylval->ival = parse_int(yytext); 

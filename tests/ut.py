@@ -34,6 +34,14 @@ class TestFbhw(unittest.TestCase):
         self.assertEqual([t['group'] for t in fbhw.terms], [0]*3+[1]*3)
 
 class TestAtomsel(unittest.TestCase):
+    
+    def testFunnyResnames(self):
+        mol=msys.CreateSystem()
+        a=mol.addAtom()
+        a.name='0A'
+        self.assertEqual(mol.selectIds("name '0A'"), [0])
+        self.assertEqual(mol.selectIds("name 0A"), [0])
+
     def testSpaces(self):
         mol=msys.CreateSystem()
         for i in range(2):
