@@ -1,3 +1,6 @@
+1.7.10 FIXED: Atom selections with names beginning with digits were broken
+              since 1.7.7.
+
 1.7.9  FIXED: Amber prm files with nontrivial dihedral phases could be misread.
 
 1.7.8  FIXED: Amber prm file should still add bonds when structure_only=True.
