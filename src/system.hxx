@@ -159,10 +159,18 @@ namespace desres { namespace msys {
     public:
         /* constructor: maintain a single row with msys_name as the first
          * property. */
-        component_t() : _kv(ParamTable::create()) {
+        component_t() {
+            _kv = ParamTable::create();
             _kv->addParam();
             _kv->addProp("msys_name", StringType);
         }
+
+        /* must implement copy constructor so that we don't share _kv! */
+        component_t(component_t const& c) {
+            *this = c;
+        }
+
+        component_t& operator=(component_t const& c);
 
         /* getter/setter for name */
         String name() const { return _kv->value(0,0); }
@@ -375,6 +383,8 @@ namespace desres { namespace msys {
 
         IdList atomsForCt(Id id) const;
         Id atomCountForCt(Id id) const;
+        IdList bondsForCt(Id id) const;
+        Id bondCountForCt(Id id) const;
 
 
         /* is the the given element id valid? */

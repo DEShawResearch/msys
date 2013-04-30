@@ -1,6 +1,6 @@
 #include "system.hxx"
 #include "sssr.hxx"
-#include "term_table.hxx"
+#include "append.hxx"
 #include <sstream>
 #include <stack>
 #include <queue>
@@ -145,6 +145,12 @@ Id System::addCt() {
     return id;
 }
 
+component_t& component_t::operator=(component_t const& c) {
+    _kv = ParamTable::create();
+    AppendParams(_kv, c._kv, c._kv->params());
+    return *this;
+}
+
 void System::delBond(Id id) {
     const bond_t& b = _bonds.at(id);
     _deadbonds.insert(id);
@@ -213,6 +219,33 @@ Id System::atomCountForCt(Id ct) const {
     return n;
 }
 
+IdList System::bondsForCt(Id ct) const {
+    IdList ids;
+    BOOST_FOREACH(Id const& chn, chainsForCt(ct)) {
+        BOOST_FOREACH(Id res, residuesForChain(chn)) {
+            IdList const& atms = atomsForResidue(res);
+            BOOST_FOREACH(Id atm, atms) {
+                IdList const& bonds = bondsForAtom(atm);
+                BOOST_FOREACH(Id bnd, bonds) {
+                    if (bond(bnd).i == atm) ids.push_back(bnd);
+                }
+            }
+        }
+    }
+    return ids;
+}
+
+Id System::bondCountForCt(Id ct) const {
+    Id n=0;
+    BOOST_FOREACH(Id const& chn, chainsForCt(ct)) {
+        BOOST_FOREACH(Id res, residuesForChain(chn)) {
+            BOOST_FOREACH(Id atm, atomsForResidue(res)) {
+                n += bondCountForAtom(atm);
+            }
+        }
+    }
+    return n/2;
+}
 
 
 void System::delResidue(Id id) {
