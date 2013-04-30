@@ -386,6 +386,8 @@ namespace desres { namespace msys {
         IdList bondsForCt(Id id) const;
         Id bondCountForCt(Id id) const;
 
+        IdList residuesForCt(Id id) const;
+
 
         /* is the the given element id valid? */
         bool hasAtom(Id id) const {

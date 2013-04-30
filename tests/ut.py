@@ -1496,10 +1496,14 @@ class TestMain(unittest.TestCase):
 
         try: os.unlink(path)
         except: pass
+        m.ct(0).name = 'XYZ'
         msys.SaveMol2(m,path, append=True)
+        m.ct(0).name = 'ABC'
         msys.SaveMol2(m,path, append=True)
         for i,m in enumerate(msys.LoadMany(path)):
             self.assertEqual(m.natoms, 1)
+            self.assertEqual(m.ct(0).name, ('XYZ', 'ABC')[i])
+            self.assertEqual(m.name, ('XYZ', 'ABC')[i])
         self.assertEqual(i,1)
 
     def testAppendSDF(self):

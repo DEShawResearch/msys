@@ -1,6 +1,7 @@
 #include "../mol2.hxx"
 #include "../sssr.hxx"
 #include "elements.hxx"
+#include "append.hxx"
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp> /* for boost::trim */
 #include <stdio.h>
@@ -33,7 +34,11 @@ namespace {
 }
 
 SystemPtr desres::msys::ImportMol2(std::string const& path) {
-    return iterator(path).next();
+    SystemPtr ct, mol = System::create();
+    iterator it(path);
+    while ((ct=it.next())) AppendSystem(mol,ct);
+    mol->name = path;
+    return mol;
 }
 
 std::vector<SystemPtr>
@@ -77,6 +82,7 @@ SystemPtr iterator::next() {
     fgets(buf, sizeof(buf), fd); 
     mol->name = buf;
     boost::trim(mol->name);
+    mol->ct(0).setName(mol->name);
     /* read natoms, nbonds, nsub */
     natoms = nbonds = 0;
     nsub = 0;

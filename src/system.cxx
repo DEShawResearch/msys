@@ -247,6 +247,14 @@ Id System::bondCountForCt(Id ct) const {
     return n/2;
 }
 
+IdList System::residuesForCt(Id ct) const {
+    IdList ids;
+    BOOST_FOREACH(Id const& chn, chainsForCt(ct)) {
+        IdList const& reslist = residuesForChain(chn);
+        ids.insert(ids.end(), reslist.begin(), reslist.end());
+    }
+    return ids;
+}
 
 void System::delResidue(Id id) {
     /* nothing to do if invalid residue */

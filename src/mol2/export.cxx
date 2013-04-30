@@ -6,40 +6,41 @@
 
 using namespace desres::msys;
 
-void desres::msys::ExportMol2( SystemPtr mol, std::string const& path,
-                               Provenance const& provenance,
-                               unsigned flags) {
-
-    const char* mode = flags & Mol2Export::Append ? "ab" : "wb";
-    FILE* fd = fopen(path.c_str(), mode);
-    if (!fd) MSYS_FAIL("Could not open '" << "' for writing.");
-    boost::shared_ptr<FILE> dtor(fd, fclose);
+static void export_ct(SystemPtr mol, Id ct, FILE* fd, 
+                      Provenance const& provenance, unsigned flags) {
 
     Id atype = mol->atomPropIndex("sybyl_type");
     Id btype = mol->bondPropIndex("sybyl_type");
 
+    component_t const& cmp = mol->ct(ct);
+    IdList atoms = mol->atomsForCt(ct);
+    IdList bonds = mol->bondsForCt(ct);
+    IdList residues = mol->residuesForChain(ct);
+    std::sort(atoms.begin(), atoms.end());
+    std::sort(residues.begin(), residues.end());
+
     /* molecule record */
     fprintf(fd, "@<TRIPOS>MOLECULE\n");
-    fprintf(fd, "%s\n", mol->name.c_str());
-    fprintf(fd, " %4d %4d %4d\n", 
-            mol->atomCount(), mol->bondCount(), mol->residueCount());
-    fprintf(fd, "%s\n", mol->residueCount()==1 ? "SMALL" : "BIOPOLYMER");
+    fprintf(fd, "%s\n", cmp.name().c_str());
+    fprintf(fd, " %4lu %4lu %4lu\n", 
+            atoms.size(), bonds.size(), residues.size());
+    fprintf(fd, "%s\n", residues.size()==1 ? "SMALL" : "BIOPOLYMER");
     fprintf(fd, "USER_CHARGES\n");
     fprintf(fd, "%s\n", "****");    /* status bits */
     fprintf(fd, "%s: %s\n", 
             provenance.version.c_str(),
             provenance.cmdline.c_str());
 
-    /* atom records */
-    IdList idmap(mol->maxAtomId(), 0);
-    Id index=0;
-
     fprintf(fd, "@<TRIPOS>ATOM\n");
-    for (Id i=0; i<mol->maxAtomId(); i++) {
-        if (!mol->hasAtom(i)) continue;
-        idmap[i] = ++index;
-        const atom_t& atm = mol->atom(i);
+    for (Id i=0; i<atoms.size(); i++) {
+        Id id = atoms[i];
+        const atom_t& atm = mol->atom(id);
         const residue_t& res = mol->residue(atm.residue);
+
+        int atomid = 1 + std::lower_bound(
+                atoms.begin(), atoms.end(), id)-atoms.begin();
+        int resid = 1 + std::lower_bound(
+                residues.begin(), residues.end(), atm.residue)-residues.begin();
 
         /* Use atom name unless it's invalid */
         std::string aname(atm.name);
@@ -63,17 +64,22 @@ void desres::msys::ExportMol2( SystemPtr mol, std::string const& path,
         /* write the atom line */
         fprintf(fd, 
            "%7d %-4s      %8.4f  %8.4f  %8.4f %-6s %4d  %4s  %8.4f\n", 
-           index, aname.c_str(), atm.x, atm.y, atm.z,
-           type.c_str(), atm.residue+1, rname.c_str(), atm.charge);
+           atomid, aname.c_str(), atm.x, atm.y, atm.z,
+           type.c_str(), resid, rname.c_str(), atm.charge);
     }
 
     /* bond records */
     fprintf(fd, "@<TRIPOS>BOND\n");
-    for (Id i=0; i<mol->maxBondId(); i++) {
-        if (!mol->hasBond(i)) continue;
-        bond_t const& bnd = mol->bond(i);
-        Id ai = idmap[bnd.i];
-        Id aj = idmap[bnd.j];
+    for (Id i=0; i<bonds.size(); i++) {
+        Id id = bonds[i];
+        bond_t const& bnd = mol->bond(id);
+        Id ai = bnd.i;
+        Id aj = bnd.j;
+        Id si = std::lower_bound(atoms.begin(), atoms.end(), ai)-atoms.begin();
+        Id sj = std::lower_bound(atoms.begin(), atoms.end(), aj)-atoms.begin();
+        if (si==atoms.size() || sj==atoms.size()) {
+            MSYS_FAIL("Ct " << ct << " has bonds which cross ct boundaries.  Cannot export to MOL2.");
+        }
         std::string type;
         if (bad(btype)) {
             std::stringstream ss;
@@ -82,19 +88,34 @@ void desres::msys::ExportMol2( SystemPtr mol, std::string const& path,
         } else {
             type = mol->bondPropValue(i,btype).asString();
         }
-        fprintf(fd, "%5u %5u %5u %s\n", i+1, ai, aj, type.c_str());
+        fprintf(fd, "%5u %5u %5u %s\n", i+1, si+1, sj+1, type.c_str());
     }
 
     /* substructure */
     fprintf(fd, "@<TRIPOS>SUBSTRUCTURE\n");
-    for (Id i=0; i<mol->maxResidueId(); i++) {
-        if (!mol->atomCountForResidue(i)) continue;
-        residue_t const& res = mol->residue(i);
+    for (Id i=0; i<residues.size(); i++) {
+        Id id = residues[i];
+        residue_t const& res = mol->residue(id);
+        Id ri = mol->atomsForResidue(id).at(0);
+        Id si = std::lower_bound(atoms.begin(), atoms.end(), ri)-atoms.begin();
         fprintf(fd, "%7u %-4s %7u %-8s\n",
                 i+1,                                /* residue id */
                 res.name.c_str(),                   /* residue name */
-                mol->atomsForResidue(i).at(0)+1,    /* root atom */
-                mol->residueCount()==1 ? "GROUP" : "RESIDUE");
+                si+1,                               /* root atom */
+                residues.size()==1 ? "GROUP" : "RESIDUE");
+    }
+}
+
+void desres::msys::ExportMol2( SystemPtr mol, std::string const& path,
+                               Provenance const& provenance,
+                               unsigned flags) {
+
+    const char* mode = flags & Mol2Export::Append ? "ab" : "wb";
+    FILE* fd = fopen(path.c_str(), mode);
+    if (!fd) MSYS_FAIL("Could not open '" << "' for writing.");
+    boost::shared_ptr<FILE> dtor(fd, fclose);
+    for (Id ct=0; ct<mol->ctCount(); ct++) {
+        export_ct(mol,ct,fd,provenance,flags);
     }
 }
 
