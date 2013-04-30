@@ -244,6 +244,7 @@ class TestMain(unittest.TestCase):
     def testElement(self):
         for i,a in (1,'H'), (2,'He'), (19,'K'):
             self.assertEqual(msys.ElementForAbbreviation(a), i)
+            self.assertEqual(msys.AbbreviationForElement(i), a)
 
     def testAssignBondOrdersAndFormalCharges(self):
         # Smoke test only
