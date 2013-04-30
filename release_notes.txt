@@ -1,3 +1,8 @@
+1.7.11 NEW: AbbreviationForElement in Python interface.
+       FIXED: ct properties were being improperly shared.
+       FIXED: mol2 and sdf import/export better supports multiple entries.
+       FIXED: dms-dump looks for more than six cmap tables.
+
 1.7.10 FIXED: Atom selections with names beginning with digits were broken
               since 1.7.7.
 
