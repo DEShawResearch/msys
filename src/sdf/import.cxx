@@ -96,8 +96,9 @@ SystemPtr iterator::next() {
     SystemPtr mol = System::create();
     Id chn = mol->addChain();
     Id res = mol->addResidue(chn);
+    boost::trim(h1);
     mol->name = h1;
-    boost::trim(mol->name);
+    mol->ct(0).setName(h1);
 
     /* parse counts line */
     std::string line;
@@ -253,6 +254,7 @@ SystemPtr desres::msys::ImportSdf(std::string const& path) {
     SystemPtr ct, mol = System::create();
     iterator it(path);
     while ((ct=it.next())) AppendSystem(mol,ct);
+    mol->name = path;
     return mol;
 }
 

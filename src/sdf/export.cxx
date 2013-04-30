@@ -4,7 +4,71 @@
 #include <fstream>
 #include <errno.h>
 
+using namespace desres::msys;
 using boost::format;
+
+static void export_ct(SystemPtr mol, Id ct, std::ostream& out) {
+
+    if (mol->atomCountForCt(ct) > 999) {
+        MSYS_FAIL("SDF export not support for > 999 atoms, have ct " << ct
+                << " with " << mol->atomCountForCt(ct) << " atoms.");
+    }
+    component_t const& cmp = mol->ct(ct);
+    IdList atoms = mol->atomsForCt(ct);
+    IdList bonds = mol->bondsForCt(ct);
+    std::sort(atoms.begin(), atoms.end());
+
+    /* header */
+    out << cmp.name() << std::endl;
+    out << std::endl;
+    out << std::endl;
+
+    /* counts */
+    out << format("%3d") % atoms.size()
+        << format("%3d") % bonds.size()
+        << " 0  0  0  0            999 V2000"
+        << std::endl;
+
+    /* atoms */
+    for (Id i=0; i<atoms.size(); i++) {
+        atom_t const& atm = mol->atom(atoms[i]);
+        const char* elem = AbbreviationForElement(atm.atomic_number);
+        int fc=atm.formal_charge;
+        fc=(fc==0 || fc<-3 || fc>3) ? 0 : 4-fc;
+        out << format("%10.4f") % atm.x
+            << format("%10.4f") % atm.y
+            << format("%10.4f ") % atm.z
+            << format("%-3s")   % elem
+            << " 0"
+            << format("%3d") % fc
+            << "  0  0  0  0"
+            << std::endl;
+    }
+
+    /* bonds */
+    for (Id i=0; i<bonds.size(); i++) {
+        bond_t const& bnd = mol->bond(bonds[i]);
+        Id ai = bnd.i;
+        Id aj = bnd.j;
+        Id si = std::lower_bound(atoms.begin(), atoms.end(), ai)-atoms.begin();
+        Id sj = std::lower_bound(atoms.begin(), atoms.end(), aj)-atoms.begin();
+        if (si==atoms.size() || sj==atoms.size()) {
+            MSYS_FAIL("Ct " << ct << " has bonds which cross ct boundaries.  Cannot export to SDF.");
+        }
+        out << format("%3i") % (si+1)
+            << format("%3i") % (sj+1)
+            << format("%3i") % bnd.order
+            << "  0  0  0"
+            << std::endl;
+    }
+
+    /* write property block? */
+
+    /* done with molecule section */
+    out << "M  END" << std::endl;
+
+    out << "$$$$" << std::endl;
+}
 
 namespace desres { namespace msys {
 
@@ -22,60 +86,7 @@ namespace desres { namespace msys {
     }
 
     void ExportSdf( SystemPtr mol, std::ostream& out ) {
-
-        if (mol->atomCount() > 999) {
-            MSYS_FAIL("SDF export not support for > 999 atoms, have " << 
-                    mol->atomCount());
-        }
-
-        /* header */
-        out << mol->name << std::endl;
-        out << std::endl;
-        out << std::endl;
-
-        /* counts */
-        out << format("%3d") % mol->atomCount()
-            << format("%3d") % mol->bondCount()
-            << " 0  0  0  0            999 V2000"
-            << std::endl;
-
-        /* atoms */
-        IdList idmap(mol->maxAtomId(), BadId);
-        Id lid = 0;
-        for (Id i=0; i<mol->maxAtomId(); i++) {
-            if (!mol->hasAtom(i)) continue;
-            idmap[i] = ++lid;
-            atom_t const& atm = mol->atom(i);
-            const char* elem = AbbreviationForElement(atm.atomic_number);
-            int fc=atm.formal_charge;
-            fc=(fc==0 || fc<-3 || fc>3) ? 0 : 4-fc;
-            out << format("%10.4f") % atm.x
-                << format("%10.4f") % atm.y
-                << format("%10.4f ") % atm.z
-                << format("%-3s")   % elem
-                << " 0"
-                << format("%3d") % fc
-                << "  0  0  0  0"
-                << std::endl;
-        }
-
-        /* bonds */
-        for (Id i=0; i<mol->maxBondId(); i++) {
-            if (!mol->hasBond(i)) continue;
-            bond_t const& bnd = mol->bond(i);
-            out << format("%3i") % idmap.at(bnd.i)
-                << format("%3i") % idmap.at(bnd.j)
-                << format("%3i") % bnd.order
-                << "  0  0  0"
-                << std::endl;
-        }
-
-        /* write property block? */
-
-        /* done with molecule section */
-        out << "M  END" << std::endl;
-
-        out << "$$$$" << std::endl;
+        for (Id ct=0; ct<mol->ctCount(); ct++) export_ct(mol,ct,out);
     }
-
 }}
+

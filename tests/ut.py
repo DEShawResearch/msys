@@ -58,14 +58,44 @@ class TestAtomsel(unittest.TestCase):
                 self.assertEqual(old, new)
 
 class TestSdf(unittest.TestCase):
-    def setUp(self):
-        self.mol=msys.Load('tests/files/lig.sdf')
-
     def testFormalCharge(self):
-        self.assertEqual(self.mol.atom(12).formal_charge,1)
-        self.assertEqual(self.mol.atom(19).formal_charge,1)
-        self.assertEqual(self.mol.atom(20).formal_charge,0)
-        self.assertEqual(self.mol.atom(21).formal_charge,0)
+        mol=msys.Load('tests/files/lig.sdf')
+        self.assertEqual(mol.atom(12).formal_charge,1)
+        self.assertEqual(mol.atom(19).formal_charge,1)
+        self.assertEqual(mol.atom(20).formal_charge,0)
+        self.assertEqual(mol.atom(21).formal_charge,0)
+
+    def testSingleCt(self):
+        path='/tmp/msys_test.sdf'
+        mol=msys.CreateSystem()
+        a=mol.addAtom()
+        mol.ct(0).name="XYZ"
+        a.atomic_number=11
+        msys.SaveSDF(mol, path)
+        mol2=msys.Load(path)
+        self.assertEqual(mol2.ct(0).name, "XYZ")
+
+    def testMultipleCt(self):
+        path='/tmp/msys_test.sdf'
+        ct=msys.CreateSystem()
+        a=ct.addAtom()
+        a.atomic_number=11
+        mol=msys.CreateSystem()
+        mol.append(ct)
+        mol.append(ct)
+        mol.ct(0).name="XYZ"
+        mol.ct(1).name="ABC"
+        self.assertEqual(mol.ct(0).name, "XYZ")
+        self.assertEqual(mol.ct(1).name, "ABC")
+
+        msys.SaveSDF(mol, path)
+        mol2=msys.Load(path)
+        self.assertEqual(mol2.ct(0).name, "XYZ")
+        self.assertEqual(mol2.ct(1).name, "ABC")
+        for i, mol in enumerate(msys.LoadMany(path)):
+            self.assertEqual(mol.ct(0).name, ('XYZ', 'ABC')[i])
+            self.assertEqual(mol.name, ('XYZ', 'ABC')[i])
+
 
 class TestPdb(unittest.TestCase):
     def setUp(self):
