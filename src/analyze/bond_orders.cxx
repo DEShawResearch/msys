@@ -718,7 +718,7 @@ namespace desres { namespace msys {
             _component_resonant_solution[i]/=nforms;
         }
 
-    };
+    }
 
     void ComponentAssigner::extractComponentSolution(solutionMap &atominfo,
                                                      solutionMap &bondinfo,
