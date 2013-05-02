@@ -44,7 +44,7 @@ namespace desres { namespace msys {
 
             /* Helper functions for constructor */
             void compute_ring_systems();
-            bool flag_aromatic(const IdList& atoms, const IdList& bonds);
+            bool is_aromatic(const IdList& atoms, const IdList& bonds);
             void compute_aromaticity();
 
         public:

@@ -133,7 +133,7 @@ void desres::msys::AnnotatedSystem::compute_ring_systems() {
     }
 }
 
-bool desres::msys::AnnotatedSystem::flag_aromatic(const IdList& atoms,
+bool desres::msys::AnnotatedSystem::is_aromatic(const IdList& atoms,
         const IdList& bonds) {
     int electron_count = 0;
     BOOST_FOREACH(Id bond, bonds) {
@@ -162,36 +162,40 @@ bool desres::msys::AnnotatedSystem::flag_aromatic(const IdList& atoms,
         if (!has_double && _atoms[atom].lone_pairs > 0) electron_count += 2;
     }
     /* Use Huckel's rule */
-    if (electron_count % 4 == 2) {
-        BOOST_FOREACH(Id atom, atoms)
-            _atoms[atom].aromatic = true;
-        BOOST_FOREACH(Id bond, bonds)
-            _bonds[bond].aromatic = true;
-        return true;
-    }
-    return false;
+    return (electron_count % 4 == 2);
 }
 
 void desres::msys::AnnotatedSystem::compute_aromaticity() {
-    BOOST_FOREACH(const ring_system_t& ring_sys, _ring_systems) {
-        /* Check if entire ring system is aromatic */
-        if (flag_aromatic(ring_sys.atoms, ring_sys.bonds))
-            continue;
-        /* Check if individual rings are aromatic */
-        std::vector<bool> ring_aromatic(ring_sys.rings.size(), false);
-        bool detected = true;
-        /* Do while the previous iteration marked at least one new aromatic ring */
-        while (detected) {
-            detected = false;
-            for (unsigned i = 0; i < ring_sys.rings.size(); ++i) {
-                /* If ring has already been marked as aromatic, leave as aromatic */
-                if (ring_aromatic[i]) continue;
-                if (flag_aromatic(_rings[ring_sys.rings[i]].atoms,
-                            _rings[ring_sys.rings[i]].bonds)) {
-                    detected = true;
-                    ring_aromatic[i] = true;
+    bool detected = true;
+    /* Do while previous iteration marked a new aromatic atom or bond */
+    while (detected) {
+        std::vector<bool> ring_aromatic(_rings.size(), false);
+        BOOST_FOREACH(const ring_system_t& ring_sys, _ring_systems) {
+            /* Check if entire ring system is aromatic */
+            if (is_aromatic(ring_sys.atoms, ring_sys.bonds)) {
+                BOOST_FOREACH(Id ring, ring_sys.rings)
+                    ring_aromatic[ring] = true;
+            } else {
+                /* Check if individual rings are aromatic */
+                BOOST_FOREACH(Id ring, ring_sys.rings) {
+                    if (is_aromatic(_rings[ring].atoms, _rings[ring].bonds))
+                        ring_aromatic[ring] = true;
                 }
             }
+        }
+        detected = false;
+        for (unsigned i = 0; i < _rings.size(); ++i) {
+            if (ring_aromatic[i]) {
+                /* Set aromaticity for atoms/bonds of this ring */
+                BOOST_FOREACH(Id atom, _rings[i].atoms) {
+                    detected |= (!_atoms[atom].aromatic);
+                    _atoms[atom].aromatic = true;
+                }
+                BOOST_FOREACH(Id bond, _rings[i].bonds) {
+                    detected |= (!_bonds[bond].aromatic);
+                    _bonds[bond].aromatic = true;
+                }
+            } else { /* We do not undo previously detected aromaticity */ }
         }
     }
 }

@@ -1644,21 +1644,31 @@ class TestMain(unittest.TestCase):
 
     def testSmartsPattern(self):
         d=os.path.dirname(__file__)
-        tests = json.loads(open(os.path.join(d, 'smarts_tests.json')).read())
-        ww = msys.LoadDMS('/proj/desres/root/Linux/x86_64/dms_inputs/1.5.4/share/ww.dms', True)
-        msys.AssignBondOrderAndFormalCharge(ww)
-        ww_annot = msys.AnnotatedSystem(ww)
-        ww_atoms = ww.select('not water')
-        membrane = msys.LoadDMS('/proj/desres/root/Linux/x86_64/dms_inputs/1.5.4/share/membrane.dms', True)
-        msys.AssignBondOrderAndFormalCharge(membrane)
-        membrane_annot = msys.AnnotatedSystem(membrane)
-        membrane_atoms = membrane.select('not water')
-        for smarts, ww_matches, membrane_matches in zip(tests['smarts'], tests['ww_matches'], tests['membrane_matches']):
+        tests = json.loads(open('tests/smarts_tests.json').read())
+        files = ['/proj/desres/root/Linux/x86_64/dms_inputs/1.5.4/share/ww.dms',
+                '/proj/desres/root/Linux/x86_64/dms_inputs/1.5.4/share/membrane.dms',
+                'tests/files/4A9C_chainA_46.mae',
+                'tests/files/4A9C_chainA_cf_21.mae',
+                'tests/files/acrd.mae',
+                'tests/files/azul.mae',
+                'tests/files/boron.mae',
+                'tests/files/fenz.mae',
+                'tests/files/indz.mae',
+                'tests/files/ndph.mae',
+                'tests/files/pegm.mae']
+        mols = [msys.Load(file, structure_only=True) for file in files]
+        for mol in mols:
+            msys.AssignBondOrderAndFormalCharge(mol)
+        annot_mols = [msys.AnnotatedSystem(mol) for mol in mols]
+        mol_atoms = [mol.select('not water') for mol in mols]
+        for tup in tests:
+            smarts = tup[0]
+            mol_matches = tup[1:]
             sp = msys.SmartsPattern(smarts)
-            self.assertEqual(sp.findMatches(ww_annot, ww_atoms), ww_matches)
-            self.assertEqual(sp.findMatches(membrane_annot, membrane_atoms), membrane_matches)
-        sp = msys.SmartsPattern(tests['smarts'][0])
-        self.assertTrue(len(sp.findMatches(ww_annot)) > 0)
+            for annot_mol, atoms, matches in zip(annot_mols, mol_atoms, mol_matches):
+                self.assertEqual(sp.findMatches(annot_mol, atoms), matches)
+        sp = msys.SmartsPattern(tests[0][0])
+        self.assertTrue(len(sp.findMatches(annot_mols[0])) > 0)
 
     def testGraph(self):
         sys_A = msys.CreateSystem()

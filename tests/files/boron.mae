@@ -1,0 +1,1586 @@
+{
+  s_m_m2io_version
+  :::
+  2.0.0
+}
+f_m_ct {
+  s_m_title
+  r_chorus_box_ax
+  r_chorus_box_ay
+  r_chorus_box_az
+  r_chorus_box_bx
+  r_chorus_box_by
+  r_chorus_box_bz
+  r_chorus_box_cx
+  r_chorus_box_cy
+  r_chorus_box_cz
+  :::
+  ""
+  84.4987
+  0
+  0
+  0
+  84.4987
+  0
+  0
+  0
+  84.4987
+  m_atom[74] {
+    i_m_mmod_type
+    r_m_x_coord
+    r_m_y_coord
+    r_m_z_coord
+    i_m_residue_number
+    s_m_insertion_code
+    s_m_mmod_res
+    s_m_chain_name
+    i_m_color
+    r_m_charge1
+    r_m_charge2
+    s_m_pdb_residue_name
+    s_m_pdb_atom_name
+    s_m_grow_name
+    i_m_atomic_number
+    i_m_formal_charge
+    i_m_visibility
+    s_m_pdb_segment_name
+    r_ffio_x_vel
+    r_ffio_y_vel
+    r_ffio_z_vel
+    :::
+    1 52 9.54719 0.753742 5.90123 900 " " " " X 13 0 0 "UNK " " S  " " " 16 0 1 C1 0 0 0
+    2 23 10.2243 6.51671 4.41234 900 " " " " X 70 0 0 "UNK " " O  " " " 8 0 1 C1 0 0 0
+    3 23 10.6292 7.31277 7.24304 900 " " " " X 70 0 0 "UNK " " O  " " " 8 0 1 C1 0 0 0
+    4 23 10.7424 9.59084 7.67744 900 " " " " X 70 0 0 "UNK " " O  " " " 8 0 1 C1 0 0 0
+    5 23 10.5457 3.50343 5.39977 900 " " " " X 70 0 0 "UNK " " O  " " " 8 0 1 C1 0 0 0
+    6 23 17.1165 12.4421 3.68036 900 " " " " X 70 0 0 "UNK " " O  " " " 8 0 1 C1 0 0 0
+    7 23 15.5053 10.9737 3.93462 900 " " " " X 70 0 0 "UNK " " O  " " " 8 0 1 C1 0 0 0
+    8 40 12.1885 7.51582 4.92226 900 " " " " X 43 0 0 "UNK " " N  " " " 7 0 1 C1 0 0 0
+    9 40 11.4328 4.18978 3.42148 900 " " " " X 43 0 0 "UNK " " N  " " " 7 0 1 C1 0 0 0
+    10 40 15.8027 8.70449 2.65401 900 " " " " X 43 0 0 "UNK " " N  " " " 7 0 1 C1 0 0 0
+    11 40 17.4484 10.2743 3.02336 900 " " " " X 43 0 0 "UNK " " N  " " " 7 0 1 C1 0 0 0
+    12 40 18.0073 8.14745 2.15944 900 " " " " X 43 0 0 "UNK " " N  " " " 7 0 1 C1 0 0 0
+    13 40 16.6282 11.3215 3.59251 900 " " " " X 43 0 0 "UNK " " N  " " " 7 0 1 C1 0 0 0
+    14 14 10.5395 9.28409 4.48511 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    15 14 11.6524 8.77542 5.4278 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    16 14 9.91756 10.6458 4.87002 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    17 14 12.2407 5.37339 3.74447 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    18 14 13.2236 5.84023 2.63497 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    19 14 11.4553 6.51366 4.41226 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    20 14 13.7687 7.28475 2.7145 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    21 14 10.979 11.7302 5.1217 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    22 14 8.92858 11.1097 3.78984 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    23 14 15.2213 7.41932 2.23716 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    24 14 10.8605 3.28333 4.23231 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    25 14 10.6344 1.89671 3.62206 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    26 14 10.8414 0.753184 4.62873 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    27 14 8.54414 -0.689103 5.68407 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    28 14 17.1053 9.03727 2.60827 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    29 14 8.40725 -3.07192 5.1514 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    30 14 9.17173 -1.90115 5.33283 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    31 14 7.00121 -3.02907 5.32292 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    32 14 7.14293 -0.648596 5.85429 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    33 14 6.37525 -1.81573 5.67396 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    34 14 9.03475 -4.28524 4.80024 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    35 14 6.23584 -4.19977 5.14172 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    36 14 8.26535 -5.45135 4.62059 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    37 14 6.86796 -5.40869 4.79108 900 " " " " X 2 0 0 "UNK " " C  " " " 6 0 1 C1 0 0 0
+    38 64 11.1233 8.53692 6.89685 900 " " " " X 2 0 0 "UNK " " B  " " " 5 0 1 C1 0 0 0
+    39 48 10.9399 9.35856 3.47276 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    40 48 9.75047 8.53278 4.42894 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    41 48 12.4518 9.51684 5.45147 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    42 48 9.34489 10.5228 5.78963 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    43 48 12.8846 4.98613 4.53586 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    44 48 14.0747 5.15841 2.66691 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    45 48 12.777 5.67721 1.65343 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    46 48 13.194 7.42778 4.89388 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    47 48 13.1439 7.9395 2.10737 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    48 48 13.7039 7.67177 3.73134 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    49 48 8.45286 12.0504 4.06892 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    50 48 9.42877 11.2617 2.83272 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    51 48 10.5117 12.6897 5.34553 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    52 48 11.6175 11.4835 5.96939 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    53 48 11.6184 11.87 4.24948 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    54 48 8.13588 10.3765 3.63839 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    55 48 11.252 4.06303 2.43631 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    56 48 15.8295 6.59295 2.60627 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    57 48 15.2488 7.37752 1.14792 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    58 48 11.3117 1.7611 2.77748 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    59 48 9.62094 1.85928 3.22116 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    60 48 11.8105 0.850778 5.11985 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    61 48 10.8271 -0.208272 4.11373 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    62 48 11.2368 6.61938 7.02873 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    63 48 10.8943 9.41925 8.59472 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    64 48 10.244 -1.92988 5.20298 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    65 48 6.6372 0.265517 6.12251 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    66 48 5.30387 -1.77394 5.80666 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    67 48 10.1061 -4.32734 4.66736 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    68 48 5.16341 -4.17637 5.27042 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    69 48 18.4121 10.5689 2.92348 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    70 48 18.9857 8.40307 2.12335 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    71 48 17.7162 7.23016 1.85458 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    72 48 8.74778 -6.37955 4.3517 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    73 48 6.28016 -6.30423 4.65275 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    74 48 15.146 9.40912 2.9624 900 " " " " X 21 0 0 "UNK " " H  " " " 1 0 1 C1 0 0 0
+    :::
+  }
+  m_bond[75] {
+    i_m_from
+    i_m_to
+    i_m_order
+    :::
+    1 1 26 1
+    2 1 27 1
+    3 2 19 2
+    4 3 38 1
+    5 3 62 1
+    6 4 38 1
+    7 4 63 1
+    8 5 24 2
+    9 6 13 1
+    10 7 13 2
+    11 8 15 1
+    12 8 19 1
+    13 8 46 1
+    14 9 17 1
+    15 9 24 1
+    16 9 55 1
+    17 10 23 1
+    18 10 28 2
+    19 10 74 1
+    20 11 13 1
+    21 11 28 1
+    22 11 69 1
+    23 12 28 1
+    24 12 70 1
+    25 12 71 1
+    26 14 15 1
+    27 14 16 1
+    28 14 39 1
+    29 14 40 1
+    30 15 38 1
+    31 15 41 1
+    32 16 21 1
+    33 16 22 1
+    34 16 42 1
+    35 17 18 1
+    36 17 19 1
+    37 17 43 1
+    38 18 20 1
+    39 18 44 1
+    40 18 45 1
+    41 20 23 1
+    42 20 47 1
+    43 20 48 1
+    44 21 51 1
+    45 21 52 1
+    46 21 53 1
+    47 22 49 1
+    48 22 50 1
+    49 22 54 1
+    50 23 56 1
+    51 23 57 1
+    52 24 25 1
+    53 25 26 1
+    54 25 58 1
+    55 25 59 1
+    56 26 60 1
+    57 26 61 1
+    58 27 30 2
+    59 27 32 1
+    60 29 30 1
+    61 29 31 1
+    62 29 34 2
+    63 30 64 1
+    64 31 33 1
+    65 31 35 2
+    66 32 33 2
+    67 32 65 1
+    68 33 66 1
+    69 34 36 1
+    70 34 67 1
+    71 35 37 1
+    72 35 68 1
+    73 36 37 2
+    74 36 72 1
+    75 37 73 1
+    :::
+  }
+  ffio_ff {
+    s_viparr_version
+    s_ffio_name
+    s_ffio_version
+    s_viparr_workdir
+    s_viparr_command
+    s_date
+    s_user
+    s_ffio_vdw_func
+    s_ffio_comb_rule
+    :::
+    1.8.3
+    "Generated by viparr"
+    1.0.0
+    /d/en/lij-0/phys/fragment/codes.v0.7/boron
+    "/proj/desres/root/Linux/x86_64/viparr/1.8.3/viparr/viparr.py -d /u/nyc/lij/phys/fragment/ff_cgenff_base_v2b7 -m _viparr1_ compound.mae output.mae"
+    "date: Thu Dec 20 16:08:50 EST 2012"
+    "user: None"
+    LJ12_6_sig_epsilon
+    ARITHMETIC/GEOMETRIC
+    viparr_info[3] {
+      s_viparr_section
+      s_viparr_info
+      :::
+      1 "Plugins: </proj/desres/root/Linux/x86_64/viparr/1.8.3/plugins>" ""
+      2 "FF: </tmp/viparr_30099>" "GenFF: Topologies and Parameters for the Charmm General Force Field v2b7"
+      3 "FF: </tmp/viparr_30099>" "Vanommeslaeghe et al. J. Comput. Chem. 2010, 31, 671-690"
+      :::
+    }
+    ffio_angles[194] {
+      i_ffio_ai
+      i_ffio_aj
+      i_ffio_ak
+      s_ffio_funct
+      r_ffio_c1
+      r_ffio_c2
+      s_ffio_comment
+      :::
+      1 1 26 25 Harm 114.5 58 "PROT expt. MeEtS,     3/26/92 (FL)"
+      2 1 26 60 Harm 111.3 46.1 "PROT vib. freq. and HF/geo. (DTN) 8/24/90"
+      3 1 26 61 Harm 111.3 46.1 "PROT vib. freq. and HF/geo. (DTN) 8/24/90"
+      4 1 27 30 Harm 120 40 "FETZ, phenothiazine, erh"
+      5 1 27 32 Harm 120 40 "FETZ, phenothiazine, erh"
+      6 2 19 8 Harm 122.5 80 "PROT NMA Vib Modes (LK)"
+      7 2 19 17 Harm 121 80 "PROT Alanine Dipeptide ab initio calc's (LK)"
+      8 5 24 9 Harm 122.5 80 "PROT NMA Vib Modes (LK)"
+      9 5 24 25 Harm 121 80 "PROT Alanine Dipeptide ab initio calc's (LK)"
+      10 8 15 14 Harm 113.5 70 "PROT Alanine Dipeptide ab initio calc's (LK)"
+      11 8 15 41 Harm 108 48 "PROT Alanine Dipeptide ab initio calc's (LK)"
+      12 8 19 17 Harm 116.5 80 "PROT NMA Vib Modes (LK)"
+      13 9 17 18 Harm 113.5 70 "PROT Alanine Dipeptide ab initio calc's (LK)"
+      14 9 17 19 Harm 107 50 "PROT Alanine Dipeptide ab initio calc's (LK)"
+      15 9 17 43 Harm 108 48 "PROT Alanine Dipeptide ab initio calc's (LK)"
+      16 9 24 25 Harm 116.5 80 "PROT NMA Vib Modes (LK)"
+      17 10 23 20 Harm 110 67.7 "RETINOL SCK1, protonated Schiff's base _eq_"
+      18 10 23 56 Harm 110.1 42 "RETINOL SCK1, deprotonated Schiff's base _eq_"
+      19 10 23 57 Harm 110.1 42 "RETINOL SCK1, deprotonated Schiff's base _eq_"
+      20 10 28 11 Harm 125 50 "MGU2, methylguanidine2, from NG2D1 CG2N1 NG311, penalty 25.0"
+      21 10 28 12 Harm 125 100 "MGU1, methylguanidine; MGU2, methylguanidine2, from NG2D1 CG2N1 NG321, penalty 10.0"
+      22 11 28 12 Harm 113 50 "MGU2, methylguanidine2 kevo: sum 363 (deliberate), from NG311 CG2N1 NG321, penalty 15.0"
+      23 13 11 28 Harm 106 43 "MGU2, methylguanidine2, from CG2N1 NG311 CG331, penalty 261.0"
+      24 13 11 69 Harm 102 55 "HDZN, hydrazine, ed, from NG3N1 NG3N1 HGP1, penalty 10.0"
+      25 14 15 41 Harm 110.1 34.5 "PROT alkane update, adm jr., 3/2/92"
+      26 14 16 21 Harm 114 53.35 "PROT alkane update, adm jr., 3/2/92"
+      27 14 16 22 Harm 114 53.35 "PROT alkane update, adm jr., 3/2/92"
+      28 14 16 42 Harm 110.1 34.5 "PROT alkane update, adm jr., 3/2/92"
+      29 15 8 19 Harm 120 50 "PROT NMA Vib Modes (LK)"
+      30 15 8 46 Harm 117 35 "PROT NMA Vibrational Modes (LK)"
+      31 15 14 16 Harm 113.5 58.35 "PROT alkanes"
+      32 15 14 39 Harm 110.1 33.43 "PROT alkanes"
+      33 15 14 40 Harm 110.1 33.43 "PROT alkanes"
+      34 16 14 39 Harm 110.1 33.43 "PROT alkanes"
+      35 16 14 40 Harm 110.1 33.43 "PROT alkanes"
+      36 16 21 51 Harm 110.1 33.43 "PROT alkanes"
+      37 16 21 52 Harm 110.1 33.43 "PROT alkanes"
+      38 16 21 53 Harm 110.1 33.43 "PROT alkanes"
+      39 16 22 49 Harm 110.1 33.43 "PROT alkanes"
+      40 16 22 50 Harm 110.1 33.43 "PROT alkanes"
+      41 16 22 54 Harm 110.1 33.43 "PROT alkanes"
+      42 17 9 24 Harm 120 50 "PROT NMA Vib Modes (LK)"
+      43 17 9 55 Harm 117 35 "PROT NMA Vibrational Modes (LK)"
+      44 17 18 20 Harm 113.5 58.35 "PROT alkanes"
+      45 17 18 44 Harm 110.1 33.43 "PROT alkanes"
+      46 17 18 45 Harm 110.1 33.43 "PROT alkanes"
+      47 18 17 19 Harm 108 52 "PROT Alanine Dipeptide ab initio calc's (LK)"
+      48 18 17 43 Harm 110.1 34.5 "PROT alkane update, adm jr., 3/2/92"
+      49 18 20 23 Harm 110.5 58.35 "FLAVOP PIP1,2,3"
+      50 18 20 47 Harm 110.1 26.5 "PROT alkane update, adm jr., 3/2/92"
+      51 18 20 48 Harm 110.1 26.5 "PROT alkane update, adm jr., 3/2/92"
+      52 19 8 46 Harm 123 34 "PROT NMA Vib Modes (LK)"
+      53 19 17 43 Harm 109.5 50 "PROT Alanine Dipeptide ab initio calc's (LK)"
+      54 20 18 44 Harm 110.1 26.5 "PROT alkane update, adm jr., 3/2/92"
+      55 20 18 45 Harm 110.1 26.5 "PROT alkane update, adm jr., 3/2/92"
+      56 20 23 56 Harm 111.8 26.5 "FLAVOP PIP1,2,3"
+      57 20 23 57 Harm 111.8 26.5 "FLAVOP PIP1,2,3"
+      58 21 16 22 Harm 114 53.35 "PROT alkane update, adm jr., 3/2/92"
+      59 21 16 42 Harm 110.1 34.5 "PROT alkane update, adm jr., 3/2/92"
+      60 22 16 42 Harm 110.1 34.5 "PROT alkane update, adm jr., 3/2/92"
+      61 23 10 28 Harm 120 62.3 "PROT 107.5->120.0 to make planar Arg (KK)"
+      62 23 10 74 Harm 120 40.4 "PROT 107.5->120.0 to make planar Arg (KK)"
+      63 23 20 47 Harm 110.1 26.5 "FLAVOP PIP1,2,3"
+      64 23 20 48 Harm 110.1 26.5 "FLAVOP PIP1,2,3"
+      65 24 9 55 Harm 123 34 "PROT NMA Vib Modes (LK)"
+      66 24 25 26 Harm 108 52 "PROT adm jr. 5/02/91, acetic acid pure solvent"
+      67 24 25 58 Harm 109.5 33 "PROT alanine dipeptide, 5/09/91"
+      68 24 25 59 Harm 109.5 33 "PROT alanine dipeptide, 5/09/91"
+      69 25 26 60 Harm 110.1 26.5 "PROT alkane update, adm jr., 3/2/92"
+      70 25 26 61 Harm 110.1 26.5 "PROT alkane update, adm jr., 3/2/92"
+      71 26 1 27 Harm 96 60 "DMTT, dimethyl trithiocarbonate, kevo, from CG2O6 SG311 CG331, penalty 33.4"
+      72 26 25 58 Harm 110.1 26.5 "PROT alkane update, adm jr., 3/2/92"
+      73 26 25 59 Harm 110.1 26.5 "PROT alkane update, adm jr., 3/2/92"
+      74 27 30 29 Harm 120 40 "PROT JES 8/25/89"
+      75 27 30 64 Harm 120 30 "PROT JES 8/25/89 benzene"
+      76 27 32 33 Harm 120 40 "PROT JES 8/25/89"
+      77 27 32 65 Harm 120 30 "PROT JES 8/25/89 benzene"
+      78 28 10 74 Harm 120 49 "PROT 35.3->49.0 GUANIDINIUM (KK)"
+      79 28 12 70 Harm 108 55 "MGU1, methylguanidine, from CG2N1 NG321 HGPAM2, penalty 20.0"
+      80 28 12 71 Harm 108 55 "MGU1, methylguanidine, from CG2N1 NG321 HGPAM2, penalty 20.0"
+      81 29 30 64 Harm 120 30 "PROT JES 8/25/89 benzene"
+      82 29 31 33 Harm 120 40 "PROT JES 8/25/89"
+      83 29 31 35 Harm 120 40 "PROT JES 8/25/89"
+      84 29 34 36 Harm 120 40 "PROT JES 8/25/89"
+      85 29 34 67 Harm 120 30 "PROT JES 8/25/89 benzene"
+      86 30 27 32 Harm 120 40 "PROT JES 8/25/89"
+      87 30 29 31 Harm 120 40 "PROT JES 8/25/89"
+      88 30 29 34 Harm 120 40 "PROT JES 8/25/89"
+      89 31 29 34 Harm 120 40 "PROT JES 8/25/89"
+      90 31 33 32 Harm 120 40 "PROT JES 8/25/89"
+      91 31 33 66 Harm 120 30 "PROT JES 8/25/89 benzene"
+      92 31 35 37 Harm 120 40 "PROT JES 8/25/89"
+      93 31 35 68 Harm 120 30 "PROT JES 8/25/89 benzene"
+      94 32 33 66 Harm 120 30 "PROT JES 8/25/89 benzene"
+      95 33 31 35 Harm 120 40 "PROT JES 8/25/89"
+      96 33 32 65 Harm 120 30 "PROT JES 8/25/89 benzene"
+      97 34 36 37 Harm 120 40 "PROT JES 8/25/89"
+      98 34 36 72 Harm 120 30 "PROT JES 8/25/89 benzene"
+      99 35 37 36 Harm 120 40 "PROT JES 8/25/89"
+      100 35 37 73 Harm 120 30 "PROT JES 8/25/89 benzene"
+      101 36 34 67 Harm 120 30 "PROT JES 8/25/89 benzene"
+      102 36 37 73 Harm 120 30 "PROT JES 8/25/89 benzene"
+      103 37 35 68 Harm 120 30 "PROT JES 8/25/89 benzene"
+      104 37 36 72 Harm 120 30 "PROT JES 8/25/89 benzene"
+      105 39 14 40 Harm 109 35.5 "PROT alkane update, adm jr., 3/2/92"
+      106 44 18 45 Harm 109 35.5 "PROT alkane update, adm jr., 3/2/92"
+      107 47 20 48 Harm 109 35.5 "PROT alkane update, adm jr., 3/2/92"
+      108 49 22 50 Harm 108.4 35.5 "PROT alkane update, adm jr., 3/2/92"
+      109 49 22 54 Harm 108.4 35.5 "PROT alkane update, adm jr., 3/2/92"
+      110 50 22 54 Harm 108.4 35.5 "PROT alkane update, adm jr., 3/2/92"
+      111 51 21 52 Harm 108.4 35.5 "PROT alkane update, adm jr., 3/2/92"
+      112 51 21 53 Harm 108.4 35.5 "PROT alkane update, adm jr., 3/2/92"
+      113 52 21 53 Harm 108.4 35.5 "PROT alkane update, adm jr., 3/2/92"
+      114 56 23 57 Harm 109 35.5 PIP1,2,3
+      115 58 25 59 Harm 109 35.5 "PROT alkane update, adm jr., 3/2/92"
+      116 60 26 61 Harm 109 35.5 "PROT alkane update, adm jr., 3/2/92"
+      117 70 12 71 Harm 110 38 "MSAM, methanesulfonamide; BSAM, benzenesulfonamide; xxwy, from HGP1 NG321 HGP1, penalty 20.0"
+      118 14 15 41 UB 2.179 22.53 "PROT alkane update, adm jr., 3/2/92"
+      119 14 16 21 UB 2.561 8 "PROT alkane update, adm jr., 3/2/92"
+      120 14 16 22 UB 2.561 8 "PROT alkane update, adm jr., 3/2/92"
+      121 14 16 42 UB 2.179 22.53 "PROT alkane update, adm jr., 3/2/92"
+      122 15 14 16 UB 2.561 11.16 "PROT alkanes"
+      123 15 14 39 UB 2.179 22.53 "PROT alkanes"
+      124 15 14 40 UB 2.179 22.53 "PROT alkanes"
+      125 16 14 39 UB 2.179 22.53 "PROT alkanes"
+      126 16 14 40 UB 2.179 22.53 "PROT alkanes"
+      127 16 21 51 UB 2.179 22.53 "PROT alkanes"
+      128 16 21 52 UB 2.179 22.53 "PROT alkanes"
+      129 16 21 53 UB 2.179 22.53 "PROT alkanes"
+      130 16 22 49 UB 2.179 22.53 "PROT alkanes"
+      131 16 22 50 UB 2.179 22.53 "PROT alkanes"
+      132 16 22 54 UB 2.179 22.53 "PROT alkanes"
+      133 17 18 20 UB 2.561 11.16 "PROT alkanes"
+      134 17 18 44 UB 2.179 22.53 "PROT alkanes"
+      135 17 18 45 UB 2.179 22.53 "PROT alkanes"
+      136 18 17 43 UB 2.179 22.53 "PROT alkane update, adm jr., 3/2/92"
+      137 18 20 23 UB 2.561 11.16 "FLAVOP PIP1,2,3"
+      138 18 20 47 UB 2.179 22.53 "PROT alkane update, adm jr., 3/2/92"
+      139 18 20 48 UB 2.179 22.53 "PROT alkane update, adm jr., 3/2/92"
+      140 20 18 44 UB 2.179 22.53 "PROT alkane update, adm jr., 3/2/92"
+      141 20 18 45 UB 2.179 22.53 "PROT alkane update, adm jr., 3/2/92"
+      142 20 23 56 UB 2.179 22.53 "FLAVOP PIP1,2,3"
+      143 20 23 57 UB 2.179 22.53 "FLAVOP PIP1,2,3"
+      144 21 16 22 UB 2.561 8 "PROT alkane update, adm jr., 3/2/92"
+      145 21 16 42 UB 2.179 22.53 "PROT alkane update, adm jr., 3/2/92"
+      146 22 16 42 UB 2.179 22.53 "PROT alkane update, adm jr., 3/2/92"
+      147 23 20 47 UB 2.179 22.53 "FLAVOP PIP1,2,3"
+      148 23 20 48 UB 2.179 22.53 "FLAVOP PIP1,2,3"
+      149 24 25 58 UB 2.163 30 "PROT alanine dipeptide, 5/09/91"
+      150 24 25 59 UB 2.163 30 "PROT alanine dipeptide, 5/09/91"
+      151 25 26 60 UB 2.179 22.53 "PROT alkane update, adm jr., 3/2/92"
+      152 25 26 61 UB 2.179 22.53 "PROT alkane update, adm jr., 3/2/92"
+      153 26 25 58 UB 2.179 22.53 "PROT alkane update, adm jr., 3/2/92"
+      154 26 25 59 UB 2.179 22.53 "PROT alkane update, adm jr., 3/2/92"
+      155 27 30 29 UB 2.4162 35 "PROT JES 8/25/89"
+      156 27 30 64 UB 2.1525 22 "PROT JES 8/25/89 benzene"
+      157 27 32 33 UB 2.4162 35 "PROT JES 8/25/89"
+      158 27 32 65 UB 2.1525 22 "PROT JES 8/25/89 benzene"
+      159 29 30 64 UB 2.1525 22 "PROT JES 8/25/89 benzene"
+      160 29 31 33 UB 2.4162 35 "PROT JES 8/25/89"
+      161 29 31 35 UB 2.4162 35 "PROT JES 8/25/89"
+      162 29 34 36 UB 2.4162 35 "PROT JES 8/25/89"
+      163 29 34 67 UB 2.1525 22 "PROT JES 8/25/89 benzene"
+      164 30 27 32 UB 2.4162 35 "PROT JES 8/25/89"
+      165 30 29 31 UB 2.4162 35 "PROT JES 8/25/89"
+      166 30 29 34 UB 2.4162 35 "PROT JES 8/25/89"
+      167 31 29 34 UB 2.4162 35 "PROT JES 8/25/89"
+      168 31 33 32 UB 2.4162 35 "PROT JES 8/25/89"
+      169 31 33 66 UB 2.1525 22 "PROT JES 8/25/89 benzene"
+      170 31 35 37 UB 2.4162 35 "PROT JES 8/25/89"
+      171 31 35 68 UB 2.1525 22 "PROT JES 8/25/89 benzene"
+      172 32 33 66 UB 2.1525 22 "PROT JES 8/25/89 benzene"
+      173 33 31 35 UB 2.4162 35 "PROT JES 8/25/89"
+      174 33 32 65 UB 2.1525 22 "PROT JES 8/25/89 benzene"
+      175 34 36 37 UB 2.4162 35 "PROT JES 8/25/89"
+      176 34 36 72 UB 2.1525 22 "PROT JES 8/25/89 benzene"
+      177 35 37 36 UB 2.4162 35 "PROT JES 8/25/89"
+      178 35 37 73 UB 2.1525 22 "PROT JES 8/25/89 benzene"
+      179 36 34 67 UB 2.1525 22 "PROT JES 8/25/89 benzene"
+      180 36 37 73 UB 2.1525 22 "PROT JES 8/25/89 benzene"
+      181 37 35 68 UB 2.1525 22 "PROT JES 8/25/89 benzene"
+      182 37 36 72 UB 2.1525 22 "PROT JES 8/25/89 benzene"
+      183 39 14 40 UB 1.802 5.4 "PROT alkane update, adm jr., 3/2/92"
+      184 44 18 45 UB 1.802 5.4 "PROT alkane update, adm jr., 3/2/92"
+      185 47 20 48 UB 1.802 5.4 "PROT alkane update, adm jr., 3/2/92"
+      186 49 22 50 UB 1.802 5.4 "PROT alkane update, adm jr., 3/2/92"
+      187 49 22 54 UB 1.802 5.4 "PROT alkane update, adm jr., 3/2/92"
+      188 50 22 54 UB 1.802 5.4 "PROT alkane update, adm jr., 3/2/92"
+      189 51 21 52 UB 1.802 5.4 "PROT alkane update, adm jr., 3/2/92"
+      190 51 21 53 UB 1.802 5.4 "PROT alkane update, adm jr., 3/2/92"
+      191 52 21 53 UB 1.802 5.4 "PROT alkane update, adm jr., 3/2/92"
+      192 56 23 57 UB 1.802 5.4 PIP1,2,3
+      193 58 25 59 UB 1.802 5.4 "PROT alkane update, adm jr., 3/2/92"
+      194 60 26 61 UB 1.802 5.4 "PROT alkane update, adm jr., 3/2/92"
+      :::
+    }
+    ffio_sites[74] {
+      s_ffio_type
+      i_ffio_resnr
+      s_ffio_residue
+      r_ffio_charge
+      r_ffio_mass
+      s_ffio_vdwtype
+      :::
+      1 atom 1 COMPOUND 0 32.06 SG311
+      2 atom 1 COMPOUND 0 15.9994 OG2D1
+      3 atom 1 COMPOUND 0 15.9994 OG311
+      4 atom 1 COMPOUND 0 15.9994 OG311
+      5 atom 1 COMPOUND 0 15.9994 OG2D1
+      6 atom 1 COMPOUND 0 15.9994 OG2N1
+      7 atom 1 COMPOUND 0 15.9994 OG2D1
+      8 atom 1 COMPOUND 0 14.007 NG2S1
+      9 atom 1 COMPOUND 0 14.007 NG2S1
+      10 atom 1 COMPOUND 0 14.007 NG2P1
+      11 atom 1 COMPOUND 0 14.007 NG3N1
+      12 atom 1 COMPOUND 0 14.007 NG321
+      13 atom 1 COMPOUND 0 14.007 NG3N1
+      14 atom 1 COMPOUND 0 12.011 CG321
+      15 atom 1 COMPOUND 0 12.011 CG311
+      16 atom 1 COMPOUND 0 12.011 CG311
+      17 atom 1 COMPOUND 0 12.011 CG311
+      18 atom 1 COMPOUND 0 12.011 CG321
+      19 atom 1 COMPOUND 0 12.011 CG2O1
+      20 atom 1 COMPOUND 0 12.011 CG321
+      21 atom 1 COMPOUND 0 12.011 CG331
+      22 atom 1 COMPOUND 0 12.011 CG331
+      23 atom 1 COMPOUND 0 12.011 CG324
+      24 atom 1 COMPOUND 0 12.011 CG2O1
+      25 atom 1 COMPOUND 0 12.011 CG321
+      26 atom 1 COMPOUND 0 12.011 CG321
+      27 atom 1 COMPOUND 0 12.011 CG2R61
+      28 atom 1 COMPOUND 0 12.011 CG2N1
+      29 atom 1 COMPOUND 0 12.011 CG2R61
+      30 atom 1 COMPOUND 0 12.011 CG2R61
+      31 atom 1 COMPOUND 0 12.011 CG2R61
+      32 atom 1 COMPOUND 0 12.011 CG2R61
+      33 atom 1 COMPOUND 0 12.011 CG2R61
+      34 atom 1 COMPOUND 0 12.011 CG2R61
+      35 atom 1 COMPOUND 0 12.011 CG2R61
+      36 atom 1 COMPOUND 0 12.011 CG2R61
+      37 atom 1 COMPOUND 0 12.011 CG2R61
+      38 atom 1 COMPOUND 0 10.811 BG311
+      39 atom 1 COMPOUND 0 1.008 HGA2
+      40 atom 1 COMPOUND 0 1.008 HGA2
+      41 atom 1 COMPOUND 0 1.008 HGA1
+      42 atom 1 COMPOUND 0 1.008 HGA1
+      43 atom 1 COMPOUND 0 1.008 HGA1
+      44 atom 1 COMPOUND 0 1.008 HGA2
+      45 atom 1 COMPOUND 0 1.008 HGA2
+      46 atom 1 COMPOUND 0 1.008 HGP1
+      47 atom 1 COMPOUND 0 1.008 HGA2
+      48 atom 1 COMPOUND 0 1.008 HGA2
+      49 atom 1 COMPOUND 0 1.008 HGA3
+      50 atom 1 COMPOUND 0 1.008 HGA3
+      51 atom 1 COMPOUND 0 1.008 HGA3
+      52 atom 1 COMPOUND 0 1.008 HGA3
+      53 atom 1 COMPOUND 0 1.008 HGA3
+      54 atom 1 COMPOUND 0 1.008 HGA3
+      55 atom 1 COMPOUND 0 1.008 HGP1
+      56 atom 1 COMPOUND 0 1.008 HGA2
+      57 atom 1 COMPOUND 0 1.008 HGA2
+      58 atom 1 COMPOUND 0 1.008 HGA2
+      59 atom 1 COMPOUND 0 1.008 HGA2
+      60 atom 1 COMPOUND 0 1.008 HGA2
+      61 atom 1 COMPOUND 0 1.008 HGA2
+      62 atom 1 COMPOUND 0 1.008 HGP1
+      63 atom 1 COMPOUND 0 1.008 HGP1
+      64 atom 1 COMPOUND 0 1.008 HGR61
+      65 atom 1 COMPOUND 0 1.008 HGR61
+      66 atom 1 COMPOUND 0 1.008 HGR61
+      67 atom 1 COMPOUND 0 1.008 HGR61
+      68 atom 1 COMPOUND 0 1.008 HGR61
+      69 atom 1 COMPOUND 0 1.008 HGP2
+      70 atom 1 COMPOUND 0 1.008 HGP2
+      71 atom 1 COMPOUND 0 1.008 HGP2
+      72 atom 1 COMPOUND 0 1.008 HGR61
+      73 atom 1 COMPOUND 0 1.008 HGR61
+      74 atom 1 COMPOUND 0 1.008 HGP2
+      :::
+    }
+    ffio_bonds[75] {
+      i_ffio_ai
+      i_ffio_aj
+      s_ffio_funct
+      r_ffio_c1
+      r_ffio_c2
+      s_ffio_comment
+      :::
+      1 1 26 Harm 1.818 198 "PROT fitted to C-S s   9/26/92 (FL)"
+      2 1 27 Harm 1.75 280 "FETZ, phenothiazine, erh based on PY02, 2h-pyran"
+      3 2 19 Harm 1.23 620 "PROT Peptide geometry, condensed phase (LK)"
+      4 3 38 Harm 1.4 300 "DUMMY Bond param, penalty 999"
+      5 3 62 Harm 0.96 545 "PROT EMB 11/21/89 methanol vib fit; og tested on MeOH EtOH,..."
+      6 4 38 Harm 1.4 300 "DUMMY Bond param, penalty 999"
+      7 4 63 Harm 0.96 545 "PROT EMB 11/21/89 methanol vib fit; og tested on MeOH EtOH,..."
+      8 5 24 Harm 1.23 620 "PROT Peptide geometry, condensed phase (LK)"
+      9 6 13 Harm 1.42 428 "PROT methanol vib fit EMB 11/21/89, from CG331 OG311, penalty 256.0"
+      10 7 13 Harm 1.4 300 "DUMMY Bond param, penalty 999"
+      11 8 15 Harm 1.43 320 "PROT NMA Gas & Liquid Phase IR Spectra (LK)"
+      12 8 19 Harm 1.345 370 "PROT Alanine Dipeptide ab initio calc's (LK)"
+      13 8 46 Harm 0.997 440 "PROT Alanine Dipeptide ab initio calc's (LK)"
+      14 9 17 Harm 1.43 320 "PROT NMA Gas & Liquid Phase IR Spectra (LK)"
+      15 9 24 Harm 1.345 370 "PROT Alanine Dipeptide ab initio calc's (LK)"
+      16 9 55 Harm 0.997 440 "PROT Alanine Dipeptide ab initio calc's (LK)"
+      17 10 23 Harm 1.453 300 "RETINOL SCH2, Schiff's base, protonated _eq_"
+      18 10 28 Harm 1.365 463 "PROT 403.0->463.0, 1.305->1.365 guanidinium (KK)"
+      19 10 74 Harm 1 455 "RETINOL SCH2, Schiff's base, protonated"
+      20 11 13 Harm 1.4 355 "HDZN, hydrazine, ed"
+      21 11 28 Harm 1.44 500 "MGU2, methylguanidine2, from CG2N1 NG311, penalty 15.0"
+      22 11 69 Harm 1.01 437 "HDZN, hydrazine, ed, from NG3N1 HGP1, penalty 10.0"
+      23 12 28 Harm 1.44 450 "MGU1, methylguanidine"
+      24 12 70 Harm 1.02 454 "MSAM, methanesulfonamide; BSAM, benzenesulfonamide; xxwy, from NG321 HGP1, penalty 10.0"
+      25 12 71 Harm 1.02 454 "MSAM, methanesulfonamide; BSAM, benzenesulfonamide; xxwy, from NG321 HGP1, penalty 10.0"
+      26 14 15 Harm 1.538 222.5 "PROT alkane update, adm jr., 3/2/92"
+      27 14 16 Harm 1.538 222.5 "PROT alkane update, adm jr., 3/2/92"
+      28 14 39 Harm 1.111 309 "PROT alkane update, adm jr., 3/2/92"
+      29 14 40 Harm 1.111 309 "PROT alkane update, adm jr., 3/2/92"
+      30 15 38 Harm 1.4 300 "DUMMY Bond param, penalty 999"
+      31 15 41 Harm 1.111 309 "PROT alkane update, adm jr., 3/2/92"
+      32 16 21 Harm 1.538 222.5 "PROT alkane update, adm jr., 3/2/92"
+      33 16 22 Harm 1.538 222.5 "PROT alkane update, adm jr., 3/2/92"
+      34 16 42 Harm 1.111 309 "PROT alkane update, adm jr., 3/2/92"
+      35 17 18 Harm 1.538 222.5 "PROT alkane update, adm jr., 3/2/92"
+      36 17 19 Harm 1.49 250 "PROT Ala Dipeptide (5/91)"
+      37 17 43 Harm 1.111 309 "PROT alkane update, adm jr., 3/2/92"
+      38 18 20 Harm 1.53 222.5 "PROT alkane update, adm jr., 3/2/92"
+      39 18 44 Harm 1.111 309 "PROT alkane update, adm jr., 3/2/92"
+      40 18 45 Harm 1.111 309 "PROT alkane update, adm jr., 3/2/92"
+      41 20 23 Harm 1.53 222.5 "FLAVOP PIP1,2,3"
+      42 20 47 Harm 1.111 309 "PROT alkane update, adm jr., 3/2/92"
+      43 20 48 Harm 1.111 309 "PROT alkane update, adm jr., 3/2/92"
+      44 21 51 Harm 1.111 322 "PROT alkane update, adm jr., 3/2/92"
+      45 21 52 Harm 1.111 322 "PROT alkane update, adm jr., 3/2/92"
+      46 21 53 Harm 1.111 322 "PROT alkane update, adm jr., 3/2/92"
+      47 22 49 Harm 1.111 322 "PROT alkane update, adm jr., 3/2/92"
+      48 22 50 Harm 1.111 322 "PROT alkane update, adm jr., 3/2/92"
+      49 22 54 Harm 1.111 322 "PROT alkane update, adm jr., 3/2/92"
+      50 23 56 Harm 1.1 284.5 "FLAVOP PIP1,2,3"
+      51 23 57 Harm 1.1 284.5 "FLAVOP PIP1,2,3"
+      52 24 25 Harm 1.49 250 "PROT Ala Dipeptide (5/91)"
+      53 25 26 Harm 1.53 222.5 "PROT alkane update, adm jr., 3/2/92"
+      54 25 58 Harm 1.111 309 "PROT alkane update, adm jr., 3/2/92"
+      55 25 59 Harm 1.111 309 "PROT alkane update, adm jr., 3/2/92"
+      56 26 60 Harm 1.111 309 "PROT alkane update, adm jr., 3/2/92"
+      57 26 61 Harm 1.111 309 "PROT alkane update, adm jr., 3/2/92"
+      58 27 30 Harm 1.375 305 "PROT benzene, JES 8/25/89"
+      59 27 32 Harm 1.375 305 "PROT benzene, JES 8/25/89"
+      60 29 30 Harm 1.375 305 "PROT benzene, JES 8/25/89"
+      61 29 31 Harm 1.375 305 "PROT benzene, JES 8/25/89"
+      62 29 34 Harm 1.375 305 "PROT benzene, JES 8/25/89"
+      63 30 64 Harm 1.08 340 "PROT phe,tyr JES 8/25/89"
+      64 31 33 Harm 1.375 305 "PROT benzene, JES 8/25/89"
+      65 31 35 Harm 1.375 305 "PROT benzene, JES 8/25/89"
+      66 32 33 Harm 1.375 305 "PROT benzene, JES 8/25/89"
+      67 32 65 Harm 1.08 340 "PROT phe,tyr JES 8/25/89"
+      68 33 66 Harm 1.08 340 "PROT phe,tyr JES 8/25/89"
+      69 34 36 Harm 1.375 305 "PROT benzene, JES 8/25/89"
+      70 34 67 Harm 1.08 340 "PROT phe,tyr JES 8/25/89"
+      71 35 37 Harm 1.375 305 "PROT benzene, JES 8/25/89"
+      72 35 68 Harm 1.08 340 "PROT phe,tyr JES 8/25/89"
+      73 36 37 Harm 1.375 305 "PROT benzene, JES 8/25/89"
+      74 36 72 Harm 1.08 340 "PROT phe,tyr JES 8/25/89"
+      75 37 73 Harm 1.08 340 "PROT phe,tyr JES 8/25/89"
+      :::
+    }
+    ffio_dihedrals[167] {
+      i_ffio_ai
+      i_ffio_aj
+      i_ffio_ak
+      i_ffio_al
+      s_ffio_funct
+      r_ffio_c0
+      r_ffio_c1
+      r_ffio_c2
+      r_ffio_c3
+      r_ffio_c4
+      r_ffio_c5
+      r_ffio_c6
+      r_ffio_c7
+      s_ffio_comment
+      :::
+      1 1 26 25 24 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "PROT alkane update, adm jr., 3/2/92, from CG2O1 CG311 CG321 SG311, penalty 4"
+      2 1 26 25 58 Proper_Trig 0 0.01 0 0 0.01 0 0 0 "PROT DTN 8/24/90"
+      3 1 26 25 59 Proper_Trig 0 0.01 0 0 0.01 0 0 0 "PROT DTN 8/24/90"
+      4 1 27 30 29 Proper_Trig 0 4.5 0 -4.5 0 0 0 0 "FETZ, phenothiazine, erh based on toluene, adm jr., 3/7/92"
+      5 1 27 30 64 Proper_Trig 0 2.4 0 -2.4 0 0 0 0 "FETZ, phenothiazine, erh based on toluene, adm jr., 3/7/92 Kenno: 4.2 -> 2.4"
+      6 1 27 32 33 Proper_Trig 0 4.5 0 -4.5 0 0 0 0 "FETZ, phenothiazine, erh based on toluene, adm jr., 3/7/92"
+      7 1 27 32 65 Proper_Trig 0 2.4 0 -2.4 0 0 0 0 "FETZ, phenothiazine, erh based on toluene, adm jr., 3/7/92 Kenno: 4.2 -> 2.4"
+      8 2 19 8 15 Proper_Trig 0 2.5 0 -2.5 0 0 0 0 "PROT Gives appropriate NMA cis/trans barrier. (LK)"
+      9 2 19 8 46 Proper_Trig 0 2.5 0 -2.5 0 0 0 0 "PROT Gives appropriate NMA cis/trans barrier. (LK)"
+      10 2 19 17 9 Proper_Trig 0 0 0 0 0 0 0 0 "PROT Alanine Dipeptide ab initio calc's (LK)"
+      11 2 19 17 18 Proper_Trig 0 1.4 1.4 0 0 0 0 0 "PROT ala dipeptide, new C VDW Rmin, adm jr., 3/3/93c"
+      12 2 19 17 43 Proper_Trig 0 0 0 0 0 0 0 0 "PROT Alanine Dipeptide ab initio calc's (LK)"
+      13 5 24 9 17 Proper_Trig 0 2.5 0 -2.5 0 0 0 0 "PROT Gives appropriate NMA cis/trans barrier. (LK)"
+      14 5 24 9 55 Proper_Trig 0 2.5 0 -2.5 0 0 0 0 "PROT Gives appropriate NMA cis/trans barrier. (LK)"
+      15 5 24 25 26 Proper_Trig 0 0.05 0 0 0 0 0 -0.05 "PROT For side chains of asp,asn,glu,gln, (n 6) from KK(LK)"
+      16 5 24 25 58 Proper_Trig 0 0 0 0 0 0 0 0 "PROT adm jr., 8/13/90  geometry and vibrations"
+      17 5 24 25 59 Proper_Trig 0 0 0 0 0 0 0 0 "PROT adm jr., 8/13/90  geometry and vibrations"
+      18 8 15 14 16 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      19 8 15 14 39 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      20 8 15 14 40 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      21 8 19 17 9 Proper_Trig 0 0.6 0.6 0 0 0 0 0 "PROT ala dipeptide, new C VDW Rmin, adm jr., 3/3/93"
+      22 8 19 17 18 Proper_Trig 0 0 0 0 0 0 0 0 "PROT ala dipeptide, new C VDW Rmin, 4/10/93 (LK)"
+      23 8 19 17 43 Proper_Trig 0 0 0 0 0 0 0 0 "PROT Alanine Dipeptide ab initio calc's (LK)"
+      24 9 17 18 20 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      25 9 17 18 44 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      26 9 17 18 45 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      27 9 24 25 26 Proper_Trig 0 0 0 0 0 0 0 0 "PROT from NG2S1  CG2O1  CG311  CT2, for lactams, adm jr."
+      28 9 24 25 58 Proper_Trig 0 0 0 0 0 0 0 0 "PROT, sp2-methyl, no torsion potential"
+      29 9 24 25 59 Proper_Trig 0 0 0 0 0 0 0 0 "PROT, sp2-methyl, no torsion potential"
+      30 10 23 20 18 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      31 10 23 20 47 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      32 10 23 20 48 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      33 10 28 11 13 Proper_Trig 0 0.5 0 -0.5 0 0 0 0 "MGU2, methylguanidine2, from NG2D1 CG2N1 NG311 CG331, penalty 271.0"
+      34 10 28 12 70 Proper_Trig 0 0.35 0 -0.2 0 0 0 0.15 "MGU1, methylguanidine; MGU2, methylguanidine2 kevo: new. Needs to be further optimized., from NG2D1 CG2N1 NG321 HGPAM2, penalty 30.0"
+      35 10 28 12 71 Proper_Trig 0 0.35 0 -0.2 0 0 0 0.15 "MGU1, methylguanidine; MGU2, methylguanidine2 kevo: new. Needs to be further optimized., from NG2D1 CG2N1 NG321 HGPAM2, penalty 30.0"
+      36 11 28 10 23 Proper_Trig 0 12 0 -12 0 0 0 0 "RETINOL SCH1, Schiff's base, deprotonated, from CG331 CG2D1 NG2D1 CG331, penalty 283.0"
+      37 11 28 10 74 Proper_Trig 0 5.2 0 -5.2 0 0 0 0 "MGU2, methylguanidine2, from NG311 CG2N1 NG2D1 HGP1, penalty 35.0"
+      38 11 28 12 70 Proper_Trig 0 0.35 0 -0.2 0 0 0 0.15 "MGU2, methylguanidine2 kevo: new. Needs to be further optimized., from NG311 CG2N1 NG321 HGPAM2, penalty 35.0"
+      39 11 28 12 71 Proper_Trig 0 0.35 0 -0.2 0 0 0 0.15 "MGU2, methylguanidine2 kevo: new. Needs to be further optimized., from NG311 CG2N1 NG321 HGPAM2, penalty 35.0"
+      40 12 28 10 23 Proper_Trig 0 6.5 0 -6.5 0 0 0 0 "MGU1, methylguanidine, from NG321 CG2N1 NG2D1 CG331, penalty 17.0"
+      41 12 28 10 74 Proper_Trig 0 5.2 0 -5.2 0 0 0 0 "MGU2, methylguanidine2, from NG321 CG2N1 NG2D1 HGP1, penalty 20.0"
+      42 12 28 11 13 Proper_Trig 0 0.5 0 -0.5 0 0 0 0 "MGU2, methylguanidine2, from NG321 CG2N1 NG311 CG331, penalty 261.0"
+      43 14 15 8 19 Proper_Trig 0 1.8 1.8 0 0 0 0 0 "PROT ala dipeptide, new C VDW Rmin, adm jr., 3/3/93c"
+      44 14 15 8 46 Proper_Trig 0 0 0 0 0 0 0 0 "PROT Alanine Dipeptide ab initio calc's (LK)"
+      45 14 16 21 51 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      46 14 16 21 52 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      47 14 16 21 53 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      48 14 16 22 49 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      49 14 16 22 50 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      50 14 16 22 54 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      51 15 8 19 17 Proper_Trig 0 4.1 1.6 -2.5 0 0 0 0 "PROT NMA cis/trans energy difference. (LK)"
+      52 15 14 16 21 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      53 15 14 16 22 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      54 15 14 16 42 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      55 16 14 15 41 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      56 17 9 24 25 Proper_Trig 0 4.1 1.6 -2.5 0 0 0 0 "PROT NMA cis/trans energy difference. (LK)"
+      57 17 18 20 23 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "FLAVOP PIP1,2,3"
+      58 17 18 20 47 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA abasic nucleoside"
+      59 17 18 20 48 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA abasic nucleoside"
+      60 17 19 8 46 Proper_Trig 0 2.5 0 -2.5 0 0 0 0 "PROT Gives appropriate NMA cis/trans barrier. (LK)"
+      61 18 17 9 24 Proper_Trig 0 1.8 1.8 0 0 0 0 0 "PROT ala dipeptide, new C VDW Rmin, adm jr., 3/3/93c"
+      62 18 17 9 55 Proper_Trig 0 0 0 0 0 0 0 0 "PROT Alanine Dipeptide ab initio calc's (LK)"
+      63 18 20 23 56 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "FLAVOP PIP1,2,3"
+      64 18 20 23 57 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "FLAVOP PIP1,2,3"
+      65 19 8 15 41 Proper_Trig 0 0 0 0 0 0 0 0 "PROT Alanine Dipeptide ab initio calc's (LK)"
+      66 19 17 9 24 Proper_Trig 0 0.2 -0.2 0 0 0 0 0 "PROT ala dipeptide, new C VDW Rmin, adm jr., 3/3/93c"
+      67 19 17 9 55 Proper_Trig 0 0 0 0 0 0 0 0 "PROT Alanine Dipeptide ab initio calc's (LK)"
+      68 19 17 18 20 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      69 19 17 18 44 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      70 19 17 18 45 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      71 20 18 17 43 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA abasic nucleoside"
+      72 20 23 10 28 Proper_Trig 0 0 0 0 0 0 0 0 "PROT methylguanidinium, adm jr., 3/26/92"
+      73 20 23 10 74 Proper_Trig 0 0 0 0 0 0 0 0 "PROT methylguanidinium, adm jr., 3/26/92"
+      74 21 16 14 39 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      75 21 16 14 40 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      76 21 16 22 49 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "PROTNA alkanes phospho-ser/thr"
+      77 21 16 22 50 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "PROTNA alkanes phospho-ser/thr"
+      78 21 16 22 54 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "PROTNA alkanes phospho-ser/thr"
+      79 22 16 14 39 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      80 22 16 14 40 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      81 22 16 21 51 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "PROTNA alkanes phospho-ser/thr"
+      82 22 16 21 52 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "PROTNA alkanes phospho-ser/thr"
+      83 22 16 21 53 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "PROTNA alkanes phospho-ser/thr"
+      84 23 20 18 44 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "FLAVOP PIP1,2,3"
+      85 23 20 18 45 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "FLAVOP PIP1,2,3"
+      86 24 9 17 43 Proper_Trig 0 0 0 0 0 0 0 0 "PROT Alanine Dipeptide ab initio calc's (LK)"
+      87 24 25 26 60 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      88 24 25 26 61 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "PROT alkane update, adm jr., 3/2/92"
+      89 25 24 9 55 Proper_Trig 0 2.5 0 -2.5 0 0 0 0 "PROT Gives appropriate NMA cis/trans barrier. (LK)"
+      90 25 26 1 27 Proper_Trig 0 0.61 -0.24 0 0.37 0 0 0 "PROT expt. MeEtS,      3/26/92 (FL), from CG321 CG321 SG311 CG321, penalty 71"
+      91 26 1 27 30 Proper_Trig 0 1.75 0 1.75 0 0 0 0 "FETZ, phenothiazine fit_dihedral, erh, from CG2R61 CG2R61 SG311 CG2R61, penalty 73.5"
+      92 26 1 27 32 Proper_Trig 0 1.75 0 1.75 0 0 0 0 "FETZ, phenothiazine fit_dihedral, erh, from CG2R61 CG2R61 SG311 CG2R61, penalty 73.5"
+      93 27 1 26 60 Proper_Trig 0 0.36 0 0 0.36 0 0 0 "DMTT, dimethyl trithiocarbonate, kevo, from HGA3 CG331 SG311 CG2O6, penalty 38.5"
+      94 27 1 26 61 Proper_Trig 0 0.36 0 0 0.36 0 0 0 "DMTT, dimethyl trithiocarbonate, kevo, from HGA3 CG331 SG311 CG2O6, penalty 38.5"
+      95 27 30 29 31 Proper_Trig 0 3.1 0 -3.1 0 0 0 0 "PROT JES 8/25/89"
+      96 27 30 29 34 Proper_Trig 0 3.1 0 -3.1 0 0 0 0 "PROT JES 8/25/89"
+      97 27 32 33 31 Proper_Trig 0 3.1 0 -3.1 0 0 0 0 "PROT JES 8/25/89"
+      98 27 32 33 66 Proper_Trig 0 4.2 0 -4.2 0 0 0 0 "PROT JES 8/25/89 benzene"
+      99 28 10 23 56 Proper_Trig 0 0 0 0 0 0 0 0 "PROT methylguanidinium, adm jr., 3/26/92"
+      100 28 10 23 57 Proper_Trig 0 0 0 0 0 0 0 0 "PROT methylguanidinium, adm jr., 3/26/92"
+      101 29 30 27 32 Proper_Trig 0 3.1 0 -3.1 0 0 0 0 "PROT JES 8/25/89"
+      102 29 31 33 32 Proper_Trig 0 3.1 0 -3.1 0 0 0 0 "PROT JES 8/25/89"
+      103 29 31 33 66 Proper_Trig 0 4.2 0 -4.2 0 0 0 0 "PROT JES 8/25/89 benzene"
+      104 29 31 35 37 Proper_Trig 0 3.1 0 -3.1 0 0 0 0 "PROT JES 8/25/89"
+      105 29 31 35 68 Proper_Trig 0 4.2 0 -4.2 0 0 0 0 "PROT JES 8/25/89 benzene"
+      106 29 34 36 37 Proper_Trig 0 3.1 0 -3.1 0 0 0 0 "PROT JES 8/25/89"
+      107 29 34 36 72 Proper_Trig 0 4.2 0 -4.2 0 0 0 0 "PROT JES 8/25/89 benzene"
+      108 30 27 32 33 Proper_Trig 0 3.1 0 -3.1 0 0 0 0 "PROT JES 8/25/89"
+      109 30 27 32 65 Proper_Trig 0 4.2 0 -4.2 0 0 0 0 "PROT JES 8/25/89 benzene"
+      110 30 29 31 33 Proper_Trig 0 3.1 0 -3.1 0 0 0 0 "PROT JES 8/25/89"
+      111 30 29 31 35 Proper_Trig 0 3.1 0 -3.1 0 0 0 0 "PROT JES 8/25/89"
+      112 30 29 34 36 Proper_Trig 0 3.1 0 -3.1 0 0 0 0 "PROT JES 8/25/89"
+      113 30 29 34 67 Proper_Trig 0 4.2 0 -4.2 0 0 0 0 "PROT JES 8/25/89 benzene"
+      114 31 29 30 64 Proper_Trig 0 4.2 0 -4.2 0 0 0 0 "PROT JES 8/25/89 benzene"
+      115 31 29 34 36 Proper_Trig 0 3.1 0 -3.1 0 0 0 0 "PROT JES 8/25/89"
+      116 31 29 34 67 Proper_Trig 0 4.2 0 -4.2 0 0 0 0 "PROT JES 8/25/89 benzene"
+      117 31 33 32 65 Proper_Trig 0 4.2 0 -4.2 0 0 0 0 "PROT JES 8/25/89 benzene"
+      118 31 35 37 36 Proper_Trig 0 3.1 0 -3.1 0 0 0 0 "PROT JES 8/25/89"
+      119 31 35 37 73 Proper_Trig 0 4.2 0 -4.2 0 0 0 0 "PROT JES 8/25/89 benzene"
+      120 32 27 30 64 Proper_Trig 0 4.2 0 -4.2 0 0 0 0 "PROT JES 8/25/89 benzene"
+      121 32 33 31 35 Proper_Trig 0 3.1 0 -3.1 0 0 0 0 "PROT JES 8/25/89"
+      122 33 31 29 34 Proper_Trig 0 3.1 0 -3.1 0 0 0 0 "PROT JES 8/25/89"
+      123 33 31 35 37 Proper_Trig 0 3.1 0 -3.1 0 0 0 0 "PROT JES 8/25/89"
+      124 33 31 35 68 Proper_Trig 0 4.2 0 -4.2 0 0 0 0 "PROT JES 8/25/89 benzene"
+      125 34 29 30 64 Proper_Trig 0 4.2 0 -4.2 0 0 0 0 "PROT JES 8/25/89 benzene"
+      126 34 29 31 35 Proper_Trig 0 3.1 0 -3.1 0 0 0 0 "PROT JES 8/25/89"
+      127 34 36 37 35 Proper_Trig 0 3.1 0 -3.1 0 0 0 0 "PROT JES 8/25/89"
+      128 34 36 37 73 Proper_Trig 0 4.2 0 -4.2 0 0 0 0 "PROT JES 8/25/89 benzene"
+      129 35 31 33 66 Proper_Trig 0 4.2 0 -4.2 0 0 0 0 "PROT JES 8/25/89 benzene"
+      130 35 37 36 72 Proper_Trig 0 4.2 0 -4.2 0 0 0 0 "PROT JES 8/25/89 benzene"
+      131 36 37 35 68 Proper_Trig 0 4.2 0 -4.2 0 0 0 0 "PROT JES 8/25/89 benzene"
+      132 37 36 34 67 Proper_Trig 0 4.2 0 -4.2 0 0 0 0 "PROT JES 8/25/89 benzene"
+      133 39 14 15 41 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      134 39 14 16 42 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      135 40 14 15 41 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      136 40 14 16 42 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      137 41 15 8 46 Proper_Trig 0 0 0 0 0 0 0 0 "PROT Alanine Dipeptide ab initio calc's (LK)"
+      138 42 16 21 51 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      139 42 16 21 52 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      140 42 16 21 53 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      141 42 16 22 49 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      142 42 16 22 50 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      143 42 16 22 54 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      144 43 17 9 55 Proper_Trig 0 0 0 0 0 0 0 0 "PROT Alanine Dipeptide ab initio calc's (LK)"
+      145 43 17 18 44 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      146 43 17 18 45 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      147 44 18 20 47 Proper_Trig 0 0.22 0 0 0.22 0 0 0 "LIPID alkanes"
+      148 44 18 20 48 Proper_Trig 0 0.22 0 0 0.22 0 0 0 "LIPID alkanes"
+      149 45 18 20 47 Proper_Trig 0 0.22 0 0 0.22 0 0 0 "LIPID alkanes"
+      150 45 18 20 48 Proper_Trig 0 0.22 0 0 0.22 0 0 0 "LIPID alkanes"
+      151 47 20 23 56 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "FLAVOP PIP1,2,3"
+      152 47 20 23 57 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "FLAVOP PIP1,2,3"
+      153 48 20 23 56 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "FLAVOP PIP1,2,3"
+      154 48 20 23 57 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "FLAVOP PIP1,2,3"
+      155 56 23 10 74 Proper_Trig 0 0 0 0 0 0 0 0 "PROT methylguanidinium, adm jr., 3/26/92"
+      156 57 23 10 74 Proper_Trig 0 0 0 0 0 0 0 0 "PROT methylguanidinium, adm jr., 3/26/92"
+      157 58 25 26 60 Proper_Trig 0 0.22 0 0 0.22 0 0 0 "LIPID alkanes"
+      158 58 25 26 61 Proper_Trig 0 0.22 0 0 0.22 0 0 0 "LIPID alkanes"
+      159 59 25 26 60 Proper_Trig 0 0.22 0 0 0.22 0 0 0 "LIPID alkanes"
+      160 59 25 26 61 Proper_Trig 0 0.22 0 0 0.22 0 0 0 "LIPID alkanes"
+      161 65 32 33 66 Proper_Trig 0 2.4 0 -2.4 0 0 0 0 "PROT JES 8/25/89 benzene"
+      162 67 34 36 72 Proper_Trig 0 2.4 0 -2.4 0 0 0 0 "PROT JES 8/25/89 benzene"
+      163 68 35 37 73 Proper_Trig 0 2.4 0 -2.4 0 0 0 0 "PROT JES 8/25/89 benzene"
+      164 72 36 37 73 Proper_Trig 0 2.4 0 -2.4 0 0 0 0 "PROT JES 8/25/89 benzene"
+      165 19 17 8 2 Improper_Harm 0 120 <> <> <> <> <> <> "PROT NMA Vibrational Modes (LK) WILDCARD"
+      166 24 25 9 5 Improper_Harm 0 120 <> <> <> <> <> <> "PROT NMA Vibrational Modes (LK) WILDCARD"
+      167 28 10 11 12 Improper_Harm 0 85 <> <> <> <> <> <> "MGU2, methylguanidine2, from CG2N1 NG2D1 NG311 NG321, penalty 25.0"
+      :::
+    }
+    ffio_exclusions[383] {
+      i_ffio_ai
+      i_ffio_aj
+      :::
+      1 1 24
+      2 1 25
+      3 1 26
+      4 1 27
+      5 1 29
+      6 1 30
+      7 1 32
+      8 1 33
+      9 1 58
+      10 1 59
+      11 1 60
+      12 1 61
+      13 1 64
+      14 1 65
+      15 2 8
+      16 2 9
+      17 2 15
+      18 2 17
+      19 2 18
+      20 2 19
+      21 2 43
+      22 2 46
+      23 3 4
+      24 3 8
+      25 3 14
+      26 3 15
+      27 3 38
+      28 3 41
+      29 3 62
+      30 3 63
+      31 4 8
+      32 4 14
+      33 4 15
+      34 4 38
+      35 4 41
+      36 4 62
+      37 4 63
+      38 5 9
+      39 5 17
+      40 5 24
+      41 5 25
+      42 5 26
+      43 5 55
+      44 5 58
+      45 5 59
+      46 6 7
+      47 6 11
+      48 6 13
+      49 6 28
+      50 6 69
+      51 7 11
+      52 7 13
+      53 7 28
+      54 7 69
+      55 8 9
+      56 8 14
+      57 8 15
+      58 8 16
+      59 8 17
+      60 8 18
+      61 8 19
+      62 8 38
+      63 8 39
+      64 8 40
+      65 8 41
+      66 8 43
+      67 8 46
+      68 9 17
+      69 9 18
+      70 9 19
+      71 9 20
+      72 9 24
+      73 9 25
+      74 9 26
+      75 9 43
+      76 9 44
+      77 9 45
+      78 9 55
+      79 9 58
+      80 9 59
+      81 10 11
+      82 10 12
+      83 10 13
+      84 10 18
+      85 10 20
+      86 10 23
+      87 10 28
+      88 10 47
+      89 10 48
+      90 10 56
+      91 10 57
+      92 10 69
+      93 10 70
+      94 10 71
+      95 10 74
+      96 11 12
+      97 11 13
+      98 11 23
+      99 11 28
+      100 11 69
+      101 11 70
+      102 11 71
+      103 11 74
+      104 12 13
+      105 12 23
+      106 12 28
+      107 12 69
+      108 12 70
+      109 12 71
+      110 12 74
+      111 13 28
+      112 13 69
+      113 14 15
+      114 14 16
+      115 14 19
+      116 14 21
+      117 14 22
+      118 14 38
+      119 14 39
+      120 14 40
+      121 14 41
+      122 14 42
+      123 14 46
+      124 14 49
+      125 14 50
+      126 14 51
+      127 14 52
+      128 14 53
+      129 14 54
+      130 15 16
+      131 15 17
+      132 15 19
+      133 15 21
+      134 15 22
+      135 15 38
+      136 15 39
+      137 15 40
+      138 15 41
+      139 15 42
+      140 15 46
+      141 15 62
+      142 15 63
+      143 16 21
+      144 16 22
+      145 16 38
+      146 16 39
+      147 16 40
+      148 16 41
+      149 16 42
+      150 16 49
+      151 16 50
+      152 16 51
+      153 16 52
+      154 16 53
+      155 16 54
+      156 17 18
+      157 17 19
+      158 17 20
+      159 17 23
+      160 17 24
+      161 17 25
+      162 17 43
+      163 17 44
+      164 17 45
+      165 17 46
+      166 17 47
+      167 17 48
+      168 17 55
+      169 18 19
+      170 18 20
+      171 18 23
+      172 18 24
+      173 18 43
+      174 18 44
+      175 18 45
+      176 18 47
+      177 18 48
+      178 18 55
+      179 18 56
+      180 18 57
+      181 19 20
+      182 19 24
+      183 19 38
+      184 19 41
+      185 19 43
+      186 19 44
+      187 19 45
+      188 19 46
+      189 19 55
+      190 20 23
+      191 20 28
+      192 20 43
+      193 20 44
+      194 20 45
+      195 20 47
+      196 20 48
+      197 20 56
+      198 20 57
+      199 20 74
+      200 21 22
+      201 21 39
+      202 21 40
+      203 21 42
+      204 21 49
+      205 21 50
+      206 21 51
+      207 21 52
+      208 21 53
+      209 21 54
+      210 22 39
+      211 22 40
+      212 22 42
+      213 22 49
+      214 22 50
+      215 22 51
+      216 22 52
+      217 22 53
+      218 22 54
+      219 23 28
+      220 23 44
+      221 23 45
+      222 23 47
+      223 23 48
+      224 23 56
+      225 23 57
+      226 23 74
+      227 24 25
+      228 24 26
+      229 24 43
+      230 24 55
+      231 24 58
+      232 24 59
+      233 24 60
+      234 24 61
+      235 25 26
+      236 25 27
+      237 25 55
+      238 25 58
+      239 25 59
+      240 25 60
+      241 25 61
+      242 26 27
+      243 26 30
+      244 26 32
+      245 26 58
+      246 26 59
+      247 26 60
+      248 26 61
+      249 27 29
+      250 27 30
+      251 27 31
+      252 27 32
+      253 27 33
+      254 27 34
+      255 27 60
+      256 27 61
+      257 27 64
+      258 27 65
+      259 27 66
+      260 28 56
+      261 28 57
+      262 28 69
+      263 28 70
+      264 28 71
+      265 28 74
+      266 29 30
+      267 29 31
+      268 29 32
+      269 29 33
+      270 29 34
+      271 29 35
+      272 29 36
+      273 29 37
+      274 29 64
+      275 29 66
+      276 29 67
+      277 29 68
+      278 29 72
+      279 30 31
+      280 30 32
+      281 30 33
+      282 30 34
+      283 30 35
+      284 30 36
+      285 30 64
+      286 30 65
+      287 30 67
+      288 31 32
+      289 31 33
+      290 31 34
+      291 31 35
+      292 31 36
+      293 31 37
+      294 31 64
+      295 31 65
+      296 31 66
+      297 31 67
+      298 31 68
+      299 31 73
+      300 32 33
+      301 32 35
+      302 32 64
+      303 32 65
+      304 32 66
+      305 33 34
+      306 33 35
+      307 33 37
+      308 33 65
+      309 33 66
+      310 33 68
+      311 34 35
+      312 34 36
+      313 34 37
+      314 34 64
+      315 34 67
+      316 34 72
+      317 34 73
+      318 35 36
+      319 35 37
+      320 35 66
+      321 35 68
+      322 35 72
+      323 35 73
+      324 36 37
+      325 36 67
+      326 36 68
+      327 36 72
+      328 36 73
+      329 37 67
+      330 37 68
+      331 37 72
+      332 37 73
+      333 38 39
+      334 38 40
+      335 38 41
+      336 38 46
+      337 38 62
+      338 38 63
+      339 39 40
+      340 39 41
+      341 39 42
+      342 40 41
+      343 40 42
+      344 41 46
+      345 42 49
+      346 42 50
+      347 42 51
+      348 42 52
+      349 42 53
+      350 42 54
+      351 43 44
+      352 43 45
+      353 43 55
+      354 44 45
+      355 44 47
+      356 44 48
+      357 45 47
+      358 45 48
+      359 47 48
+      360 47 56
+      361 47 57
+      362 48 56
+      363 48 57
+      364 49 50
+      365 49 54
+      366 50 54
+      367 51 52
+      368 51 53
+      369 52 53
+      370 56 57
+      371 56 74
+      372 57 74
+      373 58 59
+      374 58 60
+      375 58 61
+      376 59 60
+      377 59 61
+      378 60 61
+      379 65 66
+      380 67 72
+      381 68 73
+      382 70 71
+      383 72 73
+      :::
+    }
+    ffio_pairs[358] {
+      i_ffio_ai
+      i_ffio_aj
+      s_ffio_funct
+      r_ffio_c1
+      r_ffio_c2
+      :::
+      1 1 24 LJ 1 <>
+      2 1 29 LJ 1 <>
+      3 1 33 LJ 1 <>
+      4 1 58 LJ 1 <>
+      5 1 59 LJ 1 <>
+      6 1 64 LJ 1 <>
+      7 1 65 LJ 1 <>
+      8 2 9 LJ12_6_sig_epsilon 2.6281512 0.15491933
+      9 2 15 LJ12_6_sig_epsilon 2.9399658 0.034641016
+      10 2 18 LJ12_6_sig_epsilon 2.9399658 0.034641016
+      11 2 43 LJ12_6_sig_epsilon 2.4410625 0.073484692
+      12 2 46 LJ12_6_sig_epsilon 1.447265 0.074296702
+      13 3 8 LJ12_6_sig_epsilon 2.9533293 0.1960102
+      14 3 14 LJ12_6_sig_epsilon 3.2651438 0.043829214
+      15 3 41 LJ 1 <>
+      16 3 63 LJ 1 <>
+      17 4 8 LJ12_6_sig_epsilon 2.9533293 0.1960102
+      18 4 14 LJ12_6_sig_epsilon 3.2651438 0.043829214
+      19 4 41 LJ 1 <>
+      20 4 62 LJ 1 <>
+      21 5 17 LJ12_6_sig_epsilon 2.9399658 0.034641016
+      22 5 26 LJ12_6_sig_epsilon 2.9399658 0.034641016
+      23 5 55 LJ12_6_sig_epsilon 1.447265 0.074296702
+      24 5 58 LJ12_6_sig_epsilon 2.4410625 0.064807407
+      25 5 59 LJ12_6_sig_epsilon 2.4410625 0.064807407
+      26 6 28 LJ 1 <>
+      27 6 69 LJ 1 <>
+      28 7 28 LJ12_6_sig_epsilon 3.0290556 0.11489125
+      29 7 69 LJ12_6_sig_epsilon 1.447265 0.074296702
+      30 8 9 LJ12_6_sig_epsilon 2.761786 0.2
+      31 8 16 LJ12_6_sig_epsilon 3.0736006 0.04472136
+      32 8 18 LJ12_6_sig_epsilon 3.0736006 0.04472136
+      33 8 39 LJ12_6_sig_epsilon 2.5746973 0.083666003
+      34 8 40 LJ12_6_sig_epsilon 2.5746973 0.083666003
+      35 8 43 LJ12_6_sig_epsilon 2.5746973 0.09486833
+      36 9 20 LJ12_6_sig_epsilon 3.0736006 0.04472136
+      37 9 26 LJ12_6_sig_epsilon 3.0736006 0.04472136
+      38 9 44 LJ12_6_sig_epsilon 2.5746973 0.083666003
+      39 9 45 LJ12_6_sig_epsilon 2.5746973 0.083666003
+      40 9 58 LJ12_6_sig_epsilon 2.5746973 0.083666003
+      41 9 59 LJ12_6_sig_epsilon 2.5746973 0.083666003
+      42 10 13 LJ 1 <>
+      43 10 18 LJ12_6_sig_epsilon 3.3408702 0.04472136
+      44 10 47 LJ 1 <>
+      45 10 48 LJ 1 <>
+      46 10 69 LJ 1 <>
+      47 10 70 LJ 1 <>
+      48 10 71 LJ 1 <>
+      49 11 23 LJ12_6_sig_epsilon 3.5190499 0.024494897
+      50 11 70 LJ 1 <>
+      51 11 71 LJ 1 <>
+      52 11 74 LJ 1 <>
+      53 12 13 LJ 1 <>
+      54 12 23 LJ12_6_sig_epsilon 3.465596 0.024494897
+      55 12 69 LJ 1 <>
+      56 12 74 LJ 1 <>
+      57 14 19 LJ12_6_sig_epsilon 3.474505 0.033166248
+      58 14 46 LJ12_6_sig_epsilon 1.8927143 0.021447611
+      59 14 49 LJ12_6_sig_epsilon 2.8865118 0.015491933
+      60 14 50 LJ12_6_sig_epsilon 2.8865118 0.015491933
+      61 14 51 LJ12_6_sig_epsilon 2.8865118 0.015491933
+      62 14 52 LJ12_6_sig_epsilon 2.8865118 0.015491933
+      63 14 53 LJ12_6_sig_epsilon 2.8865118 0.015491933
+      64 14 54 LJ12_6_sig_epsilon 2.8865118 0.015491933
+      65 15 17 LJ12_6_sig_epsilon 3.3854151 0.01
+      66 15 21 LJ12_6_sig_epsilon 3.3854151 0.01
+      67 15 22 LJ12_6_sig_epsilon 3.3854151 0.01
+      68 15 42 LJ12_6_sig_epsilon 2.8865118 0.021213203
+      69 15 62 LJ12_6_sig_epsilon 1.8927143 0.021447611
+      70 15 63 LJ12_6_sig_epsilon 1.8927143 0.021447611
+      71 16 38 LJ12_6_sig_epsilon 3.5368679 0.064807407
+      72 16 41 LJ12_6_sig_epsilon 2.8865118 0.021213203
+      73 17 23 LJ12_6_sig_epsilon 3.3854151 0.01
+      74 17 25 LJ12_6_sig_epsilon 3.3854151 0.01
+      75 17 46 LJ12_6_sig_epsilon 1.8927143 0.021447611
+      76 17 47 LJ12_6_sig_epsilon 2.8865118 0.018708287
+      77 17 48 LJ12_6_sig_epsilon 2.8865118 0.018708287
+      78 18 24 LJ12_6_sig_epsilon 3.474505 0.033166248
+      79 18 55 LJ12_6_sig_epsilon 1.8927143 0.021447611
+      80 18 56 LJ12_6_sig_epsilon 2.8865118 0.018708287
+      81 18 57 LJ12_6_sig_epsilon 2.8865118 0.018708287
+      82 19 20 LJ12_6_sig_epsilon 3.474505 0.033166248
+      83 19 24 LJ 1 <>
+      84 19 38 LJ 1 <>
+      85 19 41 LJ 1 <>
+      86 19 44 LJ 1 <>
+      87 19 45 LJ 1 <>
+      88 19 55 LJ 1 <>
+      89 20 28 LJ12_6_sig_epsilon 3.474505 0.033166248
+      90 20 43 LJ12_6_sig_epsilon 2.8865118 0.021213203
+      91 20 74 LJ12_6_sig_epsilon 1.8927143 0.021447611
+      92 21 39 LJ12_6_sig_epsilon 2.8865118 0.018708287
+      93 21 40 LJ12_6_sig_epsilon 2.8865118 0.018708287
+      94 21 49 LJ12_6_sig_epsilon 2.8865118 0.015491933
+      95 21 50 LJ12_6_sig_epsilon 2.8865118 0.015491933
+      96 21 54 LJ12_6_sig_epsilon 2.8865118 0.015491933
+      97 22 39 LJ12_6_sig_epsilon 2.8865118 0.018708287
+      98 22 40 LJ12_6_sig_epsilon 2.8865118 0.018708287
+      99 22 51 LJ12_6_sig_epsilon 2.8865118 0.015491933
+      100 22 52 LJ12_6_sig_epsilon 2.8865118 0.015491933
+      101 22 53 LJ12_6_sig_epsilon 2.8865118 0.015491933
+      102 23 44 LJ12_6_sig_epsilon 2.8865118 0.018708287
+      103 23 45 LJ12_6_sig_epsilon 2.8865118 0.018708287
+      104 24 43 LJ 1 <>
+      105 24 60 LJ 1 <>
+      106 24 61 LJ 1 <>
+      107 25 27 LJ12_6_sig_epsilon 3.4677342 0.026457513
+      108 25 55 LJ12_6_sig_epsilon 1.8927143 0.021447611
+      109 26 30 LJ12_6_sig_epsilon 3.4677342 0.026457513
+      110 26 32 LJ12_6_sig_epsilon 3.4677342 0.026457513
+      111 27 31 LJ 1 <>
+      112 27 34 LJ 1 <>
+      113 27 60 LJ 1 <>
+      114 27 61 LJ 1 <>
+      115 27 66 LJ 1 <>
+      116 28 56 LJ 1 <>
+      117 28 57 LJ 1 <>
+      118 29 32 LJ 1 <>
+      119 29 37 LJ 1 <>
+      120 29 66 LJ 1 <>
+      121 29 68 LJ 1 <>
+      122 29 72 LJ 1 <>
+      123 30 33 LJ 1 <>
+      124 30 35 LJ 1 <>
+      125 30 36 LJ 1 <>
+      126 30 65 LJ 1 <>
+      127 30 67 LJ 1 <>
+      128 31 36 LJ 1 <>
+      129 31 64 LJ 1 <>
+      130 31 65 LJ 1 <>
+      131 31 67 LJ 1 <>
+      132 31 73 LJ 1 <>
+      133 32 35 LJ 1 <>
+      134 32 64 LJ 1 <>
+      135 33 34 LJ 1 <>
+      136 33 37 LJ 1 <>
+      137 33 68 LJ 1 <>
+      138 34 35 LJ 1 <>
+      139 34 64 LJ 1 <>
+      140 34 73 LJ 1 <>
+      141 35 66 LJ 1 <>
+      142 35 72 LJ 1 <>
+      143 36 68 LJ 1 <>
+      144 37 67 LJ 1 <>
+      145 38 39 LJ 1 <>
+      146 38 40 LJ 1 <>
+      147 38 46 LJ 1 <>
+      148 39 41 LJ 1 <>
+      149 39 42 LJ 1 <>
+      150 40 41 LJ 1 <>
+      151 40 42 LJ 1 <>
+      152 41 46 LJ 1 <>
+      153 42 49 LJ 1 <>
+      154 42 50 LJ 1 <>
+      155 42 51 LJ 1 <>
+      156 42 52 LJ 1 <>
+      157 42 53 LJ 1 <>
+      158 42 54 LJ 1 <>
+      159 43 44 LJ 1 <>
+      160 43 45 LJ 1 <>
+      161 43 55 LJ 1 <>
+      162 44 47 LJ 1 <>
+      163 44 48 LJ 1 <>
+      164 45 47 LJ 1 <>
+      165 45 48 LJ 1 <>
+      166 47 56 LJ 1 <>
+      167 47 57 LJ 1 <>
+      168 48 56 LJ 1 <>
+      169 48 57 LJ 1 <>
+      170 56 74 LJ 1 <>
+      171 57 74 LJ 1 <>
+      172 58 60 LJ 1 <>
+      173 58 61 LJ 1 <>
+      174 59 60 LJ 1 <>
+      175 59 61 LJ 1 <>
+      176 65 66 LJ 1 <>
+      177 67 72 LJ 1 <>
+      178 68 73 LJ 1 <>
+      179 72 73 LJ 1 <>
+      180 1 24 Coulomb 1 <>
+      181 1 29 Coulomb 1 <>
+      182 1 33 Coulomb 1 <>
+      183 1 58 Coulomb 1 <>
+      184 1 59 Coulomb 1 <>
+      185 1 64 Coulomb 1 <>
+      186 1 65 Coulomb 1 <>
+      187 2 9 Coulomb 1 <>
+      188 2 15 Coulomb 1 <>
+      189 2 18 Coulomb 1 <>
+      190 2 43 Coulomb 1 <>
+      191 2 46 Coulomb 1 <>
+      192 3 8 Coulomb 1 <>
+      193 3 14 Coulomb 1 <>
+      194 3 41 Coulomb 1 <>
+      195 3 63 Coulomb 1 <>
+      196 4 8 Coulomb 1 <>
+      197 4 14 Coulomb 1 <>
+      198 4 41 Coulomb 1 <>
+      199 4 62 Coulomb 1 <>
+      200 5 17 Coulomb 1 <>
+      201 5 26 Coulomb 1 <>
+      202 5 55 Coulomb 1 <>
+      203 5 58 Coulomb 1 <>
+      204 5 59 Coulomb 1 <>
+      205 6 28 Coulomb 1 <>
+      206 6 69 Coulomb 1 <>
+      207 7 28 Coulomb 1 <>
+      208 7 69 Coulomb 1 <>
+      209 8 9 Coulomb 1 <>
+      210 8 16 Coulomb 1 <>
+      211 8 18 Coulomb 1 <>
+      212 8 39 Coulomb 1 <>
+      213 8 40 Coulomb 1 <>
+      214 8 43 Coulomb 1 <>
+      215 9 20 Coulomb 1 <>
+      216 9 26 Coulomb 1 <>
+      217 9 44 Coulomb 1 <>
+      218 9 45 Coulomb 1 <>
+      219 9 58 Coulomb 1 <>
+      220 9 59 Coulomb 1 <>
+      221 10 13 Coulomb 1 <>
+      222 10 18 Coulomb 1 <>
+      223 10 47 Coulomb 1 <>
+      224 10 48 Coulomb 1 <>
+      225 10 69 Coulomb 1 <>
+      226 10 70 Coulomb 1 <>
+      227 10 71 Coulomb 1 <>
+      228 11 23 Coulomb 1 <>
+      229 11 70 Coulomb 1 <>
+      230 11 71 Coulomb 1 <>
+      231 11 74 Coulomb 1 <>
+      232 12 13 Coulomb 1 <>
+      233 12 23 Coulomb 1 <>
+      234 12 69 Coulomb 1 <>
+      235 12 74 Coulomb 1 <>
+      236 14 19 Coulomb 1 <>
+      237 14 46 Coulomb 1 <>
+      238 14 49 Coulomb 1 <>
+      239 14 50 Coulomb 1 <>
+      240 14 51 Coulomb 1 <>
+      241 14 52 Coulomb 1 <>
+      242 14 53 Coulomb 1 <>
+      243 14 54 Coulomb 1 <>
+      244 15 17 Coulomb 1 <>
+      245 15 21 Coulomb 1 <>
+      246 15 22 Coulomb 1 <>
+      247 15 42 Coulomb 1 <>
+      248 15 62 Coulomb 1 <>
+      249 15 63 Coulomb 1 <>
+      250 16 38 Coulomb 1 <>
+      251 16 41 Coulomb 1 <>
+      252 17 23 Coulomb 1 <>
+      253 17 25 Coulomb 1 <>
+      254 17 46 Coulomb 1 <>
+      255 17 47 Coulomb 1 <>
+      256 17 48 Coulomb 1 <>
+      257 18 24 Coulomb 1 <>
+      258 18 55 Coulomb 1 <>
+      259 18 56 Coulomb 1 <>
+      260 18 57 Coulomb 1 <>
+      261 19 20 Coulomb 1 <>
+      262 19 24 Coulomb 1 <>
+      263 19 38 Coulomb 1 <>
+      264 19 41 Coulomb 1 <>
+      265 19 44 Coulomb 1 <>
+      266 19 45 Coulomb 1 <>
+      267 19 55 Coulomb 1 <>
+      268 20 28 Coulomb 1 <>
+      269 20 43 Coulomb 1 <>
+      270 20 74 Coulomb 1 <>
+      271 21 39 Coulomb 1 <>
+      272 21 40 Coulomb 1 <>
+      273 21 49 Coulomb 1 <>
+      274 21 50 Coulomb 1 <>
+      275 21 54 Coulomb 1 <>
+      276 22 39 Coulomb 1 <>
+      277 22 40 Coulomb 1 <>
+      278 22 51 Coulomb 1 <>
+      279 22 52 Coulomb 1 <>
+      280 22 53 Coulomb 1 <>
+      281 23 44 Coulomb 1 <>
+      282 23 45 Coulomb 1 <>
+      283 24 43 Coulomb 1 <>
+      284 24 60 Coulomb 1 <>
+      285 24 61 Coulomb 1 <>
+      286 25 27 Coulomb 1 <>
+      287 25 55 Coulomb 1 <>
+      288 26 30 Coulomb 1 <>
+      289 26 32 Coulomb 1 <>
+      290 27 31 Coulomb 1 <>
+      291 27 34 Coulomb 1 <>
+      292 27 60 Coulomb 1 <>
+      293 27 61 Coulomb 1 <>
+      294 27 66 Coulomb 1 <>
+      295 28 56 Coulomb 1 <>
+      296 28 57 Coulomb 1 <>
+      297 29 32 Coulomb 1 <>
+      298 29 37 Coulomb 1 <>
+      299 29 66 Coulomb 1 <>
+      300 29 68 Coulomb 1 <>
+      301 29 72 Coulomb 1 <>
+      302 30 33 Coulomb 1 <>
+      303 30 35 Coulomb 1 <>
+      304 30 36 Coulomb 1 <>
+      305 30 65 Coulomb 1 <>
+      306 30 67 Coulomb 1 <>
+      307 31 36 Coulomb 1 <>
+      308 31 64 Coulomb 1 <>
+      309 31 65 Coulomb 1 <>
+      310 31 67 Coulomb 1 <>
+      311 31 73 Coulomb 1 <>
+      312 32 35 Coulomb 1 <>
+      313 32 64 Coulomb 1 <>
+      314 33 34 Coulomb 1 <>
+      315 33 37 Coulomb 1 <>
+      316 33 68 Coulomb 1 <>
+      317 34 35 Coulomb 1 <>
+      318 34 64 Coulomb 1 <>
+      319 34 73 Coulomb 1 <>
+      320 35 66 Coulomb 1 <>
+      321 35 72 Coulomb 1 <>
+      322 36 68 Coulomb 1 <>
+      323 37 67 Coulomb 1 <>
+      324 38 39 Coulomb 1 <>
+      325 38 40 Coulomb 1 <>
+      326 38 46 Coulomb 1 <>
+      327 39 41 Coulomb 1 <>
+      328 39 42 Coulomb 1 <>
+      329 40 41 Coulomb 1 <>
+      330 40 42 Coulomb 1 <>
+      331 41 46 Coulomb 1 <>
+      332 42 49 Coulomb 1 <>
+      333 42 50 Coulomb 1 <>
+      334 42 51 Coulomb 1 <>
+      335 42 52 Coulomb 1 <>
+      336 42 53 Coulomb 1 <>
+      337 42 54 Coulomb 1 <>
+      338 43 44 Coulomb 1 <>
+      339 43 45 Coulomb 1 <>
+      340 43 55 Coulomb 1 <>
+      341 44 47 Coulomb 1 <>
+      342 44 48 Coulomb 1 <>
+      343 45 47 Coulomb 1 <>
+      344 45 48 Coulomb 1 <>
+      345 47 56 Coulomb 1 <>
+      346 47 57 Coulomb 1 <>
+      347 48 56 Coulomb 1 <>
+      348 48 57 Coulomb 1 <>
+      349 56 74 Coulomb 1 <>
+      350 57 74 Coulomb 1 <>
+      351 58 60 Coulomb 1 <>
+      352 58 61 Coulomb 1 <>
+      353 59 60 Coulomb 1 <>
+      354 59 61 Coulomb 1 <>
+      355 65 66 Coulomb 1 <>
+      356 67 72 Coulomb 1 <>
+      357 68 73 Coulomb 1 <>
+      358 72 73 Coulomb 1 <>
+      :::
+    }
+    ffio_vdwtypes[22] {
+      s_ffio_name
+      s_ffio_funct
+      r_ffio_c1
+      r_ffio_c2
+      s_ffio_comment
+      :::
+      1 NG3N1 LJ12_6_sig_epsilon 3.6526847 0.06 "HDZN, hydrazine, ed"
+      2 OG2N1 LJ12_6_sig_epsilon 3.0290556 0.12 "NITR, nitrobenzene"
+      3 HGP2 LJ12_6_sig_epsilon 0.40001352 0.046 "small polar Hydrogen, charged systems"
+      4 HGP1 LJ12_6_sig_epsilon 0.40001352 0.046 "polar H"
+      5 OG2D1 LJ12_6_sig_epsilon 3.0290556 0.12 "carbonyl. Also consistent with adm, acetaldehyde, 11/08"
+      6 NG2P1 LJ12_6_sig_epsilon 3.2963253 0.2 "protonated Schiff's base"
+      7 CG324 LJ12_6_sig_epsilon 3.8754094 0.055 PIP1,2,3
+      8 CG2R61 LJ12_6_sig_epsilon 3.5500532 0.07 INDO/TRP
+      9 CG2O1 LJ12_6_sig_epsilon 3.5635949 0.11 "NMA pure solvent, adm jr., 3/3/93"
+      10 HGA2 LJ12_6_sig_epsilon 2.3876086 0.035 "alkane, igor, 6/05"
+      11 HGA3 LJ12_6_sig_epsilon 2.3876086 0.024 "alkane, yin and mackerell, 4/98"
+      12 HGR61 LJ12_6_sig_epsilon 2.4200373 0.03 benzene
+      13 OG311 LJ12_6_sig_epsilon 3.1448725 0.1921 "og MeOH and EtOH 1/06 (was -0.1521 1.7682)"
+      14 CG321 LJ12_6_sig_epsilon 3.5814128 0.056 "alkane (CT2), 4/98, yin, adm jr, also used by viv"
+      15 HGA1 LJ12_6_sig_epsilon 2.3876086 0.045 "alkane, igor, 6/05"
+      16 SG311 LJ12_6_sig_epsilon 3.5635949 0.45 "methanethiol/ethylmethylsulfide pure solvent"
+      17 NG2S1 LJ12_6_sig_epsilon 3.2963253 0.2 "1,4 vdW allows the C5 dipeptide minimum to exist"
+      18 BG311 LJ12_6_sig_epsilon 3.6883207 0.42 "Boron, dummy"
+      19 CG311 LJ12_6_sig_epsilon 3.5635949 0.032 "alkane (CT1), isobutane, 6/05 viv"
+      20 CG331 LJ12_6_sig_epsilon 3.6526847 0.078 "alkane (CT3), 4/98, yin, adm jr; Rmin/2 modified from 2.04 to 2.05"
+      21 CG2N1 LJ12_6_sig_epsilon 3.5635949 0.11 "NMA pure solvent, adm jr., 3/3/93"
+      22 NG321 LJ12_6_sig_epsilon 3.5457769 0.06 "aliphatic amines"
+      :::
+    }
+  }
+}
+
