@@ -1643,32 +1643,33 @@ class TestMain(unittest.TestCase):
             self.assertTrue(not annot_sys.aromatic(cc[i]))
 
     def testSmartsPattern(self):
+        import ast
         d=os.path.dirname(__file__)
-        tests = json.loads(open('tests/smarts_tests.json').read())
-        files = ['/proj/desres/root/Linux/x86_64/dms_inputs/1.5.4/share/ww.dms',
-                '/proj/desres/root/Linux/x86_64/dms_inputs/1.5.4/share/membrane.dms',
-                'tests/files/4A9C_chainA_46.mae',
-                'tests/files/4A9C_chainA_cf_21.mae',
-                'tests/files/acrd.mae',
-                'tests/files/azul.mae',
-                'tests/files/boron.mae',
-                'tests/files/fenz.mae',
-                'tests/files/indz.mae',
-                'tests/files/ndph.mae',
-                'tests/files/pegm.mae']
-        mols = [msys.Load(file, structure_only=True) for file in files]
-        for mol in mols:
+        files = ['ww.dms',
+                'membrane.dms',
+                '4A9C_chainA_46.mae',
+                '4A9C_chainA_cf_21.mae',
+                'acrd.mae',
+                'azul.mae',
+                'boron.mae',
+                'fenz.mae',
+                'indz.mae',
+                'ndph.mae',
+                'pegm.mae']
+        for f in files:
+            name = f[:-4]
+            mol = msys.Load('tests/smarts_tests/' + f, structure_only=True)
             msys.AssignBondOrderAndFormalCharge(mol)
-        annot_mols = [msys.AnnotatedSystem(mol) for mol in mols]
-        mol_atoms = [mol.select('not water') for mol in mols]
-        for tup in tests:
-            smarts = tup[0]
-            mol_matches = tup[1:]
-            sp = msys.SmartsPattern(smarts)
-            for annot_mol, atoms, matches in zip(annot_mols, mol_atoms, mol_matches):
-                self.assertEqual(sp.findMatches(annot_mol, atoms), matches)
-        sp = msys.SmartsPattern(tests[0][0])
-        self.assertTrue(len(sp.findMatches(annot_mols[0])) > 0)
+            annot_mol = msys.AnnotatedSystem(mol)
+            atoms = mol.select('not water')
+            tests = ast.literal_eval(open('tests/smarts_tests/%s_matches' % name).read())
+            for k, v in tests.items():
+                sp = msys.SmartsPattern(k)
+                match = sp.findMatches(annot_mol, atoms)
+                if match != v:
+                    self.assertTrue(False,
+                        msg="SMARTS mismatch for molecule '%s', pattern '%s'.\nMissing matches: %s\nExtra matches: %s\n"
+                        % (name, k, str([i for i in v if i not in match]), str([i for i in match if i not in v])))
 
     def testGraph(self):
         sys_A = msys.CreateSystem()
