@@ -1,0 +1,1694 @@
+{
+  s_m_m2io_version
+  :::
+  2.0.0
+}
+f_m_ct {
+  s_m_title
+  :::
+  ""
+  m_atom[75] {
+    i_m_mmod_type
+    r_m_x_coord
+    r_m_y_coord
+    r_m_z_coord
+    i_m_residue_number
+    s_m_insertion_code
+    s_m_mmod_res
+    s_m_chain_name
+    i_m_color
+    r_m_charge1
+    r_m_charge2
+    s_m_pdb_residue_name
+    s_m_pdb_atom_name
+    s_m_grow_name
+    i_m_atomic_number
+    i_m_formal_charge
+    s_m_atom_name
+    r_m_pdb_occupancy
+    i_m_pdb_convert_problem
+    i_pdb_PDB_serial
+    :::
+    1 3 1.362000 -6.677000 -2.486000 1 " " X " " 14 0.00000 0.00000 "LIG " " C  " "    " 6 0 "" 1 4 1
+    2 26 2.801000 -6.405000 -2.406000 1 " " X " " 14 0.00000 0.00000 "LIG " " N  " "    " 7 0 "" 1 4 2
+    3 4 3.725000 -7.421000 -2.229000 1 " " X " " 14 0.00000 0.00000 "LIG " " C  " "    " 6 0 "" 1 4 3
+    4 27 4.923000 -6.967000 -1.923000 1 " " X " " 14 0.00000 0.00000 "LIG " " N  " "    " 7 0 "" 1 4 4
+    5 4 4.782000 -5.599000 -1.960000 1 " " X " " 14 0.00000 0.00000 "LIG " " C  " "    " 6 0 "" 1 4 5
+    6 4 3.496000 -5.230000 -2.329000 1 " " X " " 14 0.00000 0.00000 "LIG " " C  " "    " 6 0 "" 1 4 6
+    7 27 3.056000 -3.977000 -2.484000 1 " " X " " 14 0.00000 0.00000 "LIG " " N  " "    " 7 0 "" 1 4 7
+    8 4 3.984000 -3.066000 -2.135000 1 " " X " " 14 0.00000 0.00000 "LIG " " C  " "    " 6 0 "" 1 4 8
+    9 27 5.262000 -3.287000 -1.729000 1 " " X " " 14 0.00000 0.00000 "LIG " " N  " "    " 7 0 "" 1 4 9
+    10 4 5.680000 -4.566000 -1.639000 1 " " X " " 14 0.00000 0.00000 "LIG " " C  " "    " 6 0 "" 1 4 10
+    11 26 6.959000 -4.812000 -1.117000 1 " " X " " 14 0.00000 0.00000 "LIG " " N  " "    " 7 0 "" 1 4 11
+    12 16 0.560000 -5.506000 -2.756000 1 " " X " " 14 0.00000 0.00000 "LIG " " O  " "    " 8 0 "" 1 4 12
+    13 3 -0.062000 -5.074000 -1.521000 1 " " X " " 14 0.00000 0.00000 "LIG " " C  " "    " 6 0 "" 1 4 13
+    14 3 -1.556000 -4.782000 -1.653000 1 " " X " " 14 0.00000 0.00000 "LIG " " C  " "    " 6 0 "" 1 4 14
+    15 16 -2.124000 -4.358000 -0.412000 1 " " X " " 14 0.00000 0.00000 "LIG " " O  " "    " 8 0 "" 1 4 15
+    16 53 -1.782000 -2.861000 0.173000 1 " " X " " 14 0.00000 0.00000 "LIG " " P  " "    " 15 0 "" 1 4 16
+    17 17 -1.752000 -1.938000 -1.017000 1 " " X " " 14 0.00000 0.00000 "LIG " " O  " "    " 8 0 "" 1 4 17
+    18 17 -2.785000 -2.654000 1.288000 1 " " X " " 14 0.00000 0.00000 "LIG " " O  " "    " 8 0 "" 1 4 18
+    19 16 -0.335000 -3.170000 0.792000 1 " " X " " 14 0.00000 0.00000 "LIG " " O  " "    " 8 0 "" 1 4 19
+    20 53 0.963000 -2.262000 1.028000 1 " " X " " 14 0.00000 0.00000 "LIG " " P  " "    " 15 0 "" 1 4 20
+    21 17 1.674000 -1.960000 -0.270000 1 " " X " " 14 0.00000 0.00000 "LIG " " O  " "    " 8 0 "" 1 4 21
+    22 17 0.782000 -1.188000 2.081000 1 " " X " " 14 0.00000 0.00000 "LIG " " O  " "    " 8 0 "" 1 4 22
+    23 16 1.875000 -3.380000 1.823000 1 " " X " " 14 0.00000 0.00000 "LIG " " O  " "    " 8 0 "" 1 4 23
+    24 3 3.083000 -3.798000 1.213000 1 " " X " " 14 0.00000 0.00000 "LIG " " C  " "    " 6 0 "" 1 4 24
+    25 3 4.136000 -4.160000 2.253000 1 " " X " " 14 0.00000 0.00000 "LIG " " C  " "    " 6 0 "" 1 4 25
+    26 16 4.679000 -2.953000 2.862000 1 " " X " " 14 0.00000 0.00000 "LIG " " O  " "    " 8 0 "" 1 4 26
+    27 3 4.760000 -3.207000 4.269000 1 " " X " " 14 0.00000 0.00000 "LIG " " C  " "    " 6 0 "" 1 4 27
+    28 26 4.790000 -1.991000 5.100000 1 " " X " " 14 0.00000 0.00000 "LIG " " N  " "    " 7 0 "" 1 4 28
+    29 4 5.486000 -2.001000 6.306000 1 " " X " " 14 0.00000 0.00000 "LIG " " C  " "    " 6 0 "" 1 4 29
+    30 4 5.347000 -1.063000 7.252000 1 " " X " " 14 0.00000 0.00000 "LIG " " C  " "    " 6 0 "" 1 4 30
+    31 3 4.381000 0.083000 7.065000 1 " " X " " 14 0.00000 0.00000 "LIG " " C  " "    " 6 0 "" 1 4 31
+    32 4 3.681000 0.067000 5.725000 1 " " X " " 14 0.00000 0.00000 "LIG " " C  " "    " 6 0 "" 1 4 32
+    33 4 2.733000 1.190000 5.477000 1 " " X " " 14 0.00000 0.00000 "LIG " " C  " "    " 6 0 "" 1 4 33
+    34 17 2.752000 2.200000 6.164000 1 " " X " " 14 0.00000 0.00000 "LIG " " O  " "    " 8 0 "" 1 4 34
+    35 26 1.808000 1.024000 4.492000 1 " " X " " 14 0.00000 0.00000 "LIG " " N  " "    " 7 0 "" 1 4 35
+    36 4 3.923000 -0.921000 4.844000 1 " " X " " 14 0.00000 0.00000 "LIG " " C  " "    " 6 0 "" 1 4 36
+    37 3 3.590000 -4.147000 4.591000 1 " " X " " 14 0.00000 0.00000 "LIG " " C  " "    " 6 0 "" 1 4 37
+    38 16 2.298000 -3.530000 4.634000 1 " " X " " 14 0.00000 0.00000 "LIG " " O  " "    " 8 0 "" 1 4 38
+    39 3 3.697000 -5.084000 3.399000 1 " " X " " 14 0.00000 0.00000 "LIG " " C  " "    " 6 0 "" 1 4 39
+    40 16 2.534000 -5.858000 3.181000 1 " " X " " 14 0.00000 0.00000 "LIG " " O  " "    " 8 0 "" 1 4 40
+    41 3 0.267000 -6.111000 -0.439000 1 " " X " " 14 0.00000 0.00000 "LIG " " C  " "    " 6 0 "" 1 4 41
+    42 16 -0.765000 -6.479000 0.469000 1 " " X " " 14 0.00000 0.00000 "LIG " " O  " "    " 8 0 "" 1 4 42
+    43 3 0.835000 -7.302000 -1.194000 1 " " X " " 14 0.00000 0.00000 "LIG " " C  " "    " 6 0 "" 1 4 43
+    44 16 -0.129000 -8.316000 -1.490000 1 " " X " " 14 0.00000 0.00000 "LIG " " O  " "    " 8 0 "" 1 4 44
+    45 53 0.510000 -9.712000 -2.001000 1 " " X " " 14 0.00000 0.00000 "LIG " " P  " "    " 15 0 "" 1 4 45
+    46 17 0.637000 -9.659000 -3.499000 1 " " X " " 14 0.00000 0.00000 "LIG " " O  " "    " 8 0 "" 1 4 46
+    47 17 1.665000 -10.156000 -1.156000 1 " " X " " 14 0.00000 0.00000 "LIG " " O  " "    " 8 0 "" 1 4 47
+    48 16 -0.733000 -10.705000 -1.781000 1 " " X " " 14 0.00000 0.00000 "LIG " " O  " "    " 8 0 "" 1 4 48
+    49 41 1.250000 -7.316000 -3.364000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 49
+    50 41 3.437000 -8.466000 -2.282000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 50
+    51 41 3.658000 -2.028000 -2.153000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 51
+    52 43 6.983000 -5.749000 -0.723000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 52
+    53 43 7.188000 -4.055000 -0.484000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 53
+    54 41 0.435000 -4.134000 -1.275000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 54
+    55 41 -2.081000 -5.697000 -1.955000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 55
+    56 41 -1.765000 -4.052000 -2.442000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 56
+    57 41 2.872000 -4.669000 0.592000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 57
+    58 41 3.502000 -3.003000 0.597000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 58
+    59 41 4.975000 -4.628000 1.725000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 59
+    60 41 5.708000 -3.747000 4.406000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 60
+    61 41 6.158000 -2.842000 6.441000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 61
+    62 41 5.907000 -1.125000 8.177000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 62
+    63 41 4.938000 1.020000 7.188000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 63
+    64 41 3.634000 0.030000 7.867000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 64
+    65 43 1.675000 0.189000 3.916000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 65
+    66 43 1.126000 1.749000 4.333000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 66
+    67 41 3.443000 -0.972000 3.869000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 67
+    68 41 3.729000 -4.663000 5.546000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 68
+    69 42 2.139000 -3.053000 3.786000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 69
+    70 41 4.515000 -5.791000 3.590000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 70
+    71 42 1.784000 -5.226000 3.102000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 71
+    72 41 1.063000 -5.684000 0.174000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 72
+    73 42 -1.294000 -5.669000 0.640000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 73
+    74 41 1.610000 -7.758000 -0.570000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 74
+    75 42 -1.014000 -10.875000 -2.695000 1 " " X " " 14 0.00000 0.00000 "LIG " " H  " "    " 1 0 "" 1 4 75
+    :::
+  }
+  m_bond[158] {
+    i_m_from
+    i_m_to
+    i_m_order
+    :::
+    1 1 43 1
+    2 1 12 1
+    3 1 49 1
+    4 1 2 1
+    5 2 1 1
+    6 2 6 1
+    7 2 3 1
+    8 3 2 1
+    9 3 4 1
+    10 3 50 1
+    11 4 3 1
+    12 4 5 1
+    13 5 4 1
+    14 5 6 1
+    15 5 10 1
+    16 6 2 1
+    17 6 5 1
+    18 6 7 1
+    19 7 6 1
+    20 7 8 1
+    21 8 7 1
+    22 8 9 1
+    23 8 51 1
+    24 9 8 1
+    25 9 10 1
+    26 10 5 1
+    27 10 9 1
+    28 10 11 1
+    29 11 10 1
+    30 11 53 1
+    31 11 52 1
+    32 12 1 1
+    33 12 13 1
+    34 13 12 1
+    35 13 41 1
+    36 13 54 1
+    37 13 14 1
+    38 14 13 1
+    39 14 56 1
+    40 14 55 1
+    41 14 15 1
+    42 15 14 1
+    43 15 16 1
+    44 16 15 1
+    45 16 19 1
+    46 16 18 1
+    47 16 17 1
+    48 17 16 1
+    49 18 16 1
+    50 19 16 1
+    51 19 20 1
+    52 20 19 1
+    53 20 23 1
+    54 20 22 1
+    55 20 21 1
+    56 21 20 1
+    57 22 20 1
+    58 23 20 1
+    59 23 24 1
+    60 24 23 1
+    61 24 58 1
+    62 24 57 1
+    63 24 25 1
+    64 25 24 1
+    65 25 39 1
+    66 25 26 1
+    67 25 59 1
+    68 26 25 1
+    69 26 27 1
+    70 27 26 1
+    71 27 37 1
+    72 27 60 1
+    73 27 28 1
+    74 28 27 1
+    75 28 36 1
+    76 28 29 1
+    77 29 28 1
+    78 29 30 1
+    79 29 61 1
+    80 30 29 1
+    81 30 31 1
+    82 30 62 1
+    83 31 30 1
+    84 31 32 1
+    85 31 64 1
+    86 31 63 1
+    87 32 31 1
+    88 32 36 1
+    89 32 33 1
+    90 33 32 1
+    91 33 35 1
+    92 33 34 1
+    93 34 33 1
+    94 35 33 1
+    95 35 66 1
+    96 35 65 1
+    97 36 28 1
+    98 36 32 1
+    99 36 67 1
+    100 37 27 1
+    101 37 39 1
+    102 37 68 1
+    103 37 38 1
+    104 38 37 1
+    105 38 69 1
+    106 39 25 1
+    107 39 37 1
+    108 39 70 1
+    109 39 40 1
+    110 40 39 1
+    111 40 71 1
+    112 41 13 1
+    113 41 43 1
+    114 41 72 1
+    115 41 42 1
+    116 42 41 1
+    117 42 73 1
+    118 43 1 1
+    119 43 41 1
+    120 43 74 1
+    121 43 44 1
+    122 44 43 1
+    123 44 45 1
+    124 45 44 1
+    125 45 48 1
+    126 45 47 1
+    127 45 46 1
+    128 46 45 1
+    129 47 45 1
+    130 48 45 1
+    131 48 75 1
+    132 49 1 1
+    133 50 3 1
+    134 51 8 1
+    135 52 11 1
+    136 53 11 1
+    137 54 13 1
+    138 55 14 1
+    139 56 14 1
+    140 57 24 1
+    141 58 24 1
+    142 59 25 1
+    143 60 27 1
+    144 61 29 1
+    145 62 30 1
+    146 63 31 1
+    147 64 31 1
+    148 65 35 1
+    149 66 35 1
+    150 67 36 1
+    151 68 37 1
+    152 69 38 1
+    153 70 39 1
+    154 71 40 1
+    155 72 41 1
+    156 73 42 1
+    157 74 43 1
+    158 75 48 1
+    :::
+  }
+  ffio_ff {
+    s_viparr_version
+    s_ffio_name
+    s_ffio_version
+    s_viparr_workdir
+    s_viparr_command
+    s_date
+    s_user
+    s_ffio_vdw_func
+    s_ffio_comb_rule
+    :::
+    1.8.3
+    "Generated by viparr"
+    1.0.0
+    /d/en/lij-0/phys/fragment/codes.v0.7/cgenff.ff
+    "/proj/desres/root/Linux/x86_64/viparr/1.8.3/viparr/viparr.py -d /u/nyc/lij/phys/fragment/ff_cgenff_base_v2b7 ../cgenff.3d/ndph.mae ./ndph.mae"
+    "date: Wed Jan 23 13:43:46 EST 2013"
+    "user: lij"
+    LJ12_6_sig_epsilon
+    ARITHMETIC/GEOMETRIC
+    viparr_info[3] {
+      s_viparr_section
+      s_viparr_info
+      :::
+      1 "Plugins: </proj/desres/root/Linux/x86_64/viparr/1.8.3/plugins>" ""
+      2 "FF: </u/nyc/lij/phys/fragment/ff_cgenff_base_v2b7>" "GenFF: Topologies and Parameters for the Charmm General Force Field v2b7"
+      3 "FF: </u/nyc/lij/phys/fragment/ff_cgenff_base_v2b7>" "Vanommeslaeghe et al. J. Comput. Chem. 2010, 31, 671-690"
+      :::
+    }
+    ffio_angles[173] {
+      i_ffio_ai
+      i_ffio_aj
+      i_ffio_ak
+      s_ffio_funct
+      r_ffio_c1
+      r_ffio_c2
+      s_ffio_comment
+      :::
+      1 1 2 3 Harm 126.3 45 "NA G"
+      2 1 2 6 Harm 126.5 45 "NA G"
+      3 1 12 13 Harm 111 95 "THF 10/21/05, viv"
+      4 1 43 41 Harm 109.5 58 "THF, nucleotide CSD/NDB survey, 05/30/06, viv"
+      5 1 43 44 Harm 109.7 115 "PROTNA Ser-Phos"
+      6 1 43 74 Harm 111.4 35 "TF2M, viv"
+      7 2 1 12 Harm 108 140 NA
+      8 2 1 43 Harm 111 110 "NA T/U/G, Arabinose (NF)"
+      9 2 1 49 Harm 111 43 "NA From HGA1   CG3C51 NN2"
+      10 2 3 4 Harm 113 100 "NA Gua 5R)"
+      11 2 3 50 Harm 122.2 40 "NA Gua  h8 (NN4 CG2R53HN3 124.8)"
+      12 2 6 5 Harm 105.7 100 "NA Ade 5R) bridgeC4"
+      13 2 6 7 Harm 126.9 100 "NA Ade bridgeC4"
+      14 3 2 6 Harm 107.2 100 "NA Gua 5R)"
+      15 3 4 5 Harm 103.8 120 "NA Gua 5R)"
+      16 4 3 50 Harm 124.8 39 "NA Ade h8, G,A"
+      17 4 5 6 Harm 110 100 "NA Ade 5R) bridgeC5"
+      18 4 5 10 Harm 129 100 "NA Ade bridgeC5"
+      19 5 6 7 Harm 127.4 60 "NA Ade 6R) bridgeC4"
+      20 5 10 9 Harm 110.7 60 "NA Ade 6R)"
+      21 5 10 11 Harm 118.6 50 "NA Ade"
+      22 6 5 10 Harm 121 60 "NA Ade 6R) bridgeC5"
+      23 6 7 8 Harm 115.1 90 "NA Ade 6R) %%% TEST 110.1 -> 120.9 %%%"
+      24 7 8 9 Harm 128 60 "NA Ade 6R) %%% TEST 133.0 -> 122.2 %%%"
+      25 7 8 51 Harm 116 38 "NA Ade h2 %%% TEST 113.5 -> 118.9 %%%"
+      26 8 9 10 Harm 117.8 90 "NA Ade 6R) adm jr. 11/97"
+      27 9 8 51 Harm 116 38 "NA Ade h2 %%% TEST 113.5 -> 118.9 %%%"
+      28 9 10 11 Harm 122.4 95 "NA Gua"
+      29 10 11 52 Harm 121.5 40 "NA Ade h61,h62, C,A,G"
+      30 10 11 53 Harm 121.5 40 "NA Ade h61,h62, C,A,G"
+      31 12 1 43 Harm 111.1 45 "THF 10/21/05, viv"
+      32 12 1 49 Harm 107.3 70 "THF 10/21/05, viv"
+      33 12 13 14 Harm 111.5 45 "TF2M, viv"
+      34 12 13 41 Harm 111.1 45 "THF 10/21/05, viv"
+      35 12 13 54 Harm 107.3 70 "THF 10/21/05, viv"
+      36 13 14 15 Harm 110.1 75.7 "LIPID acetic acid"
+      37 13 14 55 Harm 110.1 34.6 "TF2M viv"
+      38 13 14 56 Harm 110.1 34.6 "TF2M viv"
+      39 13 41 42 Harm 110.1 75.7 "PROT MeOH, EMB, 10/10/89"
+      40 13 41 43 Harm 109.5 58 "THF, nucleotide CSD/NDB survey, 05/30/06, viv"
+      41 13 41 72 Harm 111.4 35 "TF2M, viv"
+      42 14 13 41 Harm 115 58 "TF2M viv"
+      43 14 13 54 Harm 110.1 34.6 "TF2M viv"
+      44 14 15 16 Harm 120 20 "NA  ! Reorganization: PC and others"
+      45 15 14 55 Harm 109.5 60 "PROTNA Thr-Phos"
+      46 15 14 56 Harm 109.5 60 "PROTNA Thr-Phos"
+      47 15 16 17 Harm 107.5 98.9 "MP_1 reorganization, kevo"
+      48 15 16 18 Harm 107.5 98.9 "MP_1 reorganization, kevo"
+      49 15 16 19 Harm 105 48.1 "PPI1, PPI2, METP reorganization, kevo"
+      50 16 19 20 Harm 143 45 "PPI2, METP reorganization, kevo"
+      51 17 16 18 Harm 120 104 "MP_1 reorganization, kevo"
+      52 17 16 19 Harm 111.6 88.9 "NA nad/ppi, jjp1/adm jr. 7/95  ! Reorganization:PPI1, PPI2"
+      53 18 16 19 Harm 111.6 88.9 "NA nad/ppi, jjp1/adm jr. 7/95  ! Reorganization:PPI1, PPI2"
+      54 19 20 21 Harm 111.6 88.9 "NA nad/ppi, jjp1/adm jr. 7/95  ! Reorganization:PPI1, PPI2"
+      55 19 20 22 Harm 111.6 88.9 "NA nad/ppi, jjp1/adm jr. 7/95  ! Reorganization:PPI1, PPI2"
+      56 19 20 23 Harm 105 48.1 "PPI1, PPI2, METP reorganization, kevo"
+      57 20 23 24 Harm 120 20 "NA  ! Reorganization: PC and others"
+      58 21 20 22 Harm 120 104 "MP_1 reorganization, kevo"
+      59 21 20 23 Harm 107.5 98.9 "MP_1 reorganization, kevo"
+      60 22 20 23 Harm 107.5 98.9 "MP_1 reorganization, kevo"
+      61 23 24 25 Harm 110.1 75.7 "LIPID acetic acid"
+      62 23 24 57 Harm 109.5 60 "PROTNA Thr-Phos"
+      63 23 24 58 Harm 109.5 60 "PROTNA Thr-Phos"
+      64 24 25 26 Harm 111.5 45 "TF2M, viv"
+      65 24 25 39 Harm 115 58 "TF2M viv"
+      66 24 25 59 Harm 110.1 34.6 "TF2M viv"
+      67 25 24 57 Harm 110.1 34.6 "TF2M viv"
+      68 25 24 58 Harm 110.1 34.6 "TF2M viv"
+      69 25 26 27 Harm 111 95 "THF 10/21/05, viv"
+      70 25 39 37 Harm 109.5 58 "THF, nucleotide CSD/NDB survey, 05/30/06, viv"
+      71 25 39 40 Harm 110.1 75.7 "PROT MeOH, EMB, 10/10/89"
+      72 25 39 70 Harm 111.4 35 "TF2M, viv"
+      73 26 25 39 Harm 111.1 45 "THF 10/21/05, viv"
+      74 26 25 59 Harm 107.3 70 "THF 10/21/05, viv"
+      75 26 27 28 Harm 112 110 "NADH, NDPH; Kenno: reverted to \"C/A RNA\" from par_all27_na.prm"
+      76 26 27 37 Harm 111.1 45 "THF 10/21/05, viv"
+      77 26 27 60 Harm 107.3 70 "THF 10/21/05, viv"
+      78 27 28 29 Harm 121.7 70 "NADH, NDPH; Kenno: reverted to nad/ppi, jjp1/adm jr. 7/95"
+      79 27 28 36 Harm 121.7 70 "NADH, NDPH; Kenno: reverted to nad/ppi, jjp1/adm jr. 7/95"
+      80 27 37 38 Harm 110.1 75.7 "PROT MeOH, EMB, 10/10/89"
+      81 27 37 39 Harm 109.5 58 "THF, nucleotide CSD/NDB survey, 05/30/06, viv"
+      82 27 37 68 Harm 111.4 35 "TF2M, viv"
+      83 28 27 37 Harm 111 110 "NADH, NDPH; Kenno: reverted to \"C/A, RNA\" from par_all27_na.prm"
+      84 28 27 60 Harm 111 43 "NADH, NDPH; Kenno: reverted to uncommented parameter from par_all27_na.prm"
+      85 28 29 30 Harm 122 60 "NADH, NDPH; Kenno: reverted to nadh/ppi, jjp1/adm jr. 7/95"
+      86 28 29 61 Harm 119 42 "NADH, NDPH; Kenno: reverted to nad/ppi, jjp1/adm jr. 7/95"
+      87 28 36 32 Harm 122 60 "NADH, NDPH; Kenno: reverted to nadh/ppi, jjp1/adm jr. 7/95"
+      88 28 36 67 Harm 119 42 "NADH, NDPH; Kenno: reverted to nad/ppi, jjp1/adm jr. 7/95"
+      89 29 28 36 Harm 114 20 "NADH, NDPH; Kenno: reverted to nadh/ppi, jjp1/adm jr. 7/95"
+      90 29 30 31 Harm 127.5 40 "PY01, 4h-pyran"
+      91 29 30 62 Harm 119.5 52 "PY01, 4h-pyran"
+      92 30 29 61 Harm 122 52 "PY01, 4h-pyran"
+      93 30 31 32 Harm 108 125 "NICH; Kenno: reverted to nadh/ppi, jjp1/adm jr. 7/95  !  force constant is unlikely high"
+      94 30 31 63 Harm 111.5 45 "LIPID 1-butene; propene, yin,adm jr., 12/95"
+      95 30 31 64 Harm 111.5 45 "LIPID 1-butene; propene, yin,adm jr., 12/95"
+      96 31 30 62 Harm 116 40 "LIPID 1-butene; propene, yin,adm jr., 12/95"
+      97 31 32 33 Harm 123.5 65 "NICH; Kenno: nadh/ppi, jjp1/adm jr. 7/95 says 125.0 124.2 but that's unlikely   > re-optimize"
+      98 31 32 36 Harm 126.5 43.5 "NICH; Kenno: nadh/ppi, jjp1/adm jr. 7/95 says 43.50 128.00 but that's unlikely   > re-optimize"
+      99 32 31 63 Harm 111.5 45 "RETINOL BTE2, 2-butene"
+      100 32 31 64 Harm 111.5 45 "RETINOL BTE2, 2-butene"
+      101 32 33 34 Harm 122.5 80 "RETINOL CROT"
+      102 32 33 35 Harm 113 85 "NICH; Kenno: reverted to nad/ppi, jjp1/adm jr. 7/95"
+      103 32 36 67 Harm 120 42 "PY02, 2h-pyran"
+      104 33 32 36 Harm 113 65 "NICH; Kenno: nad/ppi, jjp1/adm jr. 7/95 says 5.0 107.8 but that's too unlikely   > re-optimize"
+      105 33 35 65 Harm 120 50 "PROT his, adm jr. 8/13/90  geometry and vibrations"
+      106 33 35 66 Harm 120 50 "PROT his, adm jr. 8/13/90  geometry and vibrations"
+      107 34 33 35 Harm 122.5 75 "PROT adm jr. 4/10/91, acetamide update"
+      108 37 27 60 Harm 111.4 35 "TF2M, viv"
+      109 37 38 69 Harm 109 50 "par_Sugars, CC315x OC311 HCP1; was 57.5 106"
+      110 37 39 40 Harm 110.1 75.7 "PROT MeOH, EMB, 10/10/89"
+      111 37 39 70 Harm 111.4 35 "TF2M, viv"
+      112 38 37 39 Harm 110.1 75.7 "PROT MeOH, EMB, 10/10/89"
+      113 38 37 68 Harm 108.89 45.9 "PROT MeOH, EMB, 10/10/89"
+      114 39 25 59 Harm 111.4 35 "TF2M, viv"
+      115 39 37 68 Harm 111.4 35 "TF2M, viv"
+      116 39 40 71 Harm 109 50 "par_Sugars, CC315x OC311 HCP1; was 57.5 106"
+      117 40 39 70 Harm 108.89 45.9 "PROT MeOH, EMB, 10/10/89"
+      118 41 13 54 Harm 111.4 35 "TF2M, viv"
+      119 41 42 73 Harm 109 50 "par_Sugars, CC315x OC311 HCP1; was 57.5 106"
+      120 41 43 44 Harm 109.7 115 "PROTNA Ser-Phos"
+      121 41 43 74 Harm 111.4 35 "TF2M, viv"
+      122 42 41 43 Harm 110.1 75.7 "PROT MeOH, EMB, 10/10/89"
+      123 42 41 72 Harm 108.89 45.9 "PROT MeOH, EMB, 10/10/89"
+      124 43 1 49 Harm 111.4 35 "TF2M, viv"
+      125 43 41 72 Harm 111.4 35 "TF2M, viv"
+      126 43 44 45 Harm 120 20 "BPNP and others"
+      127 44 43 74 Harm 109.5 60 "PROTNA Ser-Phos"
+      128 44 45 46 Harm 107.5 98.9 "MP_1 reorganization, kevo"
+      129 44 45 47 Harm 107.5 98.9 "MP_1 reorganization, kevo"
+      130 44 45 48 Harm 108 48.1 "MP_1 reorganization, kevo"
+      131 45 48 75 Harm 115 30 "NA MP_1, ADM Jr.  ! Reorganization:MP_1"
+      132 46 45 47 Harm 120 104 "MP_1 reorganization, kevo"
+      133 46 45 48 Harm 111 98.9 "MP_1 reorganization, kevo"
+      134 47 45 48 Harm 111 98.9 "MP_1 reorganization, kevo"
+      135 52 11 53 Harm 117 31 "NA Ade C,A,G"
+      136 55 14 56 Harm 109 35.5 "PROT alkane update, adm jr., 3/2/92"
+      137 57 24 58 Harm 109 35.5 "PROT alkane update, adm jr., 3/2/92"
+      138 63 31 64 Harm 109 35.5 "PROT alkane update, adm jr., 3/2/92"
+      139 65 35 66 Harm 120 23 "PROT adm jr. 8/13/90  geometry and vibrations"
+      140 1 43 41 UB 2.561 11.16 "THF, nucleotide CSD/NDB survey, 05/30/06, viv"
+      141 1 43 74 UB 2.179 22.53 "TF2M, viv"
+      142 13 14 55 UB 2.179 22.53 "TF2M viv"
+      143 13 14 56 UB 2.179 22.53 "TF2M viv"
+      144 13 41 43 UB 2.561 11.16 "THF, nucleotide CSD/NDB survey, 05/30/06, viv"
+      145 13 41 72 UB 2.179 22.53 "TF2M, viv"
+      146 14 13 41 UB 2.561 8 "TF2M viv"
+      147 14 13 54 UB 2.179 22.53 "TF2M viv"
+      148 14 15 16 UB 2.33 35 "NA  ! Reorganization: PC and others"
+      149 16 19 20 UB 3.25 40 "PPI2, METP reorganization, kevo"
+      150 20 23 24 UB 2.33 35 "NA  ! Reorganization: PC and others"
+      151 24 25 39 UB 2.561 8 "TF2M viv"
+      152 24 25 59 UB 2.179 22.53 "TF2M viv"
+      153 25 24 57 UB 2.179 22.53 "TF2M viv"
+      154 25 24 58 UB 2.179 22.53 "TF2M viv"
+      155 25 39 37 UB 2.561 11.16 "THF, nucleotide CSD/NDB survey, 05/30/06, viv"
+      156 25 39 70 UB 2.179 22.53 "TF2M, viv"
+      157 27 37 39 UB 2.561 11.16 "THF, nucleotide CSD/NDB survey, 05/30/06, viv"
+      158 27 37 68 UB 2.179 22.53 "TF2M, viv"
+      159 32 33 35 UB 2.46 80 "NICH; Kenno: reverted to nad/ppi, jjp1/adm jr. 7/95"
+      160 34 33 35 UB 2.37 50 "PROT adm jr. 4/10/91, acetamide update"
+      161 37 27 60 UB 2.179 22.53 "TF2M, viv"
+      162 37 39 70 UB 2.179 22.53 "TF2M, viv"
+      163 39 25 59 UB 2.179 22.53 "TF2M, viv"
+      164 39 37 68 UB 2.179 22.53 "TF2M, viv"
+      165 41 13 54 UB 2.179 22.53 "TF2M, viv"
+      166 41 43 74 UB 2.179 22.53 "TF2M, viv"
+      167 43 1 49 UB 2.179 22.53 "TF2M, viv"
+      168 43 41 72 UB 2.179 22.53 "TF2M, viv"
+      169 43 44 45 UB 2.33 35 "BPNP and others"
+      170 45 48 75 UB 2.35 40 "NA MP_1, ADM Jr.  ! Reorganization:MP_1"
+      171 55 14 56 UB 1.802 5.4 "PROT alkane update, adm jr., 3/2/92"
+      172 57 24 58 UB 1.802 5.4 "PROT alkane update, adm jr., 3/2/92"
+      173 63 31 64 UB 1.802 5.4 "PROT alkane update, adm jr., 3/2/92"
+      :::
+    }
+    ffio_sites[75] {
+      s_ffio_type
+      i_ffio_resnr
+      s_ffio_residue
+      r_ffio_charge
+      r_ffio_mass
+      s_ffio_vdwtype
+      :::
+      1 atom 1 NDPH 0.11 12.011 CG3C51
+      2 atom 1 NDPH -0.05 14.007 NG2R51
+      3 atom 1 NDPH 0.34 12.011 CG2R53
+      4 atom 1 NDPH -0.71 14.007 NG2R50
+      5 atom 1 NDPH 0.28 12.011 CG2RC0
+      6 atom 1 NDPH 0.43 12.011 CG2RC0
+      7 atom 1 NDPH -0.75 14.007 NG2R62
+      8 atom 1 NDPH 0.5 12.011 CG2R64
+      9 atom 1 NDPH -0.74 14.007 NG2R62
+      10 atom 1 NDPH 0.46 12.011 CG2R64
+      11 atom 1 NDPH -0.77 14.007 NG2S3
+      12 atom 1 NDPH -0.4 15.9994 OG3C51
+      13 atom 1 NDPH 0.11 12.011 CG3C51
+      14 atom 1 NDPH -0.08 12.011 CG321
+      15 atom 1 NDPH -0.62 15.9994 OG303
+      16 atom 1 NDPH 1.5 30.9738 PG1
+      17 atom 1 NDPH -0.82 15.9994 OG2P1
+      18 atom 1 NDPH -0.82 15.9994 OG2P1
+      19 atom 1 NDPH -0.68 15.9994 OG304
+      20 atom 1 NDPH 1.5 30.9738 PG1
+      21 atom 1 NDPH -0.82 15.9994 OG2P1
+      22 atom 1 NDPH -0.82 15.9994 OG2P1
+      23 atom 1 NDPH -0.62 15.9994 OG303
+      24 atom 1 NDPH -0.08 12.011 CG321
+      25 atom 1 NDPH 0.11 12.011 CG3C51
+      26 atom 1 NDPH -0.4 15.9994 OG3C51
+      27 atom 1 NDPH 0.11 12.011 CG3C51
+      28 atom 1 NDPH -0.27 14.007 NG301
+      29 atom 1 NDPH -0.06 12.011 CG2D1O
+      30 atom 1 NDPH -0.18 12.011 CG2D1
+      31 atom 1 NDPH -0.28 12.011 CG321
+      32 atom 1 NDPH 0.36 12.011 CG2DC1
+      33 atom 1 NDPH 0.55 12.011 CG2O1
+      34 atom 1 NDPH -0.51 15.9994 OG2D1
+      35 atom 1 NDPH -0.72 14.007 NG2S2
+      36 atom 1 NDPH -0.1 12.011 CG2D1O
+      37 atom 1 NDPH 0.14 12.011 CG3C51
+      38 atom 1 NDPH -0.65 15.9994 OG311
+      39 atom 1 NDPH 0.14 12.011 CG3C51
+      40 atom 1 NDPH -0.65 15.9994 OG311
+      41 atom 1 NDPH 0.14 12.011 CG3C51
+      42 atom 1 NDPH -0.65 15.9994 OG311
+      43 atom 1 NDPH 0.01 12.011 CG3C51
+      44 atom 1 NDPH -0.62 15.9994 OG303
+      45 atom 1 NDPH 1.5 30.9738 PG1
+      46 atom 1 NDPH -0.82 15.9994 OG2P1
+      47 atom 1 NDPH -0.82 15.9994 OG2P1
+      48 atom 1 NDPH -0.67 15.9994 OG311
+      49 atom 1 NDPH 0.09 1.008 HGA1
+      50 atom 1 NDPH 0.12 1.008 HGR52
+      51 atom 1 NDPH 0.13 1.008 HGR62
+      52 atom 1 NDPH 0.38 1.008 HGP4
+      53 atom 1 NDPH 0.38 1.008 HGP4
+      54 atom 1 NDPH 0.09 1.008 HGA1
+      55 atom 1 NDPH 0.09 1.008 HGA2
+      56 atom 1 NDPH 0.09 1.008 HGA2
+      57 atom 1 NDPH 0.09 1.008 HGA2
+      58 atom 1 NDPH 0.09 1.008 HGA2
+      59 atom 1 NDPH 0.09 1.008 HGA1
+      60 atom 1 NDPH 0.09 1.008 HGA1
+      61 atom 1 NDPH 0.17 1.008 HGA4
+      62 atom 1 NDPH 0.14 1.008 HGA4
+      63 atom 1 NDPH 0.09 1.008 HGA2
+      64 atom 1 NDPH 0.09 1.008 HGA2
+      65 atom 1 NDPH 0.26 1.008 HGP1
+      66 atom 1 NDPH 0.32 1.008 HGP1
+      67 atom 1 NDPH 0.14 1.008 HGA4
+      68 atom 1 NDPH 0.09 1.008 HGA1
+      69 atom 1 NDPH 0.42 1.008 HGP1
+      70 atom 1 NDPH 0.09 1.008 HGA1
+      71 atom 1 NDPH 0.42 1.008 HGP1
+      72 atom 1 NDPH 0.09 1.008 HGA1
+      73 atom 1 NDPH 0.42 1.008 HGP1
+      74 atom 1 NDPH 0.09 1.008 HGA1
+      75 atom 1 NDPH 0.33 1.008 HGP1
+      :::
+    }
+    ffio_bonds[79] {
+      i_ffio_ai
+      i_ffio_aj
+      s_ffio_funct
+      r_ffio_c1
+      r_ffio_c2
+      s_ffio_comment
+      :::
+      1 1 2 Harm 1.458 220 "NA G/T/U"
+      2 1 12 Harm 1.425 350 "THF, nucleotide CSD/NDB survey, 5/30/06,viv"
+      3 1 43 Harm 1.518 195 "THF, nucleotide CSD/NDB survey, 5/30/06,viv"
+      4 1 49 Harm 1.1 307 "THF, THF neutron diffr., 5/30/06, viv"
+      5 2 3 Harm 1.374 320 "NA A, adm jr. 11/97"
+      6 2 6 Harm 1.375 300 "NA A, adm jr. 11/97"
+      7 3 4 Harm 1.32 400 "PROT his, ADM JR., 7/20/89"
+      8 3 50 Harm 1.09 340 "PROT his, adm jr., 6/28/29"
+      9 4 5 Harm 1.365 310 "NA G, adm jr. 11/97"
+      10 5 6 Harm 1.385 360 INDO/TRP
+      11 5 10 Harm 1.358 360 "NA A, adm jr. 11/97"
+      12 6 7 Harm 1.315 350 "NA G, adm jr. 11/97"
+      13 7 8 Harm 1.342 400 "NA A, adm jr. 11/97"
+      14 8 9 Harm 1.342 400 "NA A, adm jr. 11/97"
+      15 8 51 Harm 1.09 380 "NA G,A, JWK par_a7 9/30/91"
+      16 9 10 Harm 1.342 400 "NA A, adm jr. 11/97"
+      17 10 11 Harm 1.366 360 "NA C,A,G JWK, adm jr. 10/2/91"
+      18 11 52 Harm 1 488 "NA A,C,G, JWK, adm jr. 7/24/91"
+      19 11 53 Harm 1 488 "NA A,C,G, JWK, adm jr. 7/24/91"
+      20 12 13 Harm 1.425 350 "THF, nucleotide CSD/NDB survey, 5/30/06,viv"
+      21 13 14 Harm 1.528 222.5 "TF2M, viv"
+      22 13 41 Harm 1.518 195 "THF, nucleotide CSD/NDB survey, 5/30/06,viv"
+      23 13 54 Harm 1.1 307 "THF, THF neutron diffr., 5/30/06, viv"
+      24 14 15 Harm 1.44 320 "PROTNA serine/threonine phosphate"
+      25 14 55 Harm 1.111 309 "PROT alkane update, adm jr., 3/2/92"
+      26 14 56 Harm 1.111 309 "PROT alkane update, adm jr., 3/2/92"
+      27 15 16 Harm 1.65 190 "MP_1 reorganization, kevo"
+      28 16 17 Harm 1.51 500 "MP_1 reorganization, kevo"
+      29 16 18 Harm 1.51 500 "MP_1 reorganization, kevo"
+      30 16 19 Harm 1.675 330 "PPI1, PPI2, METP reorganization, kevo  !  pulls against attraction"
+      31 19 20 Harm 1.675 330 "PPI1, PPI2, METP reorganization, kevo  !  pulls against attraction"
+      32 20 21 Harm 1.51 500 "MP_1 reorganization, kevo"
+      33 20 22 Harm 1.51 500 "MP_1 reorganization, kevo"
+      34 20 23 Harm 1.65 190 "MP_1 reorganization, kevo"
+      35 23 24 Harm 1.44 320 "PROTNA serine/threonine phosphate"
+      36 24 25 Harm 1.528 222.5 "TF2M, viv"
+      37 24 57 Harm 1.111 309 "PROT alkane update, adm jr., 3/2/92"
+      38 24 58 Harm 1.111 309 "PROT alkane update, adm jr., 3/2/92"
+      39 25 26 Harm 1.425 350 "THF, nucleotide CSD/NDB survey, 5/30/06,viv"
+      40 25 39 Harm 1.518 195 "THF, nucleotide CSD/NDB survey, 5/30/06,viv"
+      41 25 59 Harm 1.1 307 "THF, THF neutron diffr., 5/30/06, viv"
+      42 26 27 Harm 1.425 350 "THF, nucleotide CSD/NDB survey, 5/30/06,viv"
+      43 27 28 Harm 1.456 220 "NADH, NDPH; Kenno: reverted to \"A/C\" from par_all27_na.prm"
+      44 27 37 Harm 1.518 195 "THF, nucleotide CSD/NDB survey, 5/30/06,viv"
+      45 27 60 Harm 1.1 307 "THF, THF neutron diffr., 5/30/06, viv"
+      46 28 29 Harm 1.355 420 "NADH, NDPH; Kenno: reverted to nadh/ppi, jjp1/adm jr. 7/95"
+      47 28 36 Harm 1.355 420 "NADH, NDPH; Kenno: reverted to nadh/ppi, jjp1/adm jr. 7/95"
+      48 29 30 Harm 1.318 440 "PY01, 4h-pyran"
+      49 29 61 Harm 1.1 360.5 "PY01, 4h-pyran"
+      50 30 31 Harm 1.502 365 "LIPID butene; from propene, yin,adm jr., 12/95"
+      51 30 62 Harm 1.1 360.5 "LIPID propene, yin,adm jr., 12/95"
+      52 31 32 Harm 1.502 365 "RETINOL MECH"
+      53 31 63 Harm 1.111 309 "PROT alkane update, adm jr., 3/2/92"
+      54 31 64 Harm 1.111 309 "PROT alkane update, adm jr., 3/2/92"
+      55 32 33 Harm 1.489 440 "RETINOL CROT"
+      56 32 36 Harm 1.34 440 "PY02, 2h-pyran"
+      57 33 34 Harm 1.23 620 "PROT Peptide geometry, condensed phase (LK)"
+      58 33 35 Harm 1.36 430 "PROT from NG2S2  CT3, neutral glycine, adm jr."
+      59 35 65 Harm 1 480 "PROT adm jr. 8/13/90 acetamide geometry and vibrations"
+      60 35 66 Harm 1 480 "PROT adm jr. 8/13/90 acetamide geometry and vibrations"
+      61 36 67 Harm 1.1 360.5 "PY01, 4h-pyran"
+      62 37 38 Harm 1.42 428 "PROT methanol vib fit EMB 11/21/89"
+      63 37 39 Harm 1.518 195 "THF, nucleotide CSD/NDB survey, 5/30/06,viv"
+      64 37 68 Harm 1.1 307 "THF, THF neutron diffr., 5/30/06, viv"
+      65 38 69 Harm 0.96 545 "PROT EMB 11/21/89 methanol vib fit; og tested on MeOH EtOH,..."
+      66 39 40 Harm 1.42 428 "PROT methanol vib fit EMB 11/21/89"
+      67 39 70 Harm 1.1 307 "THF, THF neutron diffr., 5/30/06, viv"
+      68 40 71 Harm 0.96 545 "PROT EMB 11/21/89 methanol vib fit; og tested on MeOH EtOH,..."
+      69 41 42 Harm 1.42 428 "PROT methanol vib fit EMB 11/21/89"
+      70 41 43 Harm 1.518 195 "THF, nucleotide CSD/NDB survey, 5/30/06,viv"
+      71 41 72 Harm 1.1 307 "THF, THF neutron diffr., 5/30/06, viv"
+      72 42 73 Harm 0.96 545 "PROT EMB 11/21/89 methanol vib fit; og tested on MeOH EtOH,..."
+      73 43 44 Harm 1.43 340 "LIPID phosphate"
+      74 43 74 Harm 1.1 307 "THF, THF neutron diffr., 5/30/06, viv"
+      75 44 45 Harm 1.65 190 "MP_1 reorganization, kevo"
+      76 45 46 Harm 1.51 500 "MP_1 reorganization, kevo"
+      77 45 47 Harm 1.51 500 "MP_1 reorganization, kevo"
+      78 45 48 Harm 1.61 237 "MP_1 reorganization, kevo"
+      79 48 75 Harm 0.96 545 "PROT EMB 11/21/89 methanol vib fit; og tested on MeOH EtOH,..."
+      :::
+    }
+    ffio_dihedrals[205] {
+      i_ffio_ai
+      i_ffio_aj
+      i_ffio_ak
+      i_ffio_al
+      s_ffio_funct
+      r_ffio_c0
+      r_ffio_c1
+      r_ffio_c2
+      r_ffio_c3
+      r_ffio_c4
+      r_ffio_c5
+      r_ffio_c6
+      r_ffio_c7
+      s_ffio_comment
+      :::
+      1 1 2 3 4 Proper_Trig 0 11 0 -11 0 0 0 0 "NA, glycosyl linkage"
+      2 1 2 3 50 Proper_Trig 0 0 0 0 0 0 0 0 "NA, glycosyl linkage"
+      3 1 2 6 5 Proper_Trig 0 11 0 -11 0 0 0 0 "NA, glycosyl linkage"
+      4 1 2 6 7 Proper_Trig 0 11 0 -11 0 0 0 0 "NA, glycosyl linkage"
+      5 1 12 13 14 Proper_Trig 0 0.3 0 0 0.3 0 0 0 "THF, 05/30/06, viv"
+      6 1 12 13 41 Proper_Trig 0 0.5 0 0 0.5 0 0 0 "THF, 05/30/06, viv"
+      7 1 12 13 54 Proper_Trig 0 0.3 0 0 0.3 0 0 0 "THF, 05/30/06, viv"
+      8 1 43 41 13 Proper_Trig 0 0.41 0 0 -0.41 0 0 0 "cpen, cyclopentane, viv 10/4/05"
+      9 1 43 41 42 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "par22, X   CT1 CT2 X; erh 3/08"
+      10 1 43 41 72 Proper_Trig 0 0.19 0 0 0.19 0 0 0 "alkane, 4/98, yin and mackerell, thf, viv"
+      11 1 43 44 45 Proper_Trig 0 2.5 -2.5 0 0 0 0 0 "reverted to NA, sugar by kevo"
+      12 2 1 12 13 Proper_Trig 0 0 0 0 0 0 0 0 "NA, sugar"
+      13 2 1 43 41 Proper_Trig 0 0 0 0 0 0 0 0 "NA, glycosyl linkage"
+      14 2 1 43 44 Proper_Trig 0 0 0 0 0 0 0 0 "NA nadp/nadph"
+      15 2 1 43 74 Proper_Trig 0 0 0 0 0 0 0 0 "NA, glycosyl linkage"
+      16 2 3 4 5 Proper_Trig 0 14 0 -14 0 0 0 0 "NA A"
+      17 2 6 5 4 Proper_Trig 0 10 0 -10 0 0 0 0 "NA G"
+      18 2 6 5 10 Proper_Trig 0 7 0 -7 0 0 0 0 "NA A"
+      19 2 6 7 8 Proper_Trig 0 2 0 -2 0 0 0 0 "NA G"
+      20 3 2 1 12 Proper_Trig 0 1.1 1.1 0 0 0 0 0 "NA, glycosyl linkage"
+      21 3 2 1 43 Proper_Trig 0 0 0 0 0 0 0 0 "NA, glycosyl linkage"
+      22 3 2 1 49 Proper_Trig 0 0.445 0 -0.25 0.195 0 0 0 "NA, glycosyl linkage 0.25 2 180 to compensate for removal of OG3C51 CG3C51 NG2R51 CG2R51 0.5 2 -70"
+      23 3 2 6 5 Proper_Trig 0 6 0 -6 0 0 0 0 "NA G"
+      24 3 2 6 7 Proper_Trig 0 2 0 -2 0 0 0 0 "NA G"
+      25 3 4 5 6 Proper_Trig 0 6 0 -6 0 0 0 0 "NA G"
+      26 3 4 5 10 Proper_Trig 0 2 0 -2 0 0 0 0 "NA A"
+      27 4 3 2 6 Proper_Trig 0 6 0 -6 0 0 0 0 "NA A"
+      28 4 5 6 7 Proper_Trig 0 7 0 -7 0 0 0 0 "NA A"
+      29 4 5 10 9 Proper_Trig 0 2 0 -2 0 0 0 0 "NA A"
+      30 4 5 10 11 Proper_Trig 0 0 0 0 0 0 0 0 "NA A"
+      31 5 4 3 50 Proper_Trig 0 5.2 0 -5.2 0 0 0 0 "NA A"
+      32 5 6 7 8 Proper_Trig 0 0.2 0 -0.2 0 0 0 0 "NA G"
+      33 5 10 9 8 Proper_Trig 0 1.8 0 -1.8 0 0 0 0 "NA A"
+      34 5 10 11 52 Proper_Trig 0 0.5 0 -0.5 0 0 0 0 "NA A"
+      35 5 10 11 53 Proper_Trig 0 0.5 0 -0.5 0 0 0 0 "NA A"
+      36 6 2 1 12 Proper_Trig 0 1.3 -1.1 0 0.2 0 0 0 "NA, glycosyl linkage"
+      37 6 2 1 43 Proper_Trig 0 0 0 0 0 0 0 0 "NA, glycosyl linkage"
+      38 6 2 1 49 Proper_Trig 0 0.25 0 -0.25 0 0 0 0 "NA, glycosyl linkage 0.25 2 180 to compensate for removal of OG3C51 CG3C51 NG2R51 CG2R51 0.5 2 -70"
+      39 6 2 3 50 Proper_Trig 0 5.6 0 -5.6 0 0 0 0 "NA G"
+      40 6 5 10 9 Proper_Trig 0 1.8 0 -1.8 0 0 0 0 "NA A"
+      41 6 5 10 11 Proper_Trig 0 4 0 -4 0 0 0 0 "NA A"
+      42 6 7 8 9 Proper_Trig 0 2 0 -2 0 0 0 0 "NAMODEL guanine tautomer"
+      43 6 7 8 51 Proper_Trig 0 8.5 0 -8.5 0 0 0 0 "NA A"
+      44 7 6 5 10 Proper_Trig 0 2 0 -2 0 0 0 0 "NA A"
+      45 7 8 9 10 Proper_Trig 0 1.8 0 -1.8 0 0 0 0 "NA A"
+      46 8 9 10 11 Proper_Trig 0 1.8 0 -1.8 0 0 0 0 "NA A"
+      47 9 10 11 52 Proper_Trig 0 1 0 -1 0 0 0 0 "NA C"
+      48 9 10 11 53 Proper_Trig 0 1 0 -1 0 0 0 0 "NA C"
+      49 10 9 8 51 Proper_Trig 0 8.5 0 -8.5 0 0 0 0 "NA A"
+      50 12 1 43 41 Proper_Trig 0 0 0 0 0 0 0 0 "THF, 05/30/06, viv"
+      51 12 1 43 44 Proper_Trig 0 1.6 0 0 0.2 -0.6 0.3 0.5 "NA bkb"
+      52 12 1 43 74 Proper_Trig 0 0.19 0 0 0.19 0 0 0 "alkane, 4/98, yin and mackerell, thf viv"
+      53 12 13 14 15 Proper_Trig 0 3.4 -3.4 0 0 0 0 0 "NA, sugar"
+      54 12 13 14 55 Proper_Trig 0 0.16 0 0 0.16 0 0 0 "alkane, 4/98, yin and mackerell, tf2m viv"
+      55 12 13 14 56 Proper_Trig 0 0.16 0 0 0.16 0 0 0 "alkane, 4/98, yin and mackerell, tf2m viv"
+      56 12 13 41 42 Proper_Trig 0 1.6 0 0 0.2 -0.6 0.3 0.5 "NA, sugar"
+      57 12 13 41 43 Proper_Trig 0 0 0 0 0 0 0 0 "THF, 05/30/06, viv"
+      58 12 13 41 72 Proper_Trig 0 0.19 0 0 0.19 0 0 0 "alkane, 4/98, yin and mackerell, thf viv"
+      59 13 12 1 43 Proper_Trig 0 0.5 0 0 0.5 0 0 0 "THF, 05/30/06, viv"
+      60 13 12 1 49 Proper_Trig 0 0.3 0 0 0.3 0 0 0 "THF, 05/30/06, viv"
+      61 13 14 15 16 Proper_Trig 0 1.3 -0.6 0.65 0.05 0 0 0 "B5SP carbocyclic sugars reset to EP_2 phospho-ser/thr"
+      62 13 41 42 73 Proper_Trig 0 0.96 0.29 0.62 0.05 0 0 0 "Team sugar, CC3151 CC3152 OC311 HCP1"
+      63 13 41 43 44 Proper_Trig 0 3.2 0 0 -2 0 0.4 0.8 "NA, sugar"
+      64 13 41 43 74 Proper_Trig 0 0.19 0 0 0.19 0 0 0 "alkane, 4/98, yin and mackerell, thf, viv"
+      65 14 13 41 42 Proper_Trig 0 0.14 0 0 0.14 0 0 0 "PROT, hydroxyl wild card"
+      66 14 13 41 43 Proper_Trig 0 0.19 0 0 0.19 0 0 0 "alkane, 4/98, yin and mackerell, thf, viv"
+      67 14 13 41 72 Proper_Trig 0 0.19 0 0 0.19 0 0 0 "alkane, 4/98, yin and mackerell, thf, viv"
+      68 14 15 16 17 Proper_Trig 0 0.1 0 0 0.1 0 0 0 "NA dmp  ! Reorganization: PC and others"
+      69 14 15 16 18 Proper_Trig 0 0.1 0 0 0.1 0 0 0 "NA dmp  ! Reorganization: PC and others"
+      70 14 15 16 19 Proper_Trig 0 1.4 -1.2 -0.1 -0.1 0 0 0 "NA dmp  ! Reorganization:ADP"
+      71 15 14 13 41 Proper_Trig 0 3.9 -2.5 0.4 -0.8 -0.2 0 0 "NA, sugar"
+      72 15 14 13 54 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      73 15 16 19 20 Proper_Trig 0 0.06 0 0.03 0.03 0 0 0 "NA ppi2  ! Reorganization:PPI2"
+      74 16 15 14 55 Proper_Trig 0 0 0 0 0 0 0 0 "NA dmp  ! Reorganization: PC and others"
+      75 16 15 14 56 Proper_Trig 0 0 0 0 0 0 0 0 "NA dmp  ! Reorganization: PC and others"
+      76 16 19 20 21 Proper_Trig 0 0.13 0 0.1 0.03 0 0 0 "NA ppi2  ! Reorganization:PPI2"
+      77 16 19 20 22 Proper_Trig 0 0.13 0 0.1 0.03 0 0 0 "NA ppi2  ! Reorganization:PPI2"
+      78 16 19 20 23 Proper_Trig 0 0.06 0 0.03 0.03 0 0 0 "NA ppi2  ! Reorganization:PPI2"
+      79 17 16 19 20 Proper_Trig 0 0.13 0 0.1 0.03 0 0 0 "NA ppi2  ! Reorganization:PPI2"
+      80 18 16 19 20 Proper_Trig 0 0.13 0 0.1 0.03 0 0 0 "NA ppi2  ! Reorganization:PPI2"
+      81 19 20 23 24 Proper_Trig 0 1.4 -1.2 -0.1 -0.1 0 0 0 "NA dmp  ! Reorganization:ADP"
+      82 20 23 24 25 Proper_Trig 0 1.3 -0.6 0.65 0.05 0 0 0 "B5SP carbocyclic sugars reset to EP_2 phospho-ser/thr"
+      83 20 23 24 57 Proper_Trig 0 0 0 0 0 0 0 0 "NA dmp  ! Reorganization: PC and others"
+      84 20 23 24 58 Proper_Trig 0 0 0 0 0 0 0 0 "NA dmp  ! Reorganization: PC and others"
+      85 21 20 23 24 Proper_Trig 0 0.1 0 0 0.1 0 0 0 "NA dmp  ! Reorganization: PC and others"
+      86 22 20 23 24 Proper_Trig 0 0.1 0 0 0.1 0 0 0 "NA dmp  ! Reorganization: PC and others"
+      87 23 24 25 26 Proper_Trig 0 3.4 -3.4 0 0 0 0 0 "NA, sugar"
+      88 23 24 25 39 Proper_Trig 0 3.9 -2.5 0.4 -0.8 -0.2 0 0 "NA, sugar"
+      89 23 24 25 59 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      90 24 25 26 27 Proper_Trig 0 0.3 0 0 0.3 0 0 0 "THF, 05/30/06, viv"
+      91 24 25 39 37 Proper_Trig 0 0.19 0 0 0.19 0 0 0 "alkane, 4/98, yin and mackerell, thf, viv"
+      92 24 25 39 40 Proper_Trig 0 0.14 0 0 0.14 0 0 0 "PROT, hydroxyl wild card"
+      93 24 25 39 70 Proper_Trig 0 0.19 0 0 0.19 0 0 0 "alkane, 4/98, yin and mackerell, thf, viv"
+      94 25 26 27 28 Proper_Trig 0 0 0 0 0 0 0 0 "NADH, NDPH; Kenno: reverted to uncommented parameter from par_all27_na.prm"
+      95 25 26 27 37 Proper_Trig 0 0.5 0 0 0.5 0 0 0 "THF, 05/30/06, viv"
+      96 25 26 27 60 Proper_Trig 0 0.3 0 0 0.3 0 0 0 "THF, 05/30/06, viv"
+      97 25 39 37 27 Proper_Trig 0 0.41 0 0 -0.41 0 0 0 "cpen, cyclopentane, viv 10/4/05"
+      98 25 39 37 38 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "par22, X   CT1 CT2 X; erh 3/08"
+      99 25 39 37 68 Proper_Trig 0 0.19 0 0 0.19 0 0 0 "alkane, 4/98, yin and mackerell, thf, viv"
+      100 25 39 40 71 Proper_Trig 0 0.96 0.29 0.62 0.05 0 0 0 "Team sugar, CC3151 CC3152 OC311 HCP1"
+      101 26 25 24 57 Proper_Trig 0 0.16 0 0 0.16 0 0 0 "alkane, 4/98, yin and mackerell, tf2m viv"
+      102 26 25 24 58 Proper_Trig 0 0.16 0 0 0.16 0 0 0 "alkane, 4/98, yin and mackerell, tf2m viv"
+      103 26 25 39 37 Proper_Trig 0 0 0 0 0 0 0 0 "THF, 05/30/06, viv"
+      104 26 25 39 40 Proper_Trig 0 1.6 0 0 0.2 -0.6 0.3 0.5 "NA, sugar"
+      105 26 25 39 70 Proper_Trig 0 0.19 0 0 0.19 0 0 0 "alkane, 4/98, yin and mackerell, thf viv"
+      106 26 27 28 29 Proper_Trig 0 0 0 0 0 0 0 0 "NADH, NDPH; Kenno: reverted to \"for NADPH\" from par_all27_na.prm"
+      107 26 27 28 36 Proper_Trig 0 0 0 0 0 0 0 0 "NADH, NDPH; Kenno: reverted to \"for NADPH\" from par_all27_na.prm"
+      108 26 27 37 38 Proper_Trig 0 1.6 0 0 0.2 -0.6 0.3 0.5 "NA, sugar"
+      109 26 27 37 39 Proper_Trig 0 0 0 0 0 0 0 0 "THF, 05/30/06, viv"
+      110 26 27 37 68 Proper_Trig 0 0.19 0 0 0.19 0 0 0 "alkane, 4/98, yin and mackerell, thf viv"
+      111 27 26 25 39 Proper_Trig 0 0.5 0 0 0.5 0 0 0 "THF, 05/30/06, viv"
+      112 27 26 25 59 Proper_Trig 0 0.3 0 0 0.3 0 0 0 "THF, 05/30/06, viv"
+      113 27 28 29 30 Proper_Trig 0 0.1 0 -0.1 0 0 0 0 "NICH; Kenno: reverted to nad/ppi, jjp1/adm jr. 7/95"
+      114 27 28 29 61 Proper_Trig 0 0.1 0 -0.1 0 0 0 0 "NICH; Kenno: reverted to nad/ppi, jjp1/adm jr. 7/95"
+      115 27 28 36 32 Proper_Trig 0 0.1 0 -0.1 0 0 0 0 "NICH; Kenno: reverted to nad/ppi, jjp1/adm jr. 7/95"
+      116 27 28 36 67 Proper_Trig 0 0.1 0 -0.1 0 0 0 0 "NICH; Kenno: reverted to nad/ppi, jjp1/adm jr. 7/95"
+      117 27 37 38 69 Proper_Trig 0 0.96 0.29 0.62 0.05 0 0 0 "Team sugar, CC3151 CC3152 OC311 HCP1"
+      118 27 37 39 40 Proper_Trig 0 0.2 0 0 0.2 0 0 0 "par22, X   CT1 CT2 X; erh 3/08"
+      119 27 37 39 70 Proper_Trig 0 0.19 0 0 0.19 0 0 0 "alkane, 4/98, yin and mackerell, thf, viv"
+      120 28 27 37 38 Proper_Trig 0 0 0 0 0 0 0 0 "NADH, NDPH; Kenno: reverted to \"Adenine and cytosine\" from par_all27_na.prm"
+      121 28 27 37 39 Proper_Trig 0 0 0 0 0 0 0 0 "NADH, NDPH; Kenno: reverted to uncommented parameter from par_all27_na.prm"
+      122 28 27 37 68 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NADH, NDPH; Kenno: reverted to uncommented parameter from par_all27_na.prm"
+      123 28 29 30 31 Proper_Trig 0 3 0 -3 0 0 0 0 "NICH; Kenno: nad/ppi, jjp1/adm jr. 7/95 says 0.1 but that's unlikely   > re-optimize"
+      124 28 29 30 62 Proper_Trig 0 1 0 -1 0 0 0 0 "NICH; Kenno: nad/ppi, jjp1/adm jr. 7/95 says 0.1 but that's unlikely   > re-optimize"
+      125 28 36 32 31 Proper_Trig 0 2.5 0 -2.5 0 0 0 0 "NICH; Kenno: nad/ppi, jjp1/adm jr. 7/95 says 0.1 but that's unlikely   > re-optimize"
+      126 28 36 32 33 Proper_Trig 0 2.5 0 -2.5 0 0 0 0 "NICH; Kenno: reverted to nad/ppi, jjp1/adm jr. 7/95"
+      127 29 28 27 37 Proper_Trig 0 0 0 0 0 0 0 0 "NADH, NDPH; Kenno: reverted to uncommented parameter from par_all27_na.prm"
+      128 29 28 27 60 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NADH, NDPH; Kenno: reverted to uncommented parameter from par_all27_na.prm"
+      129 29 28 36 32 Proper_Trig 0 0.5 0 -0.5 0 0 0 0 "NICH; Kenno: nad/ppi, jjp1/adm jr. 7/95 says 0.1 but that's unlikely   > re-optimize"
+      130 29 28 36 67 Proper_Trig 0 0.1 0 -0.1 0 0 0 0 "NICH; Kenno: reverted to nad/ppi, jjp1/adm jr. 7/95"
+      131 29 30 31 32 Proper_Trig 0 0 0 0 0 0 0 0 "NICH; Kenno: nad/ppi, jjp1/adm jr. 7/95 says 1.0 3 180 but that's unlikely   > re-optimize"
+      132 29 30 31 63 Proper_Trig 0 0.1 0 0 0.1 0 0 0 "PY01, 4h-pyran"
+      133 29 30 31 64 Proper_Trig 0 0.1 0 0 0.1 0 0 0 "PY01, 4h-pyran"
+      134 30 29 28 36 Proper_Trig 0 0.1 0 -0.1 0 0 0 0 "NADH, NDPH; Kenno: reverted to nad/ppi, jjp1/adm jr. 7/95"
+      135 30 31 32 33 Proper_Trig 0 0 0 0 0 0 0 0 "NICH; Kenno: nad/ppi, jjp1/adm jr. 7/95 says 1.0 3 180 but that's unlikely   > re-optimize"
+      136 30 31 32 36 Proper_Trig 0 0 0 0 0 0 0 0 "NICH; Kenno: nad/ppi, jjp1/adm jr. 7/95 says 1.0 3 180 but that's unlikely   > re-optimize"
+      137 31 30 29 61 Proper_Trig 0 6 0 -6 0 0 0 0 "PY01, 4h-pyran"
+      138 31 32 33 34 Proper_Trig 0 2.4 0 -1 1 0 0 0.4 "NICH; Kenno: reverted to nadh, jjp1,adm jr. 4/95"
+      139 31 32 33 35 Proper_Trig 0 1.25 0 -0.5 -0.35 0 0 0.4 "NICH; Kenno: reverted to nadh, jjp1,adm jr. 4/95"
+      140 31 32 36 67 Proper_Trig 0 1 0 -1 0 0 0 0 "NICH; Kenno: nad/ppi, jjp1/adm jr. 7/95 says 0.1 but that's unlikely   > re-optimize"
+      141 32 31 30 62 Proper_Trig 0 0 0 0 0 0 0 0 "NICH; Kenno: nad/ppi, jjp1/adm jr. 7/95 says 1.0 3 180 but that's unlikely   > re-optimize"
+      142 32 33 35 65 Proper_Trig 0 2.5 0 -2.5 0 0 0 0 "NICH; Kenno: reverted to nad/ppi, jjp1/adm jr. 7/95"
+      143 32 33 35 66 Proper_Trig 0 2.5 0 -2.5 0 0 0 0 "NICH; Kenno: reverted to nad/ppi, jjp1/adm jr. 7/95"
+      144 33 32 31 63 Proper_Trig 0 0 0 0 0 0 0 0 "NICH; Kenno: nad/ppi, jjp1/adm jr. 7/95 says 1.0 3 180 but that's unlikely   > re-optimize"
+      145 33 32 31 64 Proper_Trig 0 0 0 0 0 0 0 0 "NICH; Kenno: nad/ppi, jjp1/adm jr. 7/95 says 1.0 3 180 but that's unlikely   > re-optimize"
+      146 33 32 36 67 Proper_Trig 0 1 0 -1 0 0 0 0 "NICH; Kenno: nad/ppi, jjp1/adm jr. 7/95 says 0.1 but that's unlikely   > re-optimize"
+      147 34 33 32 36 Proper_Trig 0 2.25 0.3 -1.95 0 0 0 0 "NICH; Kenno: reverted to nadh, jjp1,adm jr. 4/95"
+      148 34 33 35 65 Proper_Trig 0 1.4 0 -1.4 0 0 0 0 "PROT adm jr. 4/10/91, acetamide update"
+      149 34 33 35 66 Proper_Trig 0 1.4 0 -1.4 0 0 0 0 "PROT adm jr. 4/10/91, acetamide update"
+      150 35 33 32 36 Proper_Trig 0 3.05 -1.1 -1.95 0 0 0 0 "NICH; Kenno: reverted to nadh, jjp1,adm jr. 4/95"
+      151 36 28 27 37 Proper_Trig 0 0 0 0 0 0 0 0 "NADH, NDPH; Kenno: reverted to uncommented parameter from par_all27_na.prm"
+      152 36 28 27 60 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NADH, NDPH; Kenno: reverted to uncommented parameter from par_all27_na.prm"
+      153 36 28 29 61 Proper_Trig 0 0.1 0 -0.1 0 0 0 0 "NICH; Kenno: reverted to nad/ppi, jjp1/adm jr. 7/95"
+      154 36 32 31 63 Proper_Trig 0 0 0 0 0 0 0 0 "NICH; Kenno: nad/ppi, jjp1/adm jr. 7/95 says 1.0 3 180 but that's unlikely   > re-optimize"
+      155 36 32 31 64 Proper_Trig 0 0 0 0 0 0 0 0 "NICH; Kenno: nad/ppi, jjp1/adm jr. 7/95 says 1.0 3 180 but that's unlikely   > re-optimize"
+      156 37 39 25 59 Proper_Trig 0 0.19 0 0 0.19 0 0 0 "alkane, 4/98, yin and mackerell, thf, viv"
+      157 37 39 40 71 Proper_Trig 0 0.96 0.29 0.62 0.05 0 0 0 "Team sugar, CC3151 CC3152 OC311 HCP1"
+      158 38 37 27 60 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      159 38 37 39 40 Proper_Trig 0 0 0 0 0 0 0 0 "NA bkb"
+      160 38 37 39 70 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      161 39 25 24 57 Proper_Trig 0 0.16 0 0 0.16 0 0 0 "alkane, 4/98, yin and mackerell, tf2m viv"
+      162 39 25 24 58 Proper_Trig 0 0.16 0 0 0.16 0 0 0 "alkane, 4/98, yin and mackerell, tf2m viv"
+      163 39 37 27 60 Proper_Trig 0 0.19 0 0 0.19 0 0 0 "alkane, 4/98, yin and mackerell, thf, viv"
+      164 39 37 38 69 Proper_Trig 0 0.96 0.29 0.62 0.05 0 0 0 "Team sugar, CC3151 CC3152 OC311 HCP1"
+      165 40 39 25 59 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      166 40 39 37 68 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      167 41 13 14 55 Proper_Trig 0 0.16 0 0 0.16 0 0 0 "alkane, 4/98, yin and mackerell, tf2m viv"
+      168 41 13 14 56 Proper_Trig 0 0.16 0 0 0.16 0 0 0 "alkane, 4/98, yin and mackerell, tf2m viv"
+      169 41 43 1 49 Proper_Trig 0 0.19 0 0 0.19 0 0 0 "alkane, 4/98, yin and mackerell, thf, viv"
+      170 41 43 44 45 Proper_Trig 0 2.5 -2.5 0 0 0 0 0 "reverted to NA, sugar by kevo"
+      171 42 41 13 54 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      172 42 41 43 44 Proper_Trig 0 0 0 0 0 0 0 0 "NA bkb"
+      173 42 41 43 74 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      174 43 41 13 54 Proper_Trig 0 0.19 0 0 0.19 0 0 0 "alkane, 4/98, yin and mackerell, thf, viv"
+      175 43 41 42 73 Proper_Trig 0 0.96 0.29 0.62 0.05 0 0 0 "Team sugar, CC3151 CC3152 OC311 HCP1"
+      176 43 44 45 46 Proper_Trig 0 0.1 0 0 0.1 0 0 0 "BPNP and others dmp,eps, O1P-P-O3'-C3'"
+      177 43 44 45 47 Proper_Trig 0 0.1 0 0 0.1 0 0 0 "BPNP and others dmp,eps, O1P-P-O3'-C3'"
+      178 43 44 45 48 Proper_Trig 0 1.45 0 0.95 0.5 0 0 0 "NA T3PH, adm jr."
+      179 44 43 1 49 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      180 44 43 41 72 Proper_Trig 0 0.195 0 0 0.195 0 0 0 "NA, sugar"
+      181 44 45 48 75 Proper_Trig 0 2.5 -1.6 0.9 0 0 0 0 "PROTNA phenol phosphate  ! Reorganization:MP_1"
+      182 45 44 43 74 Proper_Trig 0 0 0 0 0 0 0 0 "NA, sugar  !  verified by kevo"
+      183 46 45 48 75 Proper_Trig 0 0.3 0 0 0.3 0 0 0 "NA MP_1, adm jr.  ! Reorganization:MP_1"
+      184 47 45 48 75 Proper_Trig 0 0.3 0 0 0.3 0 0 0 "NA MP_1, adm jr.  ! Reorganization:MP_1"
+      185 49 1 43 74 Proper_Trig 0 0.19 0 0 0.19 0 0 0 "alkane, 4/98, yin and mackerell, thf, viv"
+      186 54 13 14 55 Proper_Trig 0 0.16 0 0 0.16 0 0 0 "alkane, 4/98, yin and mackerell, tf2m viv"
+      187 54 13 14 56 Proper_Trig 0 0.16 0 0 0.16 0 0 0 "alkane, 4/98, yin and mackerell, tf2m viv"
+      188 54 13 41 72 Proper_Trig 0 0.19 0 0 0.19 0 0 0 "alkane, 4/98, yin and mackerell, thf, viv"
+      189 57 24 25 59 Proper_Trig 0 0.16 0 0 0.16 0 0 0 "alkane, 4/98, yin and mackerell, tf2m viv"
+      190 58 24 25 59 Proper_Trig 0 0.16 0 0 0.16 0 0 0 "alkane, 4/98, yin and mackerell, tf2m viv"
+      191 59 25 39 70 Proper_Trig 0 0.19 0 0 0.19 0 0 0 "alkane, 4/98, yin and mackerell, thf, viv"
+      192 60 27 37 68 Proper_Trig 0 0.19 0 0 0.19 0 0 0 "alkane, 4/98, yin and mackerell, thf, viv"
+      193 61 29 30 62 Proper_Trig 0 1 0 -1 0 0 0 0 "PY01, 4h-pyran"
+      194 62 30 31 63 Proper_Trig 0 0 0 0 0 0 0 0 "LIPID butene, adm jr., 2/00 update"
+      195 62 30 31 64 Proper_Trig 0 0 0 0 0 0 0 0 "LIPID butene, adm jr., 2/00 update"
+      196 68 37 38 69 Proper_Trig 0 0.18 0 0 0.18 0 0 0 "Team sugar, HCP1 OC311 CC3151 HCA1"
+      197 68 37 39 70 Proper_Trig 0 0.19 0 0 0.19 0 0 0 "alkane, 4/98, yin and mackerell, thf, viv"
+      198 70 39 40 71 Proper_Trig 0 0.18 0 0 0.18 0 0 0 "Team sugar, HCP1 OC311 CC3151 HCA1"
+      199 72 41 42 73 Proper_Trig 0 0.18 0 0 0.18 0 0 0 "Team sugar, HCP1 OC311 CC3151 HCA1"
+      200 72 41 43 74 Proper_Trig 0 0.19 0 0 0.19 0 0 0 "alkane, 4/98, yin and mackerell, thf, viv"
+      201 10 5 9 11 Improper_Harm 0 40 <> <> <> <> <> <> "NA A"
+      202 11 53 52 10 Improper_Harm 0 9 <> <> <> <> <> <> "NA GUA ADE CYT; from artificially planar 2APY, 2-aminopyridine parameter set (12/2010); xxwy & kevo"
+      203 29 30 28 61 Improper_Harm 0 53 <> <> <> <> <> <> "NA NICH, adm jr. WILDCARD"
+      204 33 32 35 34 Improper_Harm 0 120 <> <> <> <> <> <> "PROT NMA Vibrational Modes (LK) WILDCARD"
+      205 36 32 28 67 Improper_Harm 0 53 <> <> <> <> <> <> "NA NICH, adm jr. WILDCARD"
+      :::
+    }
+    ffio_exclusions[397] {
+      i_ffio_ai
+      i_ffio_aj
+      :::
+      1 1 2
+      2 1 3
+      3 1 4
+      4 1 5
+      5 1 6
+      6 1 7
+      7 1 12
+      8 1 13
+      9 1 14
+      10 1 41
+      11 1 42
+      12 1 43
+      13 1 44
+      14 1 45
+      15 1 49
+      16 1 50
+      17 1 54
+      18 1 72
+      19 1 74
+      20 2 3
+      21 2 4
+      22 2 5
+      23 2 6
+      24 2 7
+      25 2 8
+      26 2 10
+      27 2 12
+      28 2 13
+      29 2 41
+      30 2 43
+      31 2 44
+      32 2 49
+      33 2 50
+      34 2 74
+      35 3 4
+      36 3 5
+      37 3 6
+      38 3 7
+      39 3 10
+      40 3 12
+      41 3 43
+      42 3 49
+      43 3 50
+      44 4 5
+      45 4 6
+      46 4 7
+      47 4 9
+      48 4 10
+      49 4 11
+      50 4 50
+      51 5 6
+      52 5 7
+      53 5 8
+      54 5 9
+      55 5 10
+      56 5 11
+      57 5 50
+      58 5 52
+      59 5 53
+      60 6 7
+      61 6 8
+      62 6 9
+      63 6 10
+      64 6 11
+      65 6 12
+      66 6 43
+      67 6 49
+      68 6 50
+      69 6 51
+      70 7 8
+      71 7 9
+      72 7 10
+      73 7 51
+      74 8 9
+      75 8 10
+      76 8 11
+      77 8 51
+      78 9 10
+      79 9 11
+      80 9 51
+      81 9 52
+      82 9 53
+      83 10 11
+      84 10 51
+      85 10 52
+      86 10 53
+      87 11 52
+      88 11 53
+      89 12 13
+      90 12 14
+      91 12 15
+      92 12 41
+      93 12 42
+      94 12 43
+      95 12 44
+      96 12 49
+      97 12 54
+      98 12 55
+      99 12 56
+      100 12 72
+      101 12 74
+      102 13 14
+      103 13 15
+      104 13 16
+      105 13 41
+      106 13 42
+      107 13 43
+      108 13 44
+      109 13 49
+      110 13 54
+      111 13 55
+      112 13 56
+      113 13 72
+      114 13 73
+      115 13 74
+      116 14 15
+      117 14 16
+      118 14 17
+      119 14 18
+      120 14 19
+      121 14 41
+      122 14 42
+      123 14 43
+      124 14 54
+      125 14 55
+      126 14 56
+      127 14 72
+      128 15 16
+      129 15 17
+      130 15 18
+      131 15 19
+      132 15 20
+      133 15 41
+      134 15 54
+      135 15 55
+      136 15 56
+      137 16 17
+      138 16 18
+      139 16 19
+      140 16 20
+      141 16 21
+      142 16 22
+      143 16 23
+      144 16 55
+      145 16 56
+      146 17 18
+      147 17 19
+      148 17 20
+      149 18 19
+      150 18 20
+      151 19 20
+      152 19 21
+      153 19 22
+      154 19 23
+      155 19 24
+      156 20 21
+      157 20 22
+      158 20 23
+      159 20 24
+      160 20 25
+      161 20 57
+      162 20 58
+      163 21 22
+      164 21 23
+      165 21 24
+      166 22 23
+      167 22 24
+      168 23 24
+      169 23 25
+      170 23 26
+      171 23 39
+      172 23 57
+      173 23 58
+      174 23 59
+      175 24 25
+      176 24 26
+      177 24 27
+      178 24 37
+      179 24 39
+      180 24 40
+      181 24 57
+      182 24 58
+      183 24 59
+      184 24 70
+      185 25 26
+      186 25 27
+      187 25 28
+      188 25 37
+      189 25 38
+      190 25 39
+      191 25 40
+      192 25 57
+      193 25 58
+      194 25 59
+      195 25 60
+      196 25 68
+      197 25 70
+      198 25 71
+      199 26 27
+      200 26 28
+      201 26 29
+      202 26 36
+      203 26 37
+      204 26 38
+      205 26 39
+      206 26 40
+      207 26 57
+      208 26 58
+      209 26 59
+      210 26 60
+      211 26 68
+      212 26 70
+      213 27 28
+      214 27 29
+      215 27 30
+      216 27 32
+      217 27 36
+      218 27 37
+      219 27 38
+      220 27 39
+      221 27 40
+      222 27 59
+      223 27 60
+      224 27 61
+      225 27 67
+      226 27 68
+      227 27 69
+      228 27 70
+      229 28 29
+      230 28 30
+      231 28 31
+      232 28 32
+      233 28 33
+      234 28 36
+      235 28 37
+      236 28 38
+      237 28 39
+      238 28 60
+      239 28 61
+      240 28 62
+      241 28 67
+      242 28 68
+      243 29 30
+      244 29 31
+      245 29 32
+      246 29 36
+      247 29 37
+      248 29 60
+      249 29 61
+      250 29 62
+      251 29 63
+      252 29 64
+      253 29 67
+      254 30 31
+      255 30 32
+      256 30 33
+      257 30 36
+      258 30 61
+      259 30 62
+      260 30 63
+      261 30 64
+      262 31 32
+      263 31 33
+      264 31 34
+      265 31 35
+      266 31 36
+      267 31 61
+      268 31 62
+      269 31 63
+      270 31 64
+      271 31 67
+      272 32 33
+      273 32 34
+      274 32 35
+      275 32 36
+      276 32 62
+      277 32 63
+      278 32 64
+      279 32 65
+      280 32 66
+      281 32 67
+      282 33 34
+      283 33 35
+      284 33 36
+      285 33 63
+      286 33 64
+      287 33 65
+      288 33 66
+      289 33 67
+      290 34 35
+      291 34 36
+      292 34 65
+      293 34 66
+      294 35 36
+      295 35 65
+      296 35 66
+      297 36 37
+      298 36 60
+      299 36 61
+      300 36 63
+      301 36 64
+      302 36 67
+      303 37 38
+      304 37 39
+      305 37 40
+      306 37 59
+      307 37 60
+      308 37 68
+      309 37 69
+      310 37 70
+      311 37 71
+      312 38 39
+      313 38 40
+      314 38 60
+      315 38 68
+      316 38 69
+      317 38 70
+      318 39 40
+      319 39 57
+      320 39 58
+      321 39 59
+      322 39 60
+      323 39 68
+      324 39 69
+      325 39 70
+      326 39 71
+      327 40 59
+      328 40 68
+      329 40 70
+      330 40 71
+      331 41 42
+      332 41 43
+      333 41 44
+      334 41 45
+      335 41 49
+      336 41 54
+      337 41 55
+      338 41 56
+      339 41 72
+      340 41 73
+      341 41 74
+      342 42 43
+      343 42 44
+      344 42 54
+      345 42 72
+      346 42 73
+      347 42 74
+      348 43 44
+      349 43 45
+      350 43 46
+      351 43 47
+      352 43 48
+      353 43 49
+      354 43 54
+      355 43 72
+      356 43 73
+      357 43 74
+      358 44 45
+      359 44 46
+      360 44 47
+      361 44 48
+      362 44 49
+      363 44 72
+      364 44 74
+      365 44 75
+      366 45 46
+      367 45 47
+      368 45 48
+      369 45 74
+      370 45 75
+      371 46 47
+      372 46 48
+      373 46 75
+      374 47 48
+      375 47 75
+      376 48 75
+      377 49 74
+      378 52 53
+      379 54 55
+      380 54 56
+      381 54 72
+      382 55 56
+      383 57 58
+      384 57 59
+      385 58 59
+      386 59 70
+      387 60 68
+      388 61 62
+      389 62 63
+      390 62 64
+      391 63 64
+      392 65 66
+      393 68 69
+      394 68 70
+      395 70 71
+      396 72 73
+      397 72 74
+      :::
+    }
+    ffio_pairs[358] {
+      i_ffio_ai
+      i_ffio_aj
+      s_ffio_funct
+      r_ffio_c1
+      r_ffio_c2
+      :::
+      1 1 4 LJ12_6_sig_epsilon 3.3408702 0.04472136
+      2 1 5 LJ12_6_sig_epsilon 3.3497792 0.031464265
+      3 1 7 LJ12_6_sig_epsilon 3.5279589 0.02236068
+      4 1 14 LJ12_6_sig_epsilon 3.3854151 0.01
+      5 1 42 LJ12_6_sig_epsilon 3.2651438 0.043829214
+      6 1 45 LJ12_6_sig_epsilon 3.6081398 0.076485293
+      7 1 50 LJ12_6_sig_epsilon 2.4945164 0.021447611
+      8 1 54 LJ12_6_sig_epsilon 2.8865118 0.021213203
+      9 1 72 LJ12_6_sig_epsilon 2.8865118 0.021213203
+      10 2 8 LJ 1 <>
+      11 2 10 LJ 1 <>
+      12 2 13 LJ12_6_sig_epsilon 3.3408702 0.04472136
+      13 2 41 LJ12_6_sig_epsilon 3.3408702 0.04472136
+      14 2 44 LJ 1 <>
+      15 2 74 LJ 1 <>
+      16 3 7 LJ 1 <>
+      17 3 10 LJ 1 <>
+      18 3 12 LJ 1 <>
+      19 3 43 LJ12_6_sig_epsilon 3.6526847 0.014142136
+      20 3 49 LJ 1 <>
+      21 4 7 LJ 1 <>
+      22 4 9 LJ 1 <>
+      23 4 11 LJ 1 <>
+      24 5 8 LJ 1 <>
+      25 5 50 LJ 1 <>
+      26 5 52 LJ 1 <>
+      27 5 53 LJ 1 <>
+      28 6 9 LJ 1 <>
+      29 6 11 LJ 1 <>
+      30 6 12 LJ 1 <>
+      31 6 43 LJ12_6_sig_epsilon 3.3497792 0.031464265
+      32 6 49 LJ 1 <>
+      33 6 50 LJ 1 <>
+      34 6 51 LJ 1 <>
+      35 7 10 LJ 1 <>
+      36 8 11 LJ 1 <>
+      37 9 52 LJ 1 <>
+      38 9 53 LJ 1 <>
+      39 10 51 LJ 1 <>
+      40 12 15 LJ 1 <>
+      41 12 42 LJ 1 <>
+      42 12 44 LJ 1 <>
+      43 12 55 LJ 1 <>
+      44 12 56 LJ 1 <>
+      45 12 72 LJ 1 <>
+      46 12 74 LJ 1 <>
+      47 13 16 LJ12_6_sig_epsilon 3.6081398 0.076485293
+      48 13 44 LJ12_6_sig_epsilon 3.1626904 0.031622777
+      49 13 49 LJ12_6_sig_epsilon 2.8865118 0.021213203
+      50 13 73 LJ12_6_sig_epsilon 1.8927143 0.021447611
+      51 13 74 LJ12_6_sig_epsilon 2.8865118 0.021213203
+      52 14 17 LJ12_6_sig_epsilon 3.2072354 0.034641016
+      53 14 18 LJ12_6_sig_epsilon 3.2072354 0.034641016
+      54 14 19 LJ12_6_sig_epsilon 3.1626904 0.031622777
+      55 14 42 LJ12_6_sig_epsilon 3.2651438 0.043829214
+      56 14 43 LJ12_6_sig_epsilon 3.3854151 0.01
+      57 14 72 LJ12_6_sig_epsilon 2.8865118 0.021213203
+      58 15 20 LJ 1 <>
+      59 15 41 LJ12_6_sig_epsilon 3.1626904 0.031622777
+      60 15 54 LJ 1 <>
+      61 16 21 LJ 1 <>
+      62 16 22 LJ 1 <>
+      63 16 23 LJ 1 <>
+      64 16 55 LJ 1 <>
+      65 16 56 LJ 1 <>
+      66 17 20 LJ 1 <>
+      67 18 20 LJ 1 <>
+      68 19 24 LJ12_6_sig_epsilon 3.1626904 0.031622777
+      69 20 25 LJ12_6_sig_epsilon 3.6081398 0.076485293
+      70 20 57 LJ 1 <>
+      71 20 58 LJ 1 <>
+      72 21 24 LJ12_6_sig_epsilon 3.2072354 0.034641016
+      73 22 24 LJ12_6_sig_epsilon 3.2072354 0.034641016
+      74 23 26 LJ 1 <>
+      75 23 39 LJ12_6_sig_epsilon 3.1626904 0.031622777
+      76 23 59 LJ 1 <>
+      77 24 27 LJ12_6_sig_epsilon 3.3854151 0.01
+      78 24 37 LJ12_6_sig_epsilon 3.3854151 0.01
+      79 24 40 LJ12_6_sig_epsilon 3.2651438 0.043829214
+      80 24 70 LJ12_6_sig_epsilon 2.8865118 0.021213203
+      81 25 28 LJ12_6_sig_epsilon 3.474505 0.018708287
+      82 25 38 LJ12_6_sig_epsilon 3.2651438 0.043829214
+      83 25 60 LJ12_6_sig_epsilon 2.8865118 0.021213203
+      84 25 68 LJ12_6_sig_epsilon 2.8865118 0.021213203
+      85 25 71 LJ12_6_sig_epsilon 1.8927143 0.021447611
+      86 26 29 LJ 1 <>
+      87 26 36 LJ 1 <>
+      88 26 38 LJ 1 <>
+      89 26 40 LJ 1 <>
+      90 26 57 LJ 1 <>
+      91 26 58 LJ 1 <>
+      92 26 68 LJ 1 <>
+      93 26 70 LJ 1 <>
+      94 27 30 LJ12_6_sig_epsilon 3.5546859 0.02607681
+      95 27 32 LJ12_6_sig_epsilon 3.5546859 0.02607681
+      96 27 40 LJ12_6_sig_epsilon 3.2651438 0.043829214
+      97 27 59 LJ12_6_sig_epsilon 2.8865118 0.021213203
+      98 27 61 LJ12_6_sig_epsilon 2.806331 0.017606817
+      99 27 67 LJ12_6_sig_epsilon 2.806331 0.017606817
+      100 27 69 LJ12_6_sig_epsilon 1.8927143 0.021447611
+      101 27 70 LJ12_6_sig_epsilon 2.8865118 0.021213203
+      102 28 31 LJ12_6_sig_epsilon 3.474505 0.018708287
+      103 28 33 LJ 1 <>
+      104 28 38 LJ 1 <>
+      105 28 39 LJ12_6_sig_epsilon 3.474505 0.018708287
+      106 28 62 LJ 1 <>
+      107 28 68 LJ 1 <>
+      108 29 32 LJ 1 <>
+      109 29 37 LJ12_6_sig_epsilon 3.5546859 0.02607681
+      110 29 60 LJ 1 <>
+      111 29 63 LJ 1 <>
+      112 29 64 LJ 1 <>
+      113 29 67 LJ 1 <>
+      114 30 33 LJ 1 <>
+      115 30 36 LJ 1 <>
+      116 31 34 LJ12_6_sig_epsilon 2.9399658 0.034641016
+      117 31 35 LJ12_6_sig_epsilon 3.3408702 0.04472136
+      118 31 61 LJ12_6_sig_epsilon 2.806331 0.017606817
+      119 31 67 LJ12_6_sig_epsilon 2.806331 0.017606817
+      120 32 62 LJ 1 <>
+      121 32 65 LJ 1 <>
+      122 32 66 LJ 1 <>
+      123 33 63 LJ 1 <>
+      124 33 64 LJ 1 <>
+      125 33 67 LJ 1 <>
+      126 34 36 LJ12_6_sig_epsilon 3.1092365 0.090332718
+      127 34 65 LJ12_6_sig_epsilon 1.447265 0.074296702
+      128 34 66 LJ12_6_sig_epsilon 1.447265 0.074296702
+      129 35 36 LJ 1 <>
+      130 36 37 LJ12_6_sig_epsilon 3.5546859 0.02607681
+      131 36 60 LJ 1 <>
+      132 36 61 LJ 1 <>
+      133 36 63 LJ 1 <>
+      134 36 64 LJ 1 <>
+      135 37 59 LJ12_6_sig_epsilon 2.8865118 0.021213203
+      136 37 71 LJ12_6_sig_epsilon 1.8927143 0.021447611
+      137 38 40 LJ 1 <>
+      138 38 60 LJ 1 <>
+      139 38 70 LJ 1 <>
+      140 39 57 LJ12_6_sig_epsilon 2.8865118 0.018708287
+      141 39 58 LJ12_6_sig_epsilon 2.8865118 0.018708287
+      142 39 60 LJ12_6_sig_epsilon 2.8865118 0.021213203
+      143 39 69 LJ12_6_sig_epsilon 1.8927143 0.021447611
+      144 40 59 LJ 1 <>
+      145 40 68 LJ 1 <>
+      146 41 45 LJ12_6_sig_epsilon 3.6081398 0.076485293
+      147 41 49 LJ12_6_sig_epsilon 2.8865118 0.021213203
+      148 41 55 LJ12_6_sig_epsilon 2.8865118 0.018708287
+      149 41 56 LJ12_6_sig_epsilon 2.8865118 0.018708287
+      150 42 44 LJ 1 <>
+      151 42 54 LJ 1 <>
+      152 42 74 LJ 1 <>
+      153 43 46 LJ12_6_sig_epsilon 3.2072354 0.034641016
+      154 43 47 LJ12_6_sig_epsilon 3.2072354 0.034641016
+      155 43 48 LJ12_6_sig_epsilon 3.2651438 0.043829214
+      156 43 54 LJ12_6_sig_epsilon 2.8865118 0.021213203
+      157 43 73 LJ12_6_sig_epsilon 1.8927143 0.021447611
+      158 44 49 LJ 1 <>
+      159 44 72 LJ 1 <>
+      160 44 75 LJ 1 <>
+      161 45 74 LJ 1 <>
+      162 46 75 LJ 1 <>
+      163 47 75 LJ 1 <>
+      164 49 74 LJ 1 <>
+      165 54 55 LJ 1 <>
+      166 54 56 LJ 1 <>
+      167 54 72 LJ 1 <>
+      168 57 59 LJ 1 <>
+      169 58 59 LJ 1 <>
+      170 59 70 LJ 1 <>
+      171 60 68 LJ 1 <>
+      172 61 62 LJ 1 <>
+      173 62 63 LJ 1 <>
+      174 62 64 LJ 1 <>
+      175 68 69 LJ 1 <>
+      176 68 70 LJ 1 <>
+      177 70 71 LJ 1 <>
+      178 72 73 LJ 1 <>
+      179 72 74 LJ 1 <>
+      180 1 4 Coulomb 1 <>
+      181 1 5 Coulomb 1 <>
+      182 1 7 Coulomb 1 <>
+      183 1 14 Coulomb 1 <>
+      184 1 42 Coulomb 1 <>
+      185 1 45 Coulomb 1 <>
+      186 1 50 Coulomb 1 <>
+      187 1 54 Coulomb 1 <>
+      188 1 72 Coulomb 1 <>
+      189 2 8 Coulomb 1 <>
+      190 2 10 Coulomb 1 <>
+      191 2 13 Coulomb 1 <>
+      192 2 41 Coulomb 1 <>
+      193 2 44 Coulomb 1 <>
+      194 2 74 Coulomb 1 <>
+      195 3 7 Coulomb 1 <>
+      196 3 10 Coulomb 1 <>
+      197 3 12 Coulomb 1 <>
+      198 3 43 Coulomb 1 <>
+      199 3 49 Coulomb 1 <>
+      200 4 7 Coulomb 1 <>
+      201 4 9 Coulomb 1 <>
+      202 4 11 Coulomb 1 <>
+      203 5 8 Coulomb 1 <>
+      204 5 50 Coulomb 1 <>
+      205 5 52 Coulomb 1 <>
+      206 5 53 Coulomb 1 <>
+      207 6 9 Coulomb 1 <>
+      208 6 11 Coulomb 1 <>
+      209 6 12 Coulomb 1 <>
+      210 6 43 Coulomb 1 <>
+      211 6 49 Coulomb 1 <>
+      212 6 50 Coulomb 1 <>
+      213 6 51 Coulomb 1 <>
+      214 7 10 Coulomb 1 <>
+      215 8 11 Coulomb 1 <>
+      216 9 52 Coulomb 1 <>
+      217 9 53 Coulomb 1 <>
+      218 10 51 Coulomb 1 <>
+      219 12 15 Coulomb 1 <>
+      220 12 42 Coulomb 1 <>
+      221 12 44 Coulomb 1 <>
+      222 12 55 Coulomb 1 <>
+      223 12 56 Coulomb 1 <>
+      224 12 72 Coulomb 1 <>
+      225 12 74 Coulomb 1 <>
+      226 13 16 Coulomb 1 <>
+      227 13 44 Coulomb 1 <>
+      228 13 49 Coulomb 1 <>
+      229 13 73 Coulomb 1 <>
+      230 13 74 Coulomb 1 <>
+      231 14 17 Coulomb 1 <>
+      232 14 18 Coulomb 1 <>
+      233 14 19 Coulomb 1 <>
+      234 14 42 Coulomb 1 <>
+      235 14 43 Coulomb 1 <>
+      236 14 72 Coulomb 1 <>
+      237 15 20 Coulomb 1 <>
+      238 15 41 Coulomb 1 <>
+      239 15 54 Coulomb 1 <>
+      240 16 21 Coulomb 1 <>
+      241 16 22 Coulomb 1 <>
+      242 16 23 Coulomb 1 <>
+      243 16 55 Coulomb 1 <>
+      244 16 56 Coulomb 1 <>
+      245 17 20 Coulomb 1 <>
+      246 18 20 Coulomb 1 <>
+      247 19 24 Coulomb 1 <>
+      248 20 25 Coulomb 1 <>
+      249 20 57 Coulomb 1 <>
+      250 20 58 Coulomb 1 <>
+      251 21 24 Coulomb 1 <>
+      252 22 24 Coulomb 1 <>
+      253 23 26 Coulomb 1 <>
+      254 23 39 Coulomb 1 <>
+      255 23 59 Coulomb 1 <>
+      256 24 27 Coulomb 1 <>
+      257 24 37 Coulomb 1 <>
+      258 24 40 Coulomb 1 <>
+      259 24 70 Coulomb 1 <>
+      260 25 28 Coulomb 1 <>
+      261 25 38 Coulomb 1 <>
+      262 25 60 Coulomb 1 <>
+      263 25 68 Coulomb 1 <>
+      264 25 71 Coulomb 1 <>
+      265 26 29 Coulomb 1 <>
+      266 26 36 Coulomb 1 <>
+      267 26 38 Coulomb 1 <>
+      268 26 40 Coulomb 1 <>
+      269 26 57 Coulomb 1 <>
+      270 26 58 Coulomb 1 <>
+      271 26 68 Coulomb 1 <>
+      272 26 70 Coulomb 1 <>
+      273 27 30 Coulomb 1 <>
+      274 27 32 Coulomb 1 <>
+      275 27 40 Coulomb 1 <>
+      276 27 59 Coulomb 1 <>
+      277 27 61 Coulomb 1 <>
+      278 27 67 Coulomb 1 <>
+      279 27 69 Coulomb 1 <>
+      280 27 70 Coulomb 1 <>
+      281 28 31 Coulomb 1 <>
+      282 28 33 Coulomb 1 <>
+      283 28 38 Coulomb 1 <>
+      284 28 39 Coulomb 1 <>
+      285 28 62 Coulomb 1 <>
+      286 28 68 Coulomb 1 <>
+      287 29 32 Coulomb 1 <>
+      288 29 37 Coulomb 1 <>
+      289 29 60 Coulomb 1 <>
+      290 29 63 Coulomb 1 <>
+      291 29 64 Coulomb 1 <>
+      292 29 67 Coulomb 1 <>
+      293 30 33 Coulomb 1 <>
+      294 30 36 Coulomb 1 <>
+      295 31 34 Coulomb 1 <>
+      296 31 35 Coulomb 1 <>
+      297 31 61 Coulomb 1 <>
+      298 31 67 Coulomb 1 <>
+      299 32 62 Coulomb 1 <>
+      300 32 65 Coulomb 1 <>
+      301 32 66 Coulomb 1 <>
+      302 33 63 Coulomb 1 <>
+      303 33 64 Coulomb 1 <>
+      304 33 67 Coulomb 1 <>
+      305 34 36 Coulomb 1 <>
+      306 34 65 Coulomb 1 <>
+      307 34 66 Coulomb 1 <>
+      308 35 36 Coulomb 1 <>
+      309 36 37 Coulomb 1 <>
+      310 36 60 Coulomb 1 <>
+      311 36 61 Coulomb 1 <>
+      312 36 63 Coulomb 1 <>
+      313 36 64 Coulomb 1 <>
+      314 37 59 Coulomb 1 <>
+      315 37 71 Coulomb 1 <>
+      316 38 40 Coulomb 1 <>
+      317 38 60 Coulomb 1 <>
+      318 38 70 Coulomb 1 <>
+      319 39 57 Coulomb 1 <>
+      320 39 58 Coulomb 1 <>
+      321 39 60 Coulomb 1 <>
+      322 39 69 Coulomb 1 <>
+      323 40 59 Coulomb 1 <>
+      324 40 68 Coulomb 1 <>
+      325 41 45 Coulomb 1 <>
+      326 41 49 Coulomb 1 <>
+      327 41 55 Coulomb 1 <>
+      328 41 56 Coulomb 1 <>
+      329 42 44 Coulomb 1 <>
+      330 42 54 Coulomb 1 <>
+      331 42 74 Coulomb 1 <>
+      332 43 46 Coulomb 1 <>
+      333 43 47 Coulomb 1 <>
+      334 43 48 Coulomb 1 <>
+      335 43 54 Coulomb 1 <>
+      336 43 73 Coulomb 1 <>
+      337 44 49 Coulomb 1 <>
+      338 44 72 Coulomb 1 <>
+      339 44 75 Coulomb 1 <>
+      340 45 74 Coulomb 1 <>
+      341 46 75 Coulomb 1 <>
+      342 47 75 Coulomb 1 <>
+      343 49 74 Coulomb 1 <>
+      344 54 55 Coulomb 1 <>
+      345 54 56 Coulomb 1 <>
+      346 54 72 Coulomb 1 <>
+      347 57 59 Coulomb 1 <>
+      348 58 59 Coulomb 1 <>
+      349 59 70 Coulomb 1 <>
+      350 60 68 Coulomb 1 <>
+      351 61 62 Coulomb 1 <>
+      352 62 63 Coulomb 1 <>
+      353 62 64 Coulomb 1 <>
+      354 68 69 Coulomb 1 <>
+      355 68 70 Coulomb 1 <>
+      356 70 71 Coulomb 1 <>
+      357 72 73 Coulomb 1 <>
+      358 72 74 Coulomb 1 <>
+      :::
+    }
+    ffio_vdwtypes[29] {
+      s_ffio_name
+      s_ffio_funct
+      r_ffio_c1
+      r_ffio_c2
+      s_ffio_comment
+      :::
+      1 NG2R50 LJ12_6_sig_epsilon 3.2963253 0.2 "IMIA, Imidazole from IMIA/HS[DE]; originally from prot backbone - probably not ideal"
+      2 NG2R51 LJ12_6_sig_epsilon 3.2963253 0.2 "PYRL, Pyrrole; IMIA, Imidazole from IMIA/HS[DE] and INDO/TRP; originally from prot backbone - probably not ideal"
+      3 CG2DC1 LJ12_6_sig_epsilon 3.7239566 0.068 Butadiene
+      4 CG2RC0 LJ12_6_sig_epsilon 3.3141432 0.099 INDO/TRP
+      5 HGP1 LJ12_6_sig_epsilon 0.40001352 0.046 "polar H"
+      6 OG2D1 LJ12_6_sig_epsilon 3.0290556 0.12 "carbonyl. Also consistent with adm, acetaldehyde, 11/08"
+      7 HGP4 LJ12_6_sig_epsilon 0.40001352 0.046 "polar H, conjugated amines (NA bases)"
+      8 CG2R64 LJ12_6_sig_epsilon 3.7417746 0.04 "PYRM, pyrimidine"
+      9 CG321 LJ12_6_sig_epsilon 3.5814128 0.056 "alkane (CT2), 4/98, yin, adm jr, also used by viv"
+      10 CG2O1 LJ12_6_sig_epsilon 3.5635949 0.11 "NMA pure solvent, adm jr., 3/3/93"
+      11 HGA2 LJ12_6_sig_epsilon 2.3876086 0.035 "alkane, igor, 6/05"
+      12 HGA4 LJ12_6_sig_epsilon 2.2272468 0.031 "alkene, yin,adm jr., 12/95"
+      13 HGR62 LJ12_6_sig_epsilon 1.9599772 0.046 "intermediate aromatic Hvdw"
+      14 CG3C51 LJ12_6_sig_epsilon 3.5814128 0.036 "extrapolation based on CG311, CG321 and CG3C52, kevo"
+      15 OG311 LJ12_6_sig_epsilon 3.1448725 0.1921 "og MeOH and EtOH 1/06 (was -0.1521 1.7682)"
+      16 CG2R53 LJ12_6_sig_epsilon 3.9199544 0.02 "IMIA, imidazole; bulk solvent of 5 maybridge cmpds (kevo); consistent with CG2R64"
+      17 NG2R62 LJ12_6_sig_epsilon 3.6705027 0.05 "PYRM, pyrimidine"
+      18 HGA1 LJ12_6_sig_epsilon 2.3876086 0.045 "alkane, igor, 6/05"
+      19 CG2D1 LJ12_6_sig_epsilon 3.7239566 0.068 "alkene, yin,adm jr., 12/95"
+      20 NG2S3 LJ12_6_sig_epsilon 3.2963253 0.2 PROT
+      21 NG2S2 LJ12_6_sig_epsilon 3.2963253 0.2 PROT
+      22 PG1 LJ12_6_sig_epsilon 3.8308645 0.585 "phosphate -1"
+      23 OG2P1 LJ12_6_sig_epsilon 3.0290556 0.12 NA
+      24 NG301 LJ12_6_sig_epsilon 3.5635949 0.035 "aliphatic amines"
+      25 OG303 LJ12_6_sig_epsilon 2.9399658 0.1 "phosphate/sulfate ester; LJ from THP, sng 1/06"
+      26 OG304 LJ12_6_sig_epsilon 2.9399658 0.1 "linkage oxygen in pyrophosphate/pyrosulphate"
+      27 CG2D1O LJ12_6_sig_epsilon 3.7239566 0.068 "double bond carbon adjacent to O (pyran)"
+      28 OG3C51 LJ12_6_sig_epsilon 2.9399658 0.1 "THF; LJ from THP, tetrahydropyran sng 1/06"
+      29 HGR52 LJ12_6_sig_epsilon 1.6036177 0.046 "adm jr., 6/27/90, his"
+      :::
+    }
+  }
+}
+
