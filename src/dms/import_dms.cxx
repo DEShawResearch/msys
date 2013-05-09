@@ -417,12 +417,12 @@ read_cell(Sqlite dms, System& sys, KnownSet& known) {
         col[1]=r.column("y");
         col[2]=r.column("z");
         GlobalCell& cell = sys.global_cell;
-        for (int i=0; i<3; i++) cell.A[i]=r.get_flt(col[i]);
-        r.next();
-        for (int i=0; i<3; i++) cell.B[i]=r.get_flt(col[i]);
-        r.next();
-        for (int i=0; i<3; i++) cell.C[i]=r.get_flt(col[i]);
-        r.next();
+        for (int i=0; i<3; i++) {
+            for (int j=0; j<3; j++) {
+                cell[i][j] = r.get_flt(col[j]);
+            }
+            r.next();
+        }
         if (r) {
             throw std::runtime_error("global_cell table has too many rows");
         }

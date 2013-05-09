@@ -12,7 +12,8 @@ groups:
 
  * Tables - `TermTables` are grouped and accessed by name
 
- * cell - the GlobalCell object for the `System`.
+ * cell - the unit cell vectors for the `System`, in the form of a 3x3
+   NumPy array.
 
  * nonbonded_info - the NonbondedInfo object describing the type of
    nonbonded interactions.
@@ -91,36 +92,4 @@ Ct
 
 .. autoattribute:: msys.Ct.id
 .. autoattribute:: msys.Ct.system
-
-GlobalCell
-==========
-
-The `GlobalCell` is a container for three vectors describing the periodic
-nature of the `System`. 
-
-.. autoclass:: msys.GlobalCell
-
-   .. attribute:: A
-
-      First shift vector
-
-   .. attribute:: B
-
-      Second shift vector
-
-   .. attribute:: C
-
-      Third shift vector
-
-   .. method:: __getitem__(index)
-
-      get corresponding shift vector.
-
-    
-Example::
-
-  m=msys.CreateSystem()
-  m.cell.A.x = 32           # A is now [32,0,0]
-  m.cell[1][:] = [1,2,3]    # B is now [1,2,3]
-  m.cell[2][1] = 5          # C is now [0,5,0]
 

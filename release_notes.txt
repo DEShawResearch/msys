@@ -1,3 +1,10 @@
+1.7.12 NEW: The GlobalCell class is gone; System.cell is now represented
+            a 3x3 NumPy array.  getCell() still returns a copy of the cell
+            as before.  Small API change but no change in behavior of the
+            existing interfaces.
+       NEW: The Vec3 class was removed from the Python interface; it was there
+             only to support the GlobalCell class.
+
 1.7.11 NEW: AbbreviationForElement in Python interface.
        FIXED: ct properties were being improperly shared.
        FIXED: mol2 and sdf import/export better supports multiple entries.

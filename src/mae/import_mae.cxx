@@ -44,15 +44,15 @@ namespace {
     }
 
     void import_cell( const Json& ct, SystemPtr h ) {
-        h->global_cell.A[0]=ct.get("chorus_box_ax").as_float(0);
-        h->global_cell.A[1]=ct.get("chorus_box_ay").as_float(0);
-        h->global_cell.A[2]=ct.get("chorus_box_az").as_float(0);
-        h->global_cell.B[0]=ct.get("chorus_box_bx").as_float(0);
-        h->global_cell.B[1]=ct.get("chorus_box_by").as_float(0);
-        h->global_cell.B[2]=ct.get("chorus_box_bz").as_float(0);
-        h->global_cell.C[0]=ct.get("chorus_box_cx").as_float(0);
-        h->global_cell.C[1]=ct.get("chorus_box_cy").as_float(0);
-        h->global_cell.C[2]=ct.get("chorus_box_cz").as_float(0);
+        h->global_cell[0][0]=ct.get("chorus_box_ax").as_float(0);
+        h->global_cell[0][1]=ct.get("chorus_box_ay").as_float(0);
+        h->global_cell[0][2]=ct.get("chorus_box_az").as_float(0);
+        h->global_cell[1][0]=ct.get("chorus_box_bx").as_float(0);
+        h->global_cell[1][1]=ct.get("chorus_box_by").as_float(0);
+        h->global_cell[1][2]=ct.get("chorus_box_bz").as_float(0);
+        h->global_cell[2][0]=ct.get("chorus_box_cx").as_float(0);
+        h->global_cell[2][1]=ct.get("chorus_box_cy").as_float(0);
+        h->global_cell[2][2]=ct.get("chorus_box_cz").as_float(0);
     }
 
     void add_keyval(component_t& ct, std::string const& key, Json const& blk) {

@@ -62,16 +62,15 @@ namespace desres { namespace msys {
 
     };
 
-    struct GlobalCell {
-        Vec3 A, B, C;
-        Vec3& operator[](unsigned i) { 
-          return i==0 ? A : i==1 ? B : C;
-        }
-        Vec3 const& operator[](unsigned i) const { 
-          return i==0 ? A : i==1 ? B : C;
-        }
+    class GlobalCell {
+        std::vector<double> data;
+    public:
+        GlobalCell() : data(9) {}
+        double*       operator[](unsigned i)       { return &data.at(3*i); }
+        const double* operator[](unsigned i) const { return &data.at(3*i); }
 
-        /* Allow merge when corresponding fields are equal, or when
+
+        /* Allow merge when corresponding vectors are equal, or when
          * self or other is identically 0, in which case the non-zero
          * cell is adopted. */
         void merge(GlobalCell const& other);

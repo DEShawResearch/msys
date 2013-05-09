@@ -43,13 +43,11 @@ void Dump::highlevel(SystemPtr mol) {
 
 void Dump::cell(SystemPtr mol) {
     GlobalCell const& cell = mol->global_cell;
-    fprintf(fd, "Cell A:   ");
-    for (int i=0; i<3; i++) fprintf(fd, "%s ", floated(cell.A[i]));
-    fprintf(fd, "\nCell B:   ");
-    for (int i=0; i<3; i++) fprintf(fd, "%s ", floated(cell.B[i]));
-    fprintf(fd, "\nCell C:   ");
-    for (int i=0; i<3; i++) fprintf(fd, "%s ", floated(cell.C[i]));
-    fprintf(fd, "\n");
+    for (int i=0; i<3; i++) {
+        fprintf(fd, "Cell %c:   ", 'A'+i);
+        for (int j=0; j<3; j++) fprintf(fd, "%s ", floated(cell[i][j]));
+        fprintf(fd, "\n");
+    }
 }
 
 void Dump::atoms(SystemPtr mol) {

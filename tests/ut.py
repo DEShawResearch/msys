@@ -1130,22 +1130,33 @@ class TestMain(unittest.TestCase):
         
     def testGlobalCell(self):
         m=msys.CreateSystem()
-        m.cell.A.x=32
-        self.assertEqual(m.cell.A.x, 32)
+        m.cell[0][0]=32
+        self.assertEqual(m.cell[0][0], 32)
         tgt=[1,2,3]
-        m.cell.A[:]=tgt
+        m.cell[0][:]=tgt
         m.cell[1][:]=tgt
-        self.assertEqual(m.cell.A, m.cell.B)
-        self.assertNotEqual(m.cell.A, m.cell.C)
+        self.assertEqual(m.cell[0].tolist(), m.cell[1].tolist())
+        self.assertNotEqual(m.cell[0].tolist(), m.cell[2].tolist())
         with self.assertRaises(IndexError): m.cell[3]
         with self.assertRaises(IndexError): m.cell[-4]
 
-        # accept numpy floats instead of doubles. 
-        c=NP.zeros((3,3), 'f')
+        c=m.getCell()
+        self.assertEqual(c.tolist(), m.cell.tolist())
+        c[1][2]=99
+        self.assertNotEqual(c.tolist(), m.cell.tolist())
         m.setCell(c)
-        # FIXME: this is hard to make work due to how I implemented the
-        # bindings.  
-        #m.cell.A[:] = c[0]
+        self.assertEqual(c.tolist(), m.cell.tolist())
+        m.setCell(c.astype('f'))
+        self.assertEqual(c.tolist(), m.cell.tolist())
+
+        # check lifetime
+        m2=msys.CreateSystem()
+        c=m2.cell
+        del m2
+        c
+        c
+        self.assertEqual(c.tolist(), [[0,0,0],[0,0,0],[0,0,0]])
+
 
     def testNonbondedInfo(self):
         m=msys.CreateSystem()

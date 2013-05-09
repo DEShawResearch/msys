@@ -309,9 +309,9 @@ void WithinPredicate::eval( Selection& S ) {
             max[i] += rad;
         }
         IdList repids;  /* ids of replicated atoms */
-        desres::msys::Vec3 const& A = sys->global_cell.A;
-        desres::msys::Vec3 const& B = sys->global_cell.B;
-        desres::msys::Vec3 const& C = sys->global_cell.C;
+        const double* A = sys->global_cell[0];
+        const double* B = sys->global_cell[1];
+        const double* C = sys->global_cell[2];
         for (int i=-1; i<=1; i++) {
             double ax = A[0]*i;
             double ay = A[1]*i;

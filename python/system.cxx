@@ -10,18 +10,6 @@ using namespace desres::msys;
 
 namespace {
 
-    Vec3& get_A(GlobalCell& c) { return c.A; }
-    Vec3& get_B(GlobalCell& c) { return c.B; }
-    Vec3& get_C(GlobalCell& c) { return c.C; }
-    Vec3& cell_getitem(GlobalCell& c, Py_ssize_t i) {
-        if (i<0) i+=3;
-        if (i<0 || i>=3) {
-            PyErr_Format(PyExc_IndexError, "Index must be 0, 1 or 2");
-            throw_error_already_set();
-        }
-        return c[i];
-    }
-
     atom_t& system_atom(System& m, Id id) { return m.atom(id); }
     bond_t& system_bond(System& m, Id id) { return m.bond(id); }
     residue_t& system_residue(System& m, Id id) { return m.residue(id); }
@@ -137,6 +125,15 @@ namespace {
 
     void destructor(PyObject* obj) { 
         Py_DECREF(obj); 
+    }
+
+    PyObject* global_cell(object sysobj) {
+        System& sys = extract<System&>(sysobj);
+        npy_intp dims[2] = {3,3};
+        PyObject* arr = PyArray_SimpleNewFromData(2,dims,NPY_FLOAT64,
+                sys.global_cell[0]);
+        Py_INCREF(PyArray_BASE(arr)=reinterpret_cast<PyObject*>(sysobj.ptr()));
+        return arr;
     }
 
     PyObject* sys_getpos(System const& sys, object idobj) {
@@ -438,13 +435,6 @@ namespace desres { namespace msys {
         import_array();
         if (PyErr_Occurred()) return;
         
-        class_<GlobalCell>("GlobalCell", no_init)
-            .add_property("A", make_function(get_A, return_ptr()))
-            .add_property("B", make_function(get_B, return_ptr()))
-            .add_property("C", make_function(get_C, return_ptr()))
-            .def("__getitem__", cell_getitem, return_ptr())
-            ;
-
         class_<NonbondedInfo>("NonbondedInfo", no_init)
             .def_readwrite("vdw_funct", &NonbondedInfo::vdw_funct,
                     "Name of the vdw functional form; e.g., 'vdw_12_6'")
@@ -475,7 +465,7 @@ namespace desres { namespace msys {
             .def("__hash__",    obj_hash<SystemPtr>)
             .def("create",  &System::create).staticmethod("create")
             .def_readwrite("name", &System::name)
-            .def_readwrite("global_cell", &System::global_cell)
+            .add_property("global_cell", global_cell)
             .def_readwrite("nonbonded_info", &System::nonbonded_info)
 
             /* accessor */

@@ -490,12 +490,12 @@ static void export_cell(const System& sys, Sqlite dms) {
             "  x float, y float, z float)");
     Writer w = dms.insert("global_cell");
     dms.exec( "begin");
-    for (int i=0; i<3; i++) w.bind_flt(i+1,cell.A[i]);
-    w.next();
-    for (int i=0; i<3; i++) w.bind_flt(i+1,cell.B[i]);
-    w.next();
-    for (int i=0; i<3; i++) w.bind_flt(i+1,cell.C[i]);
-    w.next();
+    for (int i=0; i<3; i++) {
+        for (int j=0; j<3; j++) {
+            w.bind_flt(j+1, cell[i][j]);
+        }
+        w.next();
+    }
     dms.exec( "commit");
 }
 

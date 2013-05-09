@@ -8,7 +8,7 @@ import _msys
 import numpy
 import sys
 
-from _msys import GlobalCell, NonbondedInfo, version, hexversion
+from _msys import NonbondedInfo, version, hexversion
 from _msys import RadiusForElement, MassForElement, ElementForAbbreviation
 from _msys import GuessAtomicNumber, AbbreviationForElement
 from atomsel import Atomsel
@@ -991,11 +991,11 @@ class System(object):
     def setCell(self, cell):
         ''' set unit cell from from 3x3 array '''
         for i in range(3):
-            self.cell[i][:] = map(float, cell[i])
+            self.cell[i][:] = cell[i]
 
     def getCell(self):
-        ''' return unit cell as 3x3 array '''
-        return [self.cell[i][:] for i in range(3)]
+        ''' return copy of unit cell as 3x3 numpy array '''
+        return self.cell.copy()
 
     @property
     def center(self):
@@ -1766,24 +1766,3 @@ def FindDistinctFragments(system):
     ''' Return fragids of representative fragments.  '''
     return _msys.FindDistinctFragments(system._ptr)
 
-''' customize Vec3 '''
-from _msys import Vec3
-def __vec3_getitem(self, key):
-    tmp = [self.x, self.y, self.z]
-    return tmp[key]
-
-def __vec3_setitem(self, key, val):
-    tmp = [self.x, self.y, self.z]
-    tmp[key] = val
-    self.x, self.y, self.z = tmp
-Vec3.__getitem__ = __vec3_getitem
-Vec3.__setitem__ = __vec3_setitem
-Vec3.__repr__=lambda self: str((self.x, self.y, self.z))
-
-''' customize GlobalCell '''
-def __globalcell_str(self):
-    A=[x for x in self.A]
-    B=[x for x in self.B]
-    C=[x for x in self.C]
-    return str([A,B,C])
-GlobalCell.__str__ = __globalcell_str

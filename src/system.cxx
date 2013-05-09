@@ -965,10 +965,17 @@ void NonbondedInfo::merge(NonbondedInfo const& nb) {
 #undef MERGE_NONBONDED_INFO
 
 void GlobalCell::merge(GlobalCell const& gc) {
-    const Vec3 zero;
-    if (A==zero && B==zero && C==zero) {
-        *this = gc;
-    } else if (A!=gc.A || B!=gc.B || C != gc.C) {
-        MSYS_FAIL("Incompatible global cells");
+    double zero[3] = {0,0,0};
+    const size_t sz = sizeof(zero);
+    for (int i=0; i<3; i++) {
+        double* oldvec = (*this)[i];
+        const double* newvec = gc[i];
+        if (!memcmp(oldvec,zero,sz)) {
+            memcpy(oldvec, newvec,sz);
+        } else if (!memcmp(newvec,zero,sz)) {
+            /* ignore */
+        } else if (memcmp(oldvec,newvec,sz)) {
+            MSYS_FAIL("Incompatible global cells");
+        }
     }
 }
