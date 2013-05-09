@@ -38,7 +38,7 @@ namespace desres { namespace msys {
     private:                                                            \
         vtype name;                                                     \
     public:                                                             \
-        const vtype& get_##name() const { return name; }               \
+        const vtype& get_##name() const { return name; }                \
         void set_##name(const vtype& newval) { _needRebuild=true; _valid=false; name = newval; }
         /* scale for atoms lone pair electronegativity. 
            Set to 0.0 to remove lone pairs from objective */
@@ -46,22 +46,19 @@ namespace desres { namespace msys {
         /* penalty for positivly charged atoms. 
            Set to 0.0 to remove penalty for forming positivly charged atoms  */
         GETSETREBUILDVAR(double, atom_plus_charge_penalty);
-        /* scale factor for positivly charged atoms. 
-           Set to 0.0 to remove scale factor forming positivly charged atoms  */
-        GETSETREBUILDVAR(double, atom_plus_charge_scale);
         /* penalty for negativly charged atoms. 
            Set to 0.0 to remove penalty for forming negativly charged atoms  */
         GETSETREBUILDVAR(double, atom_minus_charge_penalty);
+        /* scale factor for positivly charged atoms. 
+           Set to 0.0 to remove scale factor forming positivly charged atoms  */
+        GETSETREBUILDVAR(double, atom_plus_charge_scale);
         /* scale factor for negativly charged atoms. 
            Set to 0.0 to remove scale factor forming negativly charged atoms  */
         GETSETREBUILDVAR(double, atom_minus_charge_scale);
-        /* penalty for charged terminal atoms. 
-           Set to 0.0 to remove penalty for forming charged terminal atoms
+        /* penalty for hypervalent atoms. 
+           Set to 0.0 to remove penalty for forming hypervalent atoms
            without adjacent compensating charge */
-        GETSETREBUILDVAR(double, atom_terminal_charge_penalty);
-        /* penalty for removing bond to "hypervalent" atoms. 
-           Set to 0.0 to remove penalty for removing bonds to hypervalent atoms */
-        GETSETREBUILDVAR(double, bond_fisure_penalty);
+        GETSETREBUILDVAR(double, hypervalent_penalty);
         /* penalty for positivly charged components.  
            Set to 0.0 to remove penalty for forming positivly charged components  */
         GETSETREBUILDVAR(double, component_plus_charge_penalty);
@@ -71,7 +68,7 @@ namespace desres { namespace msys {
         /* penalty for not forming aromatic rings. 
            Set to 0.0 to remove penalty for not forming aromatic rings */
         GETSETREBUILDVAR(double, aromatic_ring_penalty);
-        /* largest allowed absolute atom charge (if gen_charge_penalty_for_atom) */
+        /* largest allowed absolute atom charge */
         GETSETREBUILDVAR(unsigned, absmax_atom_charge);
         /* largest allowed absolute component (resonant system) charge */
         GETSETREBUILDVAR(unsigned, max_component_charge);
@@ -81,22 +78,20 @@ namespace desres { namespace msys {
         BondOrderAssigner(){
             _needRebuild=true; 
             _valid=false;
-            atom_lone_pair_scale=0.60;
-            atom_plus_charge_penalty=1.00;
-            atom_plus_charge_scale=1.75;
-            atom_minus_charge_penalty=1.25;
-            atom_minus_charge_scale=1.25;
-            atom_terminal_charge_penalty=1.25;
-            bond_fisure_penalty=2.75;
-            component_plus_charge_penalty=0.75;
-            component_minus_charge_penalty=1.00;
-            aromatic_ring_penalty=0.00;
+            atom_lone_pair_scale=0.9;
+            atom_plus_charge_penalty=0.3;
+            atom_minus_charge_penalty=0.30;
+            atom_plus_charge_scale=2.00;
+            atom_minus_charge_scale=1.20;
+            hypervalent_penalty=1.25;
+            component_plus_charge_penalty=0.25;
+            component_minus_charge_penalty=0.25;
+            aromatic_ring_penalty=0.30;
             absmax_atom_charge=2;
             max_component_charge=6; 
             _filter=NULL;
         };
         ~BondOrderAssigner(){ delete _filter;};
-
 
         static boost::shared_ptr<BondOrderAssigner> create(SystemPtr sys, 
                                                            IdList const& fragments);
@@ -188,10 +183,11 @@ namespace desres { namespace msys {
             int ilpUB;
             int qCol;
             int qCtr;
+            int hyperCol;
             std::set<Id> qTerm;
             ilpAtom(){};
             ilpAtom(int c,int l, int u):ilpCol(c),ilpLB(l),ilpUB(u),
-                                        qCol(0),qCtr(0){};
+                                        qCol(0),qCtr(0),hyperCol(0){};
         };
         typedef std::map<Id, ilpAtom> ilpAtomMap;
         
@@ -230,7 +226,6 @@ namespace desres { namespace msys {
         lpsolve::_lprec *_component_reslp;      
 
         void set_atom_charge_penalties();
-        void set_atom_terminal_charge_penalties();
         void set_atom_lonepair_penalties();
         void set_bond_penalties();
         void set_aromatic_ring_penalties();
@@ -249,6 +244,8 @@ namespace desres { namespace msys {
     };
 
 }}
+#define GENRESFORMS 1
+
 #define DEBUGPRINT  0
 #define DEBUGPRINT1 0
 #define DEBUGPRINT2 0

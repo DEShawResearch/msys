@@ -11,7 +11,6 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys)
      * hybridization */
     BOOST_FOREACH(Id ai, sys->atoms()) {
         atom_data_t& a = _atoms[ai];
-        double res_valence = 0;
         BOOST_FOREACH(Id bi, sys->bondsForAtom(ai)) {
             bond_t const& bnd = sys->bond(bi);
             Id aj = bnd.other(ai);
@@ -22,7 +21,6 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys)
                         << bi << " of system " << sys->name);
             if (anum_j == 1) ++a.hcount;
             a.valence += bnd.order;
-            res_valence += bnd.resonant_order;
             a.degree += 1;
         }
         int formal_charge = sys->atom(ai).formal_charge;
@@ -32,19 +30,12 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys)
             MSYS_FAIL("Invalid formal charge or bond orders for atom "
                     << ai << " of system " << sys->name);
         a.lone_pairs = electrons / 2;
-        a.resonant_lone_pairs = (val - res_valence
-                - sys->atom(ai).resonant_charge) / 2;
-        /* Check that resonant lone pairs is not negative */
-        if (a.resonant_lone_pairs < -0.00001)
-            MSYS_FAIL("Invalid resonant charge or bond orders for atom "
-                    << ai << " of system " << sys->name);
-        if (sys->atom(ai).atomic_number == 1 || a.degree == 0)
+
+        if (sys->atom(ai).atomic_number == 1 || a.degree == 0){
             a.hybridization = 0;
-        else
-            /* Add 0.00001 before taking floor to prevent possible floating
-             * point error */
-            a.hybridization = std::min(3, std::max(1,
-                    int(a.degree + a.resonant_lone_pairs + 0.00001 - 1)));
+        }else{
+            a.hybridization = std::max(1, a.degree + a.lone_pairs - 1);
+        }
     }
     /* Get rings and ring systems, assign ring_bonds and rings_idx */
     compute_ring_systems();
@@ -58,14 +49,17 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys)
         /* Check against 0.00001 instead of 0 to prevent possible floating
          * point error */
         if (element >= 5 && element <= 8 && a.hybridization == 3
-                && a.resonant_lone_pairs > 0.00001) {
+                && a.lone_pairs > 0) {
             if (a.aromatic) {
                 a.hybridization = 2;
                 continue;
             }
             BOOST_FOREACH(Id aj, sys->bondedAtoms(ai)) {
-                if (_atoms[aj].hybridization == 2)
+                if (_atoms[aj].hybridization == 2 || 
+                    (a.degree==1 && _atoms[aj].valence-_atoms[aj].degree==1)){
                     a.hybridization = 2;
+                    break;
+                }
             }
         }
     }
@@ -99,11 +93,9 @@ void desres::msys::AnnotatedSystem::compute_ring_systems() {
         /* All atoms in aromatic ring must be potentially sp2 (meaning sp2 or
          * hybridization greater than 2 with free electrons) */
         BOOST_FOREACH(Id atom, SSSR[i]) {
-            /* Check against 0.00001 instead of 0 to prevent possible floating
-             * point error */
             if (_atoms[atom].hybridization != 2 &&
                     (_atoms[atom].hybridization < 2
-                     || _atoms[atom].resonant_lone_pairs < 0.00001))
+                     || _atoms[atom].lone_pairs == 0))
                 possibly_aromatic = false;
         }
         if (possibly_aromatic) {

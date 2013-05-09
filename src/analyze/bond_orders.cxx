@@ -23,6 +23,14 @@ namespace lpsolve {
 
 
 namespace {
+    double clamp(double v){
+        static const double increment=pow(2,20); // 20 binary digits = 1048576
+        return nearbyint(v*increment)/increment;
+    }
+
+    /* "Natural" electronegativity for lp */
+    static const double enegLP=clamp(0.56);
+
     /* simple helper function to extract a value from a map (and assert that its found) */
     template<typename C>
     typename C::mapped_type const& asserted_find(C const& container, typename C::key_type const& key){
@@ -217,17 +225,14 @@ namespace desres { namespace msys {
                 std::vector<int> minmaxbo=boa->minmax_bond_order(aid0,aid1);
 
 #if DEBUGPRINT1
-                printf("MinMax Bond Orders for Bid %u (Aids %u %u): BO Range = %d %d  (LPBoost= %d)\n",
-                       bid,aid0,aid1,minmaxbo[0],minmaxbo[1],minmaxbo[2]);
+                printf("MinMax Bond Orders for Bid %u (Aids %u %u): BO Range = %d %d \n",
+                       bid,aid0,aid1,minmaxbo[0],minmaxbo[1]);
 #endif
+
                 tmprange.lb=minmaxbo[0];
                 tmprange.ub=minmaxbo[1];
                 boa->_bond_order.insert(std::make_pair(bid,tmprange));
-                if(minmaxbo[2]==0){
-                    boostLP.insert(aid0);
-                }else if(minmaxbo[2]==1){
-                    boostLP.insert(aid1);
-                }
+
             }
         }
 
@@ -330,7 +335,7 @@ namespace desres { namespace msys {
         }else{
             /* Everything else */
             maxFree=4-nbonds;
-            if(period>1 && nbonds>2)maxFree+=1;
+            if(period>1 && nbonds>2)maxFree=std::max(maxFree+1,1);
         }
         return std::max(0,maxFree);
     }
@@ -347,7 +352,7 @@ namespace desres { namespace msys {
             int anum=_mol->atom(aid).atomic_number;
 
             /* Set minimum bond order. 1 for everything but hypervalent */
-            int minbo= (PeriodForElement(anum)>2 && nbonds>2) ? 0 : 1;
+            int minbo= 1;
             
             /* now determine max bond order */
             int maxbo;
@@ -392,49 +397,44 @@ namespace desres { namespace msys {
                 }else if (nbonds<6){
                     maxbo=2;
                 }else{
-                    maxbo=1;
+                    maxbo=1;         
                 }
             }
             anums.push_back(anum);
             minmaxbo.push_back(std::pair<int,int>(minbo,maxbo));
         }
-        /* Hydrogen must always be bound, even to "hypervalents"... No hydride ions allowed */
-        if(anums[0]==1 || anums[1]==1){
-            minmaxbo[0].first=minmaxbo[1].first=1;
-        }
         int minbo=std::min(minmaxbo[0].first, minmaxbo[1].first);
         int maxbo=std::min(minmaxbo[0].second,minmaxbo[1].second);
-        int boostLP=-1;
-        if(minmaxbo[0].first==0 && minmaxbo[1].first!=0){
-            boostLP=1; // aid1 can have extra lp
-        }else if(minmaxbo[0].first!=0 && minmaxbo[1].first==0){
-            boostLP=0; // aid0 can have extra lp
-        }
-        std::vector<int> result(3);
+       
+        std::vector<int> result(2);
         result[0]=minbo;
         result[1]=maxbo;
-        result[2]=boostLP;
         return result;
     }
 
-    /* Function that trys to presolve for unknown bond orders / lp counts 
+    /* Function that trys to presolve for unknown bond orders / lp counts
        Its can only presolve for cases where there is a single unknown.
     */
     void BondOrderAssigner::presolve_octets(IdList &unsolved){
-        
+
         unsolved=_fragatoms;
         IdList keep;
         keep.reserve(_fragatoms.size());
 
         int npresolve=0;
         int nsolved=0;
-        
+
         bool stillsolving;
         do {
             stillsolving=false;
             BOOST_FOREACH(Id aid1, unsolved){
                 atom_t const& atm1=_mol->atom(aid1);
-                int octval=PeriodForElement(atm1.atomic_number)<=1 ? 1 : 4; //DataForElement(atm1.atomic_number).maxOct/2;
+                int period=PeriodForElement(atm1.atomic_number);
+                if(period>2){
+                    keep.push_back(aid1);
+                    continue;
+                }
+                int octval=period<=1 ? 1 : 4; 
                 
                 IdList bonds=_mol->filteredBondsForAtom(aid1, *_filter);
                 int unkcount=0;
@@ -654,6 +654,7 @@ namespace desres { namespace msys {
         _component_resonant_solution.assign(nvars,0);
         std::vector<double> ones(nvars,1.0);
         std::vector< std::vector<int> > newcons; 
+
         while(true){
             for (unsigned i=1; i<nvars;++i){
                 _component_resonant_solution[i]+=last_solution[i];
@@ -697,7 +698,10 @@ namespace desres { namespace msys {
                 lpsolve::print_solution(resLP,1);
 #endif
                 lpsolve::delete_lp(resLP); 
-                if(objf != newObjf) break;
+                if(objf != newObjf){
+                   printf("resonant solution objective is larger by %e\n",newObjf-objf);
+                   break;
+                }
             }else{
 #if DEBUGPRINT
                 printf("No resonance Solution found for component %u\n",_component_id);
@@ -727,8 +731,15 @@ namespace desres { namespace msys {
         assert(_component_solution_valid);
 
         get_ilp_solution(_component_lp,_component_solution);
-        
+#if GENRESFORMS
         generate_resonance_forms();
+#else   
+        _component_resonant_solution.resize(_component_solution.size());
+        for(Id i=0; i<_component_solution.size();++i){
+            _component_resonant_solution[i]=_component_solution[i];
+        }
+#endif
+
 
 #if DEBUGPRINT1
         for(Id i=0; i<_component_solution.size();++i){
@@ -792,13 +803,15 @@ namespace desres { namespace msys {
         _component_atom_cols.clear();
         BondOrderAssignerPtr parent=_parent.lock();
         std::ostringstream ss;
+ 
+        double lps=clamp(parent->atom_lone_pair_scale);
 
         BOOST_FOREACH(Id aid1, _component_atoms_present){
             electronRange const& range= asserted_find(parent->_atom_lp,aid1);
             ss.str("");
             ss << "a_"<<aid1 << ":"<<range.lb;
 
-            double objv=-parent->atom_lone_pair_scale*DataForElement(parent->_mol->atom(aid1).atomic_number).eneg;
+            double objv=-lps*(enegLP+clamp(DataForElement(parent->_mol->atom(aid1).atomic_number).eneg));      
 
             int colid=add_column_to_ilp(_component_lp,ss.str(),range.lb*objv, 0, 1);
             _component_atom_cols.insert(ilpAtomMap::value_type(aid1,ilpAtom(colid,range.lb,range.ub))); 
@@ -818,7 +831,8 @@ namespace desres { namespace msys {
 
         std::ostringstream ss;
         BOOST_FOREACH(Id aid1, _component_atoms_present){
-            float eneg1=DataForElement(parent->_mol->atom(aid1).atomic_number).eneg;
+            int anum1=parent->_mol->atom(aid1).atomic_number;
+            double eneg1=clamp(DataForElement(anum1).eneg);
             IdList bonds=parent->_mol->filteredBondsForAtom(aid1, *parent->_filter);
             BOOST_FOREACH(Id bid, bonds){
                 electronRange const& range= asserted_find(parent->_bond_order, bid);
@@ -830,16 +844,19 @@ namespace desres { namespace msys {
                 Id aid2=parent->_mol->bond(bid).other(aid1);
                 ss.str("");
                 ss << "b_"<<aid1<<"_"<<aid2<<":"<<range.lb;
-
-                double objv = -0.5*(eneg1+DataForElement(parent->_mol->atom(aid2).atomic_number).eneg);
-                
-                int colid=add_column_to_ilp(_component_lp,ss.str(),range.lb==0 ? parent->bond_fisure_penalty : range.lb*objv ,0,1);
+                 
+                int anum2=parent->_mol->atom(aid2).atomic_number;
+                double hyper=(PeriodForElement(anum1)>2 || PeriodForElement(anum2)>2)? 1.01 : 1.0;
+                double objv = -(eneg1 + clamp(DataForElement(anum2).eneg));
+                double factor=clamp(hyper*range.lb*(1.0+0.01*range.lb*(1-range.lb)));
+                int colid=add_column_to_ilp(_component_lp,ss.str(), factor*objv ,0,1);
 
                 _component_bond_cols.insert(iter,ilpBondMap::value_type(bid,ilpBond(colid,range.lb,range.ub)));
                 for(int i=range.lb+1; i<=range.ub;++i){
                     ss.str("");
                     ss << "b_"<<aid1<<"_"<<aid2<<":"<<i;
-                    add_column_to_ilp(_component_lp,ss.str(),i*objv, 0, 1);
+                    factor=clamp(hyper*i*(1.0+0.01*i*(1-i)));
+                    add_column_to_ilp(_component_lp,ss.str(),factor*objv, 0, 1);
                 }
             }
         }
@@ -849,12 +866,14 @@ namespace desres { namespace msys {
     bool BondOrderAssigner::allow_hextet_for_atom(Id aid1){
         int anum1=_mol->atom(aid1).atomic_number;
         Id nbonds=_mol->filteredBondsForAtom(aid1, *_filter).size();
-        /* Allow hextets for Al, B, unsaturated carbon, nitrogen and oxygen */
+        /* Allow hextets for... */
         if ( 
-            ( (anum1==5 || anum1==13) && (nbonds<4)             ) 
-            ||(anum1==6               && (nbonds==3 || nbonds==2) )
-            //|| (anum1==7               && (nbonds==2 || nbonds==1) )
-            //|| (anum1==8               && (nbonds==1             ) )
+            (  (anum1==5 || anum1==13) && (nbonds<4)               ) // Al, B
+            || (anum1==6               && (nbonds==3 || nbonds==2) ) // unsaturated carbon
+            /*
+            || (anum1==7               && (nbonds==2 || nbonds==1) ) // unsaturated nitrogen
+            || (anum1==8               && (nbonds==1             ) ) // unsaturated oxygen
+            */
             ) return true;
         return false;
     }
@@ -862,9 +881,17 @@ namespace desres { namespace msys {
     /* penalize atoms for having a charge */
     void ComponentAssigner::set_atom_charge_penalties(){
 
-        BondOrderAssignerPtr parent=_parent.lock();
- 
         std::ostringstream ss;
+        BondOrderAssignerPtr parent=_parent.lock();
+
+        static const double PosZero=0.25*clamp(DataForElement(6).eneg)+0.75*clamp(DataForElement(7).eneg);
+        static const double NegZero=clamp(DataForElement(9).eneg);
+        double shift=clamp(parent->atom_lone_pair_scale)*(enegLP);
+        double qpp=clamp(parent->atom_plus_charge_penalty);
+        double qps=clamp(parent->atom_plus_charge_scale);
+        double qmp=clamp(parent->atom_minus_charge_penalty);
+        double qms=clamp(parent->atom_minus_charge_scale);
+        double hyper=clamp(parent->hypervalent_penalty);
 
         BOOST_FOREACH(ilpAtomMap::value_type & kv, _component_atom_cols){
             Id aid1=kv.first;
@@ -872,69 +899,28 @@ namespace desres { namespace msys {
             // if (parent->_chargeinfo.find(aid1) != parent->_chargeinfo.end()) continue;
            
             int anum=parent->_mol->atom(aid1).atomic_number;
-            double eneg=DataForElement(anum).eneg;
-            double qPlus=parent->atom_plus_charge_penalty+
-                parent->atom_plus_charge_scale*fabs(DataForElement(7).eneg-eneg);
-            double qMinus=parent->atom_minus_charge_penalty +
-                parent->atom_minus_charge_scale*fabs(DataForElement(9).eneg-eneg);
+            double eneg=clamp(DataForElement(anum).eneg);
+            double qPlus =qpp+qps*fabs(eneg-PosZero);
+            double qMinus=qmp+qms*fabs(eneg-NegZero);
 
             ss.str("");
             ss << "qM_"<<aid1;
             /* Only need to keep track of the first column id */
-            kv.second.qCol=add_column_to_ilp(_component_lp,ss.str(),qMinus,0,parent->absmax_atom_charge);
+            kv.second.qCol=add_column_to_ilp(_component_lp,ss.str(),qMinus+shift,0,parent->absmax_atom_charge);
                         
             ss.str("");
             ss << "qP_"<<aid1;
             add_column_to_ilp(_component_lp,ss.str(), qPlus ,0,parent->absmax_atom_charge);
+
+            if (PeriodForElement(anum)>2){
+                ss.str("");
+                ss << "hyper_"<<aid1;
+                int maxHyper=std::max(0,GroupForElement(anum)-14);
+                kv.second.hyperCol=add_column_to_ilp(_component_lp,ss.str(), hyper,0,maxHyper);
+            }
+
         }
     }
-
-    /* penalize neighbor atom for not neutralizing terminal charges */
-    void ComponentAssigner::set_atom_terminal_charge_penalties(){
-
-        BondOrderAssignerPtr parent=_parent.lock();
- 
-        std::ostringstream ss;
-        
-        /* find possibly charged terminal atoms, and adjacent atoms */
-        typedef std::map<Id,std::set<Id> > nearbyIds;
-        nearbyIds central;
-        BOOST_FOREACH(ilpAtomMap::value_type & kv, _component_atom_cols){
-            if(kv.second.qCol==0) continue;
-            Id aid1=kv.first;
-            IdList bonds=parent->_mol->filteredBondsForAtom(aid1, *parent->_filter);
-            IdList adjacent;
-            BOOST_FOREACH(Id bid, bonds){
-                Id aid2=parent->_mol->bond(bid).other(aid1);
-                if(parent->_mol->atom(aid2).atomic_number>1) adjacent.push_back(aid2);
-            }
-            if(adjacent.size()!=1) continue;
-            if(_component_atoms_present.count(adjacent[0])){
-                central[adjacent[0]].insert(aid1);
-            }else{
-                central[aid1].insert(adjacent[0]);
-            }
-        }
-
-        BOOST_FOREACH(nearbyIds::value_type & kv, central){
-            Id aid1=kv.first;
-            ilpAtom & iatom= _component_atom_cols.find(aid1)->second;
-            if(!iatom.qCol) continue;
-            assert(kv.second.size() && !iatom.qTerm.size());
-            iatom.qTerm.swap(kv.second);
-
-            ss.str("");
-            ss << "qCtrM_"<<aid1;
-            iatom.qCtr=add_column_to_ilp(_component_lp,ss.str(), parent->atom_terminal_charge_penalty, 0,parent->absmax_atom_charge);
-
-            ss.str("");
-            ss << "qCtrP_"<<aid1;
-            add_column_to_ilp(_component_lp,ss.str(), parent->atom_terminal_charge_penalty, 0,parent->absmax_atom_charge);
-        }
-    }
-
-
-
 
     /* penalize rings for not being aromatic */
     void ComponentAssigner::set_aromatic_ring_penalties(){
@@ -942,7 +928,7 @@ namespace desres { namespace msys {
         _component_ring_cols.clear();
         BondOrderAssignerPtr parent=_parent.lock();
 
-        double objv=parent->aromatic_ring_penalty;
+        double objv=clamp(parent->aromatic_ring_penalty);
 
         std::ostringstream ss;
         // Try to make rings aromatic 
@@ -986,11 +972,13 @@ namespace desres { namespace msys {
         ss.str("");
         ss << "qCompm_"<< _component_id; 
         /* Only need to keep track of the first column id */
-        _component_charge_col=add_column_to_ilp(_component_lp,ss.str(), parent->component_minus_charge_penalty,0,parent->max_component_charge);
+        _component_charge_col=add_column_to_ilp(_component_lp,ss.str(), 
+               clamp(parent->component_minus_charge_penalty),0,parent->max_component_charge);
         
         ss.str("");
         ss << "qCompp_"<< _component_id; 
-        add_column_to_ilp(_component_lp,ss.str(),parent->component_plus_charge_penalty,0,parent->max_component_charge);
+        add_column_to_ilp(_component_lp,ss.str(),
+               clamp(parent->component_plus_charge_penalty),0,parent->max_component_charge);
         
     }
 
@@ -1099,6 +1087,9 @@ namespace desres { namespace msys {
                     lpsolve::add_constraint(_component_lp,&rowcopy[0],ROWTYPE_LE,atomoct); 
                     lpsolve::add_constraint(_component_lp,&rowcopy[0],ROWTYPE_GE,atomoct-1);
                 }else{
+                    if(iatom.hyperCol){
+                        rowcopy[iatom.hyperCol]=-1;
+                    }
                     /* equality constraint */
                     lpsolve::add_constraint(_component_lp,&rowcopy[0],ROWTYPE_EQ,atomoct);               
                 }
@@ -1142,6 +1133,29 @@ namespace desres { namespace msys {
                 }
             }
 
+            /* Additional fixups, force 2 connected carbon/nitrogen adjacent to terminal carbon/nitrogen to be sp hybridized
+               sum of bo=4 (either =X= or -X#)
+            */
+            if((anum0==6 || anum0==7) && nbonds==2){
+                bool sp=false;
+                BOOST_FOREACH(Id bid, bonds){
+                    Id aid1=parent->_mol->bond(bid).other(aid0);
+                    int anum1=parent->_mol->atom(aid1).atomic_number;
+                    if((anum1!=6 && anum1!=7) || 1!=parent->_mol->filteredBondsForAtom(aid1,*parent->_filter).size()) continue;
+                    sp=true;
+                    break;
+                }
+                if(sp){
+                    rowdata.assign(ncols+1,0);
+                    BOOST_FOREACH(Id bid, bonds){
+                        ilpBond const& ibond = asserted_find(_component_bond_cols,bid);
+                        for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB; ++i,++icol){
+                            rowdata.at(icol)=i;
+                        }
+                    }
+                    lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_EQ,4);
+                }
+            }
         }
     }
 
@@ -1231,14 +1245,19 @@ namespace desres { namespace msys {
                 /* corrected for how many are available in the pi system */
                 target+=2;
             }
-            BOOST_FOREACH( Id aid, ratoms){
-                ilpAtom const& iatom = asserted_find(_component_atom_cols, aid);
-                /* two electrons per lone pair... */
-                for(int icol=iatom.ilpCol, i=iatom.ilpLB; i<=iatom.ilpUB;++i,++icol){
-                    rowdata.at(icol)=i*2;
+
+            /* if aromaticity can be satified using alternating double bonds, do that instead
+               of including lone pairs */
+            if((ratoms.size()-2)%4 !=0){
+                BOOST_FOREACH( Id aid, ratoms){
+                    ilpAtom const& iatom = asserted_find(_component_atom_cols, aid);
+                    /* two electrons per lone pair... */
+                    for(int icol=iatom.ilpCol, i=iatom.ilpLB; i<=iatom.ilpUB;++i,++icol){
+                        rowdata.at(icol)=i*2;
+                    }
+                    /* corrected for how many are available in the pi system */
+                    target+=2*(3 - parent->_mol->filteredBondsForAtom(aid, *parent->_filter).size());
                 }
-                /* corrected for how many are available in the pi system */
-                target+=2*(3 - parent->_mol->filteredBondsForAtom(aid, *parent->_filter).size());
             }
             
             /* constraint on subtracting electrons from ring */
@@ -1275,7 +1294,6 @@ namespace desres { namespace msys {
         set_atom_lonepair_penalties();
         set_bond_penalties();
         set_atom_charge_penalties();
-        set_atom_terminal_charge_penalties();
         set_aromatic_ring_penalties();
         set_component_charge_penalty();
 
@@ -1618,27 +1636,5 @@ namespace desres { namespace msys {
                 throw std::runtime_error("SolutionToAtoms failed. atm.formal_charge != iqtarget or fabs(resq - dqtarget)>1E-8");
             }
         }
-
-        /* Convert dative bonds to hypervalent */
-        BOOST_FOREACH(Id aid0, _fragatoms){
-            atom_t& atm0=_mol->atom(aid0);
-            if(PeriodForElement(atm0.atomic_number)<3 || atm0.formal_charge<=0) continue;
-            IdList bonds=_mol->filteredBondsForAtom(aid0, *_filter);
-            BOOST_FOREACH(Id bid, bonds){
-                bond_t & bond=_mol->bond(bid);
-                Id aid1=bond.other(aid0);
-                atom_t& atm1=_mol->atom(aid1);
-                if(bond.order >1 || atm1.formal_charge>=0) continue;
-                solutionMap::iterator iter=atominfo.find(aid1);
-                assert(iter!=atominfo.end());
-                if(iter->second.nonresonant<1) continue;
-                iter->second.nonresonant-=1;
-                atm0.formal_charge-=1;
-                bond.order+=1;
-                atm1.formal_charge+=1;
-                if(atm0.formal_charge==0) break;
-            }
-        }
     }
-
 }}

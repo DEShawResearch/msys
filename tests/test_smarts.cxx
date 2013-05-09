@@ -16,9 +16,17 @@ int main(int argc, char *argv[]) {
     AssignBondOrderAndFormalCharge(mol);
     AnnotatedSystemPtr annot_mol = AnnotatedSystem::create(mol);
     IdList sel = Atomselect(mol, "not water");
+    //IdList sel = mol->atoms();
     for (int i=2; i<argc; i++) {
         printf("%s\n", argv[i]);
-        SmartsPattern(argv[i]).findMatches(annot_mol, sel);
+        MultiIdList matches=SmartsPattern(argv[i]).findMatches(annot_mol, sel);
+        BOOST_FOREACH(IdList l, matches){
+           printf(" --> [ ");
+           BOOST_FOREACH(Id i, l){
+             printf("%u ",i+1);
+           }
+           printf("]\n");
+        }
     }
     return 0;
 }

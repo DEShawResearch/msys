@@ -67,55 +67,90 @@ bool ChargeFromBondOrderValid(SystemPtr mol,
 static
 void assign(SystemPtr mol) {
 
+    IdList topids=ComputeTopologicalIds(mol);
     MultiIdList fragments;
     mol->updateFragids(&fragments);
 
-    for (unsigned frag=0; frag<fragments.size(); ++frag){
-        int qTarget=FragmentChargeFromFormalCharge(mol,fragments[frag]);
-        if(qTarget==INT_MAX) qTarget=0;
-        if(!ChargeFromBondOrderValid(mol,fragments[frag])){
-           ExportSdf( mol, "qDiff1.sdf", SdfExport::Append);
-        } 
-        AssignBondOrderAndFormalCharge(mol,fragments[frag]);
-        ExportSdf( mol, "qAssigned.sdf", SdfExport::Append);
+    Id badQ=0;
+    int qTarget=0;
+    int qTot=0;
+    std::vector<int> qTargets;
+    std::map<Id, std::map<int, int> > tid_to_qCount;
+    BOOST_FOREACH(Id aid, mol->atoms()){
+        int q=mol->atom(aid).formal_charge;
+        qTarget+=q;
+        qTargets.push_back(q);
+        tid_to_qCount[topids[aid]][q]+=1;
+    }
 
-        IdList::iterator miter;
-        printf("ATOMS:\n");
-        int qTot=0;
-        for (miter=fragments[frag].begin(); miter !=fragments[frag].end(); ++miter){
-            atom_t const& atm1 = mol->atom(*miter);
-            printf("   ( %3d %3s ): molecule= %2d  fc= %d  rc= %e  x= %f y= %f z= %f\n",
-                   *miter, atm1.name.c_str(), 
+    try{
+        for (unsigned frag=0; frag<fragments.size(); ++frag){
+            int qTarget=FragmentChargeFromFormalCharge(mol,fragments[frag]);
+            if(qTarget==INT_MAX) qTarget=0;
+            if(false && !ChargeFromBondOrderValid(mol,fragments[frag])){
+                ExportSdf( mol, "qDiff1.sdf", SdfExport::Append);
+            } 
+            
+            AssignBondOrderAndFormalCharge(mol,fragments[frag]);
+            ExportSdf( mol, "qAssigned.sdf", SdfExport::Append);
+            
+            
+            BOOST_FOREACH(Id aid, fragments[frag]){
+                int q=mol->atom(aid).formal_charge;
+                std::map<int, int> &qTargets=tid_to_qCount.find(topids[aid])->second;
+                std::map<int, int>::iterator iter=qTargets.find(q);
+                if(iter==qTargets.end() || iter->second==0){
+                    badQ++;
+                }else{
+                    iter->second--;
+                }
+                qTot+=q;
+            }   
+        }
+        if(badQ){
+            ExportSdf( mol, "qAtomDiff.sdf", SdfExport::Append);
+        }
+        if(qTot != qTarget){
+            ExportSdf( mol, "qTotDiff.sdf", SdfExport::Append);
+        }
+    } catch (std::exception& e) {
+        fprintf(stderr, "  FAILED %s\n", e.what());
+        ExportSdf( mol, "qFail.sdf", SdfExport::Append);
+    }
+
+#if 1
+    for (unsigned frag=0; frag<fragments.size(); ++frag){
+        printf("Frag %u ATOMS:\n",frag);
+        BOOST_FOREACH(Id aid, fragments[frag]){
+            atom_t const& atm1 = mol->atom(aid);
+            printf("   ( %3d %3s ): molecule= %2u  fc= %d  rc= %e  x= %f y= %f z= %f\n",
+                   aid, atm1.name.c_str(), 
                    frag, atm1.formal_charge, 
                    atm1.resonant_charge,
                    atm1.x, atm1.y, atm1.z);
-            qTot+=atm1.formal_charge;
         }
-        printf("BONDS:\n");
-        for (miter=fragments[frag].begin(); miter !=fragments[frag].end(); ++miter){
-            Id id = *miter;
-            atom_t const& atm1 = mol->atom(id);
-            IdList const& bonds = mol->bondsForAtom(id);
+
+        printf("Frag %u BONDS:\n",frag);
+        BOOST_FOREACH(Id aid, fragments[frag]){
+            atom_t const& atm1 = mol->atom(aid);
+            IdList const& bonds = mol->bondsForAtom(aid);
             for (unsigned j=0; j<bonds.size(); ++j){
-                Id otherid = mol->bond(bonds[j]).other(id);
-                if (id>otherid) continue;
+                Id otherid = mol->bond(bonds[j]).other(aid);
+                if (aid>otherid) continue;
                 atom_t const& atm2 = mol->atom(otherid);
                 double dx=atm2.x - atm1.x;
                 double dy=atm2.y - atm1.y;
                 double dz=atm2.z - atm1.z;
                 double r=sqrt(dx*dx+dy*dy+dz*dz);
                 printf("   ( %3d %s %u ) <-> ( %3d %s %u ):   order= %2.1f rorder= %f length= %f\n",
-                       id,      atm1.name.c_str(), mol->bondCountForAtom(id),
+                       aid,      atm1.name.c_str(), mol->bondCountForAtom(aid),
                        otherid, atm2.name.c_str(), mol->bondCountForAtom(otherid),
                        (double)mol->bond(bonds[j]).order, 
                        mol->bond(bonds[j]).resonant_order,
                        r);
             }
         }
-        if(qTarget!=qTot){
-            printf("qDiff2: %d != %d\n",qTarget,qTot);
-            ExportSdf( mol, "qDiff2.sdf", SdfExport::Append);
-        }
     }
+#endif
 }
  

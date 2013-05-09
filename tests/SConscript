@@ -2,7 +2,8 @@ Import('env')
 Import('libmsys')
 
 env=env.Clone()
-env.Prepend(CPPPATH=['../src'], LIBS=[libmsys])
+env.Prepend(CPPPATH=['../src'], LIBS=[libmsys], CXXFLAGS="-fopenmp", LINKFLAGS="-fopenmp")
+
 
 for p in Glob('test_*.cxx'):
     env.AddUnitTest(p.name[:-4],p)
