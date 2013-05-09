@@ -212,7 +212,7 @@ If you have a new table type that hasn't made it into Msys' canonical
 set, you can simply use ``addTable`` and configure the table yourself::
 
 
-  table = mol.addTable('funky_harm')
+  table = mol.addTable('funky_harm', 2)
   table.params.addProp('fk', float)
   table.params.addProp('r0', float)
 
