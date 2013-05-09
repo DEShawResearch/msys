@@ -699,7 +699,9 @@ namespace desres { namespace msys {
 #endif
                 lpsolve::delete_lp(resLP); 
                 if(objf != newObjf){
+#if DEBUGPRINT
                    printf("resonant solution objective is larger by %e\n",newObjf-objf);
+#endif
                    break;
                 }
             }else{
