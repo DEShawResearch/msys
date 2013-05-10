@@ -412,14 +412,11 @@ namespace desres { namespace msys {
                     hyd1.x = root.x;
                     hyd1.y = root.y;
                     hyd1.z = root.z + def_bond;
-                    Vec3 pos = apply_dihedral_geometry(
-                            Vec3(&mol->atom(hlist[0]).x),
-                            Vec3(&mol->atom(hlist[0]).x),
-                            Vec3(&mol->atom(r).x),
+                    apply_dihedral_geometry(hyd2.pos(),
+                            mol->atom(hlist[0]).pos(),
+                            mol->atom(hlist[0]).pos(),
+                            mol->atom(r).pos(),
                             def_bond, def_angle, 0);
-                    hyd2.x = pos.x;
-                    hyd2.y = pos.y;
-                    hyd2.z = pos.z;
 
                 } else if (c.size()==1) {
                     Id C = c[0];
@@ -429,23 +426,17 @@ namespace desres { namespace msys {
                             if (A!=r) break;
                         }
                     }
-                    Vec3 pos = apply_dihedral_geometry(
-                            Vec3(&mol->atom(A).x),
-                            Vec3(&mol->atom(C).x),
-                            Vec3(&mol->atom(r).x),
+                    apply_dihedral_geometry(hyd1.pos(),
+                            mol->atom(A).pos(),
+                            mol->atom(C).pos(),
+                            mol->atom(r).pos(),
                             def_bond, def_angle, -M_PI/2+def_dihedral);
-                    hyd1.x = pos.x;
-                    hyd1.y = pos.y;
-                    hyd1.z = pos.z;
 
-                    pos = apply_dihedral_geometry(
-                            Vec3(&mol->atom(A).x),
-                            Vec3(&mol->atom(C).x),
-                            Vec3(&mol->atom(r).x),
+                    apply_dihedral_geometry(hyd2.pos(),
+                            mol->atom(A).pos(),
+                            mol->atom(C).pos(),
+                            mol->atom(r).pos(),
                             def_bond, def_angle, -M_PI/2-def_dihedral);
-                    hyd2.x = pos.x;
-                    hyd2.y = pos.y;
-                    hyd2.z = pos.z;
                 }
 
             } else if (hlist.size()==1) {
@@ -465,14 +456,11 @@ namespace desres { namespace msys {
                             if (A!=r) break;
                         }
                     }
-                    Vec3 pos = apply_dihedral_geometry(
-                            Vec3(&mol->atom(A).x),
-                            Vec3(&mol->atom(C).x),
-                            Vec3(&mol->atom(r).x),
+                    apply_dihedral_geometry(hyd1.pos(),
+                            mol->atom(A).pos(),
+                            mol->atom(C).pos(),
+                            mol->atom(r).pos(),
                             def_bond, def_angle, 0);
-                    hyd1.x = pos.x;
-                    hyd1.y = pos.y;
-                    hyd1.z = pos.z;
 
                 } else {
                     Float ux=0, uy=0, uz=0;

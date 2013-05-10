@@ -15,53 +15,6 @@ namespace desres { namespace msys {
     class TermTable;
     typedef boost::shared_ptr<TermTable> TermTablePtr;
 
-        
-    struct Vec3 {
-        Float x,y,z;
-        
-        Vec3() 
-        : x(0), y(0), z(0) {}
-
-        Vec3(Float const& _x, Float const& _y, Float const& _z)
-        : x(_x), y(_y), z(_z) {}
-
-        explicit Vec3(const Float* xyz)
-        : x(xyz[0]), y(xyz[1]), z(xyz[2]) {}
-
-        Float& operator[](unsigned i) {
-            return i==0 ? x : i==1 ? y : z;
-        }
-        Float const& operator[](unsigned i) const {
-            return i==0 ? x : i==1 ? y : z;
-        }
-
-        bool operator==(Vec3 const& o) const {
-            return x==o.x && y==o.y && z==o.z;
-        }
-        bool operator!=(Vec3 const& o) const {
-            return x!=o.x || y!=o.y || z!=o.z;
-        }
-
-        Vec3& operator-=(Vec3 const& o) {
-            x-=o.x;
-            y-=o.y;
-            z-=o.z;
-            return *this;
-        }
-
-        Vec3& operator *=(Float s) {
-            x *= s;
-            y *= s;
-            z *= s;
-            return *this;
-        }
-
-        Float dot(Vec3 const& o) const {
-            return x*o.x + y*o.y + z*o.z;
-        }
-
-    };
-
     class GlobalCell {
         std::vector<double> data;
     public:
@@ -114,6 +67,11 @@ namespace desres { namespace msys {
           x(0), y(0), z(0), charge(0), vx(0), vy(0), vz(0), mass(0), type(),
           resonant_charge()
         {}
+
+        /* Don't abuse these.  In particular, bear in mind that that an atom's
+         * memory location will move around if atoms are added.  */
+        double       *pos()       { return &x; }
+        const double *pos() const { return &x; }
     };
     
     struct bond_t {

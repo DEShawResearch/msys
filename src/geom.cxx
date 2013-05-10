@@ -5,23 +5,26 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifndef M_PI
+#define M_PI 3.1415926535897932384626433832795029
+#endif
+
 using namespace desres::msys;
 
-static double calc_dot_prod( const Vec3& A, const Vec3& B ) {
+static double calc_dot_prod( const double* A, const double* B ) {
     return A[0]*B[0] + A[1]*B[1] + A[2]*B[2];
 }
 
 namespace desres { namespace msys {
 
-    double calc_distance( const Vec3& A, const Vec3& B ) {
+    double calc_distance( const double* A, const double* B ) {
         double dx=A[0]-B[0];
         double dy=A[1]-B[1];
         double dz=A[2]-B[2];
         return sqrt(dx*dx + dy*dy + dz*dz);
     }
     
-    Vec3 calc_cross_prod( const Vec3& A, const Vec3& B ) {
-        Vec3 C;
+    void calc_cross_prod( double* C, const double* A, const double* B ) {
         double cx, cy, cz;
         cx =  A[1]*B[2] - B[1]*A[2];
         cy = -A[0]*B[2] + B[0]*A[2];
@@ -29,10 +32,9 @@ namespace desres { namespace msys {
         C[0] = cx;
         C[1] = cy;
         C[2] = cz;
-        return C;
     }
     
-    double calc_normal( Vec3& A ) {
+    double calc_normal( double* A ) {
         double x=A[0];
         double y=A[1];
         double z=A[2];
@@ -45,18 +47,18 @@ namespace desres { namespace msys {
         return norm;
     }
     
-    double calc_vec_angle( const Vec3& r1, const Vec3& r2 ) {
+    double calc_vec_angle( const double* r1, const double* r2 ) {
         double psin, pcos;
-    
-        Vec3 r3 = calc_cross_prod( r1, r2 );
+        double r3[3];
+        calc_cross_prod(r3, r1, r2 );
         psin = sqrt(calc_dot_prod(r3,r3));
         pcos = calc_dot_prod( r1, r2 );
         return atan2(psin,pcos);
     }
     
-    double calc_angle( const Vec3& A, const Vec3& B, const Vec3& C ) {
+    double calc_angle( const double* A, const double* B, const double* C ) {
         int i;
-        Vec3 r1, r2;
+        double r1[3], r2[3];
         for (i=0; i<3; i++) {
             r1[i]=A[i]-B[i];
             r2[i]=C[i]-B[i];
@@ -64,27 +66,27 @@ namespace desres { namespace msys {
         return calc_vec_angle( r1, r2 );
     }
     
-    double calc_dihedral( const Vec3& A, const Vec3& B, 
-                          const Vec3& C, const Vec3& D ) {
+    double calc_dihedral( const double* A, const double* B, 
+                          const double* C, const double* D ) {
         int i;
-        Vec3 r1,r2,r3;
+        double r1[3],r2[3],r3[3],n1[3], n2[3];
         double psin, pcos;
         for (i=0; i<3; i++) {
             r1[i]=B[i]-A[i];
             r2[i]=C[i]-B[i];
             r3[i]=D[i]-C[i];
         }
-        Vec3 n1 = calc_cross_prod( r1, r2 );
-        Vec3 n2 = calc_cross_prod( r2, r3 );
+        calc_cross_prod(n1, r1, r2 );
+        calc_cross_prod(n2, r2, r3 );
         psin = calc_dot_prod( n1, r3 ) * sqrt(calc_dot_prod( r2, r2 ));
         pcos = calc_dot_prod( n1, n2 );
         return atan2(psin,pcos);
     }
     
-    Vec3 apply_dihedral_geometry( const Vec3& tmpA,
-                                        const Vec3& B,
-                                        const Vec3& C,
-                                        double r, double theta, double phi ) {
+    void apply_dihedral_geometry( double* D, const double* tmpA,
+                                  const double* B,
+                                  const double* C,
+                                  double r, double theta, double phi ) {
     
         /* Let a=B-A, b=C-B, c=D-C.  Define an orthogonal coordinate system
          * [b, t = a x b, u = b x t].  We can express 
@@ -97,9 +99,8 @@ namespace desres { namespace msys {
          *      alpha =   r sin theta sin phi
          *      gamma = - r sin theta cos phi
          */
-        Vec3 a,b;
-        Vec3 A(tmpA);
-        Vec3 D;
+        double a[3],b[3], t[3], u[3];
+        double A[3] = {tmpA[0], tmpA[1], tmpA[2]};
         double bn=0, tn=0, un=0;
         double alpha, beta, gamma;
         int i;
@@ -108,7 +109,6 @@ namespace desres { namespace msys {
             D[0]=C[0]+r;
             D[1]=C[1];
             D[2]=C[2];
-            return D;
         }
         if (A==C) {
             /* pick A not along B-C */
@@ -126,8 +126,8 @@ namespace desres { namespace msys {
             a[i] = B[i] - A[i];
             b[i] = C[i] - B[i];
         }
-        Vec3 t = calc_cross_prod( a, b );
-        Vec3 u = calc_cross_prod( b, t );
+        calc_cross_prod( t, a, b );
+        calc_cross_prod( u, b, t );
         for (i=0; i<3; i++) {
             bn += b[i] * b[i];
             tn += t[i] * t[i];
@@ -147,7 +147,6 @@ namespace desres { namespace msys {
         for (i=0; i<3; i++) {
             D[i] = C[i] + beta*b[i] + alpha*t[i] + gamma*u[i];
         }
-        return D;
     }
 
 }}
