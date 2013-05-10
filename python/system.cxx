@@ -3,6 +3,7 @@
 #include "atomsel.hxx"
 #include "append.hxx"
 #include "clone.hxx"
+#include "geom.hxx"
 
 #include <numpy/ndarrayobject.h>
 
@@ -126,6 +127,7 @@ namespace {
     void destructor(PyObject* obj) { 
         Py_DECREF(obj); 
     }
+    typedef boost::shared_ptr<PyObject> objptr;
 
     PyObject* global_cell(object sysobj) {
         System& sys = extract<System&>(sysobj);
@@ -134,6 +136,43 @@ namespace {
                 sys.global_cell[0]);
         Py_INCREF(PyArray_BASE(arr)=reinterpret_cast<PyObject*>(sysobj.ptr()));
         return arr;
+    }
+
+    PyObject* getpos3(object x, double **p) {
+        PyObject* arr = PyArray_FromAny(
+                x.ptr(), 
+                PyArray_DescrFromType(NPY_FLOAT64),
+                1, 1, NPY_C_CONTIGUOUS | NPY_ALIGNED,
+                NULL);
+        if (!arr) throw_error_already_set();
+        if (PyArray_DIM(arr, 0) != 3) {
+            PyErr_Format(PyExc_ValueError, "expected vector of length 3, got %ld", PyArray_DIM(arr, 0));
+            throw_error_already_set();
+        }
+        if (p) *p = (double *)PyArray_DATA(arr);
+        return arr;
+    }
+
+    double py_calc_distance(object A, object B) {
+        double *a, *b;
+        objptr pa(getpos3(A, &a), destructor);
+        objptr pb(getpos3(B, &b), destructor);
+        return calc_distance(a,b);
+    }
+    double py_calc_angle(object A, object B, object C) {
+        double *a, *b, *c;
+        objptr pa(getpos3(A, &a), destructor);
+        objptr pb(getpos3(B, &b), destructor);
+        objptr pc(getpos3(C, &c), destructor);
+        return calc_angle(a,b,c);
+    }
+    double py_calc_dihedral(object A, object B, object C, object D) {
+        double *a, *b, *c, *d;
+        objptr pa(getpos3(A, &a), destructor);
+        objptr pb(getpos3(B, &b), destructor);
+        objptr pc(getpos3(C, &c), destructor);
+        objptr pd(getpos3(D, &d), destructor);
+        return calc_dihedral(a,b,c,d);
     }
 
     PyObject* sys_getpos(System const& sys, object idobj) {
@@ -435,6 +474,10 @@ namespace desres { namespace msys {
         import_array();
         if (PyErr_Occurred()) return;
         
+        def("calc_distance", py_calc_distance);
+        def("calc_angle", py_calc_angle);
+        def("calc_dihedral", py_calc_dihedral);
+
         class_<NonbondedInfo>("NonbondedInfo", no_init)
             .def_readwrite("vdw_funct", &NonbondedInfo::vdw_funct,
                     "Name of the vdw functional form; e.g., 'vdw_12_6'")

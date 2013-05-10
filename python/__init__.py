@@ -1766,3 +1766,15 @@ def FindDistinctFragments(system):
     ''' Return fragids of representative fragments.  '''
     return _msys.FindDistinctFragments(system._ptr)
 
+def CalcDistance(a, b):
+    ''' Distance between positions a and b '''
+    return _msys.calc_distance(a,b)
+
+def CalcAngle(a, b, c):
+    ''' Angle in radians of positions a-b-c. '''
+    return _msys.calc_angle(a,b,c)
+
+def CalcDihedral(a, b, c, d):
+    ''' Dihedral angle in radians of positions a-b-c-d '''
+    return _msys.calc_dihedral(a,b,c,d)
+
