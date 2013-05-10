@@ -174,6 +174,25 @@ namespace {
         objptr pd(getpos3(D, &d), destructor);
         return calc_dihedral(a,b,c,d);
     }
+    double py_calc_planarity(PyObject* obj) {
+        PyObject* arr = PyArray_FromAny(
+                obj,
+                PyArray_DescrFromType(NPY_FLOAT64),
+                2, 2,   /* must be 2-dimensional */
+                NPY_C_CONTIGUOUS | NPY_ALIGNED,
+                NULL);
+        if (!arr) throw_error_already_set();
+        boost::shared_ptr<PyObject> _(arr, destructor);
+        Id n = PyArray_DIM(arr,0);
+        if (PyArray_DIM(arr,1)!=3) {
+            PyErr_Format(PyExc_ValueError, 
+                    "Supplied %ld-d positions, expected 3-d", 
+                    PyArray_DIM(arr,1));
+            throw_error_already_set();
+        }
+        const double* pos = (const double *)PyArray_DATA(arr);
+        return calc_planarity(n, pos);
+    }
 
     PyObject* sys_getpos(System const& sys, object idobj) {
         npy_intp dims[2];
@@ -477,6 +496,7 @@ namespace desres { namespace msys {
         def("calc_distance", py_calc_distance);
         def("calc_angle", py_calc_angle);
         def("calc_dihedral", py_calc_dihedral);
+        def("calc_planarity", py_calc_planarity);
 
         class_<NonbondedInfo>("NonbondedInfo", no_init)
             .def_readwrite("vdw_funct", &NonbondedInfo::vdw_funct,

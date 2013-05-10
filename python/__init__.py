@@ -1767,14 +1767,33 @@ def FindDistinctFragments(system):
     return _msys.FindDistinctFragments(system._ptr)
 
 def CalcDistance(a, b):
-    ''' Distance between positions a and b '''
+    ''' Distance between atoms or positions a and b '''
+    if not isinstance(a,numpy.ndarray): a = a.pos
+    if not isinstance(b,numpy.ndarray): b = b.pos
     return _msys.calc_distance(a,b)
 
 def CalcAngle(a, b, c):
-    ''' Angle in radians of positions a-b-c. '''
+    ''' Angle in radians of atoms or positions a-b-c. '''
+    if not isinstance(a,numpy.ndarray): a = a.pos
+    if not isinstance(b,numpy.ndarray): b = b.pos
+    if not isinstance(c,numpy.ndarray): c = c.pos
     return _msys.calc_angle(a,b,c)
 
 def CalcDihedral(a, b, c, d):
-    ''' Dihedral angle in radians of positions a-b-c-d '''
+    ''' Dihedral angle in radians of atoms or positions a-b-c-d '''
+    if not isinstance(a,numpy.ndarray): a = a.pos
+    if not isinstance(b,numpy.ndarray): b = b.pos
+    if not isinstance(c,numpy.ndarray): c = c.pos
+    if not isinstance(d,numpy.ndarray): c = d.pos
     return _msys.calc_dihedral(a,b,c,d)
+
+def CalcPlanarity(pos_or_atoms):
+    ''' Planarity of positions or atoms '''
+    if isinstance(pos_or_atoms, numpy.ndarray):
+        return _msys.calc_planarity(pos_or_atoms)
+    n = len(pos_or_atoms)
+    pos = numpy.empty((n,3), 'd')
+    for i in range(n):
+        pos[i,:] = pos_or_atoms[i].pos
+    return _msys.calc_planarity(pos)
 
