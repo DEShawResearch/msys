@@ -15,6 +15,9 @@ namespace desres { namespace msys {
     double calc_dihedral( const double* A, const double* B, 
                           const double* C, const double* D );
     
+    /* Compute planarity */
+    double calc_planarity(int n, const double* pos_3xn);
+
     /* Compute cross product; store in dst */
     void calc_cross_prod( double* dst, const double* A, const double* B);
 

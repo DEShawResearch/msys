@@ -1,6 +1,7 @@
 /* @COPYRIGHT@ */
 
 #include "geom.hxx"
+#include "analyze/eigensystem.hxx"
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -147,6 +148,45 @@ namespace desres { namespace msys {
         for (i=0; i<3; i++) {
             D[i] = C[i] + beta*b[i] + alpha*t[i] + gamma*u[i];
         }
+    }
+
+    double calc_planarity(int n, const double* pos) {
+        if (n<3) return 0;
+        const double* end = pos+3*n;
+ 
+        /* compute center */
+        double xc=0, yc=0, zc=0;
+        for (const double* p = pos; p!=end; p+=3) {
+            xc += p[0];
+            yc += p[1];
+            zc += p[2];
+        }
+        xc /= n;
+        yc /= n;
+        zc /= n;
+
+        /* compute inertia tensor */
+        double I[9]={0,0,0,0,0,0,0,0,0};
+        for (const double* p = pos; p!=end; p+=3) {
+            double x = p[0] - xc;
+            double y = p[1] - yc;
+            double z = p[2] - zc;
+            I[0] += (y*y + z*z);
+            I[1] += -(x*y);
+            I[2] += -(x*z);
+            I[4] += (x*x + z*z);
+            I[5] += -(y*z);
+            I[8] += (x*x + y*y);
+        }
+        I[3]=I[1];
+        I[6]=I[2];
+        I[7]=I[5];
+        
+        double v[3];
+        real_symmetric_eigenvalues_3x3(I,v,NULL,NULL);
+        // perpendicular axis theorem
+        double planar=fabs(v[0]-(v[1]+v[2]));
+        return planar;
     }
 
 }}

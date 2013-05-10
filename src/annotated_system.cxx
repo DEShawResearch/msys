@@ -1,5 +1,6 @@
 #include "annotated_system.hxx"
 #include "elements.hxx"
+#include "aromatic.hxx"
 #include "sssr.hxx"
 #include <queue>
 #include <assert.h>
@@ -127,6 +128,8 @@ void desres::msys::AnnotatedSystem::compute_ring_systems() {
 
 bool desres::msys::AnnotatedSystem::is_aromatic(const IdList& atoms,
         const IdList& bonds) {
+
+    ComputeRingPlanarity(_sys, atoms);
     int electron_count = 0;
     BOOST_FOREACH(Id bond, bonds) {
         /* Internal double bond, add 2 to electron count */

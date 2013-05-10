@@ -1,10 +1,10 @@
 #include "aromatic.hxx"
+#include "../geom.hxx"
 #include <stdexcept>
 #include <list>
 #include <cmath>
+#include <stdio.h>
 
-//#include <profiler/profiler.hxx>
-#include "eigensystem.hxx"
 #include "../elements.hxx"
 #include "bondFilters.hxx"
 
@@ -131,44 +131,17 @@ namespace desres { namespace msys {
     }
 
     double ComputeRingPlanarity(const SystemPtr mol, const IdList& aids){
-        //static desres::profiler::Symbol _("::ring_planarity_descriptor");
-        //desres::profiler::Clock __(_);
-
         size_t nids=aids.size();
 
         /* simple detection for closed ring cycle in provided atoms list */
         if(nids>1 && aids[0]==aids[nids-1]) nids--;
-        if(nids<3) return 0.0;
- 
-        double xctr=0.0,yctr=0.0,zctr=0.0;
-        for(size_t idx=0; idx<nids;++idx){
-            const atom_t& atm=mol->atom(aids[idx]);
-            xctr+=atm.x; yctr+=atm.y; zctr+=atm.z;
+        std::vector<double> pos;
+        BOOST_FOREACH(Id id, aids) {
+            const atom_t& atm=mol->atom(id);
+            pos.insert(pos.end(), atm.pos(), atm.pos()+3);
         }
-        xctr/=nids; yctr/=nids; zctr/=nids;
-        double I[9]={0,0,0,0,0,0,0,0,0};
-        for(size_t idx=0; idx<nids;++idx){
-            const atom_t& atm=mol->atom(aids[idx]);
-            double x=atm.x-xctr;
-            double y=atm.y-yctr;
-            double z=atm.z-zctr;
-            I[0] += (y*y + z*z);
-            I[1] += -(x*y);
-            I[2] += -(x*z);
-            I[4] += (x*x + z*z);
-            I[5] += -(y*z);
-            I[8] += (x*x + y*y);
-        }
-        I[3]=I[1];
-        I[6]=I[2];
-        I[7]=I[5];
-        
-        double v[3];
-        real_symmetric_eigenvalues_3x3(I,v,NULL,NULL);
-        // perpendicular axis theorem
-        double planar=fabs(v[0]-(v[1]+v[2]));
-        //printf("planarity descriptor for %zu atoms = %f  (Eigenvalues= %f %f %f for %zu atoms)\n",nids,planar,v[0],v[1],v[2],nids);
-        return planar;
+
+        return calc_planarity(nids,&pos[0]);
     }
 
     AromaticRing::Type ClassifyAromaticRing(SystemPtr mol, IdList const& atms) {
