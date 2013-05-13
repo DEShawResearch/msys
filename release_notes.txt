@@ -1,3 +1,6 @@
+1.7.13 NEW: Python bindings for {Period,Group}ForElement.
+       NEW: Python bindings for Calc{Distance,Angle,Dihedral,Planarity}.
+       
 1.7.12 NEW: The GlobalCell class is gone; System.cell is now represented
             a 3x3 NumPy array.  getCell() still returns a copy of the cell
             as before.  Small API change but no change in behavior of the
