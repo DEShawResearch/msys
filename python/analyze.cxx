@@ -67,6 +67,8 @@ namespace desres { namespace msys {
         def("FindDistinctFragments", find_distinct_fragments);
         def("RadiusForElement", RadiusForElement);
         def("MassForElement", MassForElement);
+        def("PeriodForElement", PeriodForElement);
+        def("GroupForElement", GroupForElement);
         def("ElementForAbbreviation", ElementForAbbreviation);
         def("AbbreviationForElement", AbbreviationForElement);
         def("GuessHydrogenPositions", GuessHydrogenPositions);

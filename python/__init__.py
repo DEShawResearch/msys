@@ -11,6 +11,7 @@ import sys
 from _msys import NonbondedInfo, version, hexversion
 from _msys import RadiusForElement, MassForElement, ElementForAbbreviation
 from _msys import GuessAtomicNumber, AbbreviationForElement
+from _msys import PeriodForElement, GroupForElement
 from atomsel import Atomsel
 
 class Handle(object):
