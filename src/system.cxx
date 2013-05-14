@@ -206,6 +206,9 @@ IdList System::atomsForCt(Id ct) const {
             ids.insert(ids.end(), atms.begin(), atms.end());
         }
     }
+    // ensure we don't get atoms in a different order just because we
+    // accessed them by ct.
+    std::sort(ids.begin(), ids.end());
     return ids;
 }
 
@@ -232,6 +235,9 @@ IdList System::bondsForCt(Id ct) const {
             }
         }
     }
+    // ensure we don't get bonds in a different order just because we
+    // accessed them by ct.
+    std::sort(ids.begin(), ids.end());
     return ids;
 }
 

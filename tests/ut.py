@@ -133,6 +133,17 @@ class TestMain(unittest.TestCase):
         with self.assertRaises(ValueError):
             m.atom('A')
 
+    def testCtOrder(self):
+        ''' atom order in ct should be the same as the original order '''
+        mol = msys.CreateSystem()
+        r1 = mol.addResidue()
+        r2 = mol.addResidue()
+        a1 = r1.addAtom()
+        a2 = r2.addAtom()
+        a3 = r1.addAtom()
+        a4 = r2.addAtom()
+        self.assertEqual(mol.ct(0).atoms, mol.atoms)
+
     def testCt(self):
         m=msys.CreateSystem()
         self.assertEqual(m.cts, [])

@@ -309,6 +309,12 @@ class Ct(Handle):
         ''' number of Atoms in the Ct '''
         return self._ptr.atomCountForCt(self._id)
 
+    @property
+    def atoms(self):
+        ''' list of Atoms in this Ct '''
+        ptr = self._ptr
+        return [Atom(ptr, i) for i in ptr.atomsForCt(self._id)]
+
     ### TODO: selectChain()
 
     @property
