@@ -1,17 +1,13 @@
 #!/usr/bin/env desres-exec
 # -*- python -*-
 #{
-# desres-cleanenv -m numpy/1.6.2-31A/lib-python -- python $0 "$@"
+# desres-with -m numpy/1.6.2-31A/lib-python -- python $0 "$@"
 #}
 
 '''
-dms-select input_file [-s | --selection seltext] [-o | --output dstfile]
-                                                 [-a | --append dstfile]
-                                                 [-c | --coalesce]
+dms-select input_file [ options ]
 
-Write or append a selection from input_file to an output dms file.
-
-The input file can be any file type supported by msys.Load.
+Write or append a selection from input_file to an output file.
 '''
 
 import sys, os
@@ -25,9 +21,12 @@ def main():
     parser.add_option('-s', '--selection', default=None)
     parser.add_option('-a', '--append', default=None)
     parser.add_option('-o', '--output', default=None)
-    parser.add_option('-v', '--verbose', action='store_true', default=False)
+    parser.add_option('-v', '--verbose', action='store_true', default=True)
+    parser.add_option('-q', '--quiet', action='store_false', dest='verbose')
     parser.add_option('-c', '--coalesce', action='store_true', default=False,
-            help='Coalesce parameters before saving')
+            help='Coalesce input file parameters before saving')
+    parser.add_option('--structure-only', action='store_true', default=False,
+            help='Write no forcefield information')
 
     opts, args = parser.parse_args()
     if len(args)!=1:
@@ -53,13 +52,6 @@ def main():
         print "dms-select: %d chain(s), %d residue(s), %d atom(s)" % (
                 len(mol.chains), len(mol.residues), len(mol.atoms))
 
-    if opts.append:
-        if opts.verbose:
-            print "Loading", opts.append
-        old=msys.LoadDMS(opts.append)
-        old.append(mol)
-        mol=old
-
     if ofile:
         if opts.coalesce:
             if opts.verbose: print "Coalescing tables"
@@ -67,7 +59,9 @@ def main():
             mol = mol.clone()
 
         if opts.verbose: print "Saving", ofile
-        msys.SaveDMS(mol, ofile)
+        msys.Save(mol, ofile, 
+                append=opts.append, 
+                structure_only=opts.structure_only)
 
 if __name__=="__main__": main()
 

@@ -13,8 +13,16 @@ namespace desres { namespace msys {
     SystemPtr ImportDMSFromBytes( const char* bytes, int64_t len,
                                   bool structure_only=false);
 
+    struct DMSExport {
+        enum Flags {
+            Default             = 0,
+            Append              = 1
+        };
+    };
+
     void ExportDMS(SystemPtr sys, const std::string& path, 
-                   Provenance const& provenance);
+                   Provenance const& provenance,
+                   unsigned flags = 0);
 
     namespace sqlite {
         SystemPtr ImportDMS(sqlite3* db, bool structure_only=false);

@@ -59,6 +59,30 @@ namespace desres { namespace msys {
 
         virtual SystemPtr next() = 0;
     };
+
+    /* Flags for Save. */
+    struct SaveOptions {
+        enum Flags {
+            Default         = 0,
+            Append          = 1 << 0,
+            StructureOnly   = 1 << 1
+        };
+    };
+
+    /* Save the system with the specified format. */
+    void SaveWithFormat(SystemPtr mol, 
+                        std::string const& path, 
+                        Provenance const& prov,
+                        FileFormat format,
+                        unsigned flags);
+
+    /* Save using format guessed from GuessFileFormat.  */
+    void Save(SystemPtr mol, 
+              std::string const& path, 
+              Provenance const& prov,
+              unsigned flags);
+
+
 }}
 
 #endif

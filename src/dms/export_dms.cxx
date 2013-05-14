@@ -2,6 +2,7 @@
 #include "../dms.hxx"
 #include "../term_table.hxx"
 #include "../override.hxx"
+#include "../append.hxx"
 
 #include <sstream>
 #include <stdio.h>
@@ -9,6 +10,7 @@
 #include <stdexcept>
 #include <boost/scoped_ptr.hpp>
 #include <boost/foreach.hpp>
+#include <boost/filesystem.hpp>
 
 using namespace desres::msys;
 
@@ -583,7 +585,14 @@ static void export_dms(SystemPtr h, Sqlite dms, Provenance const& provenance) {
 }
 
 void desres::msys::ExportDMS(SystemPtr h, const std::string& path,
-                             Provenance const& provenance) {
+                             Provenance const& provenance,
+                             unsigned flags ) {
+
+    if ((flags & DMSExport::Append) && boost::filesystem::exists(path)) {
+        SystemPtr pre = ImportDMS(path);
+        AppendSystem(pre, h);
+        h = pre;
+    }
     unlink(path.c_str());
     Sqlite dms;
     try {

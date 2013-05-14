@@ -150,4 +150,64 @@ namespace desres { namespace msys {
         }
     }
 
+    void SaveWithFormat(SystemPtr mol, 
+                        std::string const& path, 
+                        Provenance const& prov,
+                        FileFormat format,
+                        unsigned flags) {
+
+        switch (format) {
+            case DmsFileFormat: 
+                if (flags & SaveOptions::StructureOnly) {
+                    MSYS_FAIL("DMS export does not support structure_only option");
+                }
+                ExportDMS(mol, path, prov, 
+                    ( flags & SaveOptions::Append ? DMSExport::Append : 0)
+                    );
+                break;
+            case MaeFileFormat: 
+                ExportMAE(mol, path, prov, 
+                      (flags & SaveOptions::Append ? MaeExport::Append : 0) 
+                    | (flags & SaveOptions::StructureOnly ? MaeExport::StructureOnly : 0)
+                    );
+                break;
+            case PdbFileFormat: 
+                if (flags != 0) {
+                    MSYS_FAIL("PDB export supports only default save option");
+                }
+                ExportPDB(mol, path);
+                break;
+            case ParmTopFileFormat: 
+                MSYS_FAIL("PRM/TOP export not supported");
+                break;
+            case Mol2FileFormat: 
+                ExportMol2(mol, path, prov,
+                      (flags & SaveOptions::Append ? Mol2Export::Append : 0)
+                    );
+                break;
+            case XyzFileFormat: 
+                MSYS_FAIL("XYZ export not supported");
+                break;
+            case SdfFileFormat:
+                ExportSdf(mol, path,
+                      (flags & SaveOptions::Append ? SdfExport::Append : 0)
+                    );
+                break;
+            default:
+                ;
+        }
+    }
+
+    void Save(SystemPtr mol, 
+              std::string const& path, 
+              Provenance const& prov,
+              unsigned flags) {
+        FileFormat fmt = GuessFileFormat(path);
+        if (fmt == UnrecognizedFileFormat) {
+            MSYS_FAIL("Unable to determine format of '" << path << "'");
+        }
+        SaveWithFormat(mol, path, prov, fmt, flags);
+    }
+
+
 }}

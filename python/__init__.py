@@ -1572,6 +1572,14 @@ def LoadMany(path, structure_only=False):
             break
         yield System(mol)
 
+def Save(mol, path, append=False, structure_only=False):
+    ''' Save the given system to path, using a file format guessed from the
+    path name.  Not all formats support both append and structure_only options;
+    see the corresponding SaveXXX functions.
+    '''
+    return _msys.Save(mol._ptr, str(path), _msys.Provenance.fromArgs(sys.argv),
+            bool(append), bool(structure_only))
+
 def ReadCrdCoordinates(mol, path):
     ''' Read coordinates from the given Amber crd file into the given 
     System. 
@@ -1585,7 +1593,7 @@ def SaveDMS(system, path):
     path = str(path)
     prov = _msys.Provenance.fromArgs(sys.argv)
     if isinstance(system, System):
-        _msys.ExportDMS(system._ptr, path, prov)
+        _msys.ExportDMS(system._ptr, path, prov, 0)
     else:
         _msys.ExportDMSMany([x._ptr for x in system], path, prov)
 

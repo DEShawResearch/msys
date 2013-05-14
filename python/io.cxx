@@ -67,6 +67,14 @@ namespace {
         ExportMAEMany(ctlist, path, prov, flags);
     }
 
+    void save(SystemPtr mol, std::string const& path, Provenance const& prov,
+              bool append, bool structure_only) {
+        unsigned flags = 0;
+        if (append) flags |= SaveOptions::Append;
+        if (structure_only) flags |= SaveOptions::StructureOnly;
+        Save(mol, path, prov, flags);
+    }
+
 }
 
 namespace desres { namespace msys { 
@@ -110,6 +118,8 @@ namespace desres { namespace msys {
                 (arg("path"),
                  arg("structure_only")=false,
                  arg("opt_format")=object()));
+        def("Save", save);
+
 
     }
 }}
