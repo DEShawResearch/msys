@@ -136,6 +136,22 @@ class TestMain(unittest.TestCase):
             self.assertEqual(map(aget, old.atoms), map(aget, new.atoms))
             self.assertEqual(map(bget, old.bonds), map(bget, new.bonds))
 
+    def testSaveAppend(self):
+        import operator as op
+        old=msys.Load('tests/files/jandor.sdf')
+        aget=op.attrgetter('name', 'atomic_number', 'charge')
+        bget=op.attrgetter('first.id', 'second.id', 'order')
+        for fmt in 'dms mae mol2 sdf'.split():
+            dst = '/tmp/_msys.%s' % fmt
+            msys.Save(old, dst)
+            msys.Save(old, dst, append=True)
+            new = msys.Load(dst)
+            self.assertEqual(new.ncts, 2)
+            for ct in new.cts:
+                ct = new.clone(a.id for a in ct.atoms)
+                self.assertEqual(map(aget, old.atoms), map(aget, ct.atoms))
+                self.assertEqual(map(bget, old.bonds), map(bget, ct.bonds))
+
     def testBadId(self):
         m=msys.CreateSystem()
         with self.assertRaises(ValueError):

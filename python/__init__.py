@@ -315,6 +315,12 @@ class Ct(Handle):
         ptr = self._ptr
         return [Atom(ptr, i) for i in ptr.atomsForCt(self._id)]
 
+    @property
+    def bonds(self):
+        ''' list of Bonds in this Ct '''
+        ptr = self._ptr
+        return [Bond(ptr, i) for i in ptr.bondsForCt(self._id)]
+
     ### TODO: selectChain()
 
     @property

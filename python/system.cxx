@@ -601,6 +601,7 @@ namespace desres { namespace msys {
             .def("residuesForChain",&System::residuesForChain, return_const())
             .def("chainsForCt",     &System::chainsForCt, return_const())
             .def("atomsForCt",      &System::atomsForCt)
+            .def("bondsForCt",      &System::bondsForCt)
 
             /* tables */
             .def("tableNames",  table_names)
