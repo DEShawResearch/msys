@@ -1677,7 +1677,8 @@ class TestMain(unittest.TestCase):
                 'fenz.mae',
                 'indz.mae',
                 'ndph.mae',
-                'pegm.mae']
+                'pegm.mae',
+                'PC2777373.mae']
         for f in files:
             name = f[:-4]
             mol = msys.Load('tests/smarts_tests/' + f, structure_only=True)
@@ -1689,9 +1690,9 @@ class TestMain(unittest.TestCase):
                 sp = msys.SmartsPattern(k)
                 match = sp.findMatches(annot_mol, atoms)
                 if match != v:
-                    self.assertTrue(False,
-                        msg="SMARTS mismatch for molecule '%s', pattern '%s'.\nMissing matches: %s\nExtra matches: %s\n"
-                        % (name, k, str([i for i in v if i not in match]), str([i for i in match if i not in v])))
+                    msg="SMARTS mismatch for molecule '%s', pattern '%s'.\nMissing matches: %s\nExtra matches: %s\n"
+                    msg=msg%(name, k, str([i for i in v if i not in match]), str([i for i in match if i not in v]))
+                    self.assertTrue(False,msg)
 
     def testGraph(self):
         sys_A = msys.CreateSystem()

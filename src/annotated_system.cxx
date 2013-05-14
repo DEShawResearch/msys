@@ -42,24 +42,30 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys)
     compute_ring_systems();
     /* Assign aromatic */
     compute_aromaticity();
-    /* If sp3 boron/carbon/nitrogen/oxygen AND have lone pairs AND
+    /* If sp3 AND have lone pairs AND
      * (aromatic OR bonded to atom with double bonds): become sp2 */
     BOOST_FOREACH(Id ai, sys->atoms()) {
         atom_data_t& a = _atoms[ai];
-        int element = sys->atom(ai).atomic_number;
-        /* Check against 0.00001 instead of 0 to prevent possible floating
-         * point error */
-        if (element >= 5 && element <= 8 && a.hybridization == 3
-                && a.lone_pairs > 0) {
+        if (a.hybridization == 3 && a.lone_pairs > 0) {
             if (a.aromatic) {
                 a.hybridization = 2;
                 continue;
             }
-            BOOST_FOREACH(Id aj, sys->bondedAtoms(ai)) {
-                if (_atoms[aj].hybridization == 2 || 
-                    (a.degree==1 && _atoms[aj].valence-_atoms[aj].degree==1)){
+            BOOST_FOREACH(Id aj, sys->bondedAtoms(ai)){
+                if ( _atoms[aj].hybridization == 2){
                     a.hybridization = 2;
                     break;
+                }
+                if(a.degree==1 && _atoms[aj].hybridization == 3){
+                    BOOST_FOREACH(Id bi, _sys->bondsForAtom(aj)){
+                        bond_t const& bnd = sys->bond(bi);
+                        if(bnd.order != 2) continue;
+                        if(_atoms[bnd.other(aj)].degree==1){
+                            a.hybridization = 2;
+                            break;
+                        }
+                    }
+                    if(a.hybridization == 2) break;
                 }
             }
         }
@@ -92,11 +98,10 @@ void desres::msys::AnnotatedSystem::compute_ring_systems() {
     for (unsigned i = 0; i < SSSR.size(); ++i) {
         bool possibly_aromatic = true;
         /* All atoms in aromatic ring must be potentially sp2 (meaning sp2 or
-         * hybridization greater than 2 with free electrons) */
+         * sp3 with free electrons) */
         BOOST_FOREACH(Id atom, SSSR[i]) {
-            if (_atoms[atom].hybridization != 2 &&
-                    (_atoms[atom].hybridization < 2
-                     || _atoms[atom].lone_pairs == 0))
+            if (! ( ( _atoms[atom].hybridization == 3 && _atoms[atom].lone_pairs > 0) ||
+                    _atoms[atom].hybridization == 2))
                 possibly_aromatic = false;
         }
         if (possibly_aromatic) {
