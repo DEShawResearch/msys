@@ -1,5 +1,5 @@
-#ifndef msys_load_hxx
-#define msys_load_hxx
+#ifndef msys_io_hxx
+#define msys_io_hxx
 
 #include "system.hxx"
 

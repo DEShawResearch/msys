@@ -1,7 +1,7 @@
 #ifndef desres_msys_mol2_hxx
 #define desres_msys_mol2_hxx
 
-#include "load.hxx"
+#include "io.hxx"
 
 namespace desres { namespace msys {
 

@@ -5,7 +5,7 @@
 #include "pdb.hxx"
 #include "mol2.hxx"
 #include "xyz.hxx"
-#include "load.hxx"
+#include "io.hxx"
 #include "amber.hxx"
 #include "sdf.hxx"
 

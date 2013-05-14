@@ -1,4 +1,4 @@
-#include "load.hxx"
+#include "io.hxx"
 #include "analyze.hxx"
 #include "mol2.hxx"
 #include <cstdio>

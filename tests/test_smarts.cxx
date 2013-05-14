@@ -1,5 +1,5 @@
 #include "smarts.hxx"
-#include "load.hxx"
+#include "io.hxx"
 #include "analyze.hxx"
 #include "atomsel.hxx"
 
