@@ -124,6 +124,18 @@ class TestValidate(unittest.TestCase):
 
 class TestMain(unittest.TestCase):
 
+    def testSave(self):
+        import operator as op
+        old=msys.Load('tests/files/jandor.sdf')
+        aget=op.attrgetter('name', 'atomic_number', 'charge')
+        bget=op.attrgetter('first.id', 'second.id', 'order')
+        for fmt in 'dms mae mol2 sdf'.split():
+            dst = '/tmp/_msys.%s' % fmt
+            msys.Save(old, dst)
+            new = msys.Load(dst)
+            self.assertEqual(map(aget, old.atoms), map(aget, new.atoms))
+            self.assertEqual(map(bget, old.bonds), map(bget, new.bonds))
+
     def testBadId(self):
         m=msys.CreateSystem()
         with self.assertRaises(ValueError):
