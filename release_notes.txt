@@ -1,3 +1,8 @@
+1.7.14 NEW: msys.Save() function understands filename extensions.
+       FIXED: Better hybridization detection.
+       FIXED: SaveMAE preserves atom order (broken since 1.7.0).
+       C++: load.hxx was renamed to io.hxx.
+
 1.7.13 NEW: Python bindings for {Period,Group}ForElement.
        NEW: Python bindings for Calc{Distance,Angle,Dihedral,Planarity}.
        
