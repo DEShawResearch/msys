@@ -115,7 +115,7 @@ namespace desres { namespace msys {
 
     protected:
         int max_free_pairs(const Id aid);
-        std::vector<int> minmax_bond_order(const Id aid0, const Id aid1);
+        int max_bond_order(const Id aid0, const Id aid1);
       
         void presolve_octets(IdList& unsolved);
         void rebuild();
@@ -182,12 +182,11 @@ namespace desres { namespace msys {
             int ilpLB;
             int ilpUB;
             int qCol;
-            int qCtr;
             int hyperCol;
             std::set<Id> qTerm;
             ilpAtom(){};
             ilpAtom(int c,int l, int u):ilpCol(c),ilpLB(l),ilpUB(u),
-                                        qCol(0),qCtr(0),hyperCol(0){};
+                                        qCol(0),hyperCol(0){};
         };
         typedef std::map<Id, ilpAtom> ilpAtomMap;
         
@@ -231,8 +230,6 @@ namespace desres { namespace msys {
         void set_aromatic_ring_penalties();
         void set_component_charge_penalty();
         
-        void add_charge_vector_for_atom(BondOrderAssignerPtr parent,
-                                        Id aid, std::vector<double> &row);
         void add_indicator_constraints();
         void add_atom_octet_and_charge_constraints();
         void add_aromatic_ring_constraints();
@@ -244,7 +241,7 @@ namespace desres { namespace msys {
     };
 
 }}
-#define GENRESFORMS 1
+#define GENRESFORMS 0
 
 #define DEBUGPRINT  0
 #define DEBUGPRINT1 0

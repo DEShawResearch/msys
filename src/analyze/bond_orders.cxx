@@ -222,15 +222,15 @@ namespace desres { namespace msys {
                 Id aid1 = boa->_mol->bond(bid).other(aid0);
                 if(aid0>aid1) continue;
 
-                std::vector<int> minmaxbo=boa->minmax_bond_order(aid0,aid1);
+                int maxbo=boa->max_bond_order(aid0,aid1);
 
 #if DEBUGPRINT1
                 printf("MinMax Bond Orders for Bid %u (Aids %u %u): BO Range = %d %d \n",
-                       bid,aid0,aid1,minmaxbo[0],minmaxbo[1]);
+                       bid,aid0,aid1,1,maxbo);
 #endif
 
-                tmprange.lb=minmaxbo[0];
-                tmprange.ub=minmaxbo[1];
+                tmprange.lb=1;
+                tmprange.ub=maxbo;
                 boa->_bond_order.insert(std::make_pair(bid,tmprange));
 
             }
@@ -342,18 +342,15 @@ namespace desres { namespace msys {
     
 
     /* Cap bond orders for each bond connected to an atom */
-    std::vector<int> BondOrderAssigner::minmax_bond_order(const Id aid0, const Id aid1){
+    int BondOrderAssigner::max_bond_order(const Id aid0, const Id aid1){
         
-        std::vector<int> anums;
-        std::vector<std::pair<int,int> > minmaxbo;
-        Id list[]={aid0,aid1};
-        BOOST_FOREACH(Id aid, list){
+        int maxOrders[2];
+        Id ids[2]={aid0,aid1};
+        for(int idx=0;idx<2;++idx){
+            Id aid=ids[idx];  
             Id nbonds=_mol->filteredBondsForAtom(aid,*_filter).size();
             int anum=_mol->atom(aid).atomic_number;
 
-            /* Set minimum bond order. 1 for everything but hypervalent */
-            int minbo= 1;
-            
             /* now determine max bond order */
             int maxbo;
             switch (anum){
@@ -400,16 +397,10 @@ namespace desres { namespace msys {
                     maxbo=1;         
                 }
             }
-            anums.push_back(anum);
-            minmaxbo.push_back(std::pair<int,int>(minbo,maxbo));
+            maxOrders[idx]=maxbo;
         }
-        int minbo=std::min(minmaxbo[0].first, minmaxbo[1].first);
-        int maxbo=std::min(minmaxbo[0].second,minmaxbo[1].second);
+        return std::min(maxOrders[0],maxOrders[1]);
        
-        std::vector<int> result(2);
-        result[0]=minbo;
-        result[1]=maxbo;
-        return result;
     }
 
     /* Function that trys to presolve for unknown bond orders / lp counts
@@ -1033,22 +1024,6 @@ namespace desres { namespace msys {
     }
 
 
-    void ComponentAssigner::add_charge_vector_for_atom(BondOrderAssignerPtr parent,
-                                                       Id aid, std::vector<double> &row){
-        
-        ilpAtom const& iatom=asserted_find(_component_atom_cols,aid);
-        for(int icol=iatom.ilpCol, i=iatom.ilpLB; i<=iatom.ilpUB;++i,++icol){
-            row.at(icol)+=2*i;
-        }
-        IdList bonds=parent->_mol->filteredBondsForAtom(aid,*parent->_filter);
-        BOOST_FOREACH(Id bid, bonds){
-            ilpBond const& ibond = asserted_find(_component_bond_cols,bid);
-            for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB; ++i,++icol){
-                row.at(icol)+=i;
-            }
-        }
-    }
-
     void ComponentAssigner::add_atom_octet_and_charge_constraints(){
 
         BondOrderAssignerPtr parent=_parent.lock();
@@ -1113,26 +1088,6 @@ namespace desres { namespace msys {
                 rowcopy.at(iatom.qCol+1)=-1;   
                 lpsolve::add_constraint(_component_lp,&rowcopy[0],ROWTYPE_LE,-atomvalence);
 
-                if( iatom.qCtr){
-                    BOOST_FOREACH(Id aid1, iatom.qTerm){
-                        if(_component_atoms_present.count(aid1)){
-                            atomvalence+= DataForElement(parent->_mol->atom(aid1).atomic_number).nValence;
-                            add_charge_vector_for_atom(parent,aid1,rowdata);
-                        }else{
-                            atomvalence+=asserted_find(parent->_chargeinfo,aid1).nonresonant;
-                        }
-                    }
-                    /* Negative charge constraint */
-                    rowdata.at(iatom.qCtr)=-1;
-                    rowdata.at(iatom.qCtr+1)=0;
-                    lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_LE,atomvalence);
-                    /* positive charge constraint */
-                    for(int k=0;k<ncols;++k) rowdata.at(k+1)*=-1;
-                    rowdata.at(iatom.qCtr)=0; 
-                    rowdata.at(iatom.qCtr+1)=-1;   
-                    lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_LE,-atomvalence);
-
-                }
             }
 
             /* Additional fixups, force 2 connected carbon/nitrogen adjacent to terminal carbon/nitrogen to be sp hybridized
