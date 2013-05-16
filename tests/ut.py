@@ -15,6 +15,27 @@ def vsize():
     s=os.popen(cmd).read()
     return int(s)
 
+class TestInChI(unittest.TestCase):
+    gold = {
+            'fused.sdf' : 'InChI=1/C6H8N4O/c7-6-8-3-1-2-4(11)9-5(3)10-6/h1-3,5H,(H,9,11)(H3,7,8,10)/q+1/f/h9-10H,7H2',
+            'jandor.sdf' : 'InChI=1/C21H20N4O7S/c1-11(26)14-15-17(31-2)18(33-21-22-8-3-9-23-21)16(24(15)19(14)27)20(28)32-10-12-4-6-13(7-5-12)25(29)30/h3-9,11,14-15,17,26H,10H2,1-2H3',
+            }
+
+    gold['lig.sdf'] = "InChI=1/C15H27N3O2/c1-18-7-6-9-12(18)5-4-10-14-11(8-13(16-14)19-2)17-15(9,10)20-3/h9-14,16-17H,4-8H2,1-3H3/p+2/fC15H29N3O2/h16,18H/q+2"
+
+    def testSubprocess(self):
+        from msys import inchi
+        for k,v in self.gold.items():
+            m = msys.Load('tests/files/%s' % k)
+            self.assertEqual(inchi.Strings(m), [v])
+
+    def testBuiltin(self):
+        from msys import InChI
+        for k,v in self.gold.items():
+            m = msys.Load('tests/files/%s' % k)
+            self.assertEqual(InChI(m).string, v)
+
+
 class TestAmber(unittest.TestCase):
     def testStructureOnly(self):
         m1=msys.LoadPrmTop('tests/files/molecule.prmtop')

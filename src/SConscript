@@ -4,6 +4,7 @@ env=env.Clone()
 opts=Variables()
 opts.Add("MSYS_WITHOUT_MAE", "without mae file support?")
 opts.Add("MSYS_WITHOUT_LPSOLVE", "without lpsolve support?")
+opts.Add("MSYS_WITHOUT_INCHI", "without compiled-in inchi support?")
 opts.Update(env)
 
 env.Append(LIBS=[
@@ -104,7 +105,14 @@ analyze/bond_orders.cxx
 analyze/topological_ids.cxx
 '''))
 
-libmsys=env.AddLibrary('msys', selobjs + maeobjs + lpobjs + Split('''
+if env.get("MSYS_WITHOUT_INCHI"):
+    inchienv = env.Clone()
+    inchienv.Append(CPPDEFINES='MSYS_WITHOUT_INCHI'.split())
+    inchi = inchienv.AddObject('inchi.cxx')
+else:
+    inchi = env.AddObject('inchi.cxx')
+
+libmsys=env.AddLibrary('msys', selobjs + maeobjs + lpobjs + [inchi] + Split('''
 alchemical.cxx
 
 analyze/aromatic.cxx

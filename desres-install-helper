@@ -25,6 +25,7 @@ NUMPY=numpy/1.6.2-32A
 LPSOLVE=$(treetop lp_solve)
 PRIMEGEN=primegen/0.97-05
 ZLIB=zlib/1.2.4-10A
+INCHI=inchi/1.04-05
 TEXLIVE=texlive/20120701-03
 
 # build and documentation
@@ -49,6 +50,7 @@ loadmodules() {
         $LPSOLVE/lib \
         $PRIMEGEN/lib \
         $ZLIB/lib \
+        $INCHI/lib \
         $SPHINX/bin \
 	$TEXLIVE/bin
     

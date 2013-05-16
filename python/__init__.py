@@ -1818,3 +1818,51 @@ def CalcPlanarity(pos_or_atoms):
         pos[i,:] = pos_or_atoms[i].pos
     return _msys.calc_planarity(pos)
 
+class InChI(object):
+    ''' InChI holds an the result of an inchi invocation for a structure '''
+
+    def __init__(self, system, DoNotAddH = True, SNon = True, FixedH = True):
+        opts = 0
+        if DoNotAddH:
+            opts |= _msys.InChI.DoNotAddH
+        if SNon:
+            opts |= _msys.InChI.SNon
+        if FixedH:
+            opts |= _msys.InChI.FixedH
+
+        self._inchi = _msys.InChI.create(system._ptr, opts)
+
+    def __str__(self):
+        return self.string
+
+    def __nonzero__(self):
+        return self.ok
+
+    @property
+    def string(self):
+        ''' Computed inchi string '''
+        return self._inchi.string()
+
+    @property
+    def auxinfo(self):
+        ''' Auxiliary info '''
+        return self._inchi.auxinfo()
+
+    @property
+    def message(self):
+        ''' Message returned by inchi during calculation '''
+        return self._inchi.message()
+
+    @property
+    def ok(self):
+        ''' Was an inchi computed successfully? '''
+        return self._inchi.ok()
+
+    @property
+    def key(self):
+        ''' inchi key for this object's string. '''
+        return self._inchi.key()
+
+
+
+

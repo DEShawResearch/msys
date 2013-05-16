@@ -20,6 +20,7 @@ term.cxx
 vector.cxx
 io.cxx
 graph.cxx
+inchi.cxx
 pymod.cxx
 '''.split()
 
