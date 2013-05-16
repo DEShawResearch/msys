@@ -775,11 +775,11 @@ namespace desres { namespace msys {
         BOOST_FOREACH(ilpBondMap::value_type const& kv, _component_bond_cols ){ 
             Id aid=kv.first;
             ilpBond const& ibond=kv.second;
-            int nonres=0;
-            double res=0;
+            int nonres=1;
+            double res=1;
             for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB;++i,++icol){
-                nonres+=_component_solution.at(icol)*i; 
-                res+=_component_resonant_solution.at(icol)*i;
+                nonres+=_component_solution.at(icol)*(i-1); 
+                res+=_component_resonant_solution.at(icol)*(i-1);
             }
             solutionMap::iterator iter=bondinfo.lower_bound(aid);
             if(iter==bondinfo.end() || bondinfo.key_comp()(aid,iter->first)){ 
@@ -801,18 +801,21 @@ namespace desres { namespace msys {
 
         BOOST_FOREACH(Id aid1, _component_atoms_present){
             electronRange const& range= asserted_find(parent->_atom_lp,aid1);
-            ss.str("");
-            ss << "a_"<<aid1 << ":"<<range.lb;
+            assert(range.lb==0);
 
-            double objv=-lps*(enegLP+clamp(DataForElement(parent->_mol->atom(aid1).atomic_number).eneg));      
+            double objv=-lps*(enegLP+clamp(DataForElement(parent->_mol->atom(aid1).atomic_number).eneg));         
 
-            int colid=add_column_to_ilp(_component_lp,ss.str(),range.lb*objv, 0, 1);
-            _component_atom_cols.insert(ilpAtomMap::value_type(aid1,ilpAtom(colid,range.lb,range.ub))); 
-            for(int i=range.lb+1; i<=range.ub;++i){
+            std::vector<int> colid;
+            for(int i=1; i<=range.ub;++i){
                 ss.str("");
                 ss << "a_"<<aid1 << ":"<<i;
-                add_column_to_ilp(_component_lp,ss.str(),i*objv, 0, 1);
+                colid.push_back(add_column_to_ilp(_component_lp,ss.str(),i*objv, 0, 1));
             }
+            if(colid.size())
+                _component_atom_cols.insert(ilpAtomMap::value_type(aid1,ilpAtom(colid[0],1,range.ub))); 
+            else
+                _component_atom_cols.insert(ilpAtomMap::value_type(aid1,ilpAtom(0,0,0))); 
+
         }
     }
 
@@ -833,24 +836,26 @@ namespace desres { namespace msys {
                 ilpBondMap::iterator iter=_component_bond_cols.lower_bound(bid);
                 // Have we already added this bond? 
                 if(!(iter==_component_bond_cols.end() || _component_bond_cols.key_comp()(bid,iter->first))) continue; 
+                assert(range.lb==1);
 
                 Id aid2=parent->_mol->bond(bid).other(aid1);
-                ss.str("");
-                ss << "b_"<<aid1<<"_"<<aid2<<":"<<range.lb;
                  
                 int anum2=parent->_mol->atom(aid2).atomic_number;
                 double hyper=(PeriodForElement(anum1)>2 || PeriodForElement(anum2)>2)? 1.01 : 1.0;
                 double objv = -(eneg1 + clamp(DataForElement(anum2).eneg));
-                double factor=clamp(hyper*range.lb*(1.0+0.01*range.lb*(1-range.lb)));
-                int colid=add_column_to_ilp(_component_lp,ss.str(), factor*objv ,0,1);
 
-                _component_bond_cols.insert(iter,ilpBondMap::value_type(bid,ilpBond(colid,range.lb,range.ub)));
-                for(int i=range.lb+1; i<=range.ub;++i){
+                std::vector<int> colid;
+                for(int i=2; i<=range.ub;++i){
                     ss.str("");
                     ss << "b_"<<aid1<<"_"<<aid2<<":"<<i;
-                    factor=clamp(hyper*i*(1.0+0.01*i*(1-i)));
-                    add_column_to_ilp(_component_lp,ss.str(),factor*objv, 0, 1);
+                    double factor=clamp(hyper*(i*(1.0+0.01*i*(1-i))-1));
+                    colid.push_back(add_column_to_ilp(_component_lp,ss.str(),factor*objv, 0, 1));
                 }
+                if(colid.size())
+                    _component_bond_cols.insert(iter,ilpBondMap::value_type(bid,ilpBond(colid[0],2,range.ub)));
+                else
+                    _component_bond_cols.insert(iter,ilpBondMap::value_type(bid,ilpBond(0,1,1)));
+                 
             }
         }
     }
@@ -991,7 +996,8 @@ namespace desres { namespace msys {
             for(int icol=iatom.ilpCol, i=iatom.ilpLB; i<=iatom.ilpUB;++i,++icol){
                 rowdata.at(icol)=1;
             }
-            lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_EQ,1);
+            lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_GE,0);
+            lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_LE,1);
 
             if(parent->_ringAtoms.count(kv.first)){
                 IdList bonds=parent->_mol->filteredBondsForAtom(kv.first,*parent->_filter);
@@ -1008,7 +1014,8 @@ namespace desres { namespace msys {
             for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB; ++i,++icol){
                 rowdata.at(icol)=1;
             }
-            lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_EQ,1);
+            lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_GE,0);
+            lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_LE,1);
         }
 
         BOOST_FOREACH( IdList &bids, strained){
@@ -1016,10 +1023,10 @@ namespace desres { namespace msys {
             ilpBond list[]={asserted_find(_component_bond_cols,bids[0]),asserted_find(_component_bond_cols,bids[1])};
             BOOST_FOREACH(ilpBond const& ibond, list){
                 for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB; ++i,++icol){
-                    rowdata.at(icol)=i;
+                    rowdata.at(icol)=(i-1);
                 }
             }        
-            lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_LE,3);
+            lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_LE,1);
         }
     }
 
@@ -1051,9 +1058,11 @@ namespace desres { namespace msys {
             BOOST_FOREACH(Id bid, bonds){
                 ilpBond const& ibond = asserted_find(_component_bond_cols,bid);
                 for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB; ++i,++icol){
-                    rowdata.at(icol)=i;
+                    rowdata.at(icol)=i-1;
                 }
             }
+            atomoct-=nbonds;
+            atomvalence-=nbonds;
 
             if(nbonds==0){
                 /* Do Nothing (Dont add octet or charge constraints for ions) */
@@ -1107,10 +1116,10 @@ namespace desres { namespace msys {
                     BOOST_FOREACH(Id bid, bonds){
                         ilpBond const& ibond = asserted_find(_component_bond_cols,bid);
                         for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB; ++i,++icol){
-                            rowdata.at(icol)=i;
+                            rowdata.at(icol)=i-1;
                         }
                     }
-                    lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_EQ,4);
+                    lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_EQ,2);
                 }
             }
         }
@@ -1141,7 +1150,7 @@ namespace desres { namespace msys {
             BOOST_FOREACH(Id bid, bonds){
                 ilpBond const& ibond = asserted_find(_component_bond_cols,bid);
                 for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB; ++i,++icol){
-                    rowdata.at(icol)+=i;
+                    rowdata.at(icol)+=(i-1);
                 }
                 Id other=parent->_mol->bond(bid).other(aid);
                 if (_component_atoms_present.count(other)) continue;
@@ -1151,6 +1160,8 @@ namespace desres { namespace msys {
                 assert(range.lb==range.ub);
                 extvalence+=range.lb;
             }
+            valence-=bonds.size();
+            extvalence+=bonds.size();
         }
         
         _component_valence_count=valence+extvalence;
@@ -1197,10 +1208,8 @@ namespace desres { namespace msys {
                 ilpBond const& ibond = asserted_find(_component_bond_cols,bid);
                 /* two electrons per bond order in ring... */
                 for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB; ++i,++icol){
-                    rowdata.at(icol)=i*2;
+                    rowdata.at(icol)=(i-1)*2;
                 }
-                /* corrected for how many are available in the pi system */
-                target+=2;
             }
 
             /* if aromaticity can be satified using alternating double bonds, do that instead
