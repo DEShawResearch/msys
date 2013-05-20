@@ -1,3 +1,7 @@
+1.7.16 NEW: faster InChI c interface added
+       IMPROVED: bond order assignment speed (dimension of ILP reduced)
+       OTHER: resonance bond order/formal charge generation disabled 
+       
 1.7.15 FIXED: Make dms-select use desres-cleanenv.
 
 1.7.14 NEW: msys.Save() function understands filename extensions.
