@@ -24,8 +24,13 @@ def fixmass(atoms):
         d.setdefault(a.mass, []).append(a)
     
     elems=list()
+    inconsistent = list()
     for anum, d in m.items():
         if anum==0: continue
+        # make sure the masses are consistent with the atomic number.
+        for mass, atoms in d.items():
+            if msys.GuessAtomicNumber(mass) != anum:
+                inconsistent.extend(atoms)
         if len(d)==1: continue
         elems.append(anum)
         print "Found %d distinct masses for atomic number %d" % (len(d), anum)
@@ -38,6 +43,14 @@ def fixmass(atoms):
         for atoms in d.values():
             for a in atoms:
                 a.mass = M
+    if inconsistent:
+        print >> sys.stderr, "Found %d atoms whose masses are inconsistent with their atomic numbers:" % len(inconsistent)
+        for a in inconsistent:
+            print >> sys.stderr, '%8d "%s" anum %2d mass %5.3f (expected anum %2d or mass %5.3f)' % (
+                    a.id, a.name, a.atomic_number, a.mass,
+                    msys.GuessAtomicNumber(a.mass),
+                    msys.MassForElement(a.atomic_number))
+
     return elems
 
 def main():
