@@ -28,6 +28,11 @@ namespace desres { namespace msys {
      * topologically distinct fragments, as determined by atomic number. */
     IdList FindDistinctFragments(SystemPtr mol, MultiIdList const& fragments);
 
+    /* Add hydrogens to the given parent atoms, assuming current bond order 
+     * and formal charges are correct.  Returns the ids of the added 
+     * hydrogens. */
+    IdList AddHydrogens(SystemPtr mol, IdList const& parents);
+
     void GuessHydrogenPositions(SystemPtr mol, IdList const& hatoms);
 }}
 

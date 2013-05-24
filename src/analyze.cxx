@@ -210,6 +210,53 @@ namespace desres { namespace msys {
         return result;
     }
 
+    IdList AddHydrogens(SystemPtr mol, IdList const &parents) {
+        IdList added;
+
+        BOOST_FOREACH(Id atm, parents) {
+            int anum = mol->atom(atm).atomic_number;
+            int fq = mol->atom(atm).formal_charge;
+            int grp = GroupForElement(anum);
+            if (anum <= 2 || grp < 13) continue;
+
+            int degree = 0;
+            int valence = 0;
+            BOOST_FOREACH(Id bnd, mol->bondsForAtom(atm)) {
+                ++degree;
+                valence += mol->bond(bnd).order;
+            }
+
+            int target = grp-10;
+            int electrons = target - valence - fq;
+            int extraH = 0;
+            
+            // add protons to get rid of radical
+            if (electrons % 2) {
+                ++extraH;
+                --electrons;
+                ++degree;
+                ++valence;
+            }
+
+            int nlp = electrons/2; // number of lone pairs
+            /* convert lone pairs to 2x hydrogens to satisfy octets.
+             * This may not hold for hypervalent species
+             */
+            int more = 4 - nlp - valence;
+            extraH += std::max(0, 2*std::min(more, nlp));
+
+            for (int i=0; i<extraH; i++) {
+                Id H = mol->addAtom(mol->atom(atm).residue);
+                mol->addBond(atm,H);
+                mol->atom(H).fragid = mol->atom(atm).fragid;
+                mol->atom(H).atomic_number = 1;
+                mol->atom(H).name = "H";
+                added.push_back(H);
+            }
+        }
+        return added;
+    }
+
     static const double def_bond = 1.0;
     static const double def_angle = 109.5 * M_PI/180;
     static const double def_dihedral = -120.0 * M_PI/180;
