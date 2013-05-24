@@ -262,6 +262,10 @@ namespace desres { namespace msys {
     static const double def_dihedral = -120.0 * M_PI/180;
 
     void GuessHydrogenPositions(SystemPtr mol, IdList const& hatoms) {
+
+        /* Randomize orientation of water molecules, deterministically. */
+        srand48(1999);
+
         /* partition by root atom */
         typedef std::map<Id,IdList> RootMap;
         RootMap map;
@@ -290,14 +294,27 @@ namespace desres { namespace msys {
                 atom_t& hyd2 = mol->atom(hlist[1]);
                 if (c.empty()) {
                     /* water */
-                    hyd1.x = root.x;
-                    hyd1.y = root.y;
-                    hyd1.z = root.z + def_bond;
+
+                    /* sample a point on the unit sphere */
+                    double u1 = drand48();
+                    double u2 = drand48();
+                    double z = 2*u1 - 1.0;
+                    double phi = 2*M_PI*u2;
+                    double R = sqrt(1-z*z);
+
+                    /* orient and place the first hydrogen */
+                    hyd1.x = root.x + def_bond * R * cos(phi);
+                    hyd1.y = root.y + def_bond * R * sin(phi);
+                    hyd1.z = root.z + def_bond * z;
+
+                    /* arbitrary reference position for the second hydrogen */
+                    Float A[3] = {hyd1.x, hyd1.y + def_bond, hyd1.z};
+                    /* position with random rotation about O-H1 */
                     apply_dihedral_geometry(hyd2.pos(),
-                            mol->atom(hlist[0]).pos(),
+                            A,
                             mol->atom(hlist[0]).pos(),
                             mol->atom(r).pos(),
-                            def_bond, def_angle, 0);
+                            def_bond, def_angle, 2*M_PI*drand48());
 
                 } else if (c.size()==1) {
                     Id C = c[0];
@@ -332,7 +349,7 @@ namespace desres { namespace msys {
                 }
 
             } else if (hlist.size()==3) {
-                if (c.size()==1) {
+                if (c.size()>0) {
                     Id C = c[0];
                     Id A = C;
                     if (mol->bondCountForAtom(C)>1) {
