@@ -103,7 +103,8 @@ IdList desres::msys::AppendTerms( TermTablePtr dst, TermTablePtr src,
     return ids;
 }
 
-IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr ) {
+IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr,
+                                   Id dstct ) {
 
     /* Disallow if the the systems have different nonbonded vdw_funct */
     String const& dstvdw = dstptr->nonbonded_info.vdw_funct;
@@ -137,8 +138,11 @@ IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr ) {
     IdList cts = src.cts();
     for (Id c=0; c<cts.size(); c++) {
         Id srcct = cts[c];
-        Id dstct = dst.addCt();
-        dst.ct(dstct) = src.ct(srcct);
+
+        if (bad(dstct)) {
+            dstct = dst.addCt();
+            dst.ct(dstct) = src.ct(srcct);
+        }
 
         /* add chains */
         IdList const& chains = src.chainsForCt(srcct);

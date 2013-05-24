@@ -33,8 +33,12 @@ namespace desres { namespace msys {
      * Auxiliary tables in src are added to dst if there is no name clash;
      * otherwise the dst tables are kept.
      *
+     * If ct is BadId, then cts in src will be appended as cts in dst.
+     * Otherwise, ct must be a valid ct in dst, and all atoms from src
+     * will be appended to the given ct.
+     *
      * Returns the ids of the newly added atoms. */
-    IdList AppendSystem( SystemPtr dst, SystemPtr src );
+    IdList AppendSystem( SystemPtr dst, SystemPtr src, Id ct = BadId );
 
 }}
 

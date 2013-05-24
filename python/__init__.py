@@ -321,6 +321,14 @@ class Ct(Handle):
         ptr = self._ptr
         return [Bond(ptr, i) for i in ptr.bondsForCt(self._id)]
 
+    def append(self, system):
+        ''' Appends atoms and forcefield from system to self.  Returns
+        a list of of the new created atoms in self.  Systems must have
+        identical nonbonded_info.vdw_funct. '''
+        p=self._ptr
+        ids=p.append(system._ptr, self.id)
+        return [Atom(p, i) for i in ids]
+
     ### TODO: selectChain()
 
     @property
@@ -1202,8 +1210,9 @@ class System(object):
         a list of of the new created atoms in self.  Systems must have
         identical nonbonded_info.vdw_funct. '''
         p=self._ptr
-        ids=p.append(system._ptr)
-        return [Atom(p,i) for i in ids]
+        ids=p.append(system._ptr, _msys.BadId)
+        atms=self._update_atoms()
+        return [atms[i] for i in ids]
 
     def clone(self, seltext=None):
         ''' Clone the System, returning a new System.  If seltext is provided,

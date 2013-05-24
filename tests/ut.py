@@ -247,6 +247,26 @@ class TestMain(unittest.TestCase):
         self.assertEqual(m.ncts, 3)
         self.assertEqual([c.name for c in m.cts], ['a', 'b', 'd'])
         self.assertEqual(m.ct(1).chains[0].name, 'c')
+    
+    def testAppendToCt(self):
+        m=msys.CreateSystem()
+        m.addCt().name='a'
+        m.addCt().name='d'
+        m.ct(1).addChain().name='x'
+
+        m2=msys.CreateSystem()
+        ct=m2.addCt()
+        ct.name='b'
+        ct.addChain().name = 'c'
+
+        m.ct(1).append(m2)
+        self.assertEqual(m.ncts, 2)
+        self.assertEqual(m.ct(0).name, 'a')
+        self.assertEqual(m.ct(1).name, 'd')
+        self.assertEqual(m.ct(1).nchains, 2)
+        self.assertEqual(m.ct(1).chains[0].name, 'x')
+        self.assertEqual(m.ct(1).chains[1].name, 'c')
+
 
     def testCtClone(self):
         m1=msys.CreateSystem()
