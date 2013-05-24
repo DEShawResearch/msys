@@ -331,6 +331,33 @@ namespace desres { namespace msys {
                             def_bond, def_angle, def_dihedral);
                 }
 
+            } else if (hlist.size()==3) {
+                if (c.size()==1) {
+                    Id C = c[0];
+                    Id A = C;
+                    if (mol->bondCountForAtom(C)>1) {
+                        BOOST_FOREACH(A, mol->bondedAtoms(C)) {
+                            if (A!=r) break;
+                        }
+                    }
+                    apply_dihedral_geometry(mol->atom(hlist[0]).pos(),
+                            mol->atom(A).pos(),
+                            mol->atom(C).pos(),
+                            mol->atom(r).pos(),
+                            def_bond, def_angle, def_dihedral/2);
+                    apply_dihedral_geometry(mol->atom(hlist[1]).pos(),
+                            mol->atom(hlist[0]).pos(),
+                            mol->atom(C).pos(),
+                            mol->atom(r).pos(),
+                            def_bond, def_angle, def_dihedral);
+                    apply_dihedral_geometry(mol->atom(hlist[2]).pos(),
+                            mol->atom(C).pos(),
+                            mol->atom(hlist[0]).pos(),
+                            mol->atom(r).pos(),
+                            def_bond, def_angle, def_dihedral);
+
+                }
+
             } else if (hlist.size()==1) {
                 atom_t& hyd1 = mol->atom(hlist[0]);
 
