@@ -318,6 +318,17 @@ namespace desres { namespace msys {
                             mol->atom(C).pos(),
                             mol->atom(r).pos(),
                             def_bond, def_angle, -M_PI/2-def_dihedral);
+                } else if (c.size()==2) {
+                    apply_dihedral_geometry(hyd1.pos(),
+                            mol->atom(c[0]).pos(),
+                            mol->atom(c[1]).pos(),
+                            mol->atom(r).pos(),
+                            def_bond, def_angle, def_dihedral);
+                    apply_dihedral_geometry(hyd2.pos(),
+                            mol->atom(c[1]).pos(),
+                            mol->atom(c[0]).pos(),
+                            mol->atom(r).pos(),
+                            def_bond, def_angle, def_dihedral);
                 }
 
             } else if (hlist.size()==1) {
