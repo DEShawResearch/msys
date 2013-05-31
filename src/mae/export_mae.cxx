@@ -114,7 +114,7 @@ static void build_m_atom( SystemPtr mol, Destro& M ) {
         Id id=ids[i];
         const atom_t& atm = mol->atom(id);
         int color, mmod;
-        if (atm.atomic_number<1) continue;
+        if (atm.atomic_number==0) continue;
         Destro& rec = m_atom.append();
         switch  (atm.atomic_number) {
             default: color=2;  mmod=64; break;  // gray; "any atom"
