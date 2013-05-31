@@ -4,6 +4,7 @@
        NEW: Can append to a specific ct, rather than always create new cts.
        IMPROVED: GuessHydrogenPositions works much better now.
        IMPROVED: dms-fix-mass checks for consistency of atomic number and mass.
+       FIXED: MAE writer now handles negative atomic numbers.
 
 1.7.16 NEW: faster InChI c interface added
        IMPROVED: bond order assignment speed (dimension of ILP reduced)
