@@ -1,3 +1,10 @@
+1.7.17 NEW: Python bindings for ComputeTopologicalIds.
+       NEW: dms-check-groups to check for valid initial conformation.
+       NEW: AddHydrogens routine.
+       NEW: Can append to a specific ct, rather than always create new cts.
+       IMPROVED: GuessHydrogenPositions works much better now.
+       IMPROVED: dms-fix-mass checks for consistency of atomic number and mass.
+
 1.7.16 NEW: faster InChI c interface added
        IMPROVED: bond order assignment speed (dimension of ILP reduced)
        OTHER: resonance bond order/formal charge generation disabled 

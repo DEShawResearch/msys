@@ -1804,6 +1804,11 @@ def FindDistinctFragments(system):
     ''' Return fragids of representative fragments.  '''
     return _msys.FindDistinctFragments(system._ptr)
 
+def ComputeTopologicalIds(system):
+    ''' Compute and return the topological ids for the atoms or system '''
+    ids = _msys.ComputeTopologicalIds(system._ptr)
+    return [x for x in ids]
+
 def CalcDistance(a, b):
     ''' Distance between atoms or positions a and b '''
     if not isinstance(a,numpy.ndarray): a = a.pos

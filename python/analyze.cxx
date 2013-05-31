@@ -63,6 +63,7 @@ namespace desres { namespace msys {
          * lets you find rings connected to specific atoms or bonds. 
          */
         def("GetSSSR", get_sssr);
+        def("ComputeTopologicalIds", ComputeTopologicalIds);
         def("GuessBondConnectivity", GuessBondConnectivity);
         def("FindDistinctFragments", find_distinct_fragments);
         def("RadiusForElement", RadiusForElement);
