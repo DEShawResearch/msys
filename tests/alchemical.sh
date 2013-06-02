@@ -11,6 +11,10 @@ TMP=/tmp
 set -e
 DUMPOPTS="--without-provenance --reorder --without-forcefield --without-paraminfo"
 
+add_insertion() {
+    sqlite3 $1 "alter table particle add column insertion varchar default ''"
+}
+
 canonicalize() {
     set +e
     sqlite3 $1 "update stretch_harm_term set p0=p1,p1=p0 where p0>p1"
@@ -34,6 +38,7 @@ do
     # old msys route.
     dms-alchemical $DIR/A.dms $DIR/B.dms $DIR/atom.map $TMP/old.dms
     canonicalize $TMP/old.dms
+    add_insertion $TMP/old.dms
     dms-dump $DUMPOPTS $TMP/old.dms | grep -v "\-----" > $TMP/old.dump
     
     # new msys route.
