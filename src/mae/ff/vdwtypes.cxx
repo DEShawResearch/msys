@@ -24,7 +24,7 @@ namespace {
                 funct="vdw_12_6";
             } else if (vdwmap.funct()=="exp_6x") {
                 funct="vdw_exp_6";
-            } else if (vdwmap.funct()=="polynomial_pij") {
+            } else if (vdwmap.funct()=="polynomial_cij") {
                 funct="polynomial_cij";
             } else {
                 std::stringstream ss;
