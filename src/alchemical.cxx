@@ -679,7 +679,7 @@ namespace {
                 if (n2.size()>=2) keep(anglmap,       n2[1],n2[0],n1[0]);
                 if (n2.size()>=3) keep(dihemap, n2[2],n2[1],n2[0],n1[0]);
 
-                if (n1.size()>=2 && n2.size()>2)
+                if (n1.size()>=2 && n2.size()>=2)
                                   keep(dihemap, n1[1],n1[0],n2[0],n2[1]);
             }
         }

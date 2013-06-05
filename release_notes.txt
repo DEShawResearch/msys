@@ -1,3 +1,6 @@
+1.7.18 FIXED: dms-alchemical handles more complex topologies.
+       FIXED: dms-alchemical keeps dihedral terms, not just bonds and angles.
+
 1.7.17 NEW: Python bindings for ComputeTopologicalIds.
        NEW: dms-check-groups to check for valid initial conformation.
        NEW: AddHydrogens routine.
