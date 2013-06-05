@@ -505,7 +505,10 @@ namespace {
         if (!bad(al)) key.push_back(al);
         canonicalize(key);
         BlockMap::iterator it=map.find(key);
-        if (it==map.end()) return;
+        if (it==map.end()) {
+            printf("    SKIP\n");
+            return;
+        }
         int& ti = it->second.first;
         int& tj = it->second.second;
         if (ti==0) ti=-1;
@@ -544,6 +547,7 @@ namespace {
 
         IdSet connected;
         BOOST_FOREACH(Id i, alist) {
+            //printf("consider %u\n", i);
             if (mappedA.count(i) || connected.count(i)) continue;
             IdList jlist = A->bondedAtoms(i);
             /* FIXME: for comparison purposes only.  */
@@ -552,20 +556,134 @@ namespace {
                 if (!mappedA.count(j)) continue;
                 IdList n1 = two_neighbors(i,A,mappedA,idmap);
                 IdList n2 = two_neighbors(j,A,mappedA,idmap);
-                //printf("  using template [");
-                //BOOST_FOREACH(Id id,n1) printf("%u ", id);
-                //printf("] , [");
-                //BOOST_FOREACH(Id id,n2) printf("%u ", id);
-                //printf("]\n");
+
+                printf("  n2:");
+                BOOST_FOREACH(Id id, n2) {
+                    printf(" (%d %s %d %s)",
+                            id, 
+                            A->residue(A->atom(id).residue).name.c_str(),
+                            A->residue(A->atom(id).residue).resid,
+                            A->atom(id).name.c_str());
+                }
+                printf("\n");
+                printf("  using template [");
+                BOOST_FOREACH(Id id,n1) printf("%u ", id);
+                printf("] , [");
+                BOOST_FOREACH(Id id,n2) printf("%u ", id);
+                printf("]\n");
+
+                printf("  keep bond %u %u\n", n1[0], n2[0]);
+                if (n1.size()>=2) 
+                    printf("  keep angle %u %u %u\n", n1[1],n1[0],n2[0]);
+                if (n2.size()>=2)
+                    printf("  keep angle %u %u %u\n", n2[1],n2[0],n1[0]);
+                //if (1)            keep(bondmap, n1[0], n2[0]);
+                //if (n1.size()>=2) keep(anglmap, n1[1],n1[0],n2[0]);
+                ////if (n1.size()>=3) keep(dihemap, n1[2],n1[1],n1[0],n2[0]);
+                //if (n2.size()>=2) keep(anglmap, n2[1],n2[0],n1[0]);
+                ////if (n2.size()>=3) keep(dihemap, n2[2],n2[1],n2[0],n1[0]);
+                break;
+            }
+            find_connected_dummies(i,A,mappedA,connected);
+            //printf("connected is now size %lu\n", connected.size());
+            //BOOST_FOREACH(Id q, connected) { printf("  %u", q); }
+            //printf("\n");
+        }
+    }
+
+    void my_find_kept(SystemPtr A, 
+                      MultiIdList& dummy_fragmentsA,
+                      IdSet const& mappedA,
+                      IdList const& dummiesA,
+                      IdList const& a2a,
+                      BlockMap& bondmap,
+                      BlockMap& anglmap,
+                      BlockMap& dihemap) {
+
+        BOOST_FOREACH(IdList& dfrag, dummy_fragmentsA) {
+            //printf("fragment: ");
+            /* construct mapping from real atoms to bonded dummy atoms */
+            std::map<Id, IdList> rmap;
+            for (Id i=0; i<dfrag.size(); i++) {
+                /* convert dfrag from cloned system ids back to A ids */
+                Id d = dummiesA.at(dfrag[i]);
+                dfrag[i] = d;
+                //printf("%u ", d);
+                BOOST_FOREACH(Id nbr, A->bondedAtoms(d)) {
+                    if (mappedA.count(nbr)) {
+                        rmap[nbr].push_back(d);
+                    }
+                }
+            }
+            //printf("\n");
+            if (rmap.empty()) {
+                MSYS_FAIL("Found disconnected dummy atoms");
+            }
+
+            //printf("found %lu possible real connectors\n", rmap.size());
+
+            /* We can choose just one real atom to bind this dummy fragment
+             * to the real graph.  Use the following criteria, in order:
+             * 1) Number of bonded dummies
+             * 2) Smallest id of real
+             */
+            Id best_real = rmap.begin()->first;
+            Id best_degree = rmap.begin()->second.size();
+            for (std::map<Id, IdList>::iterator it=rmap.begin(); it!=rmap.end(); ++it) {
+                Id new_real = it->first;
+                Id new_degree = it->second.size();
+                if (new_degree > best_degree) {
+                    best_real = new_real;
+                    best_degree = new_degree;
+                }
+            }
+#if 0
+            printf("real connector: %u %s %d %s\n", 
+                    best_real, 
+                    A->residue(A->atom(best_real).residue).name.c_str(),
+                    A->residue(A->atom(best_real).residue).resid,
+                    A->atom(best_real).name.c_str());
+#endif
+
+            /* Find bond partners of real.  Don't allow one of the bond
+             * partners to be one of the atoms connected to the dummy
+             * fragment; i.e. it must not be one of the keys in rmap.  */
+            IdSet internal_mappedA(mappedA);
+            for (std::map<Id, IdList>::iterator it=rmap.begin(); it!=rmap.end(); ++it) {
+                if (it->first != best_real) {
+                    internal_mappedA.erase(it->first);
+                }
+            }
+            IdList n2 = two_neighbors(best_real,A,internal_mappedA,a2a);
+
+            /* Find bond partners of (all?) bonded dummies */
+            IdSet dset(dfrag.begin(), dfrag.end());
+            BOOST_FOREACH(Id d, rmap[best_real]) {
+                IdList n1 = two_neighbors(d, A, dset, a2a);
+
+#if 0
+                printf("  using template [");
+                BOOST_FOREACH(Id id,n1) printf("%u ", id);
+                printf("] , [");
+                BOOST_FOREACH(Id id,n2) printf("%u ", id);
+                printf("]\n");
+
+                printf("  keep bond %u %u\n", n1[0], n2[0]);
+                if (n1.size()>=2) 
+                    printf("  keep angle %u %u %u\n", n1[1],n1[0],n2[0]);
+                if (n2.size()>=2)
+                    printf("  keep angle %u %u %u\n", n2[1],n2[0],n1[0]);
+#endif
 
                 if (1)            keep(bondmap, n1[0], n2[0]);
                 if (n1.size()>=2) keep(anglmap, n1[1],n1[0],n2[0]);
                 //if (n1.size()>=3) keep(dihemap, n1[2],n1[1],n1[0],n2[0]);
                 if (n2.size()>=2) keep(anglmap, n2[1],n2[0],n1[0]);
-                //if (n2.size()>=3) keep(dihemap, n2[2],n2[1],n2[0],n1[0]);
+
+                // keep connections to only one dummy atom.
+                // TODO: also keep stretches to other dummy atoms
                 break;
             }
-            find_connected_dummies(i,A,mappedA,connected);
         }
     }
 
@@ -578,22 +696,53 @@ namespace {
                 BlockMap& anglmap,
                 BlockMap& dihemap) {
 
+        IdList a2a(A->atomCount(), BadId);
+        for (Id i=0; i<a2a.size(); i++) a2a[i]=i;
+
         /* find which A atoms have real analogs in B, and vice versa */
         IdSet mappedA, mappedB;
+        IdList dummiesA, dummiesB;
         for (Id i=0; i<alist.size(); i++) {
             Id a = alist[i];
             Id b = a2b.at(a);
+            //printf("i %-8u a %-8u b %-8u\n", i,a,b);
             if (!bad(b)) {
                 mappedA.insert(a);
                 mappedB.insert(b);
+            } else {
+                dummiesA.push_back(a);
             }
         }
-        IdList a2a(A->atomCount(), BadId);
-        for (Id i=0; i<a2a.size(); i++) a2a[i]=i;
+
+        for (Id i=0; i<blist.size(); i++) {
+            Id b = blist[i];
+            Id a = b2a.at(b);
+            if (!std::binary_search(alist.begin(), alist.end(), a)) {
+                dummiesB.push_back(b);
+            }
+        }
+
+        if (dummiesA.empty() && dummiesB.empty()) return;
+        sort_unique(dummiesA);
+        sort_unique(dummiesB);
+
+        /* find the connected subgraphs (fragments) */
+        MultiIdList dummy_fragmentsA, dummy_fragmentsB;
+        Clone(A, dummiesA)->updateFragids(&dummy_fragmentsA);
+        Clone(B, dummiesB)->updateFragids(&dummy_fragmentsB);
+
+        //printf("** A ** \n");
+        my_find_kept(A, dummy_fragmentsA, mappedA, dummiesA, a2a,
+                     bondmap, anglmap, dihemap);
+
+        //printf("** B ** \n");
+        my_find_kept(B, dummy_fragmentsB, mappedB, dummiesB, b2a,
+                     bondmap, anglmap, dihemap);
+
         //printf("stage A\n");
-        find_kept_atoms(A,alist,mappedA, a2a, bondmap, anglmap, dihemap);
+        //find_kept_atoms(A,alist,mappedA, a2a, bondmap, anglmap, dihemap);
         //printf("stage B\n");
-        find_kept_atoms(B,blist,mappedB, b2a, bondmap, anglmap, dihemap);
+        //find_kept_atoms(B,blist,mappedB, b2a, bondmap, anglmap, dihemap);
     }
 }
 
