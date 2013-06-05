@@ -1,3 +1,6 @@
+1.7.19 FIXED: dms-alchemical handles constraint tables with extra
+              informative parameter columns.
+
 1.7.18 FIXED: dms-alchemical handles more complex topologies.
        FIXED: dms-alchemical keeps dihedral terms, not just bonds and angles.
 
