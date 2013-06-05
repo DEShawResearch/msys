@@ -505,10 +505,7 @@ namespace {
         if (!bad(al)) key.push_back(al);
         canonicalize(key);
         BlockMap::iterator it=map.find(key);
-        if (it==map.end()) {
-            printf("    SKIP\n");
-            return;
-        }
+        if (it==map.end()) return;
         int& ti = it->second.first;
         int& tj = it->second.second;
         if (ti==0) ti=-1;
@@ -675,10 +672,15 @@ namespace {
                     printf("  keep angle %u %u %u\n", n2[1],n2[0],n1[0]);
 #endif
 
-                if (1)            keep(bondmap, n1[0], n2[0]);
-                if (n1.size()>=2) keep(anglmap, n1[1],n1[0],n2[0]);
-                //if (n1.size()>=3) keep(dihemap, n1[2],n1[1],n1[0],n2[0]);
-                if (n2.size()>=2) keep(anglmap, n2[1],n2[0],n1[0]);
+                if (1)            keep(bondmap,             n1[0],n2[0]);
+                if (n1.size()>=2) keep(anglmap,       n1[1],n1[0],n2[0]);
+                if (n1.size()>=3) keep(dihemap, n1[2],n1[1],n1[0],n2[0]);
+
+                if (n2.size()>=2) keep(anglmap,       n2[1],n2[0],n1[0]);
+                if (n2.size()>=3) keep(dihemap, n2[2],n2[1],n2[0],n1[0]);
+
+                if (n1.size()>=2 && n2.size()>2)
+                                  keep(dihemap, n1[1],n1[0],n2[0],n2[1]);
 
                 // keep connections to only one dummy atom.
                 // TODO: also keep stretches to other dummy atoms
