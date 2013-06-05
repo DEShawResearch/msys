@@ -794,17 +794,25 @@ namespace {
                         id = b2a.at(id);
                         if (std::find(aids.begin(),aids.end(),id)==aids.end()) {
                             ids.push_back(id);
-                            param_indices.push_back(i-1);
+                            param_indices.push_back(i);
                         }
                     }
-                    //printf("merge B %s: ", btable->name().c_str());
-                    //BOOST_FOREACH(Id id, bids) printf("%u ", id);
-                    //printf("into A %s: ", atable->name().c_str());
-                    //BOOST_FOREACH(Id id, aids) printf("%u ", id);
-                    //printf("\n  merged: ");
-                    //BOOST_FOREACH(Id id, ids) printf("%u ", id);
-                    //printf("\n");
 
+                    if (ids.size()==aids.size()) {
+                        /* then the constraints completely overlap, and
+                         * there's nothing to merge. */
+                        continue;
+                    }
+
+#if 0
+                    printf("merge B %s: ", btable->name().c_str());
+                    BOOST_FOREACH(Id id, bids) printf("%u ", id);
+                    printf("into A %s: ", atable->name().c_str());
+                    BOOST_FOREACH(Id id, aids) printf("%u ", id);
+                    printf("\n  merged: ");
+                    BOOST_FOREACH(Id id, ids) printf("%u ", id);
+                    printf("\n");
+#endif
                     std::stringstream ss;
                     if (atable->name()=="constraint_hoh") {
                         if (btable->name()!="constraint_hoh") {
@@ -818,12 +826,34 @@ namespace {
                     Id cparam = c->params()->addParam();
                     c->addTerm(ids, cparam);
                     ParamTablePtr bparams = btable->params();
-                    for (Id i=0; i<atable->params()->propCount(); i++) {
-                        c->params()->value(cparam,i) = atable->propValue(aterm,i);
+
+                    /* map r1, r2, ... parameters from A into new table */
+                    for (Id i=0; i<aids.size()-1; i++) {
+                        std::stringstream ss;
+                        ss << "r" << (i+1);
+                        std::string propname = ss.str();
+                        c->params()->value(cparam, propname) =
+                            atable->propValue(aterm, propname);
                     }
+
+                    /* map the parameters from B onto corresponding atoms */
                     for (Id i=0; i<param_indices.size(); i++) {
-                        c->params()->value(cparam,i+atable->params()->propCount())
-                            = btable->propValue(t,param_indices[i]);
+                        std::string src, dst;
+                        {
+                            std::stringstream ss;
+                            ss << "r" << param_indices[i];
+                            src = ss.str();
+                        }
+                        {
+                            std::stringstream ss;
+                            ss << "r" << (aids.size()+i);
+                            dst = ss.str();
+                        }
+                        //printf("  param %u src %s dst %s\n",
+                                //i,src.c_str(), dst.c_str());
+                        std::string propname = ss.str();
+                        c->params()->value(cparam, dst) =
+                            btable->propValue(t, src);
                     }
                     atable->delTerm(aterm);
                 }
