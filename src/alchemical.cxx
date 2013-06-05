@@ -653,7 +653,7 @@ namespace {
             }
             IdList n2 = two_neighbors(best_real,A,internal_mappedA,a2a);
 
-            /* Find bond partners of (all?) bonded dummies */
+            /* Find bond partners of all bonded dummies */
             IdSet dset(dfrag.begin(), dfrag.end());
             BOOST_FOREACH(Id d, rmap[best_real]) {
                 IdList n1 = two_neighbors(d, A, dset, a2a);
@@ -681,10 +681,6 @@ namespace {
 
                 if (n1.size()>=2 && n2.size()>2)
                                   keep(dihemap, n1[1],n1[0],n2[0],n2[1]);
-
-                // keep connections to only one dummy atom.
-                // TODO: also keep stretches to other dummy atoms
-                break;
             }
         }
     }
