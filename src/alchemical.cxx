@@ -900,7 +900,7 @@ SystemPtr desres::msys::MakeAlchemical( SystemPtr A, SystemPtr B,
 
     /* Replace B with just the "mapped" part, and update the map to
      * reflect the new numbering. */
-    B = clone_mapped_alchemical(B, pairs);
+    //B = clone_mapped_alchemical(B, pairs);
 
     /* Add custom atom properties from B */
     for (Id i=0; i<B->atomPropCount(); i++) {
