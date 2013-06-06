@@ -860,6 +860,35 @@ namespace {
             }
         }
     }
+
+    SystemPtr clone_mapped_alchemical(SystemPtr B, std::vector<IdPair>& pairs) {
+
+        IdList batoms, bfragids, sorted_batoms, connected_batoms;
+        MultiIdList bfrags;
+        B->updateFragids(&bfrags);
+        BOOST_FOREACH(IdPair& p, pairs) {
+            Id bi = p.second;
+            if (!bad(bi)) {
+                p.second = batoms.size();
+                batoms.push_back(bi);
+                bfragids.push_back(B->atom(bi).fragid);
+            }
+        }
+        sort_unique(bfragids);
+        sorted_batoms = batoms;
+        sort_unique(sorted_batoms);
+        BOOST_FOREACH(Id fragid, bfragids) {
+            connected_batoms.insert(
+                    connected_batoms.end(), 
+                    bfrags[fragid].begin(), 
+                    bfrags[fragid].end());
+        }
+        sort_unique(connected_batoms);
+        if (connected_batoms != sorted_batoms) {
+            MSYS_FAIL("Map of B state does not contain all connected atoms");
+        }
+        return Clone(B, batoms);
+    }
 }
 
 SystemPtr desres::msys::MakeAlchemical( SystemPtr A, SystemPtr B,
@@ -868,6 +897,10 @@ SystemPtr desres::msys::MakeAlchemical( SystemPtr A, SystemPtr B,
 
     /* We will be modifying A, so make a copy */
     A = Clone(A, A->atoms());
+
+    /* Replace B with just the "mapped" part, and update the map to
+     * reflect the new numbering. */
+    B = clone_mapped_alchemical(B, pairs);
 
     /* Add custom atom properties from B */
     for (Id i=0; i<B->atomPropCount(); i++) {
