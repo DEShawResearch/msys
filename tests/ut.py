@@ -1873,5 +1873,33 @@ class TestMain(unittest.TestCase):
         self.assertTrue(len(all_matches) == 8 * 6)
         self.assertTrue(len(all_matches[0]) == 4)
 
+
+class TestAtomMatch(unittest.TestCase):
+    def FIXME_THERE_ARE_NO_CHECKS_IN_THIS_testFEPAtomMatch(self):
+        from msys import atommatch as AM
+        for i in range(32):
+            if i+1 == 7:
+                continue
+            if i+1 in [21,22,29,30,31,32]:
+                name = '/d/en/ramek-1/fep/sar39/sar39_%02d/gpu-0' % (i+1)
+            else:
+                name = '/d/en/ramek-1/fep/sar39/sar39_%02d/mut-0' % (i+1)
+            print name
+            mol1 = msys.Load(os.path.join(name, 'alig.dms'))
+            mol2 = msys.Load(os.path.join(name, 'blig.dms'))
+            matches, aligned = AM.FEPAtomMatch(mol1, mol2, sel1='resname LIG', sel2='resname LIG')
+            if os.path.exists(os.path.join(name, 'solvation.atommap')):
+                lines = open(os.path.join(name, 'solvation.atommap')).readlines()
+            elif os.path.exists(os.path.join(name, 'solavtion.atommap')):
+                lines = open(os.path.join(name, 'solavtion.atommap')).readlines()
+            elif os.path.exists(os.path.join(name, 'solvation.atommapp')):
+                lines = open(os.path.join(name, 'solvation.atommapp')).readlines()
+            else:
+                lines = open(os.path.join(name, 'solv.atommap')).readlines()
+            matches_alex = set([(int(line.split()[0])-1, int(line.split()[1])-1) for line in lines if len(line.split()) > 1 and '-' not in line])
+            matches_auto = set([(a.id, b.id) for a,b in matches])
+            print 'Missing matches: ' + str(sorted(matches_alex - matches_auto))
+            print 'Extra matches: ' + str(sorted(matches_auto - matches_alex))
+
 if __name__=="__main__":
     unittest.main(verbosity=2)

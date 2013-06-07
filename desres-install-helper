@@ -26,6 +26,7 @@ LPSOLVE=$(treetop lp_solve)
 PRIMEGEN=primegen/0.97-05
 ZLIB=zlib/1.2.4-10A
 INCHI=inchi/1.04-05
+EIGEN=eigen/3.1.2-01        # for tools/atommatch
 TEXLIVE=texlive/20120701-03
 
 # build and documentation
@@ -51,6 +52,7 @@ loadmodules() {
         $PRIMEGEN/lib \
         $ZLIB/lib \
         $INCHI/lib \
+        $EIGEN/lib \
         $SPHINX/bin \
 	$TEXLIVE/bin
     
