@@ -1827,7 +1827,7 @@ def CalcDihedral(a, b, c, d):
     if not isinstance(a,numpy.ndarray): a = a.pos
     if not isinstance(b,numpy.ndarray): b = b.pos
     if not isinstance(c,numpy.ndarray): c = c.pos
-    if not isinstance(d,numpy.ndarray): c = d.pos
+    if not isinstance(d,numpy.ndarray): d = d.pos
     return _msys.calc_dihedral(a,b,c,d)
 
 def CalcPlanarity(pos_or_atoms):
