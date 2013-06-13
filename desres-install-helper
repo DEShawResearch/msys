@@ -132,7 +132,8 @@ case $1 in
 	desres_require_prefix
 	desres_require_moduledir
 
-        $0 --exec scons -j4 install PREFIX=${PREFIX} OBJDIR=${TMPDIR}
+        # scons gets confused about missing -lmsys when using -j N
+        $0 --exec scons install PREFIX=${PREFIX} OBJDIR=${TMPDIR}
 
         ./tests/ut.py
 

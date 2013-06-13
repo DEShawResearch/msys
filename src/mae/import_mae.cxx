@@ -35,6 +35,7 @@ namespace {
     const char * FORMAL_CHG = "m_formal_charge";
     const char * INSERTION =  "m_insertion_code";
     const char * GROW_NAME =  "m_grow_name";
+    const char * MMOD_TYPE =  "m_mmod_type";
 
     const std::string empty;
 
@@ -125,9 +126,11 @@ namespace {
         const Json& formals = m_atom.get(FORMAL_CHG);
         const Json& inserts = m_atom.get(INSERTION);
         const Json& grow = m_atom.get(GROW_NAME);
+        const Json& mmod_type = m_atom.get(MMOD_TYPE);
 
         Id gtmp=BadId, gene=BadId, glig=BadId, gbias=BadId, gfrz=BadId;
         Id growcol=BadId;
+        Id mmodcol=BadId;
 
         if (!!temp) gtmp=h->addAtomProp("grp_temperature", IntType);
         if (!!nrg)  gene=h->addAtomProp("grp_energy", IntType);
@@ -172,6 +175,12 @@ namespace {
                     }
                     h->atomPropValue(id,growcol)=g;
                 }
+            }
+            if (!!mmod_type) {
+                if (bad(mmodcol)) {
+                    mmodcol=h->addAtomProp("m_mmod_type",IntType);
+                }
+                h->atomPropValue(id,mmodcol)=mmod_type.elem(j).as_int();
             }
             atoms.push_back(id);
             *natoms += 1;

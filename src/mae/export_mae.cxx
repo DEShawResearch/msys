@@ -110,6 +110,7 @@ static void build_m_atom( SystemPtr mol, Destro& M ) {
     }
 
     IdList ids=mol->atoms();
+    Id mmod_id=mol->atomPropIndex("m_mmod_type");
     for (Id i=0; i<ids.size(); i++) {
         Id id=ids[i];
         const atom_t& atm = mol->atom(id);
@@ -132,6 +133,9 @@ static void build_m_atom( SystemPtr mol, Destro& M ) {
             case 17: color=13; mmod=102; break;  // Cl- ion
             case 19: color=4;  mmod=67; break;  // K+ ion
             case 20: color=4;  mmod=70; break;  // Ca2+ ion
+        }
+        if(mmod_id!=BadId) {
+            mmod=mol->atomPropValue(id,mmod_id).asInt();
         }
         const residue_t& res = mol->residue(atm.residue);
         const chain_t& chn = mol->chain(res.chain);
