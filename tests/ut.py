@@ -1875,31 +1875,28 @@ class TestMain(unittest.TestCase):
 
 
 class TestAtomMatch(unittest.TestCase):
-    def FIXME_THERE_ARE_NO_CHECKS_IN_THIS_testFEPAtomMatch(self):
+    def testAtomMatch(self):
         from msys import atommatch as AM
-        for i in range(32):
-            if i+1 == 7:
-                continue
-            if i+1 in [21,22,29,30,31,32]:
-                name = '/d/en/ramek-1/fep/sar39/sar39_%02d/gpu-0' % (i+1)
-            else:
-                name = '/d/en/ramek-1/fep/sar39/sar39_%02d/mut-0' % (i+1)
-            print name
-            mol1 = msys.Load(os.path.join(name, 'alig.dms'))
-            mol2 = msys.Load(os.path.join(name, 'blig.dms'))
-            matches, aligned = AM.FEPAtomMatch(mol1, mol2, sel1='resname LIG', sel2='resname LIG')
-            if os.path.exists(os.path.join(name, 'solvation.atommap')):
-                lines = open(os.path.join(name, 'solvation.atommap')).readlines()
-            elif os.path.exists(os.path.join(name, 'solavtion.atommap')):
-                lines = open(os.path.join(name, 'solavtion.atommap')).readlines()
-            elif os.path.exists(os.path.join(name, 'solvation.atommapp')):
-                lines = open(os.path.join(name, 'solvation.atommapp')).readlines()
-            else:
-                lines = open(os.path.join(name, 'solv.atommap')).readlines()
-            matches_alex = set([(int(line.split()[0])-1, int(line.split()[1])-1) for line in lines if len(line.split()) > 1 and '-' not in line])
-            matches_auto = set([(a.id, b.id) for a,b in matches])
-            print 'Missing matches: ' + str(sorted(matches_alex - matches_auto))
-            print 'Extra matches: ' + str(sorted(matches_auto - matches_alex))
+        mol1 = msys.Load('tests/files/alig.dms')
+        mol2 = msys.Load('tests/files/blig.dms')
+        matches, aligned = AM.AtomMatch(mol1, mol2, sel1='resname LIG',
+                sel2='resname LIG')
+        self.assertTrue(len(aligned.atoms) == len(mol2.select('resname LIG')))
+        for pair in matches:
+            self.assertTrue(pair[1] in aligned.atoms)
+        X = NP.array([a.pos for a,b in matches])
+        Y = NP.array([b.pos for a,b in matches])
+        A, b, rmsd = AM._rawalign(X,Y)
+        rmsd2 = NP.sqrt(((X-Y)**2).sum() / X.shape[0])
+        self.assertTrue(abs(rmsd - rmsd2) / rmsd < 0.01)
+        matches = set([(a.id, b.id) for a,b in matches])
+        self.assertTrue(matches == set([(1, 0), (4, 1), (5, 2), (6, 3), (7, 4),
+            (8, 5), (9, 6), (10, 7), (11, 8), (12, 9), (13, 10), (14, 11),
+            (15, 12), (16, 13), (17, 14), (18, 15), (19, 16), (20, 17),
+            (21, 18), (22, 19), (23, 20), (24, 21), (25, 22), (26, 23),
+            (27, 24), (28, 25), (38, 26), (39, 27), (40, 28), (41, 29),
+            (42, 30), (43, 31), (44, 32), (45, 33), (46, 34), (47, 35),
+            (48, 36), (49, 37), (50, 38), (51, 39), (52, 40), (53, 41)]))
 
 if __name__=="__main__":
     unittest.main(verbosity=2)

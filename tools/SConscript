@@ -8,7 +8,7 @@ obj=env.AddObject('atommatch/atommatch.cxx')
 env.AddUnitTest('test_atommatch', [obj]+['atommatch/test_atommatch.cxx'])
 env.AddPythonExtension('_atommatch', [obj]+['atommatch/pymod.cxx'], prefix='msys', EXTERNAL_LIBS=['boost_python', 'msys'])
 env.AddPythonModule('atommatch/atommatch.py', prefix='msys')
-env.AddScript('dms-atommatch', src='atommatch/FEPAtomMatch')
+env.AddScript('dms-atommatch', src='atommatch/dms-atommatch')
 
 # converters
 env.AddProgram('mae2dms', 'converters/mae2dms.cxx')

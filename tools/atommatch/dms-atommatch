@@ -3,12 +3,20 @@
 # desres-cleanenv -m numpy/1.6.2-31A/lib-python -- python $0 "$@"
 #}
 '''
-%prog% mol1.dms mol2.dms atommap_output [ options ]
+%prog% mol1.dms mol2.dms atommap aligned_mol2.dms [ options ]
 
-Computes the best atom map between atoms in mol1 and mol2 for FEP. See
-FEPAtomMatch Python function for details. A user-specified scoring
-function defined in Python may be used in place of the default scoring
-function.
+Inputs: mol1.dms, mol2.dms
+Outputs: atommap, aligned_mol2.dms
+
+Computes the best atom map between atoms in mol1 and mol2. See AtomMatch
+Python function for details. A user-specified scoring function defined in
+Python may be used in place of the default scoring function.
+
+aligned_mol2.dms is a clone of the relevant selection of mol2.dms,
+aligned to mol1.dms using the matched atoms. atommap lists pairs of atom
+IDs, the first corresponding to an atom in mol1.dms and the second to a
+matching atom in aligned_mol2.dms (NOTE: not mol2.dms). Unmatched atoms
+are paired with -1.
 
 '''
 
@@ -22,32 +30,31 @@ import imp
 
 def main():
     parser = optparse.OptionParser(__doc__)
-    parser.add_option('--sel1', default='all', help='atomsel for mol1; default all')
-    parser.add_option('--sel2', default='all', help='atomsel for mol2; default all')
+    parser.add_option('--sel1', default='all',
+            help='atomsel for mol1 for a single complete fragment; default all')
+    parser.add_option('--sel2', default='all',
+            help='atomsel for mol2 for a single complete fragment; default all')
     parser.add_option('--score-fct-file', default=None,
             help='Python file defining a user-defined "score_fct" function')
-    parser.add_option('--aligned', default=None,
-            help='DMS file output for mol2 aligned to mol1 based on matched atoms')
     opts, args = parser.parse_args()
-    if len(args) != 3:
+    if len(args) != 4:
         parser.error("incorrect number of arguments")
 
-    # Run FEPAtomMatch
+    # Run AtomMatch
     mol1 = msys.Load(args[0])
     mol2 = msys.Load(args[1])
     if opts.score_fct_file is None:
-        score_fct = fep_atommatch.default_score_fct
+        score_fct = atommatch.default_score_fct
     else:
         d = imp.load_source('score_fct', opts.score_fct_file).__dict__
         if 'score_fct' not in d:
             raise RuntimeError, 'file missing "score_fct" definition'
         score_fct = d['score_fct']
-    matches, aligned = fep_atommatch.FEPAtomMatch(mol1, mol2,
+    matches, aligned = atommatch.AtomMatch(mol1, mol2,
             sel1=opts.sel1, sel2=opts.sel2, score_fct=score_fct)
 
     # Write aligned structure
-    if opts.aligned is not None:
-        msys.SaveDMS(aligned, opts.aligned)
+    msys.SaveDMS(aligned, args[3])
 
     # Write atommap_output file
     matches = [(a.id, b.id) for a,b in matches]
@@ -57,17 +64,13 @@ def main():
     for match in sorted(matches):
         matched1.add(match[0])
         matched2.add(match[1])
-        out_lines.append('%d %d\n' % (match[0]+1, match[1]+1))
-    ind1 = len(mol1.atoms)+1
-    ind2 = len(mol2.atoms)+1
-    for a in mol1.atoms:
+        out_lines.append('%d %d\n' % (match[0], match[1]))
+    for a in mol1.select(opts.sel1):
         if a.id not in matched1:
-            out_lines.append('%d %d\n' % (a.id+1, -ind2))
-            ind2 += 1
-    for a in mol2.atoms:
+            out_lines.append('%d %d\n' % (a.id, -1))
+    for a in aligned.atoms:
         if a.id not in matched2:
-            out_lines.append('%d %d\n' % (-ind1, a.id+1))
-            ind1 += 1
+            out_lines.append('%d %d\n' % (-1, a.id))
     f = open(args[2], 'w')
     f.writelines(out_lines)
     f.close()

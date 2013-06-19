@@ -4,7 +4,7 @@ import msys
 import numpy as np
 
 def default_score_fct(atoms1, atoms2):
-    ''' Default scoring function for use in FEPAtomMatch.
+    ''' Default scoring function for use in AtomMatch.
 
     Rule 1: Do not match hydrogens to other elements.
     Rule 2: Do not match if any bond lengths differ by more than 10%.
@@ -48,8 +48,8 @@ def _rawalign(X, Y, w=None):
     b = ym - np.dot(xm, A)
     return A, b, rmsd
 
-def FEPAtomMatch(mol1, mol2, sel1='all', sel2='all', score_fct=default_score_fct):
-    '''Get best mapping of atoms between two molecules for FEP.
+def AtomMatch(mol1, mol2, sel1='all', sel2='all', score_fct=default_score_fct):
+    '''Get best mapping of atoms between two molecules.
 
     Returns the best isomorphism between subgraphs in mol1 and mol2,
     where "best" is determined by the following rules:
@@ -66,8 +66,7 @@ def FEPAtomMatch(mol1, mol2, sel1='all', sel2='all', score_fct=default_score_fct
         most matched atoms.
 
     (4) Among multiple matches satisfying (3), the match minimizes RMSD
-        between the
-        matched atoms.
+        between the matched atoms.
 
     Rules (1)-(3) are enforced exactly. As the number of matches that
     satisfy rules (1)-(3) may increase exponentially in the number of
@@ -95,10 +94,11 @@ def FEPAtomMatch(mol1, mol2, sel1='all', sel2='all', score_fct=default_score_fct
 
         match -- [(Atom, Atom), ... ], where the first atom in each
         pair is an atom from mol1 and the second is the matching atom
-        from mol2.
+        from aligned_mol
 
-        aligned_mol -- msys.System, a clone of mol2 that is RMSD-aligned
-        to mol1 using the positions of the matched atoms
+        aligned_mol -- msys.System, a clone of the selection sel2 of mol2
+        that is RMSD-aligned to mol1 using the positions of the matched
+        atoms
 
     '''
     # Clone selections
@@ -106,18 +106,25 @@ def FEPAtomMatch(mol1, mol2, sel1='all', sel2='all', score_fct=default_score_fct
     atoms2 = mol2.select(sel2)
     clone1 = msys.CloneSystem(atoms1)
     clone2 = msys.CloneSystem(atoms2)
+    if len(clone1.updateFragids()) != 1 or len(clone2.updateFragids()) != 1 \
+            or len(set.union(*[set(a.bonded_atoms)
+                for a in atoms1])) != len(atoms1) \
+            or len(set.union(*[set(a.bonded_atoms)
+                for a in atoms2])) != len(atoms2):
+        raise RuntimeError, \
+                'Atom selection must correspond to a single complete fragment'
     # Call C++ function
     def f(m1, a1, m2, a2):
         atoms1 = [msys.Atom(m1, id) for id in a1]
         atoms2 = [msys.Atom(m2, id) for id in a2]
         return score_fct(atoms1, atoms2)
     rep = _atommatch.ScoreFct(f)
-    out = _atommatch.FEPAtomMatch(clone1._ptr, clone2._ptr, rep)
-    match = [(atoms1[id1], atoms2[id2]) for (id1, id2) in out]
+    out = _atommatch.AtomMatch(clone1._ptr, clone2._ptr, rep)
+    match = [(atoms1[id1], clone2.atom(id2)) for (id1, id2) in out]
     # Align mol2 to mol1 based on matched atoms
     mol2_copy = mol2.clone()
     A, b, rmsd = _rawalign(np.array([a2.pos for a1,a2 in match]),
             np.array([a1.pos for a1,a2 in match]))
-    for a2 in mol2_copy.atoms:
+    for a2 in clone2.atoms:
         a2.pos = np.dot(a2.pos, A) + b
-    return match, mol2_copy
+    return match, clone2

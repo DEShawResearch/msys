@@ -1,32 +1,33 @@
 #include "atommatch.hxx"
+#include "atommatch_helpers.hxx"
 #include <queue>
 #include <stack>
 #include <limits>
 #include <cmath>
 #include <Eigen/Dense>
 
-using namespace desres;
-using namespace desres::fep_atommatch;
-using namespace desres::fep_atommatch::helpers;
+using namespace desres::msys;
+using namespace desres::msys::atommatch;
+using namespace desres::msys::atommatch::helpers;
 
 /* Create a graph from a set of connected atoms in a molecule.
  *
  * g is the created graph object and atom_idx is the atom ID mapping such
  * that node i in g maps to atom atom_idx[i] in mol.
  */
-void helpers::init_graph(msys::SystemPtr mol, std::vector<int>& atom_idx,
+void helpers::init_graph(SystemPtr mol, std::vector<int>& atom_idx,
         GraphRepr& g) {
     atom_idx.clear();
     atom_idx.resize(mol->maxAtomId(), -1);
-    msys::IdList atoms = mol->atoms();
+    IdList atoms = mol->atoms();
     for (unsigned i = 0; i < atoms.size(); ++i)
         atom_idx[atoms[i]] = i;
     g.v_to_e.clear();
     g.edges.clear();
     g.v_to_e.resize(atoms.size(), std::vector<int>());
     for (unsigned i = 0; i < atoms.size(); ++i) {
-        msys::IdList bonded = mol->bondedAtoms(atoms[i]);
-        BOOST_FOREACH(msys::Id other, bonded) {
+        IdList bonded = mol->bondedAtoms(atoms[i]);
+        BOOST_FOREACH(Id other, bonded) {
             if (atoms[i] < other) {
                 g.edges.push_back(Edge(i, atom_idx[other]));
                 g.v_to_e[i].push_back(g.edges.size() - 1);
@@ -64,7 +65,7 @@ void helpers::partition_graph_biconnected(const GraphRepr& g,
     /* Use msys routine to get biconnected components */
     std::vector<GraphRepr> tmp_components;
     std::vector<std::vector<int> > tmp_components_idx;
-    msys::SSSR::get_biconnected_components(g, tmp_components,
+    SSSR::get_biconnected_components(g, tmp_components,
             tmp_components_idx);
     std::map<int, std::vector<int> > by_size;
     for (unsigned i = 0; i < tmp_components_idx.size(); ++i)
@@ -149,7 +150,7 @@ void helpers::partition_graph_biedgeconnected(const GraphRepr& g,
         }
     }
     if (label_to_v.size() != g.v_to_e.size())
-        FAIL("Input molecule is not connected");
+        MSYS_FAIL("Input molecule is not connected");
     /* Compute ND, L, and H as in Tarjan paper */
     std::vector<int> ND(g.v_to_e.size(), 0);
     std::vector<int> low(g.v_to_e.size(), -1);
@@ -308,9 +309,9 @@ bool match_node(const GraphRepr& g1, int v1, const GraphRepr& g2, int v2,
  */
 void helpers::isomorphisms(const GraphRepr& g1,
         const std::vector<int>& comp_idx1,
-        const std::vector<int>& atom_idx1, msys::SystemPtr mol1,
+        const std::vector<int>& atom_idx1, SystemPtr mol1,
         const GraphRepr& g2, const std::vector<int>& comp_idx2,
-        const std::vector<int>& atom_idx2, msys::SystemPtr mol2,
+        const std::vector<int>& atom_idx2, SystemPtr mol2,
         ScoreFctPtr score_fct, Isomorphisms& isos) {
     isos.clear();
     if (g1.edges.size() != g2.edges.size()
@@ -338,7 +339,7 @@ void helpers::isomorphisms(const GraphRepr& g1,
         }
     }
     if (int(nodes_bfs.size()) != size)
-        FAIL("Graph isomorphism error---check that graph is connected");
+        MSYS_FAIL("Graph isomorphism error---check that graph is connected");
 
     /* Maintain the following: For all but top element of matches, matches[i] of
      * H matches nodes_bfs[i] of G. Top element of matches indicates the node in
@@ -364,8 +365,8 @@ void helpers::isomorphisms(const GraphRepr& g1,
             /* Have matched all nodes in g1 */
             isos.push_back(Isomorphism());
             isos.back().perm = G1toG2;
-            msys::IdList atoms1(size);
-            msys::IdList atoms2(size);
+            IdList atoms1(size);
+            IdList atoms2(size);
             for (int i = 0; i < size; ++i) {
                 atoms1[i] = atom_idx1[comp_idx1[i]];
                 atoms2[i] = atom_idx2[comp_idx2[G1toG2[i]]];
@@ -823,7 +824,7 @@ double compute_dist(const double* p1, const double* p2, double* rot,
  * SVD implementation in periodicfix does not seem to correctly handle singular
  * matrices.
  */
-double compute_align(msys::SystemPtr mol1, msys::SystemPtr mol2,
+double compute_align(SystemPtr mol1, SystemPtr mol2,
         const MatchList& match, double* rot, double* trans) {
     /* Get centroids */
     Eigen::Vector3d xm = Eigen::Vector3d::Zero();
@@ -883,9 +884,9 @@ double compute_align(msys::SystemPtr mol1, msys::SystemPtr mol2,
  */
 double helpers::select_single(const DPMat& best_matches, int v1, int v2,
         int iso_ind, const std::vector<std::vector<int> >& components_idx1,
-        const std::vector<int>& atom_idx1, msys::SystemPtr mol1,
+        const std::vector<int>& atom_idx1, SystemPtr mol1,
         const std::vector<std::vector<int> >& components_idx2,
-        const std::vector<int>& atom_idx2, msys::SystemPtr mol2,
+        const std::vector<int>& atom_idx2, SystemPtr mol2,
         const IsoMat& iso_mat, MatchList& match) {
     match.clear();
 
@@ -980,7 +981,7 @@ double helpers::select_single(const DPMat& best_matches, int v1, int v2,
             }
         }
         if (best_option == NULL)
-            FAIL("Error -- uninitialized best option");
+            MSYS_FAIL("Error -- uninitialized best option");
         BOOST_FOREACH(const DPNode& node, *best_option) {
             q.push_back(&best_matches[node.v1][node.v2][node.iso_ind]);
             if (done_components.find(node.v1) != done_components.end())
@@ -1002,8 +1003,8 @@ double helpers::select_single(const DPMat& best_matches, int v1, int v2,
     return compute_align(mol1, mol2, match, rot, trans);
 }
 
-void desres::fep_atommatch::FEPAtomMatch(msys::SystemPtr mol1,
-        msys::SystemPtr mol2, ScoreFctPtr rep, MatchList& match) {
+void atommatch::AtomMatch(SystemPtr mol1,
+        SystemPtr mol2, ScoreFctPtr rep, MatchList& match) {
     /* Initialize graphs from molecules */
     std::vector<int> atom_idx1;
     std::vector<int> atom_idx2;

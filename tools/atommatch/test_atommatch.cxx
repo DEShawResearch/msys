@@ -1,11 +1,12 @@
 #include "atommatch.hxx"
+#include "atommatch_helpers.hxx"
 #include "io.hxx"
 
 #include <iostream>
 
 using namespace desres::msys;
-using namespace desres::fep_atommatch;
-using namespace desres::fep_atommatch::helpers;
+using namespace desres::msys::atommatch;
+using namespace desres::msys::atommatch::helpers;
 
 void test_init_graph() {
     SystemPtr mol = Load("/proj/desres/root/Linux/x86_64/dms_inputs/1.5.4/share/ww.dms", true);
@@ -155,7 +156,7 @@ double rep2(SystemPtr mol1, const IdList& atoms1,
     if (atoms1.size() == 2)
         return 1;
     if (atoms1.size() != atoms2.size())
-        FAIL("BUG---Atom lists of different sizes");
+        MSYS_FAIL("BUG---Atom lists of different sizes");
     for (unsigned i = 0; i < atoms1.size(); ++i) {
         if (mol1->bondsForAtom(atoms1[i]).size()
                 != mol2->bondsForAtom(atoms2[i]).size())
@@ -167,7 +168,7 @@ double rep2(SystemPtr mol1, const IdList& atoms1,
 double rep3(SystemPtr mol1, const IdList& atoms1,
         SystemPtr mol2, const IdList& atoms2) {
     if (atoms1.size() != atoms2.size())
-        FAIL("BUG---Atom lists of different sizes");
+        MSYS_FAIL("BUG---Atom lists of different sizes");
     for (unsigned i = 0; i < atoms1.size(); ++i) {
         if (mol1->bondsForAtom(atoms1[i]).size()
                 != mol2->bondsForAtom(atoms2[i]).size())
@@ -591,7 +592,7 @@ void test_fep_atommatch(ScoreFctPtr rep) {
     mol2->atom(11).y = -2;
     mol2->atom(11).z = 0;
     MatchList match;
-    FEPAtomMatch(mol2, mol1, rep, match);
+    AtomMatch(mol2, mol1, rep, match);
     for (unsigned i = 0; i < match.size(); ++i)
         std::cout << "(" << match[i].first << "," << match[i].second << ") ";
     std::cout << std::endl;
@@ -618,13 +619,13 @@ int main(int argc, char** argv) {
     test_dp_update(1, 3, ScoreFctPtr(new ScoreFctC(rep3)));
     std::cout << "TESTING DP UPDATE REP4" << std::endl;
     test_dp_update(1, 4, ScoreFctPtr(new ScoreFctC(rep4)));
-    std::cout << "TESTING FEP ATOMMATCH REP1" << std::endl;
+    std::cout << "TESTING ATOMMATCH REP1" << std::endl;
     test_fep_atommatch(ScoreFctPtr(new ScoreFctC(rep1)));
-    std::cout << "TESTING FEP ATOMMATCH REP2" << std::endl;
+    std::cout << "TESTING ATOMMATCH REP2" << std::endl;
     test_fep_atommatch(ScoreFctPtr(new ScoreFctC(rep2)));
-    std::cout << "TESTING FEP ATOMMATCH REP3" << std::endl;
+    std::cout << "TESTING ATOMMATCH REP3" << std::endl;
     test_fep_atommatch(ScoreFctPtr(new ScoreFctC(rep3)));
-    std::cout << "TESTING FEP ATOMMATCH REP4" << std::endl;
+    std::cout << "TESTING ATOMMATCH REP4" << std::endl;
     test_fep_atommatch(ScoreFctPtr(new ScoreFctC(rep4)));
     return 0;
 }
