@@ -64,13 +64,13 @@ def main():
     for match in sorted(matches):
         matched1.add(match[0])
         matched2.add(match[1])
-        out_lines.append('%d %d\n' % (match[0], match[1]))
+        out_lines.append('%d %d\n' % (match[0]+1, match[1]+1))
     for a in mol1.select(opts.sel1):
         if a.id not in matched1:
-            out_lines.append('%d %d\n' % (a.id, -1))
+            out_lines.append('%d %d\n' % (a.id+1, -1))
     for a in aligned.atoms:
         if a.id not in matched2:
-            out_lines.append('%d %d\n' % (-1, a.id))
+            out_lines.append('%d %d\n' % (-1, a.id+1))
     f = open(args[2], 'w')
     f.writelines(out_lines)
     f.close()

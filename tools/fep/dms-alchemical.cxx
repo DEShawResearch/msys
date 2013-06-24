@@ -42,8 +42,11 @@ static std::vector<IdPair> read_atommap(const char *path) {
         if (sscanf(line.c_str(), "%d %d", &a, &b)!=2) {
             MSYS_FAIL("Misformtted atom map at line " << lineno);
         }
-        Id A = a<0 ? BadId : a;
-        Id B = b<0 ? BadId : b;
+        if (a==0 || b==0) {
+            MSYS_FAIL("Atom map entry contains a zero at line " << lineno);
+        }
+        Id A = a<0 ? BadId : a-1;
+        Id B = b<0 ? BadId : b-1;
         pairs.push_back(std::make_pair(A,B));
     }
     return pairs;

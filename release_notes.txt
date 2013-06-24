@@ -1,5 +1,5 @@
 1.7.20 NEW: Add dms-atommatch program and msys.atommatch Python library
-       FIXED: dms-alchemical now expects 0-based indexing in atom.map input
+       FIXED: dms-alchemical keeps more bonded terms involving dummy atoms
 
 1.7.19 FIXED: dms-alchemical handles constraint tables with extra
               informative parameter columns.
