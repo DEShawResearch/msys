@@ -1,6 +1,5 @@
 #include "annotated_system.hxx"
 #include "elements.hxx"
-#include "aromatic.hxx"
 #include "sssr.hxx"
 #include <queue>
 #include <assert.h>
@@ -134,7 +133,6 @@ void desres::msys::AnnotatedSystem::compute_ring_systems() {
 bool desres::msys::AnnotatedSystem::is_aromatic(const IdList& atoms,
         const IdList& bonds) {
 
-    ComputeRingPlanarity(_sys, atoms);
     int electron_count = 0;
     BOOST_FOREACH(Id bond, bonds) {
         /* Internal double bond, add 2 to electron count */
@@ -146,15 +144,21 @@ bool desres::msys::AnnotatedSystem::is_aromatic(const IdList& atoms,
         IdList bondedAtoms = _sys->bondedAtoms(atom);
         bool has_double = false;
         BOOST_FOREACH(Id bonded, bondedAtoms) {
-            if (_sys->atom(bonded).atomic_number < 1) continue;
+            int bondedAtomicNumber=_sys->atom(bonded).atomic_number;
+            if (bondedAtomicNumber < 1) continue;
             Id bond = _sys->findBond(atom, bonded);
             if (_sys->bond(bond).order == 2) {
                 has_double = true;
-                if (_atoms[bonded].aromatic && atom_set.find(bonded)
-                        == atom_set.end())
-                    /* External double bond to aromatic atom; add 1 to
-                     * electron count */
-                    ++electron_count;
+                if (atom_set.find(bonded)== atom_set.end()){
+                    if(_atoms[bonded].aromatic){
+                       /* External double bond to aromatic atom; add 1 to
+                        * electron count */
+                        ++electron_count;
+                    }else if(_sys->atom(atom).atomic_number==6 && bondedAtomicNumber==6){
+                       /* External C=C bond to nonaromatic carbon destroys aromaticity */
+                        return false;
+                    }
+                }
             }
         }
         /* If no double bonds and has lone pair, lone pair is in ring--add 2 to

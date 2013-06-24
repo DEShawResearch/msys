@@ -7,7 +7,6 @@
 
 #include "bond_orders.hxx"
 #include "../sssr.hxx"
-#include "aromatic.hxx"
 #include "get_fragments.hxx"
 #include "../quadsum.hxx"
 #include "eigensystem.hxx"

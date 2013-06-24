@@ -20,7 +20,8 @@ files = ['ww.dms',
         'indz.mae',
         'ndph.mae',
         'pegm.mae',
-        'PC2777373.mae']
+        'PC2777373.mae',
+        'PC32699.mae']
 
 mols = []
 annot_mols = []
