@@ -656,17 +656,17 @@ namespace {
             /* Find bond partners of all bonded dummies */
             IdSet dset(dfrag.begin(), dfrag.end());
             BOOST_FOREACH(Id d, rmap[best_real]) {
-                keep(bondmap, n2[0],d);
-                if (n2.size() >= 2) keep(anglmap, n2[1],n2[0],d);
-                if (n2.size() >= 3) keep(dihemap, n2[2],n2[1],n2[0],d);
+                keep(bondmap, n2[0],a2a.at(d));
+                if (n2.size() >= 2) keep(anglmap, n2[1],n2[0],a2a.at(d));
+                if (n2.size() >= 3) keep(dihemap, n2[2],n2[1],n2[0],a2a.at(d));
                 BOOST_FOREACH(Id bonded, A->bondedAtoms(d)) {
                     if (dset.find(bonded) == dset.end()) continue;
-                    keep(anglmap, bonded,d,n2[0]);
-                    if (n2.size() >= 2) keep(dihemap, bonded,d,n2[0],n2[1]);
+                    keep(anglmap, a2a.at(bonded),a2a.at(d),n2[0]);
+                    if (n2.size() >= 2) keep(dihemap, a2a.at(bonded),a2a.at(d),n2[0],n2[1]);
                     BOOST_FOREACH(Id bonded2, A->bondedAtoms(bonded)) {
                         if (dset.find(bonded2) == dset.end()) continue;
                         if (bonded2 == d) continue;
-                        keep(dihemap, bonded2,bonded,d,n2[0]);
+                        keep(dihemap, a2a.at(bonded2),a2a.at(bonded),a2a.at(d),n2[0]);
                     }
                 }
 #if 0
