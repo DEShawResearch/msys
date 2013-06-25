@@ -71,7 +71,6 @@ namespace desres { namespace msys { namespace mae {
   
         /*! \brief Line where token starts */
         unsigned m_tokenline;
-
     };
 }}}
 
@@ -743,6 +742,7 @@ namespace {
         char in[CHUNK], out[CHUNK];
         std::streamsize _gcount;
 
+        void init();
         void close();
 
     public:
@@ -755,6 +755,10 @@ namespace {
     gzip_istream::gzip_istream(std::istream& _file) 
     : file(_file), _gcount() {
         memset(&strm, 0, sizeof(strm));
+        init();
+    }
+
+    void gzip_istream::init() {
         /* magic initialization to read gzip files.  It's not in the zlib 
          * manual, or the example code.  
          * http://stackoverflow.com/questions/1838699/how-can-i-decompress-a-gzip-stream-with-zlib
@@ -767,7 +771,7 @@ namespace {
     void gzip_istream::read(char *s, std::streamsize n) {
 
         _gcount=0;
-        if (!strm.avail_out) {
+        while (!strm.avail_out) {
             if (!strm.avail_in) {
                 if (file.eof()) return;
                 file.read((char *)in,CHUNK);
@@ -780,7 +784,10 @@ namespace {
             strm.avail_out = CHUNK;
             strm.next_out = (unsigned char *)out;
             int rc = inflate(&strm, Z_NO_FLUSH);
-            if (rc && rc!=1) {
+            if (rc==1) {
+                close();
+                init();
+            } else if (rc) {
                 MSYS_FAIL("Reading zlib stream failed: " << strm.msg);
             }
             strm.next_out = (unsigned char *)out; 

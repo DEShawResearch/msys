@@ -1,3 +1,5 @@
+1.7.22 FIXED: Handle maegz files containing multiple zlib streams.
+
 1.7.21 NEW: Add dms-atommatch program and msys.atommatch Python library
        FIXED: dms-alchemical keeps more bonded terms involving dummy atoms
 
