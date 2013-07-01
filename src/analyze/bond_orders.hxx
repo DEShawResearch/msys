@@ -65,6 +65,9 @@ namespace desres { namespace msys {
         /* penalty for negativly charged components.  
            Set to 0.0 to remove penalty for forming negativly charged components  */
         GETSETREBUILDVAR(double, component_minus_charge_penalty);
+        /* scale weight factor for bond orders >1 
+           Set to 0.0 to remove additional objective goodness for orders>1  */
+        GETSETREBUILDVAR(double, multi_bond_scale);
         /* penalty for not forming aromatic rings. 
            Set to 0.0 to remove penalty for not forming aromatic rings */
         GETSETREBUILDVAR(double, aromatic_ring_penalty);
@@ -78,14 +81,15 @@ namespace desres { namespace msys {
         BondOrderAssigner(){
             _needRebuild=true; 
             _valid=false;
-            atom_lone_pair_scale=0.9;
-            atom_plus_charge_penalty=0.3;
-            atom_minus_charge_penalty=0.30;
+            atom_lone_pair_scale=0.95;
+            atom_plus_charge_penalty=0.25;
+            atom_minus_charge_penalty=0.25;
             atom_plus_charge_scale=2.00;
             atom_minus_charge_scale=1.20;
-            hypervalent_penalty=1.25;
+            hypervalent_penalty=2.75;
             component_plus_charge_penalty=0.25;
             component_minus_charge_penalty=0.25;
+            multi_bond_scale=0.9;
             aromatic_ring_penalty=0.30;
             absmax_atom_charge=2;
             max_component_charge=6; 

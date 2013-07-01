@@ -362,7 +362,11 @@ namespace desres { namespace msys {
             case 17: // Cl
             case 35: // Br
             case 53: // I
-                maxbo=2;
+                if(nbonds==1){
+                    maxbo=1;
+                }else{
+                    maxbo=2;
+                }
                 break;
             case 5: // B
             case 6: // C
@@ -802,7 +806,9 @@ namespace desres { namespace msys {
             electronRange const& range= asserted_find(parent->_atom_lp,aid1);
             assert(range.lb==0);
 
-            double objv=-lps*(enegLP+clamp(DataForElement(parent->_mol->atom(aid1).atomic_number).eneg));         
+            int anum1=parent->_mol->atom(aid1).atomic_number;
+            double eneg=enegLP +clamp(DataForElement(anum1).eneg);
+            double objv=-lps*eneg;         
 
             std::vector<int> colid;
             for(int i=1; i<=range.ub;++i){
@@ -824,6 +830,8 @@ namespace desres { namespace msys {
         _component_bond_cols.clear();
         BondOrderAssignerPtr parent=_parent.lock();
 
+        double boscale=clamp(parent->multi_bond_scale);
+
         std::ostringstream ss;
         BOOST_FOREACH(Id aid1, _component_atoms_present){
             int anum1=parent->_mol->atom(aid1).atomic_number;
@@ -844,11 +852,12 @@ namespace desres { namespace msys {
                 double objv = -(eneg1 + clamp(DataForElement(anum2).eneg));
 
                 std::vector<int> colid;
+                double factor=1.0*hyper;
                 for(int i=2; i<=range.ub;++i){
                     ss.str("");
                     ss << "b_"<<aid1<<"_"<<aid2<<":"<<i;
-                    double factor=clamp(hyper*(i*(1.0+0.01*i*(1-i))-1));
                     colid.push_back(add_column_to_ilp(_component_lp,ss.str(),factor*objv, 0, 1));
+                    factor+=clamp(hyper*boscale);
                 }
                 if(colid.size())
                     _component_bond_cols.insert(iter,ilpBondMap::value_type(bid,ilpBond(colid[0],2,range.ub)));
@@ -903,11 +912,22 @@ namespace desres { namespace msys {
             ss.str("");
             ss << "qM_"<<aid1;
             /* Only need to keep track of the first column id */
-            kv.second.qCol=add_column_to_ilp(_component_lp,ss.str(),qMinus+shift,0,parent->absmax_atom_charge);
-                        
+            if(GroupForElement(anum)==18){
+                /* nobel gases shouldnt be negative */
+                kv.second.qCol=add_column_to_ilp(_component_lp,ss.str(),qMinus+shift,0, 0);
+            }else{
+                kv.second.qCol=add_column_to_ilp(_component_lp,ss.str(),qMinus+shift,0,parent->absmax_atom_charge);
+            }
+
+
             ss.str("");
             ss << "qP_"<<aid1;
-            add_column_to_ilp(_component_lp,ss.str(), qPlus ,0,parent->absmax_atom_charge);
+            if(GroupForElement(anum)>16){
+                /* halogens and nobel gases shouldnt be positive */
+                add_column_to_ilp(_component_lp,ss.str(), qPlus ,0, 0);
+            }else{
+                add_column_to_ilp(_component_lp,ss.str(), qPlus ,0,parent->absmax_atom_charge);
+            }
 
             if (PeriodForElement(anum)>2){
                 ss.str("");
