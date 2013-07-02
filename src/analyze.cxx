@@ -225,6 +225,10 @@ namespace desres { namespace msys {
                 ++degree;
                 valence += mol->bond(bnd).order;
             }
+            /* shortcut check for saturated atoms */
+            if( (degree>3 || valence>3) && PeriodForElement(anum)<3){
+                continue;
+            }
 
             int target = grp-10;
             int electrons = target - valence - fq;
