@@ -130,8 +130,8 @@ namespace desres { namespace msys {
             const term_t& operator*() const { return dereference(); }
             const term_t* operator->() const { return &dereference(); }
             const_iterator& operator++() { increment(); return *this; }
-            bool operator==(const_iterator const& c) { return equal(c); }
-            bool operator!=(const_iterator const& c) { return !equal(c); }
+            bool operator==(const_iterator const& c) const { return equal(c); }
+            bool operator!=(const_iterator const& c) const { return !equal(c); }
         };
 
         /* iterator pointing to first element */
