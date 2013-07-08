@@ -830,9 +830,12 @@ class System(object):
         ''' add and return a new Ct '''
         return Ct(self._ptr, self._ptr.addCt())
 
-    def delAtoms(self, elems):
-        ''' remove all Atoms in elems from the System '''
-        self._ptr.delAtoms(e.id for e in elems)
+    def delAtoms(self, atoms):
+        ''' remove the given Atoms from the System '''
+        ptr, ids = _find_ids(atoms)
+        if ptr != self._ptr:
+            raise ValueError("atoms come from a different system")
+        ptr.delAtoms(ids)
 
     def delBonds(self, elems):
         ''' remove all Bonds in elems from the System '''
@@ -1461,6 +1464,8 @@ def _find_ids(atoms):
     ids = _msys.IdList()
     sys = set()
     for a in atoms:
+        if not isinstance(a, Atom):
+            raise TypeError("Expect Atoms; got %s" % type(a))
         ids.append(a.id)
         sys.add(a.system)
     if len(sys) > 1:

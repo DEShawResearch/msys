@@ -560,7 +560,7 @@ namespace desres { namespace msys {
             .def("delCt",       &System::delCt)
 
             /* delete list of elements */
-            .def("delAtoms",    del_atoms)
+            .def("delAtoms",    &System::delAtoms<IdList>)
             .def("delBonds",    del_bonds)
             .def("delResidues", del_residues)
             .def("delChains",   del_chains)
