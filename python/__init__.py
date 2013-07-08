@@ -844,13 +844,19 @@ class System(object):
             raise ValueError("bonds come from a different system")
         ptr.delBonds(ids)
 
-    def delResidues(self, elems):
-        ''' remove all Residues in elems from the System '''
-        self._ptr.delResidues(e.id for e in elems)
+    def delResidues(self, residues):
+        ''' remove the given Residues from the System '''
+        ptr, ids = _find_ids(residues, Residue)
+        if ptr != self._ptr:
+            raise ValueError("residues come from a different system")
+        ptr.delResidues(ids)
 
-    def delChains(self, elems):
-        ''' remove all Chains in elems from the System '''
-        self._ptr.delChains(e.id for e in elems)
+    def delChains(self, chains):
+        ''' remove the given Chains from the System '''
+        ptr, ids = _find_ids(chains, Chain)
+        if ptr != self._ptr:
+            raise ValueError("chains come from a different system")
+        ptr.delChains(ids)
 
     def atom(self, id):
         ''' return the atom with the specified id '''

@@ -17,19 +17,6 @@ namespace {
     chain_t& system_chain(System& m, Id id) { return m.chain(id); }
     component_t& system_ct(System& m, Id id) { return m.ct(id); }
 
-    void del_residues(System& sys, object elems) {
-        list L(elems);
-        IdList ids(len(L));
-        for (unsigned i=0; i<ids.size(); i++) ids[i]=extract<Id>(L[i]);
-        sys.delResidues(ids);
-    }
-    void del_chains(System& sys, object elems) {
-        list L(elems);
-        IdList ids(len(L));
-        for (unsigned i=0; i<ids.size(); i++) ids[i]=extract<Id>(L[i]);
-        sys.delChains(ids);
-    }
-
     PyObject* atom_prop_type(System& sys, Id col) {
         return from_value_type(sys.atomPropType(col));
     }
@@ -550,8 +537,8 @@ namespace desres { namespace msys {
             /* delete list of elements */
             .def("delAtoms",    &System::delAtoms<IdList>)
             .def("delBonds",    &System::delBonds<IdList>)
-            .def("delResidues", del_residues)
-            .def("delChains",   del_chains)
+            .def("delResidues", &System::delResidues<IdList>)
+            .def("delChains",   &System::delChains<IdList>)
 
             /* max element */
             .def("maxAtomId",   &System::maxAtomId)

@@ -625,6 +625,16 @@ class TestMain(unittest.TestCase):
             m.delAtoms(m.bonds)
         with self.assertRaises(TypeError):
             m.delBonds(m.atoms)
+        with self.assertRaises(TypeError):
+            m.delResidues(m.chains)
+        with self.assertRaises(TypeError):
+            m.delChains(m.residues)
+
+        m2 = msys.CreateSystem()
+        with self.assertRaises(ValueError): m2.delAtoms(m.atoms)
+        with self.assertRaises(ValueError): m2.delBonds(m.bonds)
+        with self.assertRaises(ValueError): m2.delResidues(m.residues)
+        with self.assertRaises(ValueError): m2.delChains(m.chains)
 
         m.delBonds(m.bonds)
         self.assertEqual(len(m.bonds), 0)
