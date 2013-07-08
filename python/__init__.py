@@ -837,9 +837,12 @@ class System(object):
             raise ValueError("atoms come from a different system")
         ptr.delAtoms(ids)
 
-    def delBonds(self, elems):
-        ''' remove all Bonds in elems from the System '''
-        self._ptr.delBonds(e.id for e in elems)
+    def delBonds(self, bonds):
+        ''' remove the given Bonds from the System '''
+        ptr, ids = _find_ids(bonds, Bond)
+        if ptr != self._ptr:
+            raise ValueError("bonds come from a different system")
+        ptr.delBonds(ids)
 
     def delResidues(self, elems):
         ''' remove all Residues in elems from the System '''
@@ -1454,7 +1457,7 @@ def CreateSystem():
     ''' Create a new, empty System '''
     return System(_msys.SystemPtr.create())
 
-def _find_ids(atoms):
+def _find_ids(atoms, klass = Atom):
     ''' return the SystemPtr and IdList for the given set of atoms.
     Raise ValueError if atoms come from multiple systems.  Return
     None, [] if the input list is empty.
@@ -1464,8 +1467,8 @@ def _find_ids(atoms):
     ids = _msys.IdList()
     sys = set()
     for a in atoms:
-        if not isinstance(a, Atom):
-            raise TypeError("Expect Atoms; got %s" % type(a))
+        if not isinstance(a, klass):
+            raise TypeError("Expect list of %s; got %s" % (klass, type(a)))
         ids.append(a.id)
         sys.add(a.system)
     if len(sys) > 1:

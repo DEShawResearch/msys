@@ -623,6 +623,8 @@ class TestMain(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             m.delAtoms(m.bonds)
+        with self.assertRaises(TypeError):
+            m.delBonds(m.atoms)
 
         m.delBonds(m.bonds)
         self.assertEqual(len(m.bonds), 0)

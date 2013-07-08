@@ -17,18 +17,6 @@ namespace {
     chain_t& system_chain(System& m, Id id) { return m.chain(id); }
     component_t& system_ct(System& m, Id id) { return m.ct(id); }
 
-    void del_atoms(System& sys, object elems) {
-        list L(elems);
-        IdList ids(len(L));
-        for (unsigned i=0; i<ids.size(); i++) ids[i]=extract<Id>(L[i]);
-        sys.delAtoms(ids);
-    }
-    void del_bonds(System& sys, object elems) {
-        list L(elems);
-        IdList ids(len(L));
-        for (unsigned i=0; i<ids.size(); i++) ids[i]=extract<Id>(L[i]);
-        sys.delBonds(ids);
-    }
     void del_residues(System& sys, object elems) {
         list L(elems);
         IdList ids(len(L));
@@ -561,7 +549,7 @@ namespace desres { namespace msys {
 
             /* delete list of elements */
             .def("delAtoms",    &System::delAtoms<IdList>)
-            .def("delBonds",    del_bonds)
+            .def("delBonds",    &System::delBonds<IdList>)
             .def("delResidues", del_residues)
             .def("delChains",   del_chains)
 
