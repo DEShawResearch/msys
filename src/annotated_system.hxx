@@ -18,10 +18,19 @@ namespace desres { namespace msys {
                 unsigned char ring_bonds;
                 unsigned char hybridization;
                 IdList rings_idx;
+
+                atom_data_t() 
+                : aromatic(), hcount(), valence(), degree(),
+                  lone_pairs(), ring_bonds(), hybridization()
+                {}
             };
             struct bond_data_t {
                 bool aromatic;
                 IdList rings_idx;
+
+                bond_data_t()
+                : aromatic()
+                {}
             };
             struct ring_t {
                 IdList atoms;
