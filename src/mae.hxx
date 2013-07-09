@@ -25,15 +25,14 @@ namespace desres { namespace msys {
         enum Flags {
             Default             = 0,
             StructureOnly       = 1 << 0,
-            CompressForcefield  = 1 << 1,
+            //CompressForcefield  = 1 << 1, /* deprecated */
             Append              = 1 << 2
         };
     };
 
-    void ExportMAEMany( std::vector<SystemPtr> const& cts, 
-                        std::string const& path,
-                        Provenance const& provenance,
-                        unsigned flags=0);
+    std::string ExportMAEContents( SystemPtr h,
+                            Provenance const& provenance,
+                            unsigned flags=0);
 
     void ExportMAE( SystemPtr h, std::string const& path,
                            Provenance const& provenance,

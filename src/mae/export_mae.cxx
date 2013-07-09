@@ -735,6 +735,7 @@ static void write_ct(Maeff& M, SystemPtr mol,
     Destro& ffio_ff = ct.new_block("ffio_ff");
 
     IdList compress;
+#if 0
     if (flags & MaeExport::CompressForcefield) {
         MultiIdList fragments;
         mol->updateFragids(&fragments);
@@ -743,10 +744,26 @@ static void write_ct(Maeff& M, SystemPtr mol,
             compress = fragments[0];
         }
     }
+#endif
 
     build_sites( mol, compress, ffio_ff );
     build_pseudos( mol, ffio_ff );
     build_ff( mol, compress, ffio_ff );
+}
+
+namespace {
+    void export_mae(SystemPtr h, Provenance const& p, 
+                    unsigned flags, std::ostream& out) {
+
+        Maeff M;
+
+        BOOST_FOREACH(Id ct, h->cts()) {
+            write_ct(M, Clone(h, h->atomsForCt(ct)), p, flags);
+        }
+
+        out << M;
+
+    }
 }
 
 namespace desres { namespace msys {
@@ -754,18 +771,6 @@ namespace desres { namespace msys {
                            Provenance const& provenance,
                            unsigned flags) {
         
-        std::vector<SystemPtr> cts;
-        BOOST_FOREACH(Id ct, h->cts()) {
-            cts.push_back(Clone(h, h->atomsForCt(ct)));
-        }
-        ExportMAEMany(cts, path, provenance, flags);
-    }
-
-    void ExportMAEMany( std::vector<SystemPtr> const& cts, 
-                        std::string const& path,
-                        Provenance const& provenance,
-                        unsigned flags) {
-
         std::ios_base::openmode mode = std::ofstream::out;
         if (flags & MaeExport::Append) {
             mode |= std::ofstream::app;
@@ -776,12 +781,8 @@ namespace desres { namespace msys {
                     << strerror(errno));
         }
 
-        Maeff M;
-        BOOST_FOREACH(SystemPtr ct, cts) {
-            write_ct(M,ct,provenance,flags);
-        }
+        export_mae(h, provenance, flags, out);
 
-        out << M;
         if (!out) {
             MSYS_FAIL("Error writing to " << path << " : " 
                     << strerror(errno));
@@ -791,6 +792,14 @@ namespace desres { namespace msys {
             MSYS_FAIL("Error closing file at " << path << " : "
                     << strerror(errno));
         }
+    }
+
+    std::string ExportMAEContents( SystemPtr h,
+                            Provenance const& provenance,
+                            unsigned flags) {
+        std::ostringstream ss;
+        export_mae(h, provenance, flags, ss);
+        return ss.str();
     }
 
 }}

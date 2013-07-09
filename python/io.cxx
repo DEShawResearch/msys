@@ -57,16 +57,6 @@ namespace {
         return iter.next();
     }
 
-    void export_mae_many(object ctarr, std::string const& path,
-                         Provenance const& prov,
-                         unsigned flags) {
-        std::vector<SystemPtr> ctlist;
-        for (Py_ssize_t i=0; i<len(ctarr); i++) {
-            ctlist.push_back(extract<SystemPtr>(ctarr[i]));
-        }
-        ExportMAEMany(ctlist, path, prov, flags);
-    }
-
     void save(SystemPtr mol, std::string const& path, Provenance const& prov,
               bool append, bool structure_only) {
         unsigned flags = 0;
@@ -84,7 +74,7 @@ namespace desres { namespace msys {
         enum_<MaeExport::Flags>("MaeExportFlags")
             .value("Default",           MaeExport::Default)
             .value("StructureOnly",     MaeExport::StructureOnly)
-            .value("CompressForcefield",MaeExport::CompressForcefield)
+            //.value("CompressForcefield",MaeExport::CompressForcefield)
             .value("Append",            MaeExport::Append)
             ;
 
@@ -104,7 +94,7 @@ namespace desres { namespace msys {
         def("ImportMAE", ImportMAE);
         def("ImportMAEFromBuffer", import_mae_from_buffer);
         def("ExportMAE", ExportMAE);
-        def("ExportMAEMany", export_mae_many);
+        def("ExportMAEContents", ExportMAEContents);
         def("ImportPDB", ImportPDB);
         def("ExportPDB", ExportPDB);
         def("ImportPrmTop", ImportPrmTop);
