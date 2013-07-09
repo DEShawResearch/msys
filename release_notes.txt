@@ -1,3 +1,9 @@
+1.7.24 IMPROVED: Documentation
+       REMOVED: ExportMAE() no longer takes a list argument; use append=True.
+       NEW: ExportMAE() takes path=None to return MAE file contents.
+       FIXED: Type checks for delAtom, etc.
+       FIXED: Don't consider saturated elements for hydrogen addition.
+
 1.7.23 FIXED: bond order assignments for disulfides and hypervalent halogens
 
 1.7.22 FIXED: Handle maegz files containing multiple zlib streams.
