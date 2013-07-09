@@ -4,27 +4,29 @@
    contain the root `toctree` directive.
 
 The Msys library
-====================================
+================
 
-Msys is a library for manipulating molecular structures and their
-associated forcefields.  Among its many features:
+Msys is a library for inspecting and manipulating chemical structures of
+the sort used in molecular simulations.  Its main features include:
 
-* Reads and writes DMS and MAE file formats;
+ * A hierarchical organization of structure information, as opposed to the
+   flat tables typically used in molecular file formats;
 
-* Implements the VMD atom selection language;
+ * A powerful VMD-like atom selection language;
 
-* Provides a high-performance C++ interface as well as a friendlier Python
-  interface;
+ * Representation of molecular forcefields which supports sharing of
+   parameters by many groups of terms;
 
-* Contains a collection of command line and scripting tools for examining,
-  combining, and processing DMS files.
+ * Conversion to and from many chemical file formats, with forcefield
+   and chemical information preserved where possible;
 
+ * Command line tools for scripting common tasks;
 
-Msys is written in C++, with bindings for Python.  The direct Python
-bindings are generated using boost::python, and are intended to be
-used only by developers, or those familiar with the C++ interface.
-The rest of this guide describes the high level Python interface,
-which is based on the Python bindings.  
+ * C++ and Python interfaces.
+
+In the rest of this introduction, we go into more detail about the
+Msys data model and how to perform common tasks.  The descriptions
+will be of the interface as seen from the Python layer.  
 
 Contents:
 
@@ -33,6 +35,7 @@ Contents:
 
    overview
    selections
+   python
    paramtable
    termtable
    system
