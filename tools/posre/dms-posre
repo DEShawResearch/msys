@@ -20,6 +20,7 @@ sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
 
 import msys
 from msys import posre
+import math
 
 def main():
     import optparse
@@ -40,6 +41,11 @@ def main():
             help='get equilibrium positions from reference structure')
     parser.add_option('--reference-selection', default=None,
             help='selection for reference structure [default: selection]')
+    parser.add_option('--max-distance', default=None,
+            help='abort if max restraint distance exceeds value in Angstroms')
+    parser.add_option('--max-energy', default=None,
+            help='abort if max restraint energy exceeds value in kcal/mol')
+
     parser.add_option('-q', '--quiet', action='store_true', default=False)
 
     opts, args = parser.parse_args()
@@ -73,14 +79,26 @@ def main():
         assert len(ref_sel.atoms) == len(atoms)
         for a, p in zip(atoms, ref_sel.positions):
             a.pos = p
+
+        displacements = ref_sel.positions - cur_sel.positions
+        E_restr = ((displacements**2)*(fcx, fcy, fcz)).sum(-1)
+        index = E_restr.argmax()
+        dist = math.sqrt(sum(displacements[index]**2))
+        a = atoms[index]
+        r = a.residue
         if not opts.quiet:
-            displacements = ref_sel.positions - cur_sel.positions
-            E_restr = ((displacements**2)*(fcx, fcy, fcz)).sum(-1)
-            a = atoms[E_restr.argmax()]
-            r = a.residue
             a_name = 'chain %s %s%d:%s' % (r.chain.name,r.name,r.resid,a.name)
-            fmt = "Most energetic restraint: %s (%.1f kcal/mol)"
-            print fmt % (a_name, E_restr.max())
+            fmt = "Most energetic restraint: %s (%.1f kcal/mol, %.1f Angstroms)"
+            print fmt % (a_name, E_restr.max(), dist)
+        if opts.max_distance is not None:
+            if dist > float(opts.max_distance):
+                print >> sys.stderr, "ERROR: Maximum distance exceeded."
+                return 1
+        if opts.max_energy is not None:
+            if E_restr.max() > float(opts.max_energy):
+                print >> sys.stderr, "ERROR: Maximum energy exceeded."
+                return 1
+
     else:
         if not opts.quiet: print "Restraining atoms to current positions"
     n=posre.apply(mol, atoms, fcx, fcy, fcz, replace=opts.replace)
