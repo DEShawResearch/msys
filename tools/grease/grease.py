@@ -2,9 +2,8 @@
 import os, msys
 
 def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
-            chain='LIP', verbose=False, 
-            square=False,
-            chain2=None):
+            ctname='grease', verbose=True, 
+            square=False):
     '''
     Build and return a new system consisting of mol plus lipid bilayer.
     Tile is the lipid bilayer system to replicate.
@@ -15,8 +14,9 @@ def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
     with dimensions.  If square is true, the box size will be expanded to
     the size of the longest dimension.
 
-    If chain2 is not None, it should be a string which will be used as the
-    chain name for lipids whose centers have z<0 (i.e. the lower leaflet).
+    Lipids will be created in a new Ct.  Their chain names will be left the
+    same as in the original tile, but the resids will be renumbered to ensure
+    uniqueness.
 
     Return the greased system; no modifications are made to the input system.
     '''
@@ -24,15 +24,6 @@ def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
     mol=mol.clone()
 
     lipsize=[tile.cell[i][i] for i in range(3)]
-
-    # find a chain name for the lipids that doesn't overlap with the 
-    # input structure.
-    chains = set(c.name for c in mol.chains)
-    lipchain = 'X'
-    while lipchain in chains:
-        lipchain += 'X'
-    for c in tile.chains:
-        c.name = lipchain
 
     if xsize is None or ysize is None:
         if verbose: print "finding bounding box..."
@@ -72,13 +63,17 @@ def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
     xmax = -xmin
     ymax = -ymin
 
+    # Create a new Ct for the lipids
+    ct = mol.addCt()
+    ct.name = 'grease'
+    ctnum = ct.id + 1
     # replicate the template lipid box
     if verbose: print "replicating %d x %d" % (nx,ny)
     for i in range(nx):
         xdelta = xshift + i*lipsize[0]
         for j in range(ny):
             ydelta = yshift + j*lipsize[1]
-            newatoms = mol.append(tile)
+            newatoms = ct.append(tile)
             for a in newatoms:
                 a.x += xdelta
                 a.y += ydelta
@@ -87,39 +82,26 @@ def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
     if verbose: print "removing overlap with solute"
     headgroup_dist = 2.0
     mol = mol.clone(
-        'not (chain %s and same residue as (atomicnumber 8 15 and pbwithin %f of (noh and not chain %s)))' % (
-            lipchain, headgroup_dist, lipchain))
+        'not (ctnumber %d and same residue as (atomicnumber 8 15 and pbwithin %f of (noh and not ctnumber %d)))' % (
+            ctnum, headgroup_dist, ctnum))
     dist = 1.0
     mol = mol.clone(
-        'not (chain %s and same residue as (pbwithin %f of (noh and not chain %s)))' % (
-            lipchain, dist, lipchain))
+        'not (ctnumber %d and same residue as (pbwithin %f of (noh and not ctnumber %d)))' % (
+            ctnum, dist, ctnum))
     if verbose: print "after removing solute overlap, have %d atoms" % mol.natoms
 
     if verbose: print "removing outer lipids and water"
     mol = mol.clone(
-        'not (chain %s and same residue as (atomicnumber 8 15 and (abs(x)>%f or abs(y)>%f)))' % (
-            lipchain,xmax,ymax))
+        'not (ctnumber %d and same residue as (atomicnumber 8 15 and (abs(x)>%f or abs(y)>%f)))' % (
+            ctnum,xmax,ymax))
     if verbose: print "after removing outer lipids, have %d atoms" % mol.natoms
 
-    # assign the lipid chain name, and renumber lipid resids
+    # renumber lipid resids
     lipnum = 1
-    for c in mol.chains:
-        if c.name == lipchain:
-            c.name = chain
+    for c in ct.chains:
             for r in c.residues:
                 r.resid = lipnum
                 lipnum += 1
-
-    # if a lower leaflet chain is specified, move z<0 lipids to a different 
-    # chain.
-    if chain2 is not None and chain2 != chain:
-        c2=mol.addChain()
-        c2.name = chain2
-        for c in mol.chains:
-            if c.name != chain: continue
-            for r in c.residues:
-                if r.center[2] < 0:
-                    r.chain = c2
 
     if verbose: print "updating global cell"
 

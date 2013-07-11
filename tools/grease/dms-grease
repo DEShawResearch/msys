@@ -27,15 +27,11 @@ def main():
         help='Size of membrane along x dimension')
     parser.add_option('-y', '--ysize', default=None,
         help='Size of membrane along y dimension')
-    parser.add_option('-c', '--chain', default='LIP',
-        help='Chain name of constructed lipids')
-    parser.add_option(      '--chain2', default=None,
-        help='Chain name of lower leaflet')
     parser.add_option(      '--square', default=False, action='store_true',
         help='Ensure the resulting membrane is square')
     parser.add_option('--structure-only', default=False, action='store_true',
         help='Ignore forcefield in input.dms and lipid.dms')
-    parser.add_option('-v', '--verbose', default=False, action='store_true')
+    parser.add_option('-v', '--verbose', default=True, action='store_true')
 
     opts, args = parser.parse_args()
     if len(args)!=3:
