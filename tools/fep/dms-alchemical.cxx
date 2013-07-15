@@ -9,12 +9,44 @@ using namespace desres::msys;
 
 static bool avoid_alchemical_noop = true;
 
+static void usage(FILE *fd) {
+    fprintf(fd, "Usage:\ndms-alchemical A.dms B.dms atom.map C.dms\n");
+    fprintf(fd,
+
+"Create an alchemical system from A and B states and a map between them.\n"
+"\n"
+"The atom.map file should consist of lines with two 1-based indices,\n"
+"the first referring to atoms in the A state and the second to atoms in\n"
+"the B state.  Either the A or B index may be negative, indicating that\n"
+"the corresponding atom has no analog in the other state.  The order of\n"
+"the lines in the file is insignificant.\n"
+"\n"
+"It is not necessary that the atom map reference every atom in A and B\n"
+"states; however, any term in a given state must be either completely\n"
+"mapped or completely unmapped.  In practice this usually means that\n"
+"the atom map should contain complete sets of connected atoms.\n"
+"\n"
+"Options:\n"
+"   -h, --help       show this help message and exit\n"
+"   --keep-alchemical-noop\n"
+"                    Generate all alchemical terms described by the atom\n"
+"                    map, even those whose A and B states are identical.\n"
+"                    This option is present only for comparison with\n"
+"                    previous versions of dms-alchemical.\n"
+    );
+}
+
 void parse_cmdline( int *pargc, char ***pargv ) {
     int i,j=0;
                            
     for (i=0; i<pargc[0]; i++) {
         pargv[0][j] = pargv[0][i];
-        if ( !strcmp(pargv[0][j], "--keep-alchemical-noop")) {
+        if ( !strcmp(pargv[0][j], "-h") ||
+             !strcmp(pargv[0][j], "--help")) {
+            usage(stdout);
+            exit(0);
+
+        } else if ( !strcmp(pargv[0][j], "--keep-alchemical-noop")) {
             avoid_alchemical_noop = false; 
         }  else {
             j++;
@@ -23,6 +55,7 @@ void parse_cmdline( int *pargc, char ***pargv ) {
     pargc[0]=j;
     pargv[0][j]=NULL;
 }
+
 static std::vector<IdPair> read_atommap(const char *path) {
     std::vector<IdPair> pairs;
     char buf[80];
@@ -55,7 +88,7 @@ static std::vector<IdPair> read_atommap(const char *path) {
 int main(int argc, char *argv[]) {
     parse_cmdline(&argc, &argv);
     if (argc!=5) {
-        fprintf(stderr, "\nUsage: %s A.dms B.dms atom.map C.dms\n", argv[0]);
+        usage(stderr);
         exit(1);
     }
 

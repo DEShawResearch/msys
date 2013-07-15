@@ -8,7 +8,7 @@
 '''
 dms-info [ options ] [ dms files ]
 
-Write information about a dms file to stdout.
+Write a human-readable summary of the contents of a structure file to stdout.
 
 '''
 

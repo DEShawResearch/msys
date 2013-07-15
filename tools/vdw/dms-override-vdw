@@ -9,10 +9,16 @@ dms-override-vdw input.dms output.dms [ options ]
 
 Override vdw interactions between selected atoms.
 
-Restrictions: produces a nonbonded_overrided_param table and therefore
-              may not be usable on Anton.
+*dms-override-vdw* changes the vdw interaction between two specified groups
+of atoms to the specified values of sigma and epsilon.  All options (sigma,
+epsilon, selection0, selection1) are required, and the selection groups must
+not be empty.  
 
-              Works for vdw_funct=vdw_12_6 only.
+Currently, the vdw functional form of the DMS file must be "vdw_12_6".  
+
+This tool uses the `nonbonded_combined_param` table in the DMS file to store
+the overrides and therefore should not be used with versions of Anton
+software older than 2.9.2  
 '''
 
 import sys, os

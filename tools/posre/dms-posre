@@ -10,8 +10,22 @@ dms-posre input.dms output.dms [ options ]
 
 Assign harmonic position restraints to selected atoms.  
 
-If no selection is provided, and --replace is specified, then the output 
-file will contain no restraints.
+`dms-posre` adds position restraints to a dms file, using the existing atom
+positions for the reference positions of the restraints.  If ``--replace``
+is specified on the command line, any existing restraints will be replaced
+by the new set.  Otherwise, atoms that are already restrained in the existing
+file will be restrained using the newly provided force constraints::
+
+  # Add position restraints to backbone atoms with a force constant of 0.2
+  dms-posre input.dms out1.dms -s "backbone" -f 0.2
+
+  # Restrain CA atoms with a force constant of 0.3
+  dms-posre out1.dms out2.dms -s "name CA" -f 0.3
+
+  # Remove all position restraints:
+  dms-posre input.dms output.dms --replace
+  ## or:
+  dms-posre input.dms output.dms -s none --replace
 
 '''
 
@@ -46,7 +60,8 @@ def main():
     parser.add_option('--max-energy', default=None,
             help='abort if max restraint energy exceeds value in kcal/mol')
 
-    parser.add_option('-q', '--quiet', action='store_true', default=False)
+    parser.add_option('-q', '--quiet', action='store_true', default=False,
+            help="Don't be chatty")
 
     opts, args = parser.parse_args()
     if len(args)!=2:

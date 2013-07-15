@@ -18,11 +18,16 @@ def main():
     import optparse
     parser = optparse.OptionParser(__doc__)
 
-    parser.add_option('-s', '--selection', default=None)
-    parser.add_option('-a', '--append', default=None)
-    parser.add_option('-o', '--output', default=None)
-    parser.add_option('-v', '--verbose', action='store_true', default=True)
-    parser.add_option('-q', '--quiet', action='store_false', dest='verbose')
+    parser.add_option('-s', '--selection', default=None,
+            help="Atom selection text")
+    parser.add_option('-a', '--append', default=None,
+            help="Append to given file.")
+    parser.add_option('-o', '--output', default=None,
+            help="Write new system to given file")
+    parser.add_option('-v', '--verbose', action='store_true', default=True,
+            help="Be chatty")
+    parser.add_option('-q', '--quiet', action='store_false', dest='verbose',
+            help="Don't be chatty")
     parser.add_option('-c', '--coalesce', action='store_true', default=False,
             help='Coalesce input file parameters before saving')
     parser.add_option('--structure-only', action='store_true', default=False,

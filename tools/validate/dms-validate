@@ -8,7 +8,35 @@
 '''
 dms-validate system.dms [ options ]
 
-Performs various sanity checks on your dms file.
+`dms-validate` flags conditions that are likely to be errors in a chemical
+system.  The set of "basic" checks are always performed; additional checks
+can be enabled using various command line flags. 
+
+The set of basic checks comprise the following:
+
+ * nonbonded: if a nonbonded table exists, every particle must have a 
+   nonbonded param assignment.
+
+
+The set of strict checks comprise the following items.  Note that it
+is certainly possible for a valid simulation to be performed using a
+system that passes none of its strict checks!  However, it may be worth
+investigating why a system fails theses checks.
+
+ * constraints: the system must have constraint terms.  
+
+ * consistent masses: Particles with equal atomic number must have equal mass.
+   Pseudo particles (those with atomic number zero) are excluded from the
+   check.
+
+ * sparsify: every 1-4 bond (i.e., pair of atoms separated by three 
+   distinct bonds) must be included in the exclusion table.
+
+Desmond-specific checks:
+
+ * bonded terms: check that neither the exclusion table nor any table
+   in the bond_term metable contains terms whose atoms are not connected
+   through the bond table.  
 
 '''
 
@@ -21,11 +49,16 @@ from msys import validate
 def main():
     import optparse
     parser = optparse.OptionParser(__doc__)
-    parser.add_option('--strict', action='store_true', default=False)
-    parser.add_option('--desmond', action='store_true', default=False)
-    parser.add_option('--verbose', action='store_true', default=False)
-    parser.add_option('--all', action='store_true', default=False)
-    parser.add_option('--anton', action='store_true', default=False)
+    parser.add_option('--strict', action='store_true', default=False,
+            help="Run strict tests")
+    parser.add_option('--desmond', action='store_true', default=False,
+            help="Run Desmond-specific tests")
+    parser.add_option('--verbose', action='store_true', default=False,
+            help="Be chatty")
+    parser.add_option('--all', action='store_true', default=False,
+            help="Run all tests")
+    parser.add_option('--anton', action='store_true', default=False,
+            help="Run Anton-specific tests")
 
     opts, args = parser.parse_args()
     if len(args)!=1:

@@ -9,6 +9,22 @@
 dms-grease input.dms lipid.dms output.dms [ options ]
 
 Tile a lipid bilayer around a solute.
+
+dms-grease builds a new chemical system consisting of the input system
+plus a lipid bilayer constructed by tiling *lipid.dms* in the x-y plane.
+If the *input.dms* is given as "-", then a pure membrane will be built.
+
+An error will be encountered if only one of *input.dms* and *lipid.dms* 
+have forcefield information; this is because Msys refuses to write DMS
+files that have only partial information for the nonbonded atom types.
+If you don't have forcefield information for one of the input files,
+use the *--structure-only* option to ignore the forcefield information
+in the one that does.
+
+The global cell of the new system will be orthorhombic and have x and
+y dimensions given by the specified size of the membrane, and z dimension
+given by the input structure or the lipid membrane template, whichever is
+greater.
 '''
 
 import sys, os
@@ -31,7 +47,8 @@ def main():
         help='Ensure the resulting membrane is square')
     parser.add_option('--structure-only', default=False, action='store_true',
         help='Ignore forcefield in input.dms and lipid.dms')
-    parser.add_option('-v', '--verbose', default=True, action='store_true')
+    parser.add_option('-v', '--verbose', default=True, action='store_true',
+        help="Be chatty")
 
     opts, args = parser.parse_args()
     if len(args)!=3:

@@ -2,9 +2,20 @@
 
 : ${DMSDIFF:=diff}
 
+opts="--without-provenance --without-forcefield --without-paraminfo $@" 
+
 [ -z "$1" -o -z "$2" ] && {
-    echo "Usage: $0 <dms1> <dms2>" 1>&2
-    exit 1
+    echo "`basename $0` <dms1> <dms2> [options]" 
+    echo 
+    echo "Writes to stdout a Unix diff of the result of running dms-dump"
+    echo "on ``file1.dms`` and ``file2.dms``.  The environment variable"
+    echo "``DMSDIFF`` can be used to specify an alternate file comparison"
+    echo "utility."
+    echo 
+    echo "The options $opts"
+    echo "will be passed along to dms-dump, along with any other arguments"
+    echo "after the inputs files."
+    exit 0
 }
 
 set -e
@@ -13,7 +24,6 @@ set -x
 d1=$1; shift
 d2=$1; shift
 
-opts="--without-provenance --without-forcefield --without-paraminfo $@" 
 
 out1=/tmp/dms-dump.$$.1
 out2=/tmp/dms-dump.$$.2

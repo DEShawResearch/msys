@@ -8,6 +8,21 @@
 '''
 
 dmsdump [ options ] input.dms
+
+dms-dump generates a textual representation of a dms file that can be
+understood by humans and compared to the output of another dms file.
+A certain amount of canonicalization is applied to the contents of the dms
+file in order to make this happen:
+
+ * all floating point values are rounded to six decimals;
+
+ * all force terms are sorted by particle id, i.e. p0, p1, ...
+
+ * all columns are sorted alphabetically;
+
+ * rather than printing the nbtype of each particle, the nonbonded parameters
+   of each particle are dumped with a "nonbonded" label at the start of
+   each line.
 '''
 
 import optparse

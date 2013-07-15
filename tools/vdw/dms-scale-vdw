@@ -7,12 +7,18 @@
 '''
 dms-scale-vdw input.dms output.dms [ options ]
 
-Scale vdw interactions between selected atoms.
+*dms-scale-vdw* scales the vdw interactions between multiple groups of atoms.
+The vdw interactions between each ligand group will be scaled by the
+specified amount.  As many ligands may be specified as desired, though
+different implementations on Desmond and Anton may in practice limit the
+number possible
 
-Restrictions: produces a nonbonded_scaled_param table and therefore
-              may not be usable on older Anton software versions.
- 
-              Works for vdw_funct=vdw_12_6 only.
+Currently, the vdw functional form of the DMS file must be "vdw_12_6".  
+
+This tool uses the `nonbonded_combined_param` table in the DMS file to store
+the overrides and therefore should not be used with versions of Anton
+software older than 2.9.2  
+
 '''
 
 import sys, os

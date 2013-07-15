@@ -10,9 +10,28 @@
 
 '''
 dms-frame input.dms output.dms [ options ]
-    Extract a frame from a trajectory into a dms file, and perform optional
-    centering and periodic wrapping.
+
+Extract a frame from a trajectory into a dms file, and perform optional
+centering and periodic wrapping.
                     
+dms-frame reads coordinates from a coordinate or trajectory file and
+copies them into a DMS file.  Periodic wrapping may also be applied
+to the coordinates.  If the input coordinate file is a trajectory containing
+multiple frames, the frame may be selected either with a time, in which case
+the frame whose time is closest to the provided value will be selected,
+or with a frame index, which can be negative in the usual Python sense
+(i.e. index -1 chooses the last frame).  Either time or index may be 
+provided, but not both.
+
+If a centering selection is provided, the center will be calculated from
+the input coordinates after applying any glue or periodic wrapping.  The
+selection will be centered on the origin, and the rest of the system will
+be wrapped so as to fit in the periodic cell.
+
+Velocities will be copied from the input frame if they are present; if
+not, the velocities in the input dms file will be used.  Specifying 
+`--zero-velocities` makes the velocities zero in the output file.
+
 '''
 
 import sys, os
