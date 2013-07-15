@@ -18,7 +18,7 @@ namespace desres { namespace msys {
         char buf[256];
 
         /* read #atoms */
-        if (fscanf(fd, "%d\n", &natoms)!=1) {
+        if (!fgets(buf, sizeof(buf), fd) || sscanf(buf, "%d", &natoms)!=1) {
             MSYS_FAIL("Failed reading number of atoms in xyz file " << path);
         }
 
