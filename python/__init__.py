@@ -1848,6 +1848,10 @@ def CalcPlanarity(pos_or_atoms):
         pos[i,:] = pos_or_atoms[i].pos
     return _msys.calc_planarity(pos)
 
+def LineIntersectsTriangle(r, s, a, b, c):
+    ''' True if line segment rs intersects triangle abc '''
+    return _msys.line_intersects_tri(a,b,c,r,s)
+
 class InChI(object):
     ''' InChI holds an the result of an inchi invocation for a structure '''
 

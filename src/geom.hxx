@@ -29,5 +29,12 @@ namespace desres { namespace msys {
                                   const double* C,
                                   double r, double theta, double phi );
 
+    /* Return true iff line R-S passes through triangle ABC */
+    bool line_intersects_tri( const double* A,
+                              const double* B,
+                              const double* C,
+                              const double* R,
+                              const double* S);
+
 }}
 

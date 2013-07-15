@@ -189,4 +189,51 @@ namespace desres { namespace msys {
         return planar;
     }
 
+    bool line_intersects_tri( const double* A,
+                              const double* B,
+                              const double* C,
+                              const double* R,
+                              const double* S) {
+
+        double RS[3], AB[3], BC[3], norm[3], LT[3], I[3];
+        for (int i=0; i<3; i++) {
+            RS[i] = S[i]-R[i];
+            AB[i] = B[i]-A[i];
+            BC[i] = C[i]-B[i];
+        }
+        calc_cross_prod(norm, AB, BC);
+        double norm_dot_line = calc_dot_prod(norm, RS);
+        if (norm_dot_line==0) {
+            /* line is parallel to triangle */
+            return false;
+        }
+
+        for (int i=0; i<3; i++) LT[i] = R[i]-A[i];
+        double t = -calc_dot_prod(norm, LT) / norm_dot_line;
+        if (t<=0 || t>=1) {
+            /* intersection is past line's endpoints */
+            return false;
+        }
+
+        for (int i=0; i<3; i++) I[i] = R[i] + RS[i]*t;
+
+        double areas[3];
+        for (int i=0; i<3; i++) {
+            const double* t0 = i==0 ? A : i==1 ? B : C;
+            const double* t1 = i==0 ? B : i==1 ? C : A;
+            double v0[3], v1[3], c[3];
+            for (int j=0; j<3; j++) {
+                v0[j] = t1[j]-t0[j];
+                v1[j] = I[j] - t0[j];
+            }
+            calc_cross_prod(c, v0, v1);
+            areas[i] = calc_dot_prod(c, norm);
+
+            if (areas[i]==0) return false;
+        }
+        return signbit(areas[0])==signbit(areas[1]) &&
+               signbit(areas[0])==signbit(areas[2]);
+    }
+
 }}
+

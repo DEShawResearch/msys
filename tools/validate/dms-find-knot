@@ -21,6 +21,7 @@ sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
 import msys
 from msys import knot
 from optparse import OptionParser
+import cProfile as profile
 
 if __name__ == "__main__":
     knot.ut_intersection()

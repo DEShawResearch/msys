@@ -29,49 +29,6 @@ import sys
 import math
 import msys
 
-sys.setrecursionlimit(10000)
-
-def det(t0,t1,int,norm):
-    v0 = t1-t0
-    v1 = int-t0
-    c = numpy.cross(v0,v1)
-    det = numpy.dot(c, norm)
-    return det
-
-def check_line_intersect_tri(t0,t1,t2,l0,l1):
-    # print "t0=",t0,"t1=",t1,"t2=",t2
-    l01 = l1-l0
-    # print "l01=", l01
-
-    t01 = t1-t0
-    t12 = t2-t1
-
-    norm = numpy.cross(t01,t12)
-    # print "t01=",t01,"t12=",t12,"norm=", norm
-    norm_dot_line = numpy.dot(l01,norm)
-    
-    if norm_dot_line == 0: 
-        #print "line is parallel to triangle"
-        return False
-
-    l0mt0 = l0-t0
-    # print "l0mt0",l0mt0
-    t = -numpy.dot(norm,l0mt0) / numpy.dot(norm,l01)
-    if t<=0 or t>=1:
-        #print "intersection is past the line's endpoints"
-        return False
-
-    intersection = l0 + l01*t
-    # print "intersection=",intersection
-    
-    signed_areas = numpy.array([det(t0,t1,intersection,norm),
-                                det(t1,t2,intersection,norm),
-                                det(t2,t0,intersection,norm)])
-    # print "signed areas: ",signed_areas/2/sum(norm**2)**0.5
-    cw = numpy.sign(signed_areas)
-    # print "clockwise: ",cw
-    return cw[0]!=0 and cw[0]==cw[1] and cw[0]==cw[2]
-
 def ut_intersection():
     t0 = numpy.array([0.0, 0.0, 0.0]);
     t1 = numpy.array([0.0, 3.0, 3.0]);
@@ -81,8 +38,10 @@ def ut_intersection():
     l1n = numpy.array([1.0, 0.5, 1.0]);
     l1p = numpy.array([1.0, 1.5, 1.0]);
     
-    assert check_line_intersect_tri(t0,t1,t2,l0,l1n) == False
-    assert check_line_intersect_tri(t0,t1,t2,l0,l1p) == True
+    assert msys.LineIntersectsTriangle(l0,l1n,t0,t1,t2) == False
+    assert msys.LineIntersectsTriangle(l0,l1p,t0,t1,t2) == True
+
+ut_intersection()
 
 #######################################################################
 #######################################################################
@@ -91,6 +50,7 @@ def ut_intersection():
 
 def FindKnots(mol, max_cycle_size=None, selection='all', verbose=False):
 
+    from msys import LineIntersectsTriangle
     if selection is None: selection = 'all'
     atoms = mol.select(selection) 
     cycles = msys.GetSSSR(atoms)
@@ -127,8 +87,8 @@ def FindKnots(mol, max_cycle_size=None, selection='all', verbose=False):
             ai, aj = bond
             if ai not in ids: continue
             for idx in cycle_inds:
-                if check_line_intersect_tri(
-                        cp[0    ], cp[idx  ], cp[idx+1], pos[ai], pos[aj]):
+                if LineIntersectsTriangle(
+                        pos[ai], pos[aj], cp[0], cp[idx], cp[idx+1]):
                     num_int += 1
                     if verbose: print "==> intersection:",cycle,bond
                     results.append((cycle, bond))

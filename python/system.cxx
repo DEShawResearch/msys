@@ -169,6 +169,17 @@ namespace {
         return calc_planarity(n, pos);
     }
 
+    bool py_line_intersects_tri(object A, object B, object C, 
+                                object R, object S) {
+        double *a, *b, *c, *r, *s;
+        objptr pa(getpos3(A,&a), destructor);
+        objptr pb(getpos3(B,&b), destructor);
+        objptr pc(getpos3(C,&c), destructor);
+        objptr pr(getpos3(R,&r), destructor);
+        objptr ps(getpos3(S,&s), destructor);
+        return line_intersects_tri(a,b,c,r,s);
+    }
+
     PyObject* sys_getpos(System const& sys, object idobj) {
         npy_intp dims[2];
         dims[1] = 3;
@@ -472,6 +483,7 @@ namespace desres { namespace msys {
         def("calc_angle", py_calc_angle);
         def("calc_dihedral", py_calc_dihedral);
         def("calc_planarity", py_calc_planarity);
+        def("line_intersects_tri", py_line_intersects_tri);
 
         class_<NonbondedInfo>("NonbondedInfo", no_init)
             .def_readwrite("vdw_funct", &NonbondedInfo::vdw_funct,
