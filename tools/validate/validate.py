@@ -10,11 +10,6 @@ class TestCase(UT.TestCase):
         self.mol=_mol
 
 class TestAnton(TestCase):
-    def testKnots(self):
-        ''' the system must not contain knots for rings of size <= 10 '''
-        knots = knot.FindKnots(self.mol, max_cycle_size=10)
-        self.assertTrue(len(knots)==0, "The system has %d bonds passing through small rings: %s" % (len(knots), knots))
-
     def testHasConstraints(self):
         ''' The system must have constraints '''
         constraints=[t for t in self.mol.tables if t.category=='constraint']
@@ -61,6 +56,11 @@ class TestStrict(TestCase):
         self.assertFalse(ediff, "%d 1-4 bonds not found in exclusions - is the file sparsified?" % len(ediff))
 
 class TestBasic(TestCase):
+    def testKnots(self):
+        ''' the system must not contain knots for rings of size <= 10 '''
+        knots = knot.FindKnots(self.mol, max_cycle_size=10)
+        self.assertTrue(len(knots)==0, "The system has %d bonds passing through small rings: %s" % (len(knots), knots))
+
     def testHasNonbonded(self):
         ''' Every particle must have a nonbonded param assignment '''
         self.assertTrue('nonbonded' in self.mol.table_names)

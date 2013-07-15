@@ -28,6 +28,7 @@ import numpy
 import sys
 import math
 import msys
+from msys.wrap import Wrapper
 
 def ut_intersection():
     t0 = numpy.array([0.0, 0.0, 0.0]);
@@ -66,7 +67,6 @@ def FindKnots(mol, max_cycle_size=None, selection='all', verbose=False):
                     len(cycles), max_cycle_size)
 
     # fetch positions
-    pos = mol.getPositions()
     ids = set(a.id for a in atoms)
     bonds=[]
     for b in mol.bonds:
@@ -74,25 +74,38 @@ def FindKnots(mol, max_cycle_size=None, selection='all', verbose=False):
         if ai in ids and aj in ids:
             bonds.append((ai,aj))
 
-    results = []
-    num_int = 0
+    results = list()
+    found = set()
+    box = mol.getCell()
+    wrapper = Wrapper(mol)
 
-    for icycle, cycle in enumerate(cycles):
-        cycle_sel='index ' + ' '.join(map(str,cycle))
-        sel = '(%s) and exwithin 10 of %s' % (selection, cycle_sel)
-        ids = set(mol.selectIds(sel))
-        cp = [pos[i] for i in cycle]
-        cycle_inds = range(1,len(cycle)-1)
-        for bond in bonds:
-            ai, aj = bond
-            if ai not in ids: continue
-            for idx in cycle_inds:
-                if LineIntersectsTriangle(
-                        pos[ai], pos[aj], cp[0], cp[idx], cp[idx+1]):
-                    num_int += 1
-                    if verbose: print "==> intersection:",cycle,bond
-                    results.append((cycle, bond))
-    if verbose: print "Total intersections: %d" % num_int
+    # apply shift of half the box size in all directions to catch knots that
+    # cross periodic boundaries.
+    for ishift in range(4):
+        pos = mol.getPositions()
+        if ishift>0:
+            pos += 0.5*box[ishift-1]
+            mol.setPositions(pos)
+        wrapper.wrap()
+
+        for icycle, cycle in enumerate(cycles):
+            cycle_sel='index ' + ' '.join(map(str,cycle))
+            sel = '(%s) and exwithin 10 of %s' % (selection, cycle_sel)
+            ids = set(mol.selectIds(sel))
+            cp = [pos[i] for i in cycle]
+            cycle_inds = range(1,len(cycle)-1)
+            for bond in bonds:
+                ai, aj = bond
+                if ai not in ids: continue
+                for idx in cycle_inds:
+                    key = (ai,aj,0,idx,idx+1)
+                    if key in found: continue
+                    if LineIntersectsTriangle(
+                            pos[ai], pos[aj], cp[0], cp[idx], cp[idx+1]):
+                        if verbose: print "==> intersection:",cycle,bond
+                        results.append((cycle, bond))
+                        found.add(key)
+    if verbose: print "Total intersections: %d" % len(found)
     return results
 
 

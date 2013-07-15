@@ -2,6 +2,7 @@
 # -*- python -*-
 #{
 # desres-cleanenv -m numpy/1.6.2-31A/lib-python \
+# -m periodicfix/2.4.3/lib-python \
 # -- python $0 "$@"
 #}
 
@@ -17,6 +18,7 @@ The set of basic checks comprise the following:
  * nonbonded: if a nonbonded table exists, every particle must have a 
    nonbonded param assignment.
 
+ * knot: there must not be bonds passing through rings of size 10 or fewer.
 
 The set of strict checks comprise the following items.  Note that it
 is certainly possible for a valid simulation to be performed using a

@@ -140,9 +140,13 @@ class TestPdb(unittest.TestCase):
 
 
 class TestValidate(unittest.TestCase):
-    def testKnot(self):
+    def testNoKnot(self):
         mol=msys.Load('tests/files/jandor.sdf')
         knot.FindKnots(mol)
+    def testPeriodicKnot(self):
+        mol=msys.Load('tests/files/knot.mae')
+        results=knot.FindKnots(mol)
+        self.assertEqual(len(results), 2)
 
 class TestMain(unittest.TestCase):
 
