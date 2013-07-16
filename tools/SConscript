@@ -1,4 +1,5 @@
 Import('env')
+Import('libmsys')
 
 env=env.Clone()
 env.Prepend(CPPPATH=['../src'], LIBS=['msys'])
@@ -6,7 +7,8 @@ env.Prepend(CPPPATH=['../src'], LIBS=['msys'])
 # atommatch
 obj=env.AddObject('atommatch/atommatch.cxx')
 env.AddUnitTest('test_atommatch', [obj]+['atommatch/test_atommatch.cxx'])
-env.AddPythonExtension('_atommatch', [obj]+['atommatch/pymod.cxx'], prefix='msys', EXTERNAL_LIBS=['boost_python', 'msys'])
+pyext=env.AddPythonExtension('_atommatch', [obj]+['atommatch/pymod.cxx'], prefix='msys', LIBS=['boost_python', 'msys'])
+env.Requires(pyext, libmsys)
 env.AddPythonModule('atommatch/atommatch.py', prefix='msys')
 env.AddScript('dms-atommatch', src='atommatch/dms-atommatch')
 

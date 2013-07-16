@@ -38,7 +38,7 @@ clean:
 
 genhelp:
 	mkdir -p $(BUILDDIR)/genhelp
-	for x in `find ../objs/$(DESRES_OS)/$(DESRES_ISA)/bin -type f -perm /u+x`; do prog=`basename $$x`; echo $$prog; $$x -h > $(BUILDDIR)/genhelp/$$prog; done
+	for x in `find $(BINDIR) -type f -perm /u+x`; do prog=`basename $$x`; echo $$prog; $$x -h > $(BUILDDIR)/genhelp/$$prog; done
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html

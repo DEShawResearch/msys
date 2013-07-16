@@ -109,7 +109,7 @@ EOF
 }
 
 gendocs() {
-    (cd doc && VERSION=$VERSION make genhelp man html latexpdf)
+    (cd doc && VERSION=$VERSION BINDIR=${TMPDIR}/bin make genhelp man html latexpdf)
     mkdir -p $PREFIX/doc/man/man1
     cp -r doc/build/html $PREFIX/doc/
     cp doc/build/latex/Msys.pdf $PREFIX/doc/
@@ -133,8 +133,7 @@ case $1 in
 	desres_require_prefix
 	desres_require_moduledir
 
-        # scons gets confused about missing -lmsys when using -j N
-        $0 --exec scons install PREFIX=${PREFIX} OBJDIR=${TMPDIR}
+        $0 --exec scons install -j4 PREFIX=${PREFIX} OBJDIR=${TMPDIR}
 
         ./tests/ut.py
 
