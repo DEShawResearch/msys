@@ -73,13 +73,11 @@ def FindKnots(mol, max_cycle_size=None, selection='all', verbose=False):
   
     t1=time()
 
-    # fetch positions
-    ids = set(a.id for a in atoms)
+    # cache bonds
     bonds=[]
-    for b in mol.bonds:
-        ai, aj = b.first.id, b.second.id
-        if ai in ids and aj in ids:
-            bonds.append((ai,aj))
+    ptr = mol._ptr
+    for i, ai in enumerate(ptr.atoms()):
+        bonds.append([aj for aj in ptr.bondedAtoms(ai) if aj<ai])
 
     t2=time()
 
@@ -104,17 +102,20 @@ def FindKnots(mol, max_cycle_size=None, selection='all', verbose=False):
             ids = set(mol.selectIds(sel))
             cp = [pos[i] for i in cycle]
             cycle_inds = range(1,len(cycle)-1)
-            for bond in bonds:
-                ai, aj = bond
-                if ai not in ids: continue
-                for idx in cycle_inds:
-                    key = (ai,aj,0,idx,idx+1)
-                    if key in found: continue
-                    if LineIntersectsTriangle(
-                            pos[ai], pos[aj], cp[0], cp[idx], cp[idx+1]):
-                        if verbose: print "==> intersection:",cycle,bond
-                        results.append((cycle, bond))
-                        found.add(key)
+            for ai in ids:
+                for aj in bonds[ai]:
+                    if aj not in ids: continue
+                    ipos = pos[ai]
+                    jpos = pos[aj]
+                    for idx in cycle_inds:
+                        key = (ai,aj,0,idx,idx+1)
+                        if key in found: continue
+                        if LineIntersectsTriangle(
+                                ipos, jpos, cp[0], cp[idx], cp[idx+1]):
+                            bond = (ai,aj)
+                            if verbose: print "==> intersection:",cycle,bond
+                            results.append((cycle, bond))
+                            found.add(key)
     if verbose: print "Total intersections: %d" % len(found)
 
     t4=time()
