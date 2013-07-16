@@ -306,8 +306,7 @@ class TestMain(unittest.TestCase):
         ct1.addAtom().atomic_number=1
         ct2.addAtom().atomic_number=2
         ct2.addAtom().atomic_number=3
-        msys.SaveMAE(ct1, '/tmp/multi.mae')
-        msys.SaveMAE(ct2, '/tmp/multi.mae', append=True)
+        msys.SaveMAE([ct1, ct2], '/tmp/multi.mae')
         cts=[x for x in msys.LoadMany('/tmp/multi.mae')]
         self.assertEqual(len(cts), 2)
         self.assertEqual(cts[0].natoms, 1)
@@ -661,15 +660,15 @@ class TestMain(unittest.TestCase):
         msys.Save(m, path)
         b1=open(path).read()
         os.unlink(path)
-        b2=msys.SaveMAE(m, path=None)
+        b2=msys.SerializeMAE(m)
         self.assertEqual(b1,b2)
 
     def testExportMaeGz(self):
         m=msys.Load('tests/files/noFused1.mae')
         path='/tmp/_msys.maegz'
         f=gzip.open(path, 'w')
-        f.write(msys.SaveMAE(m, path=None))
-        f.write(msys.SaveMAE(m, path=None))
+        f.write(msys.SerializeMAE(m))
+        f.write(msys.SerializeMAE(m))
         f.close()
         m2=msys.Load(path)
         self.assertEqual(m2.ncts, 2)
@@ -1613,6 +1612,14 @@ class TestMain(unittest.TestCase):
         msys.SaveMAE(m,path, append=True)
         m2=msys.Load(path)
         self.assertEqual(m2.natoms, 2)
+
+        path="/tmp/app2.mae"
+        try: os.unlink(path)
+        except: pass
+        msys.SaveMAE([m,m],path, append=True)
+        m2=msys.Load(path)
+        self.assertEqual(m2.natoms, 2)
+
 
     def testAppendMol2(self):
         m=msys.CreateSystem()

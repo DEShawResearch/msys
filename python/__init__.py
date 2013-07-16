@@ -1621,11 +1621,18 @@ def SaveDMS(system, path):
     else:
         _msys.ExportDMSMany([x._ptr for x in system], path, prov)
 
+def SerializeMAE(system, with_forcefield=True):
+    ''' Return the MAE form of the System as a string. '''
+    prov = _msys.Provenance.fromArgs(sys.argv)
+    ff = bool(with_forcefield)
+    flags = _msys.MaeExportFlags.Default
+    if not with_forcefield:
+        flags |= _msys.MaeExportFlags.StructureOnly
+    return _msys.ExportMAEContents(system._ptr, prov, flags)
+
 def SaveMAE(system, path, with_forcefield = True, append = False):
-    ''' Export the System to an MAE file at the given path.  If 
-    path is None, return the MAE contents as a string.  '''
-    if not isinstance(system, System):
-        raise TypeError("system should be a System; got %s" % type(system))
+    ''' Export the System (or list of systems) to an MAE file at the 
+    given path.  '''
     prov = _msys.Provenance.fromArgs(sys.argv)
     ff = bool(with_forcefield)
     flags = _msys.MaeExportFlags.Default
@@ -1633,10 +1640,13 @@ def SaveMAE(system, path, with_forcefield = True, append = False):
         flags |= _msys.MaeExportFlags.StructureOnly
     if append:
         flags |= _msys.MaeExportFlags.Append
-    if path is None:
-        return _msys.ExportMAEContents(system._ptr, prov, flags)
-    else:
+    
+    if isinstance(system, System):
         _msys.ExportMAE(system._ptr, path, prov, flags)
+    else:
+        for mol in system:
+            _msys.ExportMAE(mol._ptr, path, prov, flags)
+            flags |= _msys.MaeExportFlags.Append
 
 def SavePDB(system, path):
     ''' Export the System to a PDB file at the given path. '''
