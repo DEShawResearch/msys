@@ -186,7 +186,10 @@ namespace desres { namespace msys {
                     );
                 break;
             case XyzFileFormat: 
-                MSYS_FAIL("XYZ export not supported");
+                if (flags != 0) {
+                    MSYS_FAIL("XYZ export supports only default save option");
+                }
+                ExportXYZ(mol, path);
                 break;
             case SdfFileFormat:
                 ExportSdf(mol, path,

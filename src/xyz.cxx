@@ -4,9 +4,29 @@
 #include <errno.h>
 #include <stdio.h>
 #include <boost/algorithm/string.hpp>
+#include <fastjson/print.hxx>
 #include <string.h>
 
 namespace desres { namespace msys {
+
+    void ExportXYZ( SystemPtr mol, std::string const& path ) {
+        FILE* fd = fopen(path.c_str(), "wb");
+        if (!fd) {
+            MSYS_FAIL("Error opening '" << path << "' for writing: " << strerror(errno));
+        }
+        boost::shared_ptr<FILE> dtor(fd, fclose);
+        char x[20], y[20], z[20];
+
+        fprintf(fd, "%u\n", mol->atomCount());
+        fprintf(fd, "%s\n", mol->name.c_str());
+        for (Id i=0; i<mol->maxAtomId(); i++) {
+            if (!mol->hasAtom(i)) continue;
+            desres::fastjson::floatify(mol->atom(i).x, x);
+            desres::fastjson::floatify(mol->atom(i).y, y);
+            desres::fastjson::floatify(mol->atom(i).z, z);
+            fprintf(fd, "%d %s %s %s\n", mol->atom(i).atomic_number, x, y, z);
+        }
+    }
 
     SystemPtr ImportXYZ( std::string const& path ) {
         FILE* fd = fopen(path.c_str(), "rb");
