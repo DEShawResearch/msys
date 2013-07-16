@@ -1,4 +1,4 @@
-1.7.25 FIXED: Documentation of command line tools matches result of -h.
+1.7.26 FIXED: Documentation of command line tools matches result of -h.
        FIXED: SaveMAE supports lists of Systems again.
        FIXED: dms-find-knot finds knots crossing periodic boundaries.
        IMPROVED: dms-find-knot is much faster.

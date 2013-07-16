@@ -47,6 +47,7 @@ loadmodules() {
         $SQLITE/lib \
         $JSON/lib \
         $PERIODICFIX/lib \
+        $PERIODICFIX/lib-python \
         $MOLFILE/lib \
         $LPSOLVE/lib \
         $PRIMEGEN/lib \
