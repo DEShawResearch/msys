@@ -32,8 +32,6 @@ from msys.wrap import Wrapper
 
 from time import time
 
-def fooLineIntersectsTriangle(*args): return False
-
 def ut_intersection():
     t0 = numpy.array([0.0, 0.0, 0.0]);
     t1 = numpy.array([0.0, 3.0, 3.0]);
@@ -93,6 +91,11 @@ def FindKnots(mol, max_cycle_size=None, selection='all', verbose=False):
     for ishift in range(2):
         if ishift>0:
             mol.translate(0.5*(box[0]+box[1]+box[2]))
+            if verbose:
+                print "Checking for knots crossing periodic boundaries."
+        else:
+            if verbose:
+                print "Checking for non-periodic knots."
         wrapper.wrap()
         pos = mol.getPositions()
 
