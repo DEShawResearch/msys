@@ -1,3 +1,12 @@
+1.7.25 FIXED: Documentation of command line tools matches result of -h.
+       FIXED: SaveMAE supports lists of Systems again.
+       FIXED: dms-find-knot finds knots crossing periodic boundaries.
+       IMPROVED: dms-find-knot is much faster.
+       NEW: SerializeMAE instead of SaveMAE(path=None) for MAE contents.
+       NEW: XYZ file export.
+       NEW: dms-posre takes --max-energy and --max-distance options.
+       FIXED: dms-grease puts lipids in their own ct, leaving chains unchanged.
+
 1.7.24 IMPROVED: Documentation
        REMOVED: ExportMAE() no longer takes a list argument; use append=True.
        NEW: ExportMAE() takes path=None to return MAE file contents.
