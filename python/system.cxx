@@ -180,6 +180,16 @@ namespace {
         return line_intersects_tri(a,b,c,r,s);
     }
 
+    void sys_translate(System& sys, double x, double y, double z) {
+        for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
+            if (!sys.hasAtom(i)) continue;
+            atom_t& atm = sys.atom(i);
+            atm.x += x;
+            atm.y += y;
+            atm.z += z;
+        }
+    }
+
     PyObject* sys_getpos(System const& sys, object idobj) {
         npy_intp dims[2];
         dims[1] = 3;
@@ -662,6 +672,7 @@ namespace desres { namespace msys {
             .def("findBond",    &System::findBond)
             .def("provenance",      sys_provenance)
             .def("coalesceTables",    &System::coalesceTables)
+            .def("translate",       sys_translate)
 
             .def("getPositions", sys_getpos,
                     (arg("ids")=object()))

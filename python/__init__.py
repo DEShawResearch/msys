@@ -1037,12 +1037,7 @@ class System(object):
 
     def translate(self, xyz):
         ''' shift coordinates by given amount '''
-        x,y,z = xyz
-        for id in self._ptr.atoms():
-            atm=self._ptr.atom(id)
-            atm.x += x
-            atm.y += y
-            atm.z += z
+        self._ptr.translate(*map(float, xyz))
 
     ###
     ### bond properties

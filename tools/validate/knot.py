@@ -30,6 +30,10 @@ import math
 import msys
 from msys.wrap import Wrapper
 
+from time import time
+
+def fooLineIntersectsTriangle(*args): return False
+
 def ut_intersection():
     t0 = numpy.array([0.0, 0.0, 0.0]);
     t1 = numpy.array([0.0, 3.0, 3.0]);
@@ -42,8 +46,6 @@ def ut_intersection():
     assert msys.LineIntersectsTriangle(l0,l1n,t0,t1,t2) == False
     assert msys.LineIntersectsTriangle(l0,l1p,t0,t1,t2) == True
 
-ut_intersection()
-
 #######################################################################
 #######################################################################
 #######################################################################
@@ -52,6 +54,9 @@ ut_intersection()
 def FindKnots(mol, max_cycle_size=None, selection='all', verbose=False):
 
     from msys import LineIntersectsTriangle
+    t0=time()
+
+    mol = mol.clone()
     if selection is None: selection = 'all'
     atoms = mol.select(selection) 
     cycles = msys.GetSSSR(atoms)
@@ -65,6 +70,8 @@ def FindKnots(mol, max_cycle_size=None, selection='all', verbose=False):
         if verbose:
             print "Reduced to %d cycles of length <= %d" % (
                     len(cycles), max_cycle_size)
+  
+    t1=time()
 
     # fetch positions
     ids = set(a.id for a in atoms)
@@ -74,19 +81,22 @@ def FindKnots(mol, max_cycle_size=None, selection='all', verbose=False):
         if ai in ids and aj in ids:
             bonds.append((ai,aj))
 
+    t2=time()
+
     results = list()
     found = set()
     box = mol.getCell()
     wrapper = Wrapper(mol)
 
+    t3=time()
+
     # apply shift of half the box size in all directions to catch knots that
     # cross periodic boundaries.
-    for ishift in range(4):
-        pos = mol.getPositions()
+    for ishift in range(2):
         if ishift>0:
-            pos += 0.5*box[ishift-1]
-            mol.setPositions(pos)
+            mol.translate(0.5*(box[0]+box[1]+box[2]))
         wrapper.wrap()
+        pos = mol.getPositions()
 
         for icycle, cycle in enumerate(cycles):
             cycle_sel='index ' + ' '.join(map(str,cycle))
@@ -106,6 +116,16 @@ def FindKnots(mol, max_cycle_size=None, selection='all', verbose=False):
                         results.append((cycle, bond))
                         found.add(key)
     if verbose: print "Total intersections: %d" % len(found)
+
+    t4=time()
+
+    if False:
+        print "Time: %8.3f %8.3f %8.3f %8.3f" % (
+                (t1-t0)*1000,
+                (t2-t1)*1000,
+                (t3-t2)*1000,
+                (t4-t3)*1000,)
+
     return results
 
 

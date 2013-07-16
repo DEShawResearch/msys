@@ -37,7 +37,7 @@ if __name__ == "__main__":
     if len(a)!=2:
         parser.error("Incorrect number of arguments")
  
-    mol=msys.Load(a[1])
+    mol=msys.Load(a[1], structure_only=True)
     klist = knot.FindKnots(
             mol,
             max_cycle_size=o.max_cycle,
