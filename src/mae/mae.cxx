@@ -832,15 +832,15 @@ namespace desres { namespace msys { namespace mae {
 
     bool import_iterator::next(Json& block) {
         _offset = tk->m_offset + tk->bufpos;
+        /* eat the meta block, if any */
+        if (!strcmp("{", tokenizer_token(tk,0))) {
+            tokenizer_predict(tk, "{");
+            block.to_object();
+            predict_schema_and_values(block, tk);
+            tokenizer_predict(tk, "}");
+            _offset = tk->m_offset + tk->bufpos;
+        }
         if (tokenizer_not_a(tk, END_OF_FILE)) {
-            /* eat the meta block, if any */
-            if (!strcmp("{", tokenizer_token(tk,0))) {
-                tokenizer_predict(tk, "{");
-                block.to_object();
-                predict_schema_and_values(block, tk);
-                tokenizer_predict(tk, "}");
-                _offset = tk->m_offset + tk->bufpos;
-            }
             block.to_object();
             const char * name = tokenizer_predict(tk, END_OF_FILE);
             fill_nameless( block, name, tk );

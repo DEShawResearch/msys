@@ -300,6 +300,9 @@ class TestMain(unittest.TestCase):
         m=m.clone()
         self.assertEqual(m.ncts, 1)
 
+    def testMaeM2ioVersionAtEnd(self):
+        msys.LoadMany('tests/files/m2io_at_end.mae')
+
     def testMaeMany(self):
         ct1=msys.CreateSystem()
         ct2=msys.CreateSystem()
