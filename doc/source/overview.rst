@@ -9,7 +9,7 @@ chemical file formats msys supports.
 Molecular Structures
 ====================
 
-.. image:: images/msys_overview.001.png
+.. image:: images/msys_overview.png
    :width: 80%
    :align: center
 
