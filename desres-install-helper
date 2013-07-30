@@ -109,7 +109,7 @@ EOF
 }
 
 gendocs() {
-    (cd doc && VERSION=$VERSION BINDIR=${TMPDIR}/bin make genhelp man html latexpdf)
+    (cd doc && VERSION=$VERSION BINDIR=${TMPDIR}/bin make genhelp man html)
     mkdir -p $PREFIX/doc/man/man1
     cp -r doc/build/html $PREFIX/doc/
     cp doc/build/latex/Msys.pdf $PREFIX/doc/
