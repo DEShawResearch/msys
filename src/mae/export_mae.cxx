@@ -77,7 +77,8 @@ static void build_ct_fields( SystemPtr mol, Destro& M ) {
     }
 }
 
-static void build_m_atom( SystemPtr mol, Destro& M ) {
+/* write m_atom section.  Return mapping from msys id to m_atom index */
+static IdList build_m_atom( SystemPtr mol, Destro& M ) {
     /* the fields for the m_atom array come from the VMD maeff plugin */
     static const char * fields[] = {
         "i_m_mmod_type",
@@ -103,6 +104,7 @@ static void build_m_atom( SystemPtr mol, Destro& M ) {
     };
     static const std::string blank(" ");
 
+    IdList mapping(mol->maxAtomId(), BadId);
 
     DestroArray& m_atom = M.new_array( "m_atom" );
     for (unsigned i=0; i<sizeof(fields)/sizeof(fields[0]); i++) {
@@ -117,6 +119,7 @@ static void build_m_atom( SystemPtr mol, Destro& M ) {
         int color, mmod;
         if (atm.atomic_number==0) continue;
         Destro& rec = m_atom.append();
+        mapping.at(id) = m_atom.size();
         switch  (atm.atomic_number) {
             default: color=2;  mmod=64; break;  // gray; "any atom"
             case 1:  color=21; mmod=48; break;  // H
@@ -195,9 +198,10 @@ static void build_m_atom( SystemPtr mol, Destro& M ) {
             }
         }
     }
+    return mapping;
 }
 
-static void build_m_bond( SystemPtr mol, Destro& M ) {
+static void build_m_bond( SystemPtr mol, IdList const& mapping, Destro& M ) {
     DestroArray& m_bond = M.new_array("m_bond");
     m_bond.add_schema('i', "m_from");
     m_bond.add_schema('i', "m_to");
@@ -206,9 +210,12 @@ static void build_m_bond( SystemPtr mol, Destro& M ) {
     IdList ids=mol->bonds();
     for (Id i=0; i<ids.size(); i++) {
         const bond_t& bond = mol->bond(ids[i]);
+        Id ai = mapping.at(bond.i);
+        Id aj = mapping.at(bond.j);
+        if (bad(ai) || bad(aj)) continue;
         Destro& row = m_bond.append();
-        row["m_from"] = 1+bond.i;
-        row["m_to"]   = 1+bond.j;
+        row["m_from"] = ai;
+        row["m_to"]   = aj;
         row["m_order"] = (int)bond.order;
     }
 }
@@ -725,10 +732,10 @@ static void write_ct(Maeff& M, SystemPtr mol,
     build_ct_fields( mol, ct );
 
     /* add the atoms to the ct */
-    build_m_atom( mol, ct );
+    IdList mapping = build_m_atom( mol, ct );
 
     /* add the bonds to the ct */
-    build_m_bond( mol, ct );
+    build_m_bond( mol, mapping, ct );
 
     if (flags & MaeExport::StructureOnly) return;
 

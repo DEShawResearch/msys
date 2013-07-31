@@ -150,6 +150,24 @@ class TestValidate(unittest.TestCase):
 
 class TestMain(unittest.TestCase):
 
+    def testMaeBonds(self):
+        m=msys.CreateSystem()
+        o=m.addAtom()
+        h=m.addAtom()
+        p=m.addAtom()
+        o.addBond(h)
+        o.addBond(p)
+        o.atomic_number = 8
+        h.atomic_number = 0
+        p.atomic_number = 1
+        path = '/tmp/_msys_.mae'
+        msys.Save(m, path)
+        mol=msys.Load(path)
+        self.assertEqual(mol.nbonds, 1)
+        self.assertEqual(mol.bond(0).first.id, 0)
+        self.assertEqual(mol.bond(0).second.id, 1)
+        self.assertEqual(mol.atom(2).atomic_number, 0)
+
     def testSave(self):
         import operator as op
         old=msys.Load('tests/files/jandor.sdf')
