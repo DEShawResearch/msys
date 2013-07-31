@@ -1,3 +1,6 @@
+1.7.29 FIXED: MAE export was confused by bonds to pseudos.
+       FIXED: Bad image filename for latex2pdf documentation.
+    
 1.7.28 FIXED: Handle MAE files with m2io_version block at the end.
 
 1.7.27 FIXED: Documentation of command line tools matches result of -h.
