@@ -1,3 +1,5 @@
+1.7.30 FIXED: Another maegz fix.
+
 1.7.29 FIXED: MAE export was confused by bonds to pseudos.
        FIXED: Bad image filename for latex2pdf documentation.
     
