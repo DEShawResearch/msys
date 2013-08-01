@@ -776,6 +776,11 @@ namespace {
                 if (file.eof()) return;
                 file.read((char *)in,CHUNK);
                 strm.avail_in = file.gcount();
+                if (strm.avail_in==0) {
+                    /* interesting.  I guess we're done. */
+                    _gcount = 0;
+                    return;
+                }
                 strm.next_in = (unsigned char *)in;
                 if (file.fail() && !file.eof()) {
                     throw std::runtime_error("Reading gzipped file failed");
@@ -788,7 +793,7 @@ namespace {
                 close();
                 init();
             } else if (rc) {
-                MSYS_FAIL("Reading zlib stream failed: " << strm.msg);
+                MSYS_FAIL("Reading zlib stream failed with rc " << rc << ": " << strm.msg);
             }
             strm.next_out = (unsigned char *)out; 
             strm.avail_out = CHUNK - strm.avail_out;
