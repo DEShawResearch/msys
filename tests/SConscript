@@ -6,5 +6,5 @@ env.Prepend(CPPPATH=['../src'], LIBS=[libmsys])
 
 
 for p in Glob('test_*.cxx'):
-    env.AddUnitTest(p.name[:-4],p)
+    env.AddUnitTest(p.name[:-4],p.name)
 
