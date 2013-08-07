@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
         BOOST_FOREACH(IdList l, matches){
            printf(" --> [ ");
            BOOST_FOREACH(Id i, l){
-             printf("%u ",i+1);
+             printf("%u ",i);
            }
            printf("]\n");
         }
