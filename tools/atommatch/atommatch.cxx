@@ -1036,8 +1036,23 @@ void atommatch::AtomMatch(SystemPtr mol1, SystemPtr mol2, ScoreFctPtr rep,
     partition_graph_biconnected(g2, components2, components_idx2, tree2,
             tree_edges2);
 
+    /* Get components with atom2 if it is not BadId */
+    std::vector<int> comp_inds_atom2;
+    for (unsigned i = 0; i < components_idx2.size(); ++i) {
+        if (atom2 == BadId)
+            comp_inds_atom2.push_back(i);
+        else {
+            for (unsigned j = 0; j < components_idx2[i].size(); ++j) {
+                if (int(atom2) == atom_idx2[components_idx2[i][j]]) {
+                    comp_inds_atom2.push_back(i);
+                    break;
+                }
+            }
+        }
+    }
+
     /* Get matrix of isomorphisms and scores between all components of g1 and
-     * g2 */
+     * g2; ensure that atom1 is matched to atom2 if either is matched */
     IsoMat iso_mat(components1.size(),
             std::vector<Isomorphisms>(components2.size()));
     for (unsigned i = 0; i < components1.size(); ++i)
@@ -1052,7 +1067,9 @@ void atommatch::AtomMatch(SystemPtr mol1, SystemPtr mol2, ScoreFctPtr rep,
     int max_size = 0;
     std::vector<std::pair<int, int> > max_roots;
     for (unsigned i = 0; i < components1.size(); ++i) {
-        for (unsigned j = 0; j < components2.size(); ++j) {
+        /* Take as root only components containing atom2, to ensure the
+         * final match contains atom2 */
+        BOOST_FOREACH(unsigned j, comp_inds_atom2) {
             DPMat best_matches(tree1.v_to_e.size(),
                     std::vector<std::vector<DPBest> >(tree2.v_to_e.size()));
             /* First time around, do not keep track of isomorphisms */
