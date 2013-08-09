@@ -55,9 +55,9 @@ namespace desres { namespace msys { namespace atommatch { namespace helpers {
             GraphRepr& tree, TreeEdges& tree_edges);
     void isomorphisms(const GraphRepr& g1,
             const std::vector<int>& comp_idx1,
-            const std::vector<int>& atom_idx1, SystemPtr mol1,
+            const std::vector<int>& atom_idx1, SystemPtr mol1, Id atom1,
             const GraphRepr& g2, const std::vector<int>& idx2,
-            const std::vector<int>& atom_idx2, SystemPtr mol2,
+            const std::vector<int>& atom_idx2, SystemPtr mol2, Id atom2,
             ScoreFctPtr rep, Isomorphisms& isos);
     void get_levels(const GraphRepr& tree, int root,
             std::vector<std::vector<int> >& levels, std::vector<int>&

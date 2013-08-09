@@ -299,9 +299,8 @@ bool match_node(const GraphRepr& g1, int v1, const GraphRepr& g2, int v2,
  * atomic number or other atom/bond properties. Score for each isomorphism is
  * given by score_fct input.
  *
- * comp_idx1, atom_idx1, mol1, comp_idx2, atom_idx2, and mol2 inputs are only
- * used to map node IDs in g1 and g2 back to original atoms, for use in
- * score_fct.
+ * If atom1 and atom2 are specified, ensures that isomorphisms containing
+ * atom1 and/or atom2 must map them to each other.
  *
  * isos[i] is the i'th isomorphism, where each node j of g1 maps to
  * node isos[i].perm[j] of g2, and isos[i].score is the score of the
@@ -309,9 +308,9 @@ bool match_node(const GraphRepr& g1, int v1, const GraphRepr& g2, int v2,
  */
 void helpers::isomorphisms(const GraphRepr& g1,
         const std::vector<int>& comp_idx1,
-        const std::vector<int>& atom_idx1, SystemPtr mol1,
+        const std::vector<int>& atom_idx1, SystemPtr mol1, Id atom1,
         const GraphRepr& g2, const std::vector<int>& comp_idx2,
-        const std::vector<int>& atom_idx2, SystemPtr mol2,
+        const std::vector<int>& atom_idx2, SystemPtr mol2, Id atom2,
         ScoreFctPtr score_fct, Isomorphisms& isos) {
     isos.clear();
     if (g1.edges.size() != g2.edges.size()
@@ -367,11 +366,21 @@ void helpers::isomorphisms(const GraphRepr& g1,
             isos.back().perm = G1toG2;
             IdList atoms1(size);
             IdList atoms2(size);
+            bool valid = true;
             for (int i = 0; i < size; ++i) {
                 atoms1[i] = atom_idx1[comp_idx1[i]];
                 atoms2[i] = atom_idx2[comp_idx2[G1toG2[i]]];
+                if ((atoms1[i] == atom1 && atoms2[i] != atom2)
+                        || (atoms2[i] == atom2 && atoms1[i] != atom1))
+                    valid = false;
             }
-            isos.back().score = score_fct->apply(mol1, atoms1, mol2, atoms2);
+            /* If atom1 or atom2 are matched, only save the isomorphism if 
+             * atom1 maps to atom2 */
+            if (valid)
+                isos.back().score = score_fct->apply(mol1, atoms1, mol2, 
+                        atoms2);
+            else
+                isos.pop_back();
 
             /* Top element is the placeholder 0; remove it */
             matches.pop();
@@ -1003,8 +1012,8 @@ double helpers::select_single(const DPMat& best_matches, int v1, int v2,
     return compute_align(mol1, mol2, match, rot, trans);
 }
 
-void atommatch::AtomMatch(SystemPtr mol1,
-        SystemPtr mol2, ScoreFctPtr rep, MatchList& match) {
+void atommatch::AtomMatch(SystemPtr mol1, SystemPtr mol2, ScoreFctPtr rep,
+        MatchList& match, Id atom1, Id atom2) {
     /* Initialize graphs from molecules */
     std::vector<int> atom_idx1;
     std::vector<int> atom_idx2;
@@ -1033,9 +1042,9 @@ void atommatch::AtomMatch(SystemPtr mol1,
             std::vector<Isomorphisms>(components2.size()));
     for (unsigned i = 0; i < components1.size(); ++i)
         for (unsigned j = 0; j < components2.size(); ++j)
-            isomorphisms(components1[i], components_idx1[i], atom_idx1,
-                    mol1, components2[j], components_idx2[j], atom_idx2, mol2,
-                    rep, iso_mat[i][j]);
+            isomorphisms(components1[i], components_idx1[i], atom_idx1, mol1,
+                    atom1, components2[j], components_idx2[j], atom_idx2, mol2,
+                    atom2, rep, iso_mat[i][j]);
 
     /* Compute the maximal score and maximal size for that score, over all
      * subgraph isomorphisms */

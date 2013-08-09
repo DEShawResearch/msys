@@ -251,11 +251,11 @@ void test_isomorphisms() {
         std::cout << "Edge " << i << ": " << components2[ind2].edges[i].first << " " << components2[ind2].edges[i].second << std::endl;
     Isomorphisms isos1;
     Isomorphisms isos2;
-    isomorphisms(components1[ind1], components_idx1[ind1], atom_idx1, mol1,
-            components2[ind2], components_idx2[ind2], atom_idx2, mol2,
+    isomorphisms(components1[ind1], components_idx1[ind1], atom_idx1, mol1, BadId,
+            components2[ind2], components_idx2[ind2], atom_idx2, mol2, BadId,
             ScoreFctPtr(new ScoreFctC(rep1)), isos1);
-    isomorphisms(components1[ind1], components_idx1[ind1], atom_idx1, mol1,
-            components2[ind2], components_idx2[ind2], atom_idx2, mol2,
+    isomorphisms(components1[ind1], components_idx1[ind1], atom_idx1, mol1, BadId,
+            components2[ind2], components_idx2[ind2], atom_idx2, mol2, BadId,
             ScoreFctPtr(new ScoreFctC(rep2)), isos2);
     std::cout << "Isomorphisms 1: " << std::endl;
     for (unsigned i = 0; i < isos1.size(); ++i) {
@@ -487,7 +487,7 @@ void test_dp_update(int root1, int root2, ScoreFctPtr rep) {
     for (unsigned i = 0; i < components1.size(); ++i)
         for (unsigned j = 0; j < components2.size(); ++j)
             isomorphisms(components1[i], components_idx1[i], atom_idx1,
-                    mol1, components2[j], components_idx2[j], atom_idx2, mol2,
+                    mol1, BadId, components2[j], components_idx2[j], atom_idx2, mol2, BadId,
                     rep, iso_mat[i][j]);
     for (int j = levels1.size() - 1; j >= 0; --j) {
         if (j >= int(levels2.size())) continue;

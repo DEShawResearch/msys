@@ -32,9 +32,9 @@ namespace {
             object _py_apply;
     };
 
-    list atom_match(SystemPtr mol1, SystemPtr mol2, ScoreFctPtr rep) {
+    list atom_match(SystemPtr mol1, SystemPtr mol2, ScoreFctPtr rep, Id atom1, Id atom2) {
         MatchList match;
-        AtomMatch(mol1, mol2, rep, match);
+        AtomMatch(mol1, mol2, rep, match, atom1, atom2);
         list L;
         for (unsigned i = 0; i < match.size(); ++i)
             L.append(make_tuple(match[i].first, match[i].second));

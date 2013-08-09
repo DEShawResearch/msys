@@ -119,7 +119,8 @@ def AtomMatch(mol1, mol2, sel1='all', sel2='all', score_fct=default_score_fct):
         atoms2 = [msys.Atom(m2, id) for id in a2]
         return score_fct(atoms1, atoms2)
     rep = _atommatch.ScoreFct(f)
-    out = _atommatch.AtomMatch(clone1._ptr, clone2._ptr, rep)
+    out = _atommatch.AtomMatch(clone1._ptr, clone2._ptr, rep,
+            msys._msys.BadId, msys._msys.BadId)
     match = [(atoms1[id1], clone2.atom(id2)) for (id1, id2) in out]
     # Align mol2 to mol1 based on matched atoms
     mol2_copy = mol2.clone()

@@ -21,6 +21,8 @@ namespace desres { namespace msys { namespace atommatch {
      *   mol1 -- first system with a single molecule
      *   mol2 -- second system with a single molecule
      *   score_fct -- user-defined function to score component isomorphisms
+     *   atom1 -- optional atom in mol1 that must be matched to atom2
+     *   atom2 -- optional atom in mol2 that must be matched to atom1
      *
      * Returns:
      *   match -- list of ID pairs where the first ID is an atom in mol1 and
@@ -44,8 +46,8 @@ namespace desres { namespace msys { namespace atommatch {
      * is implemented by a heuristic search.
      */
     typedef std::vector<std::pair<int, int> > MatchList;
-    void AtomMatch(SystemPtr mol1, SystemPtr mol2,
-            ScoreFctPtr score_fct, MatchList& match);
+    void AtomMatch(SystemPtr mol1, SystemPtr mol2, ScoreFctPtr score_fct,
+            MatchList& match, Id atom1=BadId, Id atom2=BadId);
 
 }}}
 
