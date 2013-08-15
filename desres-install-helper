@@ -3,7 +3,6 @@ set -e
 #set -x
 . $DESRES_ROOT/modules/init/sourceme.sh
 module add gardenutils/1.9.2/lib-sh
-module add treetop/87-Desmond/bin   
 . desres-install-functions
 trap 'desres_trapped_exit' EXIT
 
@@ -17,12 +16,12 @@ DESCRIPTION="Biomolecular Structure Library"
 GCC=gcc/4.7.2-23A
 BOOST=boost/1_51_0-28A
 PYTHON=Python/2.7.3-07A
-SQLITE=$(treetop sqlite)
+SQLITE=sqlite/3.6.23.1-02A
 JSON=fastjson/1.5.1
-MOLFILE=molfile/1.10.15
-PERIODICFIX=periodicfix/2.4.7
+MOLFILE=molfile/1.11.7
+PERIODICFIX=periodicfix/2.4.9
 NUMPY=numpy/1.6.2-32A
-LPSOLVE=$(treetop lp_solve)
+LPSOLVE=lp_solve/5.5.2.0-03A
 PRIMEGEN=primegen/0.97-05
 ZLIB=zlib/1.2.4-10A
 INCHI=inchi/1.04-05
@@ -30,9 +29,9 @@ EIGEN=eigen/3.1.2-01        # for tools/atommatch
 TEXLIVE=texlive/20120701-03
 
 # build and documentation
-SCONS=$(treetop scons)
-SCONSUTILS=$(treetop sconsutils)
-SPHINX=$(treetop Sphinx)
+SCONS=scons/2.3.0-10A
+SCONSUTILS=sconsutils/1.37
+SPHINX=Sphinx/1.1.3-04A
 
 loadmodules() {
     module load \
