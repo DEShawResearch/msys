@@ -312,7 +312,11 @@ static inline const char * tokenizer_token(tokenizer * tk, int ignore_single) {
           c = tokenizer_read(tk);
         }
       } else {
-        if (issingle(c) || isspace(c) || c == '#' || c == '"') {
+        if (issingle(c) || isspace(c) || c == '"') {
+          *ptr++ = '\0';
+          state = DONE;
+          /* allow hashes in tokens; comments require preceding space */
+        } else if (c=='#' && isspace(ptr[-1])) {
           *ptr++ = '\0';
           state = DONE;
         } else {
