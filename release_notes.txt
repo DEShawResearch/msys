@@ -1,3 +1,6 @@
+1.7.31 FIXED: Read MAE files with fields containing hash symbols.
+       NEW: Atommatch takes optional pair of atoms which must be matched.
+
 1.7.30 FIXED: Another maegz fix.
 
 1.7.29 FIXED: MAE export was confused by bonds to pseudos.
