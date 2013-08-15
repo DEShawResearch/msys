@@ -1,11 +1,13 @@
 #include "sdf.hxx"
 #include "elements.hxx"
+#include <fastjson/print.hxx>
 #include <boost/format.hpp>
 #include <fstream>
 #include <errno.h>
 
 using namespace desres::msys;
 using boost::format;
+using desres::fastjson::floatify;
 
 static void export_ct(SystemPtr mol, Id ct, std::ostream& out) {
 
@@ -13,7 +15,7 @@ static void export_ct(SystemPtr mol, Id ct, std::ostream& out) {
         MSYS_FAIL("SDF export not support for > 999 atoms, have ct " << ct
                 << " with " << mol->atomCountForCt(ct) << " atoms.");
     }
-    component_t const& cmp = mol->ct(ct);
+    component_t& cmp = mol->ct(ct);
     IdList atoms = mol->atomsForCt(ct);
     IdList bonds = mol->bondsForCt(ct);
     std::sort(atoms.begin(), atoms.end());
@@ -61,12 +63,27 @@ static void export_ct(SystemPtr mol, Id ct, std::ostream& out) {
             << "  0  0  0"
             << std::endl;
     }
-
-    /* write property block? */
-
     /* done with molecule section */
     out << "M  END" << std::endl;
 
+    /* write property block */
+    std::vector<String> keys = cmp.keys();
+    char floatbuf[20];
+    for (unsigned i=0; i<keys.size(); i++) {
+        out << ">  <" << keys[i] << ">\n";
+        ValueRef v = cmp.value(keys[i]);
+        switch (v.type()) {
+        default:
+        case StringType: 
+            out << v.asString(); break;
+        case IntType: 
+            out << v.asInt(); break;
+        case FloatType: 
+            floatify(v.asFloat(), floatbuf); 
+            out << floatbuf; break;
+        }
+        out << "\n\n";
+    }
     out << "$$$$" << std::endl;
 }
 
