@@ -28,7 +28,7 @@ static void export_ct(SystemPtr mol, Id ct, std::ostream& out) {
     /* counts */
     out << format("%3d") % atoms.size()
         << format("%3d") % bonds.size()
-        << " 0  0  0  0            999 V2000"
+        << "  0  0  1  0            999 V2000"
         << std::endl;
 
     /* atoms */
