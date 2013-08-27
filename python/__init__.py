@@ -1399,10 +1399,10 @@ class AnnotatedSystem(object):
         else:
             raise TypeError, "atom must be of type msys.Atom"
 
-    def lonepairs(self, atom):
-        ''' Number of lone pairs of electrons '''
+    def loneelectrons(self, atom):
+        ''' Number of lone electrons '''
         if type(atom) == Atom:
-            return self._ptr.atomLonePairs(atom.id)
+            return self._ptr.atomLoneElectrons(atom.id)
         else:
             raise TypeError, "atom must be of type msys.Atom"
 

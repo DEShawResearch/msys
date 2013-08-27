@@ -14,14 +14,14 @@ namespace desres { namespace msys {
                 unsigned char hcount;
                 unsigned char valence;
                 unsigned char degree;
-                unsigned char lone_pairs;
+                unsigned char lone_electrons;
                 unsigned char ring_bonds;
                 unsigned char hybridization;
                 IdList rings_idx;
 
                 atom_data_t() 
                 : aromatic(), hcount(), valence(), degree(),
-                  lone_pairs(), ring_bonds(), hybridization()
+                  lone_electrons(), ring_bonds(), hybridization()
                 {}
             };
             struct bond_data_t {
@@ -77,8 +77,8 @@ namespace desres { namespace msys {
             /* Total number of non-pseudo bonds */
             int atomDegree(Id atom) const {
                 return _atoms.at(atom).degree; }
-            int atomLonePairs(Id atom) const {
-                return _atoms.at(atom).lone_pairs; }
+            int atomLoneElectrons(Id atom) const {
+                return _atoms.at(atom).lone_electrons; }
             /* Hybridization (1 = sp, 2 = sp2, 3 = sp3, 4 = sp3d, etc.) */
             int atomHybridization(Id atom) const {
                 return _atoms.at(atom).hybridization; }

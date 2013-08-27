@@ -7,8 +7,9 @@
 desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys)
 : _sys(sys), _atoms(sys->maxAtomId()), _bonds(sys->maxBondId()) {
 
-    /* Assign valence, degree, hcount, lone_pairs, and preliminary
+    /* Assign valence, degree, hcount, lone_electrons, and preliminary
      * hybridization */
+    int nrad=0;
     BOOST_FOREACH(Id ai, sys->atoms()) {
         atom_data_t& a = _atoms[ai];
         BOOST_FOREACH(Id bi, sys->bondsForAtom(ai)) {
@@ -26,26 +27,33 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys)
         int formal_charge = sys->atom(ai).formal_charge;
         int val = DataForElement(sys->atom(ai).atomic_number).nValence;
         int electrons = val - a.valence - formal_charge;
-        if (electrons < 0 || electrons % 2)
+        if (electrons < 0)
             MSYS_FAIL("Invalid formal charge or bond orders for atom "
                     << ai << " of system " << sys->name);
-        a.lone_pairs = electrons / 2;
+        nrad+=electrons%2;
+        a.lone_electrons=electrons;
 
         if (sys->atom(ai).atomic_number == 1 || a.degree == 0){
             a.hybridization = 0;
         }else{
-            a.hybridization = std::max(1, a.degree + a.lone_pairs - 1);
+            a.hybridization = std::max(1, a.degree + (a.lone_electrons+1)/2 - 1);
         }
     }
+    if (nrad >1)
+        MSYS_FAIL("Invalid formal charge or bond orders ( "<<nrad <<
+                  " radical centers detected ) for system " << sys->name);
+
     /* Get rings and ring systems, assign ring_bonds and rings_idx */
     compute_ring_systems();
     /* Assign aromatic */
     compute_aromaticity();
-    /* If sp3 AND have lone pairs AND
+    /* If sp3 AND have lone electrons AND group={14,15,16} AND
      * (aromatic OR bonded to atom with double bonds): become sp2 */
     BOOST_FOREACH(Id ai, sys->atoms()) {
         atom_data_t& a = _atoms[ai];
-        if (a.hybridization == 3 && a.lone_pairs > 0) {
+        int group=GroupForElement(sys->atom(ai).atomic_number);
+        bool validGroup=group>=14 && group<=16;
+        if (a.hybridization == 3 && a.lone_electrons > 1 && validGroup ) {
             if (a.aromatic) {
                 a.hybridization = 2;
                 continue;
@@ -99,7 +107,7 @@ void desres::msys::AnnotatedSystem::compute_ring_systems() {
         /* All atoms in aromatic ring must be potentially sp2 (meaning sp2 or
          * sp3 with free electrons) */
         BOOST_FOREACH(Id atom, SSSR[i]) {
-            if (! ( ( _atoms[atom].hybridization == 3 && _atoms[atom].lone_pairs > 0) ||
+            if (! ( ( _atoms[atom].hybridization == 3 && _atoms[atom].lone_electrons > 1) ||
                     _atoms[atom].hybridization == 2))
                 possibly_aromatic = false;
         }
@@ -163,7 +171,7 @@ bool desres::msys::AnnotatedSystem::is_aromatic(const IdList& atoms,
         }
         /* If no double bonds and has lone pair, lone pair is in ring--add 2 to
          * electron count */
-        if (!has_double && _atoms[atom].lone_pairs > 0) electron_count += 2;
+        if (!has_double && _atoms[atom].lone_electrons > 1) electron_count += 2;
     }
     /* Use Huckel's rule */
     return (electron_count % 4 == 2);

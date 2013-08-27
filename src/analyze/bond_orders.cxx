@@ -874,12 +874,10 @@ namespace desres { namespace msys {
         Id nbonds=_mol->filteredBondsForAtom(aid1, *_filter).size();
         /* Allow hextets for... */
         if ( 
-            (  (anum1==5 || anum1==13) && (nbonds<4)               ) // Al, B
-            || (anum1==6               && (nbonds==3 || nbonds==2) ) // unsaturated carbon
-            /*
-            || (anum1==7               && (nbonds==2 || nbonds==1) ) // unsaturated nitrogen
-            || (anum1==8               && (nbonds==1             ) ) // unsaturated oxygen
-            */
+            ( (anum1==5 || anum1==13) && (nbonds<4)               ) || // Al, B
+            ( (anum1==6 || anum1==14) && (nbonds<4) ) || // unsaturated carbon
+            ( (anum1==7 || anum1==15) && (nbonds<3) ) || // unsaturated nitrogen
+            ( (anum1==8 || anum1==16) && (nbonds<2) )    // unsaturated oxygen
             ) return true;
         return false;
     }
@@ -1090,7 +1088,7 @@ namespace desres { namespace msys {
                 if(parent->allow_hextet_for_atom(aid0)){
                     /* bound constraint */
                     lpsolve::add_constraint(_component_lp,&rowcopy[0],ROWTYPE_LE,atomoct); 
-                    lpsolve::add_constraint(_component_lp,&rowcopy[0],ROWTYPE_GE,atomoct-1);
+                    lpsolve::add_constraint(_component_lp,&rowcopy[0],ROWTYPE_GE,std::max(atomoct-2,0));
                 }else{
                     if(iatom.hyperCol){
                         rowcopy[iatom.hyperCol]=-1;

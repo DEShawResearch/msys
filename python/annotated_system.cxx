@@ -38,7 +38,7 @@ namespace desres { namespace msys {
             .def("atomHcount", &AnnotatedSystem::atomHcount)
             .def("atomDegree", &AnnotatedSystem::atomDegree)
             .def("atomValence", &AnnotatedSystem::atomValence)
-            .def("atomLonePairs", &AnnotatedSystem::atomLonePairs)
+            .def("atomLoneElectrons", &AnnotatedSystem::atomLoneElectrons)
             .def("atomHybridization", &AnnotatedSystem::atomHybridization)
             .def("atomRingBonds", &AnnotatedSystem::atomRingBonds)
             .def("atomRingCount", &AnnotatedSystem::atomRingCount)

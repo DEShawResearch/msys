@@ -1,3 +1,8 @@
+1.7.34 IMPROVED: annotated system is now handles radicals 
+                 (bond order assigner still does not)
+
+1.7.33 FIXED: SDF counts line specification
+
 1.7.32 FIXED: SDF exporter writes ct key-values.
 
 1.7.31 FIXED: Read MAE files with fields containing hash symbols.
