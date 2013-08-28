@@ -414,15 +414,6 @@ namespace {
         }
     }
 
-    list glue_pairs(System const& sys) {
-        list result;
-        std::vector<glue_t> glue = sys.gluePairs();
-        for (unsigned i=0; i<glue.size(); i++) {
-            result.append(make_tuple(glue[i].first, glue[i].second));
-        }
-        return result;
-    }
-
     /* FIXME: use a struct holding a member function implementing operator() */
     list table_names(System const& sys) {
         std::vector<std::string> names = sys.tableNames();
@@ -656,13 +647,6 @@ namespace desres { namespace msys {
 
             /* append */
             .def("append", AppendSystem)
-
-            /* glue */
-            .def("glueCount", &System::glueCount)
-            .def("gluePairs", glue_pairs)
-            .def("hasGluePair", &System::hasGluePair)
-            .def("addGluePair", &System::addGluePair)
-            .def("delGluePair", &System::delGluePair)
 
             /* miscellaneous */
             .def("validPermutation", valid_permutation)

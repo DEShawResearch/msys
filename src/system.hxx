@@ -159,8 +159,6 @@ namespace desres { namespace msys {
         }
     };
 
-    typedef std::pair<Id,Id> glue_t;
-
     class System : public boost::enable_shared_from_this<System> {
     
         static IdList _empty;
@@ -206,10 +204,6 @@ namespace desres { namespace msys {
         /* auxiliary tables.  basically a hack for cmap */
         typedef std::map<String, ParamTablePtr> AuxTableMap;
         AuxTableMap _auxtables;
-
-        /* the glue table */
-        typedef std::set<glue_t> GlueSet;
-        GlueSet     _glue;
 
         /* provenance.  Ideally, you would append to this just before 
          * serializing to disk. */
@@ -478,24 +472,6 @@ namespace desres { namespace msys {
         /* Return ids of atoms based on their order of appearance in
          * a depth-first traversal of the structure hierarchy. */
         IdList orderedIds() const;
-
-        /**** glue ***/
-
-        /* number of glue pairs */
-        Id glueCount() const;
-
-        /* the glue pairs */
-        std::vector<glue_t> gluePairs() const;
-
-        /* glue present? */
-        bool hasGluePair(Id p0, Id p1) const;
-
-        /* add a glue pair.  Return true if a pair was added; false if
-         * the pair was already present */
-        bool addGluePair(Id p0, Id p1);
-
-        /* remove a glue pair.  Return true if found, false if not. */
-        bool delGluePair(Id p0, Id p1);
     };
 
     typedef boost::shared_ptr<System> SystemPtr;

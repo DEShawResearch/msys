@@ -539,24 +539,6 @@ static void export_version(Sqlite dms) {
     w.next();
 }
 
-static void export_glue(System const& sys, Sqlite dms) {
-    if (!sys.glueCount()) return;
-    dms.exec(
-            "create table glue (\n"
-            "  id integer primary key,\n"
-            "  p0 integer not null,\n"
-            "  p1 integer not null)");
-    Writer w = dms.insert("glue");
-    dms.exec( "begin");
-    std::vector<glue_t> glue = sys.gluePairs();
-    for (unsigned i=0; i<glue.size(); i++) {
-        w.bind_int(1,glue[i].first);
-        w.bind_int(2,glue[i].second);
-        w.next();
-    }
-    dms.exec( "commit");
-}
-
 /* make a mapping from id to 0-based dms primary key */
 static IdList map_gids(System const& sys) {
     Id i,n = sys.maxAtomId();
@@ -580,7 +562,6 @@ static void export_dms(SystemPtr h, Sqlite dms, Provenance const& provenance) {
     export_nbinfo(   sys,            dms);
     export_cell(     sys,            dms);
     export_provenance(sys,provenance,dms);
-    export_glue(     sys,            dms);
     export_version(                  dms);
 }
 

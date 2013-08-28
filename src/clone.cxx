@@ -121,16 +121,6 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms ) {
         }
     }
 
-    /* Copy glue pairs whose atoms are fully within the subset */
-    std::vector<glue_t> glue = src->gluePairs();
-    for (Id i=0; i<glue.size(); i++) {
-        Id idst = atmmap.at(glue[i].first);
-        Id jdst = atmmap.at(glue[i].second);
-        if (!bad(idst) && !bad(jdst)) {
-            dst->addGluePair(idst,jdst);
-        }
-    }
-
     /* Detect when term tables share a ParamTable.  First pass: sort
      * by param table.  */
     typedef std::vector<std::string> StringList;

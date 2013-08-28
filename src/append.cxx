@@ -199,14 +199,6 @@ IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr,
         }
     }
 
-    /* add glue */
-    std::vector<glue_t> glue = src.gluePairs();
-    for (Id i=0; i<glue.size(); i++) {
-        Id dsti = src2dst.at(glue[i].first);
-        Id dstj = src2dst.at(glue[i].second);
-        dst.addGluePair(dsti, dstj);
-    }
-
     /* add/merge term tables */
     std::vector<std::string> tablenames = src.tableNames();
     for (unsigned i=0; i<tablenames.size(); i++) {

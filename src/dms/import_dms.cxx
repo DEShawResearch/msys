@@ -478,31 +478,6 @@ static void read_provenance( Sqlite dms, System& sys, KnownSet& known) {
     }
 }
 
-static void read_glue(Sqlite dms, System& sys, KnownSet& known) {
-    /* read and merge glue and msys_glue */
-    static const char* tables[] = {"glue", "msys_glue"};
-    for (int i=0; i<2; i++) {
-        const char* table = tables[i];
-        known.insert(table);
-        Reader r = dms.fetch(table);
-        if (r) {
-            int p0 = r.column( "p0");
-            int p1 = r.column( "p1");
-            if (p0<0 || p1<0) {
-                MSYS_FAIL("'" << table << "' table is missing p0 or p1 columns");
-            }
-            if (r.type(p0) != IntType ||
-                r.type(p1) != IntType) {
-                MSYS_FAIL("'" << table << "' table is misformatted: p0 and p1 must be integer");
-            }
-            for (; r; r.next()) {
-                sys.addGluePair(r.get_int( p0),
-                                r.get_int( p1));
-            }
-        }
-    }
-}
-
 static void read_cts(Sqlite dms, System& sys, KnownSet& known) {
     known.insert("msys_ct");
     Reader r = dms.fetch("msys_ct");
@@ -709,7 +684,6 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
 
     read_cell(dms, sys, known);
     read_provenance(dms, sys, known);
-    read_glue(dms, sys, known);
 
     if (!structure_only) {
         read_metatables(dms, gidmap, sys, known);

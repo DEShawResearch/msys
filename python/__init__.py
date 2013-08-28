@@ -1066,21 +1066,9 @@ class System(object):
 
     
     @property
-    def topology(self, with_glue=True):
-        ''' list of bonded atoms for each atom in the System, augmented
-        by whatever glue may be present.
-        '''
-        top = [[b.id for b in a.bonded_atoms] for a in self.atoms]
-        if with_glue and 'glue' in self.auxtable_names:
-            gtable = self.auxtable('glue')
-            for t in gtable.params:
-                p0 = t['p0']
-                p1 = t['p1']
-                if p1 not in top[p0]:
-                    top[p0].append(p1)
-                if p0 not in top[p1]:
-                    top[p1].append(p0)
-        return top
+    def topology(self):
+        ''' list of bonded atoms for each atom in the System '''
+        return [[b.id for b in a.bonded_atoms] for a in self.atoms]
 
     ###
     ### operations on term tables
@@ -1311,22 +1299,6 @@ class System(object):
     def provenance(self):
         ''' return a list of Provenance entries for this system '''
         return self._ptr.provenance()
-
-    def gluePairs(self):
-        ''' return a list of the glue pairs as tuples '''
-        return self._ptr.gluePairs()
-
-    def addGluePair(self, p0, p1):
-        ''' Add a pair of atoms to the glue.  '''
-        return self._ptr.addGluePair(p0,p1)
-
-    def hasGluePair(self, p0, p1):
-        ''' Does the pair of atoms exist in the glue? '''
-        return self._ptr.hasGluePair(p0,p1)
-
-    def delGluePair(self, p0, p1):
-        ''' Remove a pair of atoms from the glue.  '''
-        return self._ptr.delGluePair(p0,p1)
 
 class AnnotatedSystem(object):
     ''' System that has been annotated with additional chemical information '''
