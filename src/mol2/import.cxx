@@ -187,6 +187,7 @@ SystemPtr iterator::next() {
                     }
 
                 }
+                state = Skip;
             default: ;
         }
     }
