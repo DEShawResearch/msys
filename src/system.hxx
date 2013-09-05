@@ -242,6 +242,56 @@ namespace desres { namespace msys {
         const chain_t& chain(Id id) const { return _chains.at(id); }
         const component_t& ct(Id id) const { return _cts.at(id); }
 
+        /* unchecked element accessors */
+        atom_t& atomFAST(Id id) { return _atoms[id]; }
+        bond_t& bondFAST(Id id) { return _bonds[id]; }
+        residue_t& residueFAST(Id id) { return _residues[id]; }
+        chain_t& chainFAST(Id id) { return _chains[id]; }
+        component_t& ctFAST(Id id) { return _cts[id]; }
+
+        const atom_t& atomFAST(Id id) const { return _atoms[id]; }
+        const bond_t& bondFAST(Id id) const { return _bonds[id]; }
+        const residue_t& residueFAST(Id id) const { return _residues[id]; }
+        const chain_t& chainFAST(Id id) const { return _chains[id]; }
+        const component_t& ctFAST(Id id) const { return _cts[id]; }
+
+        /* id iterator, skipping deleted ids */
+        class iterator {
+            friend class System;
+            Id            _i;
+            const IdSet*  _dead;
+
+            iterator(Id i, IdSet const& dead) 
+            : _i(i), _dead(&dead) {
+                while (_dead && _dead->count(_i)) ++_i;
+            }
+
+
+            bool equal(iterator const& c) const { return _i==c._i; }
+            const Id& dereference() const { return _i; }
+            void increment() { do ++_i; while (_dead && _dead->count(_i)); }
+
+        public:
+            typedef std::forward_iterator_tag iterator_category;
+            typedef Id value_type;
+            typedef ptrdiff_t difference_type;
+            typedef const Id* pointer;
+            typedef const Id& reference;
+
+            iterator() : _i(), _dead() {}
+            const Id& operator*() const { return dereference(); }
+            const Id* operator->() const { return &dereference(); }
+            iterator& operator++() { increment(); return *this; }
+            bool operator==(iterator const& c) const { return equal(c); }
+            bool operator!=(iterator const& c) const { return !equal(c); }
+        };
+
+        /* iterators over element ids */
+        iterator atomBegin() const { return iterator(0, _deadatoms); }
+        iterator atomEnd() const { return iterator(maxAtomId(), _deadatoms); }
+        iterator bondBegin() const { return iterator(0, _deadbonds); }
+        iterator bondEnd() const { return iterator(maxBondId(), _deadbonds); }
+
         /* add an element */
         Id addAtom(Id residue);
         Id addBond(Id i, Id j);
@@ -260,11 +310,11 @@ namespace desres { namespace msys {
         void delCt(Id id);
 
         /* One more than highest valid id */
-        Id maxAtomId() const;
-        Id maxBondId() const;
-        Id maxResidueId() const;
-        Id maxChainId() const;
-        Id maxCtId() const;
+        Id maxAtomId() const { return _atoms.size(); }
+        Id maxBondId() const { return _bonds.size(); }
+        Id maxResidueId() const { return _residues.size(); }
+        Id maxChainId() const { return _chains.size(); }
+        Id maxCtId() const { return _cts.size(); }
 
         /* list of elements ids */
         IdList atoms() const;

@@ -554,22 +554,6 @@ IdList System::bondedAtoms(Id id) const {
     return ids;
 }
 
-Id System::maxAtomId() const {
-    return _atoms.size();
-}
-Id System::maxBondId() const {
-    return _bonds.size();
-}
-Id System::maxResidueId() const {
-    return _residues.size();
-}
-Id System::maxChainId() const {
-    return _chains.size();
-}
-Id System::maxCtId() const {
-    return _cts.size();
-}
-
 Id System::atomPropCount() const {
     return _atomprops->propCount();
 }
