@@ -46,6 +46,22 @@ int main(int argc, char *argv[]) {
         assert(ids.size()==2);
     }
 
+    mol = System::create();
+    res=mol->addResidue(mol->addChain());
+    for (Id i=0; i<100000; i++) mol->addAtom(res);
+    double t=-now();
+    std::count(mol->atomBegin(), mol->atomEnd(), 0);
+    t+=now();
+    printf("iter: %8.3f\n", t*1000);
+    t=-now();
+    int n=0;
+    for (Id i=0; i<mol->maxAtomId(); i++) { 
+        if (!mol->hasAtom(i)) continue;
+        if (i==0) ++n;
+    }
+    t+=now();
+    printf("old: %8.3f\n", t*1000);
+
     return 0;
 }
 

@@ -261,8 +261,8 @@ namespace desres { namespace msys {
             Id            _i;
             const IdSet*  _dead;
 
-            iterator(Id i, IdSet const& dead) 
-            : _i(i), _dead(&dead) {
+            iterator(Id i, const IdSet* dead) 
+            : _i(i), _dead(dead) {
                 while (_dead && _dead->count(_i)) ++_i;
             }
 
@@ -287,10 +287,14 @@ namespace desres { namespace msys {
         };
 
         /* iterators over element ids */
-        iterator atomBegin() const { return iterator(0, _deadatoms); }
-        iterator atomEnd() const { return iterator(maxAtomId(), _deadatoms); }
-        iterator bondBegin() const { return iterator(0, _deadbonds); }
-        iterator bondEnd() const { return iterator(maxBondId(), _deadbonds); }
+        iterator atomBegin() const { 
+            return iterator(0, _deadatoms.empty() ? NULL : &_deadatoms); 
+        }
+        iterator atomEnd() const { return iterator(maxAtomId(), NULL); }
+        iterator bondBegin() const { 
+            return iterator(0, _deadbonds.empty() ? NULL : &_deadbonds); 
+        }
+        iterator bondEnd() const { return iterator(maxBondId(), NULL); }
 
         /* add an element */
         Id addAtom(Id residue);
