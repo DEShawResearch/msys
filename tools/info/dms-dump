@@ -108,7 +108,7 @@ def dmsdump(ipath, out, without_provenance = False,
                         without_paraminfo = False,
                         reorder = False ):
 
-    cmd='sqlite3 -header -column'.split()
+    cmd='sqlite3 -header'.split()
     cmd.append(ipath)
 
     # global cell
