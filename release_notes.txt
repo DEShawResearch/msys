@@ -1,6 +1,9 @@
 1.7.35 FIXED: dms-dump truncated its fields to 10 characters; now output
               is separated by '|' rather than being formatted into columns.
 
+       IMPROVED: PDB reader guesses atomic number form name if element is
+                 missing.  END and ENDMDL records split PDB into cts.
+
 1.7.34 IMPROVED: annotated system is now handles radicals 
                  (bond order assigner still does not)
 
