@@ -29,7 +29,7 @@
 
 /*  record type defines */
 enum {
-  PDB_HEADER, PDB_REMARK, PDB_ATOM, PDB_CONECT, PDB_UNKNOWN, PDB_END, PDB_EOF, PDB_CRYST1
+  PDB_HEADER, PDB_REMARK, PDB_ATOM, PDB_CONECT, PDB_UNKNOWN, PDB_END, PDB_EOF, PDB_CRYST1, PDB_TER
 };
 
 /* read the next record from the specified pdb file, and put the string found
@@ -76,6 +76,8 @@ static int desres_msys_read_pdb_record(FILE *f, char *retStr) {
       recType = PDB_CRYST1;
     } else if (!strncmp(inbuf, "HEADER", 6)) {
       recType = PDB_HEADER;
+    } else if (!strncmp(inbuf, "TER", 3)) {
+      recType = PDB_TER;
     } else if (!strncmp(inbuf, "END", 3)) {  /* very permissive */
       /* XXX we treat any "ENDxxx" record as an end, to simplify testing */
       /*     since we don't remove trailing '\n' chars                   */

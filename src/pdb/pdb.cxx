@@ -22,6 +22,16 @@ static void strip_whitespace(char *buf) {
     *buf='\0';
 }
 
+static void strip_nonalpha(char *buf) {
+    char *ptr = buf;
+    if (!buf) return;
+    while (!isalpha(*ptr)) ++ptr;
+    while (*ptr && isalpha(*ptr)) {
+        *buf++ = *ptr++;
+    }
+    *buf='\0';
+}
+
 SystemPtr desres::msys::ImportPDB( std::string const& path ) {
 
     char pdbstr[PDB_BUFFER_LENGTH];
@@ -36,6 +46,8 @@ SystemPtr desres::msys::ImportPDB( std::string const& path ) {
     Id bfactor_id = mol->addAtomProp("bfactor", FloatType);
 
     int indx=PDB_EOF;
+    int ct=0;
+    int ctcount=0;
     do {
         indx = desres_msys_read_pdb_record(fd, pdbstr);
         if (indx == PDB_ATOM) {
@@ -57,12 +69,32 @@ SystemPtr desres::msys::ImportPDB( std::string const& path ) {
             resid = atoi(residstr);
 
             Id atm = imp.addAtom(chainname, segid, resid, resname, 
-                    name, insertion);
+                    name, insertion, ct);
+            ++ctcount;
             atom_t& atom = mol->atom(atm);
             atom.x = x;
             atom.y = y;
             atom.z = z;
-            atom.atomic_number = ElementForAbbreviation(element);
+            if (*element) {
+                atom.atomic_number = ElementForAbbreviation(element);
+            } else if (*name) {
+                /* guess atomic number from name.  Strip leading and
+                 * trailing non-alphanumeric characters.  If the atom name
+                 * and residue name match, use the atom name as the putative
+                 * element symbol.  If no match is found, use the first 
+                 * character.  Last resort, use the whole name. */
+                strip_nonalpha(name);
+                if (!strcmp(name, resname)) {
+                    atom.atomic_number = ElementForAbbreviation(name);
+                }
+                if (atom.atomic_number==0) {
+                    char tmp[2] = {name[0], 0};
+                    atom.atomic_number = ElementForAbbreviation(tmp);
+                }
+                if (atom.atomic_number==0) {
+                    atom.atomic_number = ElementForAbbreviation(name);
+                }
+            }
             if (strlen(altloc)) {
                 Id altlocid = mol->addAtomProp("altloc", StringType);
                 mol->atomPropValue(atm,altlocid) = altloc;
@@ -74,9 +106,15 @@ SystemPtr desres::msys::ImportPDB( std::string const& path ) {
             double alpha, beta, gamma, a, b, c;
             desres_msys_get_pdb_cryst1(pdbstr,&alpha,&beta,&gamma,&a,&b,&c);
             ImportPDBUnitCell(a,b,c,alpha,beta,gamma,mol->global_cell[0]);
+
+        } else if (/* indx==PDB_TER || */ indx==PDB_END) {
+            if (ctcount>0) {
+                ++ct;
+                ctcount=0;
+            }
         }
 
-    } while (indx != PDB_END && indx != PDB_EOF);
+    } while (indx != PDB_EOF);
 
     GuessBondConnectivity(mol);
     mol->analyze();

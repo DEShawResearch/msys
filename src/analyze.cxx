@@ -126,6 +126,7 @@ namespace desres { namespace msys {
 
     void GuessBondConnectivity(SystemPtr mol) {
         std::vector<Float> pos(3*mol->maxAtomId());
+        static const double cutoff = 4.0;
         if (pos.empty()) return;
         IdList atoms(mol->atoms());
         BOOST_FOREACH(Id i, atoms) {
@@ -135,10 +136,20 @@ namespace desres { namespace msys {
             pos[3*i+2] = atom.z;
         }
         BondFinder finder(mol);
-        periodicfix::find_contacts(4.0, &pos[0],
-                                   atoms.begin(), atoms.end(),
-                                   atoms.begin(), atoms.end(),
-                                   finder);
+        if (mol->ctCount()==1) {
+            periodicfix::find_contacts(cutoff, &pos[0],
+                                       atoms.begin(), atoms.end(),
+                                       atoms.begin(), atoms.end(),
+                                       finder);
+        } else {
+            for (Id i=0, n=mol->ctCount(); i<n; i++) {
+                IdList const& atoms = mol->atomsForCt(i);
+                periodicfix::find_contacts(cutoff, &pos[0],
+                                           atoms.begin(), atoms.end(),
+                                           atoms.begin(), atoms.end(),
+                                           finder);
+            }
+        }
         /* if a hydrogen has multiple bonds, keep the shortest one */
         for (Id i=0; i<mol->maxAtomId(); i++) {
             if (!mol->hasAtom(i)) continue;
@@ -150,10 +161,9 @@ namespace desres { namespace msys {
             const double x=pi[0];
             const double y=pi[1];
             const double z=pi[2];
-            IdList bonds = mol->bondsForAtom(i);
+            IdList const& bonds = mol->bondsForAtom(i);
             BOOST_FOREACH(Id b, bonds) {
                 Id j = mol->bond(b).other(i);
-                if (j>i) continue;
                 const double* pj = &pos[3*j];
                 const double dx = pj[0]-x;
                 const double dy = pj[1]-y;
