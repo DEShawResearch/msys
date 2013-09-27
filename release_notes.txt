@@ -1,5 +1,9 @@
 1.7.36 IMPROVED: PDB reader guesses atomic number form name if element is
                  missing.  END and ENDMDL records split PDB into cts.
+       IMPROVED: PDB reader and writer handle formal charge in columns 79-80.
+       IMPROVED: dms-select has -A/--assign option to assign formal charge
+                 and bond order.
+       NEW: dms-tile and dms-replicate scripts.
 
 1.7.35 FIXED: dms-dump truncated its fields to 10 characters; now output
               is separated by '|' rather than being formatted into columns.
