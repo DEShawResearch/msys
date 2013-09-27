@@ -1,0 +1,64 @@
+#!/usr/bin/env desres-exec
+#{
+# desres-cleanenv -m numpy/1.6.2-31A/lib-python -- python $0 "$@"
+#}
+
+'''
+Tile a system system by nx, ny, nz
+'''
+
+import sys, os
+sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
+import msys
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('ifile', help='input file')
+    parser.add_argument('ofile', help='output file')
+    parser.add_argument('--nx', default=1, type=int, 
+            help='tiles in the x direction')
+    parser.add_argument('--ny', default=1, type=int, 
+            help='tiles in the y direction')
+    parser.add_argument('--nz', default=1, type=int, 
+            help='tiles in the z direction')
+    args=parser.parse_args()
+    ifile, ofile = args.ifile, args.ofile
+    nx, ny, nz = args.nx, args.ny, args.nz
+    n = nx*ny*nz
+
+    print "Loading '%s'" % ifile
+    mol = msys.Load(ifile)
+
+    print "Tiling %d x %d x %d: %d total copies, %d atoms" % (
+            nx,ny,nz,n,n*mol.natoms)
+    cell = mol.getCell()
+    xshift = -0.5 * (nx-1)*cell[0]
+    yshift = -0.5 * (ny-1)*cell[1]
+    zshift = -0.5 * (nz-1)*cell[2]
+
+    out = msys.CreateSystem()
+
+    for i in range(nx):
+        xdelta = xshift + i*cell[0]
+        for j in range(ny):
+            ydelta = yshift + j*cell[1]
+            for k in range(nz):
+                zdelta = zshift + k*cell[2]
+                delta = xdelta + ydelta + zdelta
+                mol.translate(delta)
+                out._ptr.append(mol._ptr, msys._msys.BadId)
+                mol.translate(-delta)
+
+    print "Eliminating redundant forcefield terms"
+    out.coalesceTables()
+    out = out.clone()
+
+    print "Saving '%s'" % ofile
+    msys.Save(out, ofile)
+
+    print "Done"
+
+if __name__=="__main__": main()
+
+# vim: filetype=python
