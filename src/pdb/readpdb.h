@@ -138,8 +138,9 @@ void desres_msys_get_pdb_cryst1(const char *record,
 /* Extract the x,y,z coords, occupancy, and beta from an ATOM record */
 static void desres_msys_get_pdb_coordinates(const char *record, 
                                 double *x, double *y, double *z,
-                                double *occup, double *beta) {
-  char numstr[50]; /* store all fields in one array to save memset calls */
+                                double *occup, double *beta,
+                                int *formal_charge) {
+  char numstr[60]; /* store all fields in one array to save memset calls */
   memset(numstr, 0, sizeof(numstr));
 
   if (x != NULL) {
@@ -165,6 +166,10 @@ static void desres_msys_get_pdb_coordinates(const char *record,
   if (beta != NULL) {
     strncpy(numstr+40, record + 60, 6);
     *beta = (double) atof(numstr+40);
+  }
+  if (formal_charge != NULL) {
+    strncpy(numstr+50, record + 78, 2);
+    *formal_charge = atoi(numstr+50);
   }
 }
 
@@ -288,7 +293,8 @@ static void desres_msys_get_pdb_fields(const char *record, int reclength, int *s
                            char *segname, char *resid, char *insertion, 
                            char *altloc, char *elementsymbol,
                            double *x, double *y, double *z, 
-                           double *occup, double *beta) {
+                           double *occup, double *beta,
+                           int* formal_charge) {
   char serialbuf[6];
 
   /* get atom serial number */
@@ -325,7 +331,7 @@ static void desres_msys_get_pdb_fields(const char *record, int reclength, int *s
   insertion[1] = '\0';
 
   /* get x, y, and z coordinates */
-  desres_msys_get_pdb_coordinates(record, x, y, z, occup, beta);
+  desres_msys_get_pdb_coordinates(record, x, y, z, occup, beta, formal_charge);
 
   /* get segment name */
   if (reclength >= 73) {
@@ -350,7 +356,7 @@ static void desres_msys_get_pdb_fields(const char *record, int reclength, int *s
 static int desres_msys_write_raw_pdb_record(FILE *fd, const char *recordname,
     int index,const char *atomname, const char *resname,int resid, 
     const char *insertion, const char *altloc, const char *elementsymbol,
-    double x, double y, double z, double occ, double beta, 
+    double x, double y, double z, double occ, double beta, int formal_charge,
     const char *chain, const char *segname) {
   int rc;
   char indexbuf[32];
@@ -360,6 +366,7 @@ static int desres_msys_write_raw_pdb_record(FILE *fd, const char *recordname,
   char altlocchar;
   char chainchar;
   char namebuf[5];
+  char chargebuf[3];
 
   /* XXX                                                          */
   /* if the atom or residue indices exceed the legal PDB spec, we */
@@ -413,11 +420,18 @@ static int desres_msys_write_raw_pdb_record(FILE *fd, const char *recordname,
           namebuf[4]=0;
           break;
   };
+  memset(chargebuf,0,sizeof(chargebuf));
+  if (formal_charge<0 && formal_charge>-10) {
+      sprintf(chargebuf, "%d", formal_charge);
+  } else if (formal_charge>0 && formal_charge<10) {
+      sprintf(chargebuf, "+%d", formal_charge);
+  }
 
   rc = fprintf(fd,
-         "%-6s%5s %-4s%c%-4s%c%4s%c   %8.3f%8.3f%8.3f%6.2f%6.2f      %-4s%2s\n",
+         "%-6s%5s %-4s%c%-4s%c%4s%c   %8.3f%8.3f%8.3f%6.2f%6.2f      %-4s%2s%2s\n",
          recordname, indexbuf, namebuf, altlocchar, resnamebuf, chainchar, 
-         residbuf, insertion[0], x, y, z, occ, beta, segnamebuf, elementsymbol);
+         residbuf, insertion[0], x, y, z, occ, beta, segnamebuf, elementsymbol,
+         chargebuf);
 
   return (rc > 0);
 }

@@ -55,11 +55,12 @@ SystemPtr desres::msys::ImportPDB( std::string const& path ) {
             char name[32], resname[32], chainname[32], segid[32], residstr[32];
             char insertion[4], altloc[4], element[4];
             double x, y, z, occup, beta;
+            int formal_charge;
 
             desres_msys_get_pdb_fields(pdbstr, PDB_BUFFER_LENGTH, &serial,
                     name, resname, chainname,
                     segid, residstr, insertion, altloc, element,
-                    &x, &y, &z, &occup, &beta);
+                    &x, &y, &z, &occup, &beta, &formal_charge);
             strip_whitespace(name);
             strip_whitespace(resname);
             strip_whitespace(chainname);
@@ -75,6 +76,7 @@ SystemPtr desres::msys::ImportPDB( std::string const& path ) {
             atom.x = x;
             atom.y = y;
             atom.z = z;
+            atom.formal_charge = formal_charge;
             if (*element) {
                 atom.atomic_number = ElementForAbbreviation(element);
             } else if (*name) {
@@ -237,12 +239,13 @@ void desres::msys::ExportPDB(SystemPtr mol, std::string const& path) {
                 double z = mol->atom(atm).z;
                 double occ = 1;
                 double beta = 0;
+                int formal_charge = mol->atom(atm).formal_charge;
 
                 ++index;
                 if (!desres_msys_write_raw_pdb_record(
                         fd, "ATOM", index, name, resname, resid,
                         insertion, altloc, elementsym, x, y, z,
-                        occ, beta, chain, segid)) {
+                        occ, beta, formal_charge, chain, segid)) {
                     MSYS_FAIL("Failed writing PDB to " << path << " at line " << index);
                 }
             }
