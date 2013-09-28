@@ -1,9 +1,4 @@
 #include "wrap_obj.hxx"
-
-#ifdef MSYS_WITHOUT_INCHI
-void desres::msys::inchi::export_inchi() {}
-#else
-
 #include "inchi.hxx"
 
 namespace desres { namespace msys { 
@@ -24,4 +19,3 @@ namespace desres { namespace msys {
     }
 }}
 
-#endif
