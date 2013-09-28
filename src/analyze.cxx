@@ -106,6 +106,15 @@ namespace desres { namespace msys {
             }
         }
     }
+
+#ifdef MSYS_WITHOUT_LPSOLVE
+    IdList ComputeTopologicalIds(SystemPtr mol) {
+        MSYS_FAIL("LPSOLVE functionality was not included.");
+        return IdList();
+    }
+#else
+    // defined in src/analyze/topological_ids.cxx
+#endif
     
     void AssignBondOrderAndFormalCharge(SystemPtr mol, 
                                         IdList const& atoms,
