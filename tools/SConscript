@@ -4,6 +4,10 @@ Import('libmsys')
 env=env.Clone()
 env.Prepend(CPPPATH=['../src'], LIBS=['msys'])
 
+opts=Variables()
+opts.Add("MSYS_WITHOUT_PSFGEN", "without psfgen?")
+opts.Update(env)
+
 # atommatch
 obj=env.AddObject('atommatch/atommatch.cxx')
 env.AddUnitTest('test_atommatch', [obj]+['atommatch/test_atommatch.cxx'])
@@ -28,13 +32,14 @@ env.AddPythonModule('grease/grease.py', prefix='msys')
 env.AddScript('grease/dms-grease')
 
 ## psfgen
-psfenv=env.Clone()
-psfenv.Append(
-        CPPDEFINES=['PSFGEN_USEPLUGINS'],
-        LIBS=['molfile'],
-        )
-psfenv.AddLibrary('psfgen', Glob('psfgen/src/*.c'))
-psfenv.AddPythonModule('psfgen/psfgen.py', prefix='msys')
+if not env.get("MSYS_WITHOUT_PSFGEN"):
+    psfenv=env.Clone()
+    psfenv.Append(
+            CPPDEFINES=['PSFGEN_USEPLUGINS'],
+            LIBS=['molfile'],
+            )
+    psfenv.AddLibrary('psfgen', Glob('psfgen/src/*.c'))
+    psfenv.AddPythonModule('psfgen/psfgen.py', prefix='msys')
 
 ## posre
 env.AddPythonModule('posre/posre.py', prefix='msys')
