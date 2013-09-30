@@ -227,7 +227,7 @@ namespace desres { namespace msys {
                 const int natoms = nbr.num;
                 for (int k=0; k<natoms; k++) {
                     const Id pk = nbr.pts[k];
-                    if (output.exclude(atm, pk)) continue;
+                    if (atm==pk || output.exclude(atm, pk)) continue;
                     const Float* q = pos+3*pk;
                     Float d2=0;
                     if (cell) {

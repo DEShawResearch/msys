@@ -4,6 +4,7 @@
 #include "append.hxx"
 #include "clone.hxx"
 #include "geom.hxx"
+#include "contacts.hxx"
 
 #include <numpy/ndarrayobject.h>
 
@@ -189,6 +190,101 @@ namespace {
             atm.z += z;
         }
     }
+
+    struct Finder {
+        System const& mol;
+        list& contacts;
+        Finder(System const& m, list& c) : mol(m), contacts(c) {}
+        bool exclude(Id i, Id j) const { 
+            return !bad(mol.findBond(i,j)); 
+        }
+        void operator()(Id i, Id j, double d2) const {
+            contacts.append(make_tuple(i,j,d2));
+        }
+    };
+
+    list sys_find_contact_ids(System const& sys, double cutoff, bool periodic,
+                    object idobj, object otherobj,
+                    object posobj, object boxobj) {
+
+        if (sys.atomCount()==0) return list();
+
+        Id* idptr=NULL, *otherptr=NULL;
+        unsigned nids=0, nother=0;
+        const double* posptr=NULL, *boxptr=NULL;
+        std::vector<double> posdata;
+        IdList ids;
+        objptr idarr, otherarr, posarr, boxarr;
+
+        if (idobj.ptr()==Py_None) {
+            ids=sys.atoms();
+            idptr = &ids[0];
+            nids=ids.size();
+        } else {
+            idarr.reset(PyArray_FromAny(
+                        idobj.ptr(),
+                        PyArray_DescrFromType(NPY_UINT32),
+                        1,1, NPY_C_CONTIGUOUS | NPY_FORCECAST, NULL),
+                    destructor);
+            if (!idarr) throw_error_already_set();
+            idptr=(Id *)PyArray_DATA(idarr.get());
+            nids=PyArray_DIM(idarr.get(), 0);
+        }
+
+        if (otherobj.ptr()==Py_None) {
+            otherptr = idptr;
+            nother=nids;
+        } else {
+            otherarr.reset(PyArray_FromAny(
+                        otherobj.ptr(),
+                        PyArray_DescrFromType(NPY_UINT32),
+                        1,1, NPY_C_CONTIGUOUS | NPY_FORCECAST, NULL),
+                    destructor);
+            if (!otherarr) throw_error_already_set();
+            otherptr = (Id *)PyArray_DATA(otherarr.get());
+            nother = PyArray_DIM(otherarr.get(), 0);
+        }
+
+        if (posobj.ptr()==Py_None) {
+            posdata.reserve(3*sys.atomCount());
+            for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
+                if (!sys.hasAtom(i)) continue;
+                atom_t const& atm = sys.atom(i);
+                posdata.push_back(atm.x);
+                posdata.push_back(atm.y);
+                posdata.push_back(atm.z);
+            }
+            posptr= &posdata[0];
+        } else {
+            posarr.reset(PyArray_FromAny(
+                        posobj.ptr(),
+                        PyArray_DescrFromType(NPY_FLOAT64),
+                        2,2,NPY_C_CONTIGUOUS, NULL),
+                    destructor);
+            if (!posarr) throw_error_already_set();
+            posptr = (double *)PyArray_DATA(posarr.get());
+        }
+
+        if (boxobj.ptr()==Py_None) {
+            boxptr = sys.global_cell[0];
+        } else {
+            boxarr.reset(PyArray_FromAny(
+                        boxobj.ptr(),
+                        PyArray_DescrFromType(NPY_FLOAT64),
+                        2,2, NPY_C_CONTIGUOUS, NULL),
+                    destructor);
+            if (!boxarr) throw_error_already_set();
+            boxptr = (double *)PyArray_DATA(boxarr.get());
+        }
+
+        list result;
+        find_contacts(cutoff, posptr, boxptr,
+                      idptr, idptr+nids,
+                      otherptr, otherptr+nother,
+                      Finder(sys, result));
+        return result;
+    }
+
 
     PyObject* sys_getpos(System const& sys, object idobj) {
         npy_intp dims[2];
@@ -657,6 +753,7 @@ namespace desres { namespace msys {
             .def("provenance",      sys_provenance)
             .def("coalesceTables",    &System::coalesceTables)
             .def("translate",       sys_translate)
+            .def("findContactIds",  sys_find_contact_ids)
 
             .def("getPositions", sys_getpos,
                     (arg("ids")=object()))
