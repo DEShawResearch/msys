@@ -16,12 +16,10 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
 
-    parser.add_argument('ifile', help='input file')
+    parser.add_argument('files', nargs='+', help='input files')
     parser.add_argument('-s', '--selection',
             help="Atom selection text")
-    parser.add_argument('-a', '--append',
-            help="Append to given file.")
-    parser.add_argument('-o', '--output',
+    parser.add_argument('-o', '--output', required=True,
             help="Write new system to given file")
     parser.add_argument('-v', '--verbose', action='store_true', default=True,
             help="Be chatty")
@@ -36,18 +34,14 @@ def main():
 
     opts = parser.parse_args()
 
-    if opts.output and opts.append:
-        raise ValueError, "Cannot specify both --append and --output"
-    elif opts.output:
-        ofile = opts.output
-    elif opts.append:
-        ofile = opts.append
-    else:
-        ofile = None
-
+    path = opts.files[0]
     if opts.verbose:
-        print "Loading", opts.ifile
-    mol=msys.Load(opts.ifile)
+        print "Loading", path
+    mol = msys.Load(path)
+    for path in opts.files[1:]:
+        if opts.verbose:
+            print "Loading", path
+        mol.append(msys.Load(path))
 
     if opts.assign:
         if opts.verbose:
@@ -61,16 +55,14 @@ def main():
         print "dms-select: %d chain(s), %d residue(s), %d atom(s)" % (
                 len(mol.chains), len(mol.residues), len(mol.atoms))
 
-    if ofile:
-        if opts.coalesce:
-            if opts.verbose: print "Coalescing tables"
-            mol.coalesceTables()
-            mol = mol.clone()
+    if opts.coalesce:
+        if opts.verbose: print "Coalescing tables"
+        mol.coalesceTables()
+        mol = mol.clone()
 
-        if opts.verbose: print "Saving", ofile
-        msys.Save(mol, ofile, 
-                append=opts.append, 
-                structure_only=opts.structure_only)
+    if opts.output:
+        if opts.verbose: print "Saving", opts.output
+        msys.Save(mol, opts.output, structure_only=opts.structure_only)
 
 if __name__=="__main__": main()
 
