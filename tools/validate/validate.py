@@ -1,7 +1,7 @@
 import sys, msys
 import unittest as UT
 from msys import knot
-
+import numpy
 
 _mol = None
 
@@ -70,6 +70,11 @@ class TestBasic(TestCase):
                     "Particle with id %d has no nonbonded parameters" %
                     t.atoms[0].id)
 
+    def testNonzeroBox(self):
+        ''' The volume of the global cell must be positive. '''
+        cell = self.mol.getCell()
+        vol=numpy.linalg.det(cell)
+        self.assertTrue(vol>0, "Global cell must have positive volume, got %s" % vol)
 
 class TestDesmond(TestCase):
     def testBondsBetweenNonbonded(self):
