@@ -11,10 +11,6 @@ namespace desres { namespace msys {
     /* Iterator for SDF files */
     LoadIteratorPtr SdfIterator(std::string const& path);
 
-    /* Read the given MDL MOL/SDF file, and return a list of Systems, one for
-     * each MOLECULE record. */
-    std::vector<SystemPtr> ImportSdfMany(std::string const& path);
-
     struct SdfExport {
         enum Flags {
             Default = 0,

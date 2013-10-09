@@ -56,6 +56,8 @@ namespace {
         std::ifstream file;
         boost::iostreams::filtering_istream in;
 
+        void skip_to_end();
+
     public:
         explicit iterator(std::string const& path)
         : file(path.c_str()) {
@@ -79,6 +81,13 @@ namespace {
     };
 }
 
+void iterator::skip_to_end() {
+    std::string line;
+    while (std::getline(in,line)) {
+        if (line.compare(0,4,"$$$$")==0) break;
+    }
+}
+
 SystemPtr iterator::next() {
     if (in.eof()) return SystemPtr();
 
@@ -89,6 +98,7 @@ SystemPtr iterator::next() {
     std::getline(in,h3);
     if (!in) {
         if (in.eof()) return SystemPtr();
+        skip_to_end();
         MSYS_FAIL("Failed reading header block.");
     }
 
@@ -102,7 +112,11 @@ SystemPtr iterator::next() {
 
     /* parse counts line */
     std::string line;
-    if (!std::getline(in,line)) MSYS_FAIL("Failed reading counts");
+    if (!std::getline(in,line)) {
+        skip_to_end();
+        MSYS_FAIL("Failed reading counts");
+    }
+
     int natoms = stringToInt(line.substr(0,3));
     int nbonds = stringToInt(line.substr(3,3));
 
@@ -111,11 +125,13 @@ SystemPtr iterator::next() {
     /* Load Atoms */
     for (int i=0; i<natoms; i++) {
         if (!std::getline(in, line)) {
+            skip_to_end();
             MSYS_FAIL("Missing expected Atom record " << i+1);
         }
 
         /* Allow atom lines to have incomplete info (must have up to element) */
         if(line.size()<34){
+            skip_to_end();
             MSYS_FAIL("Malformed atom line:\n"<<line);
         }
     
@@ -139,9 +155,11 @@ SystemPtr iterator::next() {
                5 = -1, 6 = -2, 7 = -3 
             */
             if(q<0 || q>7){
+                skip_to_end();
                 MSYS_FAIL("charge specification for atom is out of range:\n" << line);
             }
             if(q==4){
+                skip_to_end();
                 fprintf(stderr, "WARNING: Treating doublet radical charge specification as q=0\n");
             }
             /* Just set formal charge, not 'charge', for consistency with
@@ -156,6 +174,7 @@ SystemPtr iterator::next() {
                    15 = zero valence
                 */
                 if(v<0 || v>15){
+                    skip_to_end();
                     MSYS_FAIL("valence specification for atom is out of range:\n" << line);
                 }
                 /* Use valence list to check bonds? */
@@ -168,9 +187,11 @@ SystemPtr iterator::next() {
     for (int i=0; i<nbonds; i++) {
 
         if (!std::getline(in, line)) {
+            skip_to_end();
             MSYS_FAIL("Missing expected Bond record " << i+1);
         }
         if(line.size()<9){
+            skip_to_end();
             MSYS_FAIL("Malformed bond line:\n"<<line);
         }
 
@@ -179,9 +200,11 @@ SystemPtr iterator::next() {
         int type=stringToInt(line.substr(6,3));
 
         if (ai<1 || aj<1 || ai>natoms || aj>natoms) {
+            skip_to_end();
             MSYS_FAIL("Invalid atom reference in Bond record:\n" << line);
         }
         if(type<1 || type>4){
+            skip_to_end();
             MSYS_FAIL("Invalid bond type in Bond record:\n" << line);
         }
         Id bnd = mol->addBond(ai-1, aj-1);
@@ -212,7 +235,10 @@ SystemPtr iterator::next() {
                 for (i=0; i<n; i++) {
                     int ai,fc;
                     ss >> ai >> fc;
-                    if (!ss) MSYS_FAIL("Failed parsing CHG line " << line);
+                    if (!ss) {
+                        skip_to_end();
+                        MSYS_FAIL("Failed parsing CHG line " << line);
+                    }
                     mol->atom(ai-1).formal_charge = fc;
                 }
 
@@ -244,7 +270,10 @@ SystemPtr iterator::next() {
             /* According to the spec, we shouldnt find any other blank lines,
                but we will be forgiving just in case */
             boost::trim(line);
-            if(line != "")MSYS_FAIL("Unknown line in SDF file:\n"<<line);
+            if(line != "") {
+                skip_to_end();
+                MSYS_FAIL("Unknown line in SDF file:\n"<<line);
+            }
         }
     }
     return mol;
@@ -256,15 +285,6 @@ SystemPtr desres::msys::ImportSdf(std::string const& path) {
     while ((ct=it.next())) AppendSystem(mol,ct);
     mol->name = path;
     return mol;
-}
-
-std::vector<SystemPtr>
-desres::msys::ImportSdfMany(std::string const& path) {
-    std::vector<SystemPtr> mols;
-    SystemPtr mol;
-    iterator it(path);
-    while ((mol=it.next())) mols.push_back(mol);
-    return mols;
 }
 
 LoadIteratorPtr desres::msys::SdfIterator(std::string const& path) {

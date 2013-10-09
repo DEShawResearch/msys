@@ -1576,15 +1576,28 @@ def Load(path, structure_only = False):
         raise ValueError, "Could not guess file type of '%s'" % path
     return System(ptr)
 
-def LoadMany(path, structure_only=False):
+def LoadMany(path, structure_only=False, error_writer=sys.stderr):
     ''' Iterate over structures in a file, if the file type supports
     iteration.  
 
     for mol in LoadMany('input.mol2'): ...
+
+    If there was an error reading a structure, LoadMany returns None for
+    that iteration.  If error_writer is not None, it's write() method is
+    invoked with the contents of the exception message as argument.  
+    error_writer defaults to sys.stderr.
     '''
     it = _msys.LoadIterator.create(str(path), bool(structure_only))
+    i=-1
     while True:
-        mol = it.next()
+        i += 1
+        try:
+            mol = it.next()
+        except Exception as e:
+            if error_writer:
+                error_writer.write("Error reading structure %d: %s\n" % (i,e.message))
+            yield None
+            continue
         if mol is None:
             break
         yield System(mol)

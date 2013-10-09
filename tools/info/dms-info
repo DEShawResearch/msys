@@ -16,6 +16,7 @@ import sys, os
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
 
 import msys
+import cStringIO
 from msys import vdw
 
 def print_info(mol, ct=None):
@@ -111,20 +112,26 @@ def main():
             help="Skip over empty systems")
 
     opts, args = parser.parse_args()
+    errors = cStringIO.StringIO()
     for path in args:
         if opts.multi_ct:
-            it = msys.LoadMany(path)
+            it = msys.LoadMany(path, error_writer = errors)
         else:
             it = [msys.Load(path)]
         print "-" * 75
         print path
         print
         for i, mol in enumerate(it):
+            if mol is None: continue
             if opts.ignore_empty and mol.natoms==0: continue
             print_info(mol, ct=i if opts.multi_ct else None)
             print
             if opts.multi_ct:
                 print "." * 75
+
+    errmsg = errors.getvalue()
+    if errmsg:
+        print errmsg
 
 if __name__=="__main__": exit(main())
 
