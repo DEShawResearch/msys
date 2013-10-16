@@ -12,13 +12,9 @@ env.Replace(CPPPATH=cpp)
 env.Append(CFLAGS=flg, CXXFLAGS=flg)
 
 env.Append(
-        CFLAGS='-O2 -g',
-        CXXFLAGS='-O2 -Wall -g',
+        CCFLAGS='-O2 -g -Wall',
+        CXXFLAGS='-std=c++03 -Werror',
         )
-# monobuild is pedantic.  If not monobuild then -Werror is a good thing
-if 'MONOBUILD' not in env or not env['MONOBUILD']:
-   env.Append(CXXFLAGS='-Werror')
-   env.Append(CXXFLAGS='-std=c++03')
 
 env.SConsignFile('%s/.sconsign' % (env['OBJDIR'].strip('#')))
 
