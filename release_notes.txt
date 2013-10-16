@@ -1,3 +1,7 @@
+1.7.40 FIXED: build of command line tool documentation.
+       IMPROVED: error recovery in msys.LoadMany (yield None on bad entry)
+       IMPROVED: dms-validate checks for nonzero volume.
+
 1.7.39 treetop/57-Anton2
 
 1.7.38 IMPROVED: dms-select replaced its --append option with support for

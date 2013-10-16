@@ -91,6 +91,18 @@ dms-scale-vdw
 -------------
 .. include:: ../build/genhelp/dms-scale-vdw
 
+dms-atommatch
+-------------
+.. include:: ../build/genhelp/dms-atommatch
+
+dms-tile
+--------
+.. include:: ../build/genhelp/dms-tile
+
+dms-replicate
+-------------
+.. include:: ../build/genhelp/dms-replicate
+
 
 ------------------------
 Free Energy Perturbation
@@ -115,4 +127,8 @@ dms-find-knot
 dms-validate
 ------------
 .. include:: ../build/genhelp/dms-validate
+
+dms-check-groups
+----------------
+.. include:: ../build/genhelp/dms-check-groups
 
