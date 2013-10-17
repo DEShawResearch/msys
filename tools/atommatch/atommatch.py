@@ -48,6 +48,28 @@ def _rawalign(X, Y, w=None):
     b = ym - np.dot(xm, A)
     return A, b, rmsd
 
+def output_atommap( matches, ofname, mol1, mol2, sel1='all', sel2='all'):
+    '''
+    Write atommap output file.
+    '''
+    matches = [(a.id, b.id) for a,b in matches]
+    out_lines = []
+    matched1 = set([])
+    matched2 = set([])
+    for match in sorted(matches):
+        matched1.add(match[0])
+        matched2.add(match[1])
+        out_lines.append('%d %d\n' % (match[0]+1, match[1]+1))
+    for a in mol1.select(sel1):
+        if a.id not in matched1:
+            out_lines.append('%d %d\n' % (a.id+1, -1))
+    for a in aligned2.atoms:
+        if a.id not in matched2:
+            out_lines.append('%d %d\n' % (-1, a.id+1))
+    f = open(ofname, 'w')
+    f.writelines(out_lines)
+    f.close()
+    
 def AtomMatch(mol1, mol2, sel1='all', sel2='all', score_fct=default_score_fct):
     '''Get best mapping of atoms between two molecules.
 
@@ -123,7 +145,6 @@ def AtomMatch(mol1, mol2, sel1='all', sel2='all', score_fct=default_score_fct):
             msys._msys.BadId, msys._msys.BadId)
     match = [(atoms1[id1], clone2.atom(id2)) for (id1, id2) in out]
     # Align mol2 to mol1 based on matched atoms
-    mol2_copy = mol2.clone()
     A, b, rmsd = _rawalign(np.array([a2.pos for a1,a2 in match]),
             np.array([a1.pos for a1,a2 in match]))
     for a2 in clone2.atoms:

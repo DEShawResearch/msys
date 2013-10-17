@@ -57,24 +57,8 @@ def main():
     msys.SaveDMS(aligned, args[3])
 
     # Write atommap_output file
-    matches = [(a.id, b.id) for a,b in matches]
-    out_lines = []
-    matched1 = set([])
-    matched2 = set([])
-    for match in sorted(matches):
-        matched1.add(match[0])
-        matched2.add(match[1])
-        out_lines.append('%d %d\n' % (match[0]+1, match[1]+1))
-    for a in mol1.select(opts.sel1):
-        if a.id not in matched1:
-            out_lines.append('%d %d\n' % (a.id+1, -1))
-    for a in aligned.atoms:
-        if a.id not in matched2:
-            out_lines.append('%d %d\n' % (-1, a.id+1))
-    f = open(args[2], 'w')
-    f.writelines(out_lines)
-    f.close()
-
+    atommatch.output_atommap( matches, args[2], mol1, mol2, opts.sel1, opts.sel2)
+    
 if __name__ == "__main__":
     main()
 
