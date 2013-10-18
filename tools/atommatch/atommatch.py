@@ -63,7 +63,7 @@ def output_atommap( matches, ofname, mol1, mol2, sel1='all', sel2='all'):
     for a in mol1.select(sel1):
         if a.id not in matched1:
             out_lines.append('%d %d\n' % (a.id+1, -1))
-    for a in aligned2.atoms:
+    for a in mol2.select(sel2):
         if a.id not in matched2:
             out_lines.append('%d %d\n' % (-1, a.id+1))
     f = open(ofname, 'w')
