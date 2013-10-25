@@ -1,6 +1,7 @@
 1.7.40 FIXED: build of command line tool documentation.
        IMPROVED: error recovery in msys.LoadMany (yield None on bad entry)
        IMPROVED: dms-validate checks for nonzero volume.
+       IMPROVED: dms-thermalize has a --remove-drift option.
 
 1.7.39 treetop/57-Anton2
 

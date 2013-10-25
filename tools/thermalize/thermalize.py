@@ -1,6 +1,7 @@
 
 import msys
 import random, math
+import numpy
 
 # the Boltzmann constant in J/K
 BOLTZMANN = 1.3806503e-23
@@ -25,4 +26,15 @@ def apply(mol, T, seed=None):
         a.vx = t*g.gauss(0,1)
         a.vy = t*g.gauss(0,1)
         a.vz = t*g.gauss(0,1)
+
+def remove_drift(mol):
+    ''' Remove center of mass motion.  Returns the original center of mass
+    velocity. 
+    '''
+    vel = mol.getVelocities()
+    mass = [a.mass for a in mol.atoms]
+    avg = numpy.average(vel, axis=0, weights=mass)
+    vel -= avg
+    mol.setVelocities(vel)
+    return avg
 
