@@ -26,7 +26,7 @@ def main():
             help="thermalization temperature in Kelvin")
     parser.add_option('-s', '--seed', default='1',
             help="Random seed, or 'random' to get a random random seed")
-    parser.add_option('--remove-drift', action='store_true', default=False,
+    parser.add_option('--remove-drift', action='store_true', default=True,
             help="Remove center of mass motion from assigned velocities")
     parser.add_option('--no-remove-drift', action='store_false',
             dest='remove_drift',
