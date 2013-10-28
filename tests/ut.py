@@ -1007,6 +1007,23 @@ class TestMain(unittest.TestCase):
         self.assertEqual(table.category, 'bond')
         msys.SaveDMS(m, 'foo.dms')
 
+    def testDmsStructureOnly(self):
+        m=msys.CreateSystem()
+        a=m.addAtom()
+        table=m.addTable("foo", 1)
+        p=table.params.addParam()
+        table.addTerm([a], p)
+        table.category='bond'
+        self.assertEqual(table.category, 'bond')
+        msys.SaveDMS(m, 'foo.dms', structure_only=False)
+        self.assertEqual(len(msys.Load("foo.dms").tables), 1)
+        msys.Save(m, 'foo.dms', structure_only=False)
+        self.assertEqual(len(msys.Load("foo.dms").tables), 1)
+        msys.SaveDMS(m, 'foo.dms', structure_only=True)
+        self.assertEqual(len(msys.Load("foo.dms").tables), 0)
+        msys.Save(m, 'foo.dms', structure_only=True)
+        self.assertEqual(len(msys.Load("foo.dms").tables), 0)
+
     def testFunnyNames(self):
         m=msys.CreateSystem()
         aux=msys.CreateParamTable()

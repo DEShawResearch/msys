@@ -14,9 +14,9 @@ namespace desres { namespace msys {
                                   bool structure_only=false);
 
     struct DMSExport {
-        enum Flags {
-            Default             = 0,
-            Append              = 1
+        enum Flags { Default            = 0 
+                   , Append             = 1 << 0
+                   , StructureOnly      = 1 << 1
         };
     };
 

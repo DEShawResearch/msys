@@ -1,3 +1,5 @@
+1.7.41 IMPROVED: SaveDMS accepts structure_only flag.
+
 1.7.40 FIXED: build of command line tool documentation.
        IMPROVED: error recovery in msys.LoadMany (yield None on bad entry)
        IMPROVED: dms-validate checks for nonzero volume.

@@ -1618,12 +1618,15 @@ def ReadCrdCoordinates(mol, path):
     if not isinstance(mol, System): raise TypeError, "mol must be a System"
     _msys.ImportCrdCoordinates(mol._ptr, path)
 
-def SaveDMS(system, path):
+def SaveDMS(system, path, structure_only=False):
     ''' Export the System to a DMS file at the given path. '''
     path = str(path)
     prov = _msys.Provenance.fromArgs(sys.argv)
+    flags = _msys.DMSExportFlags.Default
+    if structure_only:
+        flags |= _msys.DMSExportFlags.StructureOnly
     if isinstance(system, System):
-        _msys.ExportDMS(system._ptr, path, prov, 0)
+        _msys.ExportDMS(system._ptr, path, prov, flags)
     else:
         _msys.ExportDMSMany([x._ptr for x in system], path, prov)
 

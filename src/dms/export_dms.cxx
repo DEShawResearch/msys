@@ -551,16 +551,19 @@ static IdList map_gids(System const& sys) {
     return ids;
 }
 
-static void export_dms(SystemPtr h, Sqlite dms, Provenance const& provenance) {
+static void export_dms(SystemPtr h, Sqlite dms, Provenance const& provenance,
+                       unsigned flags) {
     System& sys = *h;
     IdList atomidmap = map_gids(sys);
     export_cts(      sys,            dms);
+    export_cell(     sys,            dms);
     export_particles(sys, atomidmap, dms);
     export_bonds(    sys, atomidmap, dms);
-    export_tables(   sys, atomidmap, dms);
-    export_aux(      sys,            dms);
-    export_nbinfo(   sys,            dms);
-    export_cell(     sys,            dms);
+    if (!(flags & DMSExport::StructureOnly)) {
+        export_tables(   sys, atomidmap, dms);
+        export_aux(      sys,            dms);
+        export_nbinfo(   sys,            dms);
+    }
     export_provenance(sys,provenance,dms);
     export_version(                  dms);
 }
@@ -581,13 +584,13 @@ void desres::msys::ExportDMS(SystemPtr h, const std::string& path,
     } catch (std::exception& e) {
         MSYS_FAIL("Could not create dms file at " << path << ": " << e.what());
     }
-    export_dms(h, dms, provenance);
+    export_dms(h, dms, provenance, flags);
 }
 
 static void no_close(sqlite3* db) {}
 
 void desres::msys::sqlite::ExportDMS(SystemPtr h, sqlite3* db,
                                      Provenance const& provenance) {
-    export_dms(h, boost::shared_ptr<sqlite3>(db,no_close), provenance);
+    export_dms(h, boost::shared_ptr<sqlite3>(db,no_close), provenance, 0);
 }
 

@@ -71,6 +71,12 @@ namespace desres { namespace msys {
 
     void export_io() {
         
+        enum_<DMSExport::Flags>("DMSExportFlags")
+            .value("Default",           DMSExport::Default)
+            .value("Append",            DMSExport::Append)
+            .value("StructureOnly",     DMSExport::StructureOnly)
+            ;
+
         enum_<MaeExport::Flags>("MaeExportFlags")
             .value("Default",           MaeExport::Default)
             .value("StructureOnly",     MaeExport::StructureOnly)

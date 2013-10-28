@@ -158,11 +158,9 @@ namespace desres { namespace msys {
 
         switch (format) {
             case DmsFileFormat: 
-                if (flags & SaveOptions::StructureOnly) {
-                    MSYS_FAIL("DMS export does not support structure_only option");
-                }
                 ExportDMS(mol, path, prov, 
                     ( flags & SaveOptions::Append ? DMSExport::Append : 0)
+                  | (flags & SaveOptions::StructureOnly ? DMSExport::StructureOnly : 0)
                     );
                 break;
             case MaeFileFormat: 
