@@ -21,7 +21,7 @@ well as pseudo-particles used as interaction sites, are represented as
 `Chains`.  Finally, `Chains` are grouped into higher-level structures
 called "components", or `Cts` for short.  
 
-Every structure type is contained its parent type; thus, even a single
+Every structure type is contained within its parent type; thus, even a single
 particle `System` will contain (at least) one `Residue`, `Chain`, and
 `Ct`.  If there is no information in the file to delineate separate
 `Residues`, `Chains`, etc., then only a single such entity will be 
@@ -44,16 +44,16 @@ There are also several other miscellaneous tables in each `System`:
 The `Ct` is the highest level of molecular organization, after the
 `System`.  Many file formats, including MAE, SDF, etc., contain multiple
 structures, and it can be convenient to represent the entire contents of
-a such a file in a single msys `System` without losing the distinction
+such a file in a single msys `System` without losing the distinction
 between structure records.  When msys loads such a multi-component file,
 each entry gets placed in its own `Ct`.  Another use for the `Ct` objects
 is when one `System` is appended to another.  If there were no `Ct`
 objects, then `Chains` in one system might be unintentionally combined
 with `Chains` in the other system if the `Chains` had the same name.
-Finally, `Ct` blocks provide a space for arbitrary metdata about system
+Finally, `Ct` blocks provide a space for arbitrary metadata about system
 components to be stored.
 
-`Chains` in msys represents collections of `Residues`.  Their main purpose
+`Chains` in msys represent collections of `Residues`.  Their main purpose
 is to hold the traditional chain and segment name information used in
 popular formats such as PDB.  
 
@@ -77,7 +77,7 @@ A `System` also holds a set of `TermTables` representing the interactions
 between `Atoms`.  A `TermTable` can be thought of as a particular kind
 of interaction; for example, a fully parameterized system would likely
 contain a ``stretch_harm`` `TermTable` to represent two-body covalent
-bond forces.   Each `Term` in a `TermTable` refers to the same number
+bond forces.  Each `Term` in a `TermTable` refers to the same number
 of atoms, though there can be any number of `Terms` in a given `TermTable`.
 
 Typically, many of the interactions in a `TermTable` are parameterized
@@ -104,7 +104,7 @@ formats have some concept of particles, residues, and chains, the way in
 which these groupings are specified varies by file type.  Even within
 a file type, groupings are not always done consistently; for example,
 a PDB file might have both segment and chain identifiers, and there is
-not requirement in the file that there be any relationship between them.
+no requirement in the file that there be any relationship between them.
 
 In addition, many chemical file formats, including MAE, MOL2, SDF,
 as well as DMS, can contain multiple, logically distinct chemical
