@@ -832,6 +832,7 @@ class System(object):
 
     def delAtoms(self, atoms):
         ''' remove the given Atoms from the System '''
+        if not atoms: return
         ptr, ids = _find_ids(atoms)
         if ptr != self._ptr:
             raise ValueError("atoms come from a different system")
@@ -839,6 +840,7 @@ class System(object):
 
     def delBonds(self, bonds):
         ''' remove the given Bonds from the System '''
+        if not bonds: return
         ptr, ids = _find_ids(bonds, Bond)
         if ptr != self._ptr:
             raise ValueError("bonds come from a different system")
@@ -846,6 +848,7 @@ class System(object):
 
     def delResidues(self, residues):
         ''' remove the given Residues from the System '''
+        if not residues: return
         ptr, ids = _find_ids(residues, Residue)
         if ptr != self._ptr:
             raise ValueError("residues come from a different system")
@@ -853,6 +856,7 @@ class System(object):
 
     def delChains(self, chains):
         ''' remove the given Chains from the System '''
+        if not chains: return
         ptr, ids = _find_ids(chains, Chain)
         if ptr != self._ptr:
             raise ValueError("chains come from a different system")
