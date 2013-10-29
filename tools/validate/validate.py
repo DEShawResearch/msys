@@ -24,8 +24,14 @@ class TestAnton(TestCase):
         for anum, masses in m.items():
             if anum==0: continue
             self.assertEqual(len(masses), 1, 
-                    "Multiple masses for atomic number %s: \n\t%s" % (
+                    "Use dms-fix-mass to fix multiple masses for atomic number %s: \n\t%s" % (
                         anum, list(masses)))
+
+    def testOrthorhombicCell(self):
+        ''' Unit cell must be diagonal '''
+        cell=self.mol.getCell()
+        self.assertTrue((numpy.diag(cell.diagonal())==cell).all(),
+                "Unit cell is not diagonal")
 
 class TestStrict(TestCase):
     def testSparsify(self):
