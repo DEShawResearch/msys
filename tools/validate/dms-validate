@@ -1,8 +1,8 @@
 #!/usr/bin/env desres-exec
 # -*- python -*-
 #{
-# desres-cleanenv -m numpy/1.6.2-31A/lib-python \
-# -m periodicfix/2.4.3/lib-python \
+# exec desres-cleanenv -m numpy/1.6.2-31A/lib-python \
+# -m periodicfix/2.4.7/lib-python \
 # -- python $0 "$@"
 #}
 
@@ -39,6 +39,11 @@ Desmond-specific checks:
  * bonded terms: check that neither the exclusion table nor any table
    in the bond_term metable contains terms whose atoms are not connected
    through the bond table.  
+
+ * groups: check that all atoms in a bonded term are within a typical
+   clone buffer radius of each other.  The value for the clone buffer
+   used in dms-validate is 5.5, but an alternative radius may be provided
+   using the dms-check-groups tool.
 
 '''
 

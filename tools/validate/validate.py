@@ -1,6 +1,6 @@
 import sys, msys
 import unittest as UT
-from msys import knot
+from msys import knot, groups
 import numpy
 
 _mol = None
@@ -93,6 +93,14 @@ class TestDesmond(TestCase):
                     fragids = set(a.fragid for a in t.atoms)
                     self.assertEqual(len(fragids), 1, 
                             "Atoms %s form a term in the %s table but are not connected by bonds" % (t.atoms, table.name))
+
+    def testGroups(self):
+        ''' Atoms in bonded terms must be within a clone radius of each
+        other. '''
+        radius = 5.5
+        for table in self.mol.tables:
+            self.assertTrue(groups.check(table, radius),
+                    "Clone radius check failed for terms in '%s'; run dms-check-groups for more information.")
     
 
 def Validate(mol, strict=False, desmond=False, verbose=False, anton=False,

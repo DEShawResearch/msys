@@ -52,6 +52,7 @@ env.AddScript('thermalize/dms-thermalize')
 # validate
 env.AddPythonModule('validate/validate.py', prefix='msys')
 env.AddPythonModule('validate/knot.py', prefix='msys')
+env.AddPythonModule('validate/groups.py', prefix='msys')
 env.AddScript('validate/dms-validate')
 env.AddScript('validate/dms-find-knot')
 
