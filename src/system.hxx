@@ -295,6 +295,10 @@ namespace desres { namespace msys {
             return iterator(0, _deadbonds.empty() ? NULL : &_deadbonds); 
         }
         iterator bondEnd() const { return iterator(maxBondId(), NULL); }
+        iterator residueBegin() const { 
+            return iterator(0, _deadresidues.empty() ? NULL : &_deadresidues); 
+        }
+        iterator residueEnd() const { return iterator(maxResidueId(), NULL); }
 
         /* add an element */
         Id addAtom(Id residue);
