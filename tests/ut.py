@@ -1298,6 +1298,19 @@ class TestMain(unittest.TestCase):
         self.assertEqual(nb.vdw_rule,  "yep")
         self.assertEqual(nb.es_funct,  "oh yeah")
 
+    def testCloneShareParams(self):
+        m=msys.CreateSystem()
+        a1=m.addAtom()
+        t1=m.addTable('t1', 1)
+        t1.category='nonbonded'
+        t1.params.addParam()
+        t1.addTerm([a1], t1.params.param(0))
+
+        m2=m.clone()
+        self.assertNotEqual(t1.params, m2.table('t1').params)
+        m2=m.clone(share_params=True)
+        self.assertEqual(t1.params, m2.table('t1').params)
+
 
     def testClone2(self):
         m=msys.CreateSystem()

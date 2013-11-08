@@ -1213,7 +1213,7 @@ class System(object):
         atms=self._update_atoms()
         return [atms[i] for i in ids]
 
-    def clone(self, seltext=None):
+    def clone(self, seltext=None, share_params=False):
         ''' Clone the System, returning a new System.  If seltext is provided,
         it should be a valid VMD atom selection, and only the selected atoms 
         will be cloned.
@@ -1221,8 +1221,10 @@ class System(object):
         If seltext is a sequence (and not a string), it will be treated as 
         a list of atom ids.
 
-        This operation is equivalent to "msys.CloneSystem(self.select(seltext))"
-        where seltext defaults to 'all'.
+        If share_params is True, then ParamTables will be shared between
+        the old and new systems.  By default, copies of the ParamTables
+        are made, but ParamTables shared _within_ the old system will
+        also be shared in the new system.
         '''
         ptr = self._ptr
         if seltext is None:
@@ -1232,7 +1234,11 @@ class System(object):
         else:
             ids = _msys.IdList()
             for a in seltext: ids.append(a)
-        return System( _msys.Clone(ptr, ids))
+        flags = _msys.CloneOption.Default
+        if share_params:
+            flags = _msys.CloneOption.ShareParams
+
+        return System( _msys.Clone(ptr, ids, flags))
 
     def sorted(self):
         ''' Return a clone of the system with atoms reordered based on their 

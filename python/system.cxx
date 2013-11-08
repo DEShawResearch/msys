@@ -601,7 +601,15 @@ namespace desres { namespace msys {
             .def_readwrite("executable", &Provenance::executable)
             ;
 
-        def("Clone", Clone);
+        enum_<CloneOption::Flags>("CloneOption")
+            .value("Default",       CloneOption::Default)
+            .value("ShareParams",   CloneOption::ShareParams)
+            ;
+
+        def("Clone", Clone, 
+                (arg("system"),
+                 arg("ids"),
+                 arg("flags")=CloneOption::Default));
 
         def("TableSchemas", table_schemas);
         def("NonbondedSchemas", nonbonded_schemas);
