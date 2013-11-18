@@ -321,9 +321,9 @@ std::string desres::msys::Destro::quotify(desres::msys::Zing z, const desres::ms
       //std::cerr << '?' << raw << "?" << escaped << '?' << std::endl;
       for(;p!=en;++p) {
         // We only support space and tab
-        if (isspace(*p) && !(*p == ' ' || *p == '\t')) {
-          throw dessert("unprintable whitespace in '" + raw + '\'');
-        }
+        //if (isspace(*p) && !(*p == ' ' || *p == '\t')) {
+          //throw dessert("unprintable whitespace in '" + raw + '\'');
+        //}
 
         if (*p == '"') {
           escaped += "\\\"";

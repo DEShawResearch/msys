@@ -628,8 +628,8 @@ static char * quotify( const char * s ) {
     for (p=s; *p; ++p) {
         if (isspace(*p) || !isprint(*p) || *p=='"' || *p=='<' || *p=='\\') {
             needs_escape = 1;
-            if (isspace(*p) && !(*p==' ' || *p=='\t'))
-                MAE_ERROR1("unprintable whitespace in <%s>", s);
+            //if (isspace(*p) && !(*p==' ' || *p=='\t'))
+                //MAE_ERROR1("unprintable whitespace in <%s>", s);
         }
     }
     if (!needs_escape) return NULL;

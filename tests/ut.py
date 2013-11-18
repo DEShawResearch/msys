@@ -333,6 +333,19 @@ class TestMain(unittest.TestCase):
         self.assertEqual(cts[0].natoms, 1)
         self.assertEqual(cts[1].natoms, 2)
 
+    def testMultilineCtProp(self):
+        m=msys.CreateSystem()
+        m.addAtom().atomic_number=1
+        prop='''
+        abc
+        123
+        '''
+        m.ct(0)['prop']=prop
+        msys.SaveMAE(m, '/tmp/multi.mae')
+        m=msys.Load('/tmp/multi.mae')
+        self.assertEqual(m.ct(0)['prop'], prop)
+
+
     def testBadAtomsel(self):
         mol=msys.CreateSystem()
         mol.addAtom()
