@@ -200,7 +200,7 @@ namespace {
         ParamTablePtr params;
         
         explicit ParamComparator(ParamTablePtr p) : params(p) {}
-        bool operator()(Id const& pi, Id const& pj) {
+        bool operator()(Id const& pi, Id const& pj) const {
             return params->compare(pi,pj)<0;
         }
     };
