@@ -513,81 +513,6 @@ namespace {
         else MSYS_FAIL("Invalid term: [" << ti << ", " << tj << "]");
     }
 
-    void find_connected_dummies(Id i, SystemPtr mol, IdSet const& mapped,
-                                IdSet& connected) {
-        /* Find all the dummy atoms that are connected to i - directly or 
-         * indirectly, through covalent bonds between dummy atoms, and set 
-         * the corresponding connected bits to true for these dummy atoms.
-         */
-        std::stack<Id> S;
-        S.push(i);
-        std::vector<bool> visited(mol->maxAtomId(), false);
-        while (!S.empty()) {
-            Id k = S.top();
-            S.pop();
-            connected.insert(k);
-            visited.at(k)=true;
-            BOOST_FOREACH(Id j, mol->bondedAtoms(k)) {
-                if (visited.at(j)) continue;
-                if (!mapped.count(j)) continue;
-                S.push(j);
-            }
-        }
-
-    }
-
-    void find_kept_atoms(SystemPtr A, IdList const& alist, IdSet const& mappedA,
-                         IdList const& idmap,
-                         BlockMap& bondmap,
-                         BlockMap& anglmap,
-                         BlockMap& dihemap) {
-
-        IdSet connected;
-        BOOST_FOREACH(Id i, alist) {
-            //printf("consider %u\n", i);
-            if (mappedA.count(i) || connected.count(i)) continue;
-            IdList jlist = A->bondedAtoms(i);
-            /* FIXME: for comparison purposes only.  */
-            std::sort(jlist.begin(), jlist.end());
-            BOOST_FOREACH(Id j, jlist) {
-                if (!mappedA.count(j)) continue;
-                IdList n1 = two_neighbors(i,A,mappedA,idmap);
-                IdList n2 = two_neighbors(j,A,mappedA,idmap);
-
-                printf("  n2:");
-                BOOST_FOREACH(Id id, n2) {
-                    printf(" (%d %s %d %s)",
-                            id, 
-                            A->residue(A->atom(id).residue).name.c_str(),
-                            A->residue(A->atom(id).residue).resid,
-                            A->atom(id).name.c_str());
-                }
-                printf("\n");
-                printf("  using template [");
-                BOOST_FOREACH(Id id,n1) printf("%u ", id);
-                printf("] , [");
-                BOOST_FOREACH(Id id,n2) printf("%u ", id);
-                printf("]\n");
-
-                printf("  keep bond %u %u\n", n1[0], n2[0]);
-                if (n1.size()>=2) 
-                    printf("  keep angle %u %u %u\n", n1[1],n1[0],n2[0]);
-                if (n2.size()>=2)
-                    printf("  keep angle %u %u %u\n", n2[1],n2[0],n1[0]);
-                //if (1)            keep(bondmap, n1[0], n2[0]);
-                //if (n1.size()>=2) keep(anglmap, n1[1],n1[0],n2[0]);
-                ////if (n1.size()>=3) keep(dihemap, n1[2],n1[1],n1[0],n2[0]);
-                //if (n2.size()>=2) keep(anglmap, n2[1],n2[0],n1[0]);
-                ////if (n2.size()>=3) keep(dihemap, n2[2],n2[1],n2[0],n1[0]);
-                break;
-            }
-            find_connected_dummies(i,A,mappedA,connected);
-            //printf("connected is now size %lu\n", connected.size());
-            //BOOST_FOREACH(Id q, connected) { printf("  %u", q); }
-            //printf("\n");
-        }
-    }
-
     void my_find_kept(SystemPtr A, 
                       MultiIdList& dummy_fragmentsA,
                       IdSet const& mappedA,
@@ -871,35 +796,6 @@ namespace {
             }
         }
     }
-
-    SystemPtr clone_mapped_alchemical(SystemPtr B, std::vector<IdPair>& pairs) {
-
-        IdList batoms, bfragids, sorted_batoms, connected_batoms;
-        MultiIdList bfrags;
-        B->updateFragids(&bfrags);
-        BOOST_FOREACH(IdPair& p, pairs) {
-            Id bi = p.second;
-            if (!bad(bi)) {
-                p.second = batoms.size();
-                batoms.push_back(bi);
-                bfragids.push_back(B->atom(bi).fragid);
-            }
-        }
-        sort_unique(bfragids);
-        sorted_batoms = batoms;
-        sort_unique(sorted_batoms);
-        BOOST_FOREACH(Id fragid, bfragids) {
-            connected_batoms.insert(
-                    connected_batoms.end(), 
-                    bfrags[fragid].begin(), 
-                    bfrags[fragid].end());
-        }
-        sort_unique(connected_batoms);
-        if (connected_batoms != sorted_batoms) {
-            MSYS_FAIL("Map of B state does not contain all connected atoms");
-        }
-        return Clone(B, batoms);
-    }
 }
 
 SystemPtr desres::msys::MakeAlchemical( SystemPtr A, SystemPtr B,
@@ -908,10 +804,6 @@ SystemPtr desres::msys::MakeAlchemical( SystemPtr A, SystemPtr B,
 
     /* We will be modifying A, so make a copy */
     A = Clone(A, A->atoms());
-
-    /* Replace B with just the "mapped" part, and update the map to
-     * reflect the new numbering. */
-    //B = clone_mapped_alchemical(B, pairs);
 
     /* Add custom atom properties from B */
     for (Id i=0; i<B->atomPropCount(); i++) {
