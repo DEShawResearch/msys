@@ -16,18 +16,6 @@
 #include <cstring>
 
 namespace {
-  /*! size of subblock, or zero if not present
-   * @param MB block
-   * @param bname subblock name
-   * @return size of subblock, or zero if not present
-   */
-  unsigned destro_block_size(const desres::msys::Destro& MB, 
-                              const std::string& bname) {
-
-    if ( ! MB.has_block(bname) ) return 0;
-    return MB[bname]->size();
-  }
-
   /*! Provide case-insensitive string comparisons */
   struct CaseInsensitive {
     static std::string to_upper(const std::string& str) {

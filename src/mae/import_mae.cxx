@@ -39,11 +39,6 @@ namespace {
 
     const std::string empty;
 
-    bool contains_non_whitespace(const std::string& s) {
-        for (unsigned i=0; i<s.size(); i++) if (!isspace(s[i])) return true;
-        return false;
-    }
-
     void import_cell( const Json& ct, SystemPtr h ) {
         h->global_cell[0][0]=ct.get("chorus_box_ax").as_float(0);
         h->global_cell[0][1]=ct.get("chorus_box_ay").as_float(0);
@@ -339,13 +334,6 @@ namespace {
             || s=="msys_forcefield"
             || s=="ffio_pseudo"
             ;
-    }
-
-    bool endswith(const char * word, const char * suffix ) {
-        const char * a = strstr(word, suffix);
-        if (!a) return false;
-        size_t startlen = a-word;
-        return startlen + strlen(suffix) == strlen(word);
     }
 
     bool is_full_system(Json const& ct) {
