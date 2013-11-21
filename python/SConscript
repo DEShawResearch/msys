@@ -22,6 +22,7 @@ io.cxx
 graph.cxx
 inchi.cxx
 pymod.cxx
+wrap_obj.cxx
 '''.split()
 
 pyext=env.AddPythonExtension('_msys', pymodfiles, prefix='msys')
