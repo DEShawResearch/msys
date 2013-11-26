@@ -14,7 +14,8 @@ namespace desres { namespace msys {
         ParmTopFileFormat      = 4,
         Mol2FileFormat         = 5,
         XyzFileFormat          = 6,
-        SdfFileFormat          = 7
+        SdfFileFormat          = 7,
+        WebPdbFileFormat       = 8
 
     };
 

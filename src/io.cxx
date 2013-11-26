@@ -13,10 +13,9 @@
 using namespace desres::msys;
 
 namespace {
-    bool match(std::string path, std::string const& expr) {
+    bool match(std::string const& path, std::string const& expr) {
         std::vector<std::string> endings;
         boost::split(endings, expr, boost::is_any_of(","));
-        boost::to_lower(path);
         for (unsigned i=0; i<endings.size(); i++) {
             std::string p(".+\\.");
             p += endings[i];
@@ -27,6 +26,10 @@ namespace {
         return false;
     }
 
+    bool match_web(std::string const& path) {
+        return regex_match(path, atomsel::Regex("[0-9][a-z][a-z][a-z]"));
+    }
+
     const char *format_names[] = {
         "UNRECOGNIZED",
         "DMS",
@@ -35,7 +38,8 @@ namespace {
         "PARM7",
         "MOL2",
         "XYZ",
-        "SDF"
+        "SDF",
+        "WEBPDB"
     };
 
     class DefaultIterator : public LoadIterator {
@@ -56,8 +60,10 @@ namespace {
 
 namespace desres { namespace msys {
 
-    FileFormat GuessFileFormat(std::string const& path) {
+    FileFormat GuessFileFormat(std::string const& _path) {
 
+        std::string path(_path);
+        boost::to_lower(path);
         const char* DMS = "dms,dms.gz";
         const char* MAE = "mae,mae.gz,maegz,maeff,maeff.gz,cms,cms.gz";
         const char* PDB = "pdb";
@@ -73,6 +79,7 @@ namespace desres { namespace msys {
         if (match(path,MOL2)) return Mol2FileFormat;
         if (match(path, XYZ)) return XyzFileFormat;
         if (match(path, SDF)) return SdfFileFormat;
+        if (match_web(path))  return WebPdbFileFormat;
         return UnrecognizedFileFormat;
     }
 
@@ -115,6 +122,8 @@ namespace desres { namespace msys {
             case SdfFileFormat:
                 m=ImportSdf(path);
                 break;
+            case WebPdbFileFormat:
+                m=ImportWebPDB(path);
             default:
                 ;
         }

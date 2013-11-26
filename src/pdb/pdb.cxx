@@ -32,12 +32,11 @@ static void strip_nonalpha(char *buf) {
     *buf='\0';
 }
 
-SystemPtr desres::msys::ImportPDB( std::string const& path ) {
+extern "C"
+char* desres_msys_import_webpdb(const char* code);
 
+static SystemPtr import_pdb_from_file(FILE* fd) {
     char pdbstr[PDB_BUFFER_LENGTH];
-
-    FILE* fd = fopen(path.c_str(), "r");
-    if (!fd) MSYS_FAIL("Failed opening pdb file for reading at " << path);
     boost::shared_ptr<FILE> defer_close(fd, fclose);
 
     SystemPtr mol = System::create();
@@ -123,6 +122,40 @@ SystemPtr desres::msys::ImportPDB( std::string const& path ) {
 
     return mol;
 }
+
+SystemPtr desres::msys::ImportWebPDB(std::string const& code) {
+    char* buf = desres_msys_import_webpdb(code.c_str());
+    if (!buf) {
+        MSYS_FAIL("Could not read pdb code " << code);
+    }
+    boost::shared_ptr<char> ptr(buf, free);
+    char temp[] = "/tmp/msys_webpdb_XXXXXX";
+    int fd = mkstemp(temp);
+    if (fd<0) {
+        MSYS_FAIL("Could not open temporary file for webpdb");
+    }
+    unlink(temp);
+    ssize_t n = strlen(buf);
+    if (::write(fd, buf, n)!=n) {
+        close(fd);
+        MSYS_FAIL("Failed writing temporary file for webpdb");
+    }
+    ::lseek(fd,0,SEEK_SET);
+    try {
+        return import_pdb_from_file(fdopen(fd, "r"));
+    }
+    catch (std::exception& e) {
+        MSYS_FAIL("Error reading contents of webpdb " << code << " : " << e.what());
+    }
+    return SystemPtr();
+}
+
+SystemPtr desres::msys::ImportPDB( std::string const& path ) {
+    FILE* fd = fopen(path.c_str(), "r");
+    if (!fd) MSYS_FAIL("Failed opening pdb file for reading at " << path);
+    return import_pdb_from_file(fd);
+}
+
 
 static double dotprod(const double* x, const double* y) {
     return x[0]*y[0] + x[1]*y[1] + x[2]*y[2];

@@ -138,6 +138,7 @@ sdf/export.cxx
 sdf/import.cxx
 
 pdb/pdb.cxx
+pdb/webpdb.c
 
 schema.cxx
 schema/schema.cxx
