@@ -365,11 +365,11 @@ namespace desres { namespace msys {
          * bool operator()(bond_t const& b) const; */
         template <typename T>
         IdList filteredBondsForAtom(Id id, T const& predicate) const {
-            IdList const& src = _bondindex[id];
+            IdList const& src = _bondindex.at(id);
             IdList dst;
             for (IdList::const_iterator it=src.begin(); it!=src.end(); ++it) {
                 Id bid = *it;
-                bond_t const& b = bond(bid);
+                bond_t const& b = bondFAST(bid);
                 if (predicate(b)) {
                     dst.push_back(bid);
                 }
