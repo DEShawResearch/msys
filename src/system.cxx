@@ -1,6 +1,7 @@
 #include "system.hxx"
 #include "sssr.hxx"
 #include "append.hxx"
+#include "graph.hxx"
 #include <sstream>
 #include <stack>
 #include <queue>
@@ -714,36 +715,6 @@ Id SystemImporter::addAtom(std::string chain, std::string segid,
 
 namespace {
 
-    bool is_water( System* sys, Id res ) {
-        Id O(BadId), H1(BadId), H2(BadId);
-        IdList const& atoms = sys->atomsForResidue(res);
-        for (Id i=0; i<atoms.size(); i++) {
-            Id id=atoms[i];
-            const atom_t& b = sys->atom(id);
-            if (b.atomic_number==8) {
-                if (bad(O)) O=id;
-                else {
-                    O=BadId;
-                    break;
-                }
-            } else if (b.atomic_number==1) {
-                if      (bad(H1)) H1=id;
-                else if (bad(H2)) H2=id;
-                else {
-                    O=BadId;
-                    break;
-                }
-            }
-        }
-        if (bad(O) || bad(H1) || bad(H2)) return false;
-        return
-            sys->bondCountForAtom(O)==2 &&
-            sys->bondCountForAtom(H1)==1 &&
-            sys->bondCountForAtom(H2)==1 &&
-            sys->bond(sys->bondsForAtom(H1)[0]).other(H1)==O &&
-            sys->bond(sys->bondsForAtom(H2)[0]).other(H2)==O;
-    }
-
     bool has_water_residue_name( const std::string& resname ) {
         static const char * names[] = {
             "H2O", "HH0", "OHH", "HOH", "OH2", "SOL", "WAT", "TIP",
@@ -760,13 +731,13 @@ namespace {
         /* pick a c-beta atom, or settle for a hydrogen */
         Id cb=BadId;
         BOOST_FOREACH(Id nbr, mol->bondedAtoms(ca)) {
-            if (mol->atom(nbr).type==AtomProBack) continue;
+            if (mol->atomFAST(nbr).type==AtomProBack) continue;
             if (bad(cb)) {
                 cb=nbr;
             } else {
                 /* already have a cb candidate.  Pick the better one. */
-                if (mol->atom(nbr).atomic_number==1 || 
-                    toupper(mol->atom(nbr).name[0]=='H')) continue;
+                if (mol->atomFAST(nbr).atomic_number==1 || 
+                    toupper(mol->atomFAST(nbr).name[0]=='H')) continue;
                 cb=nbr;
             }
         }
@@ -777,9 +748,9 @@ namespace {
         q.push(cb);
         while (!q.empty()) {
             Id atm = q.front();
-            mol->atom(atm).type = AtomProSide;
+            mol->atomFAST(atm).type = AtomProSide;
             BOOST_FOREACH(Id nbr, mol->bondedAtoms(atm)) {
-                atom_t const& nbratm = mol->atom(nbr);
+                atom_t const& nbratm = mol->atomFAST(nbr);
                 if (nbratm.type==AtomOther && nbratm.residue==res) {
                     q.push(nbr);
                 }
@@ -788,53 +759,83 @@ namespace {
         }
     }
 
-    void analyze_residue(System* sys, Id res) {
-
-        static const char * protypes[] = { "CA", "C", "O", "N" };
-        /* NOTE: VMD 1.7 _tries_ to include O2 in its backbone selection, but
-         * because of a bug in the implementation, it doesn't include it.  
-         * It's fixed in 1.9.1. and in vmd/1.9.0-17.  */
-        static const char * proterms[] = {
-            "OT1", "OT2", "OXT", "O1", "O2"
-        };
-        static const char * nuctypes[] = {
-            "P", "O1P", "O2P", "OP1", "OP2", "C3*", "C3'", "O3*", "O3'",
-            "C4*", "C4'", "C5*", "C5'", "O5*", "O5'"
-        };
-        static const char * nucterms[] = {
-            "H5T", "H3T"
-        };
-        typedef std::map<std::string,AtomType> NameMap;
-        NameMap types, terms;
-        if (types.empty()) {
-            for (unsigned i=0; i<sizeof(protypes)/sizeof(protypes[0]); i++) {
-                types[protypes[i]]=AtomProBack;
-            }
-            for (unsigned i=0; i<sizeof(nuctypes)/sizeof(nuctypes[0]); i++) {
-                types[nuctypes[i]]=AtomNucBack;
-            }
-            for (unsigned i=0; i<sizeof(proterms)/sizeof(proterms[0]); i++) {
-                terms[proterms[i]]=AtomProBack;
-            }
-            for (unsigned i=0; i<sizeof(nucterms)/sizeof(nucterms[0]); i++) {
-                terms[nucterms[i]]=AtomNucBack;
-            }
+    static std::string waterhash;
+    static GraphPtr watergraph;
+    struct _ { 
+        _() {
+            SystemPtr m = System::create();
+            m->addChain();
+            m->addResidue(0);
+            m->addAtom(0);
+            m->addAtom(0);
+            m->addAtom(0);
+            m->atom(0).atomic_number=8;
+            m->atom(1).atomic_number=1;
+            m->atom(2).atomic_number=1;
+            m->addBond(0,1);
+            m->addBond(0,2);
+            watergraph = Graph::create(m,m->atoms());
+            waterhash = Graph::hash(m,m->atoms());
         }
+    } static_initializer;
+}
+
+void System::analyze() {
+    
+    static const char * protypes[] = { "CA", "C", "O", "N" };
+    /* NOTE: VMD 1.7 _tries_ to include O2 in its backbone selection, but
+     * because of a bug in the implementation, it doesn't include it.  
+     * It's fixed in 1.9.1. and in vmd/1.9.0-17.  */
+    static const char * proterms[] = {
+        "OT1", "OT2", "OXT", "O1", "O2"
+    };
+    static const char * nuctypes[] = {
+        "P", "O1P", "O2P", "OP1", "OP2", "C3*", "C3'", "O3*", "O3'",
+        "C4*", "C4'", "C5*", "C5'", "O5*", "O5'"
+    };
+    static const char * nucterms[] = {
+        "H5T", "H3T"
+    };
+
+    typedef std::map<std::string,AtomType> NameMap;
+    NameMap types, terms;
+    if (types.empty()) {
+        for (unsigned i=0; i<sizeof(protypes)/sizeof(protypes[0]); i++) {
+            types[protypes[i]]=AtomProBack;
+        }
+        for (unsigned i=0; i<sizeof(nuctypes)/sizeof(nuctypes[0]); i++) {
+            types[nuctypes[i]]=AtomNucBack;
+        }
+        for (unsigned i=0; i<sizeof(proterms)/sizeof(proterms[0]); i++) {
+            terms[proterms[i]]=AtomProBack;
+        }
+        for (unsigned i=0; i<sizeof(nucterms)/sizeof(nucterms[0]); i++) {
+            terms[nucterms[i]]=AtomNucBack;
+        }
+    }
+
+    SystemPtr self = shared_from_this();
+    updateFragids();
+    std::vector<IdPair> perm;
+
+    for (System::iterator it=residueBegin(), e=residueEnd(); it!=e; ++it) {
+        Id res = *it;
 
         /* clear structure */
-        IdList const& atoms = sys->atomsForResidue(res);
-        for (Id i=0; i<atoms.size(); i++) sys->atom(atoms[i]).type=AtomOther;
-        sys->residue(res).type = ResidueOther;
+        IdList const& atoms = atomsForResidue(res);
+        for (Id i=0; i<atoms.size(); i++) atomFAST(atoms[i]).type=AtomOther;
+        residueFAST(res).type = ResidueOther;
 
         /* check for water */
-        if (has_water_residue_name(sys->residue(res).name) || 
-                is_water(sys,res)) {
-            sys->residue(res).type = ResidueWater;
-            return;
+        if (has_water_residue_name(residueFAST(res).name) || (
+            Graph::hash(self,atoms)==waterhash &&
+            Graph::create(self,atoms)->match(watergraph,perm))) {
+            residueFAST(res).type = ResidueWater;
+            continue;
         }
 
         /* need at least four atoms to determine protein or nucleic */
-        if (atoms.size()<4) return;
+        if (atoms.size()<4) continue;
 
         int npro=0, nnuc=0;
         std::set<std::string> names;
@@ -844,7 +845,7 @@ namespace {
         Id n_atm = BadId;
         for (Id i=0; i<atoms.size(); i++) {
             Id id = atoms[i];
-            const atom_t& atm = sys->atom(id);
+            const atom_t& atm = atomFAST(id);
             const std::string& aname = atm.name;
             if (!names.insert(aname).second) continue;
             /* check for nucleic or protein backbone */
@@ -862,10 +863,10 @@ namespace {
                 iter=terms.find(aname);
                 if (iter!=terms.end()) {
                     /* must be bonded to atom of the same type */
-                    IdList const& bonds = sys->bondsForAtom(id);
+                    IdList const& bonds = bondsForAtom(id);
                     for (Id j=0; j<bonds.size(); j++) {
-                        Id o = sys->bond(bonds[j]).other(id);
-                        AtomType otype = sys->atom(o).type;
+                        Id o = bondFAST(bonds[j]).other(id);
+                        AtomType otype = atomFAST(o).type;
                         if (otype==iter->second) {
                             atype=otype;
                             break;
@@ -873,33 +874,26 @@ namespace {
                     }
                 }
             }
-            sys->atom(id).type = atype;
+            atomFAST(id).type = atype;
             if (atype==AtomProBack) ++npro;
             if (atype==AtomNucBack) ++nnuc;
         }
         ResidueType rtype=ResidueOther;
         if (npro>=4 && 
             ca_atm!=BadId && c_atm!=BadId && n_atm != BadId &&
-            !bad(sys->findBond(ca_atm,n_atm)) &&
-            !bad(sys->findBond(ca_atm,c_atm)) &&
-             bad(sys->findBond(c_atm,n_atm))) {
+            !bad(findBond(ca_atm,n_atm)) &&
+            !bad(findBond(ca_atm,c_atm)) &&
+             bad(findBond(c_atm,n_atm))) {
             rtype=ResidueProtein;
         } else if (nnuc>=4) {
             rtype=ResidueNucleic;
         } else for (Id i=0; i<atoms.size(); i++) {
-            sys->atom(atoms[i]).type = AtomOther;
+            atomFAST(atoms[i]).type = AtomOther;
         }
         if (rtype==ResidueProtein) {
-            find_sidechain(sys, res, ca_atm);
+            find_sidechain(this, res, ca_atm);
         }
-        sys->residue(res).type=rtype;
-    }
-}
-
-void System::analyze() {
-    updateFragids();
-    for (Id res=0; res<maxResidueId(); res++) {
-        if (hasResidue(res)) analyze_residue(this,res);
+        residueFAST(res).type=rtype;
     }
 }
 
