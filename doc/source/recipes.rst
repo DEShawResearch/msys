@@ -1,4 +1,22 @@
 
+Adding artificial bonds
+-----------------------
+
+Msys can add force terms to a system::
+
+    import msys, sys
+    ifile, ofile = sys.argv[1:]
+    mol=msys.Load(ifile)
+    T=mol.table('stretch_harm')
+    P=T.params
+    param=P.addParam()
+    param['fc']=32
+    param['r0']=1.0
+    T.addTerm([mol.atom(0), mol.atom(1)], param)
+    # ...
+    msys.Save(mol, ofile)
+
+
 
 Adding energy groups
 --------------------
