@@ -1,3 +1,9 @@
+1.7.42 FIXED: Added POPS to the lipid atom selection macro.
+       FIXED: The structure analyzer recognized waters with pseudos now.
+       FIXED: Allow writing mae files with multi-line ct properties.
+       IMPROVED: Added share_params option to clone().
+       NEW: Can load from the pdb databank by specifying an accession code.
+
 1.7.41 IMPROVED: SaveDMS accepts structure_only flag.
        IMPROVED: dms-validate --desmond runs the dms-check-groups test.
        FIXED: System.delXXX was confused by empty selections.
