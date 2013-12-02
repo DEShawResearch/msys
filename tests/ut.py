@@ -6,7 +6,7 @@ import os, sys, unittest
 TMPDIR=os.getenv('TMPDIR', 'objs/Linux/x86_64')
 sys.path.insert(0,os.path.join(TMPDIR, 'lib', 'python'))
 import msys
-from msys import knot
+from msys import knot, reorder
 import numpy as NP
 import json
 import gzip
@@ -15,6 +15,32 @@ def vsize():
     cmd='ps -p %d h -o vsz' % os.getpid()
     s=os.popen(cmd).read()
     return int(s)
+
+class TestReorder(unittest.TestCase):
+    def setUp(self):
+        m1=msys.CreateSystem()
+        a1=m1.addAtom()
+        a2=m1.addAtom()
+        a3=m1.addAtom()
+        a4=m1.addAtom()
+        for a in m1.atoms: a.atomic_number=1
+        a1.addBond(a2)
+        a1.addBond(a3)
+        a1.addBond(a4)
+        self.mol=m1
+
+    def testIdentity(self):
+        reorder.Reorder(self.mol, self.mol, 'all', 'all')
+
+    def testSubset(self):
+        ref=self.mol
+        tgt=self.mol.clone('index 0 1 2')
+
+        with self.assertRaises(ValueError):
+            reorder.Reorder(ref,tgt,'all','all')
+
+        reorder.Reorder(ref, tgt,'index 0 1 2', 'all')
+
 
 class TestInChI(unittest.TestCase):
     gold = {

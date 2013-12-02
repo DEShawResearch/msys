@@ -20,12 +20,14 @@ def Reorder(ref, tgt, refsel, targetsel):
     atom topology (atomic number and degree) and minimize RMSD.
     '''
 
+    ref = ref.clone(refsel)
     rpos = ref.positions.astype('f')
     tpos = tgt.positions.astype('f')
     # find the set of residues in each selection
-    refres = set(a.residue.id for a in ref.select(refsel))
+    refres = set(a.residue.id for a in ref.atoms)
     tgtres = set(a.residue.id for a in tgt.select(targetsel))
-    assert len(refres)==len(tgtres), "System selections contain different numbers of residues: ref=%d, target=%d" % (len(refres), len(tgtres))
+    if len(refres)!=len(tgtres):
+        raise ValueError("System selections contain different numbers of residues: ref=%d, target=%d" % (len(refres), len(tgtres)))
 
     # create a mapping from target residues to reference residues.  We are
     # assuming that the order of residue ids is the same in both cases.
