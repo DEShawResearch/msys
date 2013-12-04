@@ -141,19 +141,23 @@ SystemPtr desres::msys::ImportWebPDB(std::string const& code) {
         MSYS_FAIL("Failed writing temporary file for webpdb");
     }
     ::lseek(fd,0,SEEK_SET);
+    SystemPtr mol;
     try {
-        return import_pdb_from_file(fdopen(fd, "r"));
+        mol = import_pdb_from_file(fdopen(fd, "r"));
     }
     catch (std::exception& e) {
         MSYS_FAIL("Error reading contents of webpdb " << code << " : " << e.what());
     }
-    return SystemPtr();
+    mol->name = code;
+    return mol;
 }
 
 SystemPtr desres::msys::ImportPDB( std::string const& path ) {
     FILE* fd = fopen(path.c_str(), "r");
     if (!fd) MSYS_FAIL("Failed opening pdb file for reading at " << path);
-    return import_pdb_from_file(fd);
+    SystemPtr mol = import_pdb_from_file(fd);
+    mol->name = path;
+    return mol;
 }
 
 
