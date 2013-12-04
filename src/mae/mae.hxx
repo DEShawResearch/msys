@@ -1,7 +1,7 @@
 /* @COPYRIGHT@ */
 
 #include <fastjson/fastjson.hxx>
-#include <iostream>
+#include "../istream.hxx"
 
 /* Import an mae file into a json.  Both blocks and array blocks are 
  * represented as objects (dictionaries); array blocks are dictionaries
@@ -40,7 +40,6 @@ namespace desres { namespace msys { namespace mae {
     void export_mae( const Json& js, std::ostream& out );
 
     struct tokenizer;
-    struct istream;
 
     class import_iterator {
         istream* in;

@@ -129,6 +129,7 @@ elements.cxx
 geom.cxx
 
 io.cxx
+istream.cxx
 
 mol2/assign.cxx
 mol2/export.cxx

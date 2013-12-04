@@ -13,7 +13,6 @@
 #include <sstream>
 #include <stdexcept>
 
-#include <zlib.h>
 
 using desres::fastjson::Json;
 
@@ -24,22 +23,6 @@ using desres::fastjson::Json;
  */
 
 namespace desres { namespace msys { namespace mae {
-
-    /* boost::iostreams::gzip_decompressor lies about its gcount(); it returns
-     * the size of the input buffer even on a short read.  That seems to
-     * confuse the mae parser.  I've thus rolled my own. 
-     *
-     * Subclassing std::istream or even std::streambuf isn't at all 
-     * straightforward, so I've implemented my own thin interface that
-     * provides just what the parser needs.
-     *
-     * JRG 13 February 2013
-     */
-    struct istream {
-        virtual ~istream() {}
-        virtual void read(char* s, std::streamsize n) = 0;
-        virtual std::streamsize gcount() const = 0;
-    };
 
     struct tokenizer {
 
@@ -52,7 +35,7 @@ namespace desres { namespace msys { namespace mae {
         std::streamsize bufsize;
   
         /*! \brief the stream for the file we're parsing */
-        mae::istream * m_input;
+        istream * m_input;
   
         /*! \brief The current token */
         char * m_token;
@@ -109,7 +92,7 @@ static inline char tokenizer_read(tokenizer * tk) {
  * @param input The stream to parse
  */
 
-static void tokenizer_init( tokenizer * tk, mae::istream& input );
+static void tokenizer_init( tokenizer * tk, istream& input );
 
 /*!
  * The destructor cleans up any heap allocated temporaries created
@@ -161,7 +144,7 @@ enum ACTION {
   CONTINUEOTHER  /* 9 */
 };
 
-void tokenizer_init( tokenizer * tk, mae::istream& input ) {
+void tokenizer_init( tokenizer * tk, istream& input ) {
     memset(tk,0,sizeof(*tk));
     tk->m_input = &input;
     tk->m_line = 1;
@@ -728,107 +711,10 @@ static void write_values( const Json& ct, int depth, FILE * fd ) {
     }
 }
 
-namespace {
-
-    class file_istream : public desres::msys::mae::istream {
-        std::istream& file;
-    public:
-        file_istream(std::istream& _file) : file(_file) {}
-        void read(char *s, std::streamsize n) { file.read(s,n); }
-        std::streamsize gcount() const { return file.gcount(); }
-    };
-
-    class gzip_istream : public desres::msys::mae::istream {
-
-        std::istream& file;
-        z_stream strm;
-        static const int CHUNK = 16384;
-        char in[CHUNK], out[CHUNK];
-        std::streamsize _gcount;
-
-        void init();
-        void close();
-
-    public:
-        gzip_istream(std::istream& _file);
-        ~gzip_istream() { close(); }
-        void read(char *s, std::streamsize n);
-        std::streamsize gcount() const { return _gcount; }
-    };
-
-    gzip_istream::gzip_istream(std::istream& _file) 
-    : file(_file), _gcount() {
-        memset(&strm, 0, sizeof(strm));
-        init();
-    }
-
-    void gzip_istream::init() {
-        /* magic initialization to read gzip files.  It's not in the zlib 
-         * manual, or the example code.  
-         * http://stackoverflow.com/questions/1838699/how-can-i-decompress-a-gzip-stream-with-zlib
-         */
-        if (Z_OK!=inflateInit2(&strm, 16+MAX_WBITS)) {
-            MSYS_FAIL("Failed initializing zlib stream");
-        }
-    }
-
-    void gzip_istream::read(char *s, std::streamsize n) {
-
-        _gcount=0;
-        while (!strm.avail_out) {
-            if (!strm.avail_in) {
-                if (file.eof()) return;
-                file.read((char *)in,CHUNK);
-                strm.avail_in = file.gcount();
-                if (strm.avail_in==0) {
-                    /* interesting.  I guess we're done. */
-                    _gcount = 0;
-                    return;
-                }
-                strm.next_in = (unsigned char *)in;
-                if (file.fail() && !file.eof()) {
-                    throw std::runtime_error("Reading gzipped file failed");
-                }
-            }
-            strm.avail_out = CHUNK;
-            strm.next_out = (unsigned char *)out;
-            int rc = inflate(&strm, Z_NO_FLUSH);
-            if (rc==1) {
-                close();
-                init();
-            } else if (rc) {
-                MSYS_FAIL("Reading zlib stream failed with rc " << rc << ": " << strm.msg);
-            }
-            strm.next_out = (unsigned char *)out; 
-            strm.avail_out = CHUNK - strm.avail_out;
-        }
-        std::streamsize have = strm.avail_out;
-        std::streamsize nread = std::min(n,have);
-        memcpy(s, strm.next_out, nread);
-        strm.avail_out -= nread;
-        strm.next_out += nread;
-
-        _gcount = nread;
-    }
-    void gzip_istream::close() {
-        inflateEnd(&strm);
-    }
-}
-
-
 namespace desres { namespace msys { namespace mae {
 
     import_iterator::import_iterator(std::istream& file) 
-    : in(), tk(), _offset() {
-
-        /* check for gzip magic number */
-        bool is_gzipped = file.get()==0x1f && file.get()==0x8b;
-        file.seekg(0);
-        if (is_gzipped) {
-            in = new gzip_istream(file);
-        } else {
-            in = new file_istream(file);
-        }
+    : in(istream::wrap(file)), tk(), _offset() {
         tk = new tokenizer;
         tokenizer_init(tk, *in);
     }
