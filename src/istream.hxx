@@ -16,8 +16,7 @@ namespace desres { namespace msys {
     class istream {
     public:
         virtual ~istream() {}
-        virtual void read(char* s, std::streamsize n) = 0;
-        virtual std::streamsize gcount() const = 0;
+        virtual std::streamsize read(char* s, std::streamsize n) = 0;
 
         static istream* wrap(std::istream& file);
     };

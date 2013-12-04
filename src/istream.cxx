@@ -11,8 +11,10 @@ namespace {
         std::istream& file;
     public:
         file_istream(std::istream& _file) : file(_file) {}
-        void read(char *s, std::streamsize n) { file.read(s,n); }
-        std::streamsize gcount() const { return file.gcount(); }
+        std::streamsize read(char *s, std::streamsize n) { 
+            file.read(s,n);
+            return file.gcount();
+        }
     };
 
     class gzip_istream : public istream {
@@ -21,7 +23,6 @@ namespace {
         z_stream strm;
         static const int CHUNK = 16384;
         char in[CHUNK], out[CHUNK];
-        std::streamsize _gcount;
 
         void init();
         void close();
@@ -29,14 +30,13 @@ namespace {
     public:
         gzip_istream(std::istream& _file);
         ~gzip_istream() { close(); }
-        void read(char *s, std::streamsize n);
-        std::streamsize gcount() const { return _gcount; }
+        std::streamsize read(char *s, std::streamsize n);
     };
 
 }
 
 gzip_istream::gzip_istream(std::istream& _file)
-: file(_file), _gcount() {
+: file(_file) {
     memset(&strm, 0, sizeof(strm));
     init();
 }
@@ -51,18 +51,16 @@ void gzip_istream::init() {
     }
 }
 
-void gzip_istream::read(char *s, std::streamsize n) {
+std::streamsize gzip_istream::read(char *s, std::streamsize n) {
 
-    _gcount=0;
     while (!strm.avail_out) {
         if (!strm.avail_in) {
-            if (file.eof()) return;
+            if (file.eof()) return 0;
             file.read((char *)in,CHUNK);
             strm.avail_in = file.gcount();
             if (strm.avail_in==0) {
                 /* interesting.  I guess we're done. */
-                _gcount = 0;
-                return;
+                return 0;
             }
             strm.next_in = (unsigned char *)in;
             if (file.fail() && !file.eof()) {
@@ -87,7 +85,7 @@ void gzip_istream::read(char *s, std::streamsize n) {
     strm.avail_out -= nread;
     strm.next_out += nread;
 
-    _gcount = nread;
+    return nread;
 }
 
 void gzip_istream::close() {
@@ -106,4 +104,5 @@ istream* istream::wrap(std::istream& file) {
     }
     return in;
 }
+
 

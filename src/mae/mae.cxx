@@ -77,9 +77,8 @@ static inline char tokenizer_read(tokenizer * tk) {
   if (tk->bufpos==tk->bufsize) {
       tk->m_offset += tk->bufsize;
       //printf("tokenizer_read %lu\n", sizeof(tk->buf));
-      tk->m_input->read(tk->buf, sizeof(tk->buf));
+      tk->bufsize = tk->m_input->read(tk->buf, sizeof(tk->buf));
       tk->bufpos = 0;
-      tk->bufsize = tk->m_input->gcount();
       //printf("  gcount %ld\n", tk->bufsize);
   } 
   tk->m_c = tk->bufsize ? tk->buf[tk->bufpos++] : -1;
