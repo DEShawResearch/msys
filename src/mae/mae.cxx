@@ -727,7 +727,7 @@ namespace desres { namespace msys { namespace mae {
     bool import_iterator::next(Json& block) {
         _offset = tk->m_offset + tk->bufpos;
         /* eat the meta block, if any */
-        if (!strcmp("{", tokenizer_token(tk,0))) {
+        while (!strcmp("{", tokenizer_token(tk,0))) {
             tokenizer_predict(tk, "{");
             block.to_object();
             predict_schema_and_values(block, tk);
