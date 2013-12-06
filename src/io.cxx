@@ -27,7 +27,7 @@ namespace {
     }
 
     bool match_web(std::string const& path) {
-        return regex_match(path, atomsel::Regex("[0-9][a-z][a-z][a-z]"));
+        return regex_match(path, atomsel::Regex("[0-9][a-z][a-z0-9][a-z0-9]"));
     }
 
     const char *format_names[] = {
