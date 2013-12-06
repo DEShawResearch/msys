@@ -140,6 +140,7 @@ DBL_KEY(vy,atom(i).vy)
 DBL_KEY(vz,atom(i).vz)
 
 STR_KEY(chain,sys->chain(sys->residue(sys->atom(i).residue).chain).name)
+STR_KEY(segid,sys->chain(sys->residue(sys->atom(i).residue).chain).segid)
 STR_KEY(name,sys->atom(i).name)
 STR_KEY(resname,sys->residue(sys->atom(i).residue).name)
 STR_KEY(insertion,sys->residue(sys->atom(i).residue).insertion)

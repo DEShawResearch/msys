@@ -96,6 +96,8 @@ Keyword* VMD::find_key(const char* id) {
     KeywordPtr key = 
       !strcmp(id,"atomicnumber") ? keyword_anum(sys) :
       !strcmp(id,"chain") ? keyword_chain(sys) :
+      !strcmp(id,"segid") ? keyword_segid(sys) :
+      !strcmp(id,"segname") ? keyword_segid(sys) :
       !strcmp(id,"ctnumber") ? keyword_ctnumber(sys) :
       !strcmp(id,"charge") ? keyword_charge(sys) :
       !strcmp(id,"element") ? keyword_element(sys) :
