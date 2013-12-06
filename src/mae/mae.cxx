@@ -361,12 +361,13 @@ tokenizer_predict(tokenizer * tk, const char * match) {
 static inline const char *
 tokenizer_predict_value(tokenizer * tk) {
   const char * tok = tokenizer_token(tk,1);
-  if ( (tok[0] == '\0') || (strcmp(tok,":::") == 0) || (strcmp(tok,"}") == 0)) {
-      MAE_ERROR2("Line %d predicted a value token, have '%s'",
-                  tokenizer_line(tk),
-                  (isprint(tok[0])?tok:"<unprintable>"));
+  if(tok[0]=='\0') {
+      MSYS_FAIL("Premature end of file at line " << tokenizer_line(tk));
+  } else if (!strcmp(tok,":::") || !strcmp(tok,"}")) {
+      MSYS_FAIL("Line " << tokenizer_line(tk) << " unexpected characters '" << tok << "'");
+  } else {
+    tokenizer_next(tk);
   }
-  tokenizer_next(tk);
   return tok;
 }
 
@@ -394,8 +395,7 @@ static int predict_schema( Json& js, tokenizer * tk );
 
 static void check_name( const tokenizer * tk, const char * name ) {
     if (strlen(name) && !(isalpha(*name) || *name == '_')) {
-        MAE_ERROR2("Line %d predicted a block name, have '%s'",
-                    tokenizer_line(tk), name);
+        MSYS_FAIL("Line " << tokenizer_line(tk) << " predicted a block name, have '" << name << "'");
     }
 }
 
