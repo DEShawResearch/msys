@@ -296,6 +296,14 @@ class Psfgen(object):
         res=str(res)
         assert 0==lib.topo_mol_patch_residue(self._mol, idents, res)
 
+    def setCoordinates(self, segid, resid, aname, xyz):
+        idents = (topo_mol_ident * 1)()
+        idents[0].segid = str(segid)
+        idents[0].resid = str(resid)
+        idents[0].aname = str(aname)
+        x, y, z = map(ctypes.c_double, xyz)
+        assert 0==lib.topo_mol_set_xyz(self._mol, idents, x, y, z)
+
 class Params(object):
     def __init__(self):
         self.bond = list()
