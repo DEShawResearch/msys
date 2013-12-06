@@ -1,3 +1,10 @@
+1.7.43 FIXED: System.name wasn't set when loading a pdb.
+       FIXED: The segid atom selection keyword was missing.
+       FIXED: The web pdb access code regex was too restrictive.
+       FIXED: dms-reorder atoms: reference selection applies to all atoms.
+       IMPROVED: load mae files with multiple consecutive m2io_version blocks.
+       IMPROVED: Better error reporting of truncated mae files.
+
 1.7.42 FIXED: Added POPS to the lipid atom selection macro.
        FIXED: The structure analyzer recognized waters with pseudos now.
        FIXED: Allow writing mae files with multi-line ct properties.
