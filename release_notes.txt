@@ -1,3 +1,7 @@
+1.7.44 IMPROVED: psfgen.Psfgen got setCoordinates.
+       IMPROVED: update to molfile/1.11.14.
+       FIXED: psfgen.write() to dms was writing uninitialized global cell.
+
 1.7.43 FIXED: System.name wasn't set when loading a pdb.
        FIXED: The segid atom selection keyword was missing.
        FIXED: The web pdb access code regex was too restrictive.

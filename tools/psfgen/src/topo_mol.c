@@ -14,7 +14,7 @@
 topo_mol * topo_mol_create(topo_defs *defs) {
   topo_mol *mol;
   if ( ! defs ) return 0;
-  if ( (mol = (topo_mol*) malloc(sizeof(topo_mol))) ) {
+  if ( (mol = (topo_mol*) calloc(1,sizeof(topo_mol))) ) {
     mol->newerror_handler_data = 0;
     mol->newerror_handler = 0;
     mol->defs = defs;
