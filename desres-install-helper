@@ -15,17 +15,17 @@ VERSION=`src/version.py`
 DESCRIPTION="Biomolecular Structure Library"
 
 # shared library dependencies
-GCC=$(treetop gcc) # gcc/4.7.2-23A
-BOOST=$(treetop boost) # boost/1_51_0-28A
-PYTHON=$(treetop Python) # Python/2.7.3-07A
-SQLITE=$(treetop sqlite) # /3.6.23.1-02A
+GCC=gcc/4.7.2-23A
+BOOST=boost/1_51_0-30A
+PYTHON=Python/2.7.3-07A
+SQLITE=/3.6.23.1-02A
 JSON=fastjson/1.5.1
-MOLFILE=molfile/1.11.14
-PERIODICFIX=$(treetop periodicfix) # periodicfix/2.4.9
-NUMPY=$(treetop numpy) # numpy/1.6.2-33A
+MOLFILE=molfile/1.11.16
+PERIODICFIX=periodicfix/2.4.9
+NUMPY=numpy/1.6.2-33A
 LPSOLVE=lp_solve/5.5.2.0-03A
 PRIMEGEN=primegen/0.97-05
-ZLIB=$(treetop zlib) # zlib/1.2.4-10A
+ZLIB=zlib/1.2.7-10A
 INCHI=inchi/1.04-05
 EIGEN=eigen/3.1.2-01        # for tools/atommatch
 TEXLIVE=texlive/20120701-03
