@@ -8,8 +8,6 @@ trap 'desres_trapped_exit' EXIT
 
 desres_require_cleanenv
 
-module load treetop/57-Anton2/bin
-
 NAME=msys
 VERSION=`src/version.py`
 DESCRIPTION="Biomolecular Structure Library"
