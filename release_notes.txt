@@ -1,5 +1,5 @@
-1.7.44 IMPROVED: psfgen.Psfgen got setCoordinates.
-       IMPROVED: update to molfile/1.11.14.
+1.7.46 IMPROVED: psfgen.Psfgen got setCoordinates.
+       IMPROVED: update to molfile/1.11.16.
        FIXED: psfgen.write() to dms was writing uninitialized global cell.
 
 1.7.43 FIXED: System.name wasn't set when loading a pdb.
