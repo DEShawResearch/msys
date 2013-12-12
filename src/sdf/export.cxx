@@ -57,9 +57,13 @@ static void export_ct(SystemPtr mol, Id ct, std::ostream& out) {
         if (si==atoms.size() || sj==atoms.size()) {
             MSYS_FAIL("Ct " << ct << " has bonds which cross ct boundaries.  Cannot export to SDF.");
         }
+        int btype = bnd.order;
+        if (bnd.resonant_order==1.5) {
+            btype=4;
+        }
         out << format("%3i") % (si+1)
             << format("%3i") % (sj+1)
-            << format("%3i") % bnd.order
+            << format("%3i") % btype
             << "  0  0  0"
             << std::endl;
     }

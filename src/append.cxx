@@ -191,6 +191,7 @@ IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr,
         Id dstj = src2dst[srcj];
         Id dstbnd = dst.addBond(dsti, dstj);
         dst.bond(dstbnd).order = src.bond(srcbnd).order;
+        dst.bond(dstbnd).resonant_order = src.bond(srcbnd).resonant_order;
 
         /* Copy additional bond properties */
         for (Id k=0; k<nbprops; k++) {
