@@ -1,4 +1,7 @@
-1.7.46 IMPROVED: psfgen.Psfgen got setCoordinates.
+1.7.48 FIXED: sdf export writes bond type 4 for resonant bond.
+       FIXED: clone() and append() preserve bond resonant_order.
+
+1.7.47 IMPROVED: psfgen.Psfgen got setCoordinates.
        IMPROVED: update to molfile/1.11.16.
        FIXED: psfgen.write() to dms was writing uninitialized global cell.
 
