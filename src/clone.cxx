@@ -112,6 +112,7 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms,
                 Id dstatm = atmmap[srcatm];
                 Id dstbnd = dst->addBond(dstatm, dstother);
                 dst->bond(dstbnd).order = srcbond.order;
+                dst->bond(dstbnd).resonant_order = srcbond.resonant_order;
 
                 /* Copy additional bond properties */
                 for (Id k=0; k<nbprops; k++) {
