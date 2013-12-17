@@ -590,13 +590,18 @@ namespace {
       combine_entry( m1, m2, pairs, "", "ffio_pairs", alc);
     }
     if (excls != map.end()) {
+      unsigned row=1;
       for (FepList::const_iterator i=excls->second.begin();
-          i!=excls->second.end(); ++i) {
+          i!=excls->second.end(); ++i, ++row) {
         int ta = i->ti;
         int tb = i->tj;
         int ai = std::abs(i->ai);
         int aj = std::abs(i->aj);
         if (ai > aj) std::swap(ai, aj); // We require ai<aj in exclusion lists.
+        else if (ai==aj) {
+            MSYS_FAIL("Illegal self-exclusion at line " << row << " of fepio_exclmaps: ai=" 
+                    << i->ai << " aj=" << i->aj);
+        }
 	if ( ta> 0 && tb == -1 ) {
 	  // Nothing.
 	} else if ( tb > 0 && ta == -1 ) {
