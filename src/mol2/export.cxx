@@ -15,7 +15,7 @@ static void export_ct(SystemPtr mol, Id ct, FILE* fd,
     component_t const& cmp = mol->ct(ct);
     IdList atoms = mol->atomsForCt(ct);
     IdList bonds = mol->bondsForCt(ct);
-    IdList residues = mol->residuesForChain(ct);
+    IdList residues = mol->residuesForCt(ct);
     std::sort(atoms.begin(), atoms.end());
     std::sort(residues.begin(), residues.end());
 
@@ -96,13 +96,15 @@ static void export_ct(SystemPtr mol, Id ct, FILE* fd,
     for (Id i=0; i<residues.size(); i++) {
         Id id = residues[i];
         residue_t const& res = mol->residue(id);
+        chain_t const& chn = mol->chain(res.chain);
         Id ri = mol->atomsForResidue(id).at(0);
         Id si = std::lower_bound(atoms.begin(), atoms.end(), ri)-atoms.begin();
-        fprintf(fd, "%7u %-4s %7u %-8s\n",
+        fprintf(fd, "%7u %-4s %7u %-8s 1 %-4s\n",
                 i+1,                                /* residue id */
                 res.name.c_str(),                   /* residue name */
                 si+1,                               /* root atom */
-                residues.size()==1 ? "GROUP" : "RESIDUE");
+                residues.size()==1 ? "GROUP" : "RESIDUE",
+                chn.name.c_str());
     }
 }
 
