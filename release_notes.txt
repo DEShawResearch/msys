@@ -1,3 +1,6 @@
+1.7.49 FIXED: mol2 export was missing residues not in the first chain.
+       IMPROVED: mol2 export now includes chain name.
+
 1.7.48 FIXED: sdf export writes bond type 4 for resonant bond.
        FIXED: clone() and append() preserve bond resonant_order.
 
