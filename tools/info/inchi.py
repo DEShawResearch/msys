@@ -4,8 +4,9 @@ import subprocess as SP
 import collections
 import os
 
+# FIXME: get rid of this hard-coded inchi version somehow
 if os.getenv('DESRES_ROOT'):
-    _inchi_exe = 'desres-cleanenv -m inchi/1.04-04 -- inchi-1'
+    _inchi_exe = 'desres-cleanenv -m inchi/1.04-05/bin -- inchi-1'
 else:
     _inchi_exe = 'inchi-1'
 _inchi_exe = _inchi_exe.split()
