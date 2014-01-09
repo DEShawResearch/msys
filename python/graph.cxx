@@ -1,5 +1,5 @@
-#include "graph.hxx"
 #include "wrap_obj.hxx"
+#include "graph.hxx"
 
 using namespace desres::msys;
 

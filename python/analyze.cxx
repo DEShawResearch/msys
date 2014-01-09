@@ -1,9 +1,10 @@
+#include <boost/python.hpp>
+
 #include "analyze.hxx"
 #include "sssr.hxx"
 #include "mol2.hxx"
 #include "elements.hxx"
 #include "smarts.hxx"
-#include <boost/python.hpp>
 
 using namespace desres::msys;
 using namespace boost::python;

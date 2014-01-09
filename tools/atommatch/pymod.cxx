@@ -1,6 +1,6 @@
-#include "atommatch.hxx"
 #include <boost/python.hpp>
 #include <msys/version.hxx>
+#include "atommatch.hxx"
 
 using namespace desres::msys;
 using namespace desres::msys::atommatch;
