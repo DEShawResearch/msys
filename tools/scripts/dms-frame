@@ -2,7 +2,7 @@
 # -*- python -*-
 #{
 # desres-cleanenv \
-# -m molfile/1.11.16/lib-python \
+# -m molfile/1.11.17/lib-python \
 # -m periodicfix/2.4.9/lib-python \
 # -- python $0 "$@" 
 #}

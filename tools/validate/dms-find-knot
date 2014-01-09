@@ -2,7 +2,7 @@
 # -*- python -*-
 #{
 # desres-cleanenv -m numpy/1.6.2-31A/lib-python \
-# -m periodicfix/2.4.3/lib-python \
+# -m periodicfix/2.4.9/lib-python \
 # -- python $0 "$@"
 #}
 
