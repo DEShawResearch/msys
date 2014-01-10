@@ -312,6 +312,7 @@ class Params(object):
         self.improper = list()
         self.cmap = list()
         self.nonbonded = list()
+        self.nbfix = list()
 
         self.convert_sigma = 2.0 / 2.0**(1./6.)
 
@@ -324,6 +325,8 @@ class Params(object):
                 'IMPR' : self.parse_improper,
                 'CMAP' : self.parse_cmap,
                 'NONB' : self.parse_nonbonded,
+                'NBFI' : self.parse_nbfix,
+                'CUTH' : self.parse_cuthb,
                 }
 
         lines=fobj.readlines()
@@ -443,13 +446,20 @@ class Params(object):
             params['epsilon14'] = eps14
         self.nonbonded.append((key, params))
 
+    def parse_nbfix(self, line):
+        elems=line.split()
+        k1, k2, emin, rmin = line.split('!')[0].split()
+        epsilon = -float(emin)
+        sigma=self.convert_sigma * float(rmin)
+        self.nbfix.append((k1, k2, sigma, epsilon))
+
+    def parse_cuthb(self, line):
+        pass
+
     def error(self, line):
         print "error!", line
 
 def assign(params, mol):
-    nb=mol.table('nonbonded')
-    types=[p['type'] for p in nb.params.params]
-    atypes=[types[nb.term(i).param.id] for i in range(mol.natoms)]
 
     from time import time
 
@@ -697,13 +707,13 @@ def assign(params, mol):
 Params.assign = assign
 
 def AssignDMS(ifile, ofile, *paramfiles):
-    print "Reading DMS file from %s" % ifile
-    mol=msys.LoadDMS(ifile)
     params=Params()
     for p in paramfiles:
         with file(p) as fd:
             print "Parsing parameter file at", p
             params.parse(fd)
+    print "Reading DMS file from %s" % ifile
+    mol=msys.LoadDMS(ifile)
     print "Assigning parameters..."
     params.assign(mol)
     mol.coalesceTables()
