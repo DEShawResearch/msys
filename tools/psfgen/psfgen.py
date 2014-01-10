@@ -531,6 +531,7 @@ def assign(params, mol):
     T2=time()
     # dihedrals
     trig=mol.addTableFromSchema('dihedral_trig')
+    offset=trig.params.nparams
     print "dihedral_trig:", trig.nterms
     for _,d in params.dihedral:
         p = trig.params.addParam()
@@ -550,7 +551,7 @@ def assign(params, mol):
             wild=key[0]=='X' and key[3]=='X'
             mid=key[1:3]
             if t==key or tr==key or (wild and (t[1:3]==mid or tr[1:3]==mid)):
-                p=trig.params.param(i)
+                p=trig.params.param(i+offset)
                 keyhash[t]=p
                 keyhash[tr]=p
                 term.param=p
@@ -561,6 +562,7 @@ def assign(params, mol):
     T3=time()
     # impropers
     impr=mol.addTableFromSchema('improper_harm')
+    offset=impr.params.nparams
     print "improper_harm:", impr.nterms
     for _,d in params.improper:
         p = impr.params.addParam()
@@ -575,7 +577,7 @@ def assign(params, mol):
             wild=key[1]=='X' and key[2]=='X'
             out=key[0::3]
             if t==key or tr==key or (wild and (t[0::3]==out or tr[0::3]==out)):
-                term.param = impr.params.param(i)
+                term.param = impr.params.param(i+offset)
                 break
         else:
             raise RuntimeError, "no match for improper %s with types %s" % (ids,t)
