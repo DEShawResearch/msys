@@ -461,32 +461,34 @@ class Params(object):
 
 def assign(params, mol):
 
+    nb=mol.table('nonbonded')
+    types=[p['type'] for p in nb.params.params]
+    atypes=[types[nb.term(i).param.id] for i in range(mol.natoms)]
+
     from time import time
 
     T0=time()
     # parameterize bonds
+
     stretch=mol.addTableFromSchema('stretch_harm')
-    plist=[]
+    pdict=dict()
+    print "stretch_harm:", stretch.nterms
     for t, d in params.bond:
         p = stretch.params.addParam()
         p['fc'] = d['fc']
         p['r0'] = d['r0']
-        plist.append(p)
+        # TODO: add 'type' column
+        pdict[t] = p
 
-    for b in mol.bonds:
+    for b in stretch.terms:
         ai, aj = b.atoms
         t = (atypes[ai.id], atypes[aj.id])
-        for i, p in enumerate(params.bond):
-            if p[0] == t:
-                atoms = [ai,aj] if ai.id < aj.id else [aj,ai]
-                stretch.addTerm(atoms, plist[i])
-                break
-        else:
-            raise RuntimeError, "no match for atoms %s" % (b.atoms,)
+        b.param = pdict[t]
 
     T1=time()
     # parameterize angles and urey-bradley terms
     angles=mol.addTableFromSchema('angle_harm')
+    print "angle_harm:", angles.nterms
     plist=[]
     ulist=dict()
     for t, d in params.angle:
@@ -500,26 +502,23 @@ def assign(params, mol):
             p['r0']=d['ur0']
             ulist[len(plist)-1]=p
 
-    terms=[]
     keyhash=dict()
-    if 'angles' in mol.auxtable_names:
-        terms=mol.auxtable('angles').params
-    for a in terms:
-        ids=[a[x] for x in 'p0', 'p1', 'p2']
+    for term in angles.terms:
+        ids=[a.id for a in term.atoms]
         if ids[0]>ids[2]:
             ids[0], ids[2] = ids[2], ids[0]
         t=tuple(atypes[i] for i in ids)
         p = keyhash.get(t)
         if p is not None:
             i,p = p
-            angles.addTerm([mol.atom(x) for x in ids], plist[i])
+            term.param = plist[i]
             if 'ufc' in p[1]:
                 atoms=[mol.atom(ids[x]) for x in 0,2]
                 stretch.addTerm(atoms, ulist[i])
             continue
         for i, p in enumerate(params.angle):
             if p[0] == t:
-                angles.addTerm([mol.atom(x) for x in ids], plist[i])
+                term.param = plist[i]
                 if 'ufc' in p[1]:
                     atoms=[mol.atom(ids[x]) for x in 0,2]
                     stretch.addTerm(atoms, ulist[i])
@@ -532,22 +531,19 @@ def assign(params, mol):
     T2=time()
     # dihedrals
     trig=mol.addTableFromSchema('dihedral_trig')
+    print "dihedral_trig:", trig.nterms
     for _,d in params.dihedral:
         p = trig.params.addParam()
         for k,v in d.items(): p[k]=v
-    terms=list()
     keyhash=dict()
-    if 'dihedrals' in mol.auxtable_names:
-        terms=mol.auxtable('dihedrals').params
-    for a in terms:
-        ids=[a[x] for x in 'p0', 'p1', 'p2', 'p3']
+    for term in trig.terms:
+        ids=[a.id for a in term.atoms]
         if ids[0]>ids[3]:
             ids[0], ids[3] = ids[3], ids[0]
-        atoms=[mol.atom(x) for x in ids]
         t=tuple(atypes[i] for i in ids)
         p=keyhash.get(t)
         if p is not None:
-            trig.addTerm(atoms, p)
+            term.param=p
             continue
         tr=tuple(reversed(t))
         for i,(key,d) in enumerate(params.dihedral):
@@ -557,7 +553,7 @@ def assign(params, mol):
                 p=trig.params.param(i)
                 keyhash[t]=p
                 keyhash[tr]=p
-                trig.addTerm(atoms, p)
+                term.param=p
                 break
         else:
             raise RuntimeError, "no match for dihedral %s with types %s" % (ids,t)
@@ -565,14 +561,12 @@ def assign(params, mol):
     T3=time()
     # impropers
     impr=mol.addTableFromSchema('improper_harm')
+    print "improper_harm:", impr.nterms
     for _,d in params.improper:
         p = impr.params.addParam()
         for k,v in d.items(): p[k]=v
-    terms=list()
-    if 'impropers' in mol.auxtable_names:
-        terms=mol.auxtable('impropers').params
-    for a in terms:
-        ids=[a[x] for x in 'p0', 'p1', 'p2', 'p3']
+    for term in impr.terms:
+        ids=[a.id for a in term.atoms]
         if ids[0]>ids[3]:
             ids[0], ids[3] = ids[3], ids[0]
         t=tuple(atypes[i] for i in ids)
@@ -581,8 +575,7 @@ def assign(params, mol):
             wild=key[1]=='X' and key[2]=='X'
             out=key[0::3]
             if t==key or tr==key or (wild and (t[0::3]==out or tr[0::3]==out)):
-                atoms=[mol.atom(x) for x in ids]
-                impr.addTerm(atoms, impr.params.param(i))
+                term.param = impr.params.param(i)
                 break
         else:
             raise RuntimeError, "no match for improper %s with types %s" % (ids,t)
@@ -699,10 +692,6 @@ def assign(params, mol):
     #print "exclusions   %12f" % (T5-T4)
     #print "nonbonded    %12f" % (T6-T5)
     #print "pairs        %12f" % (T7-T6)
-
-    for t in 'angles', 'dihedrals', 'impropers', 'cmaps':
-        if t in mol.auxtable_names:
-            mol.delAuxTable(t)
 
 Params.assign = assign
 
