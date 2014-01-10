@@ -509,6 +509,9 @@ desres::msys::SystemPtr desres::msys::ImportPSF( std::string const& path ) {
     int nbonds = psf_start_block(fp, "NBOND"); /* get bond count */
 
     if (nbonds > 0) {
+        TermTablePtr stretch = AddTable(mol, "stretch_harm");
+        Id param = stretch->params()->addParam();
+        IdList ids(2);
         std::vector<int> from(nbonds), to(nbonds);
         if (!psf_get_bonds(fp, nbonds, &from[0], &to[0],
                     charmmext, namdfmt)) {
@@ -516,39 +519,70 @@ desres::msys::SystemPtr desres::msys::ImportPSF( std::string const& path ) {
         }
         for (int i=0; i<nbonds; i++) {
             mol->addBond(from[i]-1, to[i]-1);
+            ids[0]=from[i]-1;
+            ids[1]=to[i]-1;
+            stretch->addTerm(ids, param);
         }
     }
 
     /* read angles */
     int nangles = psf_start_block(fp, "NTHETA"); /* get angle count */
     if (nangles > 0) {
+        TermTablePtr table = AddTable(mol, "angle_harm");
+        Id param = table->params()->addParam();
+        IdList tmp(3);
         std::vector<int> ids(3*nangles);
         if (psf_get_angles(fp, nangles, &ids[0], charmmext)) {
             MSYS_FAIL("Error reading angles");
+        }
+        for (int i=0; i<nangles; i++) {
+            for (int j=0; j<3; j++) tmp[j] = ids[3*i+j]-1;
+            table->addTerm(tmp, param);
         }
     }
 
     /* read dihedrals */
     int ndihed = psf_start_block(fp, "NPHI");
     if (ndihed > 0) {
+        TermTablePtr table = AddTable(mol, "dihedral_trig");
+        Id param = table->params()->addParam();
+        IdList tmp(4);
         std::vector<int> ids(4*ndihed);
         if (psf_get_dihedrals_impropers(fp, ndihed, &ids[0], charmmext)) {
             MSYS_FAIL("Error reading dihedrals");
+        }
+        for (int i=0; i<ndihed; i++) {
+            for (int j=0; j<4; j++) tmp[j] = ids[4*i+j]-1;
+            table->addTerm(tmp, param);
         }
     }
 
     /* read impropers */
     int nimp = psf_start_block(fp, "NIMPHI");
     if (nimp > 0) {
+        TermTablePtr table = AddTable(mol, "improper_harm");
+        Id param = table->params()->addParam();
+        IdList tmp(4);
         std::vector<int> ids(4*nimp);
         psf_get_dihedrals_impropers(fp, nimp, &ids[0], charmmext);
+        for (int i=0; i<nimp; i++) {
+            for (int j=0; j<4; j++) tmp[j] = ids[4*i+j]-1;
+            table->addTerm(tmp, param);
+        }
     }
 
     /* read cross-terms (cmap) */
     int ncmap = psf_start_block(fp, "NCRTERM");
     if (ncmap> 0) {
+        TermTablePtr table = AddTable(mol, "torsiontorsion_cmap");
+        Id param = table->params()->addParam();
+        IdList tmp(8);
         std::vector<int> ids(8*ncmap);
         psf_get_dihedrals_impropers(fp, 2*ncmap, &ids[0], charmmext);
+        for (int i=0; i<ncmap; i++) {
+            for (int j=0; j<8; j++) tmp[j] = ids[8*i+j]-1;
+            table->addTerm(tmp, param);
+        }
     }
 
     return mol;
