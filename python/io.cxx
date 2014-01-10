@@ -105,6 +105,7 @@ namespace desres { namespace msys {
         def("ExportPDB", ExportPDB);
         def("ImportPrmTop", ImportPrmTop);
         def("ImportCrdCoordinates", ImportCrdCoordinates);
+        def("ImportPDBCoordinates", ImportPDBCoordinates);
         def("ImportMOL2", ImportMol2);
         def("ImportMOL2Many", import_mol2_many);
         def("ExportMOL2", ExportMol2);

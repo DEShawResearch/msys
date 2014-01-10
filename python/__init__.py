@@ -1620,6 +1620,14 @@ def Save(mol, path, append=False, structure_only=False):
     return _msys.Save(mol._ptr, str(path), _msys.Provenance.fromArgs(sys.argv),
             bool(append), bool(structure_only))
 
+def ReadPDBCoordinates(mol, path):
+    ''' Read coordinates and box from the given pdb file into the given 
+    System. 
+    '''
+    path=str(path)
+    if not isinstance(mol, System): raise TypeError, "mol must be a System"
+    _msys.ImportPDBCoordinates(mol._ptr, path)
+
 def ReadCrdCoordinates(mol, path):
     ''' Read coordinates from the given Amber crd file into the given 
     System. 

@@ -141,6 +141,8 @@ sdf/import.cxx
 pdb/pdb.cxx
 pdb/webpdb.c
 
+psf/import.cxx
+
 schema.cxx
 schema/schema.cxx
 

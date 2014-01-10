@@ -160,6 +160,26 @@ SystemPtr desres::msys::ImportPDB( std::string const& path ) {
     return mol;
 }
 
+void desres::msys::ImportPDBCoordinates(SystemPtr mol, std::string const& path) {
+    char pdbstr[PDB_BUFFER_LENGTH];
+    FILE* fd = fopen(path.c_str(), "r");
+    if (!fd) MSYS_FAIL("Failed opening pdb file for reading at " << path);
+
+    int indx=PDB_EOF;
+    Id id=0;
+    do {
+        indx = desres_msys_read_pdb_record(fd, pdbstr);
+        if (indx == PDB_ATOM) {
+            atom_t& atm = mol->atom(id++);
+            desres_msys_get_pdb_coordinates(pdbstr, &atm.x, &atm.y, &atm.z,
+                    NULL, NULL, &atm.formal_charge);
+        } else if (indx==PDB_CRYST1) {
+            double alpha, beta, gamma, a, b, c;
+            desres_msys_get_pdb_cryst1(pdbstr,&alpha,&beta,&gamma,&a,&b,&c);
+            ImportPDBUnitCell(a,b,c,alpha,beta,gamma,mol->global_cell[0]);
+        }
+    } while (indx!=PDB_EOF);
+}
 
 static double dotprod(const double* x, const double* y) {
     return x[0]*y[0] + x[1]*y[1] + x[2]*y[2];

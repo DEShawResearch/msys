@@ -3,6 +3,7 @@
 #include "dms.hxx"
 #include "mae.hxx"
 #include "pdb.hxx"
+#include "psf.hxx"
 #include "amber.hxx"
 #include "mol2.hxx"
 #include "xyz.hxx"
@@ -39,7 +40,8 @@ namespace {
         "MOL2",
         "XYZ",
         "SDF",
-        "WEBPDB"
+        "WEBPDB",
+        "PSF"
     };
 
     class DefaultIterator : public LoadIterator {
@@ -71,6 +73,7 @@ namespace desres { namespace msys {
         const char* MOL2= "mol2";
         const char* XYZ = "xyz";
         const char* SDF = "sdf,sdf.gz,sdfgz";
+        const char* PSF = "psf";
 
         if (match(path, DMS)) return DmsFileFormat;
         if (match(path, MAE)) return MaeFileFormat;
@@ -79,6 +82,7 @@ namespace desres { namespace msys {
         if (match(path,MOL2)) return Mol2FileFormat;
         if (match(path, XYZ)) return XyzFileFormat;
         if (match(path, SDF)) return SdfFileFormat;
+        if (match(path, PSF)) return PsfFileFormat;
         if (match_web(path))  return WebPdbFileFormat;
         return UnrecognizedFileFormat;
     }
@@ -121,6 +125,9 @@ namespace desres { namespace msys {
                 break;
             case SdfFileFormat:
                 m=ImportSdf(path);
+                break;
+            case PsfFileFormat:
+                m=ImportPSF(path);
                 break;
             case WebPdbFileFormat:
                 m=ImportWebPDB(path);
