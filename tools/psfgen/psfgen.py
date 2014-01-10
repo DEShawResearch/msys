@@ -450,7 +450,7 @@ class Params(object):
         elems=line.split()
         k1, k2, emin, rmin = line.split('!')[0].split()
         epsilon = -float(emin)
-        sigma=self.convert_sigma * float(rmin)
+        sigma=self.convert_sigma * float(rmin)/2
         self.nbfix.append((k1, k2, sigma, epsilon))
 
     def parse_cuthb(self, line):
@@ -472,7 +472,6 @@ def assign(params, mol):
 
     stretch=mol.addTableFromSchema('stretch_harm')
     pdict=dict()
-    print "stretch_harm:", stretch.nterms
     for t, d in params.bond:
         p = stretch.params.addParam()
         p['fc'] = d['fc']
@@ -488,7 +487,6 @@ def assign(params, mol):
     T1=time()
     # parameterize angles and urey-bradley terms
     angles=mol.addTableFromSchema('angle_harm')
-    print "angle_harm:", angles.nterms
     plist=[]
     ulist=dict()
     for t, d in params.angle:
@@ -532,7 +530,6 @@ def assign(params, mol):
     # dihedrals
     trig=mol.addTableFromSchema('dihedral_trig')
     offset=trig.params.nparams
-    print "dihedral_trig:", trig.nterms
     for _,d in params.dihedral:
         p = trig.params.addParam()
         for k,v in d.items(): p[k]=v
@@ -563,7 +560,6 @@ def assign(params, mol):
     # impropers
     impr=mol.addTableFromSchema('improper_harm')
     offset=impr.params.nparams
-    print "improper_harm:", impr.nterms
     for _,d in params.improper:
         p = impr.params.addParam()
         for k,v in d.items(): p[k]=v
@@ -603,8 +599,10 @@ def assign(params, mol):
     nb.params.addProp('sigma', float)
     nb.params.addProp('epsilon', float)
     nbdict=dict()
+    pdict=dict()
     for p in nb.params.params:
         t = p['type']
+        pdict[t]=p
         for key, d in params.nonbonded:
             if t==key:
                 p['sigma'] = d['sigma']
@@ -613,6 +611,20 @@ def assign(params, mol):
                 break
         else:
             raise RuntimeError, "No nonbonded param for '%s'" % t
+
+    # nbfix
+    if params.nbfix:
+        overrides = nb.override_params
+        overrides.addProp('sigma', float)
+        overrides.addProp('epsilon', float)
+        for k1, k2, sigma, epsilon in params.nbfix:
+            p1 = pdict.get(k1)
+            p2 = pdict.get(k2)
+            if p1 is None or p2 is None: continue
+            p = overrides.addParam()
+            p['sigma'] = sigma
+            p['epsilon'] = epsilon
+            nb.setOverride(p1, p2, p)
 
     T6=time()
 
