@@ -1,4 +1,5 @@
 #include "../psf.hxx"
+#include "../schema.hxx"
 #include <stdio.h>
 
 //using namespace desres::msys;
@@ -467,6 +468,12 @@ desres::msys::SystemPtr desres::msys::ImportPSF( std::string const& path ) {
     SystemPtr mol = System::create();
     SystemImporter imp(mol);
 
+    typedef std::map<std::string, Id> TypeMap;
+    TypeMap types;
+    TermTablePtr nb = AddNonbonded(mol, "vdw_12_6", "arithmetic/geometric");
+    ParamTablePtr params = nb->params();
+    Id col = params->addProp("type", StringType);
+
     /* read atoms */
     for (int i=0; i<natoms; i++) {
         char name[8];
@@ -490,6 +497,12 @@ desres::msys::SystemPtr desres::msys::ImportPSF( std::string const& path ) {
         atom_t& atm = mol->atomFAST(id);
         atm.mass = mass;
         atm.charge = charge;
+        if (types.find(type)==types.end()) {
+            Id param = params->addParam();
+            types[type] = param;
+            params->value(param, col) = type;
+        } 
+        nb->addTerm(IdList(1,id), types[type]);
     }
 
     /* read bonds */
