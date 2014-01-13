@@ -24,8 +24,9 @@ def print_info(mol, ct=None):
     ax,ay,az=mol.cell[0]
     bx,by,bz=mol.cell[1]
     cx,cy,cz=mol.cell[2]
+    npseudo = len(mol.selectIds('atomicnumber 0'))
     print "Structure", ctname
-    print "%12s: %8d" % ("Atoms", mol.natoms)
+    print "%12s: %8d (%d pseudo)" % ("Atoms", mol.natoms, npseudo)
     print "%12s: %8d" % ("Bonds", mol.nbonds)
     print "%12s: %8d" % ("Residues", mol.nresidues)
     print "%12s: %8d" % ("Chains", mol.nchains)
@@ -37,9 +38,10 @@ def print_info(mol, ct=None):
     for sel, title in (
             ('protein', 'Protein'),
             ('lipid', 'Lipid'),
+            ('nucleic', 'Nucleic'),
             ('ions', 'Ions'),
             ('water', 'Water'),
-            ('not (protein or lipid or ions or water)', 'Other')):
+            ('not (protein or lipid or nucleic or ions or water)', 'Other')):
 
         # using the raw ids to count unique items is faster than
         # making sets out of the high level objects.
