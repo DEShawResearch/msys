@@ -10,6 +10,7 @@ Tile a system system by nx, ny, nz
 import sys, os
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
 import msys
+import numpy
 
 def main():
     import argparse
@@ -49,6 +50,12 @@ def main():
                 mol.translate(delta)
                 out._ptr.append(mol._ptr, msys._msys.BadId)
                 mol.translate(-delta)
+
+    # set up the unit cell
+    out.setCell(numpy.dot(numpy.diag((nx,ny,nz)), mol.getCell()))
+
+    # copy nonbonded info
+    out.nonbonded_info = mol.nonbonded_info
 
     print "Eliminating redundant forcefield terms"
     out.coalesceTables()

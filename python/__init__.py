@@ -900,6 +900,9 @@ class System(object):
     def nonbonded_info(self):
         ''' NonbondedInfo for this System '''
         return self._ptr.nonbonded_info
+    @nonbonded_info.setter
+    def nonbonded_info(self, nbinfo):
+        self._ptr.nonbonded_info = nbinfo
 
     @property
     def natoms(self):
