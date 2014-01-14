@@ -1,3 +1,8 @@
+1.7.53 FIXED: dms-tile sets nonbonded_info and cell.
+       IMPROVED: dms-info shows counts of pseudos and nucleic.
+       NEW: Load handles PSF files.
+       NEW: ReadPDBCoordinates() function.
+    
 1.7.52 CentOS6 portability.
 
 1.7.49 FIXED: mol2 export was missing residues not in the first chain.
