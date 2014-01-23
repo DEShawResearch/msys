@@ -1,3 +1,5 @@
+1.7.54 FIXED: pdb export includes insertion code.
+
 1.7.53 FIXED: dms-tile sets nonbonded_info and cell.
        IMPROVED: dms-info shows counts of pseudos and nucleic.
        NEW: Load handles PSF files.
