@@ -401,6 +401,8 @@ static int desres_msys_write_raw_pdb_record(FILE *fd, const char *recordname,
     chainchar = ' ';
   }
 
+  char insertchar = insertion && *insertion ? *insertion : ' ';
+
   /* make sure the segname or resname do not overflow the format */ 
   strncpy(segnamebuf,segname,4);
   segnamebuf[4] = '\0';
@@ -430,7 +432,7 @@ static int desres_msys_write_raw_pdb_record(FILE *fd, const char *recordname,
   rc = fprintf(fd,
          "%-6s%5s %-4s%c%-4s%c%4s%c   %8.3f%8.3f%8.3f%6.2f%6.2f      %-4s%2s%2s\n",
          recordname, indexbuf, namebuf, altlocchar, resnamebuf, chainchar, 
-         residbuf, insertion[0], x, y, z, occ, beta, segnamebuf, elementsymbol,
+         residbuf, insertchar, x, y, z, occ, beta, segnamebuf, elementsymbol,
          chargebuf);
 
   return (rc > 0);

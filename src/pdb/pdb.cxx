@@ -284,12 +284,12 @@ void desres::msys::ExportPDB(SystemPtr mol, std::string const& path) {
         BOOST_FOREACH(Id res, mol->residuesForChain(chn)) {
             int resid = mol->residue(res).resid;
             const char* resname = mol->residue(res).name.c_str();
+            const char* insertion = mol->residue(res).insertion.c_str();
 
             BOOST_FOREACH(Id atm, mol->atomsForResidue(res)) {
                 int anum = mol->atom(atm).atomic_number;
                 const char* name = mol->atom(atm).name.c_str();
                 const char* elementsym = AbbreviationForElement(anum);
-                const char* insertion = " ";
                 const char* altloc = " ";
                 double x = mol->atom(atm).x;
                 double y = mol->atom(atm).y;
