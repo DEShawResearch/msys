@@ -29,12 +29,13 @@ def apply(mol, T, seed=None):
 
 def remove_drift(mol):
     ''' Remove center of mass motion.  Returns the original center of mass
-    velocity. 
+    velocity.   Zero out the velocity of pseudoparticles.
     '''
     vel = mol.getVelocities()
     mass = [a.mass for a in mol.atoms]
     avg = numpy.average(vel, axis=0, weights=mass)
     vel -= avg
+    vel[mol.selectIds('atomicnumber 0')]=0
     mol.setVelocities(vel)
     return avg
 

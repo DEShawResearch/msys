@@ -1,3 +1,6 @@
+1.7.55 FIXED: dms-thermalize with --remove-drift leaves pseudos with zero
+              velocity.
+
 1.7.54 FIXED: pdb export includes insertion code.
 
 1.7.53 FIXED: dms-tile sets nonbonded_info and cell.
