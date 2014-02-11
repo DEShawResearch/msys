@@ -123,8 +123,8 @@ def main():
         w=Wrapper(mol, center=opts.center, glue=opts.glue)
         w.wrap()
 
-    print "Writing DMS file", args[1]
-    msys.SaveDMS(mol, args[1])
+    print "Writing", args[1]
+    msys.Save(mol, args[1])
 
 if __name__=="__main__": main()
 
