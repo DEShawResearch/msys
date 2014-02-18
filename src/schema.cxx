@@ -53,15 +53,11 @@ namespace desres { namespace msys {
         if (table) return table;
         for (unsigned i=0; i<schema_count(); i++) {
             schema_t s = schema(i);
-            if (name!=s.name) continue;
+            if (type!=s.name) continue;
             table = sys->addTable(name, s.nsites);
             configure_table(&s, table);
         }
-        if (!table) {
-            std::stringstream ss;
-            ss << "Unknown DMS table schema '" << type << "'";
-            throw std::runtime_error(ss.str());
-        }
+        if (!table) MSYS_FAIL("Unknown DMS table schema: " << type); 
         return table;
     }
 

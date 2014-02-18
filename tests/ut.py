@@ -1238,6 +1238,12 @@ class TestMain(unittest.TestCase):
             m.addNonbondedFromSchema(s)
             m.nonbonded_info.vdw_funct=""
 
+    def testSchemaWithName(self):
+        m=msys.CreateSystem()
+        t=m.addTableFromSchema('dihedral_trig', 'my_name')
+
+
+
     def testTableDMS(self):
         assert 'stretch_harm' in msys.TableSchemas()
         assert 'vdw_12_6' in msys.NonbondedSchemas()
