@@ -3,7 +3,7 @@
 #include "elements.hxx"
 #include "graph.hxx"
 #include "geom.hxx"
-#include <periodicfix/contacts.hxx>
+#include "contacts.hxx"
 #include <stdio.h>
 
 namespace {
@@ -12,7 +12,7 @@ namespace {
         SystemPtr mol;
         BondFinder(SystemPtr m) : mol(m) {}
 
-        bool exclude(Id i, Id j) {
+        bool exclude(Id i, Id j) const {
             if (i>=j) return true;
             int ai = mol->atom(i).atomic_number;
             int aj = mol->atom(j).atomic_number;
@@ -22,7 +22,7 @@ namespace {
             return false;
         }
 
-        void operator()(Id i, Id j, double d2) {
+        void operator()(Id i, Id j, double d2) const {
             if (d2>0.001) {
                 int ai = mol->atom(i).atomic_number;
                 int aj = mol->atom(j).atomic_number;
@@ -146,17 +146,17 @@ namespace desres { namespace msys {
         }
         BondFinder finder(mol);
         if (mol->ctCount()==1) {
-            periodicfix::find_contacts(cutoff, &pos[0],
-                                       atoms.begin(), atoms.end(),
-                                       atoms.begin(), atoms.end(),
-                                       finder);
+            find_contacts(cutoff, &pos[0], (Float*)NULL,
+                          atoms.begin(), atoms.end(),
+                          atoms.begin(), atoms.end(),
+                          finder);
         } else {
             for (Id i=0, n=mol->ctCount(); i<n; i++) {
                 IdList const& atoms = mol->atomsForCt(i);
-                periodicfix::find_contacts(cutoff, &pos[0],
-                                           atoms.begin(), atoms.end(),
-                                           atoms.begin(), atoms.end(),
-                                           finder);
+                find_contacts(cutoff, &pos[0], (Float*)NULL,
+                              atoms.begin(), atoms.end(),
+                              atoms.begin(), atoms.end(),
+                              finder);
             }
         }
         /* if a hydrogen has multiple bonds, keep the shortest one */
