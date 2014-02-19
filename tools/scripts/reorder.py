@@ -1,18 +1,19 @@
 
 import msys, sys
-import periodicfix as PF
 import numpy as NP
+from msys import pfx
 
 def compute_aligned_rmsd(rpos, ratoms, tpos, patoms):
     rx = rpos[[a.id for a in ratoms]]
     px = tpos[[a.id for a in patoms]]
     rx -= rx.mean(0)
     px -= px.mean(0)
-    mat = PF.compute_alignment(rx, px, None)
+    mat, _ = pfx.aligned_rmsd(rx, px)
     tx = NP.dot(px, mat)
-    tx -= rx    # deltas
-    tx *= tx    # square deltas
-    return tx.sum()
+    tx -= rx
+    tx *= tx
+    foo = tx.sum()
+    return foo 
 
 def Reorder(ref, tgt, refsel, targetsel):
     ''' Return a clone of tgt with atoms in each residue reordered to

@@ -1,7 +1,7 @@
 #!/usr/bin/env desres-exec
 # -*- python -*-
 #{
-# desres-cleanenv -m numpy/1.6.2-31A/lib-python -- python $0 "$@"
+# desres-cleanenv -m numpy/1.6.2-33A/lib-python -- python $0 "$@"
 #}
 
 '''

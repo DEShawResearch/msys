@@ -6,7 +6,8 @@ import os, sys, unittest
 TMPDIR=os.getenv('TMPDIR', 'objs/Linux/x86_64')
 sys.path.insert(0,os.path.join(TMPDIR, 'lib', 'python'))
 import msys
-from msys import knot, reorder
+from msys import knot, reorder, pfx
+from time import time
 import numpy as NP
 import json
 import gzip
@@ -2006,6 +2007,141 @@ class TestAtomMatch(unittest.TestCase):
             (27, 24), (28, 25), (38, 26), (39, 27), (40, 28), (41, 29),
             (42, 30), (43, 31), (44, 32), (45, 33), (46, 34), (47, 35),
             (48, 36), (49, 37), (50, 38), (51, 39), (52, 40), (53, 41)]))
+
+
+
+
+class TestWrap(unittest.TestCase):
+
+    def setUp(self):
+        bonds=(
+                (0,1), (0,2),
+                (4,3), (4,6), (5,6),
+                (7,8), (9,8), (9,10), (10,11), (11,7),
+                )
+        
+        agg = (1,8,9)
+        
+        box = NP.array([
+                 [0.70710678, 0.70710678, 0.],
+                 [-1.41421356, 1.41421356, 0.],
+                 [0, 0, 3]])
+        
+        pos = NP.array([
+                # first fragment
+                0,2,0,
+                0,4.1,0,
+                .1, 2.2, .3,
+                # second fragment */
+                3,1,3,
+                3,1.1,3,
+                3.1, 1.2, 3.3,
+                3.2, 1.0, 6.5,
+                # third fragment */
+                1,0,2,
+                1,0.8,2,
+                1.1, 4.2, 2.3,
+                0.8, 0.0, 2.5,
+                0.9, 0.0, 2.1], 'f')
+
+        pos = pos.reshape((12,3))
+        top=[[] for _ in range(len(pos))]
+        for i,j in bonds:
+            top[i].append(j)
+            top[j].append(i)
+
+        self.top = top
+        self.box = box
+        self.pos = pos
+        self.agg = agg
+
+    def testBondsGlueAggWrap(self):
+        p=pfx.Pfx(self.top, fixbonds=True)
+        p.glue(self.agg)
+        p.apply(self.pos, self.box)
+        NP.testing.assert_almost_equal(
+            self.box,
+            [[0.7071067690849304, 0.7071067690849304, 0.0], 
+             [-1.4142135381698608, 1.4142135381698608, 0.0], 
+             [0.0, 0.0, 3.0]]
+            )
+        NP.testing.assert_almost_equal(
+            self.pos,
+            [[-1.4142135381698608, 0.5857864618301392, 0.0], 
+            [-0.7071067690849304, 0.564466118812561, 0.0], 
+            [-1.314213514328003, 0.785786509513855, 0.30000001192092896], 
+            [-0.5355339050292969, 0.29289329051971436, 0.0],
+            [-0.5355339050292969, 0.39289331436157227, 0.0], 
+            [-0.4355340003967285, 0.4928933382034302, 0.2999999523162842], 
+            [-0.33553385734558105, 0.29289329051971436, 0.5], 
+            [0.2928932309150696, -0.7071067690849304, -1.0], 
+            [-0.41421353816986084, -0.6142135262489319, -1.0],
+            [-0.31421345472335815, -0.042640864849090576, -0.7000000476837158],
+            [0.09289324283599854, -0.7071067690849304, -0.5], 
+            [0.19289320707321167, -0.7071067690849304, -0.9000000953674316]])
+
+
+class TestSvd(unittest.TestCase):
+    def testNice(self):
+        A = NP.array([
+            [1,2,3],
+            [3,2,0],
+            [4,1,5],
+            ]);
+
+        u,w,vt = NP.linalg.svd(A)
+        U,W,V = pfx.svd_3x3(A)
+        u,w,vt = NP.linalg.svd(A)
+        U,W,V = pfx.svd_3x3(A)
+        u,w,vt = NP.linalg.svd(A)
+        U,W,V = pfx.svd_3x3(A)
+        t0=time()
+        u,w,vt = NP.linalg.svd(A)
+        t1=time()
+        U,W,V = pfx.svd_3x3(A)
+        t2=time()
+        print "\nNP %8.3fms PFX %8.3fms" % ((t1-t0)*1000, (t2-t1)*1000)
+        u[:,0] *= -1
+        u[:,2] *= -1
+        v = vt.transpose()
+        v[:,0] *= -1
+        v[:,2] *= -1
+        NP.testing.assert_almost_equal(w,W)
+        NP.testing.assert_almost_equal(u,U)
+        NP.testing.assert_almost_equal(v,V)
+
+    def testSingularRows(self):
+        A = NP.array([
+            [1,2,3],
+            [1,2,3],
+            [4,1,5],
+            ]);
+
+        u,w,vt = NP.linalg.svd(A)
+        U,W,V = pfx.svd_3x3(A)
+        u[:,0] *= -1
+        v = vt.transpose()
+        v[:,0] *= -1
+        v[:,2] *= -1
+        NP.testing.assert_almost_equal(w,W)
+        NP.testing.assert_almost_equal(u,U)
+        NP.testing.assert_almost_equal(v,V)
+
+    def testSingularCols(self):
+        A = NP.array([
+            [1,1,3],
+            [3,3,0],
+            [4,4,5],
+            ]);
+
+        u,w,vt = NP.linalg.svd(A)
+        U,W,V = pfx.svd_3x3(A)
+        u[:,0] *= -1
+        v = vt.transpose()
+        v[:,0] *= -1
+        NP.testing.assert_almost_equal(w,W)
+        NP.testing.assert_almost_equal(u,U)
+        NP.testing.assert_almost_equal(v,V)
 
 if __name__=="__main__":
     unittest.main(verbosity=2)

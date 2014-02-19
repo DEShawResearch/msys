@@ -1,8 +1,7 @@
 #!/usr/bin/env desres-exec
 # -*- python -*-
 #{
-# exec desres-cleanenv -m numpy/1.6.2-31A/lib-python \
-# -m periodicfix/2.4.9/lib-python \
+# exec desres-cleanenv -m numpy/1.6.2-33A/lib-python \
 # -- python $0 "$@"
 #}
 

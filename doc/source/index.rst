@@ -40,6 +40,7 @@ Contents:
    termtable
    system
    nonbonded
+   pfx
 
 
 Command line tools
