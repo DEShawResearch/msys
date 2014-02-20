@@ -286,6 +286,26 @@ namespace desres { namespace msys {
             bool operator!=(iterator const& c) const { return !equal(c); }
         };
 
+        template <typename T>
+        void getPositions(T setter) const {
+            for (iterator i=atomBegin(), e=atomEnd(); i!=e; ++i) {
+                atom_t const& a = atomFAST(*i);
+                *setter++ = a.x;
+                *setter++ = a.y;
+                *setter++ = a.z;
+            }
+        }
+
+        template <typename T>
+        void setPositions(T getter) {
+            for (iterator i=atomBegin(), e=atomEnd(); i!=e; ++i) {
+                atom_t& a = atomFAST(*i);
+                a.x = *getter++;
+                a.y = *getter++;
+                a.z = *getter++;
+            }
+        }
+
         /* iterators over element ids */
         iterator atomBegin() const { 
             return iterator(0, _deadatoms.empty() ? NULL : &_deadatoms); 

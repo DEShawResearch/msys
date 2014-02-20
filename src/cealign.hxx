@@ -151,7 +151,7 @@ namespace desres { namespace msys {
         double find_best(PathList const& paths, unsigned m,
                          const unsigned* A, const scalar* Apos,
                          const unsigned* B, const scalar* Bpos,
-                         scalar* mat_3x3) {
+                         scalar* mat_3x3, scalar* T1, scalar* T2) {
             if (paths.empty()) return 0;
             double best_rmsd=HUGE_VAL;
             scalar mat[9];
@@ -174,16 +174,18 @@ namespace desres { namespace msys {
                         pos.insert(pos.end(), pb, pb+3);
                     }
                 }
-                scalar tmp[3];
-                pfx::compute_center(m*sz, NULL, &ref[0], tmp);
-                pfx::apply_shift(m*sz, &ref[0], -tmp[0], -tmp[1], -tmp[2]);
-                pfx::compute_center(m*sz, NULL, &pos[0], tmp);
-                pfx::apply_shift(m*sz, &pos[0], -tmp[0], -tmp[1], -tmp[2]);
+                scalar tmp1[3], tmp2[3];
+                pfx::compute_center(m*sz, NULL, &ref[0], tmp1);
+                pfx::apply_shift(m*sz, &ref[0], -tmp1[0], -tmp1[1], -tmp1[2]);
+                pfx::compute_center(m*sz, NULL, &pos[0], tmp2);
+                pfx::apply_shift(m*sz, &pos[0], -tmp2[0], -tmp2[1], -tmp2[2]);
                 double rmsd = pfx::compute_alignment(m*sz, NULL,
                                                 &ref[0], &pos[0], mat);
-                if (i==0 || rmsd<best_rmsd) {
+                if (rmsd<best_rmsd) {
                     best_rmsd=rmsd;
                     memcpy(mat_3x3, mat, sizeof(mat));
+                    memcpy(T1, tmp1, sizeof(tmp1));
+                    memcpy(T2, tmp2, sizeof(tmp2));
                 }
             }
             return best_rmsd;
@@ -216,7 +218,7 @@ namespace desres { namespace msys {
          * the rmsd of the alignment. */
         double compute(unsigned nA, const unsigned* A, const scalar* Apos,
                        unsigned nB, const unsigned* B, const scalar* Bpos,
-                       scalar* mat_3x3) {
+                       scalar* rot, scalar* T1, scalar* T2) const {
 
             /* precalculate pairwise distances */
             //printf("calc distance for dm A: nA %u first few A %u %u\n",
@@ -231,7 +233,7 @@ namespace desres { namespace msys {
             PathList paths = find_paths(nA, dmA, nB, dmB, S);
 
             /* find the optimal path based on rmsd */
-            return find_best(paths, m, A, Apos, B, Bpos, mat_3x3);
+            return find_best(paths, m, A, Apos, B, Bpos, rot, T1, T2);
         }
     };
 
