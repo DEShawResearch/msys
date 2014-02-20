@@ -8,12 +8,8 @@ def compute_aligned_rmsd(rpos, ratoms, tpos, patoms):
     px = tpos[[a.id for a in patoms]]
     rx -= rx.mean(0)
     px -= px.mean(0)
-    mat, _ = pfx.aligned_rmsd(rx, px)
-    tx = NP.dot(px, mat)
-    tx -= rx
-    tx *= tx
-    foo = tx.sum()
-    return foo 
+    _, rmsd = pfx.aligned_rmsd(rx, px)
+    return rmsd
 
 def Reorder(ref, tgt, refsel, targetsel):
     ''' Return a clone of tgt with atoms in each residue reordered to
