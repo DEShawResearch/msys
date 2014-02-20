@@ -1,5 +1,7 @@
-1.7.55 FIXED: dms-thermalize with --remove-drift leaves pseudos with zero
-              velocity.
+1.7.55 FIXED: dms-thermalize with --remove-drift doesn't accelerate pseudos.
+       FIXED: addTableWithSchema accepts user-supplied name.
+       IMPROVED: dms-frame gets otuput format from path name.
+       NEW: Use pfx instead of periodicfix in dms-frame and other places.
 
 1.7.54 FIXED: pdb export includes insertion code.
 
