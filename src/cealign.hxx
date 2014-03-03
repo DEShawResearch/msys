@@ -3,29 +3,35 @@
 
 #include <vector>
 #include <cmath>
+#include <stdio.h>
 #include <cassert>
+#include <algorithm>
 
 #include <pfx/rms.hxx>
 #include <pfx/cell.hxx>
+
+#include "types.hxx"
 
 namespace desres { namespace msys {
 
     template <typename scalar>
     class CEAlign {
+        typedef std::pair<unsigned, unsigned> AFP;
+        typedef std::vector<AFP> Path;
+        typedef std::vector<Path> PathList;
+
         const unsigned m;   /* window size */
         const unsigned G;   /* max gap between AFPs */
         const scalar D0;    /* threshold for single AFP */
         const scalar D1;    /* threshold for average pairwise AFPs */
 
         typedef std::vector<scalar> Vec;
-        typedef std::pair<unsigned, unsigned> AFP;
-        typedef std::vector<AFP> Path;
-        typedef std::vector<Path> PathList;
 
         static
-        Vec calc_distance_matrix(unsigned n, const unsigned* inds, 
+        Vec calc_distance_matrix(IdList const& inds,
                                  const scalar* pos) {
 
+            unsigned n = inds.size();
             Vec dm(n*n);
             for (unsigned i=0; i<n; i++) {
                 const scalar* pi = pos+3*inds[i];
@@ -70,6 +76,7 @@ namespace desres { namespace msys {
                         }
                     }
                     S[i*nB+j] = score/sz;
+                    //printf("%d %d %f\n",i,j,score/sz);
                 }
             }
             return S;
@@ -208,32 +215,53 @@ namespace desres { namespace msys {
         , D1(pair_threshold)
         {}
 
+        unsigned window_size() const { return m; }
+
         /* Construct a CEAlign engine with the published defaults */
         static CEAlign<scalar> WithDefaults() {
             return CEAlign(8, 30, scalar(3.0), scalar(4.0));
         }
 
-        /* Find a good mapping of atoms B onto atoms in A.
-         * Write the alignment matrix to mat, and return 
-         * the rmsd of the alignment. */
-        double compute(unsigned nA, const unsigned* A, const scalar* Apos,
-                       unsigned nB, const unsigned* B, const scalar* Bpos,
-                       scalar* rot, scalar* T1, scalar* T2) const {
+        typedef std::pair<IdList, IdList> Map;
+        typedef std::vector<Map> MapList;
+
+        Map path_to_map(Path const& path) const {
+            Map map;
+            for (Path::const_iterator i=path.begin(), e=path.end(); i!=e; ++i) {
+                unsigned a0 = i->first;
+                unsigned b0 = i->second;
+                for (unsigned k=0; k<m; k++) {
+                    map.first.push_back(a0+k);
+                    map.second.push_back(b0+k);
+                }
+            }
+            return map;
+        }
+
+        /* Find good mappings of atoms B onto atoms in A. */
+        MapList compute(IdList const& A, const scalar* Apos,
+                        IdList const& B, const scalar* Bpos) const {
 
             /* precalculate pairwise distances */
-            //printf("calc distance for dm A: nA %u first few A %u %u\n",
-                    //nA, A[0], A[1]);
-            Vec dmA = calc_distance_matrix(nA, A, Apos);
-            Vec dmB = calc_distance_matrix(nB, B, Bpos);
+            Vec dmA = calc_distance_matrix(A, Apos);
+            Vec dmB = calc_distance_matrix(B, Bpos);
 
-            /* precalcuate AFP similarities using metric (ii) */
-            Vec S = calc_similarities(nA, dmA, nB, dmB);
+            /* precalculate AFP similarities using metric (ii) */
+            Vec S = calc_similarities(A.size(), dmA, B.size(), dmB);
 
             /* find the paths */
-            PathList paths = find_paths(nA, dmA, nB, dmB, S);
+            PathList paths = find_paths(A.size(), dmA, B.size(), dmB, S);
+            if (paths.empty()) return MapList();
 
-            /* find the optimal path based on rmsd */
-            return find_best(paths, m, A, Apos, B, Bpos, rot, T1, T2);
+            /* keep only the longest paths */
+            size_t longest = paths.back().size();
+            PathList::iterator it = paths.begin(), end=paths.end();
+            while (it->size() < longest) ++it;
+
+            /* convert paths into full mappings */
+            MapList maps;
+            for (; it!=end; ++it) maps.push_back(path_to_map(*it));
+            return maps;
         }
     };
 

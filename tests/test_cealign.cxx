@@ -28,6 +28,7 @@ int main(int argc, char *argv[]) {
     m1->getPositions(std::back_inserter(p1));
     m2->getPositions(std::back_inserter(p2));
 
+#if 0
     CEAlign<double> engine = CEAlign<double>::WithDefaults();
     double R[9], T1[3], T2[3];
     double rmsd = engine.compute(ca1.size(), &ca1[0], &p1[0],
@@ -42,6 +43,7 @@ int main(int argc, char *argv[]) {
         printf("Saving to %s\n", argv[3]);
         Save(m2, argv[3], Provenance::fromArgs(argc,argv), 0);
     }
+#endif
     return 0;
 }
 
