@@ -131,6 +131,21 @@ SystemPtr iterator::next() {
                         Id res = mol->addResidue(chn);
                         mol->residue(res).resid = nres+1;
                         mol->residue(nres).name = resname;
+                        // maybe the resid is encoded as digits at the end
+                        // of the resname.
+                        {
+                            char* p=resname;
+                            while (*p && isalpha(*p)) ++p;
+                            if (*p) {
+                                char* end=p;
+                                int resid = strtol(p, &end, 10);
+                                if (*end=='\0') {
+                                    mol->residue(res).resid = resid;
+                                    *p = '\0';
+                                    mol->residue(res).name = resname;
+                                }
+                            }
+                        }
                     }
                     Id res = mol->residuesForChain(chn).at(resid-1);
                     Id atm = mol->addAtom(res);
@@ -191,5 +206,6 @@ SystemPtr iterator::next() {
             default: ;
         }
     }
+    mol->analyze();
     return mol;
 }

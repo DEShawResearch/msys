@@ -62,10 +62,11 @@ static void export_ct(SystemPtr mol, Id ct, FILE* fd,
                        : mol->atomPropValue(i,atype).asString().c_str();
 
         /* write the atom line */
+        const char* bb = atm.type==AtomProBack ? "BACKBONE" : "";
         fprintf(fd, 
-           "%7d %-4s      %8.4f  %8.4f  %8.4f %-6s %4d  %4s  %8.4f\n", 
+           "%4d  %-4s  %8.4f  %8.4f  %8.4f %-5s %4d  %4s%-4d %7.4f %s\n", 
            atomid, aname.c_str(), atm.x, atm.y, atm.z,
-           type.c_str(), resid, rname.c_str(), atm.charge);
+           type.c_str(), resid, rname.c_str(), res.resid, atm.charge, bb);
     }
 
     /* bond records */
@@ -99,9 +100,9 @@ static void export_ct(SystemPtr mol, Id ct, FILE* fd,
         chain_t const& chn = mol->chain(res.chain);
         Id ri = mol->atomsForResidue(id).at(0);
         Id si = std::lower_bound(atoms.begin(), atoms.end(), ri)-atoms.begin();
-        fprintf(fd, "%7u %-4s %7u %-8s 1 %-4s\n",
+        fprintf(fd, "%7u %4s%-4d %4u %-8s 1 %-4s\n",
                 i+1,                                /* residue id */
-                res.name.c_str(),                   /* residue name */
+                res.name.c_str(), res.resid,        /* residue name */
                 si+1,                               /* root atom */
                 residues.size()==1 ? "GROUP" : "RESIDUE",
                 chn.name.c_str());
