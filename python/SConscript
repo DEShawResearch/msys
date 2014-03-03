@@ -31,6 +31,7 @@ env.AddPythonModule('__init__.py', prefix='msys')
 env.AddPythonModule('atomsel.py', prefix='msys')
 
 ceext=env.AddPythonExtension('_cealign', 'cealign.cxx', prefix='msys')
+env.Requires(ceext, libmsys)
 env.AddPythonModule('cealign.py', prefix='msys')
 
 pfxenv=env.Clone()
