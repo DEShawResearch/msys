@@ -240,6 +240,8 @@ class Residue(Handle):
 class Chain(Handle):
     __slots__ = ()
 
+    def __repr__(self): return '<Chain %s>' % self.name
+
     def data(self): return self._ptr.chain(self._id)
 
     def remove(self):
