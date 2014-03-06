@@ -11,29 +11,46 @@ import sys, os
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
 import msys
 import numpy
+import itertools
 
 def main():
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('ifile', help='input file')
-    parser.add_argument('ofile', help='output file')
+    parser.add_argument('ifile', nargs='+', help='input file(s)')
+    parser.add_argument('-o', '--output', required=True, help='output file')
     parser.add_argument('--nx', default=1, type=int, 
             help='tiles in the x direction')
     parser.add_argument('--ny', default=1, type=int, 
             help='tiles in the y direction')
     parser.add_argument('--nz', default=1, type=int, 
             help='tiles in the z direction')
+    parser.add_argument('--allow-unequal-cells', action='store_true', 
+            default=False, help='allow input files to have different cell shapes')
     args=parser.parse_args()
-    ifile, ofile = args.ifile, args.ofile
+    ifile, ofile = args.ifile, args.output
     nx, ny, nz = args.nx, args.ny, args.nz
+    if nx<1 or ny<1 or nz<1:
+        print "Tile dimensions must be positive"
+        return 1
     n = nx*ny*nz
+    if n%len(ifile)!=0:
+        print "Number of input files (%d) is incommensurate with number of replicas (%d)" % (len(ifile), n)
+        return 1
 
-    print "Loading '%s'" % ifile
-    mol = msys.Load(ifile)
+    print "Loading", ', '.join(ifile)
+    mols = map(msys.Load, ifile)
+    cell = mols[0].getCell()
+    for i in range(1,len(mols)):
+        icell = mols[i].getCell().tolist()
+        if cell.tolist() != icell:
+            print "The global cell of the %d'th molecule differs from the first" % (i+1)
+            print cell.tolist(), "!=", icell
+            if not args.allow_unequal_cells: return 1
 
-    print "Tiling %d x %d x %d: %d total copies, %d atoms" % (
-            nx,ny,nz,n,n*mol.natoms)
-    cell = mol.getCell()
+    cycle = itertools.cycle(mols)
+
+    print "Tiling %d x %d x %d: %d total copies" % (
+            nx,ny,nz,n)
     xshift = -0.5 * (nx-1)*cell[0]
     yshift = -0.5 * (ny-1)*cell[1]
     zshift = -0.5 * (nz-1)*cell[2]
@@ -47,12 +64,13 @@ def main():
             for k in range(nz):
                 zdelta = zshift + k*cell[2]
                 delta = xdelta + ydelta + zdelta
+                mol = cycle.next()
                 mol.translate(delta)
                 out._ptr.append(mol._ptr, msys._msys.BadId)
                 mol.translate(-delta)
 
     # set up the unit cell
-    out.setCell(numpy.dot(numpy.diag((nx,ny,nz)), mol.getCell()))
+    out.setCell(numpy.dot(numpy.diag((nx,ny,nz)), cell))
 
     # copy nonbonded info
     out.nonbonded_info = mol.nonbonded_info
@@ -66,6 +84,6 @@ def main():
 
     print "Done"
 
-if __name__=="__main__": main()
+if __name__=="__main__": exit(main())
 
 # vim: filetype=python
