@@ -1094,10 +1094,19 @@ class System(object):
         return [TermTable(self._ptr.table(x)) for x in self._ptr.tableNames()]
 
     def table(self, name):
-        ''' Get the TermTable with the given name '''
+        ''' Get the TermTable with the given name, raising ValueError if
+        not present.
+        '''
         ptr=self._ptr.table(name)
         if ptr is None:
             raise ValueError, "No such table '%s'" % name
+        return TermTable(ptr)
+
+    def getTable(self, name):
+        ''' Return the TermTable with the given name, or None if not present.
+        '''
+        ptr=self._ptr.table(name)
+        if ptr is None: return None
         return TermTable(ptr)
 
     def addTable(self, name, natoms, params = None):
