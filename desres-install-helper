@@ -80,6 +80,7 @@ EOF
 $hdr
 module-whatis {$NAME - $DESCRIPTION}
 
+prereq $BOOST/Release/lib
 prepend-path DESRES_MODULE_CPPFLAGS -I$PREFIX/include
 prepend-path DESRES_MODULE_LDFLAGS "-L$PREFIX/lib -Wl,-rpath,$PREFIX/lib"
 prepend-path DESRES_MODULE_LDLIBS   -lmsys
