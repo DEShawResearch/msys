@@ -657,6 +657,16 @@ void SystemImporter::initialize(IdList const& atoms) {
     }
 }
 
+bool SystemImporter::terminateChain(std::string chain, std::string segid, 
+                                    Id ct ) {
+    boost::trim(chain);
+    boost::trim(segid);
+    ChnMap::iterator it=chnmap.find(ChnKey(ct, chain, segid));
+    if (it==chnmap.end()) return false;
+    chnmap.erase(it);
+    return true;
+}
+
 Id SystemImporter::addAtom(std::string chain, std::string segid,
                            int resnum, std::string resname,
                            std::string aname,

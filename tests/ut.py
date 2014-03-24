@@ -165,6 +165,21 @@ class TestPdb(unittest.TestCase):
                 [161,165,167,169,171,489,493,495,497,499,501,
                  503,1448,1452,1454,1456,1458,1460,1698,1702,1704])
 
+    def testTer(self):
+        mol=msys.CreateSystem()
+        c1=mol.addChain()
+        c2=mol.addChain()
+        for c in mol.chains:
+            c.name='A'
+            r=c.addResidue()
+            r.name='ALA'
+            a=r.addAtom()
+            a.name='CA'
+            a.atomic_number=6
+        msys.Save(mol, '/tmp/msys_ter.pdb')
+        m2=msys.Load('/tmp/msys_ter.pdb')
+        self.assertEqual(m2.nchains, 2)
+
 
 class TestValidate(unittest.TestCase):
     def testNoKnot(self):

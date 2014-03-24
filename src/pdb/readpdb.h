@@ -351,7 +351,40 @@ static void desres_msys_get_pdb_fields(const char *record, int reclength, int *s
   }
 }  
 
+static void desres_msys_write_ter_record(
+        FILE* fd, int index, const char* resname, 
+        const char* chain, int resid) {
 
+    char indexbuf[6];
+    char residbuf[6];
+    char resnamebuf[6];
+    char chainchar;
+
+    if (index < 100000) {
+      sprintf(indexbuf, "%5d", index);
+    } else if (index < 1048576) {
+      sprintf(indexbuf, "%05x", index);
+    } else {
+      sprintf(indexbuf, "*****");
+    }
+
+    if (resid < 10000) {
+      sprintf(residbuf, "%4d", resid);
+    } else if (resid < 65536) {
+      sprintf(residbuf, "%04x", resid);
+    } else { 
+      sprintf(residbuf, "****");
+    }
+
+    chainchar = *chain ? *chain : ' ';
+    strncpy(resnamebuf,resname,4);
+    resnamebuf[4] = '\0';
+
+    fprintf(fd,
+         "%-6s%5s      %-4s%c%4s\n",
+         "TER", indexbuf, resnamebuf, chainchar, residbuf);
+}
+                                      
 /* Write PDB data to given file descriptor; return success. */
 static int desres_msys_write_raw_pdb_record(FILE *fd, const char *recordname,
     int index,const char *atomname, const char *resname,int resid, 

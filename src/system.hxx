@@ -609,6 +609,10 @@ namespace desres { namespace msys {
         /* process existing atoms in the system */
         void initialize(IdList const& atoms);
 
+        /* mark a chain as terminated, so that subsequent atoms with
+         * the same chain name will be added to a new chain object. */
+        bool terminateChain(std::string chain, std::string segid, Id ct=0);
+
         /* add an atom, after first constructing necessary parent
          * chain and/or residue object.  All string inputs will
          * have leading and trailing whitespace removed. */

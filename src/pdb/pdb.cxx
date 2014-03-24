@@ -47,14 +47,17 @@ static SystemPtr import_pdb_from_file(FILE* fd) {
     int indx=PDB_EOF;
     int ct=0;
     int ctcount=0;
+    int serial, resid;
+    char name[32], resname[32], chainname[32], segid[32], residstr[32];
+    char insertion[4], altloc[4], element[4];
+    chainname[0]=0;
+    segid[0]=0;
     do {
         indx = desres_msys_read_pdb_record(fd, pdbstr);
+
+        double x, y, z, occup, beta;
+        int formal_charge;
         if (indx == PDB_ATOM) {
-            int serial, resid;
-            char name[32], resname[32], chainname[32], segid[32], residstr[32];
-            char insertion[4], altloc[4], element[4];
-            double x, y, z, occup, beta;
-            int formal_charge;
 
             desres_msys_get_pdb_fields(pdbstr, PDB_BUFFER_LENGTH, &serial,
                     name, resname, chainname,
@@ -108,7 +111,10 @@ static SystemPtr import_pdb_from_file(FILE* fd) {
             desres_msys_get_pdb_cryst1(pdbstr,&alpha,&beta,&gamma,&a,&b,&c);
             ImportPDBUnitCell(a,b,c,alpha,beta,gamma,mol->global_cell[0]);
 
-        } else if (/* indx==PDB_TER || */ indx==PDB_END) {
+        } else if (indx==PDB_TER) {
+            imp.terminateChain(chainname, segid, ct);
+
+        } else if (indx==PDB_END) {
             if (ctcount>0) {
                 ++ct;
                 ctcount=0;
@@ -276,14 +282,19 @@ void desres::msys::ExportPDB(SystemPtr mol, std::string const& path) {
             "CRYST1", A,B,C,alpha,beta,gamma,"P 1", 1);
 
     int index=0;
+    const char* chain = NULL;
+    const char* resname = NULL;
+    int resid = 0;
     for (Id chn=0; chn<mol->maxChainId(); chn++) {
         if (!mol->hasChain(chn)) continue;
         const char* segid = mol->chain(chn).segid.c_str();
-        const char* chain = mol->chain(chn).name.c_str();
-
+        chain = mol->chain(chn).name.c_str();
+        if (chn>0 && mol->chain(chn).name == mol->chain(chn-1).name) {
+            desres_msys_write_ter_record(fd, ++index, resname, chain, resid);
+        }
         BOOST_FOREACH(Id res, mol->residuesForChain(chn)) {
-            int resid = mol->residue(res).resid;
-            const char* resname = mol->residue(res).name.c_str();
+            resid = mol->residue(res).resid;
+            resname = mol->residue(res).name.c_str();
             const char* insertion = mol->residue(res).insertion.c_str();
 
             BOOST_FOREACH(Id atm, mol->atomsForResidue(res)) {
