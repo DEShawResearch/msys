@@ -10,6 +10,10 @@ for p in env['CPPPATH']:
         cpp.append(p)
 env.Replace(CPPPATH=cpp)
 env.Append(CFLAGS=flg, CXXFLAGS=flg)
+# The install helper brings in libraries we don't want
+for lib in 'molfile', 'python2.7':
+    try: env['LIBS'].remove(lib)
+    except ValueError: pass
 
 env.Append(
         CCFLAGS='-O2 -g -Wall',
