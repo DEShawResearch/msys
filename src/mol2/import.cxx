@@ -76,12 +76,13 @@ SystemPtr iterator::next() {
     SystemPtr mol = System::create();
     Id atype=mol->addAtomProp("sybyl_type", StringType);
     Id btype=mol->addBondProp("sybyl_type", StringType);
-    Id chn = mol->addChain();
+    SystemImporter imp(mol);
 
     /* read mol_name */
     fgets(buf, sizeof(buf), fd); 
     mol->name = buf;
     boost::trim(mol->name);
+    mol->addCt();
     mol->ct(0).setName(mol->name);
     /* read natoms, nbonds, nsub */
     natoms = nbonds = 0;
@@ -126,32 +127,23 @@ SystemPtr iterator::next() {
                     if (rc<6) {
                         MSYS_FAIL("Could not parse Atom record:\n" << buf);
                     }
-                    int nres = mol->residueCountForChain(chn);
-                    for (; nres<resid; ++nres) {
-                        Id res = mol->addResidue(chn);
-                        mol->residue(res).resid = nres+1;
-                        mol->residue(nres).name = resname;
-                        // maybe the resid is encoded as digits at the end
-                        // of the resname.
-                        {
-                            char* p=resname;
-                            while (*p && isalpha(*p)) ++p;
-                            if (*p) {
-                                char* end=p;
-                                int resid = strtol(p, &end, 10);
-                                if (*end=='\0') {
-                                    mol->residue(res).resid = resid;
-                                    *p = '\0';
-                                    mol->residue(res).name = resname;
-                                }
+                    // maybe the resid is encoded as digits at the end
+                    // of the resname.
+                    {
+                        char* p=resname;
+                        while (*p && isalpha(*p)) ++p;
+                        if (*p) {
+                            char* end=p;
+                            int newresid = strtol(p, &end, 10);
+                            if (*end=='\0') {
+                                resid = newresid;
+                                *p = '\0';
                             }
                         }
                     }
-                    Id res = mol->residuesForChain(chn).at(resid-1);
-                    Id atm = mol->addAtom(res);
+                    Id atm = imp.addAtom( "", "", resid, resname, name);
                     mol->atomPropValue(atm,atype)=type;
                     atom_t& atom = mol->atom(atm);
-                    atom.name = name;
                     atom.x = x;
                     atom.y = y;
                     atom.z = z;
