@@ -1,6 +1,6 @@
-#include "cealign.hxx"
 #include <boost/python.hpp>
 #include <numpy/ndarrayobject.h>
+#include "cealign.hxx"
 
 using namespace desres::msys;
 using namespace boost::python;
