@@ -356,6 +356,10 @@ class Ct(Handle):
         ''' get ct property key '''
         return self.data().get(str(key))
 
+    def __delitem__(self, key):
+        ''' remove property key '''
+        self.data().remove(str(key))
+
     def get(self, key, d=None):
         ''' get ct property key, else d, which defaults to None '''
         try:

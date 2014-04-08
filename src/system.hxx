@@ -142,6 +142,10 @@ namespace desres { namespace msys {
             return k;
         }
 
+        void del(String const& key) {
+            _kv->delProp(_kv->propIndex(key));
+        }
+
         void add(String const& key, ValueType type) {
             _kv->addProp(key,type);
         }

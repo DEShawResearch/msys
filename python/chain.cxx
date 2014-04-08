@@ -50,6 +50,7 @@ namespace desres { namespace msys {
             .def("add", ct_add)
             .def("set", ct_set)
             .def("type", ct_type)
+            .def("remove", &component_t::del)
             ;
     }
 }}

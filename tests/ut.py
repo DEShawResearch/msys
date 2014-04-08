@@ -295,6 +295,11 @@ class TestMain(unittest.TestCase):
         self.assertEqual(chn.ct, m.cts[0])
         self.assertEqual(m.cts, [chn.ct, ct3])
 
+        ct3['foobar']=32
+        self.assertEqual(ct3['foobar'], 32)
+        del ct3['foobar']
+        with self.assertRaises(KeyError): ct3['foobar']
+
     def testCtAppend(self):
         m=msys.CreateSystem()
         m.addCt().name='a'
