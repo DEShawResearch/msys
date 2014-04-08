@@ -1,4 +1,5 @@
 #include "k-nearest.hxx"
+#include "within_predicate.hxx"
 #include "msys_keyword.hxx"
 
 #include <algorithm>
@@ -27,28 +28,8 @@ namespace {
             str << "]";
         }
     };
-
-    struct PointDistance {
-        float d;
-        int i;
-        PointDistance() {}
-        PointDistance(float _d, int _i) : d(_d), i(_i) {}
-        bool operator<(const PointDistance& o) const { return d<o.d; }
-    };
-    struct Position {
-        float x,y,z;
-        Position() {}
-        Position(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
-    };
 }
 
-/* 
- * Go through each point in S but not in subsel, and find its minimum 
- * distance to any point in subsel.   At the end we sort and take the 
- * first k values.
- *
- * This is a naive implementation with poor scaling.
- */
 void KNearestPredicate::eval( Selection& S ) {
 
     /* evaluate subselection */
@@ -60,43 +41,93 @@ void KNearestPredicate::eval( Selection& S ) {
         S.clear();
         return;
     }
+    const Id subcnt = subsel.count();
+    //printf("sub cnt: %u\n", subcnt);
 
-    /* cache the required positions */
-    std::vector<Position> positions(S.size());
-    for (Id i=0; i<S.size(); i++) {
-        if (S[i] || subsel[i]) {
-            const atom_t& atm = _sys->atom(i);
-            positions[i].x = atm.x;
-            positions[i].y = atm.y;
-            positions[i].z = atm.z;
+    /* S.count() <= k: nothing to do */
+    const Id cnt = S.count();
+    //printf("S count: %u\n", cnt);
+    if (cnt<=_N) return;
+
+    double rmin=0;
+    Selection smin(S);
+    exwithin_predicate(_sys, rmin, _sub)->eval(smin);
+    Id nmin = smin.count();
+
+    double rmax=2.5;
+    Selection smax(0);
+    Id nmax=nmin;
+
+    /* increase rmax until Ny is at least _N */
+    for (;;) {
+        smax = S;
+        exwithin_predicate(_sys, rmax, _sub)->eval(smax);
+        nmax = smax.count();
+        //printf("rmin %f nmin %u rmax %f nmax %u\n", rmin, nmin, rmax, nmax);
+        if (nmax >= _N) break;
+        rmin = rmax;
+        smin = smax;
+        nmin = nmax;
+        rmax *= 1.5;
+    }
+
+    /* Do a couple rounds of bisection search to narrow it down */
+    for (int nb=0; nb<6; nb++) {
+        Selection sm(S);
+        double rm = 0.5*(rmin+rmax);
+        exwithin_predicate(_sys, rm, _sub)->eval(sm);
+        Id nm = sm.count();
+        //printf("rm %f nm %u\n", rm, nm);
+        if (nm>=_N) {
+            smax = sm;
+            rmax = rm;
+            nmax = nm;
+        } else {
+            smin = sm;
+            rmin = rm;
+            nmin = nm;
+        }
+    }
+    //printf("min: rad %f n %u\n", rmin, nmin);
+    //printf("max: rad %f n %u\n", rmax, nmax);
+
+    /* cache the protein positions.
+     * FIXME: consider transpose for SIMD */
+    std::vector<double> pro;
+    pro.reserve(3*subcnt);
+    for (Id i=0, n=S.size(); i<n; i++) {
+        if (subsel[i]) {
+            const atom_t& atm = _sys->atomFAST(i);
+            pro.insert(pro.end(), &atm.x, &atm.x+3);
         }
     }
 
-    std::vector<PointDistance> distances;
-    for (Id i=0; i<S.size(); i++) {
-        if (subsel[i] || !S[i]) continue;
-        /* find minimum distance of this point to the subselection */
-        const float x = positions[i].x;
-        const float y = positions[i].y;
-        const float z = positions[i].z;
-        float d2=std::numeric_limits<float>::max();
-        for (Id j=0; j<subsel.size(); j++) {
-            if (!subsel[j]) continue;
-            float dx=x-positions[j].x;
-            float dy=y-positions[j].y;
-            float dz=z-positions[j].z;
-            float d2_j = dx*dx + dy*dy + dz*dz;
-            if (d2_j<d2) d2=d2_j;
-        }
-        distances.push_back(PointDistance(d2,i));
-    }
-    std::sort(distances.begin(), distances.end());
+    //printf("cached %lu pro positions\n", pro.size()/3);
 
-    S.clear();
-    unsigned n=_N;
-    if (n>distances.size()) n=distances.size();
-    for (unsigned i=0; i<n; i++) {
-        S[distances[i].i] = 1;
+    std::vector<std::pair<double,Id> > pts;
+    /* for each water in smax but not in smin */
+    for (Id i=0, n=S.size(); i<n; i++) {
+        if (smin[i] || !smax[i]) continue;
+        double r2 = std::numeric_limits<double>::max();
+        double x = _sys->atomFAST(i).x;
+        double y = _sys->atomFAST(i).y;
+        double z = _sys->atomFAST(i).z;
+        /* find min dist to protein */
+        const double* p = &pro[0];
+        for (Id j=0, m=subcnt; j<m; j++) {
+            double dx = x-p[0];
+            double dy = y-p[1];
+            double dz = z-p[2];
+            double d2 = dx*dx + dy*dy + dz*dz;
+            r2 = std::min(r2, d2);
+            p += 3;
+        }
+        pts.push_back(std::make_pair(r2, i));
+    }
+    std::partial_sort(pts.begin(), pts.begin()+(_N-nmin), pts.end());
+    S = smin;
+    for (Id i=0, n=_N-nmin; i<n; i++) {
+        S[pts[i].second] = 1;
     }
 }
 
