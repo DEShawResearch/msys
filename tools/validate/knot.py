@@ -49,6 +49,12 @@ def ut_intersection():
 #######################################################################
 #######################################################################
 
+
+# returns a list of 3-tuples of the form (cycle, bond, idx) 
+
+# where bond intersects with cycle, and idx is an index into cycle
+# such that the triangle cycle[idx], cycle[idx+1], cycle[0] intersects
+# with the bond.
 def FindKnots(mol, max_cycle_size=None, selection='all', verbose=False):
 
     from msys import LineIntersectsTriangle
@@ -117,7 +123,7 @@ def FindKnots(mol, max_cycle_size=None, selection='all', verbose=False):
                                 ipos, jpos, cp[0], cp[idx], cp[idx+1]):
                             bond = (ai,aj)
                             if verbose: print "==> intersection:",cycle,bond
-                            results.append((cycle, bond))
+                            results.append((cycle, bond, idx))
                             found.add(key)
     if verbose: print "Total intersections: %d" % len(found)
 
@@ -132,4 +138,63 @@ def FindKnots(mol, max_cycle_size=None, selection='all', verbose=False):
 
     return results
 
+def get_lipid_atoms(cycle, bond, dms):
+    cycle_ids = [atom.id for atom in dms.select('lipid and same residue as index %d' % cycle[0])]
+    bond_ids  = [atom.id for atom in dms.select('lipid and same residue as index %d' % bond[0] )]
+    assert cycle_ids or bond_ids, "Neither the cycle %s or the bond %s was part of a lipid" % (cycle_ids,bond_ids)
+    if cycle_ids and bond_ids:
+        print "WARNING: Both the cycle %s and the bond %s were part of a lipid. Will only move the bond molecule." % (cycle_ids,bond_ids)
+    return bond_ids if bond_ids else cycle_ids
 
+def fix_thread(mol, cycle, bond, idx, move_lipid, dirty):
+    assert idx+1 < len(cycle)
+    pos = mol.getPositions()
+    
+    b0, b1 = pos[bond[0]], pos[bond[1]]
+    b01 = b1-b0
+
+    c0, c1 = pos[cycle[idx]], pos[cycle[idx+1]]
+    c01 = c1-c0
+    
+    normal = numpy.cross(b01, c01)
+    normhat = normal / numpy.linalg.norm(normal)
+
+    dv = numpy.dot(c0-b0, normhat)
+    MUL = 2.0      # move the bond 2 times it's current distance from the ring
+    dt = MUL * dv
+    
+    if move_lipid:
+        atomsel = get_lipid_atoms(cycle, bond, mol)
+    else:
+        atomsel = bond
+
+    if set(atomsel) & dirty:
+        print "Will not fix %s %s this iteration because atoms that must be moved have been moved earlier this pass." \
+            % (cycle, bond)
+        return []
+
+    print "Moved particles %s a distance of %.2gA" % (atomsel, abs(dt))
+    
+    for atom in atomsel:
+        p_prime = pos[atom] + dt*normhat
+        mol.atom(atom).pos = p_prime
+
+    return atomsel
+
+def fix_all_threads(mol, intersections, move_lipid=False):
+    if not intersections:
+        return
+
+    dirty = set()
+    for cycle,bond,idx in intersections:
+        moved = fix_thread(mol, cycle, bond, idx, move_lipid, dirty)
+        dirty |= set(moved)
+    
+# returns True if converged within iteration_limit iterations
+def UntieKnots(mol, max_cycle_size=None, selection="all", move_lipid=False, iteration_limit=20, verbose=True):
+    for iteration_number in range(iteration_limit):
+        intersections = FindKnots(mol, max_cycle_size=max_cycle_size, selection=selection, verbose=verbose)
+        if not intersections:
+            return True
+        fix_all_threads(mol, intersections, move_lipid=move_lipid)
+    return False

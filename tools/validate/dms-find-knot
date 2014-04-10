@@ -13,6 +13,8 @@ a lipid tail passing through an aromatic ring in a protein.  Such geometries
 can accidentally arise during system construction and usually indicate
 a badly constructed system which will behave badly during simulation.
 
+If --untie is specified, the script will attempt to remove the knots by translating the offending bonds
+outside of the ring (iteratively to convergence).
 '''
 
 import sys, os
@@ -31,18 +33,39 @@ if __name__ == "__main__":
     parser.add_option("--max-cycle", help="Maximum cycle size to check (if this is set too large, disulfide-bond-induced rings will be checked).")
 
     parser.add_option("-s", "--selection", help="Limit knot search to selection")
+    parser.add_option("--untie", action="store_true", help="Attempt to remove any knots found and write to --outfile", 
+                      default=False)
+    parser.add_option("--outfile",'-o', type=str, help="Output dms file; for use in combination with --untie", 
+                      default=None)
+    parser.add_option("--move-lipid", action="store_true", 
+                      help="Use with --untie; move the whole lipid molecule instead of just the two offending bond atoms",
+                      default=False)
 
     (o,a) = parser.parse_args(sys.argv)
     if len(a)!=2:
         parser.error("Incorrect number of arguments")
+
+    if (o.untie and not o.outfile) or (o.outfile and not o.untie):
+        parser.error("--outfile must be used in combination with --untie")
  
-    mol=msys.Load(a[1], structure_only=True)
-    klist = knot.FindKnots(
+    if not o.untie:
+        mol=msys.Load(a[1], structure_only=True)
+        klist = knot.FindKnots(
             mol,
             max_cycle_size=o.max_cycle,
             selection=o.selection,
             verbose=True)
 
-    sys.exit(len(klist)!=0)
+        sys.exit(len(klist)!=0)
+    else:
+        mol=msys.Load(a[1])
+        converged = knot.UntieKnots(
+            mol,
+            max_cycle_size=o.max_cycle,
+            selection=o.selection,
+            move_lipid=o.move_lipid,
+            verbose=True)
+        msys.Save(mol, o.outfile)
+        sys.exit(not converged)
 
 # vim: filetype=python
