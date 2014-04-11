@@ -184,11 +184,25 @@ class TestPdb(unittest.TestCase):
 class TestValidate(unittest.TestCase):
     def testNoKnot(self):
         mol=msys.Load('tests/files/jandor.sdf')
-        knot.FindKnots(mol)
+        knot.FindKnots(mol,verbose=False)
     def testPeriodicKnot(self):
         mol=msys.Load('tests/files/knot.mae')
-        results=knot.FindKnots(mol)
+        results=knot.FindKnots(mol,verbose=False)
         self.assertEqual(len(results), 2)
+    def testExcludedKnot(self):
+        mol=msys.Load('tests/files/excluded_knot.dms')
+        without_ignoring = knot.FindKnots(mol,verbose=False)
+        self.assertEqual(len(without_ignoring),1)
+        with_ignoring = knot.FindKnots(mol, ignore_excluded_knots=True, verbose=False)
+        self.assertEqual(len(with_ignoring), 0)
+    def testUntieKnot(self):
+        mol=msys.Load('tests/files/knot.mae')
+        results=knot.FindKnots(mol,verbose=False)
+        self.assertEqual(len(results), 2)
+        success = knot.UntieKnots(mol,verbose=False)
+        results_after_untying = knot.FindKnots(mol,verbose=False)
+        self.assertEqual(len(results_after_untying),0)
+        self.assertTrue(success)
 
 class TestMain(unittest.TestCase):
 
