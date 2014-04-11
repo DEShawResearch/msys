@@ -55,7 +55,7 @@ def ut_intersection():
 # where bond intersects with cycle, and idx is an index into cycle
 # such that the triangle cycle[idx], cycle[idx+1], cycle[0] intersects
 # with the bond.
-def FindKnots(mol, max_cycle_size=None, selection='all', verbose=False):
+def FindKnots(mol, max_cycle_size=None, selection='all', ignore_excluded_knots=False, verbose=False):
 
     from msys import LineIntersectsTriangle
     t0=time()
@@ -92,6 +92,19 @@ def FindKnots(mol, max_cycle_size=None, selection='all', verbose=False):
 
     t3=time()
 
+    try:
+        exclusion_table = mol.table('exclusion')
+    except ValueError:
+        if ignore_excluded_knots:
+            raise ValueError("Cannot ignore_excluded_knots without an exclusion table present.")
+    def is_excluded_knot(cycle, bond):
+        for cycle_atomid in cycle:
+            for bond_atomid in bond:
+                if not exclusion_table.findWithAll([mol.atom(cycle_atomid),
+                                                    mol.atom(bond_atomid)]):
+                    return False
+        return True
+
     # apply shift of half the box size in all directions to catch knots that
     # cross periodic boundaries.
     for ishift in range(2):
@@ -122,6 +135,8 @@ def FindKnots(mol, max_cycle_size=None, selection='all', verbose=False):
                         if LineIntersectsTriangle(
                                 ipos, jpos, cp[0], cp[idx], cp[idx+1]):
                             bond = (ai,aj)
+                            if ignore_excluded_knots and is_excluded_knot(cycle, bond):
+                                continue
                             if verbose: print "==> intersection:",cycle,bond
                             results.append((cycle, bond, idx))
                             found.add(key)
@@ -146,7 +161,7 @@ def get_lipid_atoms(cycle, bond, dms):
         print "WARNING: Both the cycle %s and the bond %s were part of a lipid. Will only move the bond molecule." % (cycle_ids,bond_ids)
     return bond_ids if bond_ids else cycle_ids
 
-def fix_thread(mol, cycle, bond, idx, move_lipid, dirty):
+def fix_thread(mol, cycle, bond, idx, move_lipid, dirty, verbose=True):
     assert idx+1 < len(cycle)
     pos = mol.getPositions()
     
@@ -169,11 +184,13 @@ def fix_thread(mol, cycle, bond, idx, move_lipid, dirty):
         atomsel = bond
 
     if set(atomsel) & dirty:
-        print "Will not fix %s %s this iteration because atoms that must be moved have been moved earlier this pass." \
-            % (cycle, bond)
+        if verbose:
+            print "Will not fix %s %s this iteration because atoms that must be moved have been moved earlier this pass." \
+                % (cycle, bond)
         return []
 
-    print "Moved particles %s a distance of %.2gA" % (atomsel, abs(dt))
+    if verbose:
+        print "Moved particles %s a distance of %.2gA" % (atomsel, abs(dt))
     
     for atom in atomsel:
         p_prime = pos[atom] + dt*normhat
@@ -181,20 +198,27 @@ def fix_thread(mol, cycle, bond, idx, move_lipid, dirty):
 
     return atomsel
 
-def fix_all_threads(mol, intersections, move_lipid=False):
+def fix_all_threads(mol, intersections, move_lipid=False,verbose=True):
     if not intersections:
         return
 
     dirty = set()
     for cycle,bond,idx in intersections:
-        moved = fix_thread(mol, cycle, bond, idx, move_lipid, dirty)
+        moved = fix_thread(mol, cycle, bond, idx, move_lipid, dirty,verbose=verbose)
         dirty |= set(moved)
     
 # returns True if converged within iteration_limit iterations
-def UntieKnots(mol, max_cycle_size=None, selection="all", move_lipid=False, iteration_limit=20, verbose=True):
+def UntieKnots(mol, max_cycle_size=None, selection="all", move_lipid=False, iteration_limit=20, 
+               ignore_excluded_knots=False, verbose=True):
     for iteration_number in range(iteration_limit):
-        intersections = FindKnots(mol, max_cycle_size=max_cycle_size, selection=selection, verbose=verbose)
+        if verbose:
+            print "============ Untie: Iteration %d ============" % iteration_number
+        intersections = FindKnots(mol, max_cycle_size=max_cycle_size, selection=selection, 
+                                  ignore_excluded_knots=ignore_excluded_knots, verbose=verbose)
         if not intersections:
             return True
-        fix_all_threads(mol, intersections, move_lipid=move_lipid)
+        fix_all_threads(mol, intersections, move_lipid=move_lipid,verbose=verbose)
+
+    if verbose:
+        print "Failed to converge after %d iterations" % iteration_limit
     return False

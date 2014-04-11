@@ -40,6 +40,9 @@ if __name__ == "__main__":
     parser.add_option("--move-lipid", action="store_true", 
                       help="Use with --untie; move the whole lipid molecule instead of just the two offending bond atoms",
                       default=False)
+    parser.add_option("--ignore-excluded-knots", action="store_true", default=False,
+                      help="Ignore knots where the bond atoms are not interacting with the ring atoms," +
+                      " as determined by the exclusion table")
 
     (o,a) = parser.parse_args(sys.argv)
     if len(a)!=2:
@@ -49,11 +52,13 @@ if __name__ == "__main__":
         parser.error("--outfile must be used in combination with --untie")
  
     if not o.untie:
-        mol=msys.Load(a[1], structure_only=True)
+        # need exclusion table if o.ignore_excluded_knots
+        mol=msys.Load(a[1], structure_only=not o.ignore_excluded_knots) 
         klist = knot.FindKnots(
             mol,
             max_cycle_size=o.max_cycle,
             selection=o.selection,
+            ignore_excluded_knots=o.ignore_excluded_knots,
             verbose=True)
 
         sys.exit(len(klist)!=0)
@@ -62,10 +67,12 @@ if __name__ == "__main__":
         converged = knot.UntieKnots(
             mol,
             max_cycle_size=o.max_cycle,
+            ignore_excluded_knots=o.ignore_excluded_knots,
             selection=o.selection,
             move_lipid=o.move_lipid,
             verbose=True)
         msys.Save(mol, o.outfile)
+
         sys.exit(not converged)
 
 # vim: filetype=python
