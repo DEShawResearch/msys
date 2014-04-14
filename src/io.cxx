@@ -161,6 +161,8 @@ namespace desres { namespace msys {
                     return MaeIterator(path, structure_only);
             case SdfFileFormat:
                     return SdfIterator(path);
+            case PdbFileFormat:
+                    return PDBIterator(path);
             case UnrecognizedFileFormat:
                 MSYS_FAIL("Unable to determine format of '" << path << "'");
         }

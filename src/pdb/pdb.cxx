@@ -3,12 +3,15 @@
 #include "../pdb.hxx"
 #include "../elements.hxx"
 #include "../analyze.hxx"
+#include "../append.hxx"
 #include "readpdb.h"
 
 #include <vector>
 #include <boost/foreach.hpp>
 #include <string>
 #include <math.h>
+#include <errno.h>
+#include "../io.hxx"
 
 using namespace desres::msys;
 
@@ -35,9 +38,20 @@ static void strip_nonalpha(char *buf) {
 extern "C"
 char* desres_msys_import_webpdb(const char* code);
 
-static SystemPtr import_pdb_from_file(FILE* fd) {
+namespace {
+    class iterator : public LoadIterator {
+        boost::shared_ptr<FILE> fd;
+    public:
+        explicit iterator(std::string const& path) {
+            fd.reset(fopen(path.c_str(), "r"), fclose);
+            if (!fd) MSYS_FAIL("Failed opening pdb file at " << path << ": " << strerror(errno));
+        }
+        SystemPtr next();
+    };
+}
+
+SystemPtr iterator::next() {
     char pdbstr[PDB_BUFFER_LENGTH];
-    boost::shared_ptr<FILE> defer_close(fd, fclose);
 
     SystemPtr mol = System::create();
     SystemImporter imp(mol);
@@ -45,15 +59,13 @@ static SystemPtr import_pdb_from_file(FILE* fd) {
     Id bfactor_id = mol->addAtomProp("bfactor", FloatType);
 
     int indx=PDB_EOF;
-    int ct=0;
-    int ctcount=0;
     int serial, resid;
     char name[32], resname[32], chainname[32], segid[32], residstr[32];
     char insertion[4], altloc[4], element[4];
     chainname[0]=0;
     segid[0]=0;
     do {
-        indx = desres_msys_read_pdb_record(fd, pdbstr);
+        indx = desres_msys_read_pdb_record(fd.get(), pdbstr);
 
         double x, y, z, occup, beta;
         int formal_charge;
@@ -72,8 +84,7 @@ static SystemPtr import_pdb_from_file(FILE* fd) {
             resid = atoi(residstr);
 
             Id atm = imp.addAtom(chainname, segid, resid, resname, 
-                    name, insertion, ct);
-            ++ctcount;
+                    name, insertion);
             atom_t& atom = mol->atom(atm);
             atom.x = x;
             atom.y = y;
@@ -112,16 +123,15 @@ static SystemPtr import_pdb_from_file(FILE* fd) {
             ImportPDBUnitCell(a,b,c,alpha,beta,gamma,mol->global_cell[0]);
 
         } else if (indx==PDB_TER) {
-            imp.terminateChain(chainname, segid, ct);
+            imp.terminateChain(chainname, segid);
 
         } else if (indx==PDB_END) {
-            if (ctcount>0) {
-                ++ct;
-                ctcount=0;
-            }
+            break;
         }
 
     } while (indx != PDB_EOF);
+
+    if (indx==PDB_EOF && mol->maxAtomId()==0) return SystemPtr();
 
     GuessBondConnectivity(mol);
     mol->analyze();
@@ -149,7 +159,7 @@ SystemPtr desres::msys::ImportWebPDB(std::string const& code) {
     ::lseek(fd,0,SEEK_SET);
     SystemPtr mol;
     try {
-        mol = import_pdb_from_file(fdopen(fd, "r"));
+        mol = ImportPDB(temp);
     }
     catch (std::exception& e) {
         MSYS_FAIL("Error reading contents of webpdb " << code << " : " << e.what());
@@ -159,11 +169,15 @@ SystemPtr desres::msys::ImportWebPDB(std::string const& code) {
 }
 
 SystemPtr desres::msys::ImportPDB( std::string const& path ) {
-    FILE* fd = fopen(path.c_str(), "r");
-    if (!fd) MSYS_FAIL("Failed opening pdb file for reading at " << path);
-    SystemPtr mol = import_pdb_from_file(fd);
+    SystemPtr ct, mol = System::create();
+    iterator it(path);
+    while ((ct=it.next())) AppendSystem(mol, ct);
     mol->name = path;
     return mol;
+}
+
+LoadIteratorPtr desres::msys::PDBIterator(std::string const& path) {
+    return LoadIteratorPtr(new iterator(path));
 }
 
 void desres::msys::ImportPDBCoordinates(SystemPtr mol, std::string const& path) {
