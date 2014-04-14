@@ -40,7 +40,6 @@ env.Command('version.hxx', 'version.py', build_version_hxx )
 selobjs = env.AddObject(Split('''
 atomsel.cxx
 atomsel/expression.cxx
-atomsel/k-nearest.cxx
 atomsel/keyword.cxx
 atomsel/keyword_predicate.cxx
 atomsel/msys_keyword.cxx

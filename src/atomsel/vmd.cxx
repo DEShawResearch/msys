@@ -3,7 +3,6 @@
 #include "vmd_keyword.hxx"
 #include "keyword_predicate.hxx"
 #include "within_predicate.hxx"
-#include "k-nearest.hxx"
 
 #include "../smarts.hxx"
 

@@ -21,6 +21,11 @@ namespace desres { namespace msys { namespace atomsel {
   /*! true for elements within n bonds of subselection */
   PredicatePtr withinbonds_predicate( SystemPtr sys, int n, PredicatePtr S );
 
+  /*! true for the k nearest atoms to subselection, not including the 
+   * subselection itself.  If there are only j<k atoms not in subselection,
+   * then only j atoms will be selected. */
+  PredicatePtr k_nearest_predicate(SystemPtr sys, unsigned k, PredicatePtr S);
+
 }}}
 
 #endif
