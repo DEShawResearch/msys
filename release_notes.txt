@@ -1,6 +1,9 @@
 1.7.60 NEW: dms-find-knot has a --untie option to remove knots.
+       NEW: LoadMany support for PDB files.
        IMPROVED: dms-find-knot has a --ignore-excluded-knots that uses
                  the exclusion table
+       IMPROVED: "nearest k to subsel" is much faster.
+       IMPROVED: Delete property in ct block using python del operator.
 
 1.7.59 FIXED: mol2 importer choked on resid 0.
        IMPROVED: read and writes TER records between chains in pdb files
