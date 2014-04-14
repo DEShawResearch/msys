@@ -456,9 +456,25 @@ void KNearestPredicate::eval( Selection& S ) {
     //printf("S count: %u\n", cnt);
     if (cnt<=_N) return;
 
+    /* cache coordinates of interest */
+
+    std::vector<point_t> points(S.size());
+    for (unsigned i=0; i<S.size(); i++) {
+        if (S[i] || subsel[i]) {
+            points[i].x = _sys->atomFAST(i).x;
+            points[i].y = _sys->atomFAST(i).y;
+            points[i].z = _sys->atomFAST(i).z;
+        }
+    }
+    if (!points.size()) {
+        S.clear();
+        return;
+    }
+        //find_within( &points[0], S, subsel, rad, exclude );
+
     double rmin=0;
     Selection smin(S);
-    exwithin_predicate(_sys, rmin, _sub)->eval(smin);
+    find_within( &points[0], smin, subsel, 0, true);
     Id nmin = smin.count();
 
     double rmax=2.5;
@@ -468,7 +484,7 @@ void KNearestPredicate::eval( Selection& S ) {
     /* increase rmax until Ny is at least _N */
     for (;;) {
         smax = S;
-        exwithin_predicate(_sys, rmax, _sub)->eval(smax);
+        find_within( &points[0], smax, subsel, rmax, true);
         nmax = smax.count();
         //printf("rmin %f nmin %u rmax %f nmax %u\n", rmin, nmin, rmax, nmax);
         if (nmax >= _N) break;
@@ -482,7 +498,7 @@ void KNearestPredicate::eval( Selection& S ) {
     for (int nb=0; nb<6; nb++) {
         Selection sm(S);
         double rm = 0.5*(rmin+rmax);
-        exwithin_predicate(_sys, rm, _sub)->eval(sm);
+        find_within( &points[0], sm, subsel, rm, true);
         Id nm = sm.count();
         //printf("rm %f nm %u\n", rm, nm);
         if (nm>=_N) {
