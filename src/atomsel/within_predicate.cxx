@@ -16,6 +16,7 @@ using namespace desres::msys::atomsel;
 typedef desres::msys::atom_t atom;
 using desres::msys::SystemPtr;
 using desres::msys::atom_t;
+using desres::msys::now;
 using desres::msys::Id;
 using desres::msys::IdSet;
 using desres::msys::IdList;
@@ -25,16 +26,19 @@ struct point_t {
 };
 
 struct voxel_t {
-  int nbrs[27];
-  int n_nbrs;
+    /* For voxels on the edge of the grid, compute and store the
+     * indices of neighbor voxels.  For other voxels, the neighbors
+     * are computed using a cached set of offsets. */
+  int* nbrs;  /* NULL for non-edge voxel, terminated by -1 */
   Id stack[STACK_SIZE];
   Id * points;
   int num;
   int max;
 
-  voxel_t() : n_nbrs(0), points(stack), num(0), max(STACK_SIZE) {}
+  voxel_t() : nbrs(), points(stack), num(), max(STACK_SIZE) {}
   ~voxel_t() {
       if (points!=stack) free(points);
+      if (nbrs) free(nbrs);
   }
 
   void add(Id p) {
@@ -99,31 +103,49 @@ int find_bbox(const Selection& S, const point_t* points,
 
 static
 void find_voxel_full_shell_neighbors(voxel_t *mesh, int nx, int ny, int nz) {
-  int i, zi, yi, xi, ti, si, ri;
-  for (zi=0; zi<nz; zi++) {
-    for (yi=0; yi<ny; yi++) {
-      for (xi=0; xi<nx; xi++) {
+  for (int zi=0; zi<nz; zi++) {
+    for (int yi=0; yi<ny; yi++) {
+      for (int xi=0; xi<nx; xi++) {
+        if (zi!=0 && zi!=nz-1 &&
+            yi!=0 && yi!=ny-1 &&
+            xi!=0 && xi!=nx-1) {
+            continue;
+        }
         int n=0;
-        int nbrs[27];
+        int* nbrs = (int*)malloc(28*sizeof(int));
         int self = xi + nx*(yi + ny*zi);
         // it's a big win to always search the self voxel first!
-        nbrs[n++]=self;
-        for (ti=zi-1; ti<=zi+1; ti++) {
+        if (mesh[self].num) nbrs[++n]=self;
+        for (int ti=zi-1; ti<=zi+1; ti++) {
           if (ti<0 || ti>=nz) continue;
-          for (si=yi-1; si<=yi+1; si++) {
+          for (int si=yi-1; si<=yi+1; si++) {
             if (si<0 || si>=ny) continue;
-            for (ri=xi-1; ri<=xi+1; ri++) {
+            for (int ri=xi-1; ri<=xi+1; ri++) {
               if (ri<0 || ri>=nx) continue;
               int index = ri + nx*(si + ny*ti);
-              if (index!=self && mesh[index].num) nbrs[n++] = index;
+              if (index!=self && mesh[index].num) nbrs[++n] = index;
             }
           }
         }
-        mesh[self].n_nbrs=n;
-        for (i=0; i<n; i++) mesh[self].nbrs[i] = nbrs[i];
+        nbrs[0] = n;
+        mesh[self].nbrs = nbrs;
       }
     }
   }
+}
+
+static
+void compute_central_voxel_neighbors(int *nbrs, int nx, int ny, int nz) {
+    *nbrs++ = 0;
+    for (int k=-1; k<=1; k++) {
+        for (int j=-1; j<=1; j++) {
+            for (int i=-1; i<=1; i++) {
+                if (!(k==0 && j==0 && i==0)) {
+                    *nbrs++ = i + nx*(j + ny*k);
+                }
+            }
+        }
+    }
 }
 
 namespace {
@@ -182,12 +204,16 @@ static void find_within( const point_t* points,
   int nx, ny, nz, nvoxel;
   int i;
 
+  double t0=1000*now();
+
   /* find bounding box of subselection */
   if (!find_bbox(subsel, points, min, max)) {
     /* no atoms in subsel */
     S.clear();
     return;
   }
+
+  double t1=1000*now();
 
   /* If this is an "exwithin" selection, AND S with the converse of the
    * subselection */
@@ -219,7 +245,10 @@ static void find_within( const point_t* points,
   nz = (int)(zsize/rad)+1;
   nvoxel = nx*ny*nz;
 
+  double t2=1000*now();
+
   mesh = new voxel_t[nvoxel];
+
 
   /* map subsel atoms to voxels */
   for (Id i=0; i<subsel.size(); i++) {
@@ -233,7 +262,13 @@ static void find_within( const point_t* points,
     mesh[index].add(i);
   }
 
+  double t3=1000*now();
+
   find_voxel_full_shell_neighbors(mesh, nx, ny, nz);
+  int central_nbrs[27];
+  compute_central_voxel_neighbors(central_nbrs, nx, ny, nz);
+
+  double t4=1000*now();
 
   /* loop over atoms in left selection */
   for (Id i=0; i<S.size(); i++) {
@@ -241,6 +276,7 @@ static void find_within( const point_t* points,
     int j, index;
     int n_nbrs;
     const int * nbrs;
+    int self;
     int on;
     voxel_t * v;
     if (!S[i]) continue;
@@ -260,11 +296,19 @@ static void find_within( const point_t* points,
     }
     index = xi + nx*(yi + ny*zi);
     v = mesh+index;
-    n_nbrs = v->n_nbrs;
-    nbrs = v->nbrs;
+    if (v->nbrs) {
+        /* edge voxel, use existing neighbors */
+        nbrs = v->nbrs;
+        n_nbrs = *nbrs++;
+        self = 0;   /* absolute indices */
+    } else {
+        nbrs = central_nbrs;
+        n_nbrs = 27;
+        self = index;
+    }
     on=0;
     for (j=0; j<n_nbrs; j++) {
-      const voxel_t* nbr = mesh + nbrs[j];
+      const voxel_t* nbr = mesh + nbrs[j]+self;
       int k, natoms = nbr->num;
       for (k=0; k<natoms; k++) {
         const Id pk = nbr->points[k];
@@ -281,7 +325,13 @@ static void find_within( const point_t* points,
     }
     if (!on) S[i]=0;
   }
+  double t5=1000*now();
+
   delete [] mesh;
+
+  double t6=1000*now();
+  if (0) printf("within %8.3f: tot %8.3f : %f %f %f %f %f %f\n", rad,t6-t0,
+          t1-t0,t2-t1,t3-t2,t4-t3,t5-t4,t6-t5);
 }
 
 void WithinPredicate::eval( Selection& S ) {
@@ -470,7 +520,6 @@ void KNearestPredicate::eval( Selection& S ) {
         S.clear();
         return;
     }
-        //find_within( &points[0], S, subsel, rad, exclude );
 
     double rmin=0;
     Selection smin(S);
