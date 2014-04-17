@@ -43,7 +43,6 @@ atomsel/expression.cxx
 atomsel/keyword.cxx
 atomsel/keyword_predicate.cxx
 atomsel/msys_keyword.cxx
-atomsel/selection.cxx
 atomsel/predicate.cxx
 atomsel/vmd.cxx
 atomsel/vmd_keyword.cxx
