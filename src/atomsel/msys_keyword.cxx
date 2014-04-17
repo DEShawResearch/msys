@@ -113,38 +113,38 @@ desres::msys::atomsel::keyword_##attr( SystemPtr ent ) { \
   return KeywordPtr(new Keyword_##attr(ent)); \
 }
 
-INT_KEY(fragid,sys->atom(i).fragid)
-INT_KEY(anum,sys->atom(i).atomic_number)
-INT_KEY(hydrogen,sys->atom(i).atomic_number==1)
+INT_KEY(fragid,sys->atomFAST(i).fragid)
+INT_KEY(anum,sys->atomFAST(i).atomic_number)
+INT_KEY(hydrogen,sys->atomFAST(i).atomic_number==1)
 INT_KEY(numbonds,sys->bondCountForAtom(i))
-INT_KEY(resid,sys->residue(sys->atom(i).residue).resid)
-INT_KEY(residue,sys->atom(i).residue)
+INT_KEY(resid,sys->residueFAST(sys->atomFAST(i).residue).resid)
+INT_KEY(residue,sys->atomFAST(i).residue)
 INT_KEY(index,i)
-INT_KEY(backbone,sys->atom(i).type==AtomProBack || sys->atom(i).type==AtomNucBack)
-INT_KEY(sidechain,sys->atom(i).type==AtomProSide)
-INT_KEY(water,sys->residue(sys->atom(i).residue).type==ResidueWater)
-INT_KEY(protein,sys->residue(sys->atom(i).residue).type==ResidueProtein)
-INT_KEY(nucleic,sys->residue(sys->atom(i).residue).type==ResidueNucleic)
+INT_KEY(backbone,sys->atomFAST(i).type==AtomProBack || sys->atomFAST(i).type==AtomNucBack)
+INT_KEY(sidechain,sys->atomFAST(i).type==AtomProSide)
+INT_KEY(water,sys->residueFAST(sys->atomFAST(i).residue).type==ResidueWater)
+INT_KEY(protein,sys->residueFAST(sys->atomFAST(i).residue).type==ResidueProtein)
+INT_KEY(nucleic,sys->residueFAST(sys->atomFAST(i).residue).type==ResidueNucleic)
 
 /* add 1 to ct to match VMD :(  */
-INT_KEY(ctnumber,1+sys->chain(sys->residue(sys->atom(i).residue).chain).ct)
+INT_KEY(ctnumber,1+sys->chainFAST(sys->residueFAST(sys->atomFAST(i).residue).chain).ct)
 
 
-DBL_KEY(charge,atom(i).charge)
-DBL_KEY(mass,atom(i).mass)
-DBL_KEY(x,atom(i).x)
-DBL_KEY(y,atom(i).y)
-DBL_KEY(z,atom(i).z)
-DBL_KEY(vx,atom(i).vx)
-DBL_KEY(vy,atom(i).vy)
-DBL_KEY(vz,atom(i).vz)
+DBL_KEY(charge,atomFAST(i).charge)
+DBL_KEY(mass,atomFAST(i).mass)
+DBL_KEY(x,atomFAST(i).x)
+DBL_KEY(y,atomFAST(i).y)
+DBL_KEY(z,atomFAST(i).z)
+DBL_KEY(vx,atomFAST(i).vx)
+DBL_KEY(vy,atomFAST(i).vy)
+DBL_KEY(vz,atomFAST(i).vz)
 
-STR_KEY(chain,sys->chain(sys->residue(sys->atom(i).residue).chain).name)
-STR_KEY(segid,sys->chain(sys->residue(sys->atom(i).residue).chain).segid)
-STR_KEY(name,sys->atom(i).name)
-STR_KEY(resname,sys->residue(sys->atom(i).residue).name)
-STR_KEY(insertion,sys->residue(sys->atom(i).residue).insertion)
-STR_KEY(element,desres::msys::AbbreviationForElement(sys->atom(i).atomic_number))
+STR_KEY(chain,sys->chainFAST(sys->residueFAST(sys->atomFAST(i).residue).chain).name)
+STR_KEY(segid,sys->chainFAST(sys->residueFAST(sys->atomFAST(i).residue).chain).segid)
+STR_KEY(name,sys->atomFAST(i).name)
+STR_KEY(resname,sys->residueFAST(sys->atomFAST(i).residue).name)
+STR_KEY(insertion,sys->residueFAST(sys->atomFAST(i).residue).insertion)
+STR_KEY(element,desres::msys::AbbreviationForElement(sys->atomFAST(i).atomic_number))
 
 KeywordPtr desres::msys::atomsel::keyword_atomprop( 
         SystemPtr ent, String const& prop ) {
