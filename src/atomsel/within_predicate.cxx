@@ -366,19 +366,21 @@ void WithinPredicate::eval( Selection& S ) {
         const double* A = sys->global_cell[0];
         const double* B = sys->global_cell[1];
         const double* C = sys->global_cell[2];
+        if (A[1] || A[2] || 
+            B[0] || B[2] ||
+            C[0] || C[1]) {
+            MSYS_FAIL("pbwithin does not support triclinic global cell");
+        }
+        double ga = A[0];
+        double gb = B[1];
+        double gc = C[2];
         for (int i=-1; i<=1; i++) {
-            double ax = A[0]*i;
-            double ay = A[1]*i;
-            double az = A[2]*i;
+            double vx = ga*i;
             for (int j=-1; j<=1; j++) {
-                double bx = B[0]*j;
-                double by = B[1]*j;
-                double bz = B[2]*j;
+                double vy = gb*j;
                 for (int k=-1; k<=1; k++) {
                     if (i==0 && j==0 && k==0) continue;
-                    double vx = C[0]*k + ax + bx;
-                    double vy = C[1]*k + ay + by;
-                    double vz = C[2]*k + az + bz;
+                    double vz = gc*k;
 
                     for (Id id=0; id<S.size(); id++) {
                         if (!S[id]) continue;
