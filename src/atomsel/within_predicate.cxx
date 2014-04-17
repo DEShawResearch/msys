@@ -27,45 +27,6 @@ struct point_t {
     point_t(double _x, double _y, double _z) : x(_x), y(_y), z(_z) {}
 };
 
-struct posarray : boost::noncopyable {
-    std::vector<point_t> pos;
-    double xmin, ymin, zmin;
-    double xmax, ymax, zmax;
-    Id size;
-
-    posarray(SystemPtr mol, Selection const& S)
-    : xmin(), ymin(), zmin(), xmax(), ymax(), zmax(), size(S.count()) {
-        pos.resize(size);
-        for (Id i=0, j=0, n=S.size(); i<n; i++) {
-            if (S[i]) {
-                double x = mol->atomFAST(i).x;
-                double y = mol->atomFAST(i).y;
-                double z = mol->atomFAST(i).z;
-                if (j==0) {
-                    xmin = xmax = x;
-                    ymin = ymax = y;
-                    zmin = zmax = z;
-                } else {
-                    xmin = std::min(xmin, x);
-                    ymin = std::min(ymin, y);
-                    zmin = std::min(zmin, z);
-                    xmax = std::max(xmax, x);
-                    ymax = std::max(ymax, y);
-                    zmax = std::max(zmax, z);
-                }
-                pos[j].x = x;
-                pos[j].y = y;
-                pos[j].z = z;
-                ++j;
-            }
-        }
-    }
-    double const& x(Id i) const { return pos[i].x; }
-    double const& y(Id i) const { return pos[i].y; }
-    double const& z(Id i) const { return pos[i].z; }
-};
-
-
 struct voxel_t {
     /* For voxels on the edge of the grid, compute and store the
      * indices of neighbor voxels.  For other voxels, the neighbors
@@ -95,6 +56,55 @@ struct voxel_t {
       points[num++] = p;
   }
 };
+
+struct posarray : boost::noncopyable {
+    std::vector<point_t> pos;
+    double xmin, ymin, zmin;
+    double xmax, ymax, zmax;
+    double xm, ym, zm;          /* xmin-rad, ymin-rad, zmin-rad */
+    double ir;                  /* 1/rad */
+    Id size;
+    voxel_t *mesh;
+    int nx, ny, nz;             /* mesh dimensions */
+    int central_nbrs[27];
+
+    posarray(SystemPtr mol, Selection const& S)
+    : xmin(), ymin(), zmin(), xmax(), ymax(), zmax(), size(S.count()),
+      mesh(), nx(), ny(), nz() {
+        pos.resize(size);
+        for (Id i=0, j=0, n=S.size(); i<n; i++) {
+            if (S[i]) {
+                double x = mol->atomFAST(i).x;
+                double y = mol->atomFAST(i).y;
+                double z = mol->atomFAST(i).z;
+                if (j==0) {
+                    xmin = xmax = x;
+                    ymin = ymax = y;
+                    zmin = zmax = z;
+                } else {
+                    xmin = std::min(xmin, x);
+                    ymin = std::min(ymin, y);
+                    zmin = std::min(zmin, z);
+                    xmax = std::max(xmax, x);
+                    ymax = std::max(ymax, y);
+                    zmax = std::max(zmax, z);
+                }
+                pos[j].x = x;
+                pos[j].y = y;
+                pos[j].z = z;
+                ++j;
+            }
+        }
+    }
+    double const& x(Id i) const { return pos[i].x; }
+    double const& y(Id i) const { return pos[i].y; }
+    double const& z(Id i) const { return pos[i].z; }
+
+    ~posarray() { delete []mesh; }
+    void voxelize(double rad);
+    inline bool test(double x, double y, double z, double r2) const;
+};
+
 
 static
 void find_voxel_full_shell_neighbors(voxel_t *mesh, int nx, int ny, int nz) {
@@ -141,6 +151,78 @@ void compute_central_voxel_neighbors(int *nbrs, int nx, int ny, int nz) {
             }
         }
     }
+}
+
+void posarray::voxelize(double rad) {
+    delete []mesh;
+    mesh = NULL;
+    if (rad<=0) return;
+    ir = 1.0/rad;
+
+    /* extend bounding box by selection radius */
+    xm = xmin - rad;
+    ym = ymin - rad;
+    zm = zmin - rad;
+    double xs = rad + xmax - xm;
+    double ys = rad + ymax - ym;
+    double zs = rad + zmax - zm;
+
+    /* create and initialize voxel mesh */
+    nx = (int)(xs/rad)+1;
+    ny = (int)(ys/rad)+1;
+    nz = (int)(zs/rad)+1;
+    int nvoxel = nx*ny*nz;
+
+    /* map atoms to voxels */
+    mesh = new voxel_t[nvoxel];
+    for (Id i=0, n=size; i<n; i++) {
+      int xi = (x(i)-xm)*ir;
+      int yi = (y(i)-ym)*ir;
+      int zi = (z(i)-zm)*ir;
+      int index = xi + nx*(yi + ny*zi);
+      mesh[index].add(i);
+    }
+    find_voxel_full_shell_neighbors(mesh, nx, ny, nz);
+    compute_central_voxel_neighbors(central_nbrs, nx, ny, nz);
+}
+
+bool posarray::test(double x, double y, double z, double r2) const {
+    int xi = (x-xm)*ir;
+    int yi = (y-ym)*ir;
+    int zi = (z-zm)*ir;
+    if (xi<0 || xi>=nx ||
+        yi<0 || yi>=ny ||
+        zi<0 || zi>=nz) {
+        return false;
+    }
+    int index = xi + nx*(yi + ny*zi);
+    const voxel_t * v = mesh+index;
+    const int * nbrs;
+    int n_nbrs;
+    int self;
+    if (v->nbrs) {
+        /* edge voxel, use existing neighbors */
+        nbrs = v->nbrs;
+        n_nbrs = *nbrs++;
+        self = 0;   /* absolute indices */
+    } else {
+        nbrs = central_nbrs;
+        n_nbrs = 27;
+        self = index;
+    }
+    for (int j=0; j<n_nbrs; j++) {
+      const voxel_t* nbr = mesh + nbrs[j]+self;
+      int natoms = nbr->num;
+      for (int k=0; k<natoms; k++) {
+        const Id pk = nbr->points[k];
+        point_t const& q = pos[pk];
+        double dx=x-q.x;
+        double dy=y-q.y;
+        double dz=z-q.z;
+        if (dx*dx + dy*dy + dz*dz <=r2) return true;
+      }
+    }
+    return false;
 }
 
 namespace {
@@ -190,112 +272,17 @@ static void find_within( const point_t* wat,
                          double rad,
                          bool exclude ) {
 
-  double t1=1000*now();
-
-  /* If this is an "exwithin" selection, AND S with the converse of the
-   * subselection */
   if (exclude) {
     S.subtract(subsel);
   }
+  double r2 = rad*rad;
 
-  if (rad <= 0) {
-    S.intersect(subsel);
-    return;
-  }
-  const double ir = 1.0/rad;
-  const double r2 = rad*rad;
-
-  /* extend bounding box by selection radius */
-  double xmin = pro.xmin - rad;
-  double ymin = pro.ymin - rad;
-  double zmin = pro.zmin - rad;
-  double xsize = rad + pro.xmax - xmin;
-  double ysize = rad + pro.ymax - ymin;
-  double zsize = rad + pro.zmax - zmin;
-
-  /* create and initialize voxel mesh */
-  int nx = (int)(xsize/rad)+1;
-  int ny = (int)(ysize/rad)+1;
-  int nz = (int)(zsize/rad)+1;
-  int nvoxel = nx*ny*nz;
-
-  double t2=1000*now();
-
-  /* map pro atoms to voxels */
-  voxel_t * mesh = new voxel_t[nvoxel];
-  for (Id i=0, n=pro.size; i<n; i++) {
-    int xi = (pro.x(i)-xmin)*ir;
-    int yi = (pro.y(i)-ymin)*ir;
-    int zi = (pro.z(i)-zmin)*ir;
-    int index = xi + nx*(yi + ny*zi);
-    mesh[index].add(i);
-  }
-
-  double t3=1000*now();
-
-  find_voxel_full_shell_neighbors(mesh, nx, ny, nz);
-  int central_nbrs[27];
-  compute_central_voxel_neighbors(central_nbrs, nx, ny, nz);
-
-  double t4=1000*now();
-
-  /* loop over wat atoms */
   for (Id i=0; i<S.size(); i++) {
     if (!S[i]) continue;
     if (subsel[i]) continue;
     point_t const& p = wat[i];
-    const double x = p.x;
-    const double y = p.y;
-    const double z = p.z;
-    int xi = (x-xmin)*ir;
-    int yi = (y-ymin)*ir;
-    int zi = (z-zmin)*ir;
-    if (xi<0 || xi>=nx ||
-        yi<0 || yi>=ny ||
-        zi<0 || zi>=nz) {
-      S[i]=0;
-      continue;
-    }
-    int index = xi + nx*(yi + ny*zi);
-    const voxel_t * v = mesh+index;
-    const int * nbrs;
-    int n_nbrs;
-    int self;
-    if (v->nbrs) {
-        /* edge voxel, use existing neighbors */
-        nbrs = v->nbrs;
-        n_nbrs = *nbrs++;
-        self = 0;   /* absolute indices */
-    } else {
-        nbrs = central_nbrs;
-        n_nbrs = 27;
-        self = index;
-    }
-    bool on=0;
-    for (int j=0; j<n_nbrs; j++) {
-      const voxel_t* nbr = mesh + nbrs[j]+self;
-      int natoms = nbr->num;
-      for (int k=0; k<natoms; k++) {
-        const Id pk = nbr->points[k];
-        double dx=x-pro.x(pk);
-        double dy=y-pro.y(pk);
-        double dz=z-pro.z(pk);
-        if (dx*dx + dy*dy + dz*dz <=r2) {
-          on=1;
-          break;
-        }
-      }
-      if (on) break;
-    }
-    if (!on) S[i]=0;
+    S[i] = pro.test(p.x, p.y, p.z, r2);
   }
-  double t5=1000*now();
-
-  delete [] mesh;
-
-  double t6=1000*now();
-  if (0) printf("within %8.3f: tot %8.3f : %f %f %f %f %f\n", rad,t6-t1,
-          t2-t1,t3-t2,t4-t3,t5-t4,t6-t5);
 }
 
 void WithinPredicate::eval( Selection& S ) {
@@ -314,6 +301,7 @@ void WithinPredicate::eval( Selection& S ) {
         S.clear();
         return;
     }
+    pro.voxelize(rad);
 
     /* "water" coordinates */
     std::vector<point_t> wat(S.size());
@@ -496,6 +484,7 @@ void KNearestPredicate::eval( Selection& S ) {
     /* increase rmax until Ny is at least _N */
     for (;;) {
         smax = S;
+        pro.voxelize(rmax);
         find_within( &wat[0], pro, smax, subsel, rmax, false);
         nmax = smax.count();
         //printf("rmin %f nmin %u rmax %f nmax %u\n", rmin, nmin, rmax, nmax);
@@ -508,7 +497,7 @@ void KNearestPredicate::eval( Selection& S ) {
 
     /* Do a couple rounds of bisection search to narrow it down */
     for (int nb=0; nb<6; nb++) {
-        Selection sm(S);
+        Selection sm(smax);
         double rm = 0.5*(rmin+rmax);
         find_within( &wat[0], pro, sm, subsel, rm, false);
         Id nm = sm.count();
