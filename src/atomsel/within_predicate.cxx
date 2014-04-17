@@ -23,6 +23,8 @@ using desres::msys::IdList;
 
 struct point_t {
     double x,y,z;
+    point_t() {}
+    point_t(double _x, double _y, double _z) : x(_x), y(_y), z(_z) {}
 };
 
 struct voxel_t {
@@ -374,26 +376,21 @@ void WithinPredicate::eval( Selection& S ) {
         double ga = A[0];
         double gb = B[1];
         double gc = C[2];
-        for (int i=-1; i<=1; i++) {
-            double vx = ga*i;
-            for (int j=-1; j<=1; j++) {
-                double vy = gb*j;
-                for (int k=-1; k<=1; k++) {
-                    if (i==0 && j==0 && k==0) continue;
-                    double vz = gc*k;
-
-                    for (Id id=0; id<S.size(); id++) {
-                        if (!S[id]) continue;
-                        point_t p = points[id];
-                        p.x += vx;
-                        p.y += vy;
-                        p.z += vz;
-                        if (p.x > min[0] && p.x <= max[0] &&
-                            p.y > min[1] && p.y <= max[1] &&
-                            p.z > min[2] && p.z <= max[2]) {
-                            points.push_back(p);
-                            repids.push_back(id);
-                        }
+        for (Id id=0; id<S.size(); id++) {
+            if (!S[id]) continue;
+            point_t p = points[id];
+            for (int i=-1; i<=1; i++) {
+                double x = p.x + ga*i;
+                if (x<min[0] || x >= max[0]) continue;
+                for (int j=-1; j<=1; j++) {
+                    double y = p.y + gb*j;
+                    if (y<min[1] || y >= max[1]) continue;
+                    for (int k=-1; k<=1; k++) {
+                        double z = p.z + gc*k;
+                        if (z<min[2] || z >= max[2]) continue;
+                        if (i==0 && j==0 && k==0) continue;
+                        repids.push_back(id);
+                        points.push_back(point_t(x,y,z));
                     }
                 }
             }
