@@ -104,7 +104,7 @@ class TestAtomsel(unittest.TestCase):
             for sel, old in base:
                 sel = str(sel)
                 new = mol.selectIds(sel)
-                self.assertEqual(old, new)
+                self.assertEqual(old, new, "failed on '%s': oldlen %d newlen %d" % (sel, len(old), len(new)))
 
 class TestSdf(unittest.TestCase):
     def testFormalCharge(self):
