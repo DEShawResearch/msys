@@ -21,10 +21,12 @@ using desres::msys::Id;
 using desres::msys::IdSet;
 using desres::msys::IdList;
 
+typedef float scalar;
+
 struct point_t {
-    double x,y,z;
+    scalar x,y,z;
     point_t() {}
-    point_t(double _x, double _y, double _z) : x(_x), y(_y), z(_z) {}
+    point_t(scalar _x, scalar _y, scalar _z) : x(_x), y(_y), z(_z) {}
 };
 
 struct voxel_t {
@@ -59,10 +61,10 @@ struct voxel_t {
 
 struct posarray : boost::noncopyable {
     std::vector<point_t> pos;
-    double xmin, ymin, zmin;
-    double xmax, ymax, zmax;
-    double xm, ym, zm;          /* xmin-rad, ymin-rad, zmin-rad */
-    double ir;                  /* 1/rad */
+    scalar xmin, ymin, zmin;
+    scalar xmax, ymax, zmax;
+    scalar xm, ym, zm;          /* xmin-rad, ymin-rad, zmin-rad */
+    scalar ir;                  /* 1/rad */
     Id size;
     voxel_t *mesh;
     int nx, ny, nz;             /* mesh dimensions */
@@ -74,9 +76,9 @@ struct posarray : boost::noncopyable {
         pos.resize(size);
         for (Id i=0, j=0, n=S.size(); i<n; i++) {
             if (S[i]) {
-                double x = mol->atomFAST(i).x;
-                double y = mol->atomFAST(i).y;
-                double z = mol->atomFAST(i).z;
+                scalar x = mol->atomFAST(i).x;
+                scalar y = mol->atomFAST(i).y;
+                scalar z = mol->atomFAST(i).z;
                 if (j==0) {
                     xmin = xmax = x;
                     ymin = ymax = y;
@@ -96,13 +98,13 @@ struct posarray : boost::noncopyable {
             }
         }
     }
-    double const& x(Id i) const { return pos[i].x; }
-    double const& y(Id i) const { return pos[i].y; }
-    double const& z(Id i) const { return pos[i].z; }
+    scalar const& x(Id i) const { return pos[i].x; }
+    scalar const& y(Id i) const { return pos[i].y; }
+    scalar const& z(Id i) const { return pos[i].z; }
 
     ~posarray() { delete []mesh; }
-    void voxelize(double rad);
-    inline bool test(double x, double y, double z, double r2) const;
+    void voxelize(scalar rad);
+    inline bool test(scalar x, scalar y, scalar z, scalar r2) const;
 };
 
 
@@ -153,7 +155,7 @@ void compute_central_voxel_neighbors(int *nbrs, int nx, int ny, int nz) {
     }
 }
 
-void posarray::voxelize(double rad) {
+void posarray::voxelize(scalar rad) {
     delete []mesh;
     mesh = NULL;
     if (rad<=0) return;
@@ -163,9 +165,9 @@ void posarray::voxelize(double rad) {
     xm = xmin - rad;
     ym = ymin - rad;
     zm = zmin - rad;
-    double xs = rad + xmax - xm;
-    double ys = rad + ymax - ym;
-    double zs = rad + zmax - zm;
+    scalar xs = rad + xmax - xm;
+    scalar ys = rad + ymax - ym;
+    scalar zs = rad + zmax - zm;
 
     /* create and initialize voxel mesh */
     nx = (int)(xs/rad)+1;
@@ -186,7 +188,7 @@ void posarray::voxelize(double rad) {
     compute_central_voxel_neighbors(central_nbrs, nx, ny, nz);
 }
 
-bool posarray::test(double x, double y, double z, double r2) const {
+bool posarray::test(scalar x, scalar y, scalar z, scalar r2) const {
     int xi = (x-xm)*ir;
     int yi = (y-ym)*ir;
     int zi = (z-zm)*ir;
@@ -216,9 +218,9 @@ bool posarray::test(double x, double y, double z, double r2) const {
       for (int k=0; k<natoms; k++) {
         const Id pk = nbr->points[k];
         point_t const& q = pos[pk];
-        double dx=x-q.x;
-        double dy=y-q.y;
-        double dz=z-q.z;
+        scalar dx=x-q.x;
+        scalar dy=y-q.y;
+        scalar dz=z-q.z;
         if (dx*dx + dy*dy + dz*dz <=r2) return true;
       }
     }
@@ -229,13 +231,13 @@ namespace {
   using desres::msys::SystemPtr;
   class WithinPredicate : public Predicate {
     SystemPtr sys;
-    const double rad;
+    const scalar rad;
     PredicatePtr sub;
     const bool exclude;
     const bool periodic;
 
     public:
-    WithinPredicate( SystemPtr e, double r, bool excl, bool per, PredicatePtr s )
+    WithinPredicate( SystemPtr e, scalar r, bool excl, bool per, PredicatePtr s )
       : sys(e), rad(r), sub(s), exclude(excl), periodic(per) {}
 
     void eval( Selection& s );
@@ -269,13 +271,13 @@ static void find_within( const point_t* wat,
                          posarray const& pro,
                          Selection& S,
                          Selection const& subsel,
-                         double rad,
+                         scalar rad,
                          bool exclude ) {
 
   if (exclude) {
     S.subtract(subsel);
   }
-  double r2 = rad*rad;
+  scalar r2 = rad*rad;
 
   for (Id i=0; i<S.size(); i++) {
     if (!S[i]) continue;
@@ -315,12 +317,12 @@ void WithinPredicate::eval( Selection& S ) {
 
     if (periodic) {
         /* replicate the water within a bounding box around protein */
-        double xmin = pro.xmin - rad;
-        double ymin = pro.ymin - rad;
-        double zmin = pro.zmin - rad;
-        double xmax = pro.xmax + rad;
-        double ymax = pro.ymax + rad;
-        double zmax = pro.zmax + rad;
+        scalar xmin = pro.xmin - rad;
+        scalar ymin = pro.ymin - rad;
+        scalar zmin = pro.zmin - rad;
+        scalar xmax = pro.xmax + rad;
+        scalar ymax = pro.ymax + rad;
+        scalar zmax = pro.zmax + rad;
 
         IdList repids;  /* ids of replicated atoms */
         const double* A = sys->global_cell[0];
@@ -331,21 +333,21 @@ void WithinPredicate::eval( Selection& S ) {
             C[0] || C[1]) {
             MSYS_FAIL("pbwithin does not support triclinic global cell");
         }
-        double ga = A[0];
-        double gb = B[1];
-        double gc = C[2];
+        scalar ga = A[0];
+        scalar gb = B[1];
+        scalar gc = C[2];
         for (Id id=0; id<S.size(); id++) {
             if (!S[id]) continue;
             /* Need a copy since we'll append to wat below */
             point_t p = wat[id];    
             for (int i=-1; i<=1; i++) {
-                double x = p.x + ga*i;
+                scalar x = p.x + ga*i;
                 if (x<xmin || x >= xmax) continue;
                 for (int j=-1; j<=1; j++) {
-                    double y = p.y + gb*j;
+                    scalar y = p.y + gb*j;
                     if (y<ymin || y >= ymax) continue;
                     for (int k=-1; k<=1; k++) {
-                        double z = p.z + gc*k;
+                        scalar z = p.z + gc*k;
                         if (z<zmin || z >= zmax) continue;
                         if (i==0 && j==0 && k==0) continue;
                         repids.push_back(id);
@@ -468,7 +470,7 @@ void KNearestPredicate::eval( Selection& S ) {
     S.subtract(subsel);
 
     /* more than k atoms available? */
-    double rmin = 0;
+    scalar rmin = 0;
     Selection smin(S);
     Id nmin = smin.count();
     if (nmin <= _N) return;
@@ -487,7 +489,7 @@ void KNearestPredicate::eval( Selection& S ) {
 
     double t4=1000*now();
 
-    double rmax=2.5;
+    scalar rmax=2.5;
     Selection smax(0);
     Id nmax=nmin;
 
@@ -510,7 +512,7 @@ void KNearestPredicate::eval( Selection& S ) {
     /* Do a couple rounds of bisection search to narrow it down */
     for (int nb=0; nb<6; nb++) {
         Selection sm(smax);
-        double rm = 0.5*(rmin+rmax);
+        scalar rm = 0.5*(rmin+rmax);
         find_within( &wat[0], pro, sm, subsel, rm, false);
         Id nm = sm.count();
         //printf("rm %f nm %u\n", rm, nm);
@@ -529,18 +531,18 @@ void KNearestPredicate::eval( Selection& S ) {
     //printf("min: rad %f n %u\n", rmin, nmin);
     //printf("max: rad %f n %u\n", rmax, nmax);
 
-    std::vector<std::pair<double,Id> > pts;
+    std::vector<std::pair<scalar,Id> > pts;
     /* for each water in smax but not in smin */
     for (Id i=0, n=S.size(); i<n; i++) {
         if (smin[i] || !smax[i]) continue;
         point_t const& w = wat[i];
-        double r2 = std::numeric_limits<double>::max();
+        scalar r2 = std::numeric_limits<scalar>::max();
         /* find min dist to protein */
         for (Id j=0, m=pro.size; j<m; j++) {
-            double dx = w.x-pro.x(j);
-            double dy = w.y-pro.y(j);
-            double dz = w.z-pro.z(j);
-            double d2 = dx*dx + dy*dy + dz*dz;
+            scalar dx = w.x-pro.x(j);
+            scalar dy = w.y-pro.y(j);
+            scalar dz = w.z-pro.z(j);
+            scalar d2 = dx*dx + dy*dy + dz*dz;
             r2 = std::min(r2, d2);
         }
         pts.push_back(std::make_pair(r2, i));
