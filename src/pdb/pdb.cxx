@@ -38,12 +38,14 @@ static void strip_nonalpha(char *buf) {
 extern "C"
 char* desres_msys_import_webpdb(const char* code);
 
+static void Fclose(FILE* fp) { if (fp) fclose(fp); }
+
 namespace {
     class iterator : public LoadIterator {
         boost::shared_ptr<FILE> fd;
     public:
         explicit iterator(std::string const& path) {
-            fd.reset(fopen(path.c_str(), "r"), fclose);
+            fd.reset(fopen(path.c_str(), "r"), Fclose);
             if (!fd) MSYS_FAIL("Failed opening pdb file at " << path << ": " << strerror(errno));
         }
         SystemPtr next();
@@ -150,9 +152,9 @@ SystemPtr desres::msys::ImportWebPDB(std::string const& code) {
     if (fd<0) {
         MSYS_FAIL("Could not open temporary file for webpdb");
     }
-    unlink(temp);
     ssize_t n = strlen(buf);
     if (::write(fd, buf, n)!=n) {
+        unlink(temp);
         close(fd);
         MSYS_FAIL("Failed writing temporary file for webpdb");
     }
@@ -162,8 +164,12 @@ SystemPtr desres::msys::ImportWebPDB(std::string const& code) {
         mol = ImportPDB(temp);
     }
     catch (std::exception& e) {
+        unlink(temp);
+        close(fd);
         MSYS_FAIL("Error reading contents of webpdb " << code << " : " << e.what());
     }
+    unlink(temp);
+    close(fd);
     mol->name = code;
     return mol;
 }
