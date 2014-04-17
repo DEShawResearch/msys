@@ -447,9 +447,13 @@ namespace {
 
 void KNearestPredicate::eval( Selection& S ) {
 
+    double t0=1000*now();
+
     /* evaluate subselection */
     Selection subsel = full_selection(_sys);
     _sub->eval(subsel);
+
+    double t1=1000*now();
 
     /* "protein" coordinates */
     posarray pro(_sys, subsel);
@@ -457,6 +461,8 @@ void KNearestPredicate::eval( Selection& S ) {
         S.clear();
         return;
     }
+
+    double t2=1000*now();
 
     /* we never include subselection */
     S.subtract(subsel);
@@ -467,6 +473,8 @@ void KNearestPredicate::eval( Selection& S ) {
     Id nmin = smin.count();
     if (nmin <= _N) return;
 
+    double t3=1000*now();
+
     /* "water" coordinates */
     std::vector<point_t> wat(S.size());
     for (unsigned i=0; i<S.size(); i++) {
@@ -476,6 +484,8 @@ void KNearestPredicate::eval( Selection& S ) {
             wat[i].z = _sys->atomFAST(i).z;
         }
     }
+
+    double t4=1000*now();
 
     double rmax=2.5;
     Selection smax(0);
@@ -495,6 +505,8 @@ void KNearestPredicate::eval( Selection& S ) {
         rmax *= 1.5;
     }
 
+    double t5=1000*now();
+
     /* Do a couple rounds of bisection search to narrow it down */
     for (int nb=0; nb<6; nb++) {
         Selection sm(smax);
@@ -512,6 +524,8 @@ void KNearestPredicate::eval( Selection& S ) {
             nmin = nm;
         }
     }
+
+    double t6=1000*now();
     //printf("min: rad %f n %u\n", rmin, nmin);
     //printf("max: rad %f n %u\n", rmax, nmax);
 
@@ -536,6 +550,16 @@ void KNearestPredicate::eval( Selection& S ) {
     for (Id i=0, n=_N-nmin; i<n; i++) {
         S[pts[i].second] = 1;
     }
+    double t7=1000*now();
+
+    if (0) printf("tot %8.3f -- %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f\n", t7-t0,
+            t1-t0,
+            t2-t1,
+            t3-t2,
+            t4-t3,
+            t5-t4,
+            t6-t5,
+            t7-t6);
 }
 
 namespace desres { namespace msys { namespace atomsel {
