@@ -15,9 +15,14 @@ using desres::msys::AtomProSide;
 namespace desres { namespace msys { namespace atomsel {
 
     Selection full_selection(SystemPtr sys) {
-        if (!sys->atomCount()) return Selection(0,IdList());
-        Id last = sys->atoms().back();
-        return Selection(last+1, sys->atoms());
+        Selection s(sys->maxAtomId());
+        s.fill();
+        if (sys->maxAtomId() != sys->atomCount()) {
+            for (Id i=0, n=sys->maxAtomId(); i<n; i++) {
+                if (!sys->hasAtom(i)) s[i]=0;
+            }
+        }
+        return s;
     }
 
 }}}

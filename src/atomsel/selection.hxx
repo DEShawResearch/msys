@@ -34,7 +34,7 @@ namespace desres { namespace msys { namespace atomsel {
         
         /* clear all flags */
         void clear() { memset(&flags[0], 0, _size); }
-
+        
         /* number selected */
         Id count() const {
             Id cnt=0;
@@ -81,6 +81,11 @@ namespace desres { namespace msys { namespace atomsel {
             Id i,n = flags.size()/sizeof(size_t);
             for (i=0; i<n; i++) mine[i] &= ~(that[i]);
             return *this;
+        }
+
+        /* turn on all flags */
+        void fill() {
+            std::fill(flags.begin(), flags.begin()+_size, 1);
         }
     };
 
