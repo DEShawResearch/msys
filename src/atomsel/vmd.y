@@ -31,7 +31,7 @@
 %token <ival> CMP
 
 %token <key> INTKEY FLTKEY STRKEY
-%token WITHIN EXWITHIN PBWITHIN WITHINBONDS NEAREST SAME 
+%token WITHIN EXWITHIN PBWITHIN WITHINBONDS NEAREST SAME PBNEAREST
 %left <key> SINGLE
 
 %token <ival> IVAL
@@ -96,6 +96,7 @@ selection:
     | WITHINBONDS IVAL OF selection { $$ = context->make_withinbonds($2,$4); }
     | SAME key AS selection     { $$= context->make_same($2,$4); }
     | NEAREST IVAL TO selection { $$ = context->make_nearest($2,$4); }
+    | PBNEAREST IVAL TO selection { $$ = context->make_pbnearest($2,$4); }
     | expression CMP expression { $$ = context->make_compare($2,$1,$3); }
     ;
 

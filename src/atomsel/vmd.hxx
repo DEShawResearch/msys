@@ -53,6 +53,7 @@ namespace desres { namespace msys { namespace atomsel {
         Predicate* make_withinbonds(int n, Predicate* sub);
         Predicate* make_same(Keyword* key, Predicate* sub);
         Predicate* make_nearest(int r, Predicate* sub);
+        Predicate* make_pbnearest(int r, Predicate* sub);
         Predicate* make_compare(int cmp, Expression* lhs, Expression* rhs);
 
         Expression* make_exp(Dbl x);

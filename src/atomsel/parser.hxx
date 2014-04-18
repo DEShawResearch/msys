@@ -47,28 +47,29 @@
      WITHINBONDS = 265,
      NEAREST = 266,
      SAME = 267,
-     SINGLE = 268,
-     IVAL = 269,
-     FVAL = 270,
-     SVAL = 271,
-     FUNC = 272,
-     REGEX = 273,
-     MACRO = 274,
-     STRFCTN = 275,
-     AS = 276,
-     OF = 277,
-     TO = 278,
-     ERR = 279,
-     OR = 280,
-     AND = 281,
-     SUB = 282,
-     ADD = 283,
-     MOD = 284,
-     DIV = 285,
-     MUL = 286,
-     EXP = 287,
-     NOT = 288,
-     nonassoc = 289
+     PBNEAREST = 268,
+     SINGLE = 269,
+     IVAL = 270,
+     FVAL = 271,
+     SVAL = 272,
+     FUNC = 273,
+     REGEX = 274,
+     MACRO = 275,
+     STRFCTN = 276,
+     AS = 277,
+     OF = 278,
+     TO = 279,
+     ERR = 280,
+     OR = 281,
+     AND = 282,
+     SUB = 283,
+     ADD = 284,
+     MOD = 285,
+     DIV = 286,
+     MUL = 287,
+     EXP = 288,
+     NOT = 289,
+     nonassoc = 290
    };
 #endif
 
@@ -99,7 +100,7 @@ typedef union YYSTYPE
 
 
 /* Line 2132 of yacc.c  */
-#line 103 "parser.hxx"
+#line 104 "parser.hxx"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

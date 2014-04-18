@@ -44,6 +44,7 @@ exwithin                { return EXWITHIN; }
 pbwithin                { return PBWITHIN; }
 withinbonds             { return WITHINBONDS; }
 nearest                 { return NEAREST; }
+pbnearest               { return PBNEAREST; }
 same                    { return SAME; }
 as                      { return AS; }
 of                      { return OF;  }
