@@ -25,6 +25,7 @@ namespace desres { namespace msys { namespace atomsel {
    * subselection itself.  If there are only j<k atoms not in subselection,
    * then only j atoms will be selected. */
   PredicatePtr k_nearest_predicate(SystemPtr sys, unsigned k, PredicatePtr S);
+  PredicatePtr k_pbnearest_predicate(SystemPtr sys, unsigned k, PredicatePtr S);
 
 }}}
 

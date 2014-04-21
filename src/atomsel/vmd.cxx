@@ -247,7 +247,7 @@ Predicate* VMD::make_nearest(int r, Predicate* sub) {
 }
 
 Predicate* VMD::make_pbnearest(int r, Predicate* sub) {
-    MSYS_FAIL("pbnearest not implemented (yet)");
+    return add(k_pbnearest_predicate(sys, r, sub->shared_from_this()));
 }
 
 Expression* VMD::make_exp(int v) {

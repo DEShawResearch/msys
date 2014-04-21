@@ -28,6 +28,7 @@ struct point_t {
     point_t() {}
     point_t(scalar _x, scalar _y, scalar _z) : x(_x), y(_y), z(_z) {}
 };
+typedef std::vector<point_t> PointList;
 
 struct voxel_t {
     /* For voxels on the edge of the grid, compute and store the
@@ -267,23 +268,115 @@ namespace {
   };
 }
 
-static void find_within( const point_t* wat,
-                         posarray const& pro,
-                         Selection& S,
-                         Selection const& subsel,
-                         scalar rad,
-                         bool exclude ) {
+/* replicate the water within a bounding box around protein */
+static IdList pbreplicate(PointList& wat,
+                          const Selection& S,
+                          posarray const& pro,
+                          scalar rad,
+                          SystemPtr sys) {
+                         
+    /* replicate the water within a bounding box around protein */
+    scalar xmin = pro.xmin - rad;
+    scalar ymin = pro.ymin - rad;
+    scalar zmin = pro.zmin - rad;
+    scalar xmax = pro.xmax + rad;
+    scalar ymax = pro.ymax + rad;
+    scalar zmax = pro.zmax + rad;
 
-  if (exclude) {
-    S.subtract(subsel);
-  }
-  scalar r2 = rad*rad;
+    IdList repids;  /* ids of replicated atoms */
+    const double* A = sys->global_cell[0];
+    const double* B = sys->global_cell[1];
+    const double* C = sys->global_cell[2];
+    if (A[1] || A[2] || 
+        B[0] || B[2] ||
+        C[0] || C[1]) {
+        MSYS_FAIL("pbwithin does not support triclinic global cell");
+    }
+    scalar ga = A[0];
+    scalar gb = B[1];
+    scalar gc = C[2];
+    for (Id id=0; id<S.size(); id++) {
+        if (!S[id]) continue;
+        /* Need a copy since we'll append to wat below */
+        point_t p = wat[id];    
+        for (int i=-1; i<=1; i++) {
+            scalar x = p.x + ga*i;
+            if (x<xmin || x >= xmax) continue;
+            for (int j=-1; j<=1; j++) {
+                scalar y = p.y + gb*j;
+                if (y<ymin || y >= ymax) continue;
+                for (int k=-1; k<=1; k++) {
+                    scalar z = p.z + gc*k;
+                    if (z<zmin || z >= zmax) continue;
+                    if (i==0 && j==0 && k==0) continue;
+                    repids.push_back(id);
+                    wat.push_back(point_t(x,y,z));
+                }
+            }
+        }
+    }
+    return repids;
+}
+
+
+static void test_points(Selection& S, Selection const& subsel, 
+                        PointList const& wat, posarray const& pro,
+                        scalar r2) {
 
   for (Id i=0; i<S.size(); i++) {
     if (!S[i]) continue;
     if (subsel[i]) continue;
     point_t const& p = wat[i];
     S[i] = pro.test(p.x, p.y, p.z, r2);
+  }
+}
+
+static void find_within( PointList& wat,
+                         posarray const& pro,
+                         Selection& S,
+                         Selection const& subsel,
+                         scalar rad,
+                         bool exclude,
+                         bool periodic,
+                         SystemPtr sys) {
+
+  if (exclude) {
+    S.subtract(subsel);
+  }
+  scalar r2 = rad*rad;
+
+  if (periodic) {
+      Id watsize = wat.size();
+
+      /* FIXME: don't want to pbreplicate except when we voxelize! */
+      IdList repids = pbreplicate(wat, S, pro, rad, sys);
+
+      Selection Srep(wat.size());
+      Selection Ssub(wat.size());
+      /* copy original flags */
+      for (unsigned i=0; i<S.size(); i++) Srep[i]=S[i];
+      /* turn on all replica flags - we know they're selected */
+      for (unsigned i=0; i<repids.size(); i++) Srep[i+S.size()]=1;
+      /* copy subsel into expanded set */
+      for (unsigned i=0; i<subsel.size(); i++) Ssub[i]=subsel[i];
+
+      //find_within( &wat[0], pro, Srep, Ssub, rad, false );
+      test_points(Srep, Ssub, wat, pro, r2);
+
+      /* copy Srep back into S */
+      for (unsigned i=0; i<S.size(); i++) S[i]=Srep[i];
+
+      /* OR the replica flags into the home set */
+      for (Id i=0; i<repids.size(); i++) {
+          if (Srep[S.size()+i]) {
+              S[repids[i]]=1;
+          }
+      }
+      /* return wat to its original size */
+      wat.resize(watsize);
+
+  } else {
+    test_points(S, subsel, wat, pro, r2);
   }
 }
 
@@ -315,72 +408,7 @@ void WithinPredicate::eval( Selection& S ) {
         }
     }
 
-    if (periodic) {
-        /* replicate the water within a bounding box around protein */
-        scalar xmin = pro.xmin - rad;
-        scalar ymin = pro.ymin - rad;
-        scalar zmin = pro.zmin - rad;
-        scalar xmax = pro.xmax + rad;
-        scalar ymax = pro.ymax + rad;
-        scalar zmax = pro.zmax + rad;
-
-        IdList repids;  /* ids of replicated atoms */
-        const double* A = sys->global_cell[0];
-        const double* B = sys->global_cell[1];
-        const double* C = sys->global_cell[2];
-        if (A[1] || A[2] || 
-            B[0] || B[2] ||
-            C[0] || C[1]) {
-            MSYS_FAIL("pbwithin does not support triclinic global cell");
-        }
-        scalar ga = A[0];
-        scalar gb = B[1];
-        scalar gc = C[2];
-        for (Id id=0; id<S.size(); id++) {
-            if (!S[id]) continue;
-            /* Need a copy since we'll append to wat below */
-            point_t p = wat[id];    
-            for (int i=-1; i<=1; i++) {
-                scalar x = p.x + ga*i;
-                if (x<xmin || x >= xmax) continue;
-                for (int j=-1; j<=1; j++) {
-                    scalar y = p.y + gb*j;
-                    if (y<ymin || y >= ymax) continue;
-                    for (int k=-1; k<=1; k++) {
-                        scalar z = p.z + gc*k;
-                        if (z<zmin || z >= zmax) continue;
-                        if (i==0 && j==0 && k==0) continue;
-                        repids.push_back(id);
-                        wat.push_back(point_t(x,y,z));
-                    }
-                }
-            }
-        }
-
-        Selection Srep(wat.size());
-        Selection Ssub(wat.size());
-        /* copy original flags */
-        for (unsigned i=0; i<S.size(); i++) Srep[i]=S[i];
-        /* turn on all replica flags - we know they're selected */
-        for (unsigned i=0; i<repids.size(); i++) Srep[i+S.size()]=1;
-        /* copy subsel into expanded set */
-        for (unsigned i=0; i<subsel.size(); i++) Ssub[i]=subsel[i];
-
-        find_within( &wat[0], pro, Srep, Ssub, rad, false );
-
-        /* copy Srep back into S */
-        for (unsigned i=0; i<S.size(); i++) S[i]=Srep[i];
-
-        /* OR the replica flags into the home set */
-        for (Id i=0; i<repids.size(); i++) {
-            if (Srep[S.size()+i]) {
-                S[repids[i]]=1;
-            }
-        }
-
-    } else { 
-        find_within( &wat[0], pro, S, subsel, rad, exclude );
-    }
+    find_within(wat, pro, S, subsel, rad, exclude, periodic, sys);
 }
 
 void WithinBondsPredicate::eval( Selection& S ) {
@@ -432,15 +460,17 @@ namespace {
     class KNearestPredicate : public Predicate {
         SystemPtr _sys;
         const unsigned _N;
+        const bool periodic;
         PredicatePtr _sub;
 
     public:
-        KNearestPredicate(SystemPtr sys, unsigned k, PredicatePtr sub)
-            : _sys(sys), _N(k), _sub(sub) {}
+        KNearestPredicate(SystemPtr sys, unsigned k, bool per, PredicatePtr sub)
+            : _sys(sys), _N(k), periodic(per), _sub(sub) {}
 
         void eval(Selection& s);
         void dump( std::ostream& str ) const {
-            str << "nearest " << _N << " to [";
+            str << (periodic ? "pb" : "")
+                << "nearest " << _N << " to [";
             _sub->dump(str);
             str << "]";
         }
@@ -497,7 +527,7 @@ void KNearestPredicate::eval( Selection& S ) {
     for (;;) {
         smax = S;
         pro.voxelize(rmax);
-        find_within( &wat[0], pro, smax, subsel, rmax, false);
+        find_within( wat, pro, smax, subsel, rmax, false, periodic, _sys);
         nmax = smax.count();
         //printf("rmin %f nmin %u rmax %f nmax %u\n", rmin, nmin, rmax, nmax);
         if (nmax >= _N) break;
@@ -513,7 +543,7 @@ void KNearestPredicate::eval( Selection& S ) {
     for (int nb=0; nb<6; nb++) {
         Selection sm(smax);
         scalar rm = 0.5*(rmin+rmax);
-        find_within( &wat[0], pro, sm, subsel, rm, false);
+        find_within( wat, pro, sm, subsel, rm, false, periodic, _sys);
         Id nm = sm.count();
         //printf("rm %f nm %u\n", rm, nm);
         if (nm>=_N) {
@@ -567,7 +597,10 @@ void KNearestPredicate::eval( Selection& S ) {
 namespace desres { namespace msys { namespace atomsel {
 
     PredicatePtr k_nearest_predicate(SystemPtr sys, unsigned k, PredicatePtr S) {
-        return PredicatePtr(new KNearestPredicate(sys,k,S));
+        return PredicatePtr(new KNearestPredicate(sys,k,false,S));
+    }
+    PredicatePtr k_pbnearest_predicate(SystemPtr sys, unsigned k, PredicatePtr S) {
+        return PredicatePtr(new KNearestPredicate(sys,k,true,S));
     }
 
 }}}
