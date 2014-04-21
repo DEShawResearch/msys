@@ -106,6 +106,7 @@ struct posarray : boost::noncopyable {
     ~posarray() { delete []mesh; }
     void voxelize(scalar rad);
     inline bool test(scalar x, scalar y, scalar z, scalar r2) const;
+    inline scalar mindist2(scalar x, scalar y, scalar z) const;
 };
 
 
@@ -226,6 +227,47 @@ bool posarray::test(scalar x, scalar y, scalar z, scalar r2) const {
       }
     }
     return false;
+}
+
+scalar posarray::mindist2(scalar x, scalar y, scalar z) const {
+    int xi = (x-xm)*ir;
+    int yi = (y-ym)*ir;
+    int zi = (z-zm)*ir;
+    scalar r2 = std::numeric_limits<scalar>::max();
+    if (xi<0 || xi>=nx ||
+        yi<0 || yi>=ny ||
+        zi<0 || zi>=nz) {
+        return r2;
+    }
+    int index = xi + nx*(yi + ny*zi);
+    const voxel_t * v = mesh+index;
+    const int * nbrs;
+    int n_nbrs;
+    int self;
+    if (v->nbrs) {
+        /* edge voxel, use existing neighbors */
+        nbrs = v->nbrs;
+        n_nbrs = *nbrs++;
+        self = 0;   /* absolute indices */
+    } else {
+        nbrs = central_nbrs;
+        n_nbrs = 27;
+        self = index;
+    }
+    for (int j=0; j<n_nbrs; j++) {
+      const voxel_t* nbr = mesh + nbrs[j]+self;
+      int natoms = nbr->num;
+      for (int k=0; k<natoms; k++) {
+        const Id pk = nbr->points[k];
+        point_t const& q = pos[pk];
+        scalar dx=x-q.x;
+        scalar dy=y-q.y;
+        scalar dz=z-q.z;
+        scalar d2 = dx*dx + dy*dy + dz*dz;
+        r2 = std::min(r2, d2);
+      }
+    }
+    return r2;
 }
 
 namespace {
@@ -562,19 +604,11 @@ void KNearestPredicate::eval( Selection& S ) {
     //printf("max: rad %f n %u\n", rmax, nmax);
 
     std::vector<std::pair<scalar,Id> > pts;
-    /* for each water in smax but not in smin */
     for (Id i=0, n=S.size(); i<n; i++) {
+        /* for each water in smax but not in smin */
         if (smin[i] || !smax[i]) continue;
         point_t const& w = wat[i];
-        scalar r2 = std::numeric_limits<scalar>::max();
-        /* find min dist to protein */
-        for (Id j=0, m=pro.size; j<m; j++) {
-            scalar dx = w.x-pro.x(j);
-            scalar dy = w.y-pro.y(j);
-            scalar dz = w.z-pro.z(j);
-            scalar d2 = dx*dx + dy*dy + dz*dz;
-            r2 = std::min(r2, d2);
-        }
+        scalar r2 = pro.mindist2(w.x, w.y, w.z);
         pts.push_back(std::make_pair(r2, i));
     }
     std::partial_sort(pts.begin(), pts.begin()+(_N-nmin), pts.end());
