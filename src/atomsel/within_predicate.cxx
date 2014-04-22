@@ -542,10 +542,9 @@ void KNearestPredicate::eval( Selection& S ) {
     S.subtract(subsel);
 
     /* more than k atoms available? */
-    scalar rmin = 0;
-    Selection smin(S);
-    Id nmin = smin.count();
-    if (nmin <= _N) return;
+    Selection smax(S);
+    Id nmax = smax.count();
+    if (nmax <= _N) return;
 
     double t3=1000*now();
 
@@ -561,11 +560,11 @@ void KNearestPredicate::eval( Selection& S ) {
 
     double t4=1000*now();
 
-    scalar rmax=2.5;
-    Selection smax(0);
-    Id nmax=nmin;
-
     /* increase rmax until Ny is at least _N */
+    Selection smin(0);
+    Id nmin = 0;
+    scalar rmin = 0.0;
+    scalar rmax = 2.5;
     for (;;) {
         smax = S;
         pro.voxelize(rmax);
