@@ -310,57 +310,6 @@ namespace {
   };
 }
 
-/* replicate the water within a bounding box around protein */
-static IdList pbreplicate(PointList& wat,
-                          const Selection& S,
-                          posarray const& pro,
-                          scalar rad,
-                          SystemPtr sys) {
-                         
-    /* replicate the water within a bounding box around protein */
-    scalar xmin = pro.xmin - rad;
-    scalar ymin = pro.ymin - rad;
-    scalar zmin = pro.zmin - rad;
-    scalar xmax = pro.xmax + rad;
-    scalar ymax = pro.ymax + rad;
-    scalar zmax = pro.zmax + rad;
-
-    IdList repids;  /* ids of replicated atoms */
-    const double* A = sys->global_cell[0];
-    const double* B = sys->global_cell[1];
-    const double* C = sys->global_cell[2];
-    if (A[1] || A[2] || 
-        B[0] || B[2] ||
-        C[0] || C[1]) {
-        MSYS_FAIL("pbwithin does not support triclinic global cell");
-    }
-    scalar ga = A[0];
-    scalar gb = B[1];
-    scalar gc = C[2];
-    for (Id id=0; id<S.size(); id++) {
-        if (!S[id]) continue;
-        /* Need a copy since we'll append to wat below */
-        point_t p = wat[id];    
-        for (int i=-1; i<=1; i++) {
-            scalar x = p.x + ga*i;
-            if (x<xmin || x >= xmax) continue;
-            for (int j=-1; j<=1; j++) {
-                scalar y = p.y + gb*j;
-                if (y<ymin || y >= ymax) continue;
-                for (int k=-1; k<=1; k++) {
-                    scalar z = p.z + gc*k;
-                    if (z<zmin || z >= zmax) continue;
-                    if (i==0 && j==0 && k==0) continue;
-                    repids.push_back(id);
-                    wat.push_back(point_t(x,y,z));
-                }
-            }
-        }
-    }
-    return repids;
-}
-
-
 static void test_points(Selection& S, 
                         PointList const& wat, posarray const& pro,
                         scalar r2) {
@@ -372,7 +321,7 @@ static void test_points(Selection& S,
   }
 }
 
-static void find_within( PointList& wat,
+static void find_within( PointList const& wat,
                          posarray const& pro,
                          Selection& S,
                          scalar rad,
@@ -382,31 +331,48 @@ static void find_within( PointList& wat,
   scalar r2 = rad*rad;
 
   if (periodic) {
-      Id watsize = wat.size();
 
-      /* FIXME: don't want to pbreplicate except when we voxelize! */
-      IdList repids = pbreplicate(wat, S, pro, rad, sys);
+      Selection orig(S);
+      test_points(S, wat, pro, r2);
+      /* For points which are in orig but not in S, see if they can
+       * be found using minimum image checks */
 
-      Selection Srep(wat.size());
-      /* copy original flags */
-      for (unsigned i=0; i<S.size(); i++) Srep[i]=S[i];
-      /* turn on all replica flags - we know they're selected */
-      for (unsigned i=0; i<repids.size(); i++) Srep[i+S.size()]=1;
+      scalar xmin = pro.xmin - rad;
+      scalar ymin = pro.ymin - rad;
+      scalar zmin = pro.zmin - rad;
+      scalar xmax = pro.xmax + rad;
+      scalar ymax = pro.ymax + rad;
+      scalar zmax = pro.zmax + rad;
 
-      test_points(Srep, wat, pro, r2);
-
-      /* copy Srep back into S */
-      for (unsigned i=0; i<S.size(); i++) S[i]=Srep[i];
-
-      /* OR the replica flags into the home set */
-      for (Id i=0; i<repids.size(); i++) {
-          if (Srep[S.size()+i]) {
-              S[repids[i]]=1;
+      const double* A = sys->global_cell[0];
+      const double* B = sys->global_cell[1];
+      const double* C = sys->global_cell[2];
+      if (A[1] || A[2] || 
+          B[0] || B[2] ||
+          C[0] || C[1]) {
+          MSYS_FAIL("pbwithin does not support triclinic global cell");
+      }
+      scalar ga = A[0];
+      scalar gb = B[1];
+      scalar gc = C[2];
+      for (Id id=0; id<S.size(); id++) {
+          if (S[id] || !orig[id]) continue;
+          point_t const& p = wat[id];    
+          for (int i=-1; i<=1; i++) {
+              scalar x = p.x + ga*i;
+              if (x<xmin || x >= xmax) continue;
+              for (int j=-1; j<=1; j++) {
+                  scalar y = p.y + gb*j;
+                  if (y<ymin || y >= ymax) continue;
+                  for (int k=-1; k<=1; k++) {
+                      scalar z = p.z + gc*k;
+                      if (z<zmin || z >= zmax) continue;
+                      if (i==0 && j==0 && k==0) continue;
+                      S[id] = S[id] || pro.test(x,y,z,r2);
+                  }
+              }
           }
       }
-      /* return wat to its original size */
-      wat.resize(watsize);
-
   } else {
     test_points(S, wat, pro, r2);
   }
