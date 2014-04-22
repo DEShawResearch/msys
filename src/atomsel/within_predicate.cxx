@@ -361,13 +361,12 @@ static IdList pbreplicate(PointList& wat,
 }
 
 
-static void test_points(Selection& S, Selection const& subsel, 
+static void test_points(Selection& S, 
                         PointList const& wat, posarray const& pro,
                         scalar r2) {
 
   for (Id i=0; i<S.size(); i++) {
     if (!S[i]) continue;
-    if (subsel[i]) continue;
     point_t const& p = wat[i];
     S[i] = pro.test(p.x, p.y, p.z, r2);
   }
@@ -376,7 +375,6 @@ static void test_points(Selection& S, Selection const& subsel,
 static void find_within( PointList& wat,
                          posarray const& pro,
                          Selection& S,
-                         Selection const& subsel,
                          scalar rad,
                          bool periodic,
                          SystemPtr sys) {
@@ -390,16 +388,12 @@ static void find_within( PointList& wat,
       IdList repids = pbreplicate(wat, S, pro, rad, sys);
 
       Selection Srep(wat.size());
-      Selection Ssub(wat.size());
       /* copy original flags */
       for (unsigned i=0; i<S.size(); i++) Srep[i]=S[i];
       /* turn on all replica flags - we know they're selected */
       for (unsigned i=0; i<repids.size(); i++) Srep[i+S.size()]=1;
-      /* copy subsel into expanded set */
-      for (unsigned i=0; i<subsel.size(); i++) Ssub[i]=subsel[i];
 
-      //find_within( &wat[0], pro, Srep, Ssub, rad, false );
-      test_points(Srep, Ssub, wat, pro, r2);
+      test_points(Srep, wat, pro, r2);
 
       /* copy Srep back into S */
       for (unsigned i=0; i<S.size(); i++) S[i]=Srep[i];
@@ -414,7 +408,7 @@ static void find_within( PointList& wat,
       wat.resize(watsize);
 
   } else {
-    test_points(S, subsel, wat, pro, r2);
+    test_points(S, wat, pro, r2);
   }
 }
 
@@ -447,7 +441,7 @@ void WithinPredicate::eval( Selection& S ) {
     }
 
     if (exclude) S.subtract(subsel);
-    find_within(wat, pro, S, subsel, rad, periodic, sys);
+    find_within(wat, pro, S, rad, periodic, sys);
 }
 
 void WithinBondsPredicate::eval( Selection& S ) {
@@ -565,7 +559,7 @@ void KNearestPredicate::eval( Selection& S ) {
     for (;;) {
         smax = S;
         pro.voxelize(rmax);
-        find_within( wat, pro, smax, subsel, rmax, periodic, _sys);
+        find_within( wat, pro, smax, rmax, periodic, _sys);
         nmax = smax.count();
         //printf("rmin %f nmin %u rmax %f nmax %u\n", rmin, nmin, rmax, nmax);
         if (nmax >= _N) break;
@@ -581,7 +575,7 @@ void KNearestPredicate::eval( Selection& S ) {
     for (int nb=0; nb<6; nb++) {
         Selection sm(smax);
         scalar rm = 0.5*(rmin+rmax);
-        find_within( wat, pro, sm, subsel, rm, periodic, _sys);
+        find_within( wat, pro, sm, rm, periodic, _sys);
         Id nm = sm.count();
         //printf("rm %f nm %u\n", rm, nm);
         if (nm>=_N) {
