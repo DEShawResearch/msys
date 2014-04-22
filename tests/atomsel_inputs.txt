@@ -23,6 +23,11 @@ same residue as within 4 of protein
 (not atomicnumber 1) and within 1.5 of protein 
 (not atomicnumber 1) and within 2.5 of protein 
 (not atomicnumber 1) and within 5.5 of protein 
+
+(not atomicnumber 1) and exwithin 3.5 of protein 
+(not atomicnumber 1) and exwithin 4.5 of protein 
+(not atomicnumber 1) and exwithin 5.5 of protein 
+
 within 0 of protein
 withinbonds 2 of name C CA N O
 fragment 0
