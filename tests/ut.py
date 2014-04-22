@@ -1272,6 +1272,8 @@ class TestMain(unittest.TestCase):
         for s in msys.NonbondedSchemas():
             m.addNonbondedFromSchema(s)
             m.nonbonded_info.vdw_funct=""
+        msys.Save(m, '/tmp/_schema_.dms')
+        msys.Load('/tmp/_schema_.dms')
 
     def testSchemaWithName(self):
         m=msys.CreateSystem()
