@@ -378,13 +378,9 @@ static void find_within( PointList& wat,
                          Selection& S,
                          Selection const& subsel,
                          scalar rad,
-                         bool exclude,
                          bool periodic,
                          SystemPtr sys) {
 
-  if (exclude) {
-    S.subtract(subsel);
-  }
   scalar r2 = rad*rad;
 
   if (periodic) {
@@ -450,7 +446,8 @@ void WithinPredicate::eval( Selection& S ) {
         }
     }
 
-    find_within(wat, pro, S, subsel, rad, exclude, periodic, sys);
+    if (exclude) S.subtract(subsel);
+    find_within(wat, pro, S, subsel, rad, periodic, sys);
 }
 
 void WithinBondsPredicate::eval( Selection& S ) {
@@ -568,7 +565,7 @@ void KNearestPredicate::eval( Selection& S ) {
     for (;;) {
         smax = S;
         pro.voxelize(rmax);
-        find_within( wat, pro, smax, subsel, rmax, false, periodic, _sys);
+        find_within( wat, pro, smax, subsel, rmax, periodic, _sys);
         nmax = smax.count();
         //printf("rmin %f nmin %u rmax %f nmax %u\n", rmin, nmin, rmax, nmax);
         if (nmax >= _N) break;
@@ -584,7 +581,7 @@ void KNearestPredicate::eval( Selection& S ) {
     for (int nb=0; nb<6; nb++) {
         Selection sm(smax);
         scalar rm = 0.5*(rmin+rmax);
-        find_within( wat, pro, sm, subsel, rm, false, periodic, _sys);
+        find_within( wat, pro, sm, subsel, rm, periodic, _sys);
         Id nm = sm.count();
         //printf("rm %f nm %u\n", rm, nm);
         if (nm>=_N) {
