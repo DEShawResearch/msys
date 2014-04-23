@@ -1,3 +1,9 @@
+1.7.61 IMPROVED: Across-the-board speedups for all atom selections.
+       IMPROVED: Notable improvements to "nearest" selections.
+       NEW: "pbnearest" selection.
+       NEW: lc5-lc7 schemas.
+       FIXED: Loading webpdb crashed in 1.7.60.
+
 1.7.60 NEW: dms-find-knot has a --untie option to remove knots.
        NEW: LoadMany support for PDB files.
        IMPROVED: dms-find-knot has a --ignore-excluded-knots that uses
