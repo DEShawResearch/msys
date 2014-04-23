@@ -381,9 +381,9 @@ static void find_within( PointList const& wat,
 void WithinPredicate::eval( Selection& S ) {
     Selection subsel = full_selection(sys);
     sub->eval(subsel);
+    if (exclude) S.subtract(subsel);
 
     if (rad<=0) {
-        if (exclude) S.subtract(subsel);
         S.intersect(subsel);
         return;
     }
@@ -406,7 +406,6 @@ void WithinPredicate::eval( Selection& S ) {
         }
     }
 
-    if (exclude) S.subtract(subsel);
     find_within(wat, pro, S, rad, periodic, sys);
 }
 
