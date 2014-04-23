@@ -325,13 +325,14 @@ static void find_within( PointList const& wat,
                          posarray const& pro,
                          Selection& S,
                          scalar rad,
-                         bool periodic,
-                         SystemPtr sys) {
+                         const double* cell ) {
 
   scalar r2 = rad*rad;
 
-  if (periodic) {
-
+  if (cell) {
+      if (cell[1] || cell[2] || cell[3] || cell[5] || cell[6] || cell[7]) {
+          MSYS_FAIL("pbwithin does not support triclinic global cell");
+      }
       Selection orig(S);
       test_points(S, wat, pro, r2);
       /* For points which are in orig but not in S, see if they can
@@ -343,18 +344,10 @@ static void find_within( PointList const& wat,
       scalar xmax = pro.xmax + rad;
       scalar ymax = pro.ymax + rad;
       scalar zmax = pro.zmax + rad;
+      scalar ga = cell[0];
+      scalar gb = cell[4];
+      scalar gc = cell[8];
 
-      const double* A = sys->global_cell[0];
-      const double* B = sys->global_cell[1];
-      const double* C = sys->global_cell[2];
-      if (A[1] || A[2] || 
-          B[0] || B[2] ||
-          C[0] || C[1]) {
-          MSYS_FAIL("pbwithin does not support triclinic global cell");
-      }
-      scalar ga = A[0];
-      scalar gb = B[1];
-      scalar gc = C[2];
       for (Id id=0; id<S.size(); id++) {
           if (S[id] || !orig[id]) continue;
           point_t const& p = wat[id];    
@@ -406,7 +399,7 @@ void WithinPredicate::eval( Selection& S ) {
         }
     }
 
-    find_within(wat, pro, S, rad, periodic, sys);
+    find_within(wat, pro, S, rad, periodic ? sys->global_cell[0] : NULL);
 }
 
 void WithinBondsPredicate::eval( Selection& S ) {
@@ -516,6 +509,8 @@ void KNearestPredicate::eval( Selection& S ) {
 
     double t4=1000*now();
 
+    const double* cell = periodic ? _sys->global_cell[0] : NULL;
+
     /* increase rmax until Ny is at least _N */
     Selection smin(0);
     Id nmin = 0;
@@ -524,7 +519,7 @@ void KNearestPredicate::eval( Selection& S ) {
     for (;;) {
         smax = S;
         pro.voxelize(rmax);
-        find_within( wat, pro, smax, rmax, periodic, _sys);
+        find_within( wat, pro, smax, rmax, cell);
         nmax = smax.count();
         //printf("rmin %f nmin %u rmax %f nmax %u\n", rmin, nmin, rmax, nmax);
         if (nmax >= _N) break;
@@ -540,7 +535,7 @@ void KNearestPredicate::eval( Selection& S ) {
     for (int nb=0; nb<6; nb++) {
         Selection sm(smax);
         scalar rm = 0.5*(rmin+rmax);
-        find_within( wat, pro, sm, rm, periodic, _sys);
+        find_within( wat, pro, sm, rm, cell);
         Id nm = sm.count();
         //printf("rm %f nm %u\n", rm, nm);
         if (nm>=_N) {
