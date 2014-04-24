@@ -161,5 +161,6 @@ xyz.cxx
 '''))
 
 env.AddStagedHeaders(Glob("*.hxx"), prefix='msys')
+env.AddStagedHeaders(Glob('atomsel/*.hxx'), prefix='msys/atomsel')
 
 Export("libmsys")
