@@ -61,49 +61,70 @@ struct voxel_t {
 };
 
 struct posarray : boost::noncopyable {
-    std::vector<point_t> pos;
     scalar xmin, ymin, zmin;
     scalar xmax, ymax, zmax;
     scalar xm, ym, zm;          /* xmin-rad, ymin-rad, zmin-rad */
     scalar ir;                  /* 1/rad */
-    Id size;
     voxel_t *mesh;
     int nx, ny, nz;             /* mesh dimensions */
     int central_nbrs[27];
+    std::vector<point_t> pos;
 
-    posarray(SystemPtr mol, Selection const& S)
-    : xmin(), ymin(), zmin(), xmax(), ymax(), zmax(), size(S.count()),
-      mesh(), nx(), ny(), nz() {
-        pos.resize(size);
+    posarray()
+    : xmin(), ymin(), zmin(), 
+      xmax(), ymax(), zmax(), 
+      mesh(), nx(), ny(), nz()
+    {}
+    ~posarray() { delete[] mesh; }
+
+    Id size() const { return pos.size(); }
+
+    inline void _set(Id i, scalar x, scalar y, scalar z) {
+        pos[i].x = x;
+        pos[i].y = y;
+        pos[i].z = z;
+        xmin = std::min(xmin, x);
+        ymin = std::min(ymin, y);
+        zmin = std::min(zmin, z);
+        xmax = std::max(xmax, x);
+        ymax = std::max(ymax, y);
+        zmax = std::max(zmax, z);
+    }
+
+    void init(const float* pro, Selection const& S) {
+        pos.resize(S.count());
+        if (size()==0) return;
+        xmin = ymin = zmin = std::numeric_limits<scalar>::max();
+        xmax = ymax = zmax = std::numeric_limits<scalar>::min();
+
+        for (Id i=0, j=0, n=size(); i<n; i++) {
+            if (S[i]) {
+                const float* p = pro+3*i;
+                _set(j++, p[0], p[1], p[2]);
+            }
+        }
+    }
+
+    void init(SystemPtr mol, Selection const& S) {
+        pos.resize(S.count());
+        if (size()==0) return;
+        xmin = ymin = zmin = std::numeric_limits<scalar>::max();
+        xmax = ymax = zmax = std::numeric_limits<scalar>::min();
+
         for (Id i=0, j=0, n=S.size(); i<n; i++) {
             if (S[i]) {
                 scalar x = mol->atomFAST(i).x;
                 scalar y = mol->atomFAST(i).y;
                 scalar z = mol->atomFAST(i).z;
-                if (j==0) {
-                    xmin = xmax = x;
-                    ymin = ymax = y;
-                    zmin = zmax = z;
-                } else {
-                    xmin = std::min(xmin, x);
-                    ymin = std::min(ymin, y);
-                    zmin = std::min(zmin, z);
-                    xmax = std::max(xmax, x);
-                    ymax = std::max(ymax, y);
-                    zmax = std::max(zmax, z);
-                }
-                pos[j].x = x;
-                pos[j].y = y;
-                pos[j].z = z;
-                ++j;
+                _set(j++, x,y,z);
             }
         }
     }
+
     scalar const& x(Id i) const { return pos[i].x; }
     scalar const& y(Id i) const { return pos[i].y; }
     scalar const& z(Id i) const { return pos[i].z; }
 
-    ~posarray() { delete []mesh; }
     void voxelize(scalar rad);
     inline bool test(scalar x, scalar y, scalar z, scalar r2) const;
     inline scalar mindist2(scalar x, scalar y, scalar z) const;
@@ -179,7 +200,7 @@ void posarray::voxelize(scalar rad) {
 
     /* map atoms to voxels */
     mesh = new voxel_t[nvoxel];
-    for (Id i=0, n=size; i<n; i++) {
+    for (Id i=0, n=size(); i<n; i++) {
       int xi = (x(i)-xm)*ir;
       int yi = (y(i)-ym)*ir;
       int zi = (z(i)-zm)*ir;
@@ -311,17 +332,17 @@ namespace {
 }
 
 static void test_points(Selection& S, 
-                        PointList const& wat, posarray const& pro,
+                        const float* wat, posarray const& pro,
                         scalar r2) {
 
   for (Id i=0; i<S.size(); i++) {
     if (!S[i]) continue;
-    point_t const& p = wat[i];
-    S[i] = pro.test(p.x, p.y, p.z, r2);
+    const float* p = wat+3*i;
+    S[i] = pro.test(p[0], p[1], p[2], r2);
   }
 }
 
-static void find_within( PointList const& wat,
+static void find_within( const float* wat,
                          posarray const& pro,
                          Selection& S,
                          scalar rad,
@@ -350,15 +371,15 @@ static void find_within( PointList const& wat,
 
       for (Id id=0; id<S.size(); id++) {
           if (S[id] || !orig[id]) continue;
-          point_t const& p = wat[id];    
+          const float* p = wat+3*id;
           for (int i=-1; i<=1; i++) {
-              scalar x = p.x + ga*i;
+              scalar x = p[0] + ga*i;
               if (x<xmin || x >= xmax) continue;
               for (int j=-1; j<=1; j++) {
-                  scalar y = p.y + gb*j;
+                  scalar y = p[1] + gb*j;
                   if (y<ymin || y >= ymax) continue;
                   for (int k=-1; k<=1; k++) {
-                      scalar z = p.z + gc*k;
+                      scalar z = p[2] + gc*k;
                       if (z<zmin || z >= zmax) continue;
                       if (i==0 && j==0 && k==0) continue;
                       S[id] = S[id] || pro.test(x,y,z,r2);
@@ -382,8 +403,9 @@ void WithinPredicate::eval( Selection& S ) {
     }
 
     /* "protein" coordinates */
-    posarray pro(sys, subsel);
-    if (pro.size==0) {
+    posarray pro;
+    pro.init(sys, subsel);
+    if (pro.size()==0) {
         S.clear();
         return;
     }
@@ -399,7 +421,7 @@ void WithinPredicate::eval( Selection& S ) {
         }
     }
 
-    find_within(wat, pro, S, rad, periodic ? sys->global_cell[0] : NULL);
+    find_within(&wat[0].x, pro, S, rad, periodic ? sys->global_cell[0] : NULL);
 }
 
 void WithinBondsPredicate::eval( Selection& S ) {
@@ -479,8 +501,9 @@ void KNearestPredicate::eval( Selection& S ) {
     double t1=1000*now();
 
     /* "protein" coordinates */
-    posarray pro(_sys, subsel);
-    if (pro.size==0) {
+    posarray pro;
+    pro.init(_sys, subsel);
+    if (pro.size()==0) {
         S.clear();
         return;
     }
@@ -519,7 +542,7 @@ void KNearestPredicate::eval( Selection& S ) {
     for (;;) {
         smax = S;
         pro.voxelize(rmax);
-        find_within( wat, pro, smax, rmax, cell);
+        find_within( &wat[0].x, pro, smax, rmax, cell);
         nmax = smax.count();
         //printf("rmin %f nmin %u rmax %f nmax %u\n", rmin, nmin, rmax, nmax);
         if (nmax >= _N) break;
@@ -535,7 +558,7 @@ void KNearestPredicate::eval( Selection& S ) {
     for (int nb=0; nb<6; nb++) {
         Selection sm(smax);
         scalar rm = 0.5*(rmin+rmax);
-        find_within( wat, pro, sm, rm, cell);
+        find_within( &wat[0].x, pro, sm, rm, cell);
         Id nm = sm.count();
         //printf("rm %f nm %u\n", rm, nm);
         if (nm>=_N) {
@@ -585,6 +608,19 @@ namespace desres { namespace msys { namespace atomsel {
     }
     PredicatePtr k_pbnearest_predicate(SystemPtr sys, unsigned k, PredicatePtr S) {
         return PredicatePtr(new KNearestPredicate(sys,k,true,S));
+    }
+
+    Selection FindWithin(Selection const& wsel, const float* wat,
+                         Selection const& psel, const float* pro,
+                         float radius,
+                         const double* cell) {
+
+        posarray p;
+        p.init(pro, psel);
+        p.voxelize(radius);
+        Selection S(wsel);
+        find_within(wat, p, S, radius, cell);
+        return S;
     }
 
 }}}
