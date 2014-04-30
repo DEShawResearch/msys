@@ -67,6 +67,10 @@ class Bond(Handle):
         ''' second Atom in the bond (the one with higher id) '''
         return Atom(self._ptr, self.data().j)
 
+    def other(self, atom):
+        ''' atom in bond not the same as given atom '''
+        return Atom(self._ptr, self.data().other(atom.id))
+
     @property
     def atoms(self): 
         ''' Atoms in this Bond '''

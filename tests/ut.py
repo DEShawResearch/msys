@@ -662,6 +662,8 @@ class TestMain(unittest.TestCase):
         self.assertEqual(b.system, m)
         self.assertEqual(b.first, a2)
         self.assertEqual(b.second, a3)
+        self.assertEqual(b.other(b.first), b.second)
+        self.assertEqual(b.other(b.second), b.first)
         b.order=32
         b.resonant_order=32.5
         self.assertEqual(b.order, 32)
