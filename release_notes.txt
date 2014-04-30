@@ -1,3 +1,6 @@
+1.7.62 NEW: Bond.other(atom) from Python.
+       NEW: C++ interface for FindWithin.
+
 1.7.61 IMPROVED: Across-the-board speedups for all atom selections.
        IMPROVED: Notable improvements to "nearest" selections.
        NEW: "pbnearest" selection.
