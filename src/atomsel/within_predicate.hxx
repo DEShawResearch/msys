@@ -32,6 +32,11 @@ namespace desres { namespace msys { namespace atomsel {
                        float radius,
                        const double* cell);
 
+  Selection FindNearest(Selection const& wsel, const float* wat,
+                        Selection const& psel, const float* pro,
+                        Id k,
+                        const double* cell);
+
 }}}
 
 #endif

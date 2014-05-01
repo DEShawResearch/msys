@@ -8,9 +8,6 @@
 #include <algorithm>
 #include <limits>
 
-
-#define STACK_SIZE 4
-
 using namespace desres::msys::atomsel;
 
 typedef desres::msys::atom_t atom;
@@ -35,29 +32,11 @@ struct voxel_t {
      * indices of neighbor voxels.  For other voxels, the neighbors
      * are computed using a cached set of offsets. */
   int* nbrs;  /* NULL for non-edge voxel, terminated by -1 */
-  Id stack[STACK_SIZE];
-  Id * points;
-  int num;
-  int max;
+  Id start;
+  Id count;
 
-  voxel_t() : nbrs(), points(stack), num(), max(STACK_SIZE) {}
-  ~voxel_t() {
-      if (points!=stack) free(points);
-      if (nbrs) free(nbrs);
-  }
-
-  void add(Id p) {
-      if (num==max) {
-          max *= 1.3;
-          if (points==stack) {
-              points = (Id*)malloc(max*sizeof(Id));
-              memcpy(points, stack, num*sizeof(Id));
-          } else {
-              points = (Id*)realloc(points, max*sizeof(Id));
-          }
-      }
-      points[num++] = p;
-  }
+  voxel_t() : nbrs(), start(), count() {}
+  ~voxel_t() { if (nbrs) free(nbrs); }
 };
 
 struct posarray : boost::noncopyable {
@@ -145,7 +124,7 @@ void find_voxel_full_shell_neighbors(voxel_t *mesh, int nx, int ny, int nz) {
         int* nbrs = (int*)malloc(28*sizeof(int));
         int self = xi + nx*(yi + ny*zi);
         // it's a big win to always search the self voxel first!
-        if (mesh[self].num) nbrs[++n]=self;
+        if (mesh[self].count) nbrs[++n]=self;
         for (int ti=zi-1; ti<=zi+1; ti++) {
           if (ti<0 || ti>=nz) continue;
           for (int si=yi-1; si<=yi+1; si++) {
@@ -153,7 +132,7 @@ void find_voxel_full_shell_neighbors(voxel_t *mesh, int nx, int ny, int nz) {
             for (int ri=xi-1; ri<=xi+1; ri++) {
               if (ri<0 || ri>=nx) continue;
               int index = ri + nx*(si + ny*ti);
-              if (index!=self && mesh[index].num) nbrs[++n] = index;
+              if (index!=self && mesh[index].count) nbrs[++n] = index;
             }
           }
         }
@@ -198,17 +177,59 @@ void posarray::voxelize(scalar rad) {
     nz = (int)(zs/rad)+1;
     int nvoxel = nx*ny*nz;
 
+    //double t0=1000*now();
+
     /* map atoms to voxels */
-    mesh = new voxel_t[nvoxel];
+    typedef std::pair<Id, int> vox_t;
+    typedef std::vector<vox_t> VoxList;
+    VoxList provox(size());
+
+    //double t1=1000*now();
+
     for (Id i=0, n=size(); i<n; i++) {
       int xi = (x(i)-xm)*ir;
       int yi = (y(i)-ym)*ir;
       int zi = (z(i)-zm)*ir;
       int index = xi + nx*(yi + ny*zi);
-      mesh[index].add(i);
+      provox[i] = vox_t(i, index);
     }
+
+    //double t2=1000*now();
+    {
+        /* note carefully that vox_t has the voxel id second, not first,
+         * even though we are sorting by voxel id.  It's a little endian
+         * machine!  testing shows that sorting by uint64 is considerably
+         * faster even than using a custom compare function.  Yay STL. */
+        uint64_t *p = (uint64_t *)(&provox[0]);
+        std::sort(p, p+provox.size());
+    }
+    //double t3=1000*now();
+
+    mesh = new voxel_t[nvoxel+1];
+    std::vector<point_t> sorted_pos;
+    sorted_pos.reserve(size());
+    for (Id i=0, n=size(); i<n; i++) {
+        int voxid = provox[i].second;
+        ++mesh[voxid].count;
+        sorted_pos.push_back(pos[provox[i].first]);
+    }
+    pos.swap(sorted_pos);
+    //double t4=1000*now();
+    int start = 0;
+    for (int i=0; i<=nvoxel; i++) {
+        int count = mesh[i].count;
+        mesh[i].start = start;
+        start += count;
+    }
+    //double t5=1000*now();
+
     find_voxel_full_shell_neighbors(mesh, nx, ny, nz);
     compute_central_voxel_neighbors(central_nbrs, nx, ny, nz);
+    //double t6=1000*now();
+
+    //printf("%5.3f %5.3f %5.3f %5.3f %5.3f %5.3f\n",
+            //t1-t0, t2-t1, t3-t2,
+            //t4-t3, t5-t4, t6-t5);
 }
 
 bool posarray::test(scalar x, scalar y, scalar z, scalar r2) const {
@@ -237,10 +258,9 @@ bool posarray::test(scalar x, scalar y, scalar z, scalar r2) const {
     }
     for (int j=0; j<n_nbrs; j++) {
       const voxel_t* nbr = mesh + nbrs[j]+self;
-      int natoms = nbr->num;
-      for (int k=0; k<natoms; k++) {
-        const Id pk = nbr->points[k];
-        point_t const& q = pos[pk];
+      int start = nbr->start;
+      for (int k=0, natoms = nbr->count; k<natoms; k++) {
+        point_t const& q = pos[start+k];
         scalar dx=x-q.x;
         scalar dy=y-q.y;
         scalar dz=z-q.z;
@@ -277,10 +297,9 @@ scalar posarray::mindist2(scalar x, scalar y, scalar z) const {
     }
     for (int j=0; j<n_nbrs; j++) {
       const voxel_t* nbr = mesh + nbrs[j]+self;
-      int natoms = nbr->num;
-      for (int k=0; k<natoms; k++) {
-        const Id pk = nbr->points[k];
-        point_t const& q = pos[pk];
+      int start = nbr->start;
+      for (int k=0, natoms = nbr->count; k<natoms; k++) {
+        point_t const& q = pos[start+k];
         scalar dx=x-q.x;
         scalar dy=y-q.y;
         scalar dz=z-q.z;
@@ -490,35 +509,81 @@ namespace {
     };
 }
 
-void KNearestPredicate::eval( Selection& S ) {
-
-    double t0=1000*now();
-
-    /* evaluate subselection */
-    Selection subsel = full_selection(_sys);
-    _sub->eval(subsel);
-
-    double t1=1000*now();
-
-    /* "protein" coordinates */
-    posarray pro;
-    pro.init(_sys, subsel);
+static void find_nearest(const float* wat, posarray& pro, Selection& S,
+                         const Id K, const double* cell) {
     if (pro.size()==0) {
         S.clear();
         return;
     }
 
-    double t2=1000*now();
+    /* enough atoms available? */
+    Selection smax(S);
+    Id nmax = smax.count();
+    if (nmax <= K) return;
+
+    /* increase rmax until Ny is at least K */
+    Selection smin(0);
+    Id nmin = 0;
+    scalar rmin = 0.0;
+    scalar rmax = 2.5;
+    for (;;) {
+        smax = S;
+        pro.voxelize(rmax);
+        find_within( wat, pro, smax, rmax, cell);
+        nmax = smax.count();
+        //printf("rmin %f nmin %u rmax %f nmax %u\n", rmin, nmin, rmax, nmax);
+        if (nmax >= K) break;
+        rmin = rmax;
+        smin = smax;
+        nmin = nmax;
+        rmax *= 1.5;
+    }
+
+    /* Do a couple rounds of bisection search to narrow it down */
+    for (int nb=0; nb<6; nb++) {
+        Selection sm(smax);
+        scalar rm = 0.5*(rmin+rmax);
+        find_within( wat, pro, sm, rm, cell);
+        Id nm = sm.count();
+        //printf("rm %f nm %u\n", rm, nm);
+        if (nm>=K) {
+            smax = sm;
+            rmax = rm;
+            nmax = nm;
+        } else {
+            smin = sm;
+            rmin = rm;
+            nmin = nm;
+        }
+    }
+
+    std::vector<std::pair<scalar,Id> > pts;
+    for (Id i=0, n=S.size(); i<n; i++) {
+        /* for each water in smax but not in smin */
+        if (smin[i] || !smax[i]) continue;
+        const float* w = wat+3*i;
+        scalar r2 = pro.mindist2(w[0], w[1], w[2]);
+        pts.push_back(std::make_pair(r2, i));
+    }
+    std::partial_sort(pts.begin(), pts.begin()+(K-nmin), pts.end());
+    S = smin;
+    for (Id i=0, n=K-nmin; i<n; i++) {
+        S[pts[i].second] = 1;
+    }
+}
+
+void KNearestPredicate::eval( Selection& S ) {
+
+    /* evaluate subselection */
+    Selection subsel = full_selection(_sys);
+    _sub->eval(subsel);
+
+    /* "protein" coordinates */
+    posarray pro;
+    pro.init(_sys, subsel);
 
     /* we never include subselection */
     S.subtract(subsel);
-
-    /* more than k atoms available? */
-    Selection smax(S);
-    Id nmax = smax.count();
-    if (nmax <= _N) return;
-
-    double t3=1000*now();
 
     /* "water" coordinates */
     std::vector<point_t> wat(S.size());
@@ -530,76 +595,11 @@ void KNearestPredicate::eval( Selection& S ) {
         }
     }
 
-    double t4=1000*now();
-
     const double* cell = periodic ? _sys->global_cell[0] : NULL;
 
-    /* increase rmax until Ny is at least _N */
-    Selection smin(0);
-    Id nmin = 0;
-    scalar rmin = 0.0;
-    scalar rmax = 2.5;
-    for (;;) {
-        smax = S;
-        pro.voxelize(rmax);
-        find_within( &wat[0].x, pro, smax, rmax, cell);
-        nmax = smax.count();
-        //printf("rmin %f nmin %u rmax %f nmax %u\n", rmin, nmin, rmax, nmax);
-        if (nmax >= _N) break;
-        rmin = rmax;
-        smin = smax;
-        nmin = nmax;
-        rmax *= 1.5;
-    }
-
-    double t5=1000*now();
-
-    /* Do a couple rounds of bisection search to narrow it down */
-    for (int nb=0; nb<6; nb++) {
-        Selection sm(smax);
-        scalar rm = 0.5*(rmin+rmax);
-        find_within( &wat[0].x, pro, sm, rm, cell);
-        Id nm = sm.count();
-        //printf("rm %f nm %u\n", rm, nm);
-        if (nm>=_N) {
-            smax = sm;
-            rmax = rm;
-            nmax = nm;
-        } else {
-            smin = sm;
-            rmin = rm;
-            nmin = nm;
-        }
-    }
-
-    double t6=1000*now();
-    //printf("min: rad %f n %u\n", rmin, nmin);
-    //printf("max: rad %f n %u\n", rmax, nmax);
-
-    std::vector<std::pair<scalar,Id> > pts;
-    for (Id i=0, n=S.size(); i<n; i++) {
-        /* for each water in smax but not in smin */
-        if (smin[i] || !smax[i]) continue;
-        point_t const& w = wat[i];
-        scalar r2 = pro.mindist2(w.x, w.y, w.z);
-        pts.push_back(std::make_pair(r2, i));
-    }
-    std::partial_sort(pts.begin(), pts.begin()+(_N-nmin), pts.end());
-    S = smin;
-    for (Id i=0, n=_N-nmin; i<n; i++) {
-        S[pts[i].second] = 1;
-    }
-    double t7=1000*now();
-
-    if (0) printf("tot %8.3f -- %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f\n", t7-t0,
-            t1-t0,
-            t2-t1,
-            t3-t2,
-            t4-t3,
-            t5-t4,
-            t6-t5,
-            t7-t6);
+    find_nearest(&wat[0].x, pro, S, _N, cell);
 }
+
 
 namespace desres { namespace msys { namespace atomsel {
 
@@ -623,6 +623,18 @@ namespace desres { namespace msys { namespace atomsel {
         return S;
     }
 
+    Selection FindNearest(Selection const& wsel, const float* wat,
+                          Selection const& psel, const float* pro,
+                          Id k,
+                          const double* cell) {
+
+        posarray p;
+        p.init(pro, psel);
+        Selection S(wsel);
+        find_nearest(wat, p, S, k, cell);
+        return S;
+    }
+ 
 }}}
 
 
