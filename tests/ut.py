@@ -124,6 +124,10 @@ class TestSdf(unittest.TestCase):
         mol2=msys.Load(path)
         self.assertEqual(mol2.ct(0).name, "XYZ")
 
+    def testFunnyDoubleLikeThing(self):
+        mol=msys.Load('tests/files/multiline.sdf')
+        self.assertEqual(mol.ct(0)['PUBCHEM_CONFORMER_ID'], '0001E10300000001')
+
     def testMultipleCt(self):
         path='/tmp/msys_test.sdf'
         ct=msys.CreateSystem()

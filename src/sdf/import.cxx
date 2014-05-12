@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string>
+#include <math.h>
 
 #include <fstream>
 #include <sstream>
@@ -43,9 +44,11 @@ namespace {
         }
         try {
             double v = stringToDouble(val);
-            ct.add(key,FloatType);
-            ct.value(key)=v;
-            return;
+            if (isfinite(v)) {
+                ct.add(key,FloatType);
+                ct.value(key)=v;
+                return;
+            }
         } catch (Failure& e) {
         }
         ct.add(key,StringType);
