@@ -222,7 +222,9 @@ SystemPtr iterator::next() {
     /* properties, data and end of molecule delimeter scanning.
      * Incompletely parsed. */
     bool cleared_m_chg = false;
-    while (std::getline(in, line)) {
+    bool needline = true;
+    for(;;) {
+        if (needline && !std::getline(in, line)) break;
         if (line.compare(0,3,"M  ")==0){
             if (line.compare(3,3,"CHG")==0){
                 /* Atom Charge Info supersedes atom record lines */
@@ -261,11 +263,15 @@ SystemPtr iterator::next() {
                 key = line.substr(langle+1, rangle-langle-1);
             }
             while (std::getline(in, line)) {
-                boost::trim(line);
-                if (line.empty()) break;
-                val=line;
+                if(line.compare(0,2,"> ")==0 ||
+                   line.compare(0,4,"$$$$")==0) break;
+                if (!val.empty()) val += '\n';
+                val += line;
             }
+            boost::trim(val);
             add_typed_keyval(key,val,mol->ct(0));
+            needline = false;
+            continue;
         }else if (line.compare(0,4,"$$$$")==0){
             // End of molecule
             break;
@@ -278,6 +284,7 @@ SystemPtr iterator::next() {
                 MSYS_FAIL("Unknown line in SDF file:\n"<<line);
             }
         }
+        needline = true;
     }
     return mol;
 }

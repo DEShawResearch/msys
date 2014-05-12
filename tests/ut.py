@@ -128,6 +128,19 @@ class TestSdf(unittest.TestCase):
         mol=msys.Load('tests/files/multiline.sdf')
         self.assertEqual(mol.ct(0)['PUBCHEM_CONFORMER_ID'], '0001E10300000001')
 
+    def testMultiline(self):
+        mol=msys.Load('tests/files/multiline.sdf')
+        self.assertEqual(mol.ct(0)['PUBCHEM_SHAPE_FINGERPRINT'], 
+                '21015797 1 18410576218592473837\n260 1 18410856563971680135')
+
+    def testMultilineWithBlankOrSpace(self):
+        mol=msys.Load('tests/files/multiline.sdf')
+        self.assertEqual(mol.ct(0)['PUBCHEM_SHAPE_MULTIPOLES'], 
+            '\n'.join(map(str, [
+            36.18, 0.98, 0.57, 0.57, 0.03,
+            '',
+            0, ' ', 0, 0.03, 0, 0.03, 0, 0])))
+
     def testMultipleCt(self):
         path='/tmp/msys_test.sdf'
         ct=msys.CreateSystem()
