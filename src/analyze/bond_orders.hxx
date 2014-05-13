@@ -218,6 +218,7 @@ namespace desres { namespace msys {
 
         int _component_charge_col;
         int _component_charge_row;
+        bool _component_charge_set;
 
         bool _component_solution_valid;
         std::vector<double> _component_objf;

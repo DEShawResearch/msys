@@ -529,7 +529,7 @@ namespace desres { namespace msys {
         ca->_component_id=cid;
         ca->_component_valence_count=0;
         ca->_component_solution_valid=false;
-
+        ca->_component_charge_set=false;
         return ca;
     }
 
@@ -561,6 +561,7 @@ namespace desres { namespace msys {
             lpsolve::set_constr_type(_component_lp,_component_charge_row  , ROWTYPE_LE);
             lpsolve::set_constr_type(_component_lp,_component_charge_row+1, ROWTYPE_EQ);
         }
+        _component_charge_set=true;
     }
 
     void ComponentAssigner::unsetComponentCharge(){
@@ -571,6 +572,7 @@ namespace desres { namespace msys {
 
         lpsolve::set_constr_type(_component_lp,_component_charge_row  , ROWTYPE_LE);
         lpsolve::set_constr_type(_component_lp,_component_charge_row+1, ROWTYPE_LE);
+        _component_charge_set=false;
     }
 
     int ComponentAssigner::getSolvedComponentCharge(){
@@ -1117,18 +1119,21 @@ namespace desres { namespace msys {
             }
 
             /* Additional fixups, force 2 connected carbon/nitrogen adjacent to terminal carbon/nitrogen to be sp hybridized
-               sum of bo=4 (either =X= or -X#)
+               sum of bo=4 (either =X=Y or -X#Y)
             */
-            if((anum0==6 || anum0==7) && nbonds==2){
+            if((anum0==6 || anum0==7) && nbonds==2 && !_component_charge_set){
                 bool sp=false;
+                bool hasHydrogen=false;
                 BOOST_FOREACH(Id bid, bonds){
                     Id aid1=parent->_mol->bond(bid).other(aid0);
                     int anum1=parent->_mol->atom(aid1).atomic_number;
-                    if((anum1!=6 && anum1!=7) || 1!=parent->_mol->filteredBondsForAtom(aid1,*parent->_filter).size()) continue;
-                    sp=true;
-                    break;
+                    if((anum1==6 || anum1==7) && 1==parent->_mol->filteredBondsForAtom(aid1,*parent->_filter).size()){
+                        sp=true;
+                    }else if(anum1==1){
+                        hasHydrogen=true; 
+                    }
                 }
-                if(sp){
+                if(sp && !hasHydrogen){
                     rowdata.assign(ncols+1,0);
                     BOOST_FOREACH(Id bid, bonds){
                         ilpBond const& ibond = asserted_find(_component_bond_cols,bid);
