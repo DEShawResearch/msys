@@ -1,0 +1,51 @@
+#!/usr/bin/env desres-exec
+# -*- python -*-
+#{
+# desres-cleanenv -m numpy/1.6.2-31A/lib-python -- python $0 "$@" 
+#}
+'''
+dms-fix-water-residues system.dms out.dms
+
+Give each water fragment its own residue id.
+'''
+
+import sys, os
+sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
+
+import msys
+import numpy
+
+def split(mol,water_atomsel):
+    wat = mol.select(water_atomsel)
+    watids = set(a.id for a in wat)
+    for frag in mol.updateFragids():
+        if not watids.issuperset(a.id for a in frag): continue
+        oldres = frag[0].residue
+        newres = oldres.chain.addResidue()
+        newres.name = oldres.name
+        newres.resid = frag[0].fragid
+        for a in frag:
+            a.residue = newres
+
+    mol.coalesceTables()
+    return mol.clone()
+
+if __name__=="__main__":
+    import optparse
+    parser = optparse.OptionParser(__doc__)
+
+    parser.add_option('-s', '--selection', default='water',
+                      help='Atomsel for all the water atoms in the system.')
+
+    opts, args = parser.parse_args()
+    if len(args)!=2:
+        parser.error("incorrect number of arguments")
+
+    ifile, ofile = args
+    print "Loading", ifile
+    mol = msys.Load(ifile)
+    print "Splitting..."
+    mol=split(mol, opts.selection)
+    print "Saving", ofile
+    msys.SaveDMS(mol, ofile)
+

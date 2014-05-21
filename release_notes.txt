@@ -1,3 +1,8 @@
+1.7.65 IMPROVED: dms-validate checks that each water molecule has
+                 its own resid and lives in its own residue
+       NEW: dms-fix-water-residues for putting each water moleculue in
+            its own residue.
+
 1.7.64 FIXED: SDF writer checks for isfinite() before calling floatify.
 
 1.7.63 IMPROVED: SDF reader is more robust and handles multi-line values.

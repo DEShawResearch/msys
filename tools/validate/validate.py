@@ -34,6 +34,20 @@ class TestAnton(TestCase):
                 "Unit cell is not diagonal")
 
 class TestStrict(TestCase):
+    def testSplitWaterResids(self):
+        '''every water molecule must have its own resid'''
+        water_atoms = self.mol.select('water')
+
+        help_string="Use dms-fix-water-residues to put each water in its own residue."
+
+        for water_atom in water_atoms:
+            res = water_atom.residue
+            self.assertEqual(len(res.atoms), 3,
+                             help_string)
+            fragids = set(map(lambda x: x.fragid, res.atoms))
+            self.assertEqual(len(fragids), 1,
+                             help_string)
+
     def testSparsify(self):
         ''' molecule must have all 1-4 exclusions.  '''
         # hash the exclusions and pairs

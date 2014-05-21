@@ -5,8 +5,7 @@
 # -- python $0 "$@"
 #}
 
-'''
-dms-validate system.dms [ options ]
+'''dms-validate system.dms [ options ]
 
 `dms-validate` flags conditions that are likely to be errors in a chemical
 system.  The set of "basic" checks are always performed; additional checks
@@ -32,6 +31,9 @@ investigating why a system fails theses checks.
 
  * sparsify: every 1-4 bond (i.e., pair of atoms separated by three 
    distinct bonds) must be included in the exclusion table.
+
+ * split waters: each water molecule must have its own unique resid,
+   and live in its own residue.
 
 Desmond-specific checks:
 

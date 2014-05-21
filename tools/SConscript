@@ -74,6 +74,7 @@ env.AddScript('vdw/dms-scale-vdw')
 # other scripts
 env.AddScript('scripts/dms-check-groups')
 env.AddScript('scripts/dms-fix-mass')
+env.AddScript('scripts/dms-fix-water-residues')
 env.AddScript('scripts/dms-frame')
 env.AddScript('scripts/dms-reorder-atoms')
 env.AddScript('scripts/dms-select')
