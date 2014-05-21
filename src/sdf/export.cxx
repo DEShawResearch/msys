@@ -3,6 +3,7 @@
 #include <fastjson/print.hxx>
 #include <boost/format.hpp>
 #include <fstream>
+#include <math.h>
 #include <errno.h>
 
 using namespace desres::msys;
@@ -72,7 +73,7 @@ static void export_ct(SystemPtr mol, Id ct, std::ostream& out) {
 
     /* write property block */
     std::vector<String> keys = cmp.keys();
-    char floatbuf[20];
+    char floatbuf[32];
     for (unsigned i=0; i<keys.size(); i++) {
         out << ">  <" << keys[i] << ">\n";
         ValueRef v = cmp.value(keys[i]);
@@ -83,7 +84,11 @@ static void export_ct(SystemPtr mol, Id ct, std::ostream& out) {
         case IntType: 
             out << v.asInt(); break;
         case FloatType: 
-            floatify(v.asFloat(), floatbuf); 
+            if (isfinite(v.asFloat())) {
+                floatify(v.asFloat(), floatbuf); 
+            } else {
+                sprintf(floatbuf, "%f", v.asFloat());
+            }
             out << floatbuf; break;
         }
         out << "\n\n";

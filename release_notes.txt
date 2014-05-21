@@ -1,3 +1,5 @@
+1.7.64 FIXED: SDF writer checks for isfinite() before calling floatify.
+
 1.7.63 IMPROVED: SDF reader is more robust and handles multi-line values.
 
 1.7.62 NEW: Bond.other(atom) from Python.
