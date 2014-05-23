@@ -1,5 +1,6 @@
 #include "../psf.hxx"
 #include "../schema.hxx"
+#include "../elements.hxx"
 #include <stdio.h>
 
 //using namespace desres::msys;
@@ -497,6 +498,7 @@ desres::msys::SystemPtr desres::msys::ImportPSF( std::string const& path ) {
         atom_t& atm = mol->atomFAST(id);
         atm.mass = mass;
         atm.charge = charge;
+        if(atm.mass>1.0) atm.atomic_number=GuessAtomicNumber(atm.mass);
         if (types.find(type)==types.end()) {
             Id param = params->addParam();
             types[type] = param;
