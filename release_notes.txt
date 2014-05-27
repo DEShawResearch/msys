@@ -1,7 +1,8 @@
 1.7.65 IMPROVED: dms-validate checks that each water molecule has
                  its own resid and lives in its own residue
-       NEW: dms-fix-water-residues for putting each water moleculue in
+       NEW: dms-fix-water-residues for putting each water molecule in
             its own residue.
+       FIXED: appending systems now correctly merges nonbonded_info.
 
 1.7.64 FIXED: SDF writer checks for isfinite() before calling floatify.
 
