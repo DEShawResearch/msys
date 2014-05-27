@@ -1399,6 +1399,19 @@ class TestMain(unittest.TestCase):
         self.assertEqual(nb.vdw_rule,  "yep")
         self.assertEqual(nb.es_funct,  "oh yeah")
 
+    def testAppendNonbondedInfo(self):
+        A=msys.CreateSystem()
+        B=msys.CreateSystem()
+        attrs=dict(vdw_funct='vf', vdw_rule='vr', es_funct='es')
+        for k,v in attrs.items(): 
+            setattr(B.nonbonded_info,k,v)
+
+        A.append(B)
+        for k,v in attrs.items(): 
+            self.assertEqual(getattr(B.nonbonded_info,k), v)
+            self.assertEqual(getattr(A.nonbonded_info,k), v)
+
+
     def testCloneShareParams(self):
         m=msys.CreateSystem()
         a1=m.addAtom()

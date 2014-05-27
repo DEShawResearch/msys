@@ -106,16 +106,6 @@ IdList desres::msys::AppendTerms( TermTablePtr dst, TermTablePtr src,
 IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr,
                                    Id dstct ) {
 
-    /* Disallow if the the systems have different nonbonded vdw_funct */
-    String const& dstvdw = dstptr->nonbonded_info.vdw_funct;
-    String const& srcvdw = srcptr->nonbonded_info.vdw_funct;
-    if (dstvdw.size() && srcvdw.size() && dstvdw != srcvdw) {
-        std::stringstream ss;
-        ss << "AppendSystem: incompatible vdw_funct: '" << dstvdw 
-           << "' != '" << srcvdw << "'";
-        throw std::runtime_error(ss.str());
-    }
-
     System& dst = *dstptr;
     System const& src = *srcptr;
     IdList src2dst(src.maxAtomId(), BadId);
@@ -232,6 +222,8 @@ IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr,
             dst.addAuxTable( name, dstparams );
         }
     }
+
+    dst.nonbonded_info.merge(src.nonbonded_info);
 
     return src2dst;
 }
