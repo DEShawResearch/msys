@@ -3,7 +3,9 @@
 import os, sys, unittest
 
 # DON'T CHANGE THIS! RUN ut.py out of the base directory.  -- JRG
-TMPDIR=os.getenv('TMPDIR', 'objs/Linux/x86_64')
+DESRES_OS =os.environ['DESRES_OS']
+DESRES_ISA=os.environ['DESRES_ISA']
+TMPDIR=os.getenv('TMPDIR', 'objs/%s/%s' % (DESRES_OS, DESRES_ISA))
 sys.path.insert(0,os.path.join(TMPDIR, 'lib', 'python'))
 import msys
 from msys import knot, reorder, pfx
