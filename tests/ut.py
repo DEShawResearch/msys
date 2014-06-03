@@ -2053,34 +2053,6 @@ class TestMain(unittest.TestCase):
         self.assertTrue(len(all_matches) == 8 * 6)
         self.assertTrue(len(all_matches[0]) == 4)
 
-
-class TestAtomMatch(unittest.TestCase):
-    def testAtomMatch(self):
-        from msys import atommatch as AM
-        mol1 = msys.Load('tests/files/alig.dms')
-        mol2 = msys.Load('tests/files/blig.dms')
-        matches, aligned = AM.AtomMatch(mol1, mol2, sel1='resname LIG',
-                sel2='resname LIG')
-        self.assertTrue(len(aligned.atoms) == len(mol2.select('resname LIG')))
-        for pair in matches:
-            self.assertTrue(pair[1] in aligned.atoms)
-        X = NP.array([a.pos for a,b in matches])
-        Y = NP.array([b.pos for a,b in matches])
-        A, b, rmsd = AM._rawalign(X,Y)
-        rmsd2 = NP.sqrt(((X-Y)**2).sum() / X.shape[0])
-        self.assertTrue(abs(rmsd - rmsd2) / rmsd < 0.01)
-        matches = set([(a.id, b.id) for a,b in matches])
-        self.assertTrue(matches == set([(1, 0), (4, 1), (5, 2), (6, 3), (7, 4),
-            (8, 5), (9, 6), (10, 7), (11, 8), (12, 9), (13, 10), (14, 11),
-            (15, 12), (16, 13), (17, 14), (18, 15), (19, 16), (20, 17),
-            (21, 18), (22, 19), (23, 20), (24, 21), (25, 22), (26, 23),
-            (27, 24), (28, 25), (38, 26), (39, 27), (40, 28), (41, 29),
-            (42, 30), (43, 31), (44, 32), (45, 33), (46, 34), (47, 35),
-            (48, 36), (49, 37), (50, 38), (51, 39), (52, 40), (53, 41)]))
-
-
-
-
 class TestWrap(unittest.TestCase):
 
     def setUp(self):

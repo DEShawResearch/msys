@@ -8,16 +8,6 @@ opts=Variables()
 opts.Add("MSYS_WITHOUT_PSFGEN", "without psfgen?")
 opts.Update(env)
 
-# atommatch
-obj=env.AddObject('atommatch/atommatch.cxx')
-env.AddUnitTest('test_atommatch', [obj]+['atommatch/test_atommatch.cxx'])
-pyext=env.AddPythonExtension('_atommatch', [obj]+['atommatch/pymod.cxx'], prefix='msys', LIBS=['boost_python', 'msys'])
-env.Requires(pyext, libmsys)
-env.AddPythonModule('atommatch/atommatch.py', prefix='msys')
-env.AddScript('dms-atommatch', src='atommatch/dms-atommatch')
-# Make sure we don't use any of the non-permissive features of Eigen.
-env.Append(CCFLAGS='-DEIGEN_MPL2_ONLY')
-
 # converters
 env.AddProgram('mae2dms', 'converters/mae2dms.cxx')
 env.AddProgram('dms2mae', 'converters/dms2mae.cxx')

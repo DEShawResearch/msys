@@ -91,10 +91,6 @@ dms-scale-vdw
 -------------
 .. include:: ../build/genhelp/dms-scale-vdw
 
-dms-atommatch
--------------
-.. include:: ../build/genhelp/dms-atommatch
-
 dms-tile
 --------
 .. include:: ../build/genhelp/dms-tile
