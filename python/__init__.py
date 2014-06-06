@@ -330,7 +330,8 @@ class Ct(Handle):
     def append(self, system):
         ''' Appends atoms and forcefield from system to self.  Returns
         a list of of the new created atoms in self.  Systems must have
-        identical nonbonded_info.vdw_funct. '''
+        identical nonbonded_info.vdw_funct.  Does not overwrite the
+        global cell information in self.  '''
         p=self._ptr
         ids=p.append(system._ptr, self.id)
         return [Atom(p, i) for i in ids]
@@ -1229,7 +1230,9 @@ class System(object):
     def append(self, system):
         ''' Appends atoms and forcefield from system to self.  Returns
         a list of of the new created atoms in self.  Systems must have
-        identical nonbonded_info.vdw_funct. '''
+        identical nonbonded_info.vdw_funct.  Overwrites self.global_cell
+        with system.global_cell only when self.global_cell is all zeros.
+        '''
         p=self._ptr
         ids=p.append(system._ptr, _msys.BadId)
         atms=self._update_atoms()

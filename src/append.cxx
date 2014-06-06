@@ -110,6 +110,11 @@ IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr,
     System const& src = *srcptr;
     IdList src2dst(src.maxAtomId(), BadId);
 
+    dst.nonbonded_info.merge(src.nonbonded_info);
+    /* only overwrite global cell when appending to the system itself,
+     * not to a specific ct. */
+    if (bad(dstct)) dst.global_cell.merge(src.global_cell);
+
     /* copy atom properties */
     Id nprops = src.atomPropCount();
     IdList propmap(nprops);
@@ -222,8 +227,6 @@ IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr,
             dst.addAuxTable( name, dstparams );
         }
     }
-
-    dst.nonbonded_info.merge(src.nonbonded_info);
 
     return src2dst;
 }

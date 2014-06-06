@@ -199,6 +199,10 @@ class TestPdb(unittest.TestCase):
         m2=msys.Load('/tmp/msys_ter.pdb')
         self.assertEqual(m2.nchains, 2)
 
+    def testCell(self):
+        self.assertEqual(list(self.mol.cell.diagonal()), 
+                [42.408, 41.697, 69.9599803728577])
+
 
 class TestValidate(unittest.TestCase):
     def testNoKnot(self):
@@ -358,11 +362,13 @@ class TestMain(unittest.TestCase):
         m.ct(1).addChain().name='x'
 
         m2=msys.CreateSystem()
+        m2.cell[0][0] = 42
         ct=m2.addCt()
         ct.name='b'
         ct.addChain().name = 'c'
 
         m.ct(1).append(m2)
+        self.assertEqual(m.cell[0][0], 0)
         self.assertEqual(m.ncts, 2)
         self.assertEqual(m.ct(0).name, 'a')
         self.assertEqual(m.ct(1).name, 'd')
