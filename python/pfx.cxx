@@ -287,7 +287,7 @@ static PyObject* py_rmsd(PyObject *self, PyObject *args, PyObject *kwds) {
             rmsd = pfx->rmsd((const float *)PyArray_DATA(posarr));
             break;
         case NPY_DOUBLE:
-            rmsd = pfx->rmsd((const float *)PyArray_DATA(posarr));
+            rmsd = pfx->rmsd((const double*)PyArray_DATA(posarr));
             break;
         default:
             PyErr_Format(PyExc_ValueError, "pos must be float or double");
