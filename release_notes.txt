@@ -1,3 +1,9 @@
+1.7.67 FIXED: AppendSystem is smarter about merging global cells.
+       FIXED: PDB readers weren't storing the global cell.
+       FIXED: pfx.apply() wasn't returning the correct global cell,
+              and the Python bindings for rsmd() failed for double
+              precision inputs.
+
 1.7.66 FIXED: msys.pfx.rmsd() was invalid when given double precision
               coordinates, and pfx.apply() was not returning the transformed
               unit cell when doing an alignment.
