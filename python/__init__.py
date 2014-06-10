@@ -1086,7 +1086,7 @@ class System(object):
     @property
     def topology(self):
         ''' list of bonded atoms for each atom in the System '''
-        return [[b.id for b in a.bonded_atoms] for a in self.atoms]
+        return self._ptr.topology()
 
     ###
     ### operations on term tables

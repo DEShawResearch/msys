@@ -191,6 +191,20 @@ namespace {
         }
     }
 
+    list sys_topology(System& sys) {
+        list result;
+        for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
+            if (!sys.hasAtom(i)) continue;
+            IdList atoms = sys.bondedAtoms(i);
+            list sub;
+            for (Id j=0, m=atoms.size(); j<m; j++) {
+                sub.append(object(atoms[j]));
+            }
+            result.append(sub);
+        }
+        return result;
+    }
+
     struct Finder {
         System const& mol;
         list& contacts;
@@ -762,6 +776,7 @@ namespace desres { namespace msys {
             .def("coalesceTables",    &System::coalesceTables)
             .def("translate",       sys_translate)
             .def("findContactIds",  sys_find_contact_ids)
+            .def("topology", sys_topology)
 
             .def("getPositions", sys_getpos,
                     (arg("ids")=object()))
