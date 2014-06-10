@@ -1,3 +1,10 @@
+1.7.68 NEW: dms-validate --anton checks for contacts shorter than 1A,
+            including those that cross periodic boundaries.
+       FIXED: The bond guesser (used during loading of pdb files) sometimes
+              handled hydrogens bonded to multiple atoms incorrectly.
+       FIXED: System.findContactIds should be stable now.
+       FIXED: System.topology was too slow.
+
 1.7.67 FIXED: AppendSystem is smarter about merging global cells.
        FIXED: PDB readers weren't storing the global cell.
        FIXED: pfx.apply() wasn't returning the correct global cell,
