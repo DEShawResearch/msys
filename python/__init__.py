@@ -1335,26 +1335,24 @@ class System(object):
         ''' return a list of Provenance entries for this system '''
         return self._ptr.provenance()
 
-    def findContactIds(self, cutoff, periodic=True,
-            ids=None, other=None, pos=None, box=None):
+    def findContactIds(self, cutoff,
+            ids=None, other=None, pos=None):
         ''' ** EXPERIMENTAL. ** 
 
         Find atoms not bonded to each other which are within cutoff of
-        each other.  If periodic is True, consider nearby periodic images.
+        each other.  
         If ids is not None, consider only atoms with the given ids.  If
         other is not None, consider only atom pairs such that one is in ids
         and the other is in other.  If pos is not None, use pos as positions,
         which should be natoms x 3 regardless of the size of ids or other.
         pos may be supplied only when there are no deleted atoms in the
-        structure.  If box is not None, use box instead of the System box
-        for the periodic cell.
+        structure.  
 
         Returns a list of (id 1, id 2, distance) tuples for each contact
         found.
         '''
         cutoff = float(cutoff)
-        periodic = bool(periodic)
-        return self._ptr.findContactIds(cutoff, periodic, ids, other, pos, box)
+        return self._ptr.findContactIds(cutoff, ids, other, pos)
 
 class AnnotatedSystem(object):
     ''' System that has been annotated with additional chemical information '''

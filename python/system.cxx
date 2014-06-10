@@ -207,28 +207,31 @@ namespace {
 
     struct Finder {
         System const& mol;
+        const bool skip_symmetric;
         list& contacts;
-        Finder(System const& m, list& c) : mol(m), contacts(c) {}
+        Finder(System const& m, bool skip, list& c) 
+        : mol(m), skip_symmetric(skip), contacts(c) {}
         bool exclude(Id i, Id j) const { 
+            if (skip_symmetric && i>=j) return true;
             return !bad(mol.findBond(i,j)); 
         }
         void operator()(Id i, Id j, double d2) const {
-            contacts.append(make_tuple(i,j,d2));
+            contacts.append(make_tuple(i,j,sqrt(d2)));
         }
     };
 
-    list sys_find_contact_ids(System const& sys, double cutoff, bool periodic,
-                    object idobj, object otherobj,
-                    object posobj, object boxobj) {
+    list sys_find_contact_ids(System const& sys, double cutoff, 
+                    object idobj, object otherobj, object posobj) {
 
         if (sys.atomCount()==0) return list();
 
         Id* idptr=NULL, *otherptr=NULL;
         unsigned nids=0, nother=0;
-        const double* posptr=NULL, *boxptr=NULL;
+        const double* posptr=NULL;
         std::vector<double> posdata;
         IdList ids;
-        objptr idarr, otherarr, posarr, boxarr;
+        objptr idarr, otherarr, posarr;
+        bool skip_symmetric = true;
 
         if (idobj.ptr()==Py_None) {
             ids=sys.atoms();
@@ -249,6 +252,7 @@ namespace {
             otherptr = idptr;
             nother=nids;
         } else {
+            skip_symmetric = false;
             otherarr.reset(PyArray_FromAny(
                         otherobj.ptr(),
                         PyArray_DescrFromType(NPY_UINT32),
@@ -279,23 +283,11 @@ namespace {
             posptr = (double *)PyArray_DATA(posarr.get());
         }
 
-        if (boxobj.ptr()==Py_None) {
-            boxptr = sys.global_cell[0];
-        } else {
-            boxarr.reset(PyArray_FromAny(
-                        boxobj.ptr(),
-                        PyArray_DescrFromType(NPY_FLOAT64),
-                        2,2, NPY_C_CONTIGUOUS, NULL),
-                    destructor);
-            if (!boxarr) throw_error_already_set();
-            boxptr = (double *)PyArray_DATA(boxarr.get());
-        }
-
         list result;
-        find_contacts(cutoff, posptr, boxptr,
+        find_contacts(cutoff, posptr,
                       idptr, idptr+nids,
                       otherptr, otherptr+nother,
-                      Finder(sys, result));
+                      Finder(sys, skip_symmetric, result));
         return result;
     }
 

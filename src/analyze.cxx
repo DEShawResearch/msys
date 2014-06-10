@@ -14,8 +14,8 @@ namespace {
 
         bool exclude(Id i, Id j) const {
             if (i>=j) return true;
-            int ai = mol->atom(i).atomic_number;
-            int aj = mol->atom(j).atomic_number;
+            int ai = mol->atomFAST(i).atomic_number;
+            int aj = mol->atomFAST(j).atomic_number;
             if ((ai==1 && aj==1) ||
                 (ai==0 && aj==0)) 
                 return true;
@@ -24,8 +24,8 @@ namespace {
 
         void operator()(Id i, Id j, double d2) const {
             if (d2>0.001) {
-                int ai = mol->atom(i).atomic_number;
-                int aj = mol->atom(j).atomic_number;
+                int ai = mol->atomFAST(i).atomic_number;
+                int aj = mol->atomFAST(j).atomic_number;
                 double ri = RadiusForElement(ai);
                 double rj = RadiusForElement(aj);
                 double cut = 0.6 * (ri+rj);
@@ -146,14 +146,14 @@ namespace desres { namespace msys {
         }
         BondFinder finder(mol);
         if (mol->ctCount()==1) {
-            find_contacts(cutoff, &pos[0], (Float*)NULL,
+            find_contacts(cutoff, &pos[0],
                           atoms.begin(), atoms.end(),
                           atoms.begin(), atoms.end(),
                           finder);
         } else {
             for (Id i=0, n=mol->ctCount(); i<n; i++) {
                 IdList const& atoms = mol->atomsForCt(i);
-                find_contacts(cutoff, &pos[0], (Float*)NULL,
+                find_contacts(cutoff, &pos[0],
                               atoms.begin(), atoms.end(),
                               atoms.begin(), atoms.end(),
                               finder);
@@ -162,7 +162,7 @@ namespace desres { namespace msys {
         /* if a hydrogen has multiple bonds, keep the shortest one */
         for (Id i=0; i<mol->maxAtomId(); i++) {
             if (!mol->hasAtom(i)) continue;
-            if (mol->atom(i).atomic_number!=1) continue;
+            if (mol->atomFAST(i).atomic_number!=1) continue;
             if (mol->bondCountForAtom(i)<=1) continue;
             Id shortest_bond = BadId;
             double shortest_dist = HUGE_VAL;
@@ -170,7 +170,7 @@ namespace desres { namespace msys {
             const double x=pi[0];
             const double y=pi[1];
             const double z=pi[2];
-            IdList const& bonds = mol->bondsForAtom(i);
+            IdList bonds = mol->bondsForAtom(i);    /* yes, make a copy! */
             BOOST_FOREACH(Id b, bonds) {
                 Id j = mol->bond(b).other(i);
                 const double* pj = &pos[3*j];
