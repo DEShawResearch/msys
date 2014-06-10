@@ -40,6 +40,29 @@ class TestAnton(TestCase):
         self.assertEqual(len(contacts), 0,
                 "Found nonbonded atoms within 1A of each other: \n%s" % formatted_results)
 
+    def testPeriodicContacts(self):
+        ''' No contacts crossing periodic boundaries within 1A '''
+        mol=self.mol.clone()
+        natoms=mol.natoms
+        ct=mol.ncts+1
+        mol.append(mol)
+        sel='(not ctnumber %d) and within 1 of ctnumber %d' % (ct,ct)
+        pos = mol.positions
+        a,b,c = mol.cell
+        bad=[]
+        for i in (-1,0,1):
+            for j in (-1,0,1):
+                for k in (-1,0,1):
+                    if i==0 and i==j and i==k: continue
+                    delta = i*a + j*b + k*c
+                    pos[natoms:] += delta
+                    mol.setPositions(pos)
+                    ids = mol.selectIds(sel)
+                    bad.extend(ids)
+                    pos[natoms:] -= delta
+        self.assertEqual(len(bad), 0,
+                "Found atoms with periodic contacts less than 1A: %s" % str(bad))
+
 class TestStrict(TestCase):
     def testSplitWaterResids(self):
         '''every water molecule must have its own resid'''
