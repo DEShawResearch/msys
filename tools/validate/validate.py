@@ -33,6 +33,13 @@ class TestAnton(TestCase):
         self.assertTrue((numpy.diag(cell.diagonal())==cell).all(),
                 "Unit cell is not diagonal")
 
+    def testContacts(self):
+        ''' No nonbonded atoms within 1A of each other '''
+        contacts = self.mol.findContactIds(1.0)
+        formatted_results = '\n'.join('%6d %6d %f' % x for x in contacts)
+        self.assertEqual(len(contacts), 0,
+                "Found nonbonded atoms within 1A of each other: \n%s" % formatted_results)
+
 class TestStrict(TestCase):
     def testSplitWaterResids(self):
         '''every water molecule must have its own resid'''
