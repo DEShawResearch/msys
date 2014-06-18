@@ -99,6 +99,10 @@ static void export_ct(SystemPtr mol, Id ct, std::ostream& out) {
 namespace desres { namespace msys {
 
     void ExportSdf( SystemPtr mol, std::string const& path, unsigned flags) {
+        if (path.substr(0,6)=="stdout") {
+            ExportSdf(mol, std::cout);
+            return;
+        } 
         std::ios_base::openmode mode = std::ofstream::out;
         if (flags & SdfExport::Append) {
             mode |= std::ofstream::app;
