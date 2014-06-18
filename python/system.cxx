@@ -101,7 +101,7 @@ namespace {
     }
 
     void destructor(PyObject* obj) { 
-        Py_DECREF(obj); 
+        Py_XDECREF(obj); 
     }
     typedef boost::shared_ptr<PyObject> objptr;
 
