@@ -36,32 +36,32 @@ def main():
 
     path = opts.files[0]
     if opts.verbose:
-        print "Loading", path
+        print >> sys.stderr, "Loading", path
     mol = msys.Load(path)
     for path in opts.files[1:]:
         if opts.verbose:
-            print "Loading", path
+            print >> sys.stderr, "Loading", path
         mol.append(msys.Load(path))
 
     if opts.assign:
         if opts.verbose:
-            print "Assigning bond order and formal charge"
+            print >> sys.stderr, "Assigning bond order and formal charge"
         msys.AssignBondOrderAndFormalCharge(mol)
 
     if opts.selection:
         mol=mol.clone(opts.selection)
 
     if opts.verbose:
-        print "dms-select: %d chain(s), %d residue(s), %d atom(s)" % (
+        print >> sys.stderr, "dms-select: %d chain(s), %d residue(s), %d atom(s)" % (
                 len(mol.chains), len(mol.residues), len(mol.atoms))
 
     if opts.coalesce:
-        if opts.verbose: print "Coalescing tables"
+        if opts.verbose: print >> sys.stderr, "Coalescing tables"
         mol.coalesceTables()
         mol = mol.clone()
 
     if opts.output:
-        if opts.verbose: print "Saving", opts.output
+        if opts.verbose: print >> sys.stderr, "Saving", opts.output
         msys.Save(mol, opts.output, structure_only=opts.structure_only)
 
 if __name__=="__main__": main()
