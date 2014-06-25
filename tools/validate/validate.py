@@ -144,7 +144,7 @@ class TestDesmond(TestCase):
         radius = 5.5
         for table in self.mol.tables:
             self.assertTrue(groups.check(table, radius),
-                    "Clone radius check failed for terms in '%s'; run dms-check-groups for more information.")
+                    "Clone radius check failed for terms in '%s'; run dms-check-groups for more information." % table.name)
     
 
 def Validate(mol, strict=False, desmond=False, verbose=False, anton=False,
