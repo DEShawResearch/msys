@@ -1,9 +1,7 @@
 
 import numpy
 
-def check_midpoint(table, radius):
-    print "Checking midpoints for table %s with %d atoms, %d terms" % (
-        table.name, table.natoms, table.nterms)
+def midpoint_violations(table, radius):
     pos = table.system.getPositions()
     center = numpy.zeros(3, 'd')
     scale = 1.0/table.natoms
@@ -20,20 +18,16 @@ def check_midpoint(table, radius):
             rad2 = numpy.dot(delta, delta)
             if rad2 > r2:
                 bad.update(atoms)
-                print "  Term %d too large with atoms %s" % (
-                t, ' '.join(map(str, atoms)))
                 break
-    if bad:
-        print "Affected atoms:", ' '.join(map(str, sorted(bad)))
-    return not bad
+    return sorted(bad)
 
-def check_replicate(table, radius):
-    return True
-
-def check(table, radius):
-    if table.category in ('bond', 'exclusion'):
-        return check_midpoint(table, radius)
-    elif table.category in ('constraint', 'virtual', 'polar'):
-        return check_replicate(table, radius)
-    return False
+def clone_buffer_violations(table, radius):
+    ''' return atoms which violate Desmond's clone buffer restriction 
+    at the given radius for terms in the given table.
+    '''
+    if table.natoms < 2: 
+        return []
+    elif table.category in ('bond', 'exclusion'):
+        return midpoint_violations(table, radius)
+    return []
 

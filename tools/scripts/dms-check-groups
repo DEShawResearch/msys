@@ -41,8 +41,17 @@ def main():
 
     ok = True
     for table in mol.tables:
-        if table.natoms < 2: continue
-        ok = groups.check(table, opts.radius) and ok
+        print "Checking midpoints for table %s with %d atoms, %d terms" % (
+            table.name, table.natoms, table.nterms)
+        bad = groups.clone_buffer_violations(table, opts.radius)
+        if bad:
+            print "Violations for atoms:", ' '.join(map(str, sorted(bad)))
+            print "%d atoms, %d %s terms affected." % (
+                    len(bad),
+                    len(table.findWithAny([mol.atom(i) for i in bad])), 
+                    table.name)
+            ok = False
+
     if ok:
         print "All tables look ok"
     else:

@@ -1,6 +1,7 @@
 import sys, msys
 import unittest as UT
 from msys import knot, groups
+from msys.wrap import Wrapper
 import numpy
 
 _mol = None
@@ -142,8 +143,10 @@ class TestDesmond(TestCase):
         ''' Atoms in bonded terms must be within a clone radius of each
         other. '''
         radius = 5.5
-        for table in self.mol.tables:
-            self.assertTrue(groups.check(table, radius),
+        mol = self.mol.clone()
+        Wrapper(mol).wrap()
+        for table in mol.tables:
+            self.assertFalse(groups.clone_buffer_violations(table, radius),
                     "Clone radius check failed for terms in '%s'; run dms-check-groups for more information." % table.name)
     
 
