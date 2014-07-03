@@ -477,9 +477,9 @@ class TestMain(unittest.TestCase):
             self.assertEqual(msys.GuessAtomicNumber(m), max(i,0))
 
     def testElement(self):
-        for i,a in (1,'H'), (2,'He'), (19,'K'):
+        for i,a,n in (1,'H','H'), (2,'He','He'), (19,'K','K'),(6,'C1','C'), (17,'Cl2','Cl'), (20,'Ca3','Ca'):
             self.assertEqual(msys.ElementForAbbreviation(a), i)
-            self.assertEqual(msys.AbbreviationForElement(i), a)
+            self.assertEqual(msys.AbbreviationForElement(i), n)
 
     def testAssignBondOrdersAndFormalCharges(self):
         # Smoke test only

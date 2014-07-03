@@ -201,12 +201,19 @@ int desres::msys::GroupForElement(int anum) {
 
 
 int desres::msys::ElementForAbbreviationSlow(const char* abbr) {
-    std::string src(abbr);
-    boost::to_upper(src);
+    /* element table only has two character elements currently */
+    char src[3] = { '\0','\0','\0' };
+    strncpy(src,abbr,2);
+    /* Strip off any trailing non alpha characters */
+    if(isalpha(src[1])){
+       src[1]=tolower(src[1]);
+    }else{
+       src[1]='\0';
+    }
+    src[0]=toupper(src[0]);
     for (int i=1; i<nelems; i++) {
-        std::string ref(elems[i].abbr);
-        boost::to_upper(ref);
-        if (ref==src) return i;
+        const char* ref=elems[i].abbr;
+        if (ref[0]==src[0] && ref[1]==src[1]) return i;
     }
     return 0;
 }   
