@@ -76,7 +76,7 @@ struct posarray : boost::noncopyable {
         xmin = ymin = zmin = std::numeric_limits<scalar>::max();
         xmax = ymax = zmax = std::numeric_limits<scalar>::min();
 
-        for (Id i=0, j=0, n=size(); i<n; i++) {
+        for (Id i=0, j=0, n=S.size(); i<n; i++) {
             if (S[i]) {
                 const float* p = pro+3*i;
                 _set(j++, p[0], p[1], p[2]);
