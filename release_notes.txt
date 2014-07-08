@@ -1,3 +1,11 @@
+1.7.69 FIXED: Fix error handling in certain Python bindings.
+       FIXED: dms-validate for check-gruops.
+       FIXED: validate output formatting
+       FIXED: read/write PDB space group
+       FIXED: handling of element names with extraneous characters
+       NEW: Saving to stdout.sdf writes to stdout.
+       NEW: API change for msys.groups
+
 1.7.68 NEW: dms-validate --anton checks for contacts shorter than 1A,
             including those that cross periodic boundaries.
        FIXED: The bond guesser (used during loading of pdb files) sometimes
