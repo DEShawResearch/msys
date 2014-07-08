@@ -6,6 +6,8 @@
 #include "geom.hxx"
 #include "contacts.hxx"
 
+#include "atomsel/within_predicate.hxx"
+
 #include <numpy/ndarrayobject.h>
 
 using namespace desres::msys;
@@ -574,6 +576,56 @@ namespace {
         return ids.size() == mol->atomCount();
     }
 
+    unsigned wrap_find_within(PyObject *proobj, PyObject *propos,
+                               PyObject *ligobj, PyObject *ligpos,
+                               float radius) {
+
+        PyObject* proarr = PyArray_FromAny(
+                proobj, 
+                PyArray_DescrFromType(NPY_UINT32),
+                1, 1, NPY_C_CONTIGUOUS | NPY_ALIGNED,
+                NULL);
+        if (!proarr) throw_error_already_set();
+
+        PyObject* ligarr = PyArray_FromAny(
+                ligobj, 
+                PyArray_DescrFromType(NPY_UINT32),
+                1, 1, NPY_C_CONTIGUOUS | NPY_ALIGNED,
+                NULL);
+        if (!ligarr) throw_error_already_set();
+
+        PyObject* proposarr = PyArray_FromAny(
+                propos, 
+                PyArray_DescrFromType(NPY_FLOAT32),
+                2, 2, NPY_C_CONTIGUOUS | NPY_ALIGNED,
+                NULL);
+        if (!proposarr) throw_error_already_set();
+
+        PyObject* ligposarr = PyArray_FromAny(
+                ligpos, 
+                PyArray_DescrFromType(NPY_FLOAT32),
+                2, 2, NPY_C_CONTIGUOUS | NPY_ALIGNED,
+                NULL);
+        if (!ligposarr) throw_error_already_set();
+
+        int npro = PyArray_DIM(proposarr, 0);
+        int nlig = PyArray_DIM(ligposarr, 0);
+        const unsigned* parr = (const unsigned *)PyArray_DATA(proarr);
+        const unsigned* larr = (const unsigned *)PyArray_DATA(ligarr);
+        const float* pro = (const float *)PyArray_DATA(proposarr);
+        const float* lig = (const float *)PyArray_DATA(ligposarr);
+        atomsel::Selection psel(npro);
+        atomsel::Selection lsel(nlig);
+        for (int i=0, n=PyArray_DIM(proarr,0); i<n; i++) { psel[parr[i]]=1; }
+        for (int i=0, n=PyArray_DIM(ligarr,0); i<n; i++) { lsel[larr[i]]=1; }
+
+        atomsel::Selection a = atomsel::FindWithin(psel, pro, lsel, lig, radius, NULL);
+        Py_DECREF(proarr);
+        Py_DECREF(ligarr);
+        Py_DECREF(proposarr);
+        Py_DECREF(ligposarr);
+        return a.count();
+    }
 }
 
 namespace desres { namespace msys { 
@@ -781,6 +833,8 @@ namespace desres { namespace msys {
                     (arg("vel"),
                      arg("ids")=object()))
             ;
+
+        def("FindWithin", wrap_find_within);
     }
 
 }}

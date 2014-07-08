@@ -114,7 +114,8 @@ static int desres_msys_read_pdb_record(FILE *f, char *retStr) {
 /* Extract the alpha/beta/gamma a/b/c unit cell info from a CRYST1 record */
 void desres_msys_get_pdb_cryst1(const char *record, 
                            double *alpha, double *beta, double *gamma, 
-                           double *a, double *b, double *c) {
+                           double *a, double *b, double *c,
+                           char *space_group=NULL, int *z=NULL) {
   char tmp[PDB_RECORD_LENGTH+3]; /* space for line + cr + lf + NUL */
   char ch, *s;
   memset(tmp, 0, sizeof(tmp));
@@ -132,6 +133,8 @@ void desres_msys_get_pdb_cryst1(const char *record,
   *beta = (double) atof(s);
   s = tmp+47; *s = ch; ch = tmp[54]; tmp[54] = 0;
   *gamma = (double) atof(s);
+  if (space_group) strncpy(space_group, tmp+55, 11);
+  if (z)           *z = atoi(tmp+66);
 }
 
 

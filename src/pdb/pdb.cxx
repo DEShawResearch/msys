@@ -8,12 +8,16 @@
 
 #include <vector>
 #include <boost/foreach.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <string>
 #include <math.h>
 #include <errno.h>
 #include "../io.hxx"
 
 using namespace desres::msys;
+
+static const char PDB_SPACE_GROUP[] = "pdb_space_group";
+static const char PDB_Z_VALUE[] = "pdb_z_value";
 
 static void strip_whitespace(char *buf) {
     char *ptr = buf;
@@ -56,6 +60,7 @@ SystemPtr iterator::next() {
     char pdbstr[PDB_BUFFER_LENGTH];
 
     SystemPtr mol = System::create();
+    mol->addCt();
     SystemImporter imp(mol);
     Id occup_id = mol->addAtomProp("occupancy", FloatType);
     Id bfactor_id = mol->addAtomProp("bfactor", FloatType);
@@ -121,7 +126,21 @@ SystemPtr iterator::next() {
 
         } else if (indx==PDB_CRYST1) {
             double alpha, beta, gamma, a, b, c;
-            desres_msys_get_pdb_cryst1(pdbstr,&alpha,&beta,&gamma,&a,&b,&c);
+            char space[12];
+            int zvalue;
+            desres_msys_get_pdb_cryst1(pdbstr,&alpha,&beta,&gamma,&a,&b,&c,
+                                       space, &zvalue);
+            space[11]='\0';
+            std::string s(space);
+            boost::trim(s);
+            if (!s.empty()) {
+                Id id = mol->ct(0).add(PDB_SPACE_GROUP, StringType);
+                mol->ct(0).value(id) = s;
+            }
+            if (zvalue) {
+                Id id= mol->ct(0).add(PDB_Z_VALUE, IntType);
+                mol->ct(0).value(id) = zvalue;
+            }
             ImportPDBUnitCell(a,b,c,alpha,beta,gamma,mol->global_cell[0]);
 
         } else if (indx==PDB_TER) {
@@ -297,9 +316,18 @@ void desres::msys::ExportPDB(SystemPtr mol, std::string const& path) {
         box[3*i+j]=mol->global_cell[i][j];
     double A,B,C,alpha,beta,gamma;
     ExportPDBUnitCell(box, &A,&B,&C,&alpha,&beta,&gamma);
-
+    std::string space = "P 1";
+    int z = 1;
+    if (mol->ctCount()>0) {
+        if (mol->ct(0).has(PDB_SPACE_GROUP)) { 
+            space = mol->ct(0).value(PDB_SPACE_GROUP).asString();
+        }
+        if (mol->ct(0).has(PDB_Z_VALUE)) { 
+            z = mol->ct(0).value(PDB_Z_VALUE);
+        }
+    }
     fprintf(fd, "%6s%9.3f%9.3f%9.3f%7.2f%7.2f%7.2f %-11s%4d\n",
-            "CRYST1", A,B,C,alpha,beta,gamma,"P 1", 1);
+            "CRYST1", A,B,C,alpha,beta,gamma,space.c_str(), z);
 
     int index=0;
     const char* chain = NULL;

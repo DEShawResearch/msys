@@ -146,8 +146,8 @@ namespace desres { namespace msys {
             _kv->delProp(_kv->propIndex(key));
         }
 
-        void add(String const& key, ValueType type) {
-            _kv->addProp(key,type);
+        Id add(String const& key, ValueType type) {
+            return _kv->addProp(key,type);
         }
 
         ValueType type(String const& key) const {
@@ -159,6 +159,9 @@ namespace desres { namespace msys {
         }
 
         ValueRef value(String const& key) {
+            return _kv->value(0,key);
+        }
+        ValueRef value(Id key) {
             return _kv->value(0,key);
         }
     };
