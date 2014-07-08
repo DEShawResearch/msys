@@ -70,17 +70,15 @@ struct posarray : boost::noncopyable {
         zmax = std::max(zmax, z);
     }
 
-    void init(const float* pro, Selection const& S) {
-        pos.resize(S.count());
+    void init(const float* pro, IdList const& S) {
+        pos.resize(S.size());
         if (size()==0) return;
         xmin = ymin = zmin = std::numeric_limits<scalar>::max();
         xmax = ymax = zmax = std::numeric_limits<scalar>::min();
 
         for (Id i=0, j=0, n=S.size(); i<n; i++) {
-            if (S[i]) {
-                const float* p = pro+3*i;
-                _set(j++, p[0], p[1], p[2]);
-            }
+             const float* p = pro+3*S[i];
+             _set(j++, p[0], p[1], p[2]);
         }
     }
 
@@ -610,29 +608,30 @@ namespace desres { namespace msys { namespace atomsel {
         return PredicatePtr(new KNearestPredicate(sys,k,true,S));
     }
 
-    Selection FindWithin(Selection const& wsel, const float* wat,
-                         Selection const& psel, const float* pro,
-                         float radius,
-                         const double* cell) {
+    IdList FindWithin(IdList const& wsel, const float* wat,
+                      IdList const& psel, const float* pro,
+                      float radius,
+                      const double* cell) {
 
+        if (wsel.empty()) return IdList();
         posarray p;
         p.init(pro, psel);
         p.voxelize(radius);
-        Selection S(wsel);
+        Selection S(1+wsel.back(), wsel);
         find_within(wat, p, S, radius, cell);
-        return S;
+        return S.ids();
     }
 
-    Selection FindNearest(Selection const& wsel, const float* wat,
-                          Selection const& psel, const float* pro,
-                          Id k,
-                          const double* cell) {
+    IdList FindNearest(IdList const& wsel, const float* wat,
+                       IdList const& psel, const float* pro,
+                       Id k,               const double* cell) {
 
+        if (wsel.empty()) return IdList();
         posarray p;
         p.init(pro, psel);
-        Selection S(wsel);
+        Selection S(1+wsel.back(), wsel);
         find_nearest(wat, p, S, k, cell);
-        return S;
+        return S.ids();
     }
  
 }}}

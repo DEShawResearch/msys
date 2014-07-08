@@ -22,15 +22,10 @@ int main(int argc, char *argv[]) {
     const double* cell = sys->global_cell[0];
 
     /* evaluate selections */
-    Selection psel(sys->atomCount());
-    Selection wsel(sys->atomCount());
-    IdList ids;
 
-    ids = Atomselect(sys, prosel);
-    for (Id i=0, n=ids.size(); i<n; i++) psel[ids[i]]=1;
-    ids = Atomselect(sys, watsel);
-    for (Id i=0, n=ids.size(); i<n; i++) wsel[ids[i]]=1;
-    printf("psel %u wsel %u\n", psel.count(), wsel.count());
+    IdList psel = Atomselect(sys, prosel);
+    IdList wsel = Atomselect(sys, watsel);
+    printf("psel %lu wsel %lu\n", psel.size(), wsel.size());
 
     for (int i=4; i<argc; i++) {
         std::string sel("(");
@@ -42,11 +37,11 @@ int main(int argc, char *argv[]) {
         printf("%s -> %d atoms (%8.3fms)\n", sel.c_str(), (int)atoms.size(), t*1000);
         Id k= atoi(argv[i]);
         t=-now();
-        Selection S = atomsel::FindNearest(wsel, &pos[0], psel, &pos[0],
+        IdList S = atomsel::FindNearest(wsel, &pos[0], psel, &pos[0],
                                           k, NULL);
         t+=now();
-        printf("FindNearest-> %u atoms (%8.3fms)\n", S.count(), t*1000);
-        assert(S.ids()==atoms);
+        printf("FindNearest-> %lu atoms (%8.3fms)\n", S.size(), t*1000);
+        assert(S==atoms);
     }
     for (int i=4; i<argc; i++) {
         std::string sel("(");
@@ -58,11 +53,11 @@ int main(int argc, char *argv[]) {
         printf("%s -> %d atoms (%8.3fms)\n", sel.c_str(), (int)atoms.size(), t*1000);
         Id k = atoi(argv[i]);
         t=-now();
-        Selection S = atomsel::FindNearest(wsel, &pos[0], psel, &pos[0],
+        IdList S = atomsel::FindNearest(wsel, &pos[0], psel, &pos[0],
                                           k, cell);
         t+=now();
-        printf("FindNearest -> %u atoms (%8.3fms)\n", S.count(), t*1000);
-        assert(S.ids()==atoms);
+        printf("FindNearest -> %lu atoms (%8.3fms)\n", S.size(), t*1000);
+        assert(S==atoms);
     }
     return 0;
 }

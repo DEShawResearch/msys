@@ -27,15 +27,13 @@ namespace desres { namespace msys { namespace atomsel {
   PredicatePtr k_nearest_predicate(SystemPtr sys, unsigned k, PredicatePtr S);
   PredicatePtr k_pbnearest_predicate(SystemPtr sys, unsigned k, PredicatePtr S);
 
-  Selection FindWithin(Selection const& wsel, const float* wat,
-                       Selection const& psel, const float* pro,
-                       float radius,
-                       const double* cell);
+  IdList FindWithin(IdList const& wsel, const float* wat,
+                    IdList const& psel, const float* pro,
+                    float radius,       const double* cell);
 
-  Selection FindNearest(Selection const& wsel, const float* wat,
-                        Selection const& psel, const float* pro,
-                        Id k,
-                        const double* cell);
+  IdList FindNearest(IdList const& wsel, const float* wat,
+                     IdList const& psel, const float* pro,
+                     Id k,               const double* cell);
 
 }}}
 
