@@ -1123,10 +1123,11 @@ class System(object):
         If a table with the same name already exists, it is returned,
         otherwise the newly created table is returned.  If no ParamTable
         params is supplied, a new one is created.  '''
-        if params is None: params = CreateParamTable()
+        if params is not None:
+            params = params._ptr
         name = str(name)
         natoms = int(natoms)
-        return TermTable(self._ptr.addTable(name, natoms, params._ptr))
+        return TermTable(self._ptr.addTable(name, natoms, params))
 
     def addTableFromSchema(self, type, name = None):
         ''' Add a table to the system if it not already present, 

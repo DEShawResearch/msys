@@ -900,6 +900,15 @@ class TestMain(unittest.TestCase):
             m.addTable("foo", 0)
 
         angle=m.addTable("angle", 3)
+
+        # addTable with same name returns the same table
+        angle2=m.addTable("angle", 3)
+        self.assertEqual(angle, angle2)
+
+        # addTable with an explicit ParamTable must not already exist
+        with self.assertRaises(RuntimeError):
+            m.addTable("angle", 3, msys.CreateParamTable())
+
         self.assertEqual(angle.natoms, 3)
         self.assertEqual(len(angle.terms), 0)
         t1=angle.addTerm(m.atoms[:3])
