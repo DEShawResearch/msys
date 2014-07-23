@@ -1,8 +1,11 @@
+1.7.70 FIXED: handling of element names with extraneous characters
+       FIXED: addTable should be no-op when table already exists.
+       NEW: dms-set takes any supported file type.
+
 1.7.69 FIXED: Fix error handling in certain Python bindings.
        FIXED: dms-validate for check-gruops.
        FIXED: validate output formatting
        FIXED: read/write PDB space group
-       FIXED: handling of element names with extraneous characters
        NEW: Saving to stdout.sdf writes to stdout.
        NEW: API change for msys.groups
 
