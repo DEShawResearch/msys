@@ -13,6 +13,7 @@ from time import time
 import numpy as NP
 import json
 import gzip
+import tempfile
 
 def vsize():
     cmd='ps -p %d h -o vsz' % os.getpid()
@@ -174,9 +175,14 @@ class TestPdb(unittest.TestCase):
         self.assertEqual(ids, [490,494,496,498,500,502,504])
 
     def testBfactor(self):
+        ref = [2182, 2191, 2208, 2211, 2223, 2259, 2264, 2279, 2393, 2400, 2441]
         ids=self.mol.selectIds('bfactor > 50')
-        self.assertEqual(ids, [2182, 2191, 2208, 2211, 2223, 2259, 2264, 
-                               2279, 2393, 2400, 2441])
+        self.assertEqual(ids, ref)
+        with tempfile.NamedTemporaryFile(suffix='.pdb') as tmp:
+            msys.Save(self.mol, tmp.name)
+            mol = msys.Load(tmp.name)
+            ids=mol.selectIds('bfactor > 50')
+            self.assertEqual(ids, ref)
 
     def testAltloc(self):
         self.assertEqual(

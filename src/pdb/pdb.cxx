@@ -333,6 +333,8 @@ void desres::msys::ExportPDB(SystemPtr mol, std::string const& path) {
     const char* chain = NULL;
     const char* resname = NULL;
     int resid = 0;
+    Id bfactor_index = mol->atomPropIndex("bfactor");
+    Id occupancy_index = mol->atomPropIndex("occupancy");
     for (Id chn=0; chn<mol->maxChainId(); chn++) {
         if (!mol->hasChain(chn)) continue;
         const char* segid = mol->chain(chn).segid.c_str();
@@ -353,8 +355,10 @@ void desres::msys::ExportPDB(SystemPtr mol, std::string const& path) {
                 double x = mol->atom(atm).x;
                 double y = mol->atom(atm).y;
                 double z = mol->atom(atm).z;
-                double occ = 1;
-                double beta = 0;
+                double occ = bad(occupancy_index) ? 1 :
+                                mol->atomPropValue(atm, occupancy_index);
+                double beta = bad(occupancy_index) ? 0 :
+                                mol->atomPropValue(atm, bfactor_index);
                 int formal_charge = mol->atom(atm).formal_charge;
 
                 ++index;
