@@ -146,6 +146,46 @@ Id System::addCt() {
     return id;
 }
 
+component_t::component_t() {
+    _kv = ParamTable::create();
+    _kv->addParam();
+    _kv->addProp("msys_name", StringType);
+}
+
+String component_t::name() const { return _kv->value(0,0); }
+void component_t::setName(String const& s) { _kv->value(0,0) = s; }
+
+std::vector<String> component_t::keys() const {
+    std::vector<String> k;
+    for (Id i=1; i<_kv->propCount(); i++) {
+        k.push_back(_kv->propName(i));
+    }
+    return k;
+}
+
+void component_t::del(String const& key) { _kv->delProp(_kv->propIndex(key)); }
+
+Id component_t::add(String const& key, ValueType type) {
+    return _kv->addProp(key,type);
+}
+
+ValueType component_t::type(String const& key) const { 
+    return _kv->propType(_kv->propIndex(key));
+}
+
+bool component_t::has(String const& key) const {
+    return !bad(_kv->propIndex(key));
+}
+
+ValueRef component_t::value(String const& key) {
+    return _kv->value(0,key);
+}
+ValueRef component_t::value(Id key) {
+    return _kv->value(0,key);
+}
+
+
+
 component_t& component_t::operator=(component_t const& c) {
     _kv = ParamTable::create();
     AppendParams(_kv, c._kv, c._kv->params());

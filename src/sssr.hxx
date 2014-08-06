@@ -2,6 +2,7 @@
 #define desres_msys_sssr_hxx
 
 #include "system.hxx"
+#include <deque>
 
 namespace desres { namespace msys {
 

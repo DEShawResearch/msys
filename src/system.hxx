@@ -6,13 +6,15 @@
 #include <boost/enable_shared_from_this.hpp>
 
 #include "provenance.hxx"
-#include "types.hxx"
-#include "param_table.hxx"
+#include "value.hxx"
 
 namespace desres { namespace msys {
 
     class TermTable;
     typedef boost::shared_ptr<TermTable> TermTablePtr;
+
+    class ParamTable;
+    typedef boost::shared_ptr<ParamTable> ParamTablePtr;
 
     class GlobalCell {
         std::vector<double> data;
@@ -115,54 +117,25 @@ namespace desres { namespace msys {
     public:
         /* constructor: maintain a single row with msys_name as the first
          * property. */
-        component_t() {
-            _kv = ParamTable::create();
-            _kv->addParam();
-            _kv->addProp("msys_name", StringType);
-        }
+        component_t();
 
         /* must implement copy constructor so that we don't share _kv! */
-        component_t(component_t const& c) {
-            *this = c;
-        }
-
+        component_t(component_t const& c) { *this = c; }
         component_t& operator=(component_t const& c);
 
         /* getter/setter for name */
-        String name() const { return _kv->value(0,0); }
-        void setName(String const& s) { _kv->value(0,0) = s; }
+        String name() const;
+        void setName(String const& s);
 
         /* other keys besides name */
-        std::vector<String> keys() const {
-            std::vector<String> k;
-            for (Id i=1; i<_kv->propCount(); i++) {
-                k.push_back(_kv->propName(i));
-            }
-            return k;
-        }
+        std::vector<String> keys() const;
+        void del(String const& key);
+        Id add(String const& key, ValueType type);
+        ValueType type(String const& key) const;
 
-        void del(String const& key) {
-            _kv->delProp(_kv->propIndex(key));
-        }
-
-        Id add(String const& key, ValueType type) {
-            return _kv->addProp(key,type);
-        }
-
-        ValueType type(String const& key) const {
-            return _kv->propType(_kv->propIndex(key));
-        }
-
-        bool has(String const& key) const {
-            return !bad(_kv->propIndex(key));
-        }
-
-        ValueRef value(String const& key) {
-            return _kv->value(0,key);
-        }
-        ValueRef value(Id key) {
-            return _kv->value(0,key);
-        }
+        bool has(String const& key) const;
+        ValueRef value(String const& key);
+        ValueRef value(Id key);
     };
 
     class System : public boost::enable_shared_from_this<System> {
