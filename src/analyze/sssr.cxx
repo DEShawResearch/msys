@@ -4,6 +4,7 @@
 #include <queue>
 #include <set>
 #include <algorithm>
+#include <boost/foreach.hpp>
 
 using namespace desres::msys;
 using namespace desres::msys::SSSR;

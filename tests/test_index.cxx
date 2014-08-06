@@ -1,4 +1,5 @@
 #include "dms.hxx"
+#include "term_table.hxx"
 #include <cstdio>
 
 using namespace desres::msys;

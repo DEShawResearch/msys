@@ -2,6 +2,8 @@
 #include "analyze.hxx"
 #include "mol2.hxx"
 #include <cstdio>
+#include <string.h>
+
 
 using namespace desres::msys;
 

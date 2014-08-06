@@ -1,4 +1,5 @@
 #include "system.hxx"
+#include "term_table.hxx"
 #include "dms.hxx"
 #include "schema.hxx"
 #include <cstdio>

@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <limits>
 
+#include <boost/noncopyable.hpp>
+
 using namespace desres::msys::atomsel;
 
 typedef desres::msys::atom_t atom;

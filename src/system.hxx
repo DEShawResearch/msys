@@ -7,7 +7,6 @@
 
 #include "provenance.hxx"
 #include "types.hxx"
-#include "term_table.hxx"
 #include "param_table.hxx"
 
 namespace desres { namespace msys {

@@ -1,10 +1,12 @@
 #include "alchemical.hxx"
 #include "clone.hxx"
+#include "term_table.hxx"
 #include "schema.hxx"
 
 #include <stdio.h>
 #include <stack>
 #include <math.h>
+#include <boost/foreach.hpp>
 
 using namespace desres::msys;
 

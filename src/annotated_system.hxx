@@ -2,6 +2,7 @@
 #define desres_msys_annotated_system_hxx
 
 #include "system.hxx"
+#include <boost/foreach.hpp>
 
 namespace desres { namespace msys {
 

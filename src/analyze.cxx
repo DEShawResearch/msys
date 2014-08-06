@@ -5,6 +5,7 @@
 #include "geom.hxx"
 #include "contacts.hxx"
 #include <stdio.h>
+#include <boost/foreach.hpp>
 
 namespace {
     using namespace desres::msys;

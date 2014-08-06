@@ -11,6 +11,7 @@
 #include "../quadsum.hxx"
 #include "eigensystem.hxx"
 #include "../elements.hxx"
+#include <boost/foreach.hpp>
 
 using namespace desres::msys;
 

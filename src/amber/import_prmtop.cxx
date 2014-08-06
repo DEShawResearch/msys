@@ -3,6 +3,7 @@
 #include "../schema.hxx"
 #include "../clone.hxx"
 #include "../elements.hxx"
+#include "../term_table.hxx"
 
 #include <fstream>
 #include <boost/algorithm/string.hpp>

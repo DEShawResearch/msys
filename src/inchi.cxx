@@ -2,6 +2,7 @@
 #include "clone.hxx"
 #include "elements.hxx"
 #include <string.h>
+#include <boost/foreach.hpp>
 
 using namespace desres::msys;
 
