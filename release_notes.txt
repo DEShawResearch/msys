@@ -1,3 +1,6 @@
+1.7.71 FIXED: write bfactor and occupancy to pdb filfes.
+       NEW: C++ system.hxx no longer includes {term,param}_table.hxx.
+
 1.7.70 FIXED: handling of element names with extraneous characters
        FIXED: addTable should be no-op when table already exists.
        NEW: dms-set takes any supported file type.
