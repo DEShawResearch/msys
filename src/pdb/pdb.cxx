@@ -355,9 +355,9 @@ void desres::msys::ExportPDB(SystemPtr mol, std::string const& path) {
                 double x = mol->atom(atm).x;
                 double y = mol->atom(atm).y;
                 double z = mol->atom(atm).z;
-                double occ = bad(occupancy_index) ? 1 :
+                double occ = bad(occupancy_index) ? 1.0 :
                                 mol->atomPropValue(atm, occupancy_index);
-                double beta = bad(occupancy_index) ? 0 :
+                double beta = bad(bfactor_index) ? 0.0 :
                                 mol->atomPropValue(atm, bfactor_index);
                 int formal_charge = mol->atom(atm).formal_charge;
 
