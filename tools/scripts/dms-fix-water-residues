@@ -4,7 +4,7 @@
 # desres-cleanenv -m numpy/1.6.2-31A/lib-python -- python $0 "$@" 
 #}
 '''
-dms-fix-water-residues system.dms out.dms
+dms-fix-water-residues system.dms out.dms 
 
 Give each water fragment its own residue id.
 '''
