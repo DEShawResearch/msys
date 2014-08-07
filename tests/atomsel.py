@@ -2,7 +2,7 @@
 
 import sys
 
-sys.path.insert(0,'objs/Linux/x86_64/lib/python')
+sys.path.insert(0,'objs/CentOS6/x86_64/lib/python')
 import msys
 import vmd
 import molecule
