@@ -1,19 +1,11 @@
 
-export bond properties
-
-alchemical: don't make particles alchemical unnecessarily
 
 gen-lipid: create a new bilayer
 
 validate atom selections in mae and dms, vmd and msys.
 
-secondary structure-based atom selections
-
 dms-compare - intelligent dms file comparison
 
 dms-hash - based on dms-dump?
 
-RMS alignment (feature request)
-
-measure contacts
-
+Try string_ref from boost/1.53 to improve atom selection speed.
