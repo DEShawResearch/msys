@@ -103,17 +103,21 @@ IdList desres::msys::AppendTerms( TermTablePtr dst, TermTablePtr src,
     return ids;
 }
 
-IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr,
-                                   Id dstct ) {
+IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr, Id ctid) {
 
     System& dst = *dstptr;
     System const& src = *srcptr;
-    IdList src2dst(src.maxAtomId(), BadId);
+
+    /* Mappings from src ids to dst ids */
+    IdList atmmap(src.maxAtomId(), BadId);
+    IdList resmap(src.maxResidueId(), BadId);
+    IdList chnmap(src.maxChainId(), BadId);
+    IdList ctmap(src.maxCtId(), BadId);
 
     dst.nonbonded_info.merge(src.nonbonded_info);
     /* only overwrite global cell when appending to the system itself,
      * not to a specific ct. */
-    if (bad(dstct)) dst.global_cell.merge(src.global_cell);
+    if (bad(ctid)) dst.global_cell.merge(src.global_cell);
 
     /* copy atom properties */
     Id nprops = src.atomPropCount();
@@ -130,60 +134,58 @@ IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr,
     }
 
     /* add cts */
-    IdList cts = src.cts();
-    for (Id c=0; c<cts.size(); c++) {
-        Id srcct = cts[c];
-
+    BOOST_FOREACH(Id srcct, src.cts()) {
+        Id dstct = ctid;
         if (bad(dstct)) {
             dstct = dst.addCt();
             dst.ct(dstct) = src.ct(srcct);
         }
+        ctmap[srcct] = dstct;
+    }
 
-        /* add chains */
-        IdList const& chains = src.chainsForCt(srcct);
-        for (Id i=0; i<chains.size(); i++) {
-            Id srcchn = chains[i];
-            Id dstchn = dst.addChain(dstct);
-            /* copy attributes from src chain to dst chain */
-            dst.chain(dstchn) = src.chain(srcchn);
-            dst.chain(dstchn).ct = dstct;
+    /* add chains */
+    BOOST_FOREACH(Id srcchn, src.chains()) {
+        Id srcct = src.chain(srcchn).ct;
+        Id dstct = ctmap[srcct];
+        Id dstchn = chnmap[srcchn] = dst.addChain(dstct);
+        /* copy attributes from src chain to dst chain */
+        dst.chain(dstchn) = src.chain(srcchn);
+        dst.chain(dstchn).ct = dstct;
+    }
 
-            /* add residues */
-            IdList const& residues = src.residuesForChain(srcchn);
-            for (Id j=0; j<residues.size(); j++) {
-                Id srcres = residues[j];
-                Id dstres = dst.addResidue(dstchn);
-                /* copy attributes from src residue to dst residue */
-                dst.residue(dstres) = src.residue(srcres);
-                dst.residue(dstres).chain = dstchn;
+    /* add residues */
+    BOOST_FOREACH(Id srcres, src.residues()) {
+        Id srcchn = src.residue(srcres).chain;
+        Id dstchn = chnmap[srcchn];
+        Id dstres = resmap[srcres] = dst.addResidue(dstchn);
+        /* copy attributes from src residue to dst residue */
+        dst.residue(dstres) = src.residue(srcres);
+        dst.residue(dstres).chain = dstchn;
+    }
 
-                /* add atoms */
-                IdList const& atoms = src.atomsForResidue(srcres);
-                for (Id k=0; k<atoms.size(); k++) {
-                    Id srcatm = atoms[k];
-                    Id dstatm = dst.addAtom(dstres);
-                    /* copy attributes from src atom to dst atom */
-                    dst.atom(dstatm) = src.atom(srcatm);
-                    dst.atom(dstatm).residue = dstres;
-                    /* Copy additional atom properties */
-                    for (Id p=0; p<nprops; p++) {
-                        dst.atomPropValue(dstatm,propmap[p]) = 
-                        srcptr->atomPropValue(srcatm, p);
-                    }
-                    /* map src to dst atoms so we can add bonds */
-                    src2dst[srcatm] = dstatm;
-                }
-            }
+    /* add atoms */
+    BOOST_FOREACH(Id srcatm, src.atoms()) {
+        Id srcres = src.atom(srcatm).residue;
+        Id dstres = resmap[srcres];
+        Id dstatm = atmmap[srcatm] = dst.addAtom(dstres);
+        /* copy attributes from src atom to dst atom */
+        dst.atom(dstatm) = src.atom(srcatm);
+        dst.atom(dstatm).residue = dstres;
+        /* Copy additional atom properties */
+        for (Id p=0; p<nprops; p++) {
+            dst.atomPropValue(dstatm,propmap[p]) = 
+            srcptr->atomPropValue(srcatm, p);
         }
     }
+
     /* add bonds */
     IdList bonds = src.bonds();
     for (Id i=0; i<bonds.size(); i++) {
         Id srcbnd = bonds[i];
         Id srci = src.bond(srcbnd).i;
         Id srcj = src.bond(srcbnd).j;
-        Id dsti = src2dst[srci];
-        Id dstj = src2dst[srcj];
+        Id dsti = atmmap[srci];
+        Id dstj = atmmap[srcj];
         Id dstbnd = dst.addBond(dsti, dstj);
         dst.bond(dstbnd).order = src.bond(srcbnd).order;
         dst.bond(dstbnd).resonant_order = src.bond(srcbnd).resonant_order;
@@ -213,7 +215,7 @@ IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr,
                 throw std::runtime_error(ss.str());
             }
         }
-        AppendTerms( dsttable, srctable, src2dst, srctable->terms() );
+        AppendTerms( dsttable, srctable, atmmap, srctable->terms() );
     }
 
     /* add/replace extra tables */
@@ -228,5 +230,5 @@ IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr,
         }
     }
 
-    return src2dst;
+    return atmmap;
 }
