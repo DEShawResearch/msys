@@ -1,4 +1,8 @@
-1.7.71 FIXED: write bfactor and occupancy to pdb filfes.
+1.7.72 FIXED: bfactor and occupancy output in pdb files wasn't quite working.
+       FIXED: System.append() and PDB importer now always preserve atom order.
+       FIXED: permissions on dms-fix-water-residues.
+
+1.7.71 FIXED: write bfactor and occupancy to pdb files.
        NEW: C++ system.hxx no longer includes {term,param}_table.hxx.
 
 1.7.70 FIXED: handling of element names with extraneous characters
