@@ -534,8 +534,8 @@ static void export_version(Sqlite dms) {
             "  major integer not null,\n"
             "  minor integer not null)");
     Writer w = dms.insert("dms_version");
-    w.bind_int(0,MSYS_MAJOR_VERSION);
-    w.bind_int(1,MSYS_MINOR_VERSION);
+    w.bind_int(0,msys_major_version());
+    w.bind_int(1,msys_minor_version());
     w.next();
 }
 

@@ -507,9 +507,9 @@ static void check_dms_version(Sqlite dms, KnownSet& known) {
     for (; r; r.next()) {
         int major = r.get_int(MAJOR);
         int minor = r.get_int(MINOR);
-        if (major > MSYS_MAJOR_VERSION ||
-            minor > MSYS_MINOR_VERSION) {
-            MSYS_FAIL("Application compiled with msys " << MSYS_VERSION 
+        if (major > msys_major_version() ||
+            minor > msys_minor_version() ) {
+            MSYS_FAIL("Application compiled with msys " << msys_version()
                     << " is too old to read dms file with version " 
                     << major << "." << minor);
         }

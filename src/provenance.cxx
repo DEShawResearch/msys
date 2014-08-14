@@ -71,3 +71,9 @@ Provenance Provenance::fromArgs(int argc, char *argv[]) {
 
     return prov;
 }
+
+const char* desres::msys::msys_version() { return MSYS_VERSION; }
+int desres::msys::msys_major_version() { return MSYS_MAJOR_VERSION; }
+int desres::msys::msys_minor_version() { return MSYS_MINOR_VERSION; }
+int desres::msys::msys_micro_version() { return MSYS_MICRO_VERSION; }
+

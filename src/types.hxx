@@ -9,8 +9,6 @@
 #include <stdexcept>
 #include <algorithm>
 
-#include "version.hxx"
-
 #ifdef _MSC_VER
 #define MSYS_LOC __FILE__ << ":" << __LINE__ << "\n" << __FUNCSIG__
 #else
@@ -54,11 +52,15 @@ namespace desres { namespace msys {
     /* gettimeofday() */
     double now();
 
+    const char* msys_version();
+    int msys_major_version();
+    int msys_minor_version();
+    int msys_micro_version();
 }}
 
 #define MSYS_FAIL(args) do { \
     std::stringstream ss; \
-    ss << args << "\nversion: " << MSYS_VERSION << "\nlocation: " << MSYS_LOC; \
+    ss << args << "\nversion: " << desres::msys::msys_version() << "\nlocation: " << MSYS_LOC; \
     throw desres::msys::Failure(ss.str()); \
 } while(0)
 
