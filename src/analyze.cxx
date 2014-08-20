@@ -13,18 +13,18 @@ namespace {
         SystemPtr mol;
         BondFinder(SystemPtr m) : mol(m) {}
 
+        /* Excludes H-H and pseudo-pseudo bonds */
         bool exclude(Id i, Id j) const {
             if (i>=j) return true;
             int ai = mol->atomFAST(i).atomic_number;
             int aj = mol->atomFAST(j).atomic_number;
-            if ((ai==1 && aj==1) ||
-                (ai==0 && aj==0)) 
+            if ((ai==1 && aj==1) || (ai==0 && aj==0)) 
                 return true;
             return false;
         }
 
         void operator()(Id i, Id j, double d2) const {
-            if (d2>0.001) {
+            if (d2>0.00001) { // some virtuals can be very close to the host
                 int ai = mol->atomFAST(i).atomic_number;
                 int aj = mol->atomFAST(j).atomic_number;
                 double ri = RadiusForElement(ai);
@@ -160,19 +160,30 @@ namespace desres { namespace msys {
                               finder);
             }
         }
-        /* if a hydrogen has multiple bonds, keep the shortest one */
+        /* if a pseudo has multiple bonds: 
+              keep the shortest non-pseudo bond (ie closest atom is "parent"),
+           if a hydrogen has multiple bonds:
+              keep the shortest heavy bond (preserving any virtual bonds) 
+        */
         for (Id i=0; i<mol->maxAtomId(); i++) {
             if (!mol->hasAtom(i)) continue;
-            if (mol->atomFAST(i).atomic_number!=1) continue;
+            int anum=mol->atomFAST(i).atomic_number;
+            if (anum>1) continue;
             if (mol->bondCountForAtom(i)<=1) continue;
+            IdList candidates;
+            BOOST_FOREACH(Id b,  mol->bondsForAtom(i)){
+                int anum2=mol->atomFAST(mol->bond(b).other(i)).atomic_number;
+                if(anum2 <= anum) continue;
+                candidates.push_back(b);
+            }
+            if(candidates.size()<=1)continue;
             Id shortest_bond = BadId;
             double shortest_dist = HUGE_VAL;
             const double* pi = &pos[3*i];
             const double x=pi[0];
             const double y=pi[1];
             const double z=pi[2];
-            IdList bonds = mol->bondsForAtom(i);    /* yes, make a copy! */
-            BOOST_FOREACH(Id b, bonds) {
+            BOOST_FOREACH(Id b, candidates) {
                 Id j = mol->bond(b).other(i);
                 const double* pj = &pos[3*j];
                 const double dx = pj[0]-x;
@@ -185,7 +196,7 @@ namespace desres { namespace msys {
                 }
             }
             assert(!bad(shortest_bond));
-            BOOST_FOREACH(Id b, bonds) {
+            BOOST_FOREACH(Id b, candidates) {
                 if (b!=shortest_bond) mol->delBond(b);
             }
         }
