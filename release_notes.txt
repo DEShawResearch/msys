@@ -1,3 +1,6 @@
+1.7.73 FIXED: xyz files now written with element name rather than number.
+       FIXED: better bond guessing for systems with virtuals.
+
 1.7.72 FIXED: bfactor and occupancy output in pdb files wasn't quite working.
        FIXED: System.append() and PDB importer now always preserve atom order.
        FIXED: permissions on dms-fix-water-residues.
