@@ -21,10 +21,12 @@ namespace desres { namespace msys {
         fprintf(fd, "%s\n", mol->name.c_str());
         for (Id i=0; i<mol->maxAtomId(); i++) {
             if (!mol->hasAtom(i)) continue;
-            desres::fastjson::floatify(mol->atom(i).x, x);
-            desres::fastjson::floatify(mol->atom(i).y, y);
-            desres::fastjson::floatify(mol->atom(i).z, z);
-            fprintf(fd, "%d %s %s %s\n", mol->atom(i).atomic_number, x, y, z);
+            atom_t const& atm = mol->atomFAST(i);
+            desres::fastjson::floatify(atm.x, x);
+            desres::fastjson::floatify(atm.y, y);
+            desres::fastjson::floatify(atm.z, z);
+            fprintf(fd, "%4s %20s %20s %20s\n", 
+                    AbbreviationForElement(atm.atomic_number), x, y, z);
         }
     }
 
