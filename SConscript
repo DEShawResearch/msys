@@ -16,7 +16,11 @@ for lib in 'molfile', 'python2.7':
     except ValueError: pass
 
 env.Append(
-        CCFLAGS='-O2 -g -Wall',
+        # SSE4 for src/within.hxx.  If this is a problem, it's probably
+        # possible to get most of the benefit with SSE2, though there is
+        # currently no support for SSE without SSE4.  Compiling without
+        # SSE4 produces 10x slower "within" and "nearest" selections.
+        CCFLAGS='-O2 -g -Wall -msse4',
         CXXFLAGS='-std=c++03 -Werror',
         )
 
