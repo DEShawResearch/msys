@@ -1,5 +1,6 @@
-1.7.73 FIXED: xyz files now written with element name rather than number.
+1.7.74 FIXED: xyz files now written with element name rather than number.
        FIXED: better bond guessing for systems with virtuals.
+       NEW: distance based atom selections got a lot faster.
 
 1.7.72 FIXED: bfactor and occupancy output in pdb files wasn't quite working.
        FIXED: System.append() and PDB importer now always preserve atom order.
