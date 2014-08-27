@@ -97,9 +97,10 @@ static void export_alchemical_particles(const System& sys,
     }
 }
 
-static void export_particles(const System& sys, const IdList& map, Sqlite dms) {
+static void export_particles(const System& sys, const IdList& map, Sqlite dms,
+        bool structure_only) {
 
-    IdList nbtypes = fetch_nbtypes(sys);
+    IdList nbtypes = structure_only ? IdList() : fetch_nbtypes(sys);
     IdList ids = sys.atoms();
 
     std::string sql = 
@@ -557,7 +558,7 @@ static void export_dms(SystemPtr h, Sqlite dms, Provenance const& provenance,
     IdList atomidmap = map_gids(sys);
     export_cts(      sys,            dms);
     export_cell(     sys,            dms);
-    export_particles(sys, atomidmap, dms);
+    export_particles(sys, atomidmap, dms, flags & DMSExport::StructureOnly);
     export_bonds(    sys, atomidmap, dms);
     if (!(flags & DMSExport::StructureOnly)) {
         export_tables(   sys, atomidmap, dms);

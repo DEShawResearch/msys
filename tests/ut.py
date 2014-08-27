@@ -15,6 +15,9 @@ import json
 import gzip
 import tempfile
 
+def tmpfile(**kwds):
+    return tempfile.NamedTemporaryFile(**kwds)
+
 def vsize():
     cmd='ps -p %d h -o vsz' % os.getpid()
     s=os.popen(cmd).read()
@@ -1321,7 +1324,20 @@ class TestMain(unittest.TestCase):
         m=msys.CreateSystem()
         t=m.addTableFromSchema('dihedral_trig', 'my_name')
 
-
+    def testSavePartialNonbonded(self):
+        m = msys.CreateSystem()
+        a = m.addAtom()
+        t = m.addNonbondedFromSchema("vdw_12_6", "arithemetic/geometric")
+        with tmpfile(suffix='.dms') as tmp:
+            # don't allow partial nonbonded
+            with self.assertRaises(RuntimeError):
+                msys.Save(m, tmp.name)
+            # ... unless it's structure-only
+            msys.Save(m, tmp.name, structure_only=True)
+            # fixed the nonbonded table
+            t.addTerm([a], t.params.addParam())
+            msys.Save(m, tmp.name, structure_only=False)
+            msys.Save(m, tmp.name, structure_only=True)
 
     def testTableDMS(self):
         assert 'stretch_harm' in msys.TableSchemas()
