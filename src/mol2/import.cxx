@@ -15,6 +15,7 @@ namespace {
         FILE* fd;
         enum State { Skip, Molecule, Atom, Bond, Substructure } state;
         char buf[256];
+        long file_offset;
 
         /* go to next molecule */
         void advance();
@@ -22,7 +23,7 @@ namespace {
         ~iterator() {
             if (fd) fclose(fd);
         }
-        explicit iterator(std::string const& path) : fd() {
+        explicit iterator(std::string const& path) : fd(), file_offset() {
             fd = fopen(path.c_str(), "rb");
             if (!fd) {
                 MSYS_FAIL("Could not open mol2 file for reading at " << path);
@@ -59,6 +60,7 @@ LoadIteratorPtr desres::msys::Mol2Iterator(std::string const& path) {
 void iterator::advance() {
     while (fgets(buf, sizeof(buf), fd)) {
         if (!strncmp(buf, "@<TRIPOS>MOLECULE", 17)) {
+            file_offset = ftell(fd) - strlen(buf);
             state = Molecule;
             break;
         }
@@ -77,12 +79,14 @@ SystemPtr iterator::next() {
     Id atype=mol->addAtomProp("sybyl_type", StringType);
     Id btype=mol->addBondProp("sybyl_type", StringType);
     SystemImporter imp(mol);
+    mol->addCt();
+    mol->ct(0).add("msys_file_offset", IntType);
+    mol->ct(0).value("msys_file_offset") = file_offset;
 
     /* read mol_name */
     fgets(buf, sizeof(buf), fd); 
     mol->name = buf;
     boost::trim(mol->name);
-    mol->addCt();
     mol->ct(0).setName(mol->name);
     /* read natoms, nbonds, nsub */
     natoms = nbonds = 0;
@@ -99,6 +103,7 @@ SystemPtr iterator::next() {
     while (fgets(buf, sizeof(buf), fd)) {
         if (buf[0]=='@') {
             if (!strncmp(buf, "@<TRIPOS>MOLECULE", 17)) {
+                file_offset = ftell(fd) - strlen(buf);
                 state = Molecule;
                 break;
             } else if (!strncmp(buf, "@<TRIPOS>ATOM", 13)) {
