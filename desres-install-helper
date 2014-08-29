@@ -48,7 +48,6 @@ loadmodules() {
         $PRIMEGEN/lib \
         $ZLIB/lib \
         $INCHI/lib \
-        $EIGEN/lib \
         $SPHINX/bin \
 	$TEXLIVE/bin
     
