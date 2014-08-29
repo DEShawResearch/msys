@@ -8,10 +8,23 @@
 #include <limits>
 #include <algorithm>
 
-#ifdef __SSE4_1__
+#ifdef __SSE2__
 #include <emmintrin.h>
+#endif
+
+#ifdef __SSE4_1__
 #include <smmintrin.h>
 #endif
+
+static inline __m128i quad_int_multiply(const __m128i &a, const __m128i &b) {
+#ifdef __SSE4_1__
+    return _mm_mullo_epi32(a, b);
+#else
+    __m128i tmp1 = _mm_mul_epu32(a,b); /* mul 2,0*/
+    __m128i tmp2 = _mm_mul_epu32( _mm_srli_si128(a,4), _mm_srli_si128(b,4)); /* mul 3,1 */
+    return _mm_unpacklo_epi32(_mm_shuffle_epi32(tmp1, _MM_SHUFFLE (0,0,2,0)), _mm_shuffle_epi32(tmp2, _MM_SHUFFLE (0,0,2,0))); /* shuffle results to [63..0] and pack */
+#endif
+}
 
 #include "types.hxx"
 
@@ -310,7 +323,7 @@ namespace desres { namespace msys {
             const scalar cy = cell ? cell[4] : 0;
             const scalar cz = cell ? cell[8] : 0;
             int j=0, n=ids.size();
-#ifdef __SSE4_1__
+#ifdef __SSE2__
             const scalar r2 = r*r;
             int b0, b1, b2, b3;
             __m128 xm = _mm_set1_ps(ox);
@@ -348,8 +361,8 @@ namespace desres { namespace msys {
                 i1 = _mm_cvttps_epi32(q1);
                 i2 = _mm_cvttps_epi32(q2);
         
-                j2 = _mm_mullo_epi32(i0, nyz);
-                j1 = _mm_mullo_epi32(i1, nz);
+                j2 = quad_int_multiply(i0, nyz);
+                j1 = quad_int_multiply(i1, nz);
         
                 j0 = _mm_add_epi32(i2, j1);
                 j0 = _mm_add_epi32(j0, j2);
@@ -375,10 +388,17 @@ namespace desres { namespace msys {
 
                 if (_mm_movemask_epi8(_mm_cmpgt_epi32(j0, z1))==0) continue;
 
+#ifdef __SSE4_1__
                 int v0 = _mm_extract_epi32(j0,0);
                 int v1 = _mm_extract_epi32(j0,1);
                 int v2 = _mm_extract_epi32(j0,2);
                 int v3 = _mm_extract_epi32(j0,3);
+#else
+                int v0 = _mm_cvtsi128_si32(j0);
+                int v1 = _mm_cvtsi128_si32(_mm_shuffle_epi32(j0,0x55));
+                int v2 = _mm_cvtsi128_si32(_mm_shuffle_epi32(j0,0xAA));
+                int v3 = _mm_cvtsi128_si32(_mm_shuffle_epi32(j0,0xFF));
+#endif
 
 #define GETX(i) _mm_cvtss_f32(_mm_shuffle_ps(p0,p0, _MM_SHUFFLE(0, 0, 0, i)))
 #define GETY(i) _mm_cvtss_f32(_mm_shuffle_ps(p1,p1, _MM_SHUFFLE(0, 0, 0, i)))
@@ -439,7 +459,7 @@ namespace desres { namespace msys {
 
 
         bool test2(scalar r2, int voxid, scalar x, scalar y, scalar z) const {
-#ifdef __SSE4_1__
+#ifdef __SSE2__
             __m128 xj = _mm_set1_ps(x);
             __m128 yj = _mm_set1_ps(y);
             __m128 zj = _mm_set1_ps(z);
@@ -452,7 +472,7 @@ namespace desres { namespace msys {
                 const scalar * yi = _y+b;
                 const scalar * zi = _z+b;
 
-#ifdef __SSE4_1__
+#ifdef __SSE2__
                 /* advance to aligned offset */
                 for (; b<e && (b&3); ++b, ++xi, ++yi, ++zi) {
                     scalar dx = x - *xi;
