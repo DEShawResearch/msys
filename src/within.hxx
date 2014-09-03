@@ -112,7 +112,13 @@ namespace desres { namespace msys {
         }
 
         SpatialHash( const scalar *pos, IdList const& ids)
-        : rad(), ir(), ntarget(ids.size()), _x(), _y(), _z(), _counts() {
+        : rad(), ir(), 
+          xmin(), ymin(), zmin(),
+          xmax(), ymax(), zmax(),
+          ntarget(ids.size()), 
+          _x(), _y(), _z(), 
+          _tmpx(), _tmpy(), _tmpz(), 
+          _counts() {
             nx = ny = nz = 0;
             ox = oy = oz = 0;
             if (ntarget<1) return;
