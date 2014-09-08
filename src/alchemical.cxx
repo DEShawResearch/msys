@@ -508,11 +508,15 @@ namespace {
         canonicalize(key);
         BlockMap::iterator it=map.find(key);
         if (it==map.end()) return;
+        
         int& ti = it->second.first;
         int& tj = it->second.second;
         if (ti==0) ti=-1;
         else if (tj==0) tj=-1;
-        else MSYS_FAIL("Invalid term: [" << ti << ", " << tj << "]");
+        else {
+          MSYS_FAIL("Invalid term: [" << ti << ", " << tj << "] between" 
+                    << ai << ":" << aj);
+        }
     }
 
     void my_find_kept(SystemPtr A, 
@@ -522,7 +526,9 @@ namespace {
                       IdList const& a2a,
                       BlockMap& bondmap,
                       BlockMap& anglmap,
-                      BlockMap& dihemap) {
+                      BlockMap& dihemap,
+                      BlockMap& pairmap
+    ) {
 
         BOOST_FOREACH(IdList& dfrag, dummy_fragmentsA) {
             //printf("fragment: ");
@@ -544,6 +550,7 @@ namespace {
                 MSYS_FAIL("Found disconnected dummy atoms");
             }
 
+            
             //printf("found %lu possible real connectors\n", rmap.size());
 
             /* We can choose just one real atom to bind this dummy fragment
@@ -582,55 +589,83 @@ namespace {
 
             /* Find bond partners of all bonded dummies */
             IdSet dset(dfrag.begin(), dfrag.end());
+            IdSet a4;
             BOOST_FOREACH(Id d, rmap[best_real]) {
+                // keep stretch A-u
                 keep(bondmap, n2[0],a2a.at(d));
+                // keep angle B-A-u
                 if (n2.size() >= 2) keep(anglmap, n2[1],n2[0],a2a.at(d));
+                // keep dihedral C-B-A-u
                 if (n2.size() >= 3) keep(dihemap, n2[2],n2[1],n2[0],a2a.at(d));
                 BOOST_FOREACH(Id bonded, A->bondedAtoms(d)) {
                     if (dset.find(bonded) == dset.end()) continue;
+                    // keep angle A-u-v
                     keep(anglmap, a2a.at(bonded),a2a.at(d),n2[0]);
+                    // keep dihedral B-A-u-v
                     if (n2.size() >= 2) keep(dihemap, a2a.at(bonded),a2a.at(d),n2[0],n2[1]);
                     BOOST_FOREACH(Id bonded2, A->bondedAtoms(bonded)) {
                         if (dset.find(bonded2) == dset.end()) continue;
                         if (bonded2 == d) continue;
+                        // keep dihedral A-u-v-w
                         keep(dihemap, a2a.at(bonded2),a2a.at(bonded),a2a.at(d),n2[0]);
+                        // We can keep any pairwise interactions
+                        // between n2[0] and any dummy atoms,
+                        // including the 1-4 interactions.  This is
+                        // problematic if bonded2 can be reached by
+                        // two different path, e.g., when it is in a
+                        // 6-membered ring with n2[0], as keep() will
+                        // be called twice, leading to
+                        // inconsistencies. We therefore check whether
+                        // bonded2 has been reached before.
+                        if (a4.find(bonded2) != a4.end()) continue;
+                        keep(pairmap, a2a.at(bonded2),n2[0]);
+                        a4.insert( bonded2);
                     }
                 }
-#if 0
-                IdList n1 = two_neighbors(d, A, dset, a2a);
-                printf("  using template [");
-                BOOST_FOREACH(Id id,n1) printf("%u ", id);
-                printf("] , [");
-                BOOST_FOREACH(Id id,n2) printf("%u ", id);
-                printf("]\n");
-
-                printf("  keep bond %u %u\n", n1[0], n2[0]);
-                if (n1.size()>=2) 
-                    printf("  keep angle %u %u %u\n", n1[1],n1[0],n2[0]);
-                if (n2.size()>=2)
-                    printf("  keep angle %u %u %u\n", n2[1],n2[0],n1[0]);
-                if (1)            keep(bondmap,             n1[0],n2[0]);
-                if (n1.size()>=2) keep(anglmap,       n1[1],n1[0],n2[0]);
-                if (n1.size()>=3) keep(dihemap, n1[2],n1[1],n1[0],n2[0]);
-
-                if (n2.size()>=2) keep(anglmap,       n2[1],n2[0],n1[0]);
-                if (n2.size()>=3) keep(dihemap, n2[2],n2[1],n2[0],n1[0]);
-
-                if (n1.size()>=2 && n2.size()>=2)
-                                  keep(dihemap, n1[1],n1[0],n2[0],n2[1]);
-#endif
+                BOOST_FOREACH(Id d2, rmap[best_real]) {
+                    if (d2<=d) continue;  // hit d2,d and d,d2 only once.
+                    // keep angle u-A-v
+                    keep(anglmap, a2a.at(d), n2[0], a2a.at(d2));
+                    // keep any improper dihedral A-u-v-B.  THIS IS NOT TESTED!
+                    if (n2.size() >= 2) keep(dihemap, n2[0], a2a.at(d), a2a.at(d2), n2[1]);
+                    BOOST_FOREACH(Id d3, A->bondedAtoms(d2)) {
+                        if (dset.find(d3) == dset.end()) continue;
+                        // keep dihedral u-A-v-w
+                        keep(dihemap, a2a.at(d), n2[0], a2a.at(d2), a2a.at(d3));
+                    }
+                    BOOST_FOREACH(Id d3, A->bondedAtoms(d)) {
+                        if (dset.find(d3) == dset.end()) continue;
+                        // keep dihedral w-u-A-v
+                        keep(dihemap, a2a.at(d3), a2a.at(d), n2[0], a2a.at(d2));
+                    }
+                }
             }
         }
     }
 
-    void stage2(SystemPtr A, SystemPtr B,
-                IdList const& alist,
-                IdList const& blist,
-                IdList const& b2a,
-                IdList const& a2b,
-                BlockMap& bondmap,
-                BlockMap& anglmap,
-                BlockMap& dihemap) {
+    /*** 
+     * For each connected component (fragment) of dummy atoms, select
+     * the bonded terms between the dummy atoms and three real atoms
+     * that contribute a separable integral to the partition function,
+     * which is cancelled out in a thermodynamic cycle.
+     *
+     * Namely, we find three real atoms A, B, C, and keep 
+     * 1) the pairwise interactions between A and any dummy atom u in the
+     *    fragment, including stretch and pair 1-4 terms.
+     * 2) the angle interactions of (B,A,u) and (A,u,v), where u, v are
+     *    dummy atoms in the fragment.
+     * 3) the dihedral interactions of (C,B,A,u), (B,A,u,v), and (A,u,v,w) 
+     *    where u,v,w are dummy atoms in the fragment.
+     ***/
+    void keep_separable_dummy_real_terms(SystemPtr A, SystemPtr B,
+                                         IdList const& alist,
+                                         IdList const& blist,
+                                         IdList const& b2a,
+                                         IdList const& a2b,
+                                         BlockMap& bondmap,
+                                         BlockMap& anglmap,
+                                         BlockMap& dihemap,
+                                         BlockMap& pairmap) {
 
         IdList a2a(A->atomCount(), BadId);
         for (Id i=0; i<a2a.size(); i++) a2a[i]=i;
@@ -669,11 +704,11 @@ namespace {
 
         //printf("** A ** \n");
         my_find_kept(A, dummy_fragmentsA, mappedA, dummiesA, a2a,
-                     bondmap, anglmap, dihemap);
+                     bondmap, anglmap, dihemap, pairmap);
 
         //printf("** B ** \n");
         my_find_kept(B, dummy_fragmentsB, mappedB, dummiesB, b2a,
-                     bondmap, anglmap, dihemap);
+                     bondmap, anglmap, dihemap, pairmap);
 
         //printf("stage A\n");
         //find_kept_atoms(A,alist,mappedA, a2a, bondmap, anglmap, dihemap);
@@ -802,7 +837,8 @@ namespace {
 
 SystemPtr desres::msys::MakeAlchemical( SystemPtr A, SystemPtr B,
                                         std::vector<IdPair> pairs,
-                                        bool avoid_noops) {
+                                        bool avoid_noops,
+                                        bool keep_none) {
 
     /* We will be modifying A, so make a copy */
     A = Clone(A, A->atoms());
@@ -941,7 +977,14 @@ SystemPtr desres::msys::MakeAlchemical( SystemPtr A, SystemPtr B,
     ff="pair_12_6_es";
     pairmap=make_pairs(A,A->table(ff),B->table(ff),alist,blist,b2a,a2b);
 
-    stage2(A,B, alist, blist, b2a, a2b, bondmap, anglmap, dihemap);
+    if (not keep_none) {
+      // Some of the interactions between the real atoms and the dummy
+      // atoms can be kept such that they contribute a separable integral
+      // to the partition function.
+      // printf( "Keeping separable interactions between dummy and real atoms!\n");
+      keep_separable_dummy_real_terms(A,B, alist, blist, b2a, a2b, 
+                                      bondmap, anglmap, dihemap, pairmap);
+    }
 
     ff = "stretch_harm";
     make_alchemical(A->table(ff), B->table(ff), bondmap, avoid_noops, "r0");

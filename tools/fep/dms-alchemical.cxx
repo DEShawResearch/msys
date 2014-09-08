@@ -8,6 +8,7 @@
 using namespace desres::msys;
 
 static bool avoid_alchemical_noop = true;
+static bool keep_none = false;
 
 static void usage(FILE *fd) {
     fprintf(fd, "Usage:\ndms-alchemical A.dms B.dms atom.map C.dms\n");
@@ -33,6 +34,9 @@ static void usage(FILE *fd) {
 "                    map, even those whose A and B states are identical.\n"
 "                    This option is present only for comparison with\n"
 "                    previous versions of dms-alchemical.\n"
+"   --keep-none\n"
+"                    Do not keep any interactions between real atoms and\n"
+"                    dummy atoms.\n"
     );
 }
 
@@ -48,7 +52,9 @@ void parse_cmdline( int *pargc, char ***pargv ) {
 
         } else if ( !strcmp(pargv[0][j], "--keep-alchemical-noop")) {
             avoid_alchemical_noop = false; 
-        }  else {
+        } else if ( !strcmp(pargv[0][j], "--keep-none")) {
+            keep_none = true;
+        } else {
             j++;
         }
     }
@@ -95,7 +101,7 @@ int main(int argc, char *argv[]) {
     SystemPtr A = Load(argv[1]);
     SystemPtr B = Load(argv[2]);
     std::vector<IdPair> pairs = read_atommap(argv[3]);
-    SystemPtr C = MakeAlchemical(A,B,pairs,avoid_alchemical_noop);
+    SystemPtr C = MakeAlchemical(A,B,pairs,avoid_alchemical_noop,keep_none);
     ExportDMS(C, argv[4], Provenance::fromArgs(argc,argv));
     return 0;
 }
