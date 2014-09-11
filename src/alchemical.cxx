@@ -66,6 +66,43 @@ namespace {
         }
         if (a>b) std::reverse(ids.begin(), ids.end());
     }
+    
+    typedef enum { __A = 1,
+                   __B = 2 } AORB;
+    /** 
+     * Return true if a pair of atoms separated by 2 bonds are within
+     * the same fragment.
+     */
+    bool pair_14_in_same_fragment( SystemPtr mol,
+                                   Id i,
+                                   Id j,
+                                   IdList const& alist,
+                                   IdList const& a2b,
+                                   AORB aorb ) {
+      if (aorb==__A and (std::binary_search(alist.begin(), alist.end(), i) or
+                         std::binary_search(alist.begin(), alist.end(), j)))
+        return false;
+      if (aorb==__B and (!bad(a2b.at(i)) or !bad(a2b.at(j))))
+        return false;
+
+       BOOST_FOREACH(Id b, mol->bondedAtoms( i)) {
+         if ((aorb==__A and std::binary_search(alist.begin(), alist.end(), b)) 
+            or
+            (aorb==__B and !bad(a2b.at(b)))) continue;
+        BOOST_FOREACH(Id b2, mol->bondedAtoms( b)) {
+          if (b2 == i) continue;
+           if ((aorb==__A and std::binary_search(alist.begin(), alist.end(), b2)) 
+              or 
+              (aorb==__B and !bad(a2b.at(b2)))) continue;
+          BOOST_FOREACH(Id b3, mol->bondedAtoms( b2)) {
+            if (b3 == j) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    }
 
     BlockMap make_pairs(SystemPtr mol, 
                          TermTablePtr atable, TermTablePtr btable,
@@ -95,6 +132,26 @@ namespace {
             BlockMap::iterator p = M.insert(
                     std::make_pair(ids,IntPair(i+1,0))).first;
             p->second.first = i+1;
+        }
+
+        /* Change ti,tj=0 to -1 for "kept" terms */
+        for (BlockMap::iterator it=M.begin(); it!=M.end(); ++it) {
+            IdList const& ids = it->first;
+            int& ti = it->second.first;
+            int& tj = it->second.second;
+            if (ti==0) {
+              if (pair_14_in_same_fragment( mol, ids[0], ids[1],
+                                            alist, a2b, __A)) {
+                ti=-1;
+              }
+            } 
+            else if (tj==0) {
+              if (pair_14_in_same_fragment( mol, ids[0], ids[1],
+                                            alist, a2b, __B)) {
+                tj=-1;
+              }
+
+            }
         }
 
         return M;
@@ -309,7 +366,7 @@ namespace {
             p->second.first = i+1;
         }
 
-        /* Change ti,tj=0 to -1 for "kept" terms */
+        /* Change ti,tj=-1 to 0 for "non-kept" terms */
         for (BlockMap::iterator it=M.begin(); it!=M.end(); ++it) {
             IdList const& ids = it->first;
             int& ti = it->second.first;
@@ -508,15 +565,28 @@ namespace {
         canonicalize(key);
         BlockMap::iterator it=map.find(key);
         if (it==map.end()) return;
-        
+
         int& ti = it->second.first;
         int& tj = it->second.second;
         if (ti==0) ti=-1;
         else if (tj==0) tj=-1;
         else {
-          MSYS_FAIL("Invalid term: [" << ti << ", " << tj << "] between" 
-                    << ai << ":" << aj);
+          MSYS_FAIL("Invalid term: [" << ti << ", " << tj << "] between " 
+                    << ai << "-" << aj << "-" << ak << "-" << al);
         }
+    }
+
+    /** For improper dihedral centered on ai, there are 6 possible
+     *  improper dihedral terms: aj-ai-ak-al, aj-ai-al-ak, ak-ai-aj-al,
+     *  ak-ai-al-aj, al-ai-aj-ak, al-ai-ak-aj.
+     **/
+    void keep_improper_dihedrals( BlockMap& map, Id ai, Id aj, Id ak, Id al) {
+        keep( map, aj, ai, ak, al);
+        keep( map, aj, ai, al, ak);
+        keep( map, ak, ai, aj, al);
+        keep( map, ak, ai, al, aj);
+        keep( map, al, ai, aj, ak);
+        keep( map, al, ai, ak, aj);
     }
 
     void my_find_kept(SystemPtr A, 
@@ -604,8 +674,8 @@ namespace {
                     // keep dihedral B-A-u-v
                     if (n2.size() >= 2) keep(dihemap, a2a.at(bonded),a2a.at(d),n2[0],n2[1]);
                     BOOST_FOREACH(Id bonded2, A->bondedAtoms(bonded)) {
-                        if (dset.find(bonded2) == dset.end()) continue;
                         if (bonded2 == d) continue;
+                        if (dset.find(bonded2) == dset.end()) continue;
                         // keep dihedral A-u-v-w
                         keep(dihemap, a2a.at(bonded2),a2a.at(bonded),a2a.at(d),n2[0]);
                         // We can keep any pairwise interactions
@@ -621,13 +691,24 @@ namespace {
                         keep(pairmap, a2a.at(bonded2),n2[0]);
                         a4.insert( bonded2);
                     }
+
+                    BOOST_FOREACH(Id bonded2, A->bondedAtoms(d)) {
+                      if (bonded2 <= bonded) continue; // hit u,v and v,u only once
+                      if (dset.find(bonded2) == dset.end()) continue;
+                      // keep improper dihedral centered on d, involving A.
+                      keep_improper_dihedrals( dihemap, a2a.at(d), n2[0], a2a.at(bonded), a2a.at(bonded2));
+                    }
                 }
+
                 BOOST_FOREACH(Id d2, rmap[best_real]) {
                     if (d2<=d) continue;  // hit d2,d and d,d2 only once.
                     // keep angle u-A-v
                     keep(anglmap, a2a.at(d), n2[0], a2a.at(d2));
-                    // keep any improper dihedral A-u-v-B.  THIS IS NOT TESTED!
-                    if (n2.size() >= 2) keep(dihemap, n2[0], a2a.at(d), a2a.at(d2), n2[1]);
+                    // keep any improper dihedral centered on A,
+                    // involving B, u, v
+                    if (n2.size() >= 2) {
+                      keep_improper_dihedrals( dihemap, n2[0], n2[1], a2a.at(d), a2a.at(d2));
+                    }
                     BOOST_FOREACH(Id d3, A->bondedAtoms(d2)) {
                         if (dset.find(d3) == dset.end()) continue;
                         // keep dihedral u-A-v-w
@@ -963,6 +1044,19 @@ SystemPtr desres::msys::MakeAlchemical( SystemPtr A, SystemPtr B,
         }
     }
 
+    /* Add the bonds in the B state to the combined system. */
+    BOOST_FOREACH( Id i, B->bonds()) {
+        const bond_t& bond = B->bond( i);
+        Id ai = b2a[bond.i];
+        Id aj = b2a[bond.j];
+        if (bad(ai) and bad(aj)) continue; // unmapped atoms in the B system.
+        if (bad(A->findBond( ai, aj))) { 
+            Id ip = A->addBond( ai, aj);
+            A->bond(ip).order = bond.order;
+            A->bond(ip).resonant_order = bond.resonant_order;
+        }
+    }
+       
     /* handle bonded terms */
     BlockMap bondmap, anglmap, dihemap, imprmap, pairmap, exclmap;
     String ff;
