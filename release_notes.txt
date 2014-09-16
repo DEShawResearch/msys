@@ -1,3 +1,9 @@
+1.7.75 FIXED: Allow structure-only saves with partial nonbonded params.
+       FIXED: Use sse2 rather than sse4 in new FindWithin code.
+       FIXED: FindWithin crashed on empty subselection.
+       NEW: keep-none for dms-alchemical.
+       NEW: Write msys_file_offset in mol2 files.
+
 1.7.74 FIXED: xyz files now written with element name rather than number.
        FIXED: better bond guessing for systems with virtuals.
        NEW: distance based atom selections got a lot faster.
