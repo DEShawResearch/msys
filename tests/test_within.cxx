@@ -1,6 +1,6 @@
 #include "dms.hxx"
 #include "atomsel.hxx"
-#include "atomsel/within_predicate.hxx"
+#include "spatial_hash.hxx"
 #include <stdio.h>
 #include <assert.h>
 
@@ -36,8 +36,7 @@ int main(int argc, char *argv[]) {
         printf("%s -> %d atoms (%8.3fms)\n", sel.c_str(), (int)atoms.size(), t*1000);
         double rad = atof(argv[i]);
         t=-now();
-        IdList S = atomsel::FindWithin(wsel, &pos[0], psel, &pos[0],
-                                          rad, NULL);
+        IdList S = FindWithin(wsel, &pos[0], psel, &pos[0], rad, NULL);
         t+=now();
         printf("FindWithin -> %lu atoms (%8.3fms)\n", S.size(), t*1000);
         assert(S==atoms);
@@ -52,8 +51,7 @@ int main(int argc, char *argv[]) {
         printf("%s -> %d atoms (%8.3fms)\n", sel.c_str(), (int)atoms.size(), t*1000);
         double rad = atof(argv[i]);
         t=-now();
-        IdList S = atomsel::FindWithin(wsel, &pos[0], psel, &pos[0],
-                                          rad, cell);
+        IdList S = FindWithin(wsel, &pos[0], psel, &pos[0], rad, cell);
         t+=now();
         printf("FindWithin -> %lu atoms (%8.3fms)\n", S.size(), t*1000);
         assert(S==atoms);

@@ -5,8 +5,7 @@
 #include "clone.hxx"
 #include "geom.hxx"
 #include "contacts.hxx"
-
-#include "atomsel/within_predicate.hxx"
+#include "spatial_hash.hxx"
 
 #include <numpy/ndarrayobject.h>
 
@@ -598,7 +597,7 @@ namespace {
         objptr _ligpos(ligposarr, destructor);
         const float* lig = (const float *)PyArray_DATA(ligposarr);
 
-        return atomsel::FindWithin(psel, pro, lsel, lig, radius, NULL);
+        return FindWithin(psel, pro, lsel, lig, radius, NULL);
     }
 }
 

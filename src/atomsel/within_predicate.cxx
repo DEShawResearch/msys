@@ -2,7 +2,7 @@
 
 #include "within_predicate.hxx"
 #include "msys_keyword.hxx"
-#include "../within.hxx"
+#include "../spatial_hash.hxx"
 
 using namespace desres::msys;
 using namespace desres::msys::atomsel;
@@ -156,23 +156,6 @@ namespace desres { namespace msys { namespace atomsel {
         return PredicatePtr(new KNearestPredicate(sys,k,true,S));
     }
 
-    IdList FindWithin(IdList const& wsel, const float* wat,
-                      IdList const& psel, const float* pro,
-                      float radius,
-                      const double* cell) {
-
-        return SpatialHash<float>(pro, psel)
-            .findWithin(radius, wat, wsel, cell);
-    }
-
-    IdList FindNearest(IdList const& wsel, const float* wat,
-                       IdList const& psel, const float* pro,
-                       Id k,               const double* cell) {
-
-        return SpatialHash<float>(pro, psel)
-            .findNearest(k, wat, wsel, cell);
-    }
- 
 }}}
 
 

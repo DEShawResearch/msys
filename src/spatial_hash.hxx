@@ -1,5 +1,5 @@
-#ifndef desres_msys_within_hxx
-#define desres_msys_within_hxx
+#ifndef desres_msys_spatial_hash_hxx
+#define desres_msys_spatial_hash_hxx
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -524,6 +524,25 @@ namespace desres { namespace msys {
 
         scalar radius() const { return rad; }
     };
+
+    /* convenience routines */
+    IdList FindWithin(IdList const& wsel, const float* wat,
+                      IdList const& psel, const float* pro,
+                      float radius,
+                      const double* cell) {
+ 
+        return SpatialHash<float>(pro, psel)
+            .findWithin(radius, wat, wsel, cell);
+    }
+ 
+    IdList FindNearest(IdList const& wsel, const float* wat,
+                       IdList const& psel, const float* pro,
+                       Id k,               const double* cell) {
+ 
+        return SpatialHash<float>(pro, psel)
+            .findNearest(k, wat, wsel, cell);
+    }
+
 }}
 
 #endif

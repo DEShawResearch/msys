@@ -1,11 +1,10 @@
 #include "dms.hxx"
 #include "atomsel.hxx"
-#include "atomsel/within_predicate.hxx"
+#include "spatial_hash.hxx"
 #include <stdio.h>
 #include <assert.h>
 
 using namespace desres::msys;
-using desres::msys::atomsel::Selection;
 
 int main(int argc, char *argv[]) {
     if (argc<5) {
@@ -37,7 +36,7 @@ int main(int argc, char *argv[]) {
         printf("%s -> %d atoms (%8.3fms)\n", sel.c_str(), (int)atoms.size(), t*1000);
         Id k= atoi(argv[i]);
         t=-now();
-        IdList S = atomsel::FindNearest(wsel, &pos[0], psel, &pos[0],
+        IdList S = FindNearest(wsel, &pos[0], psel, &pos[0],
                                           k, NULL);
         t+=now();
         printf("FindNearest-> %lu atoms (%8.3fms)\n", S.size(), t*1000);
@@ -53,7 +52,7 @@ int main(int argc, char *argv[]) {
         printf("%s -> %d atoms (%8.3fms)\n", sel.c_str(), (int)atoms.size(), t*1000);
         Id k = atoi(argv[i]);
         t=-now();
-        IdList S = atomsel::FindNearest(wsel, &pos[0], psel, &pos[0],
+        IdList S = FindNearest(wsel, &pos[0], psel, &pos[0],
                                           k, cell);
         t+=now();
         printf("FindNearest -> %lu atoms (%8.3fms)\n", S.size(), t*1000);

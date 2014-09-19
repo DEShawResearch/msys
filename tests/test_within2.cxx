@@ -1,11 +1,9 @@
 #include "io.hxx"
 #include "atomsel.hxx"
-#include "atomsel/within_predicate.hxx"
-#include "within.hxx"
+#include "spatial_hash.hxx"
 
 #include <stdio.h>
 #include <boost/foreach.hpp>
-
 
 using namespace desres::msys;
 
@@ -24,20 +22,12 @@ int main(int argc, char *argv[]) {
     for (int i=4; i<argc; i++) {
         float radius = atof(argv[i]);
 
-        double t2=-now();
-        unsigned ns = SpatialHash<float>(pos, protein)
-            .findWithin(radius, pos, water).size();
-        t2 += now();
-
         double t=-now();
-        IdList sel = atomsel::FindWithin(water, pos, protein, pos, radius, 0);
+        IdList sel = FindWithin(water, pos, protein, pos, radius, 0);
         t += now();
 
         printf("FindWithin  %5.2f -> %6lu atoms (%8.3fms) atoms/ms %8.3f\n", radius, 
                 sel.size(), 1000*t, sel.size()/(1000*t));
-
-        printf("SpatialHash %5.2f -> %6u atoms (%8.3fms) atoms/ms %8.3f\n", radius, 
-                ns, 1000*t2, ns/(1000*t2));
 
     }
     return 0;
