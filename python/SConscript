@@ -21,6 +21,7 @@ vector.cxx
 io.cxx
 graph.cxx
 inchi.cxx
+spatial_hash.cxx
 pymod.cxx
 wrap_obj.cxx
 '''.split()

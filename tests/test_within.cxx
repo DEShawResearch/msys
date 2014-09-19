@@ -1,4 +1,4 @@
-#include "dms.hxx"
+#include "io.hxx"
 #include "atomsel.hxx"
 #include "spatial_hash.hxx"
 #include <stdio.h>
@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Usage: %s input.dms prosel watsel [rad rad rad...]\n", argv[0]);
         return 1;
     }
-    SystemPtr sys = ImportDMS(argv[1]);
+    SystemPtr sys = Load(argv[1]);
     std::string prosel(argv[2]);
     std::string watsel(argv[3]);
 

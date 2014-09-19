@@ -79,9 +79,10 @@ void WithinPredicate::eval( Selection& S ) {
     const float* pos = &coords[0];
     const double* cell = periodic ? sys->global_cell[0] : NULL;
     IdList subsel_ids = subsel.ids();
+    IdList S_ids = S.ids();
 
     IdList ids = SpatialHash<float>(pos, subsel_ids.size(), &subsel_ids[0])
-        .findWithin(rad, pos, S.ids(), cell);
+        .findWithin(rad, pos, S_ids.size(), &S_ids[0], cell);
 
     S.clear();
     for (Id i=0, n=ids.size(); i<n; i++) S[ids[i]] = 1;

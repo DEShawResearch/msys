@@ -1,3 +1,4 @@
+#include "unique_symbol.hxx"
 #include "wrap_obj.hxx"
 #include "schema.hxx"
 #include "atomsel.hxx"

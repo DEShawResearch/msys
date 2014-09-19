@@ -270,7 +270,7 @@ namespace desres { namespace msys {
 
             /* increase rmax until we get at least K atoms */
             for (;;) {
-                smax = findWithin(rmax, pos, ids, cell);
+                smax = findWithin(rmax, pos, ids.size(), &ids[0], cell);
                 if (smax.size() >= k) break;
                 smin.swap(smax);
                 rmin = rmax;
@@ -280,7 +280,7 @@ namespace desres { namespace msys {
             /* Refine with a couple rounds of bisection search */
             for (int nb=0; nb<6; nb++) {
                 scalar rm = 0.5*(rmin+rmax);
-                IdList sm = find_within(rm, pos, smax, cell);
+                IdList sm = find_within(rm, pos, smax.size(),&smax[0], cell);
                 if (sm.size() >= k) {
                     smax.swap(sm);
                     rmax = rm;
@@ -315,20 +315,22 @@ namespace desres { namespace msys {
          * pos + 3*ids[i], and on return store into the start of ids the
          * points which satisfy the distance check.  Return the number found.
          */
-        IdList findWithin(scalar r, const scalar* pos, IdList const& ids,
+        IdList findWithin(scalar r, const scalar* pos,
+                          int n, const Id* ids,
                           const double* cell = NULL) {
             voxelize(r);
-            return find_within(r,pos,ids,cell);
+            return find_within(r,pos,n,ids,cell);
         }
 
-        IdList find_within(scalar r, const scalar* pos, IdList const& ids,
+        IdList find_within(scalar r, const scalar* pos, 
+                          int n, const Id* ids,
                           const double* cell ) const {
             IdList result;
-            result.reserve(ids.size());
+            result.reserve(n);
             const scalar cx = cell ? cell[0] : 0;
             const scalar cy = cell ? cell[4] : 0;
             const scalar cz = cell ? cell[8] : 0;
-            int j=0, n=ids.size();
+            int j=0;
 #ifdef __SSE2__
             const scalar r2 = r*r;
             int b0, b1, b2, b3;
@@ -532,7 +534,7 @@ namespace desres { namespace msys {
                       const double* cell) {
  
         return SpatialHash<float>(pro, psel.size(), &psel[0])
-            .findWithin(radius, wat, wsel, cell);
+            .findWithin(radius, wat, wsel.size(), &wsel[0], cell);
     }
  
     IdList FindNearest(IdList const& wsel, const float* wat,
