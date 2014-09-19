@@ -1209,6 +1209,12 @@ class System(object):
         '''
         return self._ptr.selectAsList(seltext)
 
+    def selectArr(self, seltext):
+        ''' Return the ids of the Atoms satisfying the given VMD atom
+        selection as a numpy array of type uint32.  
+        '''
+        return self._ptr.selectAsArray(seltext)
+
     def selectChain(self, name=None, segid=None):
         ''' Returns a single Chain with the matching name and/or segid,
         or raises an exception if no single such chain is present.

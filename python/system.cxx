@@ -5,7 +5,6 @@
 #include "clone.hxx"
 #include "geom.hxx"
 #include "contacts.hxx"
-#include "spatial_hash.hxx"
 
 #include <numpy/ndarrayobject.h>
 
@@ -553,6 +552,17 @@ namespace {
         return L;
     }
 
+    PyObject* array_Atomselect(SystemPtr mol, std::string const& sel) {
+        IdList ids = Atomselect(mol,sel);
+        npy_intp dims[1];
+        dims[0] = ids.size();
+        PyObject *arr = PyArray_SimpleNew(1,dims,NPY_UINT32);
+        if (!arr) throw_error_already_set();
+        if (!ids.empty()) memcpy(PyArray_DATA(arr), &ids[0],
+                ids.size()*sizeof(Id));
+        return arr;
+    }
+
     PyObject* list_atoms(SystemPtr mol) {
         Id i,n = mol->atomCount(), m = mol->maxAtomId();
         PyObject *L = PyList_New(n);
@@ -573,31 +583,6 @@ namespace {
         BOOST_FOREACH(Id id, ids) if (!mol->hasAtom(id)) return false;
         /* check size */
         return ids.size() == mol->atomCount();
-    }
-
-    IdList wrap_find_within(IdList const& psel, PyObject *propos,
-                            IdList const& lsel, PyObject *ligpos,
-                            float radius) {
-
-        PyObject* proposarr = PyArray_FromAny(
-                propos, 
-                PyArray_DescrFromType(NPY_FLOAT32),
-                2, 2, NPY_C_CONTIGUOUS | NPY_ALIGNED,
-                NULL);
-        if (!proposarr) throw_error_already_set();
-        objptr _propos(proposarr, destructor);
-        const float* pro = (const float *)PyArray_DATA(proposarr);
-
-        PyObject* ligposarr = PyArray_FromAny(
-                ligpos, 
-                PyArray_DescrFromType(NPY_FLOAT32),
-                2, 2, NPY_C_CONTIGUOUS | NPY_ALIGNED,
-                NULL);
-        if (!ligposarr) throw_error_already_set();
-        objptr _ligpos(ligposarr, destructor);
-        const float* lig = (const float *)PyArray_DATA(ligposarr);
-
-        return FindWithin(psel, pro, lsel, lig, radius, NULL);
     }
 }
 
@@ -779,6 +764,7 @@ namespace desres { namespace msys {
             /* atom selection */
             .def("select", Atomselect)
             .def("selectAsList", list_Atomselect)
+            .def("selectAsArray", array_Atomselect)
 
             /* append */
             .def("append", AppendSystem)
@@ -807,7 +793,6 @@ namespace desres { namespace msys {
                      arg("ids")=object()))
             ;
 
-        def("FindWithin", wrap_find_within);
     }
 
 }}
