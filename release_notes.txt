@@ -1,3 +1,7 @@
+1.7.76 NEW: SpatialHash Python class for efficient findWithin and findNearest.
+       NEW: System.selectArr to return atom selections as numpy array of ids.
+       NEW: C++ within.hxx renamed to spatial_hash.hxx.
+
 1.7.75 FIXED: Allow structure-only saves with partial nonbonded params.
        FIXED: Use sse2 rather than sse4 in new FindWithin code.
        FIXED: FindWithin crashed on empty subselection.
