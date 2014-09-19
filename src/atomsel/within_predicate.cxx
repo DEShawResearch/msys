@@ -125,9 +125,10 @@ void KNearestPredicate::eval( Selection& S ) {
     const float* pos = &coords[0];
     const double* cell = periodic ? _sys->global_cell[0] : NULL;
     IdList subsel_ids = subsel.ids();
+    IdList S_ids = S.ids();
 
     IdList ids = SpatialHash<float>(pos, subsel_ids.size(), &subsel_ids[0])
-        .findNearest(_N, pos, S.ids(), cell);
+        .findNearest(_N, pos, S_ids.size(), &S_ids[0], cell);
 
     S.clear();
     for (Id i=0, n=ids.size(); i<n; i++) S[ids[i]] = 1;

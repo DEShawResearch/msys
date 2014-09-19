@@ -37,12 +37,13 @@ static Hash* hash_new(PyObject* posobj, PyObject* idobj) {
 }
 
 
-static PyObject* hash_find_within(Hash& hash,
-                                  float r,
-                                  PyObject* posobj,
-                                  PyObject* idsobj,
-                                  PyObject* boxobj,
-                                  bool reuse_voxels) {
+template <typename Func, typename Param>
+static PyObject* hash_find(Hash& hash,
+                           Param r,
+                           PyObject* posobj,
+                           PyObject* idsobj,
+                           PyObject* boxobj,
+                           Func func) {
 
     PyObject* posarr = PyArray_FromAny(posobj,
                 PyArray_DescrFromType(NPY_FLOAT32),
@@ -77,8 +78,8 @@ static PyObject* hash_find_within(Hash& hash,
     const Id* ids = (const Id*)PyArray_DATA(idsarr);
     Id n = PyArray_DIM(idsarr,0);
 
-    IdList result = reuse_voxels ? hash.find_within(r, pos, n, ids, box)
-                                 : hash.findWithin( r, pos, n, ids, box);
+    IdList result = (hash.*func)(r, pos, n, ids, box);
+
     Py_XDECREF(boxarr);
     Py_DECREF(idsarr);
     Py_DECREF(posarr);
@@ -90,6 +91,26 @@ static PyObject* hash_find_within(Hash& hash,
                                 &result[0],
                                 result.size()*sizeof(Id));
     return arr;
+}
+
+static PyObject* hash_find_within(Hash& hash,
+                                  float r,
+                                  PyObject* pos,
+                                  PyObject* ids,
+                                  PyObject* box,
+                                  bool reuse_voxels) {
+
+    return reuse_voxels ? hash_find(hash, r, pos, ids, box, &Hash::find_within)
+                        : hash_find(hash, r, pos, ids, box, &Hash::findWithin);
+}
+
+static PyObject* hash_find_nearest(Hash& hash,
+                                   int k,
+                                   PyObject* pos,
+                                   PyObject* ids,
+                                   PyObject* box) {
+
+    return hash_find(hash, k, pos, ids, box, &Hash::findNearest);
 }
 
 namespace desres { namespace msys {
@@ -106,6 +127,11 @@ namespace desres { namespace msys {
                      arg("ids"), 
                      arg("box")=object(),
                      arg("reuse_voxels")=false))
+            .def("findNearest", hash_find_nearest,
+                    (arg("k"), 
+                     arg("pos"), 
+                     arg("ids"), 
+                     arg("box")=object()))
             ;
     }
 }}

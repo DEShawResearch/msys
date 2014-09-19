@@ -258,11 +258,12 @@ namespace desres { namespace msys {
             return r2;
         }
 
-        IdList findNearest(unsigned k, const scalar* pos, IdList const& ids,
-                          const double* cell = NULL) {
+        IdList findNearest(unsigned k, const scalar* pos, 
+                           unsigned num, const Id* ids,
+                           const double* cell = NULL) {
 
             /* enough atoms available */
-            if (ids.size() <= k) return ids;
+            if (num <= k) return IdList(ids, ids+num);
 
             IdList smin, smax;
             scalar rmin = 0.0;
@@ -270,7 +271,7 @@ namespace desres { namespace msys {
 
             /* increase rmax until we get at least K atoms */
             for (;;) {
-                smax = findWithin(rmax, pos, ids.size(), &ids[0], cell);
+                smax = findWithin(rmax, pos, num, ids, cell);
                 if (smax.size() >= k) break;
                 smin.swap(smax);
                 rmin = rmax;
@@ -542,7 +543,7 @@ namespace desres { namespace msys {
                        Id k,               const double* cell) {
  
         return SpatialHash<float>(pro, psel.size(), &psel[0])
-            .findNearest(k, wat, wsel, cell);
+            .findNearest(k, wat, wsel.size(), &wsel[0], cell);
     }
 
 }}

@@ -27,6 +27,25 @@ def vsize():
 
 
 class TestSpatialHash(unittest.TestCase):
+    def testNearest(self):
+        mol = msys.Load('tests/files/3RYZ.pdb')
+        pos = mol.positions.astype('f')
+        box = mol.cell
+
+        pro = mol.selectArr('protein')
+        wat = mol.selectArr('water')
+
+        sph = SpatialHash(pos, pro)
+
+        new1 = sph.findNearest(30, pos, wat)
+        old1 = mol.selectArr('water and nearest 30 to protein')
+        self.assertTrue((old1==new1).all())
+
+        new2 = sph.findNearest(30, pos, wat, box)
+        old2 = mol.selectArr('water and pbnearest 30 to protein')
+        self.assertTrue((old2==new2).all())
+
+
     def testWithin(self):
         mol = msys.Load('tests/files/3RYZ.pdb')
         pos = mol.positions.astype('f')
@@ -44,6 +63,7 @@ class TestSpatialHash(unittest.TestCase):
         new2 = sph.findWithin(3.0, pos, wat, box)
         old2 = mol.selectArr('water and pbwithin 3.0 of protein')
         self.assertTrue((old2==new2).all())
+
 
 class TestReorder(unittest.TestCase):
     def setUp(self):
