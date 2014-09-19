@@ -80,7 +80,7 @@ void WithinPredicate::eval( Selection& S ) {
     const double* cell = periodic ? sys->global_cell[0] : NULL;
     IdList subsel_ids = subsel.ids();
 
-    IdList ids = SpatialHash<float>(pos, subsel_ids.begin(), subsel_ids.end())
+    IdList ids = SpatialHash<float>(pos, subsel_ids.size(), &subsel_ids[0])
         .findWithin(rad, pos, S.ids(), cell);
 
     S.clear();
@@ -125,7 +125,7 @@ void KNearestPredicate::eval( Selection& S ) {
     const double* cell = periodic ? _sys->global_cell[0] : NULL;
     IdList subsel_ids = subsel.ids();
 
-    IdList ids = SpatialHash<float>(pos, subsel_ids.begin(), subsel_ids.end())
+    IdList ids = SpatialHash<float>(pos, subsel_ids.size(), &subsel_ids[0])
         .findNearest(_N, pos, S.ids(), cell);
 
     S.clear();
