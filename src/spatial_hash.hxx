@@ -111,11 +111,13 @@ namespace desres { namespace msys {
             free(_tmpz);
         }
 
-        SpatialHash( const scalar *pos, IdList const& ids)
+        /* constructor provides position array and iterator range of ids */
+        template <typename Iter>
+        SpatialHash( const scalar *pos, Iter begin, Iter end)
         : rad(), ir(), 
           xmin(), ymin(), zmin(),
           xmax(), ymax(), zmax(),
-          ntarget(ids.size()), 
+          ntarget(std::distance(begin,end)),
           _x(), _y(), _z(), 
           _tmpx(), _tmpy(), _tmpz(), 
           _counts() {
@@ -131,7 +133,8 @@ namespace desres { namespace msys {
             posix_memalign((void **)&_tmpy, 16, ntarget*sizeof(*_tmpy));
             posix_memalign((void **)&_tmpz, 16, ntarget*sizeof(*_tmpz));
             for (int i=0; i<ntarget; i++) {
-                const scalar *xyz = pos+3*ids[i];
+                Id id = *begin++;
+                const scalar *xyz = pos+3*id;
                 _x[i] = xyz[0];
                 _y[i] = xyz[1];
                 _z[i] = xyz[2];
@@ -531,7 +534,7 @@ namespace desres { namespace msys {
                       float radius,
                       const double* cell) {
  
-        return SpatialHash<float>(pro, psel)
+        return SpatialHash<float>(pro, psel.begin(), psel.end())
             .findWithin(radius, wat, wsel, cell);
     }
  
@@ -539,7 +542,7 @@ namespace desres { namespace msys {
                        IdList const& psel, const float* pro,
                        Id k,               const double* cell) {
  
-        return SpatialHash<float>(pro, psel)
+        return SpatialHash<float>(pro, psel.begin(), psel.end())
             .findNearest(k, wat, wsel, cell);
     }
 
