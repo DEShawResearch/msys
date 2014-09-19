@@ -1959,6 +1959,56 @@ class InChI(object):
         ''' inchi key for this object's string. '''
         return self._inchi.key()
 
+class SpatialHash(object):
+    ''' SpatialHash provides an interface for efficient spatial queries
+    on particle positions. '''
+    
+    def __init__(self, pos, ids=None):
+        ''' Construct from particle positions.  If ids are provided,
+        they should be a numpy array of type uint32 and specify which
+        rows of the Nx3 pos array are to be hashed.
+        '''
+        # FIXME: change the C++ SpatialHash class so that ids are optional.
+        if ids is None:
+            ids = numpy.arange(len(pos), dtype='uint32')
+        self._hash = _msys.SpatialHash(pos, ids)
 
+    def voxelize(self, radius):
+        ''' Perform voxelization such that findWithin queries with 
+        reuse_voxels=True at a radius equal to or less than the given 
+        radius can be performed accurately.  For queries at radius 
+        less than the voxelization, it may be worthwhile to revoxelize 
+        at a smaller radius.  Note that, by default, findWithin calls
+        voxelize with the query radius as argument, so it is not strictly
+        necessary ever to use this method.
+        '''
+        self._hash.voxelize(float(radius))
+
+    def findWithin(self, radius, pos, ids=None, box=None, reuse_voxels=False):
+        ''' Find particles from pos which are within the given radius
+        of some particle in the spatial hash (i.e. provided in the 
+        SpatialHash constructor).  By default, voxelization is performed
+        at the same resolution as the query radius, but this can be 
+        overridden by calling voxelize() manually, then calling findWithin()
+        with reuse_voxels=True.  pos is expected to be an Nx3 array of
+        floats.  The ids parameter defaults to arange(len(pos)); supply
+        an array of ids to limit the search to a subset of rows in pos.
+        If box is provided, it must be a 3x3 array of doubles, and the
+        search will be performed using periodic boundary conditions.
+        Currently, box must be diagonal.
+        '''
+        # FIXME: Make ids optional in the C++ interface
+        if ids is None: ids = numpy.arange(len(pos), dtype='uint32')
+        return self._hash.findWithin(radius, pos, ids, box, reuse_voxels)
+
+    def findNearest(self, k, pos, ids=None, box=None):
+        ''' Find at most k particles from pos with the smallest minimum 
+        distance to some particle in the spatial hash.  If ids is not 
+        provided, it defaults to arange(len(pos)).  If box is provided, 
+        minimum image distances are considered.  Currently, box must be 
+        diagonal.
+        '''
+        if ids is None: ids = numpy.arange(len(pos), dtype='uint32')
+        return self._hash.findNearest(k, pos, ids, box)
 
 

@@ -15,8 +15,6 @@ import json
 import gzip
 import tempfile
 
-from msys._msys import SpatialHash
-
 def tmpfile(**kwds):
     return tempfile.NamedTemporaryFile(**kwds)
 
@@ -35,7 +33,7 @@ class TestSpatialHash(unittest.TestCase):
         pro = mol.selectArr('protein')
         wat = mol.selectArr('water')
 
-        sph = SpatialHash(pos, pro)
+        sph = msys.SpatialHash(pos, pro)
 
         new1 = sph.findNearest(30, pos, wat)
         old1 = mol.selectArr('water and nearest 30 to protein')
@@ -54,7 +52,7 @@ class TestSpatialHash(unittest.TestCase):
         pro = mol.selectArr('protein')
         wat = mol.selectArr('water')
 
-        sph = SpatialHash(pos, pro)
+        sph = msys.SpatialHash(pos[pro])
 
         new1 = sph.findWithin(3.0, pos, wat)
         old1 = mol.selectArr('water and within 3.0 of protein')
