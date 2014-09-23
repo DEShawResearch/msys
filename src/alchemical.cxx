@@ -514,11 +514,10 @@ namespace {
         }
     }
 
-    IdList two_neighbors(Id i, SystemPtr mol, IdSet const& mapped,
-            IdList const& idmap) {
+    IdList two_neighbors(Id i, SystemPtr mol, IdSet const& mapped) {
         /* Return a list of 1, 2 or 3 atoms [i,j,k] such that i is 
          * bonded to j, j is bonded to k, and k!=i.  */
-        IdList ret(1,idmap.at(i));
+        IdList ret(1,i);
         bool type = mapped.count(i);
 
         /* find neighbors of j of the same type, along with their degree */
@@ -542,14 +541,14 @@ namespace {
 
         /* keep the one with the highest degree */
         Id ind = std::max_element(degs.begin(), degs.end())-degs.begin();
-        Id j = idmap.at(nbrs[ind]);
+        Id j = nbrs[ind];
         ret.push_back(j);
         //printf("    got position %u with max degree, atom %u\n", ind,j);
 
         /* now try to find the second atom */
         BOOST_FOREACH(Id k, mol->bondedAtoms(nbrs[ind])) {
             if (mapped.count(i)==type && k!=i) {
-                ret.push_back(idmap.at(k));
+                ret.push_back(k);
                 //printf("        adding second atom %u\n", idmap.at(k));
                 break;
             }
@@ -580,13 +579,25 @@ namespace {
      *  improper dihedral terms: aj-ai-ak-al, aj-ai-al-ak, ak-ai-aj-al,
      *  ak-ai-al-aj, al-ai-aj-ak, al-ai-ak-aj.
      **/
-    void keep_improper_dihedrals( BlockMap& map, Id ai, Id aj, Id ak, Id al) {
-        keep( map, aj, ai, ak, al);
-        keep( map, aj, ai, al, ak);
-        keep( map, ak, ai, aj, al);
-        keep( map, ak, ai, al, aj);
-        keep( map, al, ai, aj, ak);
-        keep( map, al, ai, ak, aj);
+    void keep_improper_dihedrals( BlockMap& map, Id ai, Id aj, Id ak, Id al,
+                                  bool bondedjk, bool bondedkl, bool bondedjl,
+                                  bool dont_repeat_dihedrals) {
+        // We check whether ak and al are bonded, in which case aj-ai-ak-al
+        // forms a proper dihedral, and we skip it if dont_repeat_dihedrals
+        // is set to true.
+        // This happens when ai, ak, al form a three-membered ring.
+        if (!bondedkl and dont_repeat_dihedrals) {
+            keep( map, aj, ai, ak, al);
+            keep( map, aj, ai, al, ak);
+        }
+        if (!bondedjl and dont_repeat_dihedrals) {
+            keep( map, ak, ai, aj, al);
+            keep( map, ak, ai, al, aj);
+        }
+        if (!bondedjk and dont_repeat_dihedrals) {
+            keep( map, al, ai, aj, ak);
+            keep( map, al, ai, ak, aj);
+        }
     }
 
     void my_find_kept(SystemPtr A, 
@@ -655,7 +666,14 @@ namespace {
                     internal_mappedA.erase(it->first);
                 }
             }
-            IdList n2 = two_neighbors(best_real,A,internal_mappedA,a2a);
+            // The indices of the A, B, C atoms in the original molecular 
+            // system
+            IdList abc = two_neighbors(best_real, A, internal_mappedA);
+            // The indices of the A, B, C atoms in the alchemical system
+            IdList n2;
+            BOOST_FOREACH( Id i, abc) {
+              n2.push_back( a2a.at(i));
+            }
 
             /* Find bond partners of all bonded dummies */
             IdSet dset(dfrag.begin(), dfrag.end());
@@ -696,7 +714,7 @@ namespace {
                       if (bonded2 <= bonded) continue; // hit u,v and v,u only once
                       if (dset.find(bonded2) == dset.end()) continue;
                       // keep improper dihedral centered on d, involving A.
-                      keep_improper_dihedrals( dihemap, a2a.at(d), n2[0], a2a.at(bonded), a2a.at(bonded2));
+                      keep_improper_dihedrals( dihemap, a2a.at(d), n2[0], a2a.at(bonded), a2a.at(bonded2), !bad(A->findBond(abc[0],bonded)), !bad(A->findBond(bonded,bonded2)), !bad(A->findBond(abc[0],bonded2)), true);
                     }
                 }
 
@@ -707,7 +725,7 @@ namespace {
                     // keep any improper dihedral centered on A,
                     // involving B, u, v
                     if (n2.size() >= 2) {
-                      keep_improper_dihedrals( dihemap, n2[0], n2[1], a2a.at(d), a2a.at(d2));
+                      keep_improper_dihedrals( dihemap, n2[0], n2[1], a2a.at(d), a2a.at(d2), !bad(A->findBond(abc[1],d)), !bad(A->findBond(d,d2)), !bad(A->findBond(abc[1],d2)), true);
                     }
                     BOOST_FOREACH(Id d3, A->bondedAtoms(d2)) {
                         if (dset.find(d3) == dset.end()) continue;
@@ -1056,7 +1074,7 @@ SystemPtr desres::msys::MakeAlchemical( SystemPtr A, SystemPtr B,
             A->bond(ip).resonant_order = bond.resonant_order;
         }
     }
-       
+    
     /* handle bonded terms */
     BlockMap bondmap, anglmap, dihemap, imprmap, pairmap, exclmap;
     String ff;
@@ -1090,20 +1108,6 @@ SystemPtr desres::msys::MakeAlchemical( SystemPtr A, SystemPtr B,
     make_alchemical(A->table(ff), B->table(ff), imprmap, avoid_noops);
     ff="pair_12_6_es";
     make_alchemical(A->table(ff), B->table(ff), pairmap, avoid_noops);
-
-    /* handle bonds */
-    BOOST_FOREACH(Id bi, blist) {
-        Id ai = b2a.at(bi);
-        assert(!bad(ai));
-        BOOST_FOREACH(Id bnd, B->bondsForAtom(bi)) {
-            bond_t const& bond = B->bond(bnd);
-            Id bj = bond.other(bi);
-            Id aj = b2a.at(bj);
-            if (!bad(aj)) {
-                A->addBond(ai,aj);
-            }
-        }
-    }
 
     /* exclusions and pairs */
     ff = "exclusion";
