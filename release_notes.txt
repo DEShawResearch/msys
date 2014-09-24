@@ -1,3 +1,5 @@
+1.7.77 FIXED: dms-alchemical typos.
+
 1.7.76 NEW: SpatialHash Python class for efficient findWithin and findNearest.
        NEW: System.selectArr to return atom selections as numpy array of ids.
        NEW: C++ within.hxx renamed to spatial_hash.hxx.
