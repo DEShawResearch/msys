@@ -547,9 +547,9 @@ namespace {
 
         /* now try to find the second atom */
         BOOST_FOREACH(Id k, mol->bondedAtoms(nbrs[ind])) {
-            if (mapped.count(i)==type && k!=i) {
+            if (mapped.count(k)==type && k!=i) {
                 ret.push_back(k);
-                //printf("        adding second atom %u\n", idmap.at(k));
+                // printf("        adding second atom %u\n", k);
                 break;
             }
         }
@@ -666,6 +666,7 @@ namespace {
                     internal_mappedA.erase(it->first);
                 }
             }
+
             // The indices of the A, B, C atoms in the original molecular 
             // system
             IdList abc = two_neighbors(best_real, A, internal_mappedA);
