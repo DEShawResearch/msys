@@ -1,4 +1,5 @@
 #include "spatial_hash.hxx"
+#include <limits>
 
 #ifdef __SSE2__
 #include <emmintrin.h>
