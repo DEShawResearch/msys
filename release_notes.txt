@@ -1,3 +1,6 @@
+1.7.78 C++ header fixes for spatial_hash.
+       C++ - Bump boost and zlib versions.
+
 1.7.77 FIXED: dms-alchemical typos.
 
 1.7.76 NEW: SpatialHash Python class for efficient findWithin and findNearest.
