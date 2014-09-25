@@ -6,7 +6,7 @@
 using namespace boost::python;
 using namespace desres::msys;
 
-typedef desres::msys::SpatialHash<float> Hash;
+typedef desres::msys::SpatialHash Hash;
 
 static Hash* hash_new(PyObject* posobj, PyObject* idobj) {
 

@@ -143,6 +143,7 @@ psf/import.cxx
 
 schema.cxx
 schema/schema.cxx
+spatial_hash.cxx
 
 annotated_system.cxx
 append.cxx
