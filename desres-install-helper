@@ -14,7 +14,7 @@ DESCRIPTION="Biomolecular Structure Library"
 
 # shared library dependencies
 GCC=gcc/4.7.2-23A
-BOOST=boost/1_53_0-30A
+BOOST=boost/1_51_0-30A
 PYTHON=Python/2.7.3-07A
 SQLITE=sqlite/3.6.23.1-02A
 JSON=fastjson/1.5.1
