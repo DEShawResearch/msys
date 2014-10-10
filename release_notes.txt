@@ -1,3 +1,9 @@
+
+1.7.80 Fix memory leak in msys.pfx.aligned_rmsd.
+       Added Python bindings for CalcDihedralGeometry.
+
+1.7.79 Revert boost version change.
+
 1.7.78 C++ header fixes for spatial_hash.
        C++ - Bump boost and zlib versions.
 
