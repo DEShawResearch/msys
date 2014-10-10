@@ -151,6 +151,20 @@ namespace {
         objptr pd(getpos3(D, &d), destructor);
         return calc_dihedral(a,b,c,d);
     }
+
+    PyObject* py_apply_dihedral_geometry(object A, object B, object C,
+                                      double r, double theta, double phi) {
+        double *a, *b, *c;
+        objptr pa(getpos3(A, &a), destructor);
+        objptr pb(getpos3(B, &b), destructor);
+        objptr pc(getpos3(C, &c), destructor);
+        npy_intp dim = 3;
+        PyObject* arr = PyArray_SimpleNew(1,&dim,NPY_FLOAT64);
+        double *d = (double *)PyArray_DATA(arr);
+        apply_dihedral_geometry(d,a,b,c,r,theta,phi);
+        return arr;
+    }
+
     double py_calc_planarity(PyObject* obj) {
         PyObject* arr = PyArray_FromAny(
                 obj,
@@ -598,6 +612,7 @@ namespace desres { namespace msys {
         def("calc_dihedral", py_calc_dihedral);
         def("calc_planarity", py_calc_planarity);
         def("line_intersects_tri", py_line_intersects_tri);
+        def("apply_dihedral_geometry", py_apply_dihedral_geometry);
 
         class_<NonbondedInfo>("NonbondedInfo", no_init)
             .def_readwrite("vdw_funct", &NonbondedInfo::vdw_funct,

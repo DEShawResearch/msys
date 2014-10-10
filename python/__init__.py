@@ -1900,6 +1900,15 @@ def CalcDihedral(a, b, c, d):
     if not isinstance(d,numpy.ndarray): d = d.pos
     return _msys.calc_dihedral(a,b,c,d)
 
+def ApplyDihedralGeometry(a, b, c, r, theta, phi):
+    ''' Return the position of atom d with cd length r, bcd angle theta,
+    and abcd dihedral phi, all in radians. 
+    '''
+    if not isinstance(a,numpy.ndarray): a = a.pos
+    if not isinstance(b,numpy.ndarray): b = b.pos
+    if not isinstance(c,numpy.ndarray): c = c.pos
+    return _msys.apply_dihedral_geometry(a,b,c,float(r),float(theta),float(phi))
+
 def CalcPlanarity(pos_or_atoms):
     ''' Planarity of positions or atoms '''
     if isinstance(pos_or_atoms, numpy.ndarray):

@@ -278,6 +278,18 @@ class TestValidate(unittest.TestCase):
 
 class TestMain(unittest.TestCase):
 
+    def testGeometry(self):
+        p=NP.array(((1,0,0),
+                    (2,3,1),
+                    (3,1,0),
+                    (2,2,2)), 'd')
+        a,b,c,d = p
+        rad = msys.CalcDistance(c,d)
+        theta = msys.CalcAngle(b,c,d)
+        phi = msys.CalcDihedral(a,b,c,d)
+        tst = msys.ApplyDihedralGeometry(a,b,c,rad,theta,phi)
+        NP.testing.assert_almost_equal(tst, d)
+
     def testMaeBonds(self):
         m=msys.CreateSystem()
         o=m.addAtom()
