@@ -432,7 +432,9 @@ PyObject* wrap_aligned_rmsd(PyObject* self, PyObject* args, PyObject* kwds) {
     double rmsd = desres::pfx::compute_alignment(n, NULL, X, Y, mat);
     Py_DECREF(Xarr);
     Py_DECREF(Yarr);
-    return Py_BuildValue("(O,d)", Marr, rmsd);
+    PyObject* obj = Py_BuildValue("(O,d)", Marr, rmsd);
+    Py_DECREF(Marr);
+    return obj;
 }
 
 PyDoc_STRVAR(module_doc,
