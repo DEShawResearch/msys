@@ -77,9 +77,9 @@ namespace {
         const char *ptr = dms->contents;
         sqlite3_int64 size=dms->size;
 
-        int max=size-offset;  // max allowable read
+        sqlite3_int64 max=size-offset;  // max allowable read
         if (max<0) max=0;
-        int amt=iAmt < max ? iAmt : max;
+        sqlite3_int64 amt=iAmt < max ? iAmt : max;
         memcpy(pBuf, ptr+offset, amt);
         if (amt < max) return SQLITE_OK;
         /* Unread parts of the buffer must be zero-filled */
@@ -273,16 +273,22 @@ Sqlite Sqlite::read(std::string const& path)  {
            << "' of size " << g_tmpsize;
         throw std::runtime_error(ss.str());
     }
-    ssize_t readcount = ::read(fd, g_tmpbuf, g_tmpsize);
-    close(fd);
-    if (readcount!=g_tmpsize) {
-        free(g_tmpbuf);
-        std::stringstream ss;
-        ss << "Failed reading DMS file contents at '" << path 
-           << "' :" << strerror(errno);
-        throw std::runtime_error(ss.str());
+    ssize_t sz = g_tmpsize;
+    char* ptr = g_tmpbuf;
+    while (sz) {
+        errno = 0;
+        ssize_t rc = ::read(fd, ptr, sz);
+        if (rc<0 || (rc==0 && errno!=0)) {
+            std::string errmsg = strerror(errno);
+            close(fd);
+            free(g_tmpbuf);
+            MSYS_FAIL("Error reading DMS contents at " << path 
+                    << ": " << errmsg);
+        }
+        sz -= rc;
+        ptr += rc;
     }
-
+    close(fd);
     int rc = sqlite3_open_v2( "::dms::", &db, SQLITE_OPEN_READONLY, 
             vfs->zName);
     if (g_tmpbuf) free(g_tmpbuf);
