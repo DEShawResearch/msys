@@ -58,8 +58,14 @@ def main():
         from msys import thermalize
         thermalize.apply(out, args.temperature, args.seed)
 
-    print "Saving '%s'" % args.ofile
-    msys.Save(out, args.ofile)
+    if args.unbuffered:
+        if not args.ofile.endswith('.dms'):
+            print "WARNING: unbuffered saves require DMS format, but output file name ends with '%s'" % (args.ofile[-4:])
+        print "Saving unbuffered DMS file '%s'" % args.ofile
+        msys.SaveDMS(out, args.ofile, unbuffered=True)
+    else:
+        print "Saving '%s'" % args.ofile
+        msys.Save(out, args.ofile)
 
     print "Done"
 
@@ -89,6 +95,8 @@ def parse_args():
             help='Assign randomized velocities at specified temperature')
     parser.add_argument('-s', '--seed', type=int,
             help='Random seed')
+    parser.add_argument('--unbuffered', action='store_true', default=False,
+            help='Write output dms file with no in-memory buffering')
     return parser.parse_args()
 
 def replicate(mol, x, y, z, density, randomize=False):

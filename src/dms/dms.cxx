@@ -53,7 +53,7 @@ namespace {
             char* ptr = dms->contents;
             while (sz) {
                 errno = 0;
-                ssize_t rc = write(fd, dms->contents, dms->size);
+                ssize_t rc = write(fd, dms->contents, sz);
                 if (rc<0 || (rc==0 && errno!=0)) {
                     std::string errmsg = strerror(errno);
                     close(fd);
@@ -312,12 +312,13 @@ Sqlite Sqlite::read_bytes(const char * bytes, int64_t len ) {
     return boost::shared_ptr<sqlite3>(db, close_db);
 }
 
-Sqlite Sqlite::write(std::string const& path) {
+Sqlite Sqlite::write(std::string const& path, bool unbuffered) {
     sqlite3* db;
     sqlite3_vfs_register(vfs, 0);
 
     int rc = sqlite3_open_v2(path.c_str(), &db, 
-            SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, vfs->zName);
+            SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, 
+            unbuffered ? NULL : vfs->zName);
     if (rc!=SQLITE_OK) MSYS_FAIL(sqlite3_errmsg(db));
     return boost::shared_ptr<sqlite3>(db, close_db);
 }

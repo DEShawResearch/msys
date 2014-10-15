@@ -75,6 +75,7 @@ namespace desres { namespace msys {
             .value("Default",           DMSExport::Default)
             .value("Append",            DMSExport::Append)
             .value("StructureOnly",     DMSExport::StructureOnly)
+            .value("Unbuffered",        DMSExport::Unbuffered)
             ;
 
         enum_<MaeExport::Flags>("MaeExportFlags")

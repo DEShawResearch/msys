@@ -17,6 +17,7 @@ namespace desres { namespace msys {
         enum Flags { Default            = 0 
                    , Append             = 1 << 0
                    , StructureOnly      = 1 << 1
+                   , Unbuffered         = 1 << 2
         };
     };
 

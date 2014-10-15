@@ -25,7 +25,7 @@ namespace desres { namespace msys {
 
         static Sqlite read(std::string const& path);
         static Sqlite read_bytes(const char* bytes, int64_t len);
-        static Sqlite write(std::string const& path);
+        static Sqlite write(std::string const& path, bool unbuffered = false);
 
         void exec(std::string const& sql);
 
