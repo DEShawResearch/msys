@@ -581,7 +581,7 @@ void desres::msys::ExportDMS(SystemPtr h, const std::string& path,
     unlink(path.c_str());
     Sqlite dms;
     try {
-        dms = Sqlite::write(path);
+        dms = Sqlite::write(path, flags & DMSExport::Unbuffered);
     } catch (std::exception& e) {
         MSYS_FAIL("Could not create dms file at " << path << ": " << e.what());
     }
