@@ -1,8 +1,12 @@
 #include <Python.h>
 #include <numpy/ndarrayobject.h>
 #include <pfx/pfx.hxx>
+#include <boost/python.hpp>
+
+using namespace boost::python;
 
 typedef desres::pfx::Pfx pfx_t;
+typedef desres::pfx::Graph graph_t;
 
 typedef struct {
     PyObject_HEAD
@@ -14,6 +18,9 @@ static PyTypeObject ptype;
 static PyObject* pfx_new(PyTypeObject* type, PyObject* args, PyObject* kwds) {
     PyObject *topobj, *fixobj=Py_False;
     PfxObject* self;
+    graph_t* g = NULL;
+    boost::shared_ptr<graph_t> gptr;
+
     int i, n, fixbonds;
 
     static char* kwlist[] = {(char *)"topology", (char *)"fixbonds", 0};
@@ -21,47 +28,55 @@ static PyObject* pfx_new(PyTypeObject* type, PyObject* args, PyObject* kwds) {
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O:new", kwlist, 
                 &topobj, &fixobj))
         return NULL;
-    if (!PySequence_Check(topobj)) {
-        PyErr_Format(PyExc_TypeError, "argument must be a sequence");
-        return NULL;
-    }
+
     fixbonds = PyObject_IsTrue(fixobj);
     if (fixbonds<0) return NULL;
 
-    n = (int)PyObject_Size(topobj);
-    desres::pfx::Graph g(n);
-    for (i=0; i<n; i++) {
-        PyObject * sublist = PySequence_GetItem(topobj,i);
-        if (!sublist || !PySequence_Check(sublist)) {
-            if (sublist) {
-                Py_DECREF(sublist);
-            }
-            PyErr_Format(PyExc_TypeError, "input elements must be sequences");
+    extract<graph_t*> get_graph(topobj);
+    if (get_graph.check()) {
+        g = get_graph();
+    } else {
+        if (!PySequence_Check(topobj)) {
+            PyErr_Format(PyExc_TypeError, "argument must be a sequence");
             return NULL;
         }
-        int j, nn = (int)PyObject_Size(sublist);
-        for (j=0; j<nn; j++) {
-            PyObject * item = PySequence_GetItem(sublist,j);
-            int gid=0;
-            PyErr_Clear();
-            if (item) {
-                gid = (int)PyInt_AsLong(item);
-                Py_DECREF(item);
-            }
-            if (PyErr_Occurred()) {
-                Py_DECREF(sublist);
-                PyErr_Format(
-                        PyExc_TypeError, "subsequence elements must be integer");
+
+        n = (int)PyObject_Size(topobj);
+        gptr.reset(new graph_t(n));
+        for (i=0; i<n; i++) {
+            PyObject * sublist = PySequence_GetItem(topobj,i);
+            if (!sublist || !PySequence_Check(sublist)) {
+                if (sublist) {
+                    Py_DECREF(sublist);
+                }
+                PyErr_Format(PyExc_TypeError, "input elements must be sequences");
                 return NULL;
             }
-            g.add_edge(i, gid); /* FIXME - error checking */
+            int j, nn = (int)PyObject_Size(sublist);
+            for (j=0; j<nn; j++) {
+                PyObject * item = PySequence_GetItem(sublist,j);
+                int gid=0;
+                PyErr_Clear();
+                if (item) {
+                    gid = (int)PyInt_AsLong(item);
+                    Py_DECREF(item);
+                }
+                if (PyErr_Occurred()) {
+                    Py_DECREF(sublist);
+                    PyErr_Format(
+                            PyExc_TypeError, "subsequence elements must be integer");
+                    return NULL;
+                }
+                gptr->add_edge(i, gid); /* FIXME - error checking */
+            }
+            Py_DECREF(sublist);
         }
-        Py_DECREF(sublist);
+        g = gptr.get();
     }
 
     self = PyObject_New(PfxObject, &ptype);
     if (!self) return NULL;
-    self->pfx = new pfx_t(g, fixbonds);
+    self->pfx = new pfx_t(*g, fixbonds);
     return (PyObject *)self;
 }
 

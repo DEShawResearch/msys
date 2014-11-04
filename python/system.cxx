@@ -8,6 +8,7 @@
 #include "contacts.hxx"
 
 #include <numpy/ndarrayobject.h>
+#include <pfx/graph.hxx>
 
 using namespace desres::msys;
 
@@ -206,18 +207,18 @@ namespace {
         }
     }
 
-    list sys_topology(System& sys) {
-        list result;
-        for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
-            if (!sys.hasAtom(i)) continue;
-            IdList atoms = sys.bondedAtoms(i);
-            list sub;
-            for (Id j=0, m=atoms.size(); j<m; j++) {
-                sub.append(object(atoms[j]));
-            }
-            result.append(sub);
+    desres::pfx::Graph* sys_topology(System const& sys) {
+        if (sys.maxAtomId() != sys.atomCount()) {
+            MSYS_FAIL("System has deleted atoms, so graph would be incorrect.");
         }
-        return result;
+        desres::pfx::Graph* g = new desres::pfx::Graph(sys.atomCount());
+        for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
+            IdList atoms = sys.bondedAtoms(i);
+            for (Id j=0, m=atoms.size(); j<m; j++) {
+                g->add_edge(i,atoms[j]);
+            }
+        }
+        return g;
     }
 
     struct Finder {
@@ -614,6 +615,11 @@ namespace desres { namespace msys {
         def("line_intersects_tri", py_line_intersects_tri);
         def("apply_dihedral_geometry", py_apply_dihedral_geometry);
 
+        class_<desres::pfx::Graph>("Topology", init<unsigned>())
+            .add_property("nverts", &desres::pfx::Graph::nverts)
+            .add_property("nedges", &desres::pfx::Graph::nedges)
+            ;
+
         class_<NonbondedInfo>("NonbondedInfo", no_init)
             .def_readwrite("vdw_funct", &NonbondedInfo::vdw_funct,
                     "Name of the vdw functional form; e.g., 'vdw_12_6'")
@@ -795,8 +801,8 @@ namespace desres { namespace msys {
             .def("coalesceTables",    &System::coalesceTables)
             .def("translate",       sys_translate)
             .def("findContactIds",  sys_find_contact_ids)
-            .def("topology", sys_topology)
-
+            .def("topology",        sys_topology, 
+                    return_value_policy<manage_new_object>())
             .def("getPositions", sys_getpos,
                     (arg("ids")=object()))
             .def("setPositions",    sys_setpos,
