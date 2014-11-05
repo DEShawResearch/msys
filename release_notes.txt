@@ -1,3 +1,5 @@
+1.7.73 System.topology now returns a pfx.Graph object.
+
 1.7.82 Fixed reading and writing of large (>2GB) dms files.  
 
 1.7.80 Fix memory leak in msys.pfx.aligned_rmsd.
