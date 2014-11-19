@@ -24,6 +24,9 @@ def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
     mol=mol.clone()
 
     lipsize=[tile.cell[i][i] for i in range(3)]
+    lx, ly, lz = lipsize
+    if lx<=1 or ly<=1:
+        raise ValueError("Lipid tile has missing box dimensions.")
 
     if xsize is None or ysize is None:
         if verbose: print "finding bounding box..."
