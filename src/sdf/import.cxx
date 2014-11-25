@@ -121,7 +121,13 @@ SystemPtr iterator::next() {
     }
 
     int natoms = stringToInt(line.substr(0,3));
-    int nbonds = stringToInt(line.substr(3,3));
+    //int nbonds = stringToInt(line.substr(3,3));
+    /* HACK: Support lines like that which were produced by older msys:
+9301001  0  0  1  0            999 V2000
+    */
+    std::string bondstr = line.substr(3,4);
+    boost::trim(bondstr);
+    int nbonds = stringToInt(bondstr);
 
     std::vector<int> valenceList;
 
