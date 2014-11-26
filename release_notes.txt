@@ -1,4 +1,6 @@
-1.7.73 System.topology now returns a pfx.Graph object.
+1.7.84 IMPROVED: Alchemical mapping now merges dummy fragments connected to the same real atom into one fragment, and thus retains more permissible terms.
+
+1.7.83 System.topology now returns a pfx.Graph object.
 
 1.7.82 Fixed reading and writing of large (>2GB) dms files.  
 

@@ -599,11 +599,86 @@ namespace {
             keep( map, al, ai, ak, aj);
         }
     }
+  
+    /** Choose just one real atom that connects this dummy fragment to
+     *  the molecular graph of the real atoms.  Use the following criteria,
+     *  in order:
+     *  1) Number of bonded dummies
+     *  2) Smallest ID among the real atoms
+     **/
+    Id find_best_real_connection(SystemPtr M,
+                                 IdList const& dfrag,
+                                 IdSet const& mapped,
+                                 IdList const& dummies)
+    {
+         /* construct mapping from real atoms to bonded dummy atoms */
+         std::map<Id, IdList> rmap;
+         for (Id i=0; i<dfrag.size(); i++) {
+             /* convert dfrag from cloned system ids back to M ids */
+             Id d = dummies.at(dfrag[i]);
+             //printf("%u ", d);
+             BOOST_FOREACH(Id nbr, M->bondedAtoms(d)) {
+                 if (mapped.count(nbr)) {
+                     rmap[nbr].push_back(d);
+                 }
+             }
+         }
+         //printf("\n");
+         if (rmap.empty()) {
+             MSYS_FAIL("Found disconnected dummy atoms");
+         }
 
-    void my_find_kept(SystemPtr A, 
-                      MultiIdList& dummy_fragmentsA,
-                      IdSet const& mappedA,
-                      IdList const& dummiesA,
+         
+         //printf("found %lu possible real connectors\n", rmap.size());
+
+         Id best_real = rmap.begin()->first;
+         Id best_degree = rmap.begin()->second.size();
+         for (std::map<Id, IdList>::iterator it=rmap.begin(); it!=rmap.end(); ++it) {
+             Id new_real = it->first;
+             Id new_degree = it->second.size();
+             if (new_degree > best_degree) {
+                 best_real = new_real;
+                 best_degree = new_degree;
+             }
+         }
+#if 0
+         printf("real connector: %u %s %d %s\n", 
+                best_real, 
+                A->residue(A->atom(best_real).residue).name.c_str(),
+                A->residue(A->atom(best_real).residue).resid,
+                A->atom(best_real).name.c_str());
+#endif
+         return best_real;
+    }
+
+    /** Merge dummy fragments that are connected to the same real atom
+     *  into a unified fragment.  The input dummy_fragments are
+     *  replaced with the merged dummy_fragments.
+     **/
+    void merge_dummy_fragments(SystemPtr M,
+                               IdSet const& mapped,
+                               IdList const& dummies,
+                               MultiIdList& dummy_fragments
+    )
+    {
+        std::map<Id, IdList> bondedDummies;
+        BOOST_FOREACH(IdList& dfrag, dummy_fragments) {
+            Id best_real = find_best_real_connection(M, dfrag, mapped, dummies);
+            IdList& v = bondedDummies[best_real];
+            v.insert(v.end(), dfrag.begin(), dfrag.end());
+        }
+        
+        dummy_fragments.clear();
+        for (std::map<Id, IdList>::iterator it=bondedDummies.begin(); it!=bondedDummies.end(); ++it) {
+            dummy_fragments.resize( dummy_fragments.size() + 1);
+            dummy_fragments.back().swap( it->second);
+        }
+    }
+                               
+    void my_find_kept(SystemPtr M, 
+                      MultiIdList& dummy_fragments,
+                      IdSet const& mapped,
+                      IdList const& dummies,
                       IdList const& a2a,
                       BlockMap& bondmap,
                       BlockMap& anglmap,
@@ -611,65 +686,35 @@ namespace {
                       BlockMap& pairmap
     ) {
 
-        BOOST_FOREACH(IdList& dfrag, dummy_fragmentsA) {
+        BOOST_FOREACH(IdList& dfrag, dummy_fragments) {
             //printf("fragment: ");
+            Id best_real = find_best_real_connection(M, dfrag, mapped, dummies);
             /* construct mapping from real atoms to bonded dummy atoms */
             std::map<Id, IdList> rmap;
             for (Id i=0; i<dfrag.size(); i++) {
-                /* convert dfrag from cloned system ids back to A ids */
-                Id d = dummiesA.at(dfrag[i]);
+                /* convert dfrag from cloned system ids back to M ids */
+                Id d = dummies.at(dfrag[i]);
                 dfrag[i] = d;
                 //printf("%u ", d);
-                BOOST_FOREACH(Id nbr, A->bondedAtoms(d)) {
-                    if (mappedA.count(nbr)) {
+                BOOST_FOREACH(Id nbr, M->bondedAtoms(d)) {
+                    if (mapped.count(nbr)) {
                         rmap[nbr].push_back(d);
                     }
                 }
-            }
-            //printf("\n");
-            if (rmap.empty()) {
-                MSYS_FAIL("Found disconnected dummy atoms");
-            }
-
-            
-            //printf("found %lu possible real connectors\n", rmap.size());
-
-            /* We can choose just one real atom to bind this dummy fragment
-             * to the real graph.  Use the following criteria, in order:
-             * 1) Number of bonded dummies
-             * 2) Smallest id of real
-             */
-            Id best_real = rmap.begin()->first;
-            Id best_degree = rmap.begin()->second.size();
-            for (std::map<Id, IdList>::iterator it=rmap.begin(); it!=rmap.end(); ++it) {
-                Id new_real = it->first;
-                Id new_degree = it->second.size();
-                if (new_degree > best_degree) {
-                    best_real = new_real;
-                    best_degree = new_degree;
-                }
-            }
-#if 0
-            printf("real connector: %u %s %d %s\n", 
-                    best_real, 
-                    A->residue(A->atom(best_real).residue).name.c_str(),
-                    A->residue(A->atom(best_real).residue).resid,
-                    A->atom(best_real).name.c_str());
-#endif
-
+            } 
             /* Find bond partners of real.  Don't allow one of the bond
              * partners to be one of the atoms connected to the dummy
              * fragment; i.e. it must not be one of the keys in rmap.  */
-            IdSet internal_mappedA(mappedA);
+            IdSet internal_mapped(mapped);
             for (std::map<Id, IdList>::iterator it=rmap.begin(); it!=rmap.end(); ++it) {
                 if (it->first != best_real) {
-                    internal_mappedA.erase(it->first);
+                    internal_mapped.erase(it->first);
                 }
             }
 
             // The indices of the A, B, C atoms in the original molecular 
             // system
-            IdList abc = two_neighbors(best_real, A, internal_mappedA);
+            IdList abc = two_neighbors(best_real, M, internal_mapped);
             // The indices of the A, B, C atoms in the alchemical system
             IdList n2;
             BOOST_FOREACH( Id i, abc) {
@@ -686,13 +731,13 @@ namespace {
                 if (n2.size() >= 2) keep(anglmap, n2[1],n2[0],a2a.at(d));
                 // keep dihedral C-B-A-u
                 if (n2.size() >= 3) keep(dihemap, n2[2],n2[1],n2[0],a2a.at(d));
-                BOOST_FOREACH(Id bonded, A->bondedAtoms(d)) {
+                BOOST_FOREACH(Id bonded, M->bondedAtoms(d)) {
                     if (dset.find(bonded) == dset.end()) continue;
                     // keep angle A-u-v
                     keep(anglmap, a2a.at(bonded),a2a.at(d),n2[0]);
                     // keep dihedral B-A-u-v
                     if (n2.size() >= 2) keep(dihemap, a2a.at(bonded),a2a.at(d),n2[0],n2[1]);
-                    BOOST_FOREACH(Id bonded2, A->bondedAtoms(bonded)) {
+                    BOOST_FOREACH(Id bonded2, M->bondedAtoms(bonded)) {
                         if (bonded2 == d) continue;
                         if (dset.find(bonded2) == dset.end()) continue;
                         // keep dihedral A-u-v-w
@@ -711,11 +756,11 @@ namespace {
                         a4.insert( bonded2);
                     }
 
-                    BOOST_FOREACH(Id bonded2, A->bondedAtoms(d)) {
+                    BOOST_FOREACH(Id bonded2, M->bondedAtoms(d)) {
                       if (bonded2 <= bonded) continue; // hit u,v and v,u only once
                       if (dset.find(bonded2) == dset.end()) continue;
                       // keep improper dihedral centered on d, involving A.
-                      keep_improper_dihedrals( dihemap, a2a.at(d), n2[0], a2a.at(bonded), a2a.at(bonded2), !bad(A->findBond(abc[0],bonded)), !bad(A->findBond(bonded,bonded2)), !bad(A->findBond(abc[0],bonded2)), true);
+                      keep_improper_dihedrals( dihemap, a2a.at(d), n2[0], a2a.at(bonded), a2a.at(bonded2), !bad(M->findBond(abc[0],bonded)), !bad(M->findBond(bonded,bonded2)), !bad(M->findBond(abc[0],bonded2)), true);
                     }
                 }
 
@@ -726,14 +771,14 @@ namespace {
                     // keep any improper dihedral centered on A,
                     // involving B, u, v
                     if (n2.size() >= 2) {
-                      keep_improper_dihedrals( dihemap, n2[0], n2[1], a2a.at(d), a2a.at(d2), !bad(A->findBond(abc[1],d)), !bad(A->findBond(d,d2)), !bad(A->findBond(abc[1],d2)), true);
+                      keep_improper_dihedrals( dihemap, n2[0], n2[1], a2a.at(d), a2a.at(d2), !bad(M->findBond(abc[1],d)), !bad(M->findBond(d,d2)), !bad(M->findBond(abc[1],d2)), true);
                     }
-                    BOOST_FOREACH(Id d3, A->bondedAtoms(d2)) {
+                    BOOST_FOREACH(Id d3, M->bondedAtoms(d2)) {
                         if (dset.find(d3) == dset.end()) continue;
                         // keep dihedral u-A-v-w
                         keep(dihemap, a2a.at(d), n2[0], a2a.at(d2), a2a.at(d3));
                     }
-                    BOOST_FOREACH(Id d3, A->bondedAtoms(d)) {
+                    BOOST_FOREACH(Id d3, M->bondedAtoms(d)) {
                         if (dset.find(d3) == dset.end()) continue;
                         // keep dihedral w-u-A-v
                         keep(dihemap, a2a.at(d3), a2a.at(d), n2[0], a2a.at(d2));
@@ -801,6 +846,10 @@ namespace {
         MultiIdList dummy_fragmentsA, dummy_fragmentsB;
         Clone(A, dummiesA)->updateFragids(&dummy_fragmentsA);
         Clone(B, dummiesB)->updateFragids(&dummy_fragmentsB);
+
+        /* merge fragments that are connected to the same real atom. */
+        merge_dummy_fragments(A, mappedA, dummiesA, dummy_fragmentsA);
+        merge_dummy_fragments(B, mappedB, dummiesB, dummy_fragmentsB);
 
         //printf("** A ** \n");
         my_find_kept(A, dummy_fragmentsA, mappedA, dummiesA, a2a,
