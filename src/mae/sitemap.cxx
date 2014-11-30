@@ -4,7 +4,7 @@
 #include <cstdio>
 
 using namespace desres::msys::mae;
-using desres::fastjson::Json;
+using desres::msys::fastjson::Json;
 
 SiteMap::SiteMap( SystemPtr h, const Json& sites, const IdList& atoms, 
                   int natoms, int npseudos ) 

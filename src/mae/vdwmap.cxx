@@ -8,7 +8,7 @@
 #include <boost/algorithm/string.hpp>
 
 using namespace desres::msys::mae;
-using desres::fastjson::Json;
+using desres::msys::fastjson::Json;
 
 VdwMap::VdwMap( const Json& ffio_ff ) {
     _rule = ffio_ff.get("ffio_comb_rule").as_string("");

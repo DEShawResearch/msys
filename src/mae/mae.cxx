@@ -14,7 +14,7 @@
 #include <stdexcept>
 
 
-using desres::fastjson::Json;
+using desres::msys::fastjson::Json;
 
 /*!
  * \brief Takes a stream and returns maestro tokens.

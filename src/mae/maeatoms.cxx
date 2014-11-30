@@ -3,7 +3,7 @@
 
 using namespace desres::msys;
 using namespace desres::msys::mae;
-using desres::fastjson::Json;
+using desres::msys::fastjson::Json;
 
 MaeAtoms::MaeAtoms( const Json& blk) {
 

@@ -207,11 +207,11 @@ namespace {
         }
     }
 
-    desres::pfx::Graph* sys_topology(System const& sys) {
+    pfx::Graph* sys_topology(System const& sys) {
         if (sys.maxAtomId() != sys.atomCount()) {
             MSYS_FAIL("System has deleted atoms, so graph would be incorrect.");
         }
-        desres::pfx::Graph* g = new desres::pfx::Graph(sys.atomCount());
+        pfx::Graph* g = new pfx::Graph(sys.atomCount());
         for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
             IdList atoms = sys.bondedAtoms(i);
             for (Id j=0, m=atoms.size(); j<m; j++) {
@@ -615,9 +615,9 @@ namespace desres { namespace msys {
         def("line_intersects_tri", py_line_intersects_tri);
         def("apply_dihedral_geometry", py_apply_dihedral_geometry);
 
-        class_<desres::pfx::Graph>("Topology", init<unsigned>())
-            .add_property("nverts", &desres::pfx::Graph::nverts)
-            .add_property("nedges", &desres::pfx::Graph::nedges)
+        class_<pfx::Graph>("Topology", init<unsigned>())
+            .add_property("nverts", &pfx::Graph::nverts)
+            .add_property("nedges", &pfx::Graph::nedges)
             ;
 
         class_<NonbondedInfo>("NonbondedInfo", no_init)

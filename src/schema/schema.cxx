@@ -3,7 +3,7 @@
 #include <fastjson/print.hxx>
 
 using namespace desres::msys;
-using desres::fastjson::Json;
+using desres::msys::fastjson::Json;
 
 static char schemas_as_json[] = "["
     "[ \"angle_harm\",   \"bond\", 3, [\"theta0\", \"fc\"], [[\"constrained\", 0]]],"
@@ -84,9 +84,9 @@ namespace {
     struct _ {
         _() {
             std::istringstream in(schemas_as_json);
-            desres::fastjson::parse_json(in, schemas);
+            desres::msys::fastjson::parse_json(in, schemas);
             std::istringstream nb(schemas_nb_as_json);
-            desres::fastjson::parse_json(nb, schemas_nb);
+            desres::msys::fastjson::parse_json(nb, schemas_nb);
         }
     } initializer;
 

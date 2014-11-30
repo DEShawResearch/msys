@@ -2,8 +2,7 @@
 #include <fastjson/print.hxx>
 
 using namespace desres::msys;
-using desres::fastjson::Json;
-using desres::fastjson::Json;
+using desres::msys::fastjson::Json;
 
 namespace {
     void process_particles(SystemPtr sys, Json& js) {

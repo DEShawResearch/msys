@@ -10,7 +10,7 @@
 #include <cstdio>
 #include <fstream>
 
-using desres::fastjson::Json;
+using desres::msys::fastjson::Json;
 using namespace desres::msys;
 
 namespace {

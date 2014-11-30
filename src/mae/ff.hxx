@@ -11,7 +11,7 @@
 
 using namespace desres::msys;
 using namespace desres::msys::mae;
-using desres::fastjson::Json;
+using desres::msys::fastjson::Json;
 
 #define FFIO_ERROR( x ) do { \
     std::stringstream ss; \
@@ -20,8 +20,6 @@ using desres::fastjson::Json;
 } while (0)
 
 namespace desres { namespace msys { namespace mae { 
-
-    using desres::fastjson::Json;
 
     struct Ffio {
         virtual ~Ffio() {}

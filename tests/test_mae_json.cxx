@@ -3,7 +3,7 @@
 #include <fstream>
 
 using namespace desres::msys;
-using desres::fastjson::Json;
+using desres::msys::fastjson::Json;
 
 int main(int argc, char *argv[]) {
     for (int i=1; i<argc; i++) {

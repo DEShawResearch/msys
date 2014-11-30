@@ -8,7 +8,7 @@
 
 using namespace desres::msys;
 using boost::format;
-using desres::fastjson::floatify;
+using desres::msys::fastjson::floatify;
 
 static void export_ct(SystemPtr mol, Id ct, std::ostream& out) {
 

@@ -1,0 +1,36 @@
+  Release Notes:
+    1.5.1 Expose floatify function in C API.
+
+    1.5.0 Support shell-style comments in input.
+
+    1.4.8 Also build static library.
+
+    1.4.7 Use gcc/4.7.2-24A
+
+    1.4.6 Portability.
+
+    1.4.5 Don't leak memory on parse errors (DESRESCode#1325).
+
+    1.4.4 Build as shared library.
+
+    1.4.3 option for more compact representation from print_json 
+          (via newlines=" " and indent="")
+
+    1.4.2 Don't go into an infinite loop when passed a directory path
+
+    1.4.1 Write integral floats as "3.0" and not "3.".
+
+    1.4.0 Fix some decimal-to-ascii errors (would crash on abs(x)<=0.1,
+          not produce incorrect results).
+
+    1 3.1 Use decimal-to-ascii conversion from the v8 javascript library.
+          
+    1.2.0 Much improvement to json printing to handle embedded quotes
+          and control characters, preserve the type of floats with no
+          decimal part, and provide sufficient precision for floats.
+
+    1.1.0 Replaced operator bool() with operator! and Json::valid().
+          Added Json::equals().
+
+    1.0.1 Added Json::copy()
+    1.0.0 Initial release.

@@ -17,8 +17,6 @@ GCC=gcc/4.7.2-23A
 BOOST=boost/1_51_0-30A
 PYTHON=Python/2.7.3-07A
 SQLITE=sqlite/3.6.23.1-02A
-JSON=fastjson/1.5.1
-PFX=pfx/1.1.2
 NUMPY=numpy/1.6.2-33A
 LPSOLVE=lp_solve/5.5.2.0-04A
 PRIMEGEN=primegen/0.97-05
@@ -42,7 +40,6 @@ loadmodules() {
         $SCONSUTILS/lib-python \
         $BOOST/Release/lib \
         $SQLITE/lib \
-        $JSON/lib \
         $PFX/lib \
         $LPSOLVE/lib \
         $PRIMEGEN/lib \

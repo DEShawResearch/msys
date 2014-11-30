@@ -5,8 +5,8 @@
 
 using namespace boost::python;
 
-typedef desres::pfx::Pfx pfx_t;
-typedef desres::pfx::Graph graph_t;
+typedef desres::msys::pfx::Pfx pfx_t;
+typedef desres::msys::pfx::Graph graph_t;
 
 typedef struct {
     PyObject_HEAD
@@ -385,7 +385,7 @@ static PyObject* wrap_svd(PyObject* self, PyObject* args, PyObject* kwds) {
     }
     
     memcpy(u,PyArray_DATA(Aarr), sizeof(u));
-    desres::pfx::svd_3x3(u,w,v);
+    desres::msys::pfx::svd_3x3(u,w,v);
     Py_DECREF(Aarr);
 
     result = PyTuple_New(3);
@@ -444,7 +444,7 @@ PyObject* wrap_aligned_rmsd(PyObject* self, PyObject* args, PyObject* kwds) {
     const double* X = (double *)PyArray_DATA(Xarr);
     const double* Y = (double *)PyArray_DATA(Yarr);
     double* mat = (double *)PyArray_DATA(Marr);
-    double rmsd = desres::pfx::compute_alignment(n, NULL, X, Y, mat);
+    double rmsd = desres::msys::pfx::compute_alignment(n, NULL, X, Y, mat);
     Py_DECREF(Xarr);
     Py_DECREF(Yarr);
     PyObject* obj = Py_BuildValue("(O,d)", Marr, rmsd);
