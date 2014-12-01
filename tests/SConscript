@@ -1,9 +1,8 @@
-Import('env')
+Import('msysenv')
 Import('libmsys')
 
-env=env.Clone()
-env.Prepend(CPPPATH=['../src'], LIBS=[libmsys])
-
+env=msysenv.Clone()
+env.Prepend(LIBS=[libmsys])
 
 for p in Glob('test_*.cxx'):
     env.AddUnitTest(p.name[:-4],p.name)

@@ -2,15 +2,21 @@ Import('env')
 env=env.Clone()
 
 opts=Variables()
-opts.Add("MSYS_WITHOUT_MAE", "without mae file support?")
 opts.Add("MSYS_WITHOUT_LPSOLVE", "without lpsolve support?")
 opts.Add("MSYS_WITHOUT_INCHI", "without compiled-in inchi support?")
+opts.Add("MSYS_BOOST_SUFFIX", "suffix for boost libraries (e.g. -mt)")
 opts.Update(env)
 
-env.Append(LIBS=[
-    'boost_iostreams', 'boost_filesystem', 'boost_system', 'boost_thread',
-    'boost_regex'])
+bsx=env.get('MSYS_BOOST_SUFFIX', '')
+boost_libs=[(x+bsx) for x in ( 
+    'boost_iostreams', 'boost_filesystem', 'boost_system', 
+    'boost_thread', 'boost_regex')]
+env.Append(LIBS=boost_libs)
+env.AppendUnique(LIBS=['sqlite3', 'z'])
 env.Append(CPPPATH=['$OBJDIR/src'])
+
+msysenv=env
+Export('msysenv')
 
 def build_version_hxx( target, source, env ):
     import os
@@ -37,7 +43,9 @@ def build_version_hxx( target, source, env ):
 
 env.Command('version.hxx', 'version.py', build_version_hxx )
 
-selobjs = env.AddObject(Split('''
+selenv = env.Clone()
+selenv.Append(CPPDEFINES='YY_NO_INPUT')
+selobjs = selenv.AddObject(Split('''
 atomsel.cxx
 atomsel/expression.cxx
 atomsel/keyword.cxx
@@ -51,11 +59,56 @@ atomsel/parser.cxx
 atomsel/within_predicate.cxx
 '''))
 
-if env.get("MSYS_WITHOUT_MAE"):
-    maeenv=env.Clone()
-    maeobjs=maeenv.AddObject('mae/stub.cxx')
+if env.get('MSYS_WITHOUT_LPSOLVE'):
+    lpenv=env.Clone()
+    lpenv.Append(CPPDEFINES=['MSYS_WITHOUT_LPSOLVE'])
+    lpobjs=lpenv.AddObject(['analyze.cxx'])
 else:
-    maeobjs=env.AddObject(Split('''
+    lpobjs=env.AddObject(Split('''
+analyze.cxx
+analyze/bond_orders.cxx
+analyze/topological_ids.cxx
+'''))
+
+if env.get("MSYS_WITHOUT_INCHI"):
+    inchienv = env.Clone()
+    inchienv.Append(CPPDEFINES='MSYS_WITHOUT_INCHI'.split())
+    inchi = inchienv.AddObject('inchi.cxx')
+else:
+    inchi = env.AddObject('inchi.cxx')
+
+libmsys=env.AddLibrary('msys', selobjs + lpobjs + [inchi] + Split('''
+alchemical.cxx
+
+analyze/eigensystem.cxx
+analyze/get_fragments.cxx
+
+amber/import_crd.cxx
+amber/import_prmtop.cxx
+
+dms/dms.cxx
+dms/export_dms.cxx
+dms/import_dms.cxx
+
+fastjson/json.cxx
+fastjson/JSON_parser.c
+fastjson/parse.cxx
+fastjson/print.cxx
+
+fastjson/dtoa/bignum.cc         
+fastjson/dtoa/diy-fp.cc     
+fastjson/dtoa/fixed-dtoa.cc
+fastjson/dtoa/bignum-dtoa.cc    
+fastjson/dtoa/dtoa.cc
+fastjson/dtoa/cached-powers.cc  
+fastjson/dtoa/fast-dtoa.cc
+
+elements.cxx
+geom.cxx
+
+io.cxx
+istream.cxx
+
 mae/ff.cxx
 mae/export_mae.cxx
 mae/import_mae.cxx
@@ -90,57 +143,6 @@ mae/destro/Maeff.cxx
 mae/destro/prep_alchemical_mae.cxx
 mae/destro/Tokenizer.cxx
 mae/destro/Zing.cxx
-'''))
-
-if env.get('MSYS_WITHOUT_LPSOLVE'):
-    lpenv=env.Clone()
-    lpenv.Append(CPPDEFINES=['MSYS_WITHOUT_LPSOLVE'])
-    lpobjs=lpenv.AddObject(['analyze.cxx'])
-else:
-    lpobjs=env.AddObject(Split('''
-analyze.cxx
-analyze/bond_orders.cxx
-analyze/topological_ids.cxx
-'''))
-
-if env.get("MSYS_WITHOUT_INCHI"):
-    inchienv = env.Clone()
-    inchienv.Append(CPPDEFINES='MSYS_WITHOUT_INCHI'.split())
-    inchi = inchienv.AddObject('inchi.cxx')
-else:
-    inchi = env.AddObject('inchi.cxx')
-
-libmsys=env.AddLibrary('msys', selobjs + maeobjs + lpobjs + [inchi] + Split('''
-alchemical.cxx
-
-analyze/eigensystem.cxx
-analyze/get_fragments.cxx
-
-amber/import_crd.cxx
-amber/import_prmtop.cxx
-
-dms/dms.cxx
-dms/export_dms.cxx
-dms/import_dms.cxx
-
-fastjson/json.cxx
-fastjson/JSON_parser.c
-fastjson/parse.cxx
-fastjson/print.cxx
-
-fastjson/dtoa/bignum.cc         
-fastjson/dtoa/diy-fp.cc     
-fastjson/dtoa/fixed-dtoa.cc
-fastjson/dtoa/bignum-dtoa.cc    
-fastjson/dtoa/dtoa.cc
-fastjson/dtoa/cached-powers.cc  
-fastjson/dtoa/fast-dtoa.cc
-
-elements.cxx
-geom.cxx
-
-io.cxx
-istream.cxx
 
 mol2/assign.cxx
 mol2/export.cxx
