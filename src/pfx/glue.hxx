@@ -2,6 +2,7 @@
 #define desres_pfx_glue_hxx
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <algorithm>
 
 namespace desres { namespace msys { namespace pfx {

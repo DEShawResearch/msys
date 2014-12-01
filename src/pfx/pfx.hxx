@@ -70,13 +70,9 @@ namespace desres { namespace msys { namespace pfx {
                 c[0] *= s;
                 c[1] *= s;
                 c[2] *= s;
-                //printf("frag %u size %u center %f %f %f\n", 
-                        //i, sz, c[0], c[1], c[2]);
                 
                 // compute shift for wrapping
                 wrap_vector(cell, proj, c);
-
-                //printf("  shift %f %f %f\n", c[0], c[1], c[2]);
 
                 // apply shift to fragment
                 for (unsigned j=0; j<sz; j++) {
@@ -106,7 +102,6 @@ namespace desres { namespace msys { namespace pfx {
 
         // Specify atoms to be wrapped as a single fragment.
         void glue(unsigned n, const unsigned* atoms) {
-            printf("adding glue of size %u\n", n);
             _glue.push_back(Glue(_comps, _sizes, n, atoms));
         }
 
