@@ -50,6 +50,9 @@ namespace desres { namespace msys {
     
         void assign(uint32_t v){ fromInt(v); }
         void assign(short v)   { fromInt(v); }
+#ifdef __clang__
+        void assign(long v)    { fromInt(v); }
+#endif
         void assign(int32_t v) { fromInt(v); }
         void assign(int64_t v) { fromInt(v); }
     
