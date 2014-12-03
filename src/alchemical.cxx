@@ -34,6 +34,14 @@ namespace {
 
     TermTablePtr copy_table_template(SystemPtr mol, TermTablePtr B) {
         TermTablePtr A = mol->addTable(B->name(), B->atomCount());
+        if (A->category == NO_CATEGORY) {
+            A->category = B->category;
+        } else if (A->category != B->category) {
+            MSYS_FAIL("Table " << A->name() << 
+                    " has different category in A state (" << 
+                    print(A->category) << " ) than in B state (" << 
+                    print(B->category) << ")");
+        }
         ParamTablePtr ap = A->params();
         ParamTablePtr bp = B->params();
         for (Id i=0; i<bp->propCount(); i++) {
