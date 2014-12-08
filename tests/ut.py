@@ -24,9 +24,22 @@ def vsize():
     return int(s)
 
 class TestPropmap(unittest.TestCase):
+
+    TABLE_NAME = 'stretch_harm'
+
+    def addprops(self, p):
+        p['s']="32"
+        p['i']=-425
+        p['f']=1.5
+
+    def checkprops(self, p):
+        self.assertEqual(type(p['s']), str)
+        self.assertEqual(type(p['i']), int)
+        self.assertEqual(type(p['f']), float)
+    
     def setUp(self):
-        m=msys.CreateSystem()
-        self.table=m.addTableFromSchema('stretch_harm')
+        self.m=msys.CreateSystem()
+        self.table=self.m.addTableFromSchema(self.TABLE_NAME)
 
     def testKeys(self):
         p=self.table.props
@@ -38,12 +51,37 @@ class TestPropmap(unittest.TestCase):
 
     def testTypes(self):
         p=self.table.props
-        p['s']="32"
-        p['i']=-425
-        p['f']=1.5
-        self.assertEqual(type(p['s']), str)
-        self.assertEqual(type(p['i']), int)
-        self.assertEqual(type(p['f']), float)
+        self.addprops(p)
+        self.checkprops(p)
+
+    def testChangeType(self):
+        p=self.table.props
+        p['foo']=32
+        self.assertEqual(p['foo'], 32)
+        p['foo']=32.1
+        self.assertEqual(p['foo'], 32.1)
+        p['foo']="32.1"
+        self.assertEqual(p['foo'], "32.1")
+        p['foo']=32
+        self.assertEqual(p['foo'], 32)
+
+    def testDms(self):
+        p=self.table.props
+        mol=self.table.system
+        mol.addAtom().atomic_number=8
+        mol.addAtom().atomic_number=1
+        mol.addAtom().atomic_number=1
+        param=self.table.params.addParam()
+        self.table.addTerm([mol.atom(0), mol.atom(1)], param)
+        self.table.addTerm([mol.atom(0), mol.atom(2)], param)
+
+        self.addprops(p)
+        self.checkprops(p)
+        with tempfile.NamedTemporaryFile(dir='/tmp', suffix='.dms') as tmp:
+            msys.Save(mol, tmp.name)
+            mol2=msys.Load(tmp.name)
+            table = mol2.table(self.TABLE_NAME)
+            self.checkprops(table.props)
 
 
 

@@ -15,9 +15,9 @@ residue.cxx
 chain.cxx
 override.cxx
 param.cxx
-propmap.cxx
 system.cxx
 term.cxx
+variant.cxx
 vector.cxx
 io.cxx
 graph.cxx

@@ -437,6 +437,26 @@ static void export_nonbonded( TermTablePtr table, const IdList& map, Sqlite dms)
     }
 }
 
+namespace {
+    class prop_visitor : public boost::static_visitor<> {
+        Writer& w;
+    public:
+        explicit prop_visitor(Writer& w) : w(w) {}
+        void operator()(Int& v) const { 
+            w.bind_int(2,IntType);
+            w.bind_int(3,v);
+        }
+        void operator()(Float& v) const {
+            w.bind_int(2,FloatType);
+            w.bind_flt(3,v);
+        }
+        void operator()(String& v) const {
+            w.bind_int(2,StringType);
+            w.bind_str(3,v);
+        }
+    };
+}
+
 static void export_tables( const System& sys, const IdList& map, Sqlite dms) {
     dms.exec( "create table bond_term (name text)");
     dms.exec( "create table constraint_term (name text)");
@@ -462,17 +482,18 @@ static void export_tables( const System& sys, const IdList& map, Sqlite dms) {
             export_view(table, name, dms);
             export_meta(table, name, dms);
         }
-        PropertyMap& map = table->tableProps();
+        VariantMap& map = table->tableProps();
         if (!map.empty()) {
             if (!have_props) {
-                dms.exec("create table msys_table_properties(name text,key text,value text");
+                dms.exec("create table msys_table_properties(name text,key text,type int, value text)");
                 have_props=true;
             }
             Writer w = dms.insert("msys_table_properties");
             w.bind_str(0,name.c_str());
-            BOOST_FOREACH(String const& key, map.keys()) {
-                w.bind_str(1,key.c_str());
-                write(map.get(key), 2, w);
+            BOOST_FOREACH(VariantMap::value_type keyval, map) {
+                w.bind_str(1,keyval.first.c_str());
+                boost::apply_visitor(prop_visitor(w), keyval.second);
+                w.next();
             }
         }
     }

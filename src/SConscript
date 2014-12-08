@@ -166,7 +166,6 @@ clone.cxx
 graph.cxx
 override.cxx
 param_table.cxx
-propmap.cxx
 provenance.cxx
 smarts.cxx
 analyze/sssr.cxx

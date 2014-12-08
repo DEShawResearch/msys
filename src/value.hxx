@@ -2,6 +2,8 @@
 #define mol_value_hxx
 
 #include "types.hxx"
+#include <map>
+#include <boost/variant/variant.hpp>
 
 namespace desres { namespace msys {
 
@@ -16,6 +18,9 @@ namespace desres { namespace msys {
         Float   f;
         char *  s;
     };
+
+    typedef boost::variant<Int,Float,String> Variant;
+    typedef std::map<String,Variant> VariantMap;
     
     struct ValueCallback {
         /* let holders of the values know about mutations.  This interface
