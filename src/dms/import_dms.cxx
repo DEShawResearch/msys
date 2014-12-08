@@ -233,6 +233,24 @@ static void read_metatables(Sqlite dms, const IdList& gidmap, System& sys,
             read_table( dms, gidmap, sys, category, table, known );
         }
     }
+
+    std::string proptable = "msys_table_properties";
+    if (dms.has(proptable)) {
+        Reader r = dms.fetch(proptable);
+        for (; r; r.next()) {
+            const char* name = r.get_str(0);
+            TermTablePtr table = sys.table(name);
+            if (!table) continue;
+            PropertyMap& map = table->tableProps();
+            ValueRef v = map.add(r.get_str(1), r.current_type(2));
+            switch (v.type()) {
+                case IntType:   v = r.get_int(2); break;
+                case FloatType: v = r.get_flt(2); break;
+                case StringType:v = r.get_str(2); break;
+                default:;
+            }
+        }
+    }
 }
 
 static void 

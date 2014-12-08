@@ -443,6 +443,7 @@ static void export_tables( const System& sys, const IdList& map, Sqlite dms) {
     dms.exec( "create table virtual_term (name text)");
     dms.exec( "create table polar_term (name text)");
     std::vector<String> tables = sys.tableNames();
+    bool have_props=false;
     for (unsigned i=0; i<tables.size(); i++) {
         const std::string& name = tables[i];
         TermTablePtr table = sys.table(name);
@@ -460,6 +461,19 @@ static void export_tables( const System& sys, const IdList& map, Sqlite dms) {
             export_params(table->params(), name+"_param", dms);
             export_view(table, name, dms);
             export_meta(table, name, dms);
+        }
+        PropertyMap& map = table->tableProps();
+        if (!map.empty()) {
+            if (!have_props) {
+                dms.exec("create table msys_table_properties(name text,key text,value text");
+                have_props=true;
+            }
+            Writer w = dms.insert("msys_table_properties");
+            w.bind_str(0,name.c_str());
+            BOOST_FOREACH(String const& key, map.keys()) {
+                w.bind_str(1,key.c_str());
+                write(map.get(key), 2, w);
+            }
         }
     }
 }

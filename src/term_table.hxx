@@ -1,7 +1,7 @@
 #ifndef desres_msys_term_table_hxx
 #define desres_msys_term_table_hxx
 
-#include "types.hxx"
+#include "propmap.hxx"
 #include "param_table.hxx"
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/foreach.hpp>
@@ -70,6 +70,9 @@ namespace desres { namespace msys {
          * delTerm if an index has already been created.  */
         void update_index();
 
+        /* table properties */
+        PropertyMap _tableprops;
+
     public:
         TermTable( SystemPtr system, Id natoms, 
                    ParamTablePtr ptr = ParamTablePtr() );
@@ -86,6 +89,10 @@ namespace desres { namespace msys {
 
         /* name of this table in the parent system */
         String name() const;
+
+        /* table properties */
+        PropertyMap&       tableProps()        { return _tableprops; }
+        PropertyMap const& tableProps() const  { return _tableprops; }
 
         /* rename table */
         void rename(String const& name);
