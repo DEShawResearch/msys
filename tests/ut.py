@@ -23,6 +23,29 @@ def vsize():
     s=os.popen(cmd).read()
     return int(s)
 
+class TestPropmap(unittest.TestCase):
+    def setUp(self):
+        m=msys.CreateSystem()
+        self.table=m.addTableFromSchema('stretch_harm')
+
+    def testKeys(self):
+        p=self.table.props
+        self.assertEqual(p.keys(), [])
+        p['foo']=1
+        self.assertEqual(p.keys(), ['foo'])
+        del p['foo']
+        self.assertEqual(p.keys(), [])
+
+    def testTypes(self):
+        p=self.table.props
+        p['s']="32"
+        p['i']=-425
+        p['f']=1.5
+        self.assertEqual(type(p['s']), str)
+        self.assertEqual(type(p['i']), int)
+        self.assertEqual(type(p['f']), float)
+
+
 
 class TestSpatialHash(unittest.TestCase):
     def testNearest(self):

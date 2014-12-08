@@ -91,8 +91,7 @@ namespace desres { namespace msys {
         String name() const;
 
         /* table properties */
-        PropertyMap&       tableProps()        { return _tableprops; }
-        PropertyMap const& tableProps() const  { return _tableprops; }
+        PropertyMap& tableProps() { return _tableprops; }
 
         /* rename table */
         void rename(String const& name);

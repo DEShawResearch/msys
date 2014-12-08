@@ -82,6 +82,9 @@ namespace desres { namespace msys {
             .def("param",       &TermTable::param)
             .def("setParam",    set_param)
 
+            /* Table properties */
+            .def("tableProps",  &TermTable::tableProps, return_ptr())
+
             /* param properties */
             .def("getProp",     get_prop)
             .def("setProp",     set_prop)

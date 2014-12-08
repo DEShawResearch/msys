@@ -15,6 +15,7 @@ residue.cxx
 chain.cxx
 override.cxx
 param.cxx
+propmap.cxx
 system.cxx
 term.cxx
 vector.cxx

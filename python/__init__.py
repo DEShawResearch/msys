@@ -372,6 +372,22 @@ class Ct(Handle):
         except KeyError:
             return d
 
+class PropertyMap(object):
+    def __init__(self, ptr):
+        self._ptr = ptr
+
+    def keys(self):
+        return self._ptr.keys()
+
+    def __getitem__(self, key):
+        return self._ptr.get(str(key))
+
+    def __setitem__(self, key, val):
+        self._ptr.set(str(key), type(val), val)
+
+    def __delitem__(self, key):
+        self._ptr._del(str(key))
+
 
 class Param(Handle):
     __slots__=()
@@ -603,6 +619,11 @@ class TermTable(object):
         of the distinct set of Params used by those Terms.
         '''
         self._ptr.coalesce()
+
+    @property
+    def props(self):
+        ''' Table properties '''
+        return PropertyMap(self._ptr.tableProps())
 
     @property
     def name(self):

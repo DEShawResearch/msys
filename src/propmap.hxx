@@ -22,20 +22,18 @@ namespace desres { namespace msys {
         /* list of keys */
         std::vector<String> keys() const;
 
-        /* type for given key */
-        ValueType type(String const& key) const;
-
         /* is key present? */
         bool has(String const& key) const;
 
-        /* add a property with a given type */
-        ValueRef add(String const& key, ValueType type);
+        /* get value for read, or change value without changing type */
+        ValueRef get(String const& key);
+
+        /* add a property with a given type, or change type  */
+        ValueRef set(String const& key, ValueType type);
 
         /* remove a property.  Exception if missing */
         void del(String const& key);
 
-        /* get value for read/write */
-        ValueRef get(String const& key);
     };
 }}
 

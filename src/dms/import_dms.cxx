@@ -242,7 +242,7 @@ static void read_metatables(Sqlite dms, const IdList& gidmap, System& sys,
             TermTablePtr table = sys.table(name);
             if (!table) continue;
             PropertyMap& map = table->tableProps();
-            ValueRef v = map.add(r.get_str(1), r.current_type(2));
+            ValueRef v = map.set(r.get_str(1), r.current_type(2));
             switch (v.type()) {
                 case IntType:   v = r.get_int(2); break;
                 case FloatType: v = r.get_flt(2); break;
