@@ -139,6 +139,10 @@ static IdList build_m_atom( SystemPtr mol, Destro& M ) {
         }
         if(mmod_id!=BadId) {
             mmod=mol->atomPropValue(id,mmod_id).asInt();
+            if (mmod==0) {
+                mmod=64;
+                color=2;
+            }
         }
         const residue_t& res = mol->residue(atm.residue);
         const chain_t& chn = mol->chain(res.chain);
