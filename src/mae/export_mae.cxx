@@ -137,13 +137,12 @@ static IdList build_m_atom( SystemPtr mol, Destro& M ) {
             case 19: color=4;  mmod=67; break;  // K+ ion
             case 20: color=4;  mmod=70; break;  // Ca2+ ion
         }
+        /* override with atom property unless it's zero, indicating unset */
         if(mmod_id!=BadId) {
-            mmod=mol->atomPropValue(id,mmod_id).asInt();
-            if (mmod==0) {
-                mmod=64;
-                color=2;
-            }
+            int tmp_mmod=mol->atomPropValue(id,mmod_id).asInt();
+            if (tmp_mmod!=0) mmod = tmp_mmod;
         }
+
         const residue_t& res = mol->residue(atm.residue);
         const chain_t& chn = mol->chain(res.chain);
 
