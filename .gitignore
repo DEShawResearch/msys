@@ -1,2 +1,4 @@
 objs
+*.dms
+/doc/build/
 

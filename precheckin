@@ -1,3 +1,20 @@
 #!/bin/sh
-# FIXME: Do something useful here
-exit 0
+
+set -e
+
+eval "$(garden-exec)"
+
+unset DESRES_PERSONAL_ROOT
+TEMP_ENTRYPOINT="$(mktemp -d)"
+trap 'rm -rf "$TEMP_ENTRYPOINT"' EXIT
+
+garden create --search-first=self $TEMP_ENTRYPOINT
+unset DESRES_PERSONAL_ROOT
+garden use $TEMP_ENTRYPOINT
+
+garden install .
+
+echo 'Package seems to work fine. Listing temporary garden:'
+find $(readlink -f "$TEMP_ENTRYPOINT" ) -ls
+
+echo "ALL OK"
