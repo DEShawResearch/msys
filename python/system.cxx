@@ -88,7 +88,9 @@ namespace {
         std::vector<char *> argv;
         for (int i=0; i<argc; i++) {
             strings.push_back(extract<std::string>(o[i]));
-            argv.push_back(const_cast<char *>(strings.back().c_str()));
+        }
+        for (int i=0; i<argc; i++) {
+            argv.push_back(const_cast<char *>(strings[i].c_str()));
         }
         return Provenance::fromArgs(argc, &argv[0]);
     }
