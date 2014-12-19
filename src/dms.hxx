@@ -13,17 +13,19 @@ namespace desres { namespace msys {
     SystemPtr ImportDMSFromBytes( const char* bytes, int64_t len,
                                   bool structure_only=false);
 
-    /* return a hash of the contents of the dms file, or empty string if
+    /* Return a hash of the contents of the dms file, or empty string if
      * the dms file does not contain hash information.  
      *
-     *  The hash excludes provenance and dms_version, in order to avoid
-     *  spurious change to the hash value resulting from simply reading the
-     *  file in and writing it back out again with no change.
+     * The hash excludes provenance and dms_version, in order to avoid
+     * spurious change to the hash value resulting from simply reading the
+     * file in and writing it back out again with no change.
      *
-     *  Note: a structure-only hash might be useful as well; however, some
-     *  thought should be given as to whether it ought to be a simply hash
-     *  of just the particle and bond tables, or else a hash of a 
-     *  canonicalized representation of the structure, like the InChI key.
+     * Unfortunately and unavoidably, the hash is sqlite version dependent.
+     *
+     * Note: a structure-only hash might be useful as well; however, some
+     * thought should be given as to whether it ought to be a simply hash
+     * of just the particle and bond tables, or else a hash of a 
+     * canonicalized representation of the structure, like the InChI key.
      */
     String HashDMS(String const& path);
 
