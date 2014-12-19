@@ -12,7 +12,7 @@ boost_libs=[(x+bsx) for x in (
     'boost_iostreams', 'boost_filesystem', 'boost_system', 
     'boost_thread', 'boost_regex')]
 env.Append(LIBS=boost_libs)
-env.AppendUnique(LIBS=['sqlite3', 'z'])
+env.AppendUnique(LIBS=['sqlite3', 'z', 'ssl'])
 env.Append(CPPPATH=['$OBJDIR/src'])
 
 msysenv=env

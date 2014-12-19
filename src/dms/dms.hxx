@@ -7,14 +7,12 @@
 struct sqlite3;
 struct sqlite3_stmt;
 
-namespace {
-    struct dms_file;
-};
 
 namespace desres { namespace msys {
 
     class Reader;
     class Writer;
+    struct dms_file;
 
     class Sqlite {
         boost::shared_ptr<sqlite3> _db;

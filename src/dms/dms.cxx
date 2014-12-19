@@ -43,13 +43,15 @@ static char* hex2ascii(const unsigned char hex[20], char buf[41]) {
 using namespace desres::msys;
 namespace bio = boost::iostreams;
 
-namespace {
+namespace desres { namespace msys {
     struct dms_file : sqlite3_file {
         char * contents;
         sqlite3_int64 size;
         char * path;
     };
+}}
 
+namespace {
     /* sqlite seems to ignore the return value from this function!  Hence
      * we throw an exception on I/O error */
     int dms_xClose(sqlite3_file *file) {
@@ -367,7 +369,7 @@ std::string Sqlite::hash() const {
         CC_SHA1(_file->contents, _file->size, md_value);
 #else
         unsigned char md_value[SHA_DIGEST_LENGTH];
-        SHA1(   _file->contents, _file->size, md_value);
+        SHA1((unsigned char*)_file->contents, _file->size, md_value);
 #endif
         char buf[41];
         return hex2ascii(md_value, buf);
