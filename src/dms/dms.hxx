@@ -7,6 +7,10 @@
 struct sqlite3;
 struct sqlite3_stmt;
 
+namespace {
+    struct dms_file;
+};
+
 namespace desres { namespace msys {
 
     class Reader;
@@ -14,20 +18,24 @@ namespace desres { namespace msys {
 
     class Sqlite {
         boost::shared_ptr<sqlite3> _db;
+        dms_file* _file;
 
         const char* errmsg() const;
 
     public:
-        Sqlite() {}
+        Sqlite() : _file() {}
 
         Sqlite(boost::shared_ptr<sqlite3> db)
-        : _db(db) {}
+        : _db(db), _file() {}
 
         static Sqlite read(std::string const& path);
         static Sqlite read_bytes(const char* bytes, int64_t len);
         static Sqlite write(std::string const& path, bool unbuffered = false);
 
         void exec(std::string const& sql);
+
+        /* compute hash based on current contents and insert into file */
+        std::string hash() const;
 
         bool has(std::string const& table) const;
         int size(std::string const& table) const;

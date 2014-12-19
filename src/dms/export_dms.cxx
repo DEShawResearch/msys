@@ -587,6 +587,14 @@ static IdList map_gids(System const& sys) {
     return ids;
 }
 
+static void export_hash(Sqlite dms) {
+    std::string hash = dms.hash();
+    dms.exec("create table msys_hash(sha1 text)");
+    Writer w = dms.insert("msys_hash");
+    w.bind_str(0, hash.data());
+    w.next();
+}
+
 static void export_dms(SystemPtr h, Sqlite dms, Provenance const& provenance,
                        unsigned flags) {
     System& sys = *h;
@@ -600,6 +608,8 @@ static void export_dms(SystemPtr h, Sqlite dms, Provenance const& provenance,
         export_aux(      sys,            dms);
         export_nbinfo(   sys,            dms);
     }
+
+    export_hash(dms);
     export_provenance(sys,provenance,dms);
     export_version(                  dms);
 }
