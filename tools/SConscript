@@ -1,7 +1,7 @@
-Import('env')
+Import('msysenv')
 Import('libmsys')
 
-env=env.Clone()
+env=msysenv.Clone()
 env.Prepend(CPPPATH=['../src'], LIBS=['msys'])
 
 # converters
