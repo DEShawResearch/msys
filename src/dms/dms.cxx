@@ -25,7 +25,7 @@
 #ifdef __APPLE__
 #include <CommonCrypto/CommonDigest.h>
 #else
-#include <openssl/evp.h>
+#include <openssl/sha.h>
 #endif
 
 static char* hex2ascii(const unsigned char hex[20], char buf[41]) {
@@ -366,15 +366,8 @@ std::string Sqlite::hash() const {
         unsigned char md_value[CC_SHA1_DIGEST_LENGTH];
         CC_SHA1(_file->contents, _file->size, md_value);
 #else
-        unsigned char md_value[EVP_MAX_MD_SIZE];
-        int md_len=0;
-        EVP_MD_CTX ctx;
-
-        const EVP_MD *md = EVP_sha1();
-        EVP_DigestInit_ex(&ctx, md, NULL);
-        EVP_DigestUpdate( &ctx, _file->contents, _file->size);
-        EVP_DigestFinal_ex(&ctx,md_value, &md_len);
-        EVP_MD_CTX_cleanup(&ctx);
+        unsigned char md_value[SHA_DIGEST_LENGTH];
+        SHA1(   _file->contents, _file->size, md_value);
 #endif
         char buf[41];
         return hex2ascii(md_value, buf);
