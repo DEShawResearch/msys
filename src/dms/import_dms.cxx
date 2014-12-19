@@ -541,6 +541,7 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
     KnownSet known;
     known.insert("particle");
     known.insert("bond");
+    known.insert("msys_hash");
     
     check_dms_version(dms, known);
 

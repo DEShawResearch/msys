@@ -1,10 +1,13 @@
-Import('env')
+Import('msysenv')
 Import('libmsys')
 
-env=env.Clone()
+env=msysenv.Clone()
 env.Append( 
         CPPPATH=['../src'],
         LIBS=['msys', 'boost_python$BOOST_SUFFIX'] )
+
+if env['PLATFORM']=='darwin':
+    env.Append(CCFLAGS='-Wno-error')
 
 pymodfiles='''
 analyze.cxx

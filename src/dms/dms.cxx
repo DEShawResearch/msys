@@ -22,6 +22,24 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#ifdef __APPLE__
+#include <CommonCrypto/CommonDigest.h>
+#else
+#include <openssl/sha.h>
+#endif
+
+static char* hex2ascii(const unsigned char hex[20], char buf[41]) {
+    char* ptr = buf;
+    static const char a[] = "0123456789abcdef";
+    for (int i=0; i<20; i++) {
+        unsigned char c=hex[i];
+        *ptr++ = a[c/16];
+        *ptr++ = a[c%16];
+    }
+    *ptr++ = '\0';
+    return buf;
+}
+
 using namespace desres::msys;
 namespace bio = boost::iostreams;
 
@@ -141,6 +159,7 @@ namespace {
     // static variables for passing buffer through the open call
     char *g_tmpbuf = NULL;
     sqlite3_int64 g_tmpsize = -1;
+    dms_file *g_dms_file = NULL;
     // mutex protecting g_tmpbuf and g_tmpsize
     boost::mutex sqlite_open_mutex;
 
@@ -186,6 +205,7 @@ namespace {
             dms->pMethods = &iomethods;
             dms->path = NULL;
             if (flags & SQLITE_OPEN_CREATE) {
+                g_dms_file = dms;
                 dms->contents = NULL;
                 dms->size = 0;
                 if (flags & SQLITE_OPEN_MAIN_DB) {
@@ -235,9 +255,15 @@ const char* Sqlite::errmsg() const {
     return sqlite3_errmsg(_db.get());
 }
 
-Sqlite Sqlite::read(std::string const& path)  {
+Sqlite Sqlite::read(std::string const& path, bool unbuffered)  {
 
     sqlite3* db;
+    if (unbuffered) {
+        int rc = sqlite3_open_v2( path.data(), &db, SQLITE_OPEN_READONLY, NULL);
+        if (rc!=SQLITE_OK) MSYS_FAIL(sqlite3_errmsg(db));
+        return boost::shared_ptr<sqlite3>(db, close_db);
+    }
+
     sqlite3_vfs_register(vfs, 0);
 
     int fd=open(path.c_str(), O_RDONLY);
@@ -322,11 +348,31 @@ Sqlite Sqlite::write(std::string const& path, bool unbuffered) {
     sqlite3* db;
     sqlite3_vfs_register(vfs, 0);
 
+    boost::mutex::scoped_lock lock(sqlite_open_mutex);
+
     int rc = sqlite3_open_v2(path.c_str(), &db, 
             SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, 
             unbuffered ? NULL : vfs->zName);
     if (rc!=SQLITE_OK) MSYS_FAIL(sqlite3_errmsg(db));
-    return boost::shared_ptr<sqlite3>(db, close_db);
+
+    Sqlite result(boost::shared_ptr<sqlite3>(db, close_db));
+    if (!unbuffered) result._file = g_dms_file;
+    return result;
+}
+
+std::string Sqlite::hash() const {
+    if (_file) {
+#ifdef __APPLE__
+        unsigned char md_value[CC_SHA1_DIGEST_LENGTH];
+        CC_SHA1(_file->contents, _file->size, md_value);
+#else
+        unsigned char md_value[SHA_DIGEST_LENGTH];
+        SHA1(   _file->contents, _file->size, md_value);
+#endif
+        char buf[41];
+        return hex2ascii(md_value, buf);
+    }
+    return "";
 }
 
 void Sqlite::exec(std::string const& sql) {
