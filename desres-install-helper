@@ -15,6 +15,7 @@ DESCRIPTION="Biomolecular Structure Library"
 # shared library dependencies
 GCC=gcc/4.7.2-23A
 BOOST=boost/1_51_0-30A
+THREEROE=ThreeRoe/0.04
 PYTHON=Python/2.7.3-07A
 SQLITE=sqlite/3.6.23.1-02A
 NUMPY=numpy/1.6.2-33A
@@ -39,6 +40,7 @@ loadmodules() {
         $SCONS/bin \
         $SCONSUTILS/lib-python \
         $BOOST/Release/lib \
+        $THREEROE/lib \
         $SQLITE/lib \
         $PFX/lib \
         $LPSOLVE/lib \

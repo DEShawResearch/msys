@@ -22,23 +22,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#ifdef __APPLE__
-#include <CommonCrypto/CommonDigest.h>
-#else
-#include <openssl/sha.h>
-#endif
-
-static char* hex2ascii(const unsigned char hex[20], char buf[41]) {
-    char* ptr = buf;
-    static const char a[] = "0123456789abcdef";
-    for (int i=0; i<20; i++) {
-        unsigned char c=hex[i];
-        *ptr++ = a[c/16];
-        *ptr++ = a[c%16];
-    }
-    *ptr++ = '\0';
-    return buf;
-}
+#include <ThreeRoe/ThreeRoe.hpp>
 
 using namespace desres::msys;
 namespace bio = boost::iostreams;
@@ -362,17 +346,13 @@ Sqlite Sqlite::write(std::string const& path, bool unbuffered) {
     return result;
 }
 
-std::string Sqlite::hash() const {
+String Sqlite::hash() const {
     if (_file) {
-#ifdef __APPLE__
-        unsigned char md_value[CC_SHA1_DIGEST_LENGTH];
-        CC_SHA1(_file->contents, _file->size, md_value);
-#else
-        unsigned char md_value[SHA_DIGEST_LENGTH];
-        SHA1((unsigned char*)_file->contents, _file->size, md_value);
-#endif
-        char buf[41];
-        return hex2ascii(md_value, buf);
+        ThreeRoe::result_type h = ThreeRoe::Hash128(
+                _file->contents, _file->size);
+        char buf[33];
+        sprintf(buf, "%016lx%016lx", h.first, h.second);
+        return buf;
     }
     return "";
 }

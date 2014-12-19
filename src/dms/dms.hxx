@@ -32,8 +32,8 @@ namespace desres { namespace msys {
 
         void exec(std::string const& sql);
 
-        /* compute hash based on current contents and insert into file */
-        std::string hash() const;
+        /* compute hash based on current contents */
+        String hash() const;
 
         bool has(std::string const& table) const;
         int size(std::string const& table) const;
