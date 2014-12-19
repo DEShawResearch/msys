@@ -587,11 +587,13 @@ static IdList map_gids(System const& sys) {
     return ids;
 }
 
-static void export_hash(Sqlite dms) {
+static void export_hash(Sqlite dms, std::string const& structure_hash,
+                                    std::string const& system_hash) {
     std::string hash = dms.hash();
-    dms.exec("create table msys_hash(sha1 text)");
+    dms.exec("create table msys_hash(structure text, system text)");
     Writer w = dms.insert("msys_hash");
-    w.bind_str(0, hash.data());
+    w.bind_str(0, structure_hash.data());
+    w.bind_str(1,    system_hash.data());
     w.next();
 }
 
@@ -603,13 +605,18 @@ static void export_dms(SystemPtr h, Sqlite dms, Provenance const& provenance,
     export_cell(     sys,            dms);
     export_particles(sys, atomidmap, dms, flags & DMSExport::StructureOnly);
     export_bonds(    sys, atomidmap, dms);
+
+    std::string structure_hash = dms.hash();
+
     if (!(flags & DMSExport::StructureOnly)) {
         export_tables(   sys, atomidmap, dms);
         export_aux(      sys,            dms);
         export_nbinfo(   sys,            dms);
     }
 
-    export_hash(dms);
+    std::string system_hash = dms.hash();
+
+    export_hash(dms, structure_hash, structure_hash);
     export_provenance(sys,provenance,dms);
     export_version(                  dms);
 }
