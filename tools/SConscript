@@ -8,6 +8,7 @@ env.Prepend(CPPPATH=['../src'], LIBS=['msys'])
 env.AddProgram('mae2dms', 'converters/mae2dms.cxx')
 env.AddProgram('dms2mae', 'converters/dms2mae.cxx')
 env.AddProgram('msys2mol2', 'converters/msys2mol2.cxx')
+env.AddProgram('dms-hash', 'info/dms-hash.cxx')
 
 ## fep
 env.AddScript('fep/dms-uncharge')

@@ -28,7 +28,7 @@ namespace desres { namespace msys {
         Sqlite(boost::shared_ptr<sqlite3> db)
         : _db(db), _file() {}
 
-        static Sqlite read(std::string const& path);
+        static Sqlite read(std::string const& path, bool unbuffered = false);
         static Sqlite read_bytes(const char* bytes, int64_t len);
         static Sqlite write(std::string const& path, bool unbuffered = false);
 

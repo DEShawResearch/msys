@@ -255,9 +255,15 @@ const char* Sqlite::errmsg() const {
     return sqlite3_errmsg(_db.get());
 }
 
-Sqlite Sqlite::read(std::string const& path)  {
+Sqlite Sqlite::read(std::string const& path, bool unbuffered)  {
 
     sqlite3* db;
+    if (unbuffered) {
+        int rc = sqlite3_open_v2( path.data(), &db, SQLITE_OPEN_READONLY, NULL);
+        if (rc!=SQLITE_OK) MSYS_FAIL(sqlite3_errmsg(db));
+        return boost::shared_ptr<sqlite3>(db, close_db);
+    }
+
     sqlite3_vfs_register(vfs, 0);
 
     int fd=open(path.c_str(), O_RDONLY);
