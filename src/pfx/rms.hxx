@@ -4,6 +4,7 @@
 #include "svd.hxx"
 #include <cmath>
 
+
 namespace desres { namespace msys { namespace pfx {
 
     /* 3x3 matrix transpose */
@@ -53,19 +54,20 @@ namespace desres { namespace msys { namespace pfx {
      * and pos are assumed to be already centered on the origin.  There should
      * be n ref positions.  If wts is non-NULL, it should hold n non-negative
      * weights which sum to a nonzero value.  The alignment will be computed 
-     * between ref * position i and pos position ids[i] */
-    template <typename scalar, typename pos_scalar>
+     * between ref * position i and pos position ids[i].  If ids is NULL,
+     * there should be exactly n contiguous positions.  */
+    template <typename scalar, typename pos_scalar, typename mat_scalar>
     double compute_alignment( 
-            unsigned        n,      /* number of positions     */
-            const unsigned *ids,    /* n ids                   */
-            const scalar   *ref,    /* nx3 reference positions */
-            const pos_scalar *pos,    /* max|ref| positions      */
-            pos_scalar       *mat,    /* returned matrix         */
-            const scalar   *wts=NULL  /* n optional weights */
+            unsigned        n,          /* number of positions      */
+            const unsigned *ids,        /* n ids                    */
+            const scalar   *ref,        /* nx3 reference positions  */
+            const pos_scalar *pos,      /* max|ref| positions       */
+            mat_scalar     *mat_3x3,    /* returned matrix          */
+            const scalar   *wts=NULL    /* n optional weights       */
             ) {
 
 
-        double U[9], S[3], V[9], V_tr[9];
+        double U[9], S[3]={0,0,0}, V[9], V_tr[9];
         double W[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
         double E0 = 0;
         unsigned i;
@@ -96,7 +98,7 @@ namespace desres { namespace msys { namespace pfx {
             E0 += w*pz*pz;
             ref += 3;
         }
-    
+
         svd_3x3(W, S, V); 
         trans_3x3(V_tr, V);
     
@@ -115,8 +117,8 @@ namespace desres { namespace msys { namespace pfx {
             S[2]     *= -1;
         }
         matmult_3x3(U, W, V_tr);
-    
-        for (i=0; i<9; i++) mat[i] = (pos_scalar)U[i];
+
+        std::copy(U,U+9,mat_3x3);
         return std::sqrt(std::fabs(E0-2*(S[0]+S[1]+S[2]))/n);
     }
 
@@ -134,9 +136,9 @@ namespace desres { namespace msys { namespace pfx {
         const scalar cx = center[0];
         const scalar cy = center[1];
         const scalar cz = center[2];
-        for (; n; --n, ++ids, ref += 3) {
+        for (unsigned i=0; i<n; i++, ref+=3) {
             const scalar w = wts ? *wts++ : 1;
-            const pos_scalar *p = pos + 3*ids[0];
+            const pos_scalar* p = ids ? pos+3*ids[i] : pos+3*i;
             scalar dx = (cx + ref[0]) - p[0];
             scalar dy = (cy + ref[1]) - p[1];
             scalar dz = (cz + ref[2]) - p[2];
