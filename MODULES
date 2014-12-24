@@ -1,0 +1,5 @@
+PYTHON=Python/2.7.3-07A
+SQLITE=sqlite/3.6.23.1-02A
+NUMPY=numpy/1.6.2-35A
+MOLFILE=molfile/1.13.10
+

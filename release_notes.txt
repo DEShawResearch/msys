@@ -1,3 +1,7 @@
+1.7.86 Bump to numpy/1.6.2-35A
+       Fix tools scripts so they use the right version of numpy and molfile.
+       Make the rms routines more general.
+
 1.7.85 Fixed construction of provenance from Python.
        Improvements to mmod_type handling in dms2mae.
        Table properties in TermTable.  New msys_table_properties in dms.

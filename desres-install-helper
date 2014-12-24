@@ -12,13 +12,13 @@ NAME=msys
 VERSION=`src/version.py`
 DESCRIPTION="Biomolecular Structure Library"
 
+# module versions that scripts in ./tools need to know
+. ./MODULES
+
 # shared library dependencies
 GCC=gcc/4.7.2-23A
 BOOST=boost/1_51_0-30A
 THREEROE=ThreeRoe/0.04
-PYTHON=Python/2.7.3-07A
-SQLITE=sqlite/3.6.23.1-02A
-NUMPY=numpy/1.6.2-33A
 LPSOLVE=lp_solve/5.5.2.0-04A
 PRIMEGEN=primegen/0.97-05
 ZLIB=zlib/1.2.4-10A
@@ -42,7 +42,6 @@ loadmodules() {
         $BOOST/Release/lib \
         $THREEROE/lib \
         $SQLITE/lib \
-        $PFX/lib \
         $LPSOLVE/lib \
         $PRIMEGEN/lib \
         $ZLIB/lib \
@@ -64,7 +63,6 @@ genmodules() {
 $hdr
 module-whatis {$NAME - $DESCRIPTION}
 
-prereq $PYTHON/bin
 prereq $NUMPY/lib-python
 prepend-path PYTHONPATH $PREFIX/lib/python
 setenv MSYS_PREFIX "$PREFIX"

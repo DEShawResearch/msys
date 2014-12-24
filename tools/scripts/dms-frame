@@ -1,8 +1,8 @@
 #!/usr/bin/env desres-exec
 # -*- python -*-
 #{
-# desres-cleanenv \
-# -m molfile/1.11.17/lib-python \
+# source `dirname $0`/../share/MODULES && \
+# exec desres-cleanenv -m $MOLFILE/lib-python \
 # -- python $0 "$@" 
 #}
 

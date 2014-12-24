@@ -1,15 +1,17 @@
 Import('env')
 
 # Avoid doing dependency checks on garden files.
-cpp=[]
-flg=[]
-for p in env['CPPPATH']:
-    if p.startswith('/proj'):
-        flg.append('-I%s' % p)
-    else:
-        cpp.append(p)
-env.Replace(CPPPATH=cpp)
-env.Append(CFLAGS=flg, CXXFLAGS=flg)
+if True:
+    cpp=[]
+    flg=[]
+    for p in env['CPPPATH']:
+        if p.startswith('/proj'):
+            flg.append('-I%s' % p)
+        else:
+            cpp.append(p)
+    env.Replace(CPPPATH=cpp)
+    env.Append(CFLAGS=flg, CXXFLAGS=flg)
+
 # The install helper brings in libraries we don't want
 for lib in 'molfile', 'python2.7':
     try: env.get('LIBS', []).remove(lib)
@@ -25,6 +27,8 @@ env.SConsignFile('%s/.sconsign' % (env['OBJDIR'].strip('#')))
 
 env.SConscript('src/SConscript')
 env.SConscript('tests/SConscript')
+
+env.AddShare('MODULES')
 
 opts=Variables()
 opts.Add("MSYS_WITHOUT_PYTHON", "without python?")
