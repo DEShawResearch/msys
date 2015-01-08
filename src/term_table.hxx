@@ -1,8 +1,7 @@
 #ifndef desres_msys_term_table_hxx
 #define desres_msys_term_table_hxx
 
-#include "param_table.hxx"
-#include <boost/enable_shared_from_this.hpp>
+#include "override.hxx"
 #include <boost/foreach.hpp>
 
 namespace desres { namespace msys {
@@ -71,6 +70,14 @@ namespace desres { namespace msys {
 
         /* table properties */
         VariantMap _tableprops;
+
+        friend class boost::serialization::access;
+        TermTable() {}
+        template <typename Ar> void serialize(Ar& a, unsigned) {
+            a & _system & _params & _natoms & _ndead & _terms;
+            a & _props & _overrides & _index & _maxIndexId & _tableprops;
+            a & category;
+        }
 
     public:
         TermTable( SystemPtr system, Id natoms, 

@@ -5,6 +5,8 @@
 #include <deque>
 #include <map>
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <string.h>
 
 namespace desres { namespace msys {
 
@@ -41,6 +43,30 @@ namespace desres { namespace msys {
             }
 
             Property() : maxIndexId(0) {}
+
+            template <typename Ar> void serialize(Ar& a, unsigned) {
+                a & name & type;
+                unsigned i,n;
+                if (Ar::is_saving::value) {
+                    n = vals.size();
+                    a & n;
+                } else {
+                    a & n;
+                    vals.resize(n);
+                }
+                if (type==IntType) for (i=0; i<n; i++) { 
+                    a & vals[i].i;
+                } else if (type==FloatType) for (i=0; i<n; i++) {
+                    a & vals[i].f;
+                } else if (Ar::is_saving::value) for (i=0; i<n; i++) {
+                    std::string s(vals[i].s);
+                    a & s;
+                } else for (i=0; i<n; i++) {
+                    std::string s;
+                    a & s;
+                    vals[i].s = strdup(s.data());
+                }
+            }
         };
         
         typedef std::deque<Property> PropList;
@@ -53,6 +79,12 @@ namespace desres { namespace msys {
         IdList _paramrefs;
 
         ParamTable();
+
+        friend class boost::serialization::access;
+        template <typename Ar> void serialize(Ar& a, unsigned) {
+            a & _props & _nrows & _paramrefs;
+        }
+
     public:
         static boost::shared_ptr<ParamTable> create();
         ~ParamTable();

@@ -5,6 +5,7 @@
 #include <boost/algorithm/string.hpp> /* for boost::trim */
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 #include <stdio.h>
 #include <errno.h>
@@ -44,7 +45,7 @@ namespace {
         }
         try {
             double v = stringToDouble(val);
-            if (isfinite(v)) {
+            if (boost::math::isfinite(v)) {
                 ct.add(key,FloatType);
                 ct.value(key)=v;
                 return;

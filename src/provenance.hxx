@@ -14,6 +14,10 @@ namespace desres { namespace msys {
         String executable;
 
         static Provenance fromArgs(int argc, char *argv[]);
+
+        template <typename Ar> void serialize(Ar& a, unsigned) {
+            a & version & timestamp & user & workdir & cmdline & executable;
+        }
     };
 
 }}

@@ -2,6 +2,11 @@
 
 using namespace desres::msys;
 
+namespace {
+    std::string get_name(atom_t const& a) { return a.name; }
+    void set_name(atom_t& a, std::string const& s) { a.name = s; }
+}
+
 namespace desres { namespace msys { 
 
     void export_atom() {
@@ -19,7 +24,8 @@ namespace desres { namespace msys {
             .def_readwrite("mass",      &atom_t::mass)
             .def_readwrite("atomic_number", &atom_t::atomic_number)
             .def_readwrite("formal_charge", &atom_t::formal_charge)
-            .def_readwrite("name",      &atom_t::name)
+            .add_property("name", get_name, set_name)
+            //.def_readwrite("name",      &atom_t::name)
             ;
 
     }

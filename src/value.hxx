@@ -27,6 +27,7 @@ namespace desres { namespace msys {
          * could be refined to hold some sort of id about which value
          * changed, but for now a simple thunk will suffice. */
         virtual void valueChanged() = 0;
+        virtual ~ValueCallback() {}
     };
 
     class ValueRef {

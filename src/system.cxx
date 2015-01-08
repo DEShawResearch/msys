@@ -763,6 +763,35 @@ Id SystemImporter::addAtom(std::string chain, std::string segid,
     return atm;
 }
 
+void System::restore_indices() {
+
+    _bondindex.resize(maxAtomId());
+    for (iterator i=bondBegin(), e=bondEnd(); i!=e; ++i) {
+        bond_t const& b = _bonds[*i];
+        _bondindex[b.i].push_back(*i);
+        _bondindex[b.j].push_back(*i);
+    }
+
+    _residueatoms.resize(maxResidueId());
+    for (iterator i=atomBegin(), e=atomEnd(); i!=e; ++i) {
+        atom_t const& a = _atoms[*i];
+        _residueatoms[a.residue].push_back(*i);
+    }
+
+    _chainresidues.resize(maxChainId());
+    for (iterator i=residueBegin(), e=residueEnd(); i!=e; ++i) {
+        residue_t const& r = _residues[*i];
+        _chainresidues[r.chain].push_back(*i);
+    }
+
+    _ctchains.resize(maxCtId());
+    for (iterator i=chainBegin(), e=chainEnd(); i!=e; ++i) {
+        chain_t const& c = _chains[*i];
+        _ctchains[c.ct].push_back(*i);
+    }
+
+}
+
 namespace {
 
     bool has_water_residue_name( const std::string& resname ) {

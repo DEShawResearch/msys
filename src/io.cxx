@@ -8,6 +8,7 @@
 #include "mol2.hxx"
 #include "xyz.hxx"
 #include "sdf.hxx"
+#include "archive.hxx"
 
 #include <boost/algorithm/string.hpp>
 
@@ -41,7 +42,8 @@ namespace {
         "XYZ",
         "SDF",
         "WEBPDB",
-        "PSF"
+        "PSF",
+        "ARCHIVE"
     };
 
     class DefaultIterator : public LoadIterator {
@@ -74,6 +76,7 @@ namespace desres { namespace msys {
         const char* XYZ = "xyz";
         const char* SDF = "sdf,sdf.gz,sdfgz";
         const char* PSF = "psf";
+        const char* MSYS= "msys";
 
         if (match(path, DMS)) return DmsFileFormat;
         if (match(path, MAE)) return MaeFileFormat;
@@ -83,6 +86,7 @@ namespace desres { namespace msys {
         if (match(path, XYZ)) return XyzFileFormat;
         if (match(path, SDF)) return SdfFileFormat;
         if (match(path, PSF)) return PsfFileFormat;
+        if (match(path,MSYS)) return MsysFileFormat;
         if (match_web(path))  return WebPdbFileFormat;
         return UnrecognizedFileFormat;
     }
@@ -128,6 +132,9 @@ namespace desres { namespace msys {
                 break;
             case PsfFileFormat:
                 m=ImportPSF(path);
+                break;
+            case MsysFileFormat:
+                m=ImportArchive(path);
                 break;
             case WebPdbFileFormat:
                 m=ImportWebPDB(path);
@@ -211,6 +218,9 @@ namespace desres { namespace msys {
                 ExportSdf(mol, path,
                       (flags & SaveOptions::Append ? SdfExport::Append : 0)
                     );
+                break;
+            case MsysFileFormat:
+                ExportArchive(mol, path);
                 break;
             default:
                 ;

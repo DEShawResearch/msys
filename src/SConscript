@@ -10,9 +10,9 @@ opts.Update(env)
 bsx=env.get('MSYS_BOOST_SUFFIX', '')
 boost_libs=[(x+bsx) for x in ( 
     'boost_iostreams', 'boost_filesystem', 'boost_system', 
-    'boost_thread', 'boost_regex')]
+    'boost_thread', 'boost_regex', 'boost_serialization')]
 env.Append(LIBS=boost_libs)
-env.AppendUnique(LIBS=['sqlite3', 'z'])
+env.AppendUnique(LIBS=['sqlite3', 'z', 'snappy' ])
 env.Append(CPPPATH=['$OBJDIR/src'])
 
 msysenv=env
@@ -85,6 +85,8 @@ analyze/get_fragments.cxx
 
 amber/import_crd.cxx
 amber/import_prmtop.cxx
+
+archive.cxx
 
 dms/dms.cxx
 dms/export_dms.cxx

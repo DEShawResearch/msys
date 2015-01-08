@@ -2,6 +2,7 @@
 #include "elements.hxx"
 #include <fastjson/print.hxx>
 #include <boost/format.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 #include <fstream>
 #include <math.h>
 #include <errno.h>
@@ -84,7 +85,7 @@ static void export_ct(SystemPtr mol, Id ct, std::ostream& out) {
         case IntType: 
             out << v.asInt(); break;
         case FloatType: 
-            if (isfinite(v.asFloat())) {
+            if (boost::math::isfinite(v.asFloat())) {
                 floatify(v.asFloat(), floatbuf); 
             } else {
                 sprintf(floatbuf, "%f", v.asFloat());

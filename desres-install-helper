@@ -23,6 +23,7 @@ LPSOLVE=lp_solve/5.5.2.0-04A
 PRIMEGEN=primegen/0.97-05
 ZLIB=zlib/1.2.4-10A
 INCHI=inchi/1.04-05
+SNAPPY=snappy/1.1.2-01
 TEXLIVE=texlive/20120701-03
 
 # build and documentation
@@ -45,6 +46,7 @@ loadmodules() {
         $LPSOLVE/lib \
         $PRIMEGEN/lib \
         $ZLIB/lib \
+        $SNAPPY/lib \
         $INCHI/lib \
         $SPHINX/bin \
 	$TEXLIVE/bin

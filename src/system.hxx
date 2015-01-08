@@ -3,10 +3,13 @@
 
 #include <vector>
 #include <map>
-#include <boost/enable_shared_from_this.hpp>
 
+#include "term_table.hxx"
 #include "provenance.hxx"
 #include "value.hxx"
+#include "smallstring.hxx"
+
+#include <boost/serialization/binary_object.hpp>
 
 namespace desres { namespace msys {
 
@@ -18,6 +21,9 @@ namespace desres { namespace msys {
 
     class GlobalCell {
         std::vector<double> data;
+
+        friend class boost::serialization::access;
+        template <typename Ar> void serialize(Ar& a, unsigned) { a & data; }
     public:
         GlobalCell() : data(9) {}
         double*       operator[](unsigned i)       { return &data.at(3*i); }
@@ -39,6 +45,10 @@ namespace desres { namespace msys {
          * of them is empty, in which case the non-empty value is adopted.
          */
         void merge(NonbondedInfo const& other);
+
+        template <typename Ar> void serialize(Ar& a, unsigned) {
+            a & vdw_funct & vdw_rule & es_funct;
+        }
     };
 
     enum AtomType {
@@ -59,7 +69,7 @@ namespace desres { namespace msys {
         Float vx,vy,vz; /* velocity */
         Float mass;
     
-        String name;
+        SmallString<30> name;
         AtomType type;
         Float resonant_charge;
     
@@ -68,6 +78,15 @@ namespace desres { namespace msys {
           x(0), y(0), z(0), charge(0), vx(0), vy(0), vz(0), mass(0), type(),
           resonant_charge()
         {}
+
+        template <class Ar>
+        void serialize(Ar& a, const unsigned int) {
+            a & fragid & residue & atomic_number & formal_charge
+              & x & y & z & charge 
+              & vx & vy & vz & mass
+              & name & type & resonant_charge
+              ;
+        }
 
         /* Don't abuse these.  In particular, bear in mind that that an atom's
          * memory location will move around if atoms are added.  */
@@ -84,6 +103,11 @@ namespace desres { namespace msys {
         bond_t() : i(BadId), j(BadId), order(1), resonant_order(1) {}
         bond_t(Id ai, Id aj) : i(ai), j(aj), order(1), resonant_order(1) {}
         Id other(Id id) const { return id==i ? j : i; }
+
+        template <class Ar>
+        void serialize(Ar& a, const unsigned int) {
+            a & i & j & order & resonant_order;
+        }
     };
     
     enum ResidueType {
@@ -96,8 +120,8 @@ namespace desres { namespace msys {
     struct residue_t {
         Id      chain;
         int     resid;
-        String  name;
-        String insertion;
+        SmallString<30> name;
+        SmallString<6> insertion;
         ResidueType type;
     
         residue_t() : chain(BadId), resid(), type() {}
@@ -109,6 +133,11 @@ namespace desres { namespace msys {
         String  segid;
     
         chain_t() : ct(BadId) {}
+
+        template <class Ar>
+        void serialize(Ar& a, const unsigned int) {
+            a & ct & name & segid;
+        }
     };
 
     class component_t {
@@ -136,6 +165,11 @@ namespace desres { namespace msys {
         bool has(String const& key) const;
         ValueRef value(String const& key);
         ValueRef value(Id key);
+
+        template <class Ar>
+        void serialize(Ar& a, const unsigned int) {
+            a & _kv;
+        }
     };
 
     class System : public boost::enable_shared_from_this<System> {
@@ -190,6 +224,48 @@ namespace desres { namespace msys {
 
         /* create only as shared pointer. */
         System();
+
+        /* Cerealization */
+        friend class boost::serialization::access;
+        template <typename Ar> void serialize(Ar& a, unsigned) {
+            using boost::serialization::binary_object;
+            a & _deadatoms & _atomprops;
+            Id an, bn, rn;
+            if (Ar::is_saving::value) {
+                an = _atoms.size();
+                bn = _bonds.size();
+                rn = _residues.size();
+                a & an & bn & rn;
+            } else {
+                a & an & bn & rn;
+                _atoms.resize(an);
+                _bonds.resize(bn);
+                _residues.resize(rn);
+            }
+            if (an) {
+                binary_object b(&_atoms[0],an*sizeof(atom_t));
+                a & b;
+            }
+            if (bn) {
+                binary_object b(&_bonds[0],bn*sizeof(bond_t));
+                a & b;
+            }
+            if (rn) {
+                binary_object b(&_residues[0],rn*sizeof(residue_t));
+                a & b;
+            }
+
+            a & _deadbonds & _bondprops;
+            a & _deadresidues;
+            a & _chains & _deadchains;
+            a & _cts & _deadcts;
+            a & _tables & _auxtables;
+            a & _provenance;
+            a & name & global_cell & nonbonded_info;
+            if (Ar::is_loading::value) restore_indices();
+        }
+        void restore_indices();
+
     public:
         static boost::shared_ptr<System> create();
         ~System();
@@ -298,6 +374,10 @@ namespace desres { namespace msys {
             return iterator(0, _deadresidues.empty() ? NULL : &_deadresidues); 
         }
         iterator residueEnd() const { return iterator(maxResidueId(), NULL); }
+        iterator chainBegin() const { 
+            return iterator(0, _deadchains.empty() ? NULL : &_deadchains); 
+        }
+        iterator chainEnd() const { return iterator(maxChainId(), NULL); }
 
         /* add an element */
         Id addAtom(Id residue);

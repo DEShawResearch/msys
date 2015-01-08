@@ -64,7 +64,12 @@ def main():
 
     if opts.output:
         if opts.verbose: print >> sys.stderr, "Saving", opts.output
+        import time
+        t=-time.time()
         msys.Save(mol, opts.output, structure_only=opts.structure_only)
+        t+=time.time()
+        if opts.verbose:
+            print >> sys.stderr, "Save: %8.3fms" % (t*1000)
 
 if __name__=="__main__": main()
 
