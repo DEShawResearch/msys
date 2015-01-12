@@ -2,7 +2,7 @@
 # -*- python -*-
 #{
 # source `dirname $0`/../share/MODULES && \
-# exec desres-cleanenv -m $NUMPY/lib-python \
+# exec desres-cleanenv -m $PYTHON/bin \
 # -- python $0 "$@" 
 #}
 '''

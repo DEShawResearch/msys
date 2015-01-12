@@ -1,3 +1,6 @@
+1.7.87 Use Python/2.7.9-05st.
+       Added boost::serialization-based archive format (.msys extension).
+
 1.7.86 Bump to numpy/1.6.2-35A
        Fix tools scripts so they use the right version of numpy and molfile.
        Make the rms routines more general.

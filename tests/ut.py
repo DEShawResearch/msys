@@ -1,4 +1,8 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env desres-exec
+#{
+# source `dirname $0`/../MODULES
+# exec desres-cleanenv -e TMPDIR -m $PYTHON/bin -- python $0 "$@"
+#}
 
 import os, sys, unittest
 

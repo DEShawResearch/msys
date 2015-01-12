@@ -4,6 +4,7 @@
 #include <sstream>
 #include <cstdio>
 #include <deque>
+#include <iostream>
 
 #include "bond_orders.hxx"
 #include "../sssr.hxx"

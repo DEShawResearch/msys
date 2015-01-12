@@ -17,11 +17,10 @@ DESCRIPTION="Biomolecular Structure Library"
 
 # shared library dependencies
 GCC=gcc/4.7.2-23A
-BOOST=boost/1_51_0-30A
+BOOST=boost/1_51_0-30A/Release
 THREEROE=ThreeRoe/0.04
 LPSOLVE=lp_solve/5.5.2.0-04A
 PRIMEGEN=primegen/0.97-05
-ZLIB=zlib/1.2.4-10A
 INCHI=inchi/1.04-05
 SNAPPY=snappy/1.1.2-01
 TEXLIVE=texlive/20120701-03
@@ -29,26 +28,20 @@ TEXLIVE=texlive/20120701-03
 # build and documentation
 SCONS=scons/2.3.0-10A
 SCONSUTILS=sconsutils/1.37
-SPHINX=Sphinx/1.1.3-04A
 
 loadmodules() {
     module load \
         $GCC/bin \
         $PYTHON/bin \
         $PYTHON/lib \
-        $NUMPY/include \
-        $NUMPY/lib-python \
         $SCONS/bin \
         $SCONSUTILS/lib-python \
-        $BOOST/Release/lib \
+        $BOOST/lib \
         $THREEROE/lib \
-        $SQLITE/lib \
         $LPSOLVE/lib \
         $PRIMEGEN/lib \
-        $ZLIB/lib \
         $SNAPPY/lib \
         $INCHI/lib \
-        $SPHINX/bin \
 	$TEXLIVE/bin
     
    export MSYS_VERSION=$VERSION
@@ -65,7 +58,7 @@ genmodules() {
 $hdr
 module-whatis {$NAME - $DESCRIPTION}
 
-prereq $NUMPY/lib-python
+prereq $PYTHON/bin
 prepend-path PYTHONPATH $PREFIX/lib/python
 setenv MSYS_PREFIX "$PREFIX"
 EOF
@@ -75,10 +68,9 @@ EOF
 $hdr
 module-whatis {$NAME - $DESCRIPTION}
 
-prereq $BOOST/Release/lib
+prereq $BOOST/lib
 prepend-path DESRES_MODULE_CPPFLAGS -I$PREFIX/include
 prepend-path DESRES_MODULE_LDFLAGS "-L$PREFIX/lib -Wl,-rpath,$PREFIX/lib"
-prepend-path DESRES_MODULE_LDLIBS   -lmsys
 setenv MSYS_PREFIX "$PREFIX"
 EOF
 
