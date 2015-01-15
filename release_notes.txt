@@ -1,3 +1,5 @@
+1.7.88 Added SmartsPattern::match().
+
 1.7.87 Use Python/2.7.9-05st.
        Added boost::serialization-based archive format (.msys extension).
 
