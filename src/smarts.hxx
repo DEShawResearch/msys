@@ -35,6 +35,9 @@ namespace desres { namespace msys {
          * matches for '*~*' in forward and reverse ordering, etc. */
          MultiIdList findMatches(AnnotatedSystemPtr sys,
                  IdList const& starts) const;
+
+         /* Return true if a match is found anywhere; false otherwise */
+         bool match(AnnotatedSystemPtr sys) const;
     };
 
 }}

@@ -84,6 +84,7 @@ namespace desres { namespace msys {
             .def("warnings",  &SmartsPattern::warnings,
                     return_value_policy<copy_const_reference>())
             .def("findMatches",     &find_matches)
+            .def("match",     &SmartsPattern::match)
             ;
     }
 }}

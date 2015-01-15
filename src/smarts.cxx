@@ -830,6 +830,16 @@ MultiIdList SmartsPattern::findMatches(AnnotatedSystemPtr sys,
     return matches;
 }
 
+bool SmartsPattern::match(AnnotatedSystemPtr sys) const {
+    SystemPtr mol = sys->system();
+    MultiIdList matches;
+    for (System::iterator i=mol->atomBegin(), e=mol->atomEnd(); i!=e; ++i) {
+        if (mol->atomFAST(*i).atomic_number < 1) continue;
+        if (_impl->matchSmartsPattern(sys, *i, matches, true)) return true;
+    }
+    return false;
+}
+
 namespace {
     /* Use this with filteredBondsPerAtom to obtain non-pseudo bonds for
      * atoms */
