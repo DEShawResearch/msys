@@ -96,6 +96,7 @@ molfile/molfile.cxx
 molfile/msys.cxx
 molfile/dtrframe.cxx
 molfile/dtrplugin.cxx
+molfile/dcdplugin.c
 
 fastjson/json.cxx
 fastjson/JSON_parser.c
