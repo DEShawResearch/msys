@@ -2132,7 +2132,8 @@ static molfile_plugin_t dtr_clobber;
 static molfile_plugin_t dtr_noclobber;
 static molfile_plugin_t force_dtr;
 
-VMDPLUGIN_API int VMDPLUGIN_init (void) {
+extern "C"
+int msys_dtrplugin_init() {
   /* Plugin for desmond trajectory files */
   ::memset(&desmond,0,sizeof(desmond));
   desmond.abiversion = vmdplugin_ABIVERSION;
@@ -2147,10 +2148,8 @@ VMDPLUGIN_API int VMDPLUGIN_init (void) {
   desmond.open_file_read = open_file_read;
   desmond.read_timestep_metadata = read_timestep_metadata;
   desmond.read_next_timestep = read_next_timestep;
-#if defined(DESRES_READ_TIMESTEP2)
   desmond.read_timestep2 = read_timestep2;
   desmond.read_times = read_times;
-#endif
   desmond.close_file_read = close_file_read;
 
   desmond.open_file_write = open_file_write;
@@ -2180,16 +2179,13 @@ VMDPLUGIN_API int VMDPLUGIN_init (void) {
   return VMDPLUGIN_SUCCESS;
 }
 
-VMDPLUGIN_API int VMDPLUGIN_register(void *v, vmdplugin_register_cb cb) {
+extern "C"
+int msys_dtrplugin_register(void *v, vmdplugin_register_cb cb) {
   cb(v,reinterpret_cast<vmdplugin_t*>(&desmond));
   cb(v,reinterpret_cast<vmdplugin_t*>(&dtr_append));
   cb(v,reinterpret_cast<vmdplugin_t*>(&dtr_clobber));
   cb(v,reinterpret_cast<vmdplugin_t*>(&dtr_noclobber));
   cb(v,reinterpret_cast<vmdplugin_t*>(&force_dtr));
-  return VMDPLUGIN_SUCCESS;
-}
-
-VMDPLUGIN_API int VMDPLUGIN_fini(void) {
   return VMDPLUGIN_SUCCESS;
 }
 

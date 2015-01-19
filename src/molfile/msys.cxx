@@ -13,10 +13,15 @@ using namespace desres::msys;
 
 struct system_t {
     SystemPtr mol;
+    int natoms;
+    std::string path;
+    FileFormat format;
+
     std::vector<int> bonds;
     std::vector<float> bondorders;
     ssize_t timestep;
-    explicit system_t(SystemPtr m) : mol(m), timestep() {}
+    explicit system_t(SystemPtr m) 
+    : mol(m), natoms(), format(UnrecognizedFileFormat), timestep() {}
 };
 
 static void* open_file_read(const char *filename, const char *filetype, 
@@ -129,6 +134,100 @@ static int read_next_timestep(void *v, int natoms, molfile_timestep_t *ts) {
     return MOLFILE_SUCCESS;
 }
 
+static void* open_file_write(const char *filepath, const char *filetype,
+          int natoms) {
+
+    std::string uppercase_type(filetype);
+    boost::to_upper(uppercase_type);
+    FileFormat format = FileFormatFromString(uppercase_type);
+    if (format == UnrecognizedFileFormat) {
+        fprintf(stderr, "Unrecognized format '%s'\n", filetype);
+        return NULL;
+    }
+    SystemPtr mol = System::create();
+    system_t* sys = new system_t(mol);
+    sys->natoms = natoms;
+    sys->format = format;
+    sys->path = filepath;
+    return sys;
+}
+
+static int write_structure(void *v, int optflags, const molfile_atom_t *atoms) {
+    system_t* sys = (system_t*)v;
+    SystemPtr mol = sys->mol;
+    SystemImporter imp(mol);
+    Id bfactor = optflags & MOLFILE_BFACTOR ?
+        mol->addAtomProp("bfactor", FloatType) : BadId;
+    Id occupancy = optflags & MOLFILE_OCCUPANCY ?
+        mol->addAtomProp("occupancy", FloatType) : BadId;
+
+    for (int i=0, n=sys->natoms; i<n; i++) {
+        molfile_atom_t const& atom = atoms[i];
+        Id id = imp.addAtom(atom.chain, atom.segid,
+                            atom.resid, atom.resname, atom.name,
+                            atom.insertion, atom.ctnumber);
+        atom_t& atm = mol->atomFAST(id);
+        residue_t& res = mol->residueFAST(atm.residue);
+        atm.mass = atom.mass;
+        atm.charge = atom.charge;
+        atm.atomic_number = atom.atomicnumber;
+        res.insertion = atom.insertion;
+        if (!bad(bfactor))   mol->atomPropValue(i,bfactor)=atom.bfactor;
+        if (!bad(occupancy)) mol->atomPropValue(i,occupancy)=atom.occupancy;
+    }
+    for (Id i=0, n=sys->bondorders.size(); i<n; i++) {
+        Id id = mol->addBond(sys->bonds[i], sys->bonds[i+n]);
+        mol->bondFAST(id).order = sys->bondorders[i];
+    }
+    return MOLFILE_SUCCESS;
+}
+
+static int write_timestep(void *v, const molfile_timestep_t *ts) {
+    system_t* sys = (system_t*)v;
+    SystemPtr mol = sys->mol;
+    const float* fpos = ts->coords;
+    const float* fvel = ts->velocities;
+    const double* dpos = ts->dcoords;
+    const double* dvel = ts->dvelocities;
+    for (int i=0, n=sys->natoms; i<n; i++) {
+        atom_t& atm = mol->atomFAST(i);
+        Float* pos = &atm.x;
+        Float* vel = &atm.vx;
+        if (fpos)       std::copy(fpos+3*i, fpos+3*(i+1), pos);
+        else if (dpos)  std::copy(dpos+3*i, dpos+3*(i+1), pos);
+        if (fvel)       std::copy(fvel+3*i, fvel+3*(i+1), vel);
+        else if (dvel)  std::copy(dvel+3*i, dvel+3*(i+1), vel);
+    }
+    try {
+        static char* argv[] = {(char *)"vmd", 0};
+        SaveWithFormat(mol, sys->path, Provenance::fromArgs(1,argv),
+                            sys->format, 0);
+    }
+    catch (std::exception& e) {
+        fprintf(stderr, e.what());
+        return MOLFILE_ERROR;
+    }
+    return MOLFILE_SUCCESS;
+}
+
+static void close_file_write(void *v) {
+    delete (system_t *)v;
+}
+
+static int write_bonds(void *v, 
+                       int nbonds, int *from, int *to, float *bondorder,
+                       int *bondtype, int nbondtypes, char **bondtypename) {
+    system_t* sys = (system_t*)v;
+    sys->bondorders.resize(nbonds);
+    sys->bonds.resize(2*nbonds);
+    for (int i=0, n=nbonds; i<nbonds; i++) {
+        sys->bonds[i]   = from[i]-1;
+        sys->bonds[n+i] =   to[i]-1;
+        sys->bondorders[i] = bondorder[i];
+    }
+    return MOLFILE_SUCCESS;
+}
+
 static molfile_plugin_t msys_plugin_base = {
      vmdplugin_ABIVERSION,
      MOLFILE_PLUGIN_TYPE,
@@ -143,7 +242,17 @@ static molfile_plugin_t msys_plugin_base = {
      read_structure,
      read_bonds,
      read_next_timestep,
-     close_file_read
+     close_file_read,
+     open_file_write,
+     write_structure,
+     write_timestep,
+     close_file_write,
+     NULL, // sync_file_write,
+     NULL, // read_volumetric_metadata,
+     NULL, // read_volumetric_data,
+     NULL, // read_rawgraphics,
+     NULL, // read_molecule_metadata,
+     write_bonds
 };
 
 struct msys_plugin_t : molfile_plugin_t {
