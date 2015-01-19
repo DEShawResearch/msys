@@ -187,5 +187,6 @@ env.AddStagedHeaders(Glob("*.hxx"), prefix='msys')
 env.AddStagedHeaders(Glob('atomsel/*.hxx'), prefix='msys/atomsel')
 env.AddStagedHeaders(Glob('fastjson/*.hxx'), prefix='msys/fastjson')
 env.AddStagedHeaders(Glob('pfx/*.hxx'), prefix='msys/pfx')
+env.AddStagedHeaders(Glob('molfile/*.h*'), prefix='msys/molfile')
 
 Export("libmsys")
