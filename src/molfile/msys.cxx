@@ -283,6 +283,7 @@ static msys_plugin_t sdfplugin( "sdf",  "SDF",              "sdf,sdf.gz,sdfgz");
 static msys_plugin_t psfplugin( "psf",  "PSF", "psf",
                                 MsysNoCoordinates);
 
+extern "C"
 int msys_plugin_register(void* v, vmdplugin_register_cb cb) {
       cb( v, (vmdplugin_t *)&dmsplugin);
       cb( v, (vmdplugin_t *)&maeplugin);
