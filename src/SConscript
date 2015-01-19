@@ -92,6 +92,10 @@ dms/dms.cxx
 dms/export_dms.cxx
 dms/import_dms.cxx
 
+molfile/molfile.cxx
+molfile/dtrframe.cxx
+molfile/dtrplugin.cxx
+
 fastjson/json.cxx
 fastjson/JSON_parser.c
 fastjson/parse.cxx
