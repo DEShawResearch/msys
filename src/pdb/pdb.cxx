@@ -306,8 +306,9 @@ void desres::msys::ExportPDBUnitCell(
     }
 }
 
-void desres::msys::ExportPDB(SystemPtr mol, std::string const& path) {
-    FILE* fd = fopen(path.c_str(), "w");
+void desres::msys::ExportPDB(SystemPtr mol, std::string const& path,
+                             unsigned flags) {
+    FILE* fd = fopen(path.c_str(), flags & PDBExport::Append ? "ab" : "wb");
     if (!fd) MSYS_FAIL("Failed opening pdb file for writing at " << path);
     boost::shared_ptr<FILE> defer_close(fd, fclose);
     

@@ -195,10 +195,9 @@ namespace desres { namespace msys {
                     );
                 break;
             case PdbFileFormat: 
-                if (flags != 0) {
-                    MSYS_FAIL("PDB export supports only default save option");
-                }
-                ExportPDB(mol, path);
+                ExportPDB(mol, path,
+                      ( flags & SaveOptions::Append ? PDBExport::Append : 0)
+                    );
                 break;
             case ParmTopFileFormat: 
                 MSYS_FAIL("PRM/TOP export not supported");

@@ -200,8 +200,12 @@ static int write_timestep(void *v, const molfile_timestep_t *ts) {
     }
     try {
         static char* argv[] = {(char *)"vmd", 0};
+        unsigned options = SaveOptions::Default;
+        if (sys->timestep++) {
+            options |= SaveOptions::Append;
+        }
         SaveWithFormat(mol, sys->path, Provenance::fromArgs(1,argv),
-                            sys->format, 0);
+                            sys->format, options);
     }
     catch (std::exception& e) {
         fprintf(stderr, e.what());

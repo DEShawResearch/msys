@@ -11,7 +11,12 @@ namespace desres { namespace msys {
 
     void ImportPDBCoordinates( SystemPtr mol, std::string const& path );
 
-    void ExportPDB(SystemPtr mol, std::string const& path);
+    struct PDBExport {
+        enum Flags { Default            = 0 
+                   , Append             = 1 << 0
+        };
+    };
+    void ExportPDB(SystemPtr mol, std::string const& path, unsigned flags=0);
 
     void ImportPDBUnitCell(double A, double B, double C,
                            double alpha, double beta, double gamma,
