@@ -255,12 +255,20 @@ static molfile_plugin_t msys_plugin_base = {
      write_bonds
 };
 
+enum {
+    MsysNoCoordinates = 1 << 0
+};
+
 struct msys_plugin_t : molfile_plugin_t {
-    msys_plugin_t(const char* name, const char* pname, const char* ext) {
+    msys_plugin_t(const char* name, const char* pname, const char* ext, int flags=0) {
         static_cast<molfile_plugin_t&>(*this) = msys_plugin_base;
         this->name = name;
         this->prettyname = pname;
         this->filename_extension = ext;
+        if (flags & MsysNoCoordinates) {
+            this->read_next_timestep = 0;
+            this->write_timestep = 0;
+        }
     };
 };
 
@@ -272,7 +280,8 @@ static msys_plugin_t prm7plugin("parm7","AMBER7 Parm",      "prmtop,prm7,parm7")
 static msys_plugin_t mol2plugin("mol2", "MDL mol2",         "mol2");
 static msys_plugin_t xyzplugin( "xyz",  "XYZ",              "xyz");
 static msys_plugin_t sdfplugin( "sdf",  "SDF",              "sdf,sdf.gz,sdfgz");
-static msys_plugin_t psfplugin( "psf",  "PSF",              "psf");
+static msys_plugin_t psfplugin( "psf",  "PSF", "psf",
+                                MsysNoCoordinates);
 
 int msys_plugin_register(void* v, vmdplugin_register_cb cb) {
       cb( v, (vmdplugin_t *)&dmsplugin);
