@@ -311,6 +311,10 @@ void desres::msys::ExportPDB(SystemPtr mol, std::string const& path,
     FILE* fd = fopen(path.c_str(), flags & PDBExport::Append ? "ab" : "wb");
     if (!fd) MSYS_FAIL("Failed opening pdb file for writing at " << path);
     boost::shared_ptr<FILE> defer_close(fd, fclose);
+
+    if (flags & PDBExport::Append) {
+        fprintf(fd, "ENDMDL\n");
+    }
     
     double box[9];
     for (int i=0; i<3; i++) for (int j=0; j<3; j++) 
