@@ -156,17 +156,25 @@ struct msys_plugin_t : molfile_plugin_t {
 };
 
 static msys_plugin_t dmsplugin( "dms",  "DESRES Structure", "dms,dms.gz");
-static msys_plugin_t psfplugin( "psf",  "PSF",              "psf");
+static msys_plugin_t maeplugin( "mae",  "MAESTRO file",     "mae,mae.gz,maegz,maeff,maeff.gz,cms,cms.gz");
+static msys_plugin_t pdbplugin( "pdb",  "PDB",              "pdb");
+static msys_plugin_t webpdbplugin("webpdb","Web PDB Download", "");
+static msys_plugin_t prm7plugin("parm7","AMBER7 Parm",      "prmtop,prm7,parm7");
 static msys_plugin_t mol2plugin("mol2", "MDL mol2",         "mol2");
-static msys_plugin_t sdfplugin( "sdf",  "SDF",              "sdf,sdf.gz,sdfgz");
 static msys_plugin_t xyzplugin( "xyz",  "XYZ",              "xyz");
+static msys_plugin_t sdfplugin( "sdf",  "SDF",              "sdf,sdf.gz,sdfgz");
+static msys_plugin_t psfplugin( "psf",  "PSF",              "psf");
 
 int msys_plugin_register(void* v, vmdplugin_register_cb cb) {
       cb( v, (vmdplugin_t *)&dmsplugin);
-      cb( v, (vmdplugin_t *)&psfplugin);
+      cb( v, (vmdplugin_t *)&maeplugin);
+      cb( v, (vmdplugin_t *)&pdbplugin);
+      cb( v, (vmdplugin_t *)&webpdbplugin);
+      cb( v, (vmdplugin_t *)&prm7plugin);
       cb( v, (vmdplugin_t *)&mol2plugin);
-      cb( v, (vmdplugin_t *)&sdfplugin);
       cb( v, (vmdplugin_t *)&xyzplugin);
+      cb( v, (vmdplugin_t *)&sdfplugin);
+      cb( v, (vmdplugin_t *)&psfplugin);
       return VMDPLUGIN_SUCCESS;
 }
 
