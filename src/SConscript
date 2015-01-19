@@ -93,6 +93,7 @@ dms/export_dms.cxx
 dms/import_dms.cxx
 
 molfile/molfile.cxx
+molfile/msys.cxx
 molfile/dtrframe.cxx
 molfile/dtrplugin.cxx
 
