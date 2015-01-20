@@ -9,6 +9,7 @@
 #include <sstream>
 #include <fstream>
 #include <cerrno>
+#include <iomanip>
 
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -350,9 +351,10 @@ String Sqlite::hash() const {
     if (_file) {
         ThreeRoe::result_type h = ThreeRoe::Hash128(
                 _file->contents, _file->size);
-        char buf[33];
-        sprintf(buf, "%016lx%016lx", h.first, h.second);
-        return buf;
+        std::stringstream ss;
+        ss << std::hex << std::setw(16) << std::setfill('0');
+        ss << h.first << h.second;
+        return ss.str();
     }
     return "";
 }

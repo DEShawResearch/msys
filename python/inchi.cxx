@@ -5,6 +5,7 @@ namespace desres { namespace msys {
 
     void export_inchi() {
 
+#ifndef MSYS_WITHOUT_INCHI
         object cls = class_<InChI>("InChI", no_init)
             .def("create", &InChI::create).staticmethod("create")
             .def("string",  &InChI::string, return_const())
@@ -16,6 +17,7 @@ namespace desres { namespace msys {
         cls.attr("DoNotAddH") = InChI::DoNotAddH;
         cls.attr("SNon") = InChI::SNon;
         cls.attr("FixedH") = InChI::FixedH;
+#endif
     }
 }}
 

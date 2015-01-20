@@ -7,6 +7,12 @@ env.Append(
         CCFLAGS='-Wno-cpp'.split(),
         LIBS=['msys', 'boost_python$BOOST_SUFFIX'] )
 
+if env['PLATFORM']=='darwin':
+    env.Append(CCFLAGS='-Wno-error')
+
+if env.get("MSYS_WITHOUT_INCHI"):
+    env.Append(CPPDEFINES='MSYS_WITHOUT_INCHI')
+
 pymodfiles='''
 analyze.cxx
 annotated_system.cxx
