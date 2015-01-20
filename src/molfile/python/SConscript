@@ -1,0 +1,23 @@
+Import('msysenv')
+env=msysenv.Clone()
+env.Append( 
+        CPPPATH=['../../src', '../'],
+        CCFLAGS='-Wno-cpp -Wno-unused-function'.split(),
+        LIBS=['msys', 'boost_python$BOOST_SUFFIX', 'boost_thread$BOOST_SUFFIX'])
+
+env.Append(CPPPATH='..')
+ext=env.AddPythonExtension('_molfile', env.Split('''
+plugin.cxx
+reader.cxx
+atom.cxx
+frame.cxx
+writer.cxx
+dtrreader.cxx
+molfilemodule.cxx
+'''), prefix='msys/molfile')
+
+env.AddPythonExtension('findframe','findframemodule.cxx',
+        prefix='msys/molfile')
+
+env.AddPythonModule('__init__.py',prefix='msys/molfile')
+

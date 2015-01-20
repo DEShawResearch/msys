@@ -98,6 +98,7 @@ molfile/msys.cxx
 molfile/dtrframe.cxx
 molfile/dtrplugin.cxx
 molfile/dcdplugin.c
+molfile/psfplugin.c
 
 fastjson/json.cxx
 fastjson/JSON_parser.c
@@ -184,6 +185,9 @@ value.cxx
 xyz.cxx
 
 '''))
+
+if not env.get("MSYS_WITHOUT_PYTHON"):
+    env.SConscript('molfile/python/SConscript')
 
 env.AddStagedHeaders(Glob("*.hxx"), prefix='msys')
 env.AddStagedHeaders(Glob('atomsel/*.hxx'), prefix='msys/atomsel')

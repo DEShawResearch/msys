@@ -2,7 +2,7 @@
 # -*- python -*-
 #{
 # source `dirname $0`/../share/MODULES && \
-# exec desres-cleanenv -m $MOLFILE/lib-python \
+# exec desres-cleanenv -m $PYTHON/bin \
 # -- python $0 "$@" 
 #}
 
@@ -38,8 +38,8 @@ sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
 
 import msys
 from msys.wrap import Wrapper
-import molfile
-from molfile import findframe
+from msys import molfile
+from msys.molfile import findframe
 
 def main():
     import optparse

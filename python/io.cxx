@@ -90,6 +90,11 @@ namespace desres { namespace msys {
             .value("Append",            Mol2Export::Append)
             ;
 
+        enum_<PDBExport::Flags>("PDBExportFlags")
+            .value("Default",           PDBExport::Default)
+            .value("Append",            PDBExport::Append)
+            ;
+
         class_<LoadIterator, LoadIteratorPtr, boost::noncopyable>("LoadIterator", no_init)
             .def("create", load_iterator_create).staticmethod("create")
             .def("next", load_iterator_next)

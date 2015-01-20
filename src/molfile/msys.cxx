@@ -232,6 +232,28 @@ static int write_bonds(void *v,
     return MOLFILE_SUCCESS;
 }
 
+static int read_timestep_metadata(void *v, molfile_timestep_metadata_t *meta) {
+    system_t* sys = (system_t*)v;
+    SystemPtr mol = sys->mol;
+    meta->count = 1;
+    meta->avg_bytes_per_timestep = mol->atomCount() * 48; /* pos+vel in dbl */
+    meta->has_velocities = 1;
+    meta->supports_double_precision = 1;
+    return MOLFILE_SUCCESS;
+}
+
+static int read_timestep2(void* v, molfile_ssize_t index, 
+                                   molfile_timestep_t* ts) {
+    system_t* sys = (system_t*)v;
+    SystemPtr mol = sys->mol;
+    if (index!=0) return MOLFILE_EOF;
+    ssize_t step = sys->timestep;
+    sys->timestep = 0;
+    int rc = read_next_timestep(v, mol->atomCount(), ts);
+    sys->timestep = step;
+    return rc;
+}
+
 static molfile_plugin_t msys_plugin_base = {
      vmdplugin_ABIVERSION,
      MOLFILE_PLUGIN_TYPE,
@@ -256,11 +278,19 @@ static molfile_plugin_t msys_plugin_base = {
      NULL, // read_volumetric_data,
      NULL, // read_rawgraphics,
      NULL, // read_molecule_metadata,
-     write_bonds
-};
-
-enum {
-    MsysNoCoordinates = 1 << 0
+     write_bonds,
+     NULL, // write_volumetric_data
+     NULL, // read_angles
+     NULL, // write_angles
+     NULL, // read_qm_metadata
+     NULL, // read_qm_rundata
+     NULL, // read_timestep
+     read_timestep_metadata,
+     NULL, // read_qm_timestep_metadata,
+     read_timestep2,
+     NULL, // read_times
+     NULL, // cons_fputs
+     NULL  // truncate_file_write
 };
 
 struct msys_plugin_t : molfile_plugin_t {
@@ -269,10 +299,6 @@ struct msys_plugin_t : molfile_plugin_t {
         this->name = name;
         this->prettyname = pname;
         this->filename_extension = ext;
-        if (flags & MsysNoCoordinates) {
-            this->read_next_timestep = 0;
-            this->write_timestep = 0;
-        }
     };
 };
 
@@ -284,8 +310,6 @@ static msys_plugin_t prm7plugin("parm7","AMBER7 Parm",      "prmtop,prm7,parm7")
 static msys_plugin_t mol2plugin("mol2", "MDL mol2",         "mol2");
 static msys_plugin_t xyzplugin( "xyz",  "XYZ",              "xyz");
 static msys_plugin_t sdfplugin( "sdf",  "SDF",              "sdf,sdf.gz,sdfgz");
-static msys_plugin_t psfplugin( "psf",  "PSF", "psf",
-                                MsysNoCoordinates);
 
 extern "C"
 int msys_plugin_register(void* v, vmdplugin_register_cb cb) {
@@ -297,7 +321,6 @@ int msys_plugin_register(void* v, vmdplugin_register_cb cb) {
       cb( v, (vmdplugin_t *)&mol2plugin);
       cb( v, (vmdplugin_t *)&xyzplugin);
       cb( v, (vmdplugin_t *)&sdfplugin);
-      cb( v, (vmdplugin_t *)&psfplugin);
       return VMDPLUGIN_SUCCESS;
 }
 

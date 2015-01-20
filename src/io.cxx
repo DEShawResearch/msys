@@ -222,7 +222,8 @@ namespace desres { namespace msys {
                 ExportArchive(mol, path);
                 break;
             default:
-                ;
+                MSYS_FAIL("No support for saving file '" << path << "' of type "
+                        << FileFormatAsString(format));
         }
     }
 
