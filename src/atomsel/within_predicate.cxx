@@ -81,9 +81,7 @@ void WithinPredicate::eval( Selection& S ) {
     IdList subsel_ids = subsel.ids();
     IdList S_ids = S.ids();
 
-    IdList ids = SpatialHash(pos, subsel_ids.size(), &subsel_ids[0])
-        .findWithin(rad, pos, S_ids.size(), &S_ids[0], cell);
-
+    IdList ids = FindWithin(S_ids, pos, subsel_ids, pos, rad, cell);
     S.clear();
     for (Id i=0, n=ids.size(); i<n; i++) S[ids[i]] = 1;
 
@@ -127,9 +125,7 @@ void KNearestPredicate::eval( Selection& S ) {
     IdList subsel_ids = subsel.ids();
     IdList S_ids = S.ids();
 
-    IdList ids = SpatialHash(pos, subsel_ids.size(), &subsel_ids[0])
-        .findNearest(_N, pos, S_ids.size(), &S_ids[0], cell);
-
+    IdList ids = FindNearest(S_ids, pos, subsel_ids, pos, _N, cell);
     S.clear();
     for (Id i=0, n=ids.size(); i<n; i++) S[ids[i]] = 1;
 }
