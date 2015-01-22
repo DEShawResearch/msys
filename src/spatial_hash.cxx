@@ -104,12 +104,21 @@ SpatialHash::SpatialHash( const float *pos, int n, const Id* ids,
         cy = sqrt(cell[3]*cell[3] + cell[4]*cell[4] + cell[5]*cell[5]);
         cz = sqrt(cell[6]*cell[6] + cell[7]*cell[7] + cell[8]*cell[8]);
         posix_memalign((void **)&rot, 16, 9*sizeof(*rot));
+        double d1=0, d2=0, d3=0; /* row dot-products */
         for (int i=0; i<3; i++) {
             rot[0+i] = cell[0+i]/cx;
             rot[3+i] = cell[3+i]/cy;
             rot[6+i] = cell[6+i]/cz;
+            d1 += rot[0+i]*rot[3+i];
+            d2 += rot[0+i]*rot[6+i];
+            d3 += rot[3+i]*rot[6+i];
+        }
+        static const float eps = 1e-4;
+        if (fabs(d1)>eps || fabs(d2)>eps || fabs(d3)>eps) {
+            MSYS_FAIL("cell appears triclinic: dot products " << d1 << " " << d2 << " " << d3);
         }
         if (!(rot[1] || rot[2] || rot[3] || rot[5] || rot[6] || rot[7])) {
+            free(rot);
             rot=NULL;
         }
     }
