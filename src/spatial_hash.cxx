@@ -1,5 +1,8 @@
 #include "spatial_hash.hxx"
 #include <limits>
+#include <math.h>
+#include "pfx/rms.hxx"
+#include <stdio.h>
 
 #ifdef __SSE2__
 #include <emmintrin.h>
@@ -78,12 +81,15 @@ SpatialHash::~SpatialHash() {
     free(_tmpx);
     free(_tmpy);
     free(_tmpz);
+    free(rot);
 }
 
-SpatialHash::SpatialHash( const float *pos, int n, const Id* ids)
+SpatialHash::SpatialHash( const float *pos, int n, const Id* ids, 
+                          const double* cell)
 : rad(), ir(), 
   xmin(), ymin(), zmin(),
   xmax(), ymax(), zmax(),
+  rot(), cx(), cy(), cz(),
   ntarget(n), 
   _x(), _y(), _z(), 
   _tmpx(), _tmpy(), _tmpz(), 
@@ -92,6 +98,21 @@ SpatialHash::SpatialHash( const float *pos, int n, const Id* ids)
     nx = ny = nz = 0;
     ox = oy = oz = 0;
     if (ntarget<1) return;
+
+    if (cell) {
+        cx = sqrt(cell[0]*cell[0] + cell[1]*cell[1] + cell[2]*cell[2]);
+        cy = sqrt(cell[3]*cell[3] + cell[4]*cell[4] + cell[5]*cell[5]);
+        cz = sqrt(cell[6]*cell[6] + cell[7]*cell[7] + cell[8]*cell[8]);
+        posix_memalign((void **)&rot, 16, 9*sizeof(*rot));
+        for (int i=0; i<3; i++) {
+            rot[0+i] = cell[0+i]/cx;
+            rot[3+i] = cell[3+i]/cy;
+            rot[6+i] = cell[6+i]/cz;
+        }
+        if (!(rot[1] || rot[2] || rot[3] || rot[5] || rot[6] || rot[7])) {
+            rot=NULL;
+        }
+    }
 
     /* copy to transposed arrays */
     posix_memalign((void **)&_x, 16, ntarget*sizeof(*_x));
@@ -102,9 +123,17 @@ SpatialHash::SpatialHash( const float *pos, int n, const Id* ids)
     posix_memalign((void **)&_tmpz, 16, ntarget*sizeof(*_tmpz));
     for (int i=0; i<ntarget; i++) {
         const float *xyz = pos+3*ids[i];
-        _x[i] = xyz[0];
-        _y[i] = xyz[1];
-        _z[i] = xyz[2];
+        if(rot) {
+            float pos[3]={xyz[0],xyz[1],xyz[2]};
+            pfx::apply_rotation(1,pos,rot);
+            _x[i] = pos[0];
+            _y[i] = pos[1];
+            _z[i] = pos[2];
+        } else {
+            _x[i] = xyz[0];
+            _y[i] = xyz[1];
+            _z[i] = xyz[2];
+        }
     }
 
     /* compute bounds for positions */
@@ -206,8 +235,7 @@ float SpatialHash::mindist2(float x, float y, float z) const {
 }
 
 IdList SpatialHash::findNearest(unsigned k, const float* pos, 
-                   unsigned num, const Id* ids,
-                   const double* cell) {
+                   unsigned num, const Id* ids) {
 
     /* enough atoms available */
     if (num <= k) return IdList(ids, ids+num);
@@ -218,7 +246,7 @@ IdList SpatialHash::findNearest(unsigned k, const float* pos,
 
     /* increase rmax until we get at least K atoms */
     for (;;) {
-        smax = findWithin(rmax, pos, num, ids, cell);
+        smax = findWithin(rmax, pos, num, ids);
         if (smax.size() >= k) break;
         smin.swap(smax);
         rmin = rmax;
@@ -228,7 +256,7 @@ IdList SpatialHash::findNearest(unsigned k, const float* pos,
     /* Refine with a couple rounds of bisection search */
     for (int nb=0; nb<6; nb++) {
         float rm = 0.5*(rmin+rmax);
-        IdList sm = find_within(rm, pos, smax.size(),&smax[0], cell);
+        IdList sm = find_within(rm, pos, smax.size(),&smax[0]);
         if (sm.size() >= k) {
             smax.swap(sm);
             rmax = rm;
@@ -258,14 +286,14 @@ IdList SpatialHash::findNearest(unsigned k, const float* pos,
 }
 
 IdList SpatialHash::find_within(float r, const float* pos, 
-                  int n, const Id* ids,
-                  const double* cell ) const {
+                  int n, const Id* ids) const {
     IdList result;
     result.reserve(n);
-    const float cx = cell ? cell[0] : 0;
-    const float cy = cell ? cell[4] : 0;
-    const float cz = cell ? cell[8] : 0;
     int j=0;
+
+    bool periodic = cx!=0 || cy!=0 || cz!=0;
+    float tmp[12];
+
 #ifdef __SSE2__
    const float r2 = r*r;
    int b0, b1, b2, b3;
@@ -292,6 +320,17 @@ IdList SpatialHash::find_within(float r, const float* pos,
        const float *b = pos+3*ids[j+1];
        const float *c = pos+3*ids[j+2];
        const float *d = pos+3*ids[j+3];
+       if (rot) {
+           memcpy(tmp+0,a,3*sizeof(float));
+           memcpy(tmp+3,b,3*sizeof(float));
+           memcpy(tmp+6,c,3*sizeof(float));
+           memcpy(tmp+9,d,3*sizeof(float));
+           pfx::apply_rotation(4,tmp,rot);
+           a=tmp+0;
+           b=tmp+3;
+           c=tmp+6;
+           d=tmp+9;
+       }
        p0 = _mm_setr_ps(a[0], b[0], c[0], d[0]);
        p1 = _mm_setr_ps(a[1], b[1], c[1], d[1]);
        p2 = _mm_setr_ps(a[2], b[2], c[2], d[2]);
@@ -329,8 +368,6 @@ IdList SpatialHash::find_within(float r, const float* pos,
                _mm_and_si128   (c2, j0),
                _mm_andnot_si128(c2, z1));
 
-       if (_mm_movemask_epi8(_mm_cmpgt_epi32(j0, z1))==0) continue;
-
 #ifdef __SSE4_1__
         int v0 = _mm_extract_epi32(j0,0);
         int v1 = _mm_extract_epi32(j0,1);
@@ -350,7 +387,7 @@ IdList SpatialHash::find_within(float r, const float* pos,
         b1 = (v1>=0) && test2(r2, v1, GETX(1), GETY(1), GETZ(1));
         b2 = (v2>=0) && test2(r2, v2, GETX(2), GETY(2), GETZ(2));
         b3 = (v3>=0) && test2(r2, v3, GETX(3), GETY(3), GETZ(3));
-        if (cell) {
+        if (periodic) {
             if (!b0) b0 = minimage(r,cx,cy,cz, GETX(0),GETY(0),GETZ(0));
             if (!b1) b1 = minimage(r,cx,cy,cz, GETX(1),GETY(1),GETZ(1));
             if (!b2) b2 = minimage(r,cx,cy,cz, GETX(2),GETY(2),GETZ(2));
@@ -368,9 +405,15 @@ IdList SpatialHash::find_within(float r, const float* pos,
     for (; j<n; j++) {
         unsigned id = ids[j];
         const float *xyz = pos + 3*id;
-        if (             test(r, xyz[0], xyz[1], xyz[2]) ||
-            minimage(r,cx,cy,cz, xyz[0], xyz[1], xyz[2])) 
+        if (rot) {
+            memcpy(tmp,xyz,3*sizeof(float));
+            pfx::apply_rotation(1,tmp,rot);
+            xyz = tmp;
+        }
+        float x=xyz[0], y=xyz[1], z=xyz[2];
+        if (test(r, x,y,z) || (periodic && minimage(r,cx,cy,cz,x,y,z))) {
             result.push_back(id);
+        }
     }
     return result;
 }
@@ -465,16 +508,16 @@ namespace desres { namespace msys {
                       float radius,
                       const double* cell) {
  
-        return SpatialHash(pro, psel.size(), &psel[0])
-            .findWithin(radius, wat, wsel.size(), &wsel[0], cell);
+        return SpatialHash(pro, psel.size(), &psel[0], cell)
+            .findWithin(radius, wat, wsel.size(), &wsel[0]);
     }
  
     IdList FindNearest(IdList const& wsel, const float* wat,
                        IdList const& psel, const float* pro,
                        Id k,               const double* cell) {
  
-        return SpatialHash(pro, psel.size(), &psel[0])
-            .findNearest(k, wat, wsel.size(), &wsel[0], cell);
+        return SpatialHash(pro, psel.size(), &psel[0], cell)
+            .findNearest(k, wat, wsel.size(), &wsel[0]);
     }
 
 }}

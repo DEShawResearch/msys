@@ -8,7 +8,7 @@ using namespace desres::msys;
 
 typedef desres::msys::SpatialHash Hash;
 
-static Hash* hash_new(PyObject* posobj, PyObject* idobj) {
+static Hash* hash_new(PyObject* posobj, PyObject* idobj, PyObject* boxobj) {
 
     PyObject* posarr = PyArray_FromAny(posobj,
                 PyArray_DescrFromType(NPY_FLOAT32),
@@ -25,12 +25,27 @@ static Hash* hash_new(PyObject* posobj, PyObject* idobj) {
         throw_error_already_set();
     }
 
+    PyObject* boxarr = NULL;
+    if (boxobj!=Py_None) {
+        boxarr = PyArray_FromAny(boxobj,
+                 PyArray_DescrFromType(NPY_FLOAT64),
+                 2, 2, NPY_C_CONTIGUOUS | NPY_ALIGNED,
+                 NULL);
+        if (!boxarr) {
+            Py_DECREF(idarr);
+            Py_DECREF(posarr);
+            throw_error_already_set();
+        }
+    }
+
     const float* pos = (const float*)PyArray_DATA(posarr);
     const Id* ids = (const Id*)PyArray_DATA(idarr);
+    const double* box = boxarr ? (const double *)PyArray_DATA(boxarr) : NULL;
     Id n = PyArray_DIM(idarr,0);
 
-    Hash* hash = new Hash(pos, n, ids);
+    Hash* hash = new Hash(pos, n, ids, box);
 
+    Py_XDECREF(boxarr);
     Py_DECREF(idarr);
     Py_DECREF(posarr);
     return hash;
@@ -42,7 +57,6 @@ static PyObject* hash_find(Hash& hash,
                            Param r,
                            PyObject* posobj,
                            PyObject* idsobj,
-                           PyObject* boxobj,
                            Func func) {
 
     PyObject* posarr = PyArray_FromAny(posobj,
@@ -60,27 +74,12 @@ static PyObject* hash_find(Hash& hash,
         throw_error_already_set();
     }
 
-    PyObject* boxarr = NULL;
-    if (boxobj!=Py_None) {
-        boxarr = PyArray_FromAny(boxobj,
-                 PyArray_DescrFromType(NPY_FLOAT64),
-                 2, 2, NPY_C_CONTIGUOUS | NPY_ALIGNED,
-                 NULL);
-        if (!boxarr) {
-            Py_DECREF(idsarr);
-            Py_DECREF(posarr);
-            throw_error_already_set();
-        }
-    }
-
     const float* pos = (const float*)PyArray_DATA(posarr);
-    const double* box = boxarr ? (const double *)PyArray_DATA(boxarr) : NULL;
     const Id* ids = (const Id*)PyArray_DATA(idsarr);
     Id n = PyArray_DIM(idsarr,0);
 
-    IdList result = (hash.*func)(r, pos, n, ids, box);
+    IdList result = (hash.*func)(r, pos, n, ids);
 
-    Py_XDECREF(boxarr);
     Py_DECREF(idsarr);
     Py_DECREF(posarr);
     npy_intp dims[1];
@@ -97,20 +96,18 @@ static PyObject* hash_find_within(Hash& hash,
                                   float r,
                                   PyObject* pos,
                                   PyObject* ids,
-                                  PyObject* box,
                                   bool reuse_voxels) {
 
-    return reuse_voxels ? hash_find(hash, r, pos, ids, box, &Hash::find_within)
-                        : hash_find(hash, r, pos, ids, box, &Hash::findWithin);
+    return reuse_voxels ? hash_find(hash, r, pos, ids, &Hash::find_within)
+                        : hash_find(hash, r, pos, ids, &Hash::findWithin);
 }
 
 static PyObject* hash_find_nearest(Hash& hash,
                                    int k,
                                    PyObject* pos,
-                                   PyObject* ids,
-                                   PyObject* box) {
+                                   PyObject* ids) {
 
-    return hash_find(hash, k, pos, ids, box, &Hash::findNearest);
+    return hash_find(hash, k, pos, ids, &Hash::findNearest);
 }
 
 namespace desres { namespace msys {
@@ -119,19 +116,17 @@ namespace desres { namespace msys {
         class_<Hash>("SpatialHash", no_init)
             .def("__init__", make_constructor(
                         hash_new, default_call_policies(),
-                        (arg("pos"), arg("ids"))))
+                        (arg("pos"), arg("ids"), arg("box")=object())))
             .def("voxelize", &Hash::voxelize, return_internal_reference<>())
             .def("findWithin", hash_find_within,
                     (arg("r"), 
                      arg("pos"), 
                      arg("ids"), 
-                     arg("box")=object(),
                      arg("reuse_voxels")=false))
             .def("findNearest", hash_find_nearest,
                     (arg("k"), 
                      arg("pos"), 
-                     arg("ids"), 
-                     arg("box")=object()))
+                     arg("ids")))
             ;
     }
 }}

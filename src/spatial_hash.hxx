@@ -23,6 +23,11 @@ namespace desres { namespace msys {
         /* voxel grid dimension */
         int nx, ny, nz;
 
+        /* rotation */
+        float* rot;
+        /* cell dims */
+        float cx, cy, cz;
+
         /* neighbor full shell offsets */
         int full_shell[10];
         int strip_lens[10];
@@ -43,7 +48,7 @@ namespace desres { namespace msys {
         ~SpatialHash();
 
         /* Constructor: supply n ids of points to be hashed. */
-        SpatialHash( const float *pos, int n, const Id* ids);
+        SpatialHash(const float *pos, int n, const Id* ids, const double* cell);
 
         SpatialHash& voxelize(float r);
 
@@ -63,27 +68,23 @@ namespace desres { namespace msys {
          * hashed point. */
         float mindist2(float x, float y, float z) const;
 
-        /* find the ids of the k nearest points.  If cell is not NULL,
-         * use minimum image distances.  */
+        /* find the ids of the k nearest points.  */
         IdList findNearest(unsigned k, const float* pos, 
-                           unsigned num, const Id* ids,
-                           const double* cell = NULL);
+                           unsigned num, const Id* ids);
 
         /* Find the points within r of the hashed points.  If cell
          * is not NULL, use minimum image distances.  */
         IdList findWithin(float r, const float* pos,
-                          int n, const Id* ids,
-                          const double* cell = NULL) {
+                          int n, const Id* ids) {
             voxelize(r);
-            return find_within(r,pos,n,ids,cell);
+            return find_within(r,pos,n,ids);
         }
 
         /* For expert users only.  Finds points within r of the
          * hashed points assuming the hashed points have already
          * been voxelized with a grid spacing of at least r. */
         IdList find_within(float r, const float* pos, 
-                          int n, const Id* ids,
-                          const double* cell ) const;
+                          int n, const Id* ids) const;
 
         /* Return true if point px,py,pz is within r of some hashed
          * point assuming an orthorhombic periodic cell with lengths
