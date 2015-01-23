@@ -12,7 +12,7 @@ DESRES_ISA=os.environ['DESRES_ISA']
 TMPDIR=os.getenv('TMPDIR', 'objs/%s/%s' % (DESRES_OS, DESRES_ISA))
 sys.path.insert(0,os.path.join(TMPDIR, 'lib', 'python'))
 import msys
-from msys import knot, reorder, pfx
+from msys import knot, reorder, pfx, molfile
 from time import time
 import numpy as NP
 import json
@@ -274,9 +274,43 @@ class TestSdf(unittest.TestCase):
             self.assertEqual(mol.name, ('XYZ', 'ABC')[i])
 
 
+class TestMolfile(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        r = molfile.pdb.read('tests/files/3RYZ.pdb')
+        cls.atoms = r.atoms
+        cls.frame = r.frame(0)
+
+    def testOccupancy(self):
+        ids=[i for i,a in enumerate(self.atoms) if a.occupancy<0.3]
+        self.assertEqual(ids, [490,494,496,498,500,502,504])
+
+    def testBfactor(self):
+        ref = [2182, 2191, 2208, 2211, 2223, 2259, 2264, 2279, 2393, 2400, 2441]
+        ids=[i for i,a in enumerate(self.atoms) if a.bfactor>50]
+        self.assertEqual(ids, ref)
+        with tempfile.NamedTemporaryFile(suffix='.pdb') as tmp:
+            molfile.pdb.write(tmp.name, self.atoms).frame(self.frame).close()
+            r = molfile.pdb.read(tmp.name)
+            atoms = r.atoms
+            ids=[i for i,a in enumerate(atoms) if a.bfactor>50]
+            self.assertEqual(ids, ref)
+
+    def testAltloc(self):
+        ids=[i for i,a in enumerate(self.atoms) if a.altloc=='A']
+        self.assertEqual(ids, 
+                [161,165,167,169,171,489,493,495,497,499,501,
+                 503,1448,1452,1454,1456,1458,1460,1698,1702,1704])
+
+    def testCell(self):
+        self.assertEqual(list(self.frame.box.diagonal()),
+                [42.408, 41.697, 69.9599803728577])
+
+
 class TestPdb(unittest.TestCase):
-    def setUp(self):
-        self.mol=msys.Load('tests/files/3RYZ.pdb')
+    @classmethod
+    def setUpClass(cls):
+        cls.mol=msys.Load('tests/files/3RYZ.pdb')
 
     def testOccupancy(self):
         ids=self.mol.selectIds('occupancy < 0.3')

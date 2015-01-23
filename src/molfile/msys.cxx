@@ -59,6 +59,13 @@ static int read_structure(void *v, int *optflags, molfile_atom_t *atoms) {
               | MOLFILE_CTNUMBER
               ;
 
+    Id occupancy = mol->atomPropIndex("occupancy");
+    Id bfactor = mol->atomPropIndex("bfactor");
+    Id altloc = mol->atomPropIndex("altloc");
+    if (!bad(occupancy)) *optflags |= MOLFILE_OCCUPANCY;
+    if (!bad(bfactor))   *optflags |= MOLFILE_BFACTOR;
+    if (!bad(altloc))    *optflags |= MOLFILE_ALTLOC;
+
     for (Id i=0, n=mol->atomCount(); i<n; i++) {
         molfile_atom_t& dst = atoms[i];
         atom_t const& atm = mol->atomFAST(i);
@@ -71,12 +78,15 @@ static int read_structure(void *v, int *optflags, molfile_atom_t *atoms) {
         dst.resid = res.resid;
         strncpy(dst.segid, chn.segid.c_str(), sizeof(dst.segid));
         strncpy(dst.chain, chn.name.c_str(), sizeof(dst.chain));
-        
         strncpy(dst.insertion, res.insertion.c_str(), sizeof(dst.insertion));
         dst.mass = atm.mass;
         dst.charge = atm.charge;
         dst.atomicnumber = atm.atomic_number;
         dst.ctnumber = chn.ct;
+
+        if (!bad(occupancy)) dst.occupancy = mol->atomPropValue(i,occupancy);
+        if (!bad(bfactor)) dst.bfactor = mol->atomPropValue(i,bfactor);
+        if (!bad(altloc)) strncpy(dst.altloc, mol->atomPropValue(i,altloc).c_str(),sizeof(dst.altloc));
 
 #define NULL_TERMINATE(x) do { x[sizeof(x)-1] = 0; } while(0)
         NULL_TERMINATE(dst.name);
@@ -118,6 +128,7 @@ static int read_bonds(void *v, int *nbonds, int **from, int **to,
 static int read_next_timestep(void *v, int natoms, molfile_timestep_t *ts) {
     system_t* sys = (system_t*)v;
     if (sys->timestep++) return MOLFILE_EOF;
+    if (!ts) return MOLFILE_SUCCESS;
     SystemPtr mol = sys->mol;
     float* fpos = ts->coords;
     float* fvel = ts->velocities;
@@ -131,6 +142,7 @@ static int read_next_timestep(void *v, int natoms, molfile_timestep_t *ts) {
         if (dpos) std::copy(pos, pos+3, dpos+3*i);
         if (dvel) std::copy(vel, vel+3, dvel+3*i);
     }
+    memcpy(ts->unit_cell, mol->global_cell[0], sizeof(ts->unit_cell));
     return MOLFILE_SUCCESS;
 }
 
@@ -160,6 +172,8 @@ static int write_structure(void *v, int optflags, const molfile_atom_t *atoms) {
         mol->addAtomProp("bfactor", FloatType) : BadId;
     Id occupancy = optflags & MOLFILE_OCCUPANCY ?
         mol->addAtomProp("occupancy", FloatType) : BadId;
+    Id altloc = optflags & MOLFILE_ALTLOC?
+        mol->addAtomProp("altloc", StringType) : BadId;
 
     for (int i=0, n=sys->natoms; i<n; i++) {
         molfile_atom_t const& atom = atoms[i];
@@ -174,6 +188,7 @@ static int write_structure(void *v, int optflags, const molfile_atom_t *atoms) {
         res.insertion = atom.insertion;
         if (!bad(bfactor))   mol->atomPropValue(i,bfactor)=atom.bfactor;
         if (!bad(occupancy)) mol->atomPropValue(i,occupancy)=atom.occupancy;
+        if (!bad(altloc))    mol->atomPropValue(i,altloc)=atom.altloc;
     }
     for (Id i=0, n=sys->bondorders.size(); i<n; i++) {
         Id id = mol->addBond(sys->bonds[i], sys->bonds[i+n]);

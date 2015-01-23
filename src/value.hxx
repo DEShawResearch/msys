@@ -89,6 +89,7 @@ namespace desres { namespace msys {
     
         /* string conversions allowed from StringType values */
         operator std::string() const { return asString(); }
+        const char* c_str() const;
     
         /* comparision to a concrete type is performed by converting this
          * to the type of the argument. */

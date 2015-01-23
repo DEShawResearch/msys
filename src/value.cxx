@@ -20,6 +20,10 @@ String ValueRef::asString() const {
     if (_type==StringType) return _val.s ? _val.s : "";
     throw std::runtime_error("Cannot convert ValueRef to string");
 }
+const char* ValueRef::c_str() const {
+    if (_type==StringType) return _val.s ? _val.s : "";
+    throw std::runtime_error("Cannot convert ValueRef to string");
+}
 
 void ValueRef::fromInt(const Int& i) {
     if (_type==IntType) _val.i = i;
