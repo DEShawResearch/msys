@@ -1,5 +1,6 @@
-1.7.89 Incorporated molfile into msys.  Use 'from msys import molfile'.
+1.7.90 Incorporated molfile into msys.  Use 'from msys import molfile'.
        pbwithin selection now handles rotated unit cell correctly.
+       [pb]nearest now handles empty subselection.
        Slight change to SpatialHash interface.
 
 1.7.88 Added SmartsPattern::match().
