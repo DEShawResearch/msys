@@ -91,41 +91,45 @@ class TestPropmap(unittest.TestCase):
 
 class TestSpatialHash(unittest.TestCase):
     def testNearest(self):
-        mol = msys.Load('tests/files/3RYZ.pdb')
+        mol = msys.Load('tests/files/small.mae')
         pos = mol.positions.astype('f')
         box = mol.cell
 
-        pro = mol.selectArr('protein')
+        pro = mol.selectArr('fragid 0')
         wat = mol.selectArr('water')
 
         sph = msys.SpatialHash(pos, pro)
-
-        new1 = sph.findNearest(30, pos, wat)
-        old1 = mol.selectArr('water and nearest 30 to protein')
+        new1 = sph.findNearest(1930, pos, wat)
+        old1 = mol.selectArr('water and nearest 1930 to fragid 0')
         self.assertTrue((old1==new1).all())
 
-        new2 = sph.findNearest(30, pos, wat, box)
-        old2 = mol.selectArr('water and pbnearest 30 to protein')
+        sph = msys.SpatialHash(pos, pro, box=box)
+        new2 = sph.findNearest(1930, pos, wat)
+        old2 = mol.selectArr('water and pbnearest 1930 to fragid 0')
         self.assertTrue((old2==new2).all())
+        # make sure we really tested the pb version
+        self.assertTrue((old1!=old2).any())
 
 
     def testWithin(self):
-        mol = msys.Load('tests/files/3RYZ.pdb')
+        mol = msys.Load('tests/files/small.mae')
         pos = mol.positions.astype('f')
         box = mol.cell
 
-        pro = mol.selectArr('protein')
+        pro = mol.selectArr('fragid 0')
         wat = mol.selectArr('water')
 
         sph = msys.SpatialHash(pos[pro])
-
-        new1 = sph.findWithin(3.0, pos, wat)
-        old1 = mol.selectArr('water and within 3.0 of protein')
+        new1 = sph.findWithin(23.0, pos, wat)
+        old1 = mol.selectArr('water and within 23.0 of fragid 0')
         self.assertTrue((old1==new1).all())
 
-        new2 = sph.findWithin(3.0, pos, wat, box)
-        old2 = mol.selectArr('water and pbwithin 3.0 of protein')
+        sph = msys.SpatialHash(pos[pro], box=box)
+        new2 = sph.findWithin(23.0, pos, wat)
+        old2 = mol.selectArr('water and pbwithin 23.0 of fragid 0')
         self.assertTrue((old2==new2).all())
+        # why does this return a bool in this case instead of an array???
+        self.assertTrue(old1!=old2)
 
 
 class TestReorder(unittest.TestCase):

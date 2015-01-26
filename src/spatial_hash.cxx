@@ -246,6 +246,9 @@ float SpatialHash::mindist2(float x, float y, float z) const {
 IdList SpatialHash::findNearest(unsigned k, const float* pos, 
                    unsigned num, const Id* ids) {
 
+    /* If there are no hashed atoms, we should stop now. */
+    if (ntarget==0) MSYS_FAIL("No atoms in target selection");
+
     /* enough atoms available */
     if (num <= k) return IdList(ids, ids+num);
 

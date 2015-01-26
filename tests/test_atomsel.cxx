@@ -1,4 +1,4 @@
-#include "dms.hxx"
+#include "io.hxx"
 #include "atomsel.hxx"
 #include <stdio.h>
 
@@ -9,7 +9,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Usage: %s input.dms atomsel [atomsel...]\n", argv[0]);
         return 1;
     }
-    SystemPtr sys = ImportDMS(argv[1]);
+    SystemPtr sys = Load(argv[1]);
     for (int i=2; i<argc; i++) {
         double t=-now();
         IdList atoms = Atomselect(sys, argv[i]);
