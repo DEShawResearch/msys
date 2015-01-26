@@ -1,3 +1,7 @@
+1.7.89 Incorporated molfile into msys.  Use 'from msys import molfile'.
+       pbwithin selection now handles rotated unit cell correctly.
+       Slight change to SpatialHash interface.
+
 1.7.88 Added SmartsPattern::match().
 
 1.7.87 Use Python/2.7.9-05st.
