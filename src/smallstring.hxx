@@ -52,15 +52,15 @@ namespace desres { namespace msys {
             return s[i];
         }
 
-        //template <int M>
-        //friend std::ostream& operator<<(std::ostream& out,
-                                        //SmallString<M> const& self);
+        template <int M>
+        friend std::ostream& operator<<(std::ostream& out,
+                                        SmallString<M> const& self);
     };
-    //template <int M>
-    //std::ostream& operator<<(std::ostream& out, SmallString<M> const& self) {
-        //out << self.s;
-        //return out;
-    //}
+    template <int M>
+    std::ostream& operator<<(std::ostream& out, SmallString<M> const& self) {
+        out << self.s;
+        return out;
+    }
 }}
 
 #endif
