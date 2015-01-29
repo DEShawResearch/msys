@@ -1,3 +1,5 @@
+1.7.91 Added ostream operator to SmallString.
+
 1.7.90 Incorporated molfile into msys.  Use 'from msys import molfile'.
        pbwithin selection now handles rotated unit cell correctly.
        [pb]nearest now handles empty subselection.
