@@ -39,8 +39,6 @@ typedef struct {
 static VMDDIR * vmd_opendir(const char *);
 static char * vmd_readdir(VMDDIR *);
 static void vmd_closedir(VMDDIR *);
-static inline int vmd_file_is_executable(const char * filename);
-
 
 #define VMD_FILENAME_MAX 1024
 
@@ -129,7 +127,7 @@ static void vmd_closedir(VMDDIR * d) {
 }
 
 
-static int vmd_file_is_executable(const char * filename) {
+static inline int vmd_file_is_executable(const char * filename) {
   struct stat buf;
   if (!stat(filename, &buf)) {
     if (buf.st_mode & S_IXUSR || 

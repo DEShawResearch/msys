@@ -1,5 +1,6 @@
 #include "libmolfile_plugin.h"
 
+int msys_plugin_init(void);
 int msys_plugin_register(void *, vmdplugin_register_cb);
 int msys_dtrplugin_init(void);
 int msys_dtrplugin_register(void *, vmdplugin_register_cb);
@@ -9,6 +10,7 @@ int msys_psfplugin_init(void);
 int msys_psfplugin_register(void *, vmdplugin_register_cb);
 
 void molfile_init_all(void) {
+    msys_plugin_init();
     msys_dtrplugin_init();
     msys_dcdplugin_init();
     msys_psfplugin_init();

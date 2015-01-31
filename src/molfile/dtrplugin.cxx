@@ -141,6 +141,9 @@ namespace {
    * 1234 for little endian, 4321 for big endian, and
    * 3412 for the unlikely PDB endianism.
    */
+
+  // unused(!)
+#if 0
   uint32_t machineEndianism() {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
     uint32_t byteorder = 1234;
@@ -159,6 +162,7 @@ namespace {
     // has an unexpected value.
     return byteorder;
   }
+#endif
 
   bool isfile(const std::string &name) {
     struct stat statbuf;
@@ -411,9 +415,9 @@ void Timekeys::initWithBytes(size_t tksize, void* bytes) {
         /* constant frame size */
         if (keys[i].size() != m_framesize) {
             if (verbose) {
-                fprintf(stderr, "non-constant framesize at frame %ld\n", i);
-                fprintf(stderr, "  size %lu framesize %lu\n\n",
-                        keys[i].size(), m_framesize);
+                std::cerr << "non-constant framesize at frame " << i << "\n";
+                std::cerr << "  size " << keys[i].size() 
+                          << " framesize " << m_framesize << "\n\n";
             }
             m_framesize = 0;
             return;
@@ -421,7 +425,7 @@ void Timekeys::initWithBytes(size_t tksize, void* bytes) {
         /* constant offset */
         if (keys[i].offset() != m_framesize*( i % m_fpf)) {
             if (verbose) {
-                fprintf(stderr, "unexpected offset for frame %ld\n", i);
+                std::cerr << "unexpected offset for frame " << i << "\n";
             }
             m_framesize = 0;
             return;
@@ -553,7 +557,7 @@ namespace {
   public:
       int eno;
       DDException(const std::string &text, int _eno=0) 
-      : std::runtime_error(text + strerror(eno)), eno(_eno){}
+      : std::runtime_error(text + strerror(_eno)), eno(_eno){}
   };
 }
 

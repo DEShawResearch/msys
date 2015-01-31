@@ -4,11 +4,12 @@ Import('libmsys')
 env=msysenv.Clone()
 env.Append( 
         CPPPATH=['../src'],
-        CCFLAGS='-Wno-cpp'.split(),
         LIBS=['msys', 'boost_python$BOOST_SUFFIX'] )
 
 if env['PLATFORM']=='darwin':
     env.Append(CCFLAGS='-Wno-error')
+else:
+    env.Append(CCFLAGS='-Wno-cpp')
 
 if env.get("MSYS_WITHOUT_INCHI"):
     env.Append(CPPDEFINES='MSYS_WITHOUT_INCHI')

@@ -39,7 +39,7 @@ static void* open_file_read(const char *filename, const char *filetype,
         mol = LoadWithFormat(filename, format, structure_only);
     }
     catch (std::exception& e) {
-        fprintf(stderr, e.what());
+        fprintf(stderr, "%s", e.what());
         return NULL;
     }
     *natoms = mol->atomCount();
@@ -223,7 +223,7 @@ static int write_timestep(void *v, const molfile_timestep_t *ts) {
                             sys->format, options);
     }
     catch (std::exception& e) {
-        fprintf(stderr, e.what());
+        fprintf(stderr, "%s", e.what());
         return MOLFILE_ERROR;
     }
     return MOLFILE_SUCCESS;
@@ -308,34 +308,46 @@ static molfile_plugin_t msys_plugin_base = {
      NULL  // truncate_file_write
 };
 
-struct msys_plugin_t : molfile_plugin_t {
-    msys_plugin_t(const char* name, const char* pname, const char* ext, int flags=0) {
-        static_cast<molfile_plugin_t&>(*this) = msys_plugin_base;
-        this->name = name;
-        this->prettyname = pname;
-        this->filename_extension = ext;
-    };
-};
+static void init(molfile_plugin_t* self, 
+                 const char* name, const char* pname, const char* ext) {
+    *self = msys_plugin_base;
+    self->name = name;
+    self->prettyname = pname;
+    self->filename_extension = ext;
+}
 
-static msys_plugin_t dmsplugin( "dms",  "DESRES Structure", "dms,dms.gz");
-static msys_plugin_t maeplugin( "mae",  "MAESTRO file",     "mae,mae.gz,maegz,maeff,maeff.gz,cms,cms.gz");
-static msys_plugin_t pdbplugin( "pdb",  "PDB",              "pdb");
-static msys_plugin_t webpdbplugin("webpdb","Web PDB Download", "");
-static msys_plugin_t prm7plugin("parm7","AMBER7 Parm",      "prmtop,prm7,parm7");
-static msys_plugin_t mol2plugin("mol2", "MDL mol2",         "mol2");
-static msys_plugin_t xyzplugin( "xyz",  "XYZ",              "xyz");
-static msys_plugin_t sdfplugin( "sdf",  "SDF",              "sdf,sdf.gz,sdfgz");
+static molfile_plugin_t dmsplugin[1];
+static molfile_plugin_t maeplugin[1];
+static molfile_plugin_t pdbplugin[1];
+static molfile_plugin_t webpdbplugin[1];
+static molfile_plugin_t prm7plugin[1];
+static molfile_plugin_t mol2plugin[1];
+static molfile_plugin_t xyzplugin[1];
+static molfile_plugin_t sdfplugin[1];
+
+extern "C"
+int msys_plugin_init() {
+    init(dmsplugin, "dms",  "DESRES Structure", "dms,dms.gz");
+    init(maeplugin, "mae",  "MAESTRO file",     "mae,mae.gz,maegz,maeff,maeff.gz,cms,cms.gz");
+    init(pdbplugin, "pdb",  "PDB",              "pdb");
+    init(webpdbplugin,"webpdb","Web PDB Download", "");
+    init(prm7plugin,"parm7","AMBER7 Parm",      "prmtop,prm7,parm7");
+    init(mol2plugin,"mol2", "MDL mol2",         "mol2");
+    init(xyzplugin, "xyz",  "XYZ",              "xyz");
+    init(sdfplugin, "sdf",  "SDF",              "sdf,sdf.gz,sdfgz");
+    return VMDPLUGIN_SUCCESS;
+}
 
 extern "C"
 int msys_plugin_register(void* v, vmdplugin_register_cb cb) {
-      cb( v, (vmdplugin_t *)&dmsplugin);
-      cb( v, (vmdplugin_t *)&maeplugin);
-      cb( v, (vmdplugin_t *)&pdbplugin);
-      cb( v, (vmdplugin_t *)&webpdbplugin);
-      cb( v, (vmdplugin_t *)&prm7plugin);
-      cb( v, (vmdplugin_t *)&mol2plugin);
-      cb( v, (vmdplugin_t *)&xyzplugin);
-      cb( v, (vmdplugin_t *)&sdfplugin);
+      cb( v, (vmdplugin_t *)dmsplugin);
+      cb( v, (vmdplugin_t *)maeplugin);
+      cb( v, (vmdplugin_t *)pdbplugin);
+      cb( v, (vmdplugin_t *)webpdbplugin);
+      cb( v, (vmdplugin_t *)prm7plugin);
+      cb( v, (vmdplugin_t *)mol2plugin);
+      cb( v, (vmdplugin_t *)xyzplugin);
+      cb( v, (vmdplugin_t *)sdfplugin);
       return VMDPLUGIN_SUCCESS;
 }
 

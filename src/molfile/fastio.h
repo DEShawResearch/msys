@@ -432,7 +432,7 @@ static fio_size_t fio_fread(void *ptr, fio_size_t size,
 //        printf("fio_fread(): rc %ld  sz: %ld\n", rc, szleft);
 //      }
       if (rc < 0) {
-        printf("fio_fread(): rc %ld  sz: %ld\n", rc, size);
+        //printf("fio_fread(): rc %ld  sz: %ld\n", rc, size);
         perror("  perror fio_fread(): ");
         break;
       }
@@ -548,7 +548,7 @@ static fio_size_t fio_fwrite(void *ptr, fio_size_t size,
 //        printf("fio_fwrite(): rc %ld  sz: %ld\n", rc, szleft);
 //      }
       if (rc < 0) {
-        printf("fio_fwrite(): rc %ld  sz: %ld\n", rc, size);
+        //printf("fio_fwrite(): rc %ld  sz: %ld\n", rc, size);
         perror("  perror fio_fwrite(): ");
         return cnt;
       }
@@ -560,7 +560,7 @@ static fio_size_t fio_fwrite(void *ptr, fio_size_t size,
   for (i=0; i<nitems; i++) {
     fio_size_t rc = write(fd, ptr, size);
     if (rc != size) {
-      printf("fio_fwrite(): rc %ld  sz: %ld\n", rc, size);
+      //printf("fio_fwrite(): rc %ld  sz: %ld\n", rc, size);
       perror("  perror fio_fwrite(): ");
       break;
     }
