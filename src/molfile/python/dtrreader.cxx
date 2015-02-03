@@ -288,6 +288,10 @@ void desres::molfile::export_dtrreader() {
 
     class_<Timekeys>("Timekeys", bp::init<>())
         .def("init", tk_init)
+        .def("size",                    &Timekeys::size)
+        .add_property("framesperfile",  &Timekeys::framesperfile)
+        .add_property("framesize",      &Timekeys::framesize)
+        .add_property("interval",       &Timekeys::interval)
         ;
 
     class_<FrameSetReader, boost::noncopyable>("DtrReader", no_init)
