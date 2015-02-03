@@ -213,20 +213,24 @@ static PyObject* py_glue(PyObject *self, PyObject *args, PyObject *kwds) {
 }
 
 PyDoc_STRVAR(align_doc,
-"align(atoms, coords=None) -- align atoms to reference structure.\n"
+"align(atoms, coords=None, weights=None) -- align to reference structure.\n"
 "\n"
 "If coords is None, then only centering will be performed.\n"
+"If weights not None, it should be of size atoms.\n"
 );
 
 static PyObject* py_align(PyObject *self, PyObject *args, PyObject *kwds) {
     pfx_t *pfx = ((PfxObject *)self)->pfx;
     PyObject *atomobj, *coordobj=Py_None;
     PyObject *atomarr, *coordarr=NULL;
+    PyObject *wobj=Py_None, *warr=NULL;
     const double* coords = NULL;
-    static char *kwlist[] = {(char *)"atoms", (char *)"coords", 0};
+    const double* weights = NULL;
+    static char *kwlist[] = {(char *)"atoms", (char *)"coords",
+                             (char *)"weights", 0};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O", kwlist,
-                &atomobj, &coordobj))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|OO", kwlist,
+                &atomobj, &coordobj, &wobj))
         return NULL;
 
     if (!(atomarr = PyArray_FromAny(
@@ -258,11 +262,32 @@ static PyObject* py_align(PyObject *self, PyObject *args, PyObject *kwds) {
         coords = (const double*)PyArray_DATA(coordarr);
     }
 
+    if (wobj!=Py_None) {
+        if (!(warr = PyArray_FromAny(
+                        wobj,
+                        PyArray_DescrFromType(NPY_DOUBLE),
+                        1,1,
+                        NPY_C_CONTIGUOUS | NPY_ALIGNED,
+                        NULL))) {
+            Py_DECREF(atomarr);
+            Py_XDECREF(coordarr);
+            return NULL;
+        }
+        if (PyArray_DIM(warr,0)!=PyArray_DIM(atomarr,0)) {
+            Py_DECREF(atomarr);
+            Py_XDECREF(coordarr);
+            PyErr_Format(PyExc_ValueError, "weights must be len(atoms)");
+            return NULL;
+        }
+        weights = (const double *)PyArray_DATA(warr);
+    }
+
     unsigned n = (int)PyArray_DIM(atomarr, 0);
-    pfx->align(n, (unsigned *)PyArray_DATA(atomarr), coords);
+    pfx->align(n, (unsigned *)PyArray_DATA(atomarr), coords, weights);
 
     Py_DECREF(atomarr);
     Py_XDECREF(coordarr);
+    Py_XDECREF(warr);
 
     Py_INCREF(Py_None);
     return Py_None;
