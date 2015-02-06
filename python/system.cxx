@@ -5,6 +5,7 @@
 #include "append.hxx"
 #include "clone.hxx"
 #include "geom.hxx"
+#include "hbond.hxx"
 #include "contacts.hxx"
 
 #include <numpy/ndarrayobject.h>
@@ -602,6 +603,45 @@ namespace {
         /* check size */
         return ids.size() == mol->atomCount();
     }
+
+    objptr get_vec3d(PyObject* obj) {
+        if (obj==Py_None) return objptr();
+        PyObject* arr = PyArray_FromAny(
+                obj,
+                PyArray_DescrFromType(NPY_FLOAT64),
+                1,1,
+                NPY_C_CONTIGUOUS,
+                NULL);
+        if (!arr) throw_error_already_set();
+        objptr ptr(arr, destructor);
+        if (PyArray_DIM(arr,0)!=3) {
+            PyErr_Format(PyExc_ValueError,
+                    "Expected 3 elements in vector, got %ld",
+                    PyArray_DIM(arr,0));
+            throw_error_already_set();
+        }
+        return ptr;
+    }
+
+    HydrogenBond *init_hbond(
+            PyObject* dobj,
+            PyObject* aobj,
+            PyObject* hobj,
+            PyObject* cobj,
+            PyObject* caobj) {
+
+        objptr darr = get_vec3d(dobj);
+        objptr aarr = get_vec3d(aobj);
+        objptr harr = get_vec3d(hobj);
+        objptr carr = get_vec3d(cobj);
+        objptr caarr = get_vec3d(caobj);
+        return new HydrogenBond(
+                darr ? (const double *)PyArray_DATA(darr.get()) : NULL,
+                aarr ? (const double *)PyArray_DATA(aarr.get()) : NULL,
+                harr ? (const double *)PyArray_DATA(harr.get()) : NULL,
+                carr ? (const double *)PyArray_DATA(carr.get()) : NULL,
+                caarr? (const double *)PyArray_DATA(caarr.get()): NULL);
+    }
 }
 
 namespace desres { namespace msys { 
@@ -817,6 +857,26 @@ namespace desres { namespace msys {
                      arg("ids")=object()))
             ;
 
+    class_<HydrogenBond>("HydrogenBond", init<>())
+        .def("__init__", make_constructor(
+                      init_hbond
+                    , default_call_policies()
+                    , (arg("d"),
+                       arg("a"),
+                       arg("h")=object(),
+                       arg("c")=object(),
+                       arg("ca")=object())))
+        .def("energy",      &HydrogenBond::energy,
+                "Stride hbond energy function")
+        .def_readwrite("r", &HydrogenBond::r,
+                "donor-acceptor distance")
+        .def_readwrite("p", &HydrogenBond::p,
+                "donor-hydrogen-acceptor angle in radians")
+        .def_readwrite("ti",&HydrogenBond::ti,
+                "out-of-plane deviation of H from lone-pair plane")
+        .def_readwrite("to",&HydrogenBond::to,
+                "within-plane deviation of H from lone-pair bisector")
+        ;
     }
 
 }}

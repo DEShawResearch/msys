@@ -235,5 +235,27 @@ namespace desres { namespace msys {
                signbit(areas[0])==signbit(areas[2]);
     }
 
+    void calc_projection(const double* c1, const double* c2,
+                         const double* c3, const double* p,
+                         double* proj) {
+
+        /* compute a normal */
+        double r1[3], r3[3], p1[3];
+        for (int i=0; i<3; i++) {
+            r1[i] = c1[i] - c2[i];
+            r3[i] = c3[i] - c2[i];
+            p1[i] = c1[i] -  p[i];
+        }
+
+        calc_cross_prod(r1,r3,proj);
+        calc_normal(proj);
+
+        double s = calc_dot_prod(proj, p1);
+        for (int i=0; i<3; i++) {
+            proj[i] = proj[i] * s + p[i];
+        }
+    }
+
+
 }}
 

@@ -36,5 +36,8 @@ namespace desres { namespace msys {
                               const double* R,
                               const double* S);
 
+    void calc_projection(const double* c1, const double* c2,
+                         const double* c3, const double* p,
+                         double* proj);
 }}
 
