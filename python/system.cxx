@@ -865,7 +865,8 @@ namespace desres { namespace msys {
                        arg("a"),
                        arg("h")=object(),
                        arg("c")=object(),
-                       arg("ca")=object())))
+                       arg("ca")=object())),
+                "Constructor: supply donor, acceptor and hydrogen positions")
         .add_property("energy", &HydrogenBond::energy,
                 "Stride hbond energy function")
         .def_readwrite("r", &HydrogenBond::r,

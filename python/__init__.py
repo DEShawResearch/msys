@@ -2060,6 +2060,10 @@ class HydrogenBondFinder(object):
     energy attribute of the returned hbonds.  A reasonable filter seems
     to be around -1.0 (more negative is stronger); i.e. energies greater
     than that are more likely than not to be spurious.
+
+    The HydrogenBond class can also be used directly to compute hydrogen
+    bond geometry and energies by supplying donor, acceptor and
+    hydrogen positions.
     '''
     def __init__(self, system, donors, acceptors, cutoff=3.5):
         self.system = system
