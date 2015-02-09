@@ -29,45 +29,13 @@ def vsize():
 
 class TestHbond(unittest.TestCase):
     def test1(self):
-        from msys._msys import HydrogenBond
-        mol = msys.Load('tests/files/apoa1_triclinic.dms')
-        pos = mol.positions
-        elems = mol.findContactIds(3.5, 
-                                   mol.selectIds('protein and name N'),
-                                   mol.selectIds('protein and name O'))
-        print
-        for don, acc, dist in elems:
-            # ignore within-residue hbonds, which are usually spurious
-            if mol.atom(don).residue.id == mol.atom(acc).residue.id:
-                continue
-            # find the hydrogen attached to the donor N
-            try:
-                hyd = mol.atom(don).residue.selectAtom('H').id
-            except:
-                continue
-            # find the parent of the acceptor atom
-            try:
-                res = mol.atom(acc).residue
-                c = res.selectAtom('C').id
-                ca = res.selectAtom('CA').id
-                #c = mol.atom(acc).bonded_atoms[0].id
-                cpos = pos[c]
-                capos = pos[ca]
-                #cpos = None
-            except:
-                cpos = None
-            hbond = HydrogenBond(d=pos[don], a=pos[acc], h=pos[hyd], c=cpos, ca=capos)
-            if hbond.energy()==0: continue
-            print "hbond %5d %5d energy %5.3f dist %5.3f angle %5.3f" % (
-                    hyd, acc, hbond.energy(), hbond.r, hbond.p*180/NP.pi)
-
-        # at this point we have donor and acceptor; need to find hydrogen
-
-
-        print "found %d potential hbonds" % len(elems)
-
-                                        
-
+        mol = msys.Load('tests/files/1vcc.mae')
+        finder = msys.HydrogenBondFinder(mol, 
+                                         'protein and name N',
+                                         'protein and name O')
+        hbonds = finder.find(mol.positions)
+        self.assertEqual(len(hbonds), 167)
+        
 class TestPropmap(unittest.TestCase):
 
     TABLE_NAME = 'stretch_harm'

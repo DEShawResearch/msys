@@ -857,7 +857,7 @@ namespace desres { namespace msys {
                      arg("ids")=object()))
             ;
 
-    class_<HydrogenBond>("HydrogenBond", init<>())
+    class_<HydrogenBond>("HydrogenBond", no_init)
         .def("__init__", make_constructor(
                       init_hbond
                     , default_call_policies()
@@ -866,7 +866,7 @@ namespace desres { namespace msys {
                        arg("h")=object(),
                        arg("c")=object(),
                        arg("ca")=object())))
-        .def("energy",      &HydrogenBond::energy,
+        .add_property("energy", &HydrogenBond::energy,
                 "Stride hbond energy function")
         .def_readwrite("r", &HydrogenBond::r,
                 "donor-acceptor distance")

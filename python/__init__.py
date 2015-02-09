@@ -12,6 +12,7 @@ from _msys import NonbondedInfo, version, hexversion
 from _msys import RadiusForElement, MassForElement, ElementForAbbreviation
 from _msys import GuessAtomicNumber, AbbreviationForElement
 from _msys import PeriodForElement, GroupForElement
+from _msys import HydrogenBond
 from atomsel import Atomsel
 
 class Handle(object):
@@ -96,6 +97,12 @@ class Atom(Handle):
     __slots__ = ()
 
     def __repr__(self): return '<Atom %d>' % self._id
+
+    @property
+    def fullname(self):
+        res = self.residue
+        chn = res.chain
+        return '%s:%s%d:%s' % (chn.name, res.name, res.resid, self.name)
 
     def data(self): return self._ptr.atom(self._id)
 
@@ -1365,8 +1372,7 @@ class System(object):
 
     def findContactIds(self, cutoff,
             ids=None, other=None, pos=None):
-        ''' ** EXPERIMENTAL. ** 
-
+        '''
         Find atoms not bonded to each other which are within cutoff of
         each other.  
         If ids is not None, consider only atoms with the given ids.  If
@@ -2043,4 +2049,57 @@ class SpatialHash(object):
         if ids is None: ids = numpy.arange(len(pos), dtype='uint32')
         return self._hash.findNearest(k, pos, ids)
 
+HydrogenBond.__repr__ = lambda self: "<Hbond %s %s %s>" % (self.donor_id, self.acceptor_id, self.hydrogen_id)
+HydrogenBond.donor = property(lambda x: x.donor_id, doc="Donor atom id")
+HydrogenBond.acceptor = property(lambda x: x.acceptor_id, doc="Acceptor atom id")
+
+class HydrogenBondFinder(object):
+    ''' Find hydrogen bonds in a system given a selection of donors and
+    acceptors, along with a cutoff distance.  More hbonds will be found
+    than are "realistic"; further filtering may be performed using the
+    energy attribute of the returned hbonds.  A reasonable filter seems
+    to be around -1.0 (more negative is stronger); i.e. energies greater
+    than that are more likely than not to be spurious.
+    '''
+    def __init__(self, system, donors, acceptors, cutoff=3.5):
+        self.system = system
+        if isinstance(donors, str):
+            donors = system.selectIds(donors)
+        if isinstance(acceptors, str):
+            acceptors = system.selectIds(acceptors)
+        self.cutoff = cutoff
+        self.hydrogen_for_donor = dict()
+        donors_with_h = []
+
+        # find hydrogens for each donor
+        for don in donors:
+            atm = system.atom(don)
+            hyd = [h for h in atm.bonded_atoms if h.atomic_number==1]
+            if len(hyd) != 1:
+                continue
+            self.hydrogen_for_donor[don] = hyd[0].id
+            donors_with_h.append(don)
+        self.donors = numpy.array(donors_with_h, dtype=numpy.uint32)
+        self.acceptors = numpy.array(acceptors, dtype=numpy.uint32)
+
+    def find(self, pos=None):
+        ''' Find hydrogen bonds for the given positions, defaulting to the
+        current positions of the input system.'''
+        if pos is None:
+            pos = self.system.getPositions()
+        elems = self.system.findContactIds(self.cutoff,
+                                           self.donors,
+                                           self.acceptors,
+                                           pos)
+        results = []
+        hdict = self.hydrogen_for_donor
+        for don, acc, dist in elems:
+            hyd = hdict[don]
+            hbond = _msys.HydrogenBond(pos[don], pos[acc], pos[hyd])
+            hbond.donor_id = don
+            hbond.acceptor_id = acc
+            hbond.hydrogen_id = hyd
+            results.append(hbond)
+
+        return results
 
