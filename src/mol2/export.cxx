@@ -1,5 +1,6 @@
 #include "../mol2.hxx"
 #include "elements.hxx"
+#include "../clone.hxx"
 #include <boost/foreach.hpp>
 #include <stdio.h>
 #include <math.h>
@@ -113,12 +114,16 @@ void desres::msys::ExportMol2( SystemPtr mol, std::string const& path,
                                Provenance const& provenance,
                                unsigned flags) {
 
+    /* make sure we have sybyl atom types for everything */
+    SystemPtr newmol = Clone(mol, mol->atoms());
+    AssignSybylTypes(newmol);
+
     const char* mode = flags & Mol2Export::Append ? "ab" : "wb";
     FILE* fd = fopen(path.c_str(), mode);
     if (!fd) MSYS_FAIL("Could not open '" << "' for writing.");
     boost::shared_ptr<FILE> dtor(fd, fclose);
-    for (Id ct=0; ct<mol->ctCount(); ct++) {
-        export_ct(mol,ct,fd,provenance,flags);
+    for (Id ct=0; ct<newmol->ctCount(); ct++) {
+        export_ct(newmol,ct,fd,provenance,flags);
     }
 }
 
