@@ -1,5 +1,5 @@
 #include "molfilemodule.hxx"
-#include "findframe.hxx"
+#include "molfile/findframe.hxx"
 #include <vector>
 #include <stdexcept>
 #include <numpy/arrayobject.h>

@@ -2,8 +2,8 @@
 #define MOLFILE_MODULE_HXX
 
 #include <Python.h>
-#include "libmolfile_plugin.h"
-#include "molfile.hxx"
+#include "molfile/libmolfile_plugin.h"
+#include "molfile/molfile.hxx"
 
 // This python module exposes the VMD plugin API through a custom 
 // type called 'plugin'.  Instances of this type correspond to the

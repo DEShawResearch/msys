@@ -1,6 +1,6 @@
 #include "molfilemodule.hxx"
-#include "dtrplugin.hxx"
-#include "findframe.hxx"
+#include "molfile/dtrplugin.hxx"
+#include "molfile/findframe.hxx"
 
 #include <boost/python.hpp>
 #include <sstream>

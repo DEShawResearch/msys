@@ -1,4 +1,5 @@
 Import('msysenv')
+Import('libmsys')
 env=msysenv.Clone()
 env.Append( 
         CPPPATH=['../../src', '../'],
@@ -20,9 +21,11 @@ writer.cxx
 dtrreader.cxx
 molfilemodule.cxx
 '''), prefix='msys/molfile')
+env.Requires(ext, libmsys)
 
-env.AddPythonExtension('findframe','findframemodule.cxx',
+ext=env.AddPythonExtension('findframe','findframemodule.cxx',
         prefix='msys/molfile')
+env.Requires(ext, libmsys)
 
 env.AddPythonModule('__init__.py',prefix='msys/molfile')
 

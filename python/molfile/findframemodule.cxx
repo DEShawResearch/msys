@@ -1,7 +1,7 @@
 #include <boost/python.hpp>
 #include <numpy/arrayobject.h>
 
-#include "findframe.hxx"
+#include "molfile/findframe.hxx"
 
 namespace bp = boost::python;
 namespace ff = desres::molfile::findframe;
