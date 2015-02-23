@@ -52,7 +52,7 @@ EOF
     cat << EOF > $GARDENDIR/lib
 prereq $BOOST/lib
 prepend-path DESRES_MODULE_CPPFLAGS -I$PREFIX/include
-prepend-path DESRES_MODULE_LDFLAGS "-L$PREFIX/lib -Wl,-rpath,$PREFIX/lib"
+prepend-path DESRES_MODULE_LDFLAGS  -L$PREFIX/lib -Wl,-rpath,$PREFIX/lib
 setenv MSYS_PREFIX "$PREFIX"
 EOF
 
