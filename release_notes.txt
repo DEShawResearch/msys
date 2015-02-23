@@ -1,3 +1,7 @@
+1.7.94 Bump lp_solve version to get tighter symbol visibility.
+       Fix race condition in build script.
+       mol2 exporter now always assigns Sybyl atom types.
+       
 1.7.93 Hydrogen bond finder.
 
 1.7.92 Added weights option to Pfx.align.
