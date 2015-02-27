@@ -58,16 +58,16 @@ static void export_ct(SystemPtr mol, Id ct, FILE* fd,
         }
 
         /* guess an atom type */
-        std::string type = 
+        const char* type =
             bad(atype) ? AbbreviationForElement(atm.atomic_number)
-                       : mol->atomPropValue(i,atype).asString().c_str();
+                       : mol->atomPropValue(id,atype).c_str();
 
         /* write the atom line */
         const char* bb = atm.type==AtomProBack ? "BACKBONE" : "";
         fprintf(fd, 
            "%4d  %-4s  %8.4f  %8.4f  %8.4f %-5s %4d  %4s%-4d %7.4f %s\n", 
            atomid, aname.c_str(), atm.x, atm.y, atm.z,
-           type.c_str(), resid, rname.c_str(), res.resid, atm.charge, bb);
+           type, resid, rname.c_str(), res.resid, atm.charge, bb);
     }
 
     /* bond records */
