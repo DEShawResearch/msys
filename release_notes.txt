@@ -1,3 +1,5 @@
+1.7.97 Fix mol2 bond type output.
+
 1.7.96 Fix mol2 atom type output.
 
 1.7.95 Fix the /lib submodule, which behaved differently under garden.

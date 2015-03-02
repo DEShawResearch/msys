@@ -88,7 +88,7 @@ static void export_ct(SystemPtr mol, Id ct, FILE* fd,
             ss << bnd.order;
             type = ss.str();
         } else {
-            type = mol->bondPropValue(i,btype).asString();
+            type = mol->bondPropValue(id,btype).asString();
         }
         fprintf(fd, "%5u %5u %5u %s\n", i+1, si+1, sj+1, type.c_str());
     }
