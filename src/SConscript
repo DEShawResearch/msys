@@ -97,6 +97,7 @@ molfile/molfile.cxx
 molfile/msys.cxx
 molfile/dtrframe.cxx
 molfile/dtrplugin.cxx
+molfile/dxplugin.cxx
 molfile/dcdplugin.c
 molfile/psfplugin.c
 molfile/xyzplugin.c
