@@ -196,6 +196,10 @@ class TestAmber(unittest.TestCase):
                 [(b.first.id, b.second.id) for b in m1.bonds],
                 [(b.first.id, b.second.id) for b in m2.bonds])
 
+    def testHbond(self):
+        m1=msys.Load('tests/files/sys.prmtop')
+
+
 class TestFbhw(unittest.TestCase):
     def testMae(self):
         mol=msys.Load('tests/files/noe.mae')

@@ -424,8 +424,25 @@ SystemPtr desres::msys::ImportPrmTop( std::string const& path,
     parse_ints(section, "POINTERS", ptrs);
 
     /* a few sanity checks */
-    if (ptrs[Nphb]>0) 
-        MSYS_FAIL("NPHB > 0: cannot read 10-12 hydrogen bonds");
+    if (ptrs[Nphb]>0) {
+        /* ignore if all the coefficients are zero */
+        std::vector<Float> acoef(ptrs[Nphb]);
+        std::vector<Float> bcoef(ptrs[Nphb]);
+        std::vector<Float> hbcut(ptrs[Nphb]);
+        parse_flts(section, "HBOND_ACOEF", acoef);
+        parse_flts(section, "HBOND_BCOEF", bcoef);
+        parse_flts(section, "HBCUT",       hbcut);
+        sort_unique(acoef);
+        sort_unique(bcoef);
+        sort_unique(hbcut);
+        if (acoef.size()==1 && acoef[0]==0 &&
+            bcoef.size()==1 && bcoef[0]==0 &&
+            hbcut.size()==1 && hbcut[0]==0) {
+            /* ignore... */
+        } else {
+            MSYS_FAIL("NPHB > 0: got 10-12 hydrogen bonds with nonzero coefficients");
+        }
+    }
     if (ptrs[Ifpert]>0)
         MSYS_FAIL("IFPERT > 0: cannot read perturbation information");
     

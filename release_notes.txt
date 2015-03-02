@@ -1,4 +1,6 @@
 1.7.97 Fix mol2 bond type output.
+       Fix molfile xyz plugin.
+       Added dx plugin.
 
 1.7.96 Fix mol2 atom type output.
 
