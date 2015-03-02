@@ -17,12 +17,31 @@ import unittest
 import numpy
 import shutil as SH
 import subprocess
+import tempfile
 
 '''
 FIXME: This is sort of a mess.  There are tests for commonly used plugins,
 the generic python interface, and the caching infrastructure all jumbled
 together here.  
 '''
+
+class TestXyz(unittest.TestCase):
+    def test1(self):
+        dms = molfile.dms.read('tests/files/ch4.dms')
+        dtr = molfile.dtr.read('tests/files/ch4.dtr')
+        with tempfile.NamedTemporaryFile(suffix='.xyz') as tmp:
+            xyz = molfile.xyz.write(tmp.name, atoms=dms.atoms)
+            xyz.frame(dms.frame(0))
+            xyz.frame(dtr.frame(0))
+            xyz.close()
+            r = molfile.xyz.read(tmp.name)
+            self.assertEqual(r.natoms, 5)
+            self.assertEqual(r.nframes, -1)
+            n=0
+            for f in r.frames():
+                n+=1
+            self.assertEqual(n,2)
+
 
 class TestDcd(unittest.TestCase):
     def setUp(self):
