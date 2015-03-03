@@ -3,7 +3,6 @@
 #include <sstream>
 #include <cstdio>
 
-#include <primegen.h>
 #include <boost/foreach.hpp>
 
 #include "../param_table.hxx"
@@ -115,21 +114,37 @@ namespace {
     }
 
     /* skip terminal atoms */
-    inline bool skip_this_atom(const SystemPtr mol, Id aid){
+    inline bool skip_this_atom(const SystemPtr mol, Id aid) {
         return mol->bondCountForAtom(aid)==1; 
     }
     
-    void generate_primes(uint32_t n, std::vector<uint32_t> &primes){
-        assert(n < static_cast<uint32_t>(-1));
-        primegen pg;
-        primegen_init(&pg);
-        primegen_skipto(&pg, 2);
-        
+    void generate_primes(Id n, std::vector<Id> &primes) {
+        /* This is about the simplest prime generation algorithm I could
+         * think of.  It will be called with n equal to the number of atoms
+         * in the largest fragment in a system.  The largest such fragment
+         * I've been able to find has 15k atoms, for which this simple sieve 
+         * procedure takes around 5ms.  For n=1e6, which I would consider
+         * to be highly unlikely, it takes around 1.4s, which is acceptable.
+         * JRG - 3 March 2015 */
         primes.clear();
         primes.reserve(n+1);
         primes.push_back(DEFAULTTID);
-        for(uint32_t idx=1; idx<n+1;++idx){
-            primes.push_back(primegen_next(&pg));
+        if (n>0) primes.push_back(2);
+        Id candidate = 3;
+        while (primes.size() <= n) {
+            bool prime = true;
+            for (Id k=2, m=primes.size(); k<m; k++) {
+                Id p = primes[k];
+                if (p*p > candidate) break;
+                if (candidate % p == 0) {
+                    prime = false;
+                    break;
+                }
+            }
+            if (prime) {
+                primes.push_back(candidate);
+            }
+            candidate += 2;
         }
     }    
 }
