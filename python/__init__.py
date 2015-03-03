@@ -2072,19 +2072,17 @@ class HydrogenBondFinder(object):
         if isinstance(acceptors, str):
             acceptors = system.selectIds(acceptors)
         self.cutoff = cutoff
-        self.hydrogens_for_donor = dict()
-        donors_with_h = []
 
         # find hydrogens for each donor
+        dh = dict()
         for don in donors:
             atm = system.atom(don)
-            hyd = [h for h in atm.bonded_atoms if h.atomic_number==1]
-            if len(hyd) != 1:
-                continue
-            self.hydrogens_for_donor.setdefault(don,[]).append(hyd[0].id)
-            donors_with_h.append(don)
-        self.donors = numpy.array(donors_with_h, dtype=numpy.uint32)
+            hyd = [h.id for h in atm.bonded_atoms if h.atomic_number==1]
+            if hyd:
+                dh[don] = hyd
+        self.donors = numpy.array(dh.keys(), dtype=numpy.uint32)
         self.acceptors = numpy.array(acceptors, dtype=numpy.uint32)
+        self.hydrogens_for_donor = dh
 
     def find(self, pos=None):
         ''' Find hydrogen bonds for the given positions, defaulting to the
@@ -2098,12 +2096,20 @@ class HydrogenBondFinder(object):
         results = []
         hdict = self.hydrogens_for_donor
         for don, acc, dist in elems:
-            for hyd in hdict[don]:
-                hbond = _msys.HydrogenBond(pos[don], pos[acc], pos[hyd])
-                hbond.donor_id = don
-                hbond.acceptor_id = acc
-                hbond.hydrogen_id = hyd
-                results.append(hbond)
+            hlist = hdict[don]
+            if len(hlist) > 1:
+                # use the hydrogen closest to the acceptor
+                apos = pos[acc]
+                hdist = [(CalcDistance(pos[h],apos), h) for h in hlist]
+                hdist.sort()
+                hyd = hdist[0][1]
+            else:
+                hyd = hlist[0]
+            hbond = _msys.HydrogenBond(pos[don], pos[acc], pos[hyd])
+            hbond.donor_id = don
+            hbond.acceptor_id = acc
+            hbond.hydrogen_id = hyd
+            results.append(hbond)
 
         return results
 

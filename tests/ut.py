@@ -34,7 +34,7 @@ class TestHbond(unittest.TestCase):
                                          'protein and name N',
                                          'protein and name O')
         hbonds = finder.find(mol.positions)
-        self.assertEqual(len(hbonds), 167)
+        self.assertEqual(len(hbonds), 168)
         
 class TestPropmap(unittest.TestCase):
 
