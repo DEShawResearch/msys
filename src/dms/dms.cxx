@@ -23,7 +23,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <ThreeRoe/ThreeRoe.hpp>
+#include "ThreeRoe.hpp"
 
 using namespace desres::msys;
 namespace bio = boost::iostreams;
