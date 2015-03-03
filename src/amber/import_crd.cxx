@@ -1,4 +1,5 @@
 #include "../amber.hxx"
+#include "../molfile/molfile_homebox.h"
 #include <fstream>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
@@ -41,7 +42,8 @@ void desres::msys::ImportCrdCoordinates( SystemPtr mol,
                 }
             }
             catch (std::exception& e) {
-                MSYS_FAIL("Parsing crd file at " << path << ": " << line);
+                MSYS_FAIL("Parsing positions in crd file at " << path << ": " << line
+                        << "\n" << e.what());
             }
             if (++i == natoms) break;
         }
@@ -64,10 +66,30 @@ void desres::msys::ImportCrdCoordinates( SystemPtr mol,
                 }
             }
             catch (std::exception& e) {
-                MSYS_FAIL("Parsing crd file at " << path << ": " << line);
+                MSYS_FAIL("Parsing velocities in crd file at " << path << ": " << line
+                        << "\n" << e.what());
             }
             if (++i == natoms) break;
         }
     }
+    /* unit cell */
+    if (std::getline(in, line)) {
+        /* read a, b, c, alpha, beta, gamma */
+        Float pdbbox[6];
+        for (int k=0; k<6; k++) {
+            std::string s = line.substr(width*k,width);
+            boost::trim(s);
+            try {
+                pdbbox[k] = boost::lexical_cast<Float>(s);
+            }
+            catch (std::exception& e) {
+                MSYS_FAIL("Parsing unit cell in crd file at " << path << ": " << line << "\n" << e.what());
+            }
+        }
+        molfile_unitcell_from_pdb(mol->global_cell[0],
+                pdbbox[0], pdbbox[1], pdbbox[2],
+                pdbbox[3], pdbbox[4], pdbbox[5]);
+    }
+
 }    
 

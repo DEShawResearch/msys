@@ -1,11 +1,11 @@
 #include <math.h>
 
-static
+static inline
 double molfile_dotprod(const double* x, const double* y) {
     return x[0]*y[0] + x[1]*y[1] + x[2]*y[2];
 }
 
-static
+static inline
 void molfile_unitcell_to_pdb( const double* m_box,
                               double* a, double* b, double* c,
                               double* alpha, double* beta, double* gamma) {
@@ -41,7 +41,7 @@ void molfile_unitcell_to_pdb( const double* m_box,
     }
 }
 
-static
+static inline
 void molfile_unitcell_from_pdb( double* m_box,
                                 double a, double b, double c,
                                 double alpha, double beta, double gamma) {
