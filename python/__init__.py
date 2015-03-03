@@ -2072,7 +2072,7 @@ class HydrogenBondFinder(object):
         if isinstance(acceptors, str):
             acceptors = system.selectIds(acceptors)
         self.cutoff = cutoff
-        self.hydrogen_for_donor = dict()
+        self.hydrogens_for_donor = dict()
         donors_with_h = []
 
         # find hydrogens for each donor
@@ -2081,7 +2081,7 @@ class HydrogenBondFinder(object):
             hyd = [h for h in atm.bonded_atoms if h.atomic_number==1]
             if len(hyd) != 1:
                 continue
-            self.hydrogen_for_donor[don] = hyd[0].id
+            self.hydrogens_for_donor.setdefault(don,[]).append(hyd[0].id)
             donors_with_h.append(don)
         self.donors = numpy.array(donors_with_h, dtype=numpy.uint32)
         self.acceptors = numpy.array(acceptors, dtype=numpy.uint32)
@@ -2096,14 +2096,14 @@ class HydrogenBondFinder(object):
                                            self.acceptors,
                                            pos)
         results = []
-        hdict = self.hydrogen_for_donor
+        hdict = self.hydrogens_for_donor
         for don, acc, dist in elems:
-            hyd = hdict[don]
-            hbond = _msys.HydrogenBond(pos[don], pos[acc], pos[hyd])
-            hbond.donor_id = don
-            hbond.acceptor_id = acc
-            hbond.hydrogen_id = hyd
-            results.append(hbond)
+            for hyd in hdict[don]:
+                hbond = _msys.HydrogenBond(pos[don], pos[acc], pos[hyd])
+                hbond.donor_id = don
+                hbond.acceptor_id = acc
+                hbond.hydrogen_id = hyd
+                results.append(hbond)
 
         return results
 
