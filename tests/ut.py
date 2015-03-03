@@ -200,8 +200,8 @@ class TestAmber(unittest.TestCase):
         m1=msys.Load('tests/files/sys.prmtop')
         msys.ReadCrdCoordinates(m1, 'tests/files/eq.rst')
         #msys.Save(m1, 'foo.dms')
-        #wat = m1.clone('water')
-        #self.assertEqual(wat.nbonds, 2*wat.nresidues)
+        wat = m1.clone('water')
+        self.assertEqual(wat.nbonds, 2*wat.nresidues)
 
 class TestFbhw(unittest.TestCase):
     def testMae(self):

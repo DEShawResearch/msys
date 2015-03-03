@@ -202,6 +202,12 @@ static void parse_stretch(SystemPtr mol, SectionMap const& map,
     for (int i=0; i<nbonh; i++) {
         ids[0] = bonh[3*i  ]/3;
         ids[1] = bonh[3*i+1]/3;
+        /* no bonds between hydrogen, please.  It's just how Amber
+         * expresses constraints.  */
+        if (mol->atom(ids[0]).atomic_number==1 &&
+            mol->atom(ids[1]).atomic_number==1) {
+            continue;
+        }
         mol->addBond(ids[0], ids[1]);
         if (structure_only) continue;
         tb->addTerm(ids, bonh[3*i+2]-1);
@@ -209,6 +215,12 @@ static void parse_stretch(SystemPtr mol, SectionMap const& map,
     for (int i=0; i<nbona; i++) {
         ids[0] = bona[3*i  ]/3;
         ids[1] = bona[3*i+1]/3;
+        if (mol->atom(ids[0]).atomic_number==1 &&
+            mol->atom(ids[1]).atomic_number==1) {
+            /* just to be sure, though we don't expect to find H-H bonds
+             * in this section. */
+            continue;
+        }
         mol->addBond(ids[0], ids[1]);
         if (structure_only) continue;
         tb->addTerm(ids, bona[3*i+2]-1);
