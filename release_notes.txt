@@ -1,3 +1,7 @@
+1.7.98 Better xyz, dx, and Amber prm/rst7 file support.
+       HBondFinder allows multiple donor hydrogens.
+       Eliminate primegen dependency.
+       
 1.7.97 Fix mol2 bond type output.
        Fix molfile xyz plugin.
        Added dx plugin.
