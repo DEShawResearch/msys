@@ -93,8 +93,6 @@ case $1 in
         ;;
     --install)
 	loadmodules
-	desres_require_prefix
-	desres_require_moduledir
 
         $0 --exec scons install -j4 PREFIX=${PREFIX} OBJDIR=${TMPDIR}
 
