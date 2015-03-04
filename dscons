@@ -1,12 +1,4 @@
-#!/usr/bin/env desres-exec
-#{
-# exec desres-cleanenv \
-#    -- sh $0 "$@"
-#}
-
-set -x
-set -e
-./desres-install-helper --exec scons "$@"
-set +e
-set +x
+#!/bin/sh
+cd "$(dirname "$0")" &&
+exec ./desres-install-helper --exec scons "$@"
 
