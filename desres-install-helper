@@ -17,8 +17,8 @@ SNAPPY=snappy/1.1.2-01
 TEXLIVE=texlive/20120701-03
 
 # build and documentation
-SCONS=scons/2.3.0-10A
-SCONSUTILS=sconsutils/1.37
+SCONS=scons/2.3.4-10A
+SCONSUTILS=sconsutils/1.40
 
 loadmodules() {
     garden add \
@@ -46,7 +46,6 @@ EOF
 
     # library
     cat << EOF > $GARDENDIR/lib
-prereq $BOOST/lib
 prepend-path DESRES_MODULE_CPPFLAGS -I$PREFIX/include
 prepend-path DESRES_MODULE_LDFLAGS  -L$PREFIX/lib -Wl,-rpath,$PREFIX/lib
 setenv MSYS_PREFIX "$PREFIX"

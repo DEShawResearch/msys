@@ -1,3 +1,6 @@
+1.7.99 Create a versioned libmsys.so.
+       More HBond finder improvements.
+
 1.7.98 Better xyz, dx, and Amber prm/rst7 file support.
        HBondFinder allows multiple donor hydrogens.
        Eliminate primegen dependency.

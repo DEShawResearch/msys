@@ -18,17 +18,28 @@ env.Append(CPPPATH=['$OBJDIR/src'])
 msysenv=env
 Export('msysenv')
 
-def build_version_hxx( target, source, env ):
-    import os
+def get_version(path):
+    ''' return version string from file '''
     g=dict()
-    execfile(source[0].path, g)
-    verstr=g['msys_version']
+    import os
+    execfile(path, g)
+    return g['msys_version']
+
+def split_version(verstr):
     dash = verstr.find('-')
     if dash != -1:
         nice_verstr = verstr[:dash]
     else:
         nice_verstr = verstr
-    major, minor, micro = nice_verstr.split('.')
+    return nice_verstr.split('.')
+
+def hexversion(triplet):
+    major, minor, micro = map(int,triplet)
+    return '%d.0.0' % ((major << 16) | (minor << 8) | (micro << 0))
+
+def build_version_hxx( target, source, env ):
+    verstr = get_version(source[0].path)
+    major, minor, micro = split_version(verstr)
     fd=file(target[0].path, 'w')
     print >> fd, "#define MSYS_VERSION \"%s\"" % verstr
     for x in 'major', 'minor', 'micro':
@@ -77,6 +88,7 @@ if env.get("MSYS_WITHOUT_INCHI"):
 else:
     inchi = env.AddObject('inchi.cxx')
 
+ver = hexversion(split_version(get_version(File('version.py').srcnode().abspath)))
 libmsys=env.AddLibrary('msys', selobjs + lpobjs + [inchi] + Split('''
 alchemical.cxx
 
@@ -186,7 +198,7 @@ term_table.cxx
 value.cxx
 xyz.cxx
 
-'''))
+'''), SHLIBVERSION=ver)
 
 env.AddStagedHeaders(Glob("*.hxx"), prefix='msys')
 env.AddStagedHeaders(Glob('atomsel/*.hxx'), prefix='msys/atomsel')
