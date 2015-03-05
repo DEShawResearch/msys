@@ -34,7 +34,8 @@ static void* open_file_read(const char *filename, const char *filetype,
         return NULL;
     }
     SystemPtr mol;
-    const bool structure_only = true;
+    /* Can't do structure_only, because it omits pseudos!  */
+    const bool structure_only = false; // true;
     try {
         mol = LoadWithFormat(filename, format, structure_only);
     }

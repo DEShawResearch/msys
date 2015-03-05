@@ -11,6 +11,7 @@ sys.path.insert(0,os.path.join(TMPDIR, 'lib', 'python'))
 
 import sqlite3
 
+import msys
 from msys import molfile
 from msys.molfile import findframe
 import unittest
@@ -491,6 +492,12 @@ class TestBonds(unittest.TestCase):
     try: os.unlink('test.mae')
     except: pass
 
+class TestPseudo(unittest.TestCase):
+    def test1(self):
+        path='tests/files/pseudo.dms'
+        m=msys.Load(path)
+        r=molfile.dms.read(path)
+        self.assertEqual(m.natoms, r.natoms)
 
 class TestFrameIterator(unittest.TestCase):
 
