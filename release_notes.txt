@@ -1,5 +1,7 @@
 1.7.99 Create a versioned libmsys.so.
+       Fix molfile-based reading of dms with pseudos.
        More HBond finder improvements.
+       Added raw dtr I/O support for Python.
 
 1.7.98 Better xyz, dx, and Amber prm/rst7 file support.
        HBondFinder allows multiple donor hydrogens.
