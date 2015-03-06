@@ -18,7 +18,6 @@ reader.cxx
 atom.cxx
 frame.cxx
 writer.cxx
-dtrreader.cxx
 molfilemodule.cxx
 '''), prefix='msys/molfile')
 env.Requires(ext, libmsys)

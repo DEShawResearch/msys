@@ -46,6 +46,23 @@ Read a trajectory possibly containing dynamically varying gids.
     f = r.frame(0)
     gids = f.gid    # None if not present
 
+
+Read the raw fields from a frameset (dtr):
+    dtr = molfile.DtrReader('input.dtr')    # also works for stk
+    for i in range(dtr.nframes):
+        f = dtr.frame(i)
+        keyvals = dict()
+        frame = dtr.frame(i, keyvals=keyvals)
+        ## use data in keyvals
+
+Write raw fields to a frameset (dtr):
+    dtr = molfile.DtrWriter('output.dtr', natoms=natoms)
+    keyvals = dict( s = "a string",
+                    f = positions.flatten(),    # must be 1d arrays
+                    i = numpy.array([1,2,3]),
+                    )
+    dtr.append( time = my_time, keyvals = keyvals )
+
 --------------------------
 # The molfile data module
 --------------------------
