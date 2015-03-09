@@ -1,3 +1,5 @@
+1.7.100 No more versioned libmsys.so.
+
 1.7.99 Create a versioned libmsys.so.
        Fix molfile-based reading of dms with pseudos.
        More HBond finder improvements.

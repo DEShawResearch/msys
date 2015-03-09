@@ -91,10 +91,13 @@ else:
 # FIXME: Presently, the implementation of versioned libraries in SCons
 # 2.3.4 forces a relink of the library every time.  This is annoying.
 # Either implement this myself, or only do versioning on install.
-if env['ENV'].get('PREFIX'):
-    ver = hexversion(split_version(get_version(File('version.py').srcnode().abspath)))
-else:
-    ver = None
+#
+# FIXME: We're getting segfaults on program exit when multiple versions
+# of libmsys.so are present.  No idea why yet so let's table this idea.
+#if env['ENV'].get('PREFIX'):
+    #ver = hexversion(split_version(get_version(File('version.py').srcnode().abspath)))
+#else:
+    #ver = None
 libmsys=env.AddLibrary('msys', selobjs + lpobjs + [inchi] + Split('''
 alchemical.cxx
 
@@ -204,7 +207,7 @@ term_table.cxx
 value.cxx
 xyz.cxx
 
-'''), SHLIBVERSION=ver)
+'''))
 
 env.AddStagedHeaders(Glob("*.hxx"), prefix='msys')
 env.AddStagedHeaders(Glob('atomsel/*.hxx'), prefix='msys/atomsel')
