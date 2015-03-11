@@ -1580,7 +1580,7 @@ def LoadMAE(path=None, ignore_unrecognized = False, buffer=None,
     tables.
 
     If the buffer argument is provided, it is expected to hold the contents
-    of a DMS file, and the path argument will be ignored.
+    of an MAE file, and the path argument will be ignored.
 
     If the contents of the file specified by path, or the contents of buffer,
     are recognized as being gzip-compressed, they will be decompressed on
