@@ -313,7 +313,8 @@ class StkFile(object):
 
             # remove trailing empty readers
             while readers and readers[-1].nframes==0: del readers[-1]
-            sizes = [r.nframes for r in readers]
+            # Store the list of sizes to allow get_prop to work.
+            self._sizes = [r.nframes for r in readers]
             if readers:
                 first = readers[-1].times[0]
                 i = len(readers)-1
@@ -323,19 +324,19 @@ class StkFile(object):
                     n = cur.nframes
                     while n>0 and cur.times[n-1] >= first: 
                         n -= 1
-                    sizes[i] = n
+                    self._sizes[i] = n
                     if n>0:
                         first = min(first, cur.times[0])
 
             seqmap = []
             offset = 0
-            for sz in sizes:
+            for sz in self._sizes:
                 offset += sz
                 seqmap.append(offset)
 
             self.readers = readers
             self.seqmap = seqmap
-            self.times = numpy.concatenate([r.times[:sz] for r,sz in zip(self.readers, sizes)])
+            self.times = numpy.concatenate([r.times[:sz] for r,sz in zip(self.readers, self._sizes)])
 
         @property
         def natoms(self): 
@@ -353,6 +354,12 @@ class StkFile(object):
             if index > 0:
                 n -= self.seqmap[index-1]
             return self.readers[index].frame(n)
+
+        def get_prop(self,prop):
+            '''
+            Use the same technique as used for times to generate a properly ordered set of properties across all readers
+            '''
+            return numpy.concatenate([r._get_prop(prop)[:sz] for r,sz in zip(self.readers, self._sizes)])
 
         def at_time_near(self, time):
             return self.frame(findframe.at_time_near(self.times, time))
@@ -393,22 +400,21 @@ class SeqFile(object):
             return [ene2frame.get(x,x) for x in attrs]
 
         def __init__(self, path):
-            rows=[]
-            times=[]
+            '''
+            Only use a direct read to determine the header for the file
+            Otherwise, use numpy.loadtxt
+            '''
             props=None
             for line in file(path):
                 cols = line.strip().split()
                 if len(cols)>1 and cols[0]=='#' and cols[1].endswith('time'):
                     props=self._parse_header(line)
-                elif line.startswith('#') or not line.strip(): 
-                    continue
-                else:
-                    cols=line.split()
-                    rows.append(cols)
-                    times.append(float(cols[0]))
+                    break
+
+            self.rows  = numpy.loadtxt(path)
+            # Just grab the times from the first column
+            self.times = self.rows[:,0] # Should this be a copy?
             self.props=props
-            self.rows=rows
-            self.times=numpy.array(times)
 
         @property
         def natoms(self): return 0
@@ -416,10 +422,24 @@ class SeqFile(object):
         @property
         def nframes(self): return len(self.rows)
 
+        def _get_prop(self,prop):
+            '''
+            Returns a MUTABLE reference to a property.
+            Used to eliminate a copy when concatenating multiple seq files
+            '''
+            try:
+                return self.rows[:,self.props.index(prop)]
+            except ValueError:
+                raise ValueError("Cannot find property {:s}".format(prop))
+
+        def get_prop(self,prop):
+            # Column accessor
+            return numpy.copy(self._get_prop(prop))
+
         def frame(self, n):
             f = Frame(natoms=0)
             for key , val in zip(self.props, self.rows[n]):
-                setattr(f, key, float(val))
+                setattr(f, key, val)
             return f
 
         def frames(self):
