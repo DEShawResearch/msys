@@ -18,6 +18,7 @@ import numpy as NP
 import json
 import gzip
 import tempfile
+import sqlite3
 
 def tmpfile(**kwds):
     return tempfile.NamedTemporaryFile(**kwds)
@@ -1313,6 +1314,23 @@ class TestMain(unittest.TestCase):
         self.assertEqual(len(msys.Load("foo.dms").tables), 0)
         msys.Save(m, 'foo.dms', structure_only=True)
         self.assertEqual(len(msys.Load("foo.dms").tables), 0)
+
+    def testArchive(self):
+        ''' check that saving and loading from .msys preserves the checksum
+        '''
+        mol=msys.Load('tests/files/1vcc.mae')
+        tmp_arc = tmpfile(prefix='/tmp/', suffix='.msys')
+        tmp_dms = tmpfile(prefix='/tmp/', suffix='.dms')
+        msys.Save(mol, tmp_arc.name)
+        msys.Save(mol, tmp_dms.name)
+        conn = sqlite3.Connection(tmp_dms.name)
+        cksum1 = conn.execute('select system from msys_hash').fetchone()[0]
+        newmol = msys.Load(tmp_arc.name)
+        msys.Save(newmol, tmp_dms.name)
+        conn = sqlite3.Connection(tmp_dms.name)
+        cksum2 = conn.execute('select system from msys_hash').fetchone()[0]
+        self.assertEqual(cksum1, cksum2)
+
 
     def testFunnyNames(self):
         m=msys.CreateSystem()
