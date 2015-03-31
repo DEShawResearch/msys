@@ -1,0 +1,75 @@
+#!/usr/bin/garden-exec
+#{
+# source `dirname $0`/../share/MODULES && \
+# exec garden with -c -m $PYTHON/bin \
+# -- python $0 "$@"
+#}
+
+'''
+dtr-validate [input.{dtr,atr,stk}]+
+
+Check that each frame in each input file is readable and provides
+position and box data.
+'''
+
+import sys, os
+sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
+from msys import molfile
+import numpy
+
+class Progress(object):
+    def __init__(self, total, dots=50, nums=10):
+        points = map(int, numpy.linspace(1, total, dots))
+        progs = map(int, numpy.linspace(0,100,dots))
+        self.dots = dict(zip(points, progs))
+        points = map(int, numpy.linspace(1, total, nums))
+        progs = map(int, numpy.linspace(0,100,nums))
+        self.nums = dict(zip(points, progs))
+        self.total = total
+
+    def __call__(self, i):
+        p = self.nums.get(i)
+        if p is not None:
+            sys.stderr.write("%d%%" % p)
+        p = self.dots.get(i)
+        if p is not None:
+            sys.stderr.write('.')
+        if i==self.total:
+            sys.stderr.write('\n')
+
+def parse_args():
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('input_files', nargs='+')
+    parser.add_argument('--progress', action='store_true', default=False,
+            help="show progress bar")
+
+    return parser.parse_args()
+
+def main():
+    args = parse_args()
+    if len(args.input_files)==1 and args.input_files[0]=='-':
+        paths = sys.stdin.read().strip().split('\n')
+    else:
+        paths = args.input_files
+    for ipath, path in enumerate(paths):
+        if args.progress: 
+            print "(%4d/%4d) %s" % (ipath+1, len(paths), path)
+        r = molfile.DtrReader(path, sequential=True)
+        natoms = r.natoms
+        nframes = r.nframes
+        if args.progress:
+            print "frames: %-9d atoms: %-9d" % (nframes, natoms)
+        assert natoms > 0, "'%s' contains %d atoms." % (path, natoms)
+        assert nframes > 0, "'%s' contains %d frames." % (path, nfraems)
+        if args.progress:
+            progress = Progress(nframes)
+        for i in xrange(nframes):
+            frame = r.frame(i)
+            assert frame.pos is not None, "'%s' is missing pos data at frame %d" % (path, i)
+            assert frame.box is not None, "'%s' is missing pos data at frame %d" % (path, i)
+            progress(i+1)
+
+main()
+
+# vim: filetype=python
