@@ -69,7 +69,6 @@ static IdList read_params( Reader r, ParamTablePtr p,
 }
 
 static void read_table( Sqlite dms, 
-                        const IdList& gidmap,
                         System& sys, 
                         const std::string& category,
                         const std::string& table,
@@ -169,7 +168,7 @@ static void read_table( Sqlite dms,
     for (; r; r.next()) {
         /* read atoms */
         for (unsigned i=0; i<natoms; i++) {
-            atoms[i] = gidmap.at(r.get_int(cols[i]));
+            atoms[i] = r.get_int(cols[i]);
         }
         /* read param properties */
         Id param = BadId;
@@ -204,8 +203,7 @@ static void read_table( Sqlite dms,
     }
 }
 
-static void read_metatables(Sqlite dms, const IdList& gidmap, System& sys,
-                             KnownSet& known) {
+static void read_metatables(Sqlite dms, System& sys, KnownSet& known) {
     static const char * categories[] = { 
         "bond", "constraint", "virtual", "polar" 
     };
@@ -218,7 +216,7 @@ static void read_metatables(Sqlite dms, const IdList& gidmap, System& sys,
             int col=r.column("name");
             for (; r; r.next()) {
                 std::string table = r.get_str(col);
-                read_table( dms, gidmap, sys, category, table, known );
+                read_table( dms, sys, category, table, known );
             }
         }
     }
@@ -230,7 +228,7 @@ static void read_metatables(Sqlite dms, const IdList& gidmap, System& sys,
         int col=r.column("name");
         for (; r; r.next()) {
             std::string table = r.get_str(col);
-            read_table( dms, gidmap, sys, category, table, known );
+            read_table( dms, sys, category, table, known );
         }
     }
 
@@ -253,7 +251,7 @@ static void read_metatables(Sqlite dms, const IdList& gidmap, System& sys,
 }
 
 static void 
-read_nonbonded( Sqlite dms, IdList const& gidmap, System& sys, 
+read_nonbonded( Sqlite dms, System& sys, 
         IdList const& nbtypes, KnownSet& known ) {
 
     known.insert("nonbonded_param");
@@ -305,7 +303,7 @@ read_nonbonded( Sqlite dms, IdList const& gidmap, System& sys,
         }
         for (; r; r.next()) {
             int p0 = r.get_int(P0);
-            atoms[0] = gidmap.at(p0);
+            atoms[0] = p0;
             if (!sys.hasAtom(atoms[0])) {
                 MSYS_FAIL("alchemical_particle table has bad p0 '" << p0 << "'");
             }
@@ -381,7 +379,7 @@ read_combined( Sqlite dms, System& sys, KnownSet& known ) {
 
 
 static void
-read_exclusions(Sqlite dms, const IdList& gidmap, System& sys, KnownSet& known) {
+read_exclusions(Sqlite dms, System& sys, KnownSet& known) {
     known.insert("exclusion");
     /* some dms writers export exclusions with a term and param table. */
     known.insert("exclusion_term");
@@ -395,8 +393,8 @@ read_exclusions(Sqlite dms, const IdList& gidmap, System& sys, KnownSet& known) 
     IdList atoms(2);
 
     for (; r; r.next()) {
-        atoms[0] = gidmap.at(r.get_int(0));
-        atoms[1] = gidmap.at(r.get_int(1));
+        atoms[0] = r.get_int(0);
+        atoms[1] = r.get_int(1);
         terms->addTerm(atoms,-1);
     }
 }
@@ -550,8 +548,6 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
     SystemImporter imp(h);
 
     IdList nbtypes;
-    IdList gidmap; /* map dms gids to msys ids */
-    IdList ignored_gids;
     std::map<Id,Id> nbtypesB;
     
     Reader r = dms.fetch("particle", false); /* no strict typing */
@@ -611,12 +607,7 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
 
     /* read the particle table */
     for (; r; r.next()) {
-        Id gid = r.get_int( GID);
-        int anum = r.get_int( ANUM);
-        if (structure_only && anum<=0) {
-            ignored_gids.push_back(gid);
-            continue;
-        }
+        int anum = r.get_int(ANUM);
 
         /* add atom */
         Id ct = CT<0 ? 0 : r.get_int(CT);
@@ -629,7 +620,7 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
         Id atmid = imp.addAtom(chainname, segid, resnum, resname, aname,insert,ct);
 
         /* add atom properties */
-        atom_t& atm = sys.atom(atmid);
+        atom_t& atm = sys.atomFAST(atmid);
         atm.x = r.get_flt( X);
         atm.y = r.get_flt( Y);
         atm.z = r.get_flt( Z);
@@ -641,8 +632,6 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
         atm.charge = r.get_flt( CHARGE);
         atm.formal_charge = FORMAL<0 ? 0 : r.get_int(FORMAL);
         atm.resonant_charge = RESCHG<0 ? 0 : r.get_flt(RESCHG);
-        while (gidmap.size()<gid) gidmap.push_back(BadId);
-        gidmap.push_back(atmid);
 
         /* extra atom properties */
         Id propcol=0;
@@ -674,27 +663,16 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
             int aj = r.get_int( p1);
             int order = o<0 ? 1 : r.get_int(o);
             Float resonant_order = ro<0 ? 1 : r.get_flt(ro);
-            Id id = BadId;
-            if (structure_only && (
-                        std::binary_search(
-                            ignored_gids.begin(), ignored_gids.end(), ai) ||
-                        std::binary_search(
-                            ignored_gids.begin(), ignored_gids.end(), aj))) {
-                continue;
-            }
+            Id id;
             try {
-                Id from = gidmap.at(ai);
-                Id to   = gidmap.at(aj);
-                id = sys.addBond(from,to);
+                id = sys.addBond(ai, aj);
             }
             catch (std::exception& e) {
-                std::stringstream ss;
-                ss << "Failed adding bond (" << ai << ", " << aj << ")"
-                   << ": " << std::endl << e.what();
-                throw std::runtime_error(ss.str());
+                MSYS_FAIL("Failed adding bond (" << ai << ", " << aj << ")\n"
+                        << e.what());
             }
-            sys.bond(id).order = order;
-            sys.bond(id).resonant_order = resonant_order;
+            sys.bondFAST(id).order = order;
+            sys.bondFAST(id).resonant_order = resonant_order;
         }
     }
 
@@ -704,10 +682,10 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
     read_provenance(dms, sys, known);
 
     if (!structure_only) {
-        read_metatables(dms, gidmap, sys, known);
-        read_nonbonded(dms, gidmap, sys, nbtypes, known);
+        read_metatables(dms, sys, known);
+        read_nonbonded(dms, sys, nbtypes, known);
         read_combined(dms, sys, known);
-        read_exclusions(dms, gidmap, sys, known);
+        read_exclusions(dms, sys, known);
         read_nbinfo(dms, sys, known);
         read_extra(dms, sys, known);
     }
