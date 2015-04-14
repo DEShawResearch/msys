@@ -2,6 +2,7 @@
 #{
 # source `dirname $0`/../share/MODULES && \
 # exec garden with -c -m $PYTHON/bin \
+# -s MOLFILE_STKCACHE_DISABLE=1 \
 # -- python $0 "$@"
 #}
 
@@ -68,7 +69,8 @@ def main():
             frame = r.frame(i)
             assert frame.pos is not None, "'%s' is missing pos data at frame %d" % (path, i)
             assert frame.box is not None, "'%s' is missing pos data at frame %d" % (path, i)
-            progress(i+1)
+            if args.progress:
+                progress(i+1)
 
 main()
 

@@ -1,6 +1,7 @@
 #include "dtrframe.hxx"
 #include "dtrutil.hxx"
 #include "endianswap.h"
+#include "ThreeRoe/ThreeRoe.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
@@ -10,8 +11,8 @@ using namespace desres::molfile::dtr;
 
 static const uint32_t magic_frame = 0x4445534d;
 static const uint32_t align_size  = 8;
-static const uint32_t block_size  = 4096;   // FIXME: make this 1 (8?)
-static const uint32_t s_version     = 0x00000100;
+static const uint32_t block_size  = 4096;
+static const uint32_t s_version     = 0x00000200;
 static const uint32_t s_irosetta    = 0x12345678;
 static const float    s_frosetta    = 1234.5;
 static const double   s_drosetta    = 1234.5e6;
@@ -70,7 +71,6 @@ static inline uint32_t machineEndianism() {
     return byteorder;
 }
 
-
 /*!
  * See RFC 1146 for Fletcher's Checksum (http://tools.ietf.org/html/rfc1146)
  */
@@ -125,7 +125,7 @@ namespace {
         uint32_t framesize_hi;  
 
         uint32_t headersize;    // size of this header
-        uint32_t unused0;   
+        uint32_t threeroe_hash; // 32 bit ThreeRoe hash of header + payload
         uint32_t irosetta;      // integer rosetta
         float    frosetta;      // float rosetta
 
@@ -159,44 +159,37 @@ namespace {
 
 }
 
-/* experimental dtr version2 stuff */
-static const uint32_t magic_frame2 = 0xdeadbeef;
+uint32_t compute_threeroe_hash(const char *datap, uint32_t data_size) {
 
-namespace {
-    /* the version 2 header. */
-    struct header2_t {
-        uint32_t magic;     /* 0xdeadbeef, native endian */
-        uint32_t checksum;  /* threefry checksum, native endian */
-    };
-    /* following the header:
-     *
-     * Labels: NULL-delimited, with a zero-length label terminating the list.
-     * The first byte in each label encodes the type, with an index into
-     * the typenames array above.  More types may be added later.
-     *
-     * Data: For each field, uint32_t count, followed by data.  No padding.
-     *
-     * Overhead for a single byte of data with a label of length 1:
-     * 8 byte header, 4 bytes for label, 4 bytes for length = 16 bytes.
-     */
+    ThreeRoe hash_obj;
+    uint32_t zero = 0;
+
+    //
+    // The bytes preceeding the ThreeRoe header
+    //
+    hash_obj.Update((const void *)datap, offsetof(struct header_t, threeroe_hash));
+
+    //
+    // Justin thought it was nice to have what looked like a contiguous block
+    // of data all pushed through ThreeRoe including the 4 bytes that should
+    // hold the hash itself.
+    //
+    hash_obj.Update((const void *)&zero, sizeof(uint32_t));
+
+    //
+    // The bytes following the ThreeRoe header
+    //
+    hash_obj.Update((const void *)(datap + offsetof(struct header_t, irosetta)), data_size - offsetof(struct header_t, irosetta));
+
+    ThreeRoe::result_type pair = hash_obj.Final();
+    uint32_t rc = pair.first;
+    return (rc);
 }
 
-static KeyMap parse_version2(size_t sz, const void* bytes) {
-    KeyMap map;
-    return map;
-}
 
 std::map<std::string, Key> 
 desres::molfile::dtr::ParseFrame(size_t sz, const void* data) {
     std::map<std::string,Key> map;
-
-    /* try version 2 header first */
-    if (sz<sizeof(header2_t)) {
-        DTR_FAILURE("data is too short");
-    }
-    if (((const header2_t *)data)->magic == magic_frame2) {
-        return parse_version2(sz, data);
-    }
 
     // parse header
     header_t header[1];
@@ -218,17 +211,37 @@ desres::molfile::dtr::ParseFrame(size_t sz, const void* data) {
     if (sz < crc_start+4) {
         DTR_FAILURE("frame is too short: need " << crc_start+4 << " got " << sz);
     }
+
     const char* bytes = (const char *)data;
 
     // check crc
     uint32_t crc = *reinterpret_cast<const uint32_t*>(bytes+crc_start);
-    if (crc!=0) {
-        uint32_t frame_crc = fletcher(reinterpret_cast<const uint16_t*>(bytes),
-                crc_start/2);
-        if (frame_crc != crc) {
-            DTR_FAILURE("checksum failure: want " << crc << " got " << frame_crc);
-        }
+    
+    uint32_t frame_crc = fletcher(reinterpret_cast<const uint16_t*>(bytes), crc_start/2);
+
+    if (frame_crc != crc) {
+	DTR_FAILURE("checksum failure: want " << crc << " got " << frame_crc);
     }
+
+    if (header->version > 0x00000100) {
+	//
+	// In version 2 and up (as defined by the frameset header), we
+	// compute not just a Fletcher CRC but also a ThreeRoe hash for
+	// additional verification of the frame integrity.  This value
+	// is stored in the header in what were previously unused bytes.
+	// 
+	// The ThreeRoe hash is computed on the header before the hash
+	// value is set, so we need to zero it in the header before
+	// computing the expected value.
+	//
+	uint32_t expected_threeroe_hash = header->threeroe_hash;
+	uint32_t threeroe_hash = compute_threeroe_hash(bytes, crc_start);
+	if (threeroe_hash != expected_threeroe_hash) {
+	    DTR_FAILURE("ThreeRoe hash failure: want " << expected_threeroe_hash << " computed " << threeroe_hash 
+			<< " htonl(expected) = " << htonl(expected_threeroe_hash));
+	}
+    }
+
     if (header->nlabels==0) return map;
 
     // read type names and convert to enum
@@ -499,7 +512,6 @@ size_t desres::molfile::dtr::ConstructFrame(KeyMap const& map, void ** bufptr) {
     header->framesize_hi = htonl(hibytes(framesize));
 
     header->headersize = htonl(size_header_block);
-    header->unused0 = 0;
     uint64_t lrosetta = assemble64(s_lrosetta_lo,s_lrosetta_hi);
     header->irosetta = s_irosetta;
     header->frosetta = s_frosetta;
@@ -553,6 +565,25 @@ size_t desres::molfile::dtr::ConstructFrame(KeyMap const& map, void ** bufptr) {
             fields += alignInteger( nbytes, align_size );
         }
     }
+
+    //
+    // Starting with frameset version 2 (as defined in the header),
+    // we compute not only a Fletcher 32 bit CRC but additionally
+    // a 32 bit ThreeRoe hash.  ThreeRoe does not suffer from some
+    // of the limitations of Fletcher (most notably a zero'd out block
+    // of data having a checksum of 0), and while it is not proven
+    // to be as strong as cryptographically secure hashes like SHA*
+    // and MD5, it is computationally much more benign.
+    //
+    // We put the ThreeRoe hash in what was previously an unused
+    // 4 byte block which earlier versions of the code will ignore.
+    // The CRC value (which all versions since August 2008 read)
+    // however must be calculated with the ThreeRoe version set
+    // in the header, so first we compute ThreeRoe and put it into
+    // the header, and then we compute the Fletcher CRC and put it
+    // into the crc block.
+    //
+    header->threeroe_hash = htonl(compute_threeroe_hash(base, offset_crc_block));
     *crc = fletcher(reinterpret_cast<uint16_t*>(base),offset_crc_block/2);
     return framesize;
 }

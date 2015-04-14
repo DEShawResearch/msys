@@ -15,6 +15,7 @@ LPSOLVE=lp_solve/5.5.2.0-05A
 INCHI=inchi/1.04-05
 SNAPPY=snappy/1.1.2-01
 TEXLIVE=texlive/20120701-03
+THREEROE=ThreeRoe/0.04
 
 # build and documentation
 SCONS=scons/2.3.4-10A
@@ -31,6 +32,7 @@ loadmodules() {
         $LPSOLVE/lib \
         $SNAPPY/lib \
         $INCHI/lib \
+	$THREEROE/lib \
 	$TEXLIVE/bin
     
    export MSYS_VERSION=$VERSION
@@ -93,7 +95,7 @@ case $1 in
     --install)
 	loadmodules
 
-        $0 --exec scons install -j4 PREFIX=${PREFIX} OBJDIR=${TMPDIR}
+        $0 --exec scons install -j 12 PREFIX=${PREFIX} OBJDIR=${TMPDIR}
 
         ./tests/ut.py
 
