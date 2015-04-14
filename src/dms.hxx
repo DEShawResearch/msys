@@ -8,6 +8,9 @@ struct sqlite3;
 
 namespace desres { namespace msys {
 
+    // Changed in 1.7.101: structure_only includes pseudos, making it
+    // consistent with export which also includes pseudos when
+    // structure_only is true.
     SystemPtr ImportDMS(const std::string& path, bool structure_only=false);
 
     SystemPtr ImportDMSFromBytes( const char* bytes, int64_t len,
