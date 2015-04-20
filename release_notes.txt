@@ -1,3 +1,6 @@
+1.7.103 Loading structure-only now includes pseudos.
+        Fix a bug in import where residues were sometimes erroneously split.
+
 1.7.100 No more versioned libmsys.so.
 
 1.7.99 Create a versioned libmsys.so.
