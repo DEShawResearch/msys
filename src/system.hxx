@@ -628,7 +628,7 @@ namespace desres { namespace msys {
             : ct(c), name(nm), segid(seg) {}
 
             bool operator<(ChnKey const& c) const {
-                if (ct<c.ct) return true;
+                if (ct!=c.ct) return ct<c.ct;
                 int rc = name.compare(c.name);
                 if (rc) return rc<0;
                 return segid.compare(c.segid)<0;
