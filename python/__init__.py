@@ -1634,6 +1634,16 @@ def LoadXYZ(path):
     return System(_msys.ImportXYZ(path))
 
 
+def LoadSDF(path=None, buffer=None):
+    ''' Load an sdf file from either path or buffer '''
+    if path is not None:
+        ptr = _msys.ImportSDF(path)
+    elif buffer is not None:
+        ptr = _msys.ImportSDFFromBuffer(buffer)
+    else:
+        raise ValueError("Specifiy either path or buffer")
+    return System(ptr)
+
 def Load(path, structure_only = False):
     ''' Infer the file type of path and load the file.
     Returns a new System.

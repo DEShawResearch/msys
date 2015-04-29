@@ -34,6 +34,18 @@ namespace {
         return ImportDMSFromBytes(bytes, view->len, structure_only);
     }
 
+    SystemPtr import_sdf_from_buffer( PyObject* obj ) {
+        Py_buffer view[1];
+        if (PyObject_GetBuffer(obj, view, PyBUF_ND)) {
+            throw_error_already_set();
+        }
+        boost::shared_ptr<Py_buffer> ptr(view, PyBuffer_Release);
+        char* bytes = reinterpret_cast<char *>(view->buf);
+        std::istringstream file;
+        file.rdbuf()->pubsetbuf(const_cast<char *>(bytes), view->len);
+        return ImportSdfFromStream(file);
+    }
+
     list import_mol2_many(std::string const& path) {
         std::vector<SystemPtr> mols = ImportMol2Many(path);
         list L;
@@ -116,6 +128,9 @@ namespace desres { namespace msys {
         def("ImportMOL2Many", import_mol2_many);
         def("ExportMOL2", ExportMol2);
         def("ImportXYZ", ImportXYZ);
+        def("ImportSDF", ImportSdf);
+        def("ImportSDFFromBuffer", import_sdf_from_buffer);
+
         def("ExportSDFBytes", export_sdf_bytes);
         def("Load", Load,
                 (arg("path"),

@@ -70,6 +70,9 @@ namespace {
             }
             init(file);
         }
+        explicit iterator(std::istream& in) {
+            init(in);
+        }
 
         void init(std::istream& input) {
             /* FIXME - copied from mae/mae.cxx */
@@ -303,6 +306,14 @@ SystemPtr desres::msys::ImportSdf(std::string const& path) {
     mol->name = path;
     return mol;
 }
+
+SystemPtr desres::msys::ImportSdfFromStream(std::istream& in) {
+    SystemPtr ct, mol = System::create();
+    iterator it(in);
+    while ((ct=it.next())) AppendSystem(mol,ct);
+    return mol;
+}
+
 
 LoadIteratorPtr desres::msys::SdfIterator(std::string const& path) {
     return LoadIteratorPtr(new iterator(path));

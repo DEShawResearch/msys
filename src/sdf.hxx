@@ -8,6 +8,8 @@ namespace desres { namespace msys {
     /* Read the given MDL MOL/SDF file.  Return the first MOLECULE record */
     SystemPtr ImportSdf(std::string const& path);
 
+    SystemPtr ImportSdfFromStream(std::istream& in);
+
     /* Iterator for SDF files */
     LoadIteratorPtr SdfIterator(std::string const& path);
 
