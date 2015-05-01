@@ -2,6 +2,7 @@
 #include "../elements.hxx"
 #include "../smiles.hxx"
 #include <boost/foreach.hpp>
+#include <stdio.h>
 
 int msys_smiles_parse(desres::msys::smiles::Smiles*);
 
