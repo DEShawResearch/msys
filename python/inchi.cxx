@@ -6,7 +6,7 @@ namespace desres { namespace msys {
     void export_inchi() {
 
 #ifndef MSYS_WITHOUT_INCHI
-        object cls = class_<InChI>("InChI", no_init)
+        scope cls = class_<InChI>("InChI", no_init)
             .def("create", &InChI::create).staticmethod("create")
             .def("string",  &InChI::string, return_const())
             .def("auxinfo", &InChI::auxinfo, return_const())
@@ -14,9 +14,13 @@ namespace desres { namespace msys {
             .def("key",     &InChI::key)
             .def("ok",      &InChI::ok)
             ;
-        cls.attr("DoNotAddH") = InChI::DoNotAddH;
-        cls.attr("SNon") = InChI::SNon;
-        cls.attr("FixedH") = InChI::FixedH;
+
+        // since we assigned cls to a scope above, this enum is in class scope
+        enum_<InChI::Flags>("Flags")
+            .value("DoNotAddH", InChI::DoNotAddH)
+            .value("SNon",      InChI::SNon)
+            .value("FixedH",    InChI::FixedH)
+            ;
 #endif
     }
 }}

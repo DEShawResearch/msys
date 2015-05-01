@@ -21,12 +21,14 @@ namespace desres { namespace msys {
           {}
 
     public:
-        /* structure perception (compatible with standard inchi) */
-        static const unsigned DoNotAddH = 1 << 0;
-        static const unsigned SNon      = 1 << 1;
+        enum Flags {
+            /* structure perception (compatible with standard inchi) */
+            DoNotAddH = 1 << 0,
+            SNon      = 1 << 1,
 
-        /* InChI creation options (lead to generation of non-standard InChI) */
-        static const unsigned FixedH    = 1 << 2;
+            /* InChI creation options (generates non-standard InChI) */
+            FixedH    = 1 << 2 
+        };
 
         /* create inchi */
         static InChI create(SystemPtr mol, unsigned options=0);

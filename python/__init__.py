@@ -1780,6 +1780,10 @@ def SaveSDF(system, path_or_file, append=False):
     f.write(s)
     f.flush()
 
+def FromSmilesString(smiles):
+    ''' Construct a System from a smiles string '''
+    return System(_msys.FromSmilesString(smiles))
+
 def TableSchemas():
     ''' available schemas for System.addTableFromSchema '''
     return [s for s in _msys.TableSchemas()]
@@ -1971,11 +1975,11 @@ class InChI(object):
     def __init__(self, system, DoNotAddH = True, SNon = True, FixedH = True):
         opts = 0
         if DoNotAddH:
-            opts |= _msys.InChI.DoNotAddH
+            opts |= _msys.InChI.Flags.DoNotAddH
         if SNon:
-            opts |= _msys.InChI.SNon
+            opts |= _msys.InChI.Flags.SNon
         if FixedH:
-            opts |= _msys.InChI.FixedH
+            opts |= _msys.InChI.Flags.FixedH
 
         self._inchi = _msys.InChI.create(system._ptr, opts)
 

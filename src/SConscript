@@ -13,6 +13,9 @@ boost_libs=[(x+bsx) for x in (
     'boost_thread', 'boost_regex', 'boost_serialization')]
 env.Append(LIBS=boost_libs)
 env.AppendUnique(LIBS=['sqlite3', 'z', 'snappy' ])
+if env['PLATFORM'] == 'darwin':
+    env.AppendUnique(LIBS=['lpsolve55'])
+
 env.Append(CPPPATH=['$OBJDIR/src'])
 
 msysenv=env
@@ -53,21 +56,14 @@ def build_version_hxx( target, source, env ):
     fd.close()
 
 env.Command('version.hxx', 'version.py', build_version_hxx )
+env.Command('smiles/lexer.cxx', 'smiles/smiles.l', 'flex -o $TARGET $SOURCE')
+env.Command(['smiles/parser.cxx', 'smiles/parser.hxx'], 'smiles/smiles.y', 'bison --report=state -t -o $TARGET $SOURCE')
 
-selenv = env.Clone()
-selenv.Append(CPPDEFINES='YY_NO_INPUT')
-selobjs = selenv.AddObject(Split('''
-atomsel.cxx
-atomsel/expression.cxx
-atomsel/keyword.cxx
-atomsel/keyword_predicate.cxx
-atomsel/msys_keyword.cxx
-atomsel/predicate.cxx
-atomsel/vmd.cxx
-atomsel/vmd_keyword.cxx
+lexenv = env.Clone()
+lexenv.Append(CPPDEFINES='YY_NO_INPUT')
+lexobjs = lexenv.AddObject(Split('''
 atomsel/lexer.cxx
-atomsel/parser.cxx
-atomsel/within_predicate.cxx
+smiles/lexer.cxx
 '''))
 
 if env.get('MSYS_WITHOUT_LPSOLVE'):
@@ -88,17 +84,7 @@ if env.get("MSYS_WITHOUT_INCHI"):
 else:
     inchi = env.AddObject('inchi.cxx')
 
-# FIXME: Presently, the implementation of versioned libraries in SCons
-# 2.3.4 forces a relink of the library every time.  This is annoying.
-# Either implement this myself, or only do versioning on install.
-#
-# FIXME: We're getting segfaults on program exit when multiple versions
-# of libmsys.so are present.  No idea why yet so let's table this idea.
-#if env['ENV'].get('PREFIX'):
-    #ver = hexversion(split_version(get_version(File('version.py').srcnode().abspath)))
-#else:
-    #ver = None
-libmsys=env.AddLibrary('msys', selobjs + lpobjs + [inchi] + Split('''
+libmsys=env.AddLibrary('msys', lexobjs + lpobjs + [inchi] + Split('''
 alchemical.cxx
 
 analyze/eigensystem.cxx
@@ -108,6 +94,16 @@ amber/import_crd.cxx
 amber/import_prmtop.cxx
 
 archive.cxx
+atomsel.cxx
+atomsel/expression.cxx
+atomsel/keyword.cxx
+atomsel/keyword_predicate.cxx
+atomsel/msys_keyword.cxx
+atomsel/predicate.cxx
+atomsel/vmd.cxx
+atomsel/vmd_keyword.cxx
+atomsel/parser.cxx
+atomsel/within_predicate.cxx
 
 dms/dms.cxx
 dms/export_dms.cxx
@@ -192,6 +188,9 @@ psf/import.cxx
 schema.cxx
 schema/schema.cxx
 spatial_hash.cxx
+
+smiles/smiles.cxx
+smiles/parser.cxx
 
 annotated_system.cxx
 append.cxx

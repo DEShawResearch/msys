@@ -21,6 +21,7 @@ env.Append(
         # SSE2 for src/within.hxx.  It's optional, but way way slower without.
         CCFLAGS='-O2 -g -Wall -msse2',
         CXXFLAGS='-std=c++03 -Werror',
+        LINKFLAGS='-g'
         )
 
 if env['PLATFORM']!='darwin':

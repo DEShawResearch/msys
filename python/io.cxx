@@ -8,6 +8,7 @@
 #include "io.hxx"
 #include "amber.hxx"
 #include "sdf.hxx"
+#include "smiles.hxx"
 
 namespace {
 
@@ -132,6 +133,7 @@ namespace desres { namespace msys {
         def("ImportSDFFromBuffer", import_sdf_from_buffer);
 
         def("ExportSDFBytes", export_sdf_bytes);
+        def("FromSmilesString", FromSmilesString);
         def("Load", Load,
                 (arg("path"),
                  arg("structure_only")=false,

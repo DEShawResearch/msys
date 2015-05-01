@@ -18,8 +18,12 @@ using namespace desres::msys;
 
 namespace lpsolve {
     /* for solving the integer linear equations. We put this in a new 
-       namespace since it dosent already use one */ 
+       namespace since it doesn't already use one */
+#ifdef __APPLE__
+#include <lp_lib.h>
+#else
 #include "lp_solve/lp_lib.h"
+#endif
 }
 
 

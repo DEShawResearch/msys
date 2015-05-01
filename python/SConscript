@@ -25,7 +25,6 @@ override.cxx
 param.cxx
 system.cxx
 term.cxx
-variant.cxx
 vector.cxx
 io.cxx
 graph.cxx
@@ -33,6 +32,7 @@ inchi.cxx
 spatial_hash.cxx
 pymod.cxx
 wrap_obj.cxx
+variant.cxx
 '''.split()
 
 pyext=env.AddPythonExtension('_msys', pymodfiles, prefix='msys')
