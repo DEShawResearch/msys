@@ -1780,10 +1780,6 @@ def SaveSDF(system, path_or_file, append=False):
     f.write(s)
     f.flush()
 
-def FromSmilesString(smiles):
-    ''' Construct a System from a smiles string '''
-    return System(_msys.FromSmilesString(smiles))
-
 def TableSchemas():
     ''' available schemas for System.addTableFromSchema '''
     return [s for s in _msys.TableSchemas()]

@@ -56,14 +56,11 @@ def build_version_hxx( target, source, env ):
     fd.close()
 
 env.Command('version.hxx', 'version.py', build_version_hxx )
-env.Command('smiles/lexer.cxx', 'smiles/smiles.l', 'flex -o $TARGET $SOURCE')
-env.Command(['smiles/parser.cxx', 'smiles/parser.hxx'], 'smiles/smiles.y', 'bison --report=state -t -o $TARGET $SOURCE')
 
 lexenv = env.Clone()
 lexenv.Append(CPPDEFINES='YY_NO_INPUT')
 lexobjs = lexenv.AddObject(Split('''
 atomsel/lexer.cxx
-smiles/lexer.cxx
 '''))
 
 if env.get('MSYS_WITHOUT_LPSOLVE'):
@@ -188,9 +185,6 @@ psf/import.cxx
 schema.cxx
 schema/schema.cxx
 spatial_hash.cxx
-
-smiles/smiles.cxx
-smiles/parser.cxx
 
 annotated_system.cxx
 append.cxx
