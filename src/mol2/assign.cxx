@@ -1,4 +1,5 @@
 #include "../mol2.hxx"
+#include "../sssr.hxx"
 #include "elements.hxx"
 #include <boost/foreach.hpp>
 #include <stdio.h>
@@ -48,7 +49,7 @@ double calc_angle( const double* A, const double* B, const double* C ) {
 /* reference: 
  * http://www.sdsc.edu/CCMS/Packages/cambridge/pluto/atom_types.html
  */
-static String guess_atom_type(SystemPtr mol, Id id) {
+static String guess_atom_type(SystemPtr mol, IdList const& cyclic, Id id) {
     atom_t const& atm = mol->atom(id);
     residue_t const& res = mol->residue(atm.residue);
     Id nbnd=mol->bondCountForAtom(id);
@@ -89,7 +90,8 @@ static String guess_atom_type(SystemPtr mol, Id id) {
             return "Ru.oh";
         case 6:             /* 1.6 */
             if (nbnd>=4 && nsng==nbnd) return "C.3";    /* 1.6.1 */
-            if (nbnd==3 && nres==0 && nnit==3) {        /* 1.6.2 */
+            if (nbnd==3 && nres==0 && nnit==3 &&        /* 1.6.2 */
+                !std::binary_search(cyclic.begin(), cyclic.end(), id)) {
                 /* check that each nitrogen forms bonds to two other atoms,
                  * neither of which is oxygen */
                 bool ok=true;
@@ -223,14 +225,26 @@ static String guess_bond_type( SystemPtr mol, Id bnd,
     return "un";
 }
 
+/* return atoms which are part of a ring */
+static IdList find_cyclic(MultiIdList const& rings) {
+    IdList cyclic;
+    for (Id i=0, n=rings.size(); i<n; i++) {
+        cyclic.insert(cyclic.end(), rings[i].begin(), rings[i].end());
+    }
+    sort_unique(cyclic);
+    return cyclic;
+}
+
 void desres::msys::AssignSybylTypes(SystemPtr mol) {
 
     Id atype = mol->addAtomProp("sybyl_type", StringType);
     Id btype = mol->addBondProp("sybyl_type", StringType);
+    MultiIdList rings = GetSSSR(mol, mol->atoms());
+    IdList cyclic = find_cyclic(rings);
 
     for (Id i=0; i<mol->maxAtomId(); i++) {
         if (!mol->hasAtom(i)) continue;
-        mol->atomPropValue(i,atype) = guess_atom_type(mol, i);
+        mol->atomPropValue(i,atype) = guess_atom_type(mol, cyclic, i);
     }
 
     for (Id i=0; i<mol->maxBondId(); i++) {
