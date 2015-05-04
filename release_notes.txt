@@ -1,3 +1,7 @@
+1.7.104 Experimental SMILES parsing.
+        Added LoadSDF function.
+        The mol2 exporter mistakenly assigned C.cat atom type in some cases.
+        
 1.7.103 Loading structure-only now includes pseudos.
         Fix a bug in import where residues were sometimes erroneously split.
 
