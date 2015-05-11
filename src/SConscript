@@ -16,7 +16,8 @@ env.AppendUnique(LIBS=['sqlite3', 'z', 'snappy' ])
 if env['PLATFORM'] == 'darwin':
     env.AppendUnique(LIBS=['lpsolve55'])
 
-env.Append(CPPPATH=['$OBJDIR/src'])
+#env.Append(CPPPATH=['$OBJDIR/src'])
+env.Append(CPPPATH=['#'+Dir('.').path])
 
 msysenv=env
 Export('msysenv')
