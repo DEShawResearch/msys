@@ -1,3 +1,5 @@
+1.7.107 Build fixes.
+
 1.7.106 Added --unrotate option to dms-frame.
 
 1.7.105 Smiles functionality factored out into its own garden module.
