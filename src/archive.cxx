@@ -13,7 +13,8 @@
 #include <boost/serialization/weak_ptr.hpp>
 
 #include "snappy.hxx"
-#include "version.hxx"
+
+#include <msys/version.hxx>
 
 using namespace desres::msys;
 

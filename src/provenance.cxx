@@ -4,7 +4,7 @@
 #include <time.h>
 #include <pwd.h>
 
-#include "version.hxx"
+#include <msys/version.hxx>
 
 using namespace desres::msys;
 namespace bfs = boost::filesystem;

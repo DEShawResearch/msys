@@ -16,11 +16,11 @@ env.AppendUnique(LIBS=['sqlite3', 'z', 'snappy' ])
 if env['PLATFORM'] == 'darwin':
     env.AppendUnique(LIBS=['lpsolve55'])
 
-#env.Append(CPPPATH=['$OBJDIR/src'])
-env.Append(CPPPATH=['#'+Dir('.').path])
+env.Append(CPPPATH='.')
 
 msysenv=env
 Export('msysenv')
+
 
 def get_version(path):
     ''' return version string from file '''
