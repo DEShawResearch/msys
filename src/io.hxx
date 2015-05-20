@@ -32,10 +32,22 @@ namespace desres { namespace msys {
     /* Inverse of previous: file format given a string. */
     FileFormat FileFormatFromString(std::string const& name);
 
+    SystemPtr LoadWithFormat(std::string const& path, FileFormat format,
+                             bool structure_only,
+                             bool without_tables);
+
     /* Load using the specified format with default options.  Returns
      * NULL SystemPtr if format is UnrecognizedFileFormat */
+    inline
     SystemPtr LoadWithFormat(std::string const& path, FileFormat format,
-                             bool structure_only = false);
+                             bool structure_only = false) {
+        return LoadWithFormat(path, format, structure_only, structure_only);
+    }
+
+    SystemPtr Load(std::string const& path,
+                   FileFormat* opt_format,
+                   bool structure_only,
+                   bool without_tables);
 
     /* Try to guess the file type from the path, and load the system
      * using default options.  Returns NULL SystemPtr if file type could
@@ -43,9 +55,13 @@ namespace desres { namespace msys {
      * between errors due to filename and errors due to failure to import
      * the file).  If optional format pointer is supplied, stores 
      * format which was guessed based on the path.  */
+    inline
     SystemPtr Load(std::string const& path, 
                    bool structure_only = false,
-                   FileFormat* opt_format = NULL);
+                   FileFormat* opt_format = NULL) {
+
+        return Load(path, opt_format, structure_only, structure_only);
+    }
 
 
     /* Interface class to iterate over structures */
@@ -55,10 +71,19 @@ namespace desres { namespace msys {
     class LoadIterator {
     public:
         virtual ~LoadIterator() {}
+
         static LoadIteratorPtr create(
                 std::string const& path,
+                FileFormat* opt_format,
+                bool structure_only,
+                bool without_tables);
+
+        static inline LoadIteratorPtr create(
+                std::string const& path,
                 bool structure_only = false,
-                FileFormat* opt_format = NULL);
+                FileFormat* opt_format = NULL) {
+            return create(path, opt_format, structure_only, structure_only);
+        }
 
         virtual SystemPtr next() = 0;
     };

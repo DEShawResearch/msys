@@ -81,6 +81,11 @@ namespace {
         return ImportDMS(path, structure_only);
     }
 
+    SystemPtr load(std::string const& path, bool structure_only,
+                   FileFormat* opt_format) {
+        return Load(path, structure_only, opt_format);
+    }
+
 }
 
 namespace desres { namespace msys { 
@@ -136,7 +141,7 @@ namespace desres { namespace msys {
         def("ImportSDFFromBuffer", import_sdf_from_buffer);
 
         def("ExportSDFBytes", export_sdf_bytes);
-        def("Load", Load,
+        def("Load", load,
                 (arg("path"),
                  arg("structure_only")=false,
                  arg("opt_format")=object()));
