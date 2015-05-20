@@ -69,7 +69,8 @@ namespace {
     void import_particles( const Json& ct, SystemPtr h,
                            IdList& atoms,
                            int * natoms,
-                           int * npseudos ) {
+                           int * npseudos,
+                           bool structure_only ) {
         *natoms=0;
         *npseudos=0;
         const Json& m_atom = ct.get("m_atom");
@@ -147,7 +148,7 @@ namespace {
 
             Id id = imp.addAtom(chainname, segid, resid, resname, name, insert, ctid);
 
-            atom_t& atm = h->atom(id);
+            atom_t& atm = h->atomFAST(id);
             atm.atomic_number = anum;
             atm.x = x.elem(j).as_float(0);
             atm.y = y.elem(j).as_float(0);
@@ -214,6 +215,7 @@ namespace {
             }
         }
 
+        if (structure_only) return;
         const Json& pseudo = ct.get("ffio_ff").get("ffio_pseudo");
         if (pseudo.valid()) {
             const Json& resids = pseudo.get("ffio_residue_number");
@@ -369,7 +371,7 @@ namespace {
         IdList atoms;
         int natoms=0, npseudos=0;
         import_cell( ct, h );
-        import_particles( ct, h, atoms, &natoms, &npseudos );
+        import_particles( ct, h, atoms, &natoms, &npseudos, structure_only );
         import_provenance(ct, h);
         if (structure_only) return;
 

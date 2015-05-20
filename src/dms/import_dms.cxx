@@ -1,4 +1,5 @@
 #include "dms.hxx"
+#include "../clone.hxx"
 #include "../dms.hxx"
 #include "../term_table.hxx"
 #include "../override.hxx"
@@ -676,12 +677,25 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
         }
     }
 
-    sys.analyze();
-
     read_cell(dms, sys, known);
     read_provenance(dms, sys, known);
 
-    if (!structure_only) {
+    if (structure_only) {
+        // clone the non-pseudos if any pseudos were loaded.
+        IdList ids;
+        const Id n=sys.maxAtomId();
+        ids.reserve(n);
+        for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
+            if (sys.atomFAST(i).atomic_number>0) {
+                ids.push_back(i);
+            }
+        }
+        if (ids.size()<n) {
+            h = Clone(h, ids);
+            /* careful - at this point, sys points to freed memory! */
+        }
+
+    } else {
         read_metatables(dms, sys, known);
         read_nonbonded(dms, sys, nbtypes, known);
         read_combined(dms, sys, known);
@@ -690,6 +704,7 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
         read_extra(dms, sys, known);
     }
 
+    h->analyze();
     return h;
 }
 

@@ -1299,7 +1299,7 @@ class TestMain(unittest.TestCase):
         self.assertEqual(table.category, 'bond')
         msys.SaveDMS(m, 'foo.dms')
 
-    def testDmsStructureOnly(self):
+    def testSaveDmsStructureOnly(self):
         m=msys.CreateSystem()
         a=m.addAtom()
         table=m.addTable("foo", 1)
@@ -1315,6 +1315,24 @@ class TestMain(unittest.TestCase):
         self.assertEqual(len(msys.Load("foo.dms").tables), 0)
         msys.Save(m, 'foo.dms', structure_only=True)
         self.assertEqual(len(msys.Load("foo.dms").tables), 0)
+
+    def testLoadStructureOnly(self):
+        m=msys.CreateSystem()
+        m.addAtom()
+        m.addAtom().atomic_number=6
+        for ext in '.dms', '.mae':
+            with tempfile.NamedTemporaryFile(suffix=ext) as fp:
+                path = fp.name
+                msys.Save(m, path)
+                mol=msys.Load(path)
+                self.assertEqual(mol.natoms, 2, "w/ structure for %s" % ext)
+                mol=msys.Load(path, structure_only=True)
+                self.assertEqual(mol.natoms, 1, "w/o structure for %s" % ext)
+
+                plugin = molfile.guess_filetype(path)
+                mol = plugin.read(path)
+                self.assertEqual(mol.natoms, 2, "molfile for %s" % ext)
+
 
     def testArchive(self):
         ''' check that saving and loading from .msys preserves the checksum
