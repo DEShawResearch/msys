@@ -77,6 +77,10 @@ namespace {
         Save(mol, path, prov, flags);
     }
 
+    SystemPtr import_dms(const std::string& path, bool structure_only=false) {
+        return ImportDMS(path, structure_only);
+    }
+
 }
 
 namespace desres { namespace msys { 
@@ -112,7 +116,7 @@ namespace desres { namespace msys {
             .def("next", load_iterator_next)
             ;
 
-        def("ImportDMS", ImportDMS);
+        def("ImportDMS", import_dms);
         def("ImportDMSFromBuffer", import_dms_from_buffer);
         def("ExportDMS", ExportDMS);
         def("ImportMAE", ImportMAE);

@@ -11,10 +11,27 @@ namespace desres { namespace msys {
     // Changed in 1.7.101: structure_only includes pseudos, making it
     // consistent with export which also includes pseudos when
     // structure_only is true.
-    SystemPtr ImportDMS(const std::string& path, bool structure_only=false);
+    //
+    // Changed in 1.7.109: revert this change and introduce without_tables.
+    SystemPtr ImportDMS(const std::string& path, bool structure_only,
+                                                 bool without_tables);
+
+    // legacy API
+    inline
+    SystemPtr ImportDMS(const std::string& path, bool structure_only=false) {
+        return ImportDMS(path, structure_only, structure_only);
+    }
+
 
     SystemPtr ImportDMSFromBytes( const char* bytes, int64_t len,
-                                  bool structure_only=false);
+                                  bool structure_only, bool without_tables);
+
+    inline
+    SystemPtr ImportDMSFromBytes( const char* bytes, int64_t len,
+                                  bool structure_only=false) {
+        return ImportDMSFromBytes(bytes, len, structure_only, structure_only);
+    }
+
 
     /* Return a hash of the contents of the dms file, or empty string if
      * the dms file does not contain hash information.  
@@ -45,7 +62,12 @@ namespace desres { namespace msys {
                    unsigned flags = 0);
 
     namespace sqlite {
-        SystemPtr ImportDMS(sqlite3* db, bool structure_only=false);
+        SystemPtr ImportDMS(sqlite3* db, bool structure_only, bool with_tables);
+
+        inline
+        SystemPtr ImportDMS(sqlite3* db, bool structure_only=false) {
+            return ImportDMS(db, structure_only, structure_only);
+        }
         void ExportDMS(SystemPtr sys, sqlite3* db,
                    Provenance const& provenance);
     }
