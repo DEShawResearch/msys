@@ -197,6 +197,18 @@ class TestAmber(unittest.TestCase):
         self.assertEqual(
                 [(b.first.id, b.second.id) for b in m1.bonds],
                 [(b.first.id, b.second.id) for b in m2.bonds])
+        self.assertTrue(m1.getTable('stretch_harm') is not None)
+        self.assertTrue(m2.getTable('stretch_harm') is     None)
+
+    def testWithoutTables(self):
+        m=msys.Load('tests/files/molecule.prmtop', structure_only=True,
+                            without_tables=False)
+        self.assertTrue(m.getTable('stretch_harm') is not None)
+        m=msys.Load('tests/files/molecule.prmtop', structure_only=False,
+                            without_tables=True)
+        self.assertTrue(m.getTable('stretch_harm') is None)
+
+
 
     def testHbond(self):
         m1=msys.Load('tests/files/sys.prmtop')

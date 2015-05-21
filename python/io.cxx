@@ -84,6 +84,9 @@ namespace {
                          bool structure_only) {
         return ImportMAE(path, ignore_unrecognized, structure_only);
     }
+    SystemPtr import_prmtop(const std::string& path, bool structure_only) {
+        return ImportPrmTop(path, structure_only);
+    }
 
     SystemPtr load(std::string const& path, bool structure_only, 
                                             bool without_tables) {
@@ -134,7 +137,7 @@ namespace desres { namespace msys {
         def("ExportMAEContents", ExportMAEContents);
         def("ImportPDB", ImportPDB);
         def("ExportPDB", ExportPDB);
-        def("ImportPrmTop", ImportPrmTop);
+        def("ImportPrmTop", import_prmtop);
         def("ImportCrdCoordinates", ImportCrdCoordinates);
         def("ImportPDBCoordinates", ImportPDBCoordinates);
         def("ImportMOL2", ImportMol2);

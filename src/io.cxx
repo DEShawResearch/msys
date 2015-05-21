@@ -119,7 +119,7 @@ namespace desres { namespace msys {
                 m=ImportPDB(path); 
                 break;
             case ParmTopFileFormat: 
-                m=ImportPrmTop(path, structure_only); 
+                m=ImportPrmTop(path, structure_only, without_tables); 
                 break;
             case Mol2FileFormat: 
                 m=ImportMol2(path); 
