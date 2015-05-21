@@ -113,7 +113,7 @@ namespace desres { namespace msys {
                 m=ImportDMS(path, structure_only, without_tables); 
                 break;
             case MaeFileFormat: 
-                m=ImportMAE(path, false, structure_only); 
+                m=ImportMAE(path, false, structure_only, without_tables); 
                 break;
             case PdbFileFormat: 
                 m=ImportPDB(path); 

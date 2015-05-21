@@ -1342,45 +1342,46 @@ class TestMain(unittest.TestCase):
 
         a0.atomic_number=6
         a1.atomic_number=6
-        a2.atomic_number=0
-        a3.atomic_number=6
+        a2.atomic_number=6
+        a3.atomic_number=0
 
         a0.addBond(a1)
         a0.addBond(a2)
-        a0.addBond(a3)
 
         t=mol.addTableFromSchema('stretch_harm')
         p=t.params.addParam()
-        t.addTerm([a1,a3],p)
+        t.addTerm([a1,a2],p)
 
-        with tempfile.NamedTemporaryFile(suffix='.dms') as fp:
-            path = fp.name
-            msys.Save(mol, path)
-            m = msys.Load(path)
-            self.assertEqual(m.natoms, 4)
-            self.assertEqual(m.nbonds, 3)
-            t=m.table('stretch_harm')
-            self.assertEqual(t.nterms, 1)
-            self.assertEqual([a.id for a in t.term(0).atoms], [1,3])
+        # TODO add support for prmtop (use tests/files/sys.prmtop as input)
+        for suffix in '.dms', '.mae':
+            with tempfile.NamedTemporaryFile(suffix=suffix) as fp:
+                path = fp.name
+                msys.Save(mol, path)
+                m = msys.Load(path)
+                self.assertEqual(m.natoms, 4)
+                self.assertEqual(m.nbonds, 2)
+                t=m.table('stretch_harm')
+                self.assertEqual(t.nterms, 1)
+                self.assertEqual([a.id for a in t.term(0).atoms], [1,2])
 
-            m = msys.Load(path, without_tables=True)
-            self.assertEqual(m.natoms, 4)
-            self.assertEqual(m.nbonds, 3)
-            t=m.getTable('stretch_harm')
-            self.assertEqual(t, None)
+                m = msys.Load(path, without_tables=True)
+                self.assertEqual(m.natoms, 4)
+                self.assertEqual(m.nbonds, 2)
+                t=m.getTable('stretch_harm')
+                self.assertEqual(t, None)
 
-            m = msys.Load(path, structure_only=True, without_tables=False)
-            self.assertEqual(m.natoms, 3)
-            self.assertEqual(m.nbonds, 2)
-            t=m.getTable('stretch_harm')
-            self.assertEqual(t.nterms, 1)
-            self.assertEqual([a.id for a in t.term(0).atoms], [1,2])
+                m = msys.Load(path, structure_only=True, without_tables=False)
+                self.assertEqual(m.natoms, 3)
+                self.assertEqual(m.nbonds, 2)
+                t=m.getTable('stretch_harm')
+                self.assertEqual(t.nterms, 1)
+                self.assertEqual([a.id for a in t.term(0).atoms], [1,2])
 
-            m = msys.Load(path, structure_only=True)
-            self.assertEqual(m.natoms, 3)
-            self.assertEqual(m.nbonds, 2)
-            t=m.getTable('stretch_harm')
-            self.assertEqual(t, None)
+                m = msys.Load(path, structure_only=True)
+                self.assertEqual(m.natoms, 3)
+                self.assertEqual(m.nbonds, 2)
+                t=m.getTable('stretch_harm')
+                self.assertEqual(t, None)
 
 
     def testArchive(self):

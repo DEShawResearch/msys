@@ -80,6 +80,10 @@ namespace {
     SystemPtr import_dms(const std::string& path, bool structure_only=false) {
         return ImportDMS(path, structure_only);
     }
+    SystemPtr import_mae(const std::string& path, bool ignore_unrecognized,
+                         bool structure_only) {
+        return ImportMAE(path, ignore_unrecognized, structure_only);
+    }
 
     SystemPtr load(std::string const& path, bool structure_only, 
                                             bool without_tables) {
@@ -124,7 +128,7 @@ namespace desres { namespace msys {
         def("ImportDMS", import_dms);
         def("ImportDMSFromBuffer", import_dms_from_buffer);
         def("ExportDMS", ExportDMS);
-        def("ImportMAE", ImportMAE);
+        def("ImportMAE", import_mae);
         def("ImportMAEFromBuffer", import_mae_from_buffer);
         def("ExportMAE", ExportMAE);
         def("ExportMAEContents", ExportMAEContents);

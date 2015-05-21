@@ -10,8 +10,17 @@ namespace desres { namespace msys {
                                 bool structure_only = false);
 
     SystemPtr ImportMAE( std::string const& path,
+                         bool ignore_unrecognized,
+                         bool structure_only,
+                         bool without_tables);
+
+    inline
+    SystemPtr ImportMAE( std::string const& path,
                          bool ignore_unrecognized = false,
-                         bool structure_only = false);
+                         bool structure_only = false) {
+        return ImportMAE(path, ignore_unrecognized, 
+                                structure_only, structure_only);
+    }
 
     SystemPtr ImportMAEFromStream( std::istream& in,
                          bool ignore_unrecognized = false,
