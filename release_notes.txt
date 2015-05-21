@@ -1,3 +1,9 @@
+1.7.109 Revert the 1.7.103 changes to structure_only.  structure_only now
+        excludes pseudos.  Also excluded in mae files (previously wasn't).
+
+        Added new without_tables option to Load(), which causes term tables
+        to be ignored during loading but otherwise gives you all particles.
+
 1.7.108 Another shot at build fixes.
 
 1.7.107 Build fixes.
