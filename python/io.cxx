@@ -81,9 +81,9 @@ namespace {
         return ImportDMS(path, structure_only);
     }
 
-    SystemPtr load(std::string const& path, bool structure_only,
-                   FileFormat* opt_format) {
-        return Load(path, structure_only, opt_format);
+    SystemPtr load(std::string const& path, bool structure_only, 
+                                            bool without_tables) {
+        return Load(path, NULL, structure_only, without_tables);
     }
 
 }
@@ -141,10 +141,7 @@ namespace desres { namespace msys {
         def("ImportSDFFromBuffer", import_sdf_from_buffer);
 
         def("ExportSDFBytes", export_sdf_bytes);
-        def("Load", load,
-                (arg("path"),
-                 arg("structure_only")=false,
-                 arg("opt_format")=object()));
+        def("Load", load);
         def("Save", save);
 
 
