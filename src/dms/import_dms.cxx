@@ -1,4 +1,5 @@
 #include "dms.hxx"
+#include "../clone.hxx"
 #include "../dms.hxx"
 #include "../term_table.hxx"
 #include "../override.hxx"
@@ -531,7 +532,8 @@ static void check_dms_version(Sqlite dms, KnownSet& known) {
     }
 }
 
-static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
+static SystemPtr import_dms( Sqlite dms, bool structure_only, 
+                                         bool without_tables ) {
 
     SystemPtr h = System::create();
     System& sys = *h;
@@ -676,12 +678,10 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
         }
     }
 
-    sys.analyze();
-
     read_cell(dms, sys, known);
     read_provenance(dms, sys, known);
 
-    if (!structure_only) {
+    if (!without_tables) {
         read_metatables(dms, sys, known);
         read_nonbonded(dms, sys, nbtypes, known);
         read_combined(dms, sys, known);
@@ -690,15 +690,33 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only ) {
         read_extra(dms, sys, known);
     }
 
+    if (structure_only) {
+        // clone the non-pseudos if any pseudos were loaded.
+        IdList ids;
+        const Id n=sys.maxAtomId();
+        ids.reserve(n);
+        for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
+            if (sys.atomFAST(i).atomic_number>0) {
+                ids.push_back(i);
+            }
+        }
+        if (ids.size()<n) {
+            h = Clone(h, ids);
+            /* careful - at this point, sys points to freed memory! */
+        }
+    }
+
+    h->analyze();
     return h;
 }
 
 SystemPtr desres::msys::ImportDMS(const std::string& path, 
-                                  bool structure_only) {
+                                  bool structure_only,
+                                  bool without_tables) {
     SystemPtr sys;
     try {
         Sqlite dms = Sqlite::read(path);
-        sys = import_dms(dms, structure_only);
+        sys = import_dms(dms, structure_only, without_tables);
     }
     catch (std::exception& e) {
         std::stringstream ss;
@@ -710,11 +728,12 @@ SystemPtr desres::msys::ImportDMS(const std::string& path,
 }
 
 SystemPtr desres::msys::ImportDMSFromBytes( const char* bytes, int64_t len,
-                                            bool structure_only ) {
+                                            bool structure_only,
+                                            bool without_tables ) {
     SystemPtr sys;
     try {
         Sqlite dms = Sqlite::read_bytes(bytes, len);
-        sys = import_dms(dms, structure_only);
+        sys = import_dms(dms, structure_only, without_tables);
     }
     catch (std::exception& e) {
         std::stringstream ss;
@@ -727,8 +746,9 @@ SystemPtr desres::msys::ImportDMSFromBytes( const char* bytes, int64_t len,
 static void no_close(sqlite3*) {}
 
 SystemPtr desres::msys::sqlite::ImportDMS(sqlite3* db,
-                                  bool structure_only) {
+                                  bool structure_only,
+                                  bool without_tables) {
     Sqlite dms(boost::shared_ptr<sqlite3>(db,no_close));
-    return import_dms(dms, structure_only);
+    return import_dms(dms, structure_only, without_tables);
 }
 

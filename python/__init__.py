@@ -1644,11 +1644,18 @@ def LoadSDF(path=None, buffer=None):
         raise ValueError("Specifiy either path or buffer")
     return System(ptr)
 
-def Load(path, structure_only = False):
+def Load(path, structure_only=False, without_tables=None):
     ''' Infer the file type of path and load the file.
+    If without_tables is True or False, it specifies whether TermTables
+    should be loaded along with the structure; by default it takes the
+    value of structure_only.
+
     Returns a new System.
     '''
-    ptr = _msys.Load(path, bool(structure_only))
+    structure_only = bool(structure_only)
+    if without_tables is None:
+        without_tables = structure_only
+    ptr = _msys.Load(path, structure_only, without_tables)
     if not ptr:
         raise ValueError, "Could not guess file type of '%s'" % path
     return System(ptr)

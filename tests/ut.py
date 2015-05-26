@@ -197,6 +197,18 @@ class TestAmber(unittest.TestCase):
         self.assertEqual(
                 [(b.first.id, b.second.id) for b in m1.bonds],
                 [(b.first.id, b.second.id) for b in m2.bonds])
+        self.assertTrue(m1.getTable('stretch_harm') is not None)
+        self.assertTrue(m2.getTable('stretch_harm') is     None)
+
+    def testWithoutTables(self):
+        m=msys.Load('tests/files/molecule.prmtop', structure_only=True,
+                            without_tables=False)
+        self.assertTrue(m.getTable('stretch_harm') is not None)
+        m=msys.Load('tests/files/molecule.prmtop', structure_only=False,
+                            without_tables=True)
+        self.assertTrue(m.getTable('stretch_harm') is None)
+
+
 
     def testHbond(self):
         m1=msys.Load('tests/files/sys.prmtop')
@@ -1299,7 +1311,7 @@ class TestMain(unittest.TestCase):
         self.assertEqual(table.category, 'bond')
         msys.SaveDMS(m, 'foo.dms')
 
-    def testDmsStructureOnly(self):
+    def testSaveDmsStructureOnly(self):
         m=msys.CreateSystem()
         a=m.addAtom()
         table=m.addTable("foo", 1)
@@ -1315,6 +1327,74 @@ class TestMain(unittest.TestCase):
         self.assertEqual(len(msys.Load("foo.dms").tables), 0)
         msys.Save(m, 'foo.dms', structure_only=True)
         self.assertEqual(len(msys.Load("foo.dms").tables), 0)
+
+    def testLoadStructureOnly(self):
+        m=msys.CreateSystem()
+        m.addAtom()
+        m.addAtom().atomic_number=6
+        for ext in '.dms', '.mae':
+            with tempfile.NamedTemporaryFile(suffix=ext) as fp:
+                path = fp.name
+                msys.Save(m, path)
+                mol=msys.Load(path)
+                self.assertEqual(mol.natoms, 2, "w/ structure for %s" % ext)
+                mol=msys.Load(path, structure_only=True)
+                self.assertEqual(mol.natoms, 1, "w/o structure for %s" % ext)
+
+                plugin = molfile.guess_filetype(path)
+                mol = plugin.read(path)
+                self.assertEqual(mol.natoms, 2, "molfile for %s" % ext)
+
+    def testLoadWithoutTables(self):
+        mol=msys.CreateSystem()
+        a0=mol.addAtom()
+        a1=mol.addAtom()
+        a2=mol.addAtom()
+        a3=mol.addAtom()
+
+        a0.atomic_number=6
+        a1.atomic_number=6
+        a2.atomic_number=6
+        a3.atomic_number=0
+
+        a0.addBond(a1)
+        a0.addBond(a2)
+
+        t=mol.addTableFromSchema('stretch_harm')
+        p=t.params.addParam()
+        t.addTerm([a1,a2],p)
+
+        # TODO add support for prmtop (use tests/files/sys.prmtop as input)
+        for suffix in '.dms', '.mae':
+            with tempfile.NamedTemporaryFile(suffix=suffix) as fp:
+                path = fp.name
+                msys.Save(mol, path)
+                m = msys.Load(path)
+                self.assertEqual(m.natoms, 4)
+                self.assertEqual(m.nbonds, 2)
+                t=m.table('stretch_harm')
+                self.assertEqual(t.nterms, 1)
+                self.assertEqual([a.id for a in t.term(0).atoms], [1,2])
+
+                m = msys.Load(path, without_tables=True)
+                self.assertEqual(m.natoms, 4)
+                self.assertEqual(m.nbonds, 2)
+                t=m.getTable('stretch_harm')
+                self.assertEqual(t, None)
+
+                m = msys.Load(path, structure_only=True, without_tables=False)
+                self.assertEqual(m.natoms, 3)
+                self.assertEqual(m.nbonds, 2)
+                t=m.getTable('stretch_harm')
+                self.assertEqual(t.nterms, 1)
+                self.assertEqual([a.id for a in t.term(0).atoms], [1,2])
+
+                m = msys.Load(path, structure_only=True)
+                self.assertEqual(m.natoms, 3)
+                self.assertEqual(m.nbonds, 2)
+                t=m.getTable('stretch_harm')
+                self.assertEqual(t, None)
+
 
     def testArchive(self):
         ''' check that saving and loading from .msys preserves the checksum

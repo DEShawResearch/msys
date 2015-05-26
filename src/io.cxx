@@ -50,8 +50,8 @@ namespace {
         SystemPtr mol;
     public:
         DefaultIterator(std::string const& path, FileFormat format,
-                        bool structure_only) {
-            mol = LoadWithFormat(path, format, structure_only);
+                        bool structure_only, bool without_tables) {
+            mol = LoadWithFormat(path, format, structure_only, without_tables);
         }
         SystemPtr next() {
             /* returns original mol the first time, then NULL */
@@ -106,20 +106,20 @@ namespace desres { namespace msys {
     }
 
     SystemPtr LoadWithFormat(std::string const& path, FileFormat format,
-                             bool structure_only) {
+                             bool structure_only, bool without_tables) {
         SystemPtr m;
         switch (format) {
             case DmsFileFormat: 
-                m=ImportDMS(path, structure_only); 
+                m=ImportDMS(path, structure_only, without_tables); 
                 break;
             case MaeFileFormat: 
-                m=ImportMAE(path, false, structure_only); 
+                m=ImportMAE(path, false, structure_only, without_tables); 
                 break;
             case PdbFileFormat: 
                 m=ImportPDB(path); 
                 break;
             case ParmTopFileFormat: 
-                m=ImportPrmTop(path, structure_only); 
+                m=ImportPrmTop(path, structure_only, without_tables); 
                 break;
             case Mol2FileFormat: 
                 m=ImportMol2(path); 
@@ -144,16 +144,18 @@ namespace desres { namespace msys {
         return m;
     }
 
-    SystemPtr Load(std::string const& path, bool structure_only,
-                   FileFormat* opt_format) {
+    SystemPtr Load(std::string const& path, FileFormat* opt_format,
+                                            bool structure_only,
+                                            bool without_tables) {
         FileFormat format = GuessFileFormat(path);
         if (opt_format) *opt_format = format;
-        return LoadWithFormat(path, format, structure_only);
+        return LoadWithFormat(path, format, structure_only, without_tables);
     }
 
     LoadIteratorPtr LoadIterator::create(std::string const& path,
+                                         FileFormat* opt_format,
                                          bool structure_only,
-                                         FileFormat* opt_format) {
+                                         bool without_tables) {
 
         FileFormat format = opt_format ? *opt_format : UnrecognizedFileFormat;
         if (!format) format=GuessFileFormat(path);
@@ -161,7 +163,8 @@ namespace desres { namespace msys {
         switch(format) {
             default:
                 return LoadIteratorPtr(
-                        new DefaultIterator(path, format, structure_only));
+                        new DefaultIterator(path, format, structure_only,
+                                                          without_tables));
             case Mol2FileFormat:
                     return Mol2Iterator(path);
             case MaeFileFormat:

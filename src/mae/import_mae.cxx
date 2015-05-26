@@ -3,6 +3,7 @@
 #include "sitemap.hxx"
 #include "vdwmap.hxx"
 #include "ff.hxx"
+#include "../clone.hxx"
 #include "../mae.hxx"
 
 #include "destro/prep_alchemical_mae.hxx"
@@ -147,7 +148,7 @@ namespace {
 
             Id id = imp.addAtom(chainname, segid, resid, resname, name, insert, ctid);
 
-            atom_t& atm = h->atom(id);
+            atom_t& atm = h->atomFAST(id);
             atm.atomic_number = anum;
             atm.x = x.elem(j).as_float(0);
             atm.y = y.elem(j).as_float(0);
@@ -362,7 +363,7 @@ namespace {
 
     void append_system(SystemPtr h, Json const& ct,
                        const bool ignore_unrecognized,
-                       const bool structure_only) {
+                       const bool without_tables) {
 
         h->name = ct.get("m_title").as_string("");
 
@@ -371,7 +372,7 @@ namespace {
         import_cell( ct, h );
         import_particles( ct, h, atoms, &natoms, &npseudos );
         import_provenance(ct, h);
-        if (structure_only) return;
+        if (without_tables) return;
 
         const Json& ff = ct.get("ffio_ff");
         if (ff.valid()) {
@@ -409,6 +410,22 @@ namespace {
         }
     }
 
+    SystemPtr clone_structure_only(SystemPtr h) {
+        // clone the non-pseudos if any pseudos were loaded.
+        IdList ids;
+        const Id n=h->maxAtomId();
+        ids.reserve(n);
+        for (Id i=0, n=h->maxAtomId(); i<n; i++) {
+            if (h->atomFAST(i).atomic_number>0) {
+                ids.push_back(i);
+            }
+        }
+        if (ids.size()<n) {
+            h = Clone(h, ids);
+        }
+        return h;
+    }
+
     class iterator : public LoadIterator {
         const bool ignore_unrecognized;
         const bool structure_only;
@@ -440,7 +457,9 @@ namespace {
             while (it->next(block)) {
                 if (is_full_system(block)) continue;
                 SystemPtr h = System::create();
-                append_system(h, block, ignore_unrecognized, structure_only);
+                bool without_tables = structure_only;
+                append_system(h, block, ignore_unrecognized, without_tables);
+                if (structure_only) h = clone_structure_only(h);
                 h->ct(0).add("msys_file_offset", IntType);
                 h->ct(0).value("msys_file_offset") = it->offset();
                 h->analyze();
@@ -452,7 +471,8 @@ namespace {
 
     SystemPtr read_all(std::istream& file, 
                        bool ignore_unrecognized,
-                       bool structure_only ) {
+                       bool structure_only,
+                       bool without_tables) {
 
         std::stringstream buf;
         buf << file.rdbuf();
@@ -480,8 +500,9 @@ namespace {
         for (int i=0; i<M.size(); i++) {
             const Json& ct = M.elem(i);
             if (is_full_system(ct)) continue;
-            append_system(h, ct, ignore_unrecognized, structure_only);
+            append_system(h, ct, ignore_unrecognized, without_tables);
         }
+        if (structure_only) h = clone_structure_only(h);
         h->analyze();
         return h;
     }
@@ -491,13 +512,16 @@ namespace desres { namespace msys {
 
     SystemPtr ImportMAE( std::string const& path,
                          bool ignore_unrecognized,
-                         bool structure_only ) {
+                         bool structure_only,
+                         bool without_tables) {
 
         std::ifstream file(path.c_str());
         if (!file) {
             MSYS_FAIL("Failed opening MAE file at '" << path << "'");
         }
-        SystemPtr sys = read_all(file, ignore_unrecognized, structure_only);
+        SystemPtr sys = read_all(file, ignore_unrecognized, 
+                                       structure_only,
+                                       without_tables);
         sys->name = path;
         return sys;
     }
@@ -507,14 +531,16 @@ namespace desres { namespace msys {
 
         std::istringstream file;
         file.rdbuf()->pubsetbuf(const_cast<char *>(bytes), len);
-        return read_all(file, ignore_unrecognized, structure_only);
+        return read_all(file, ignore_unrecognized, structure_only,
+                                                   structure_only);
     }
 
     SystemPtr ImportMAEFromStream( std::istream& file,
                                    bool ignore_unrecognized,
                                    bool structure_only) {
 
-        return read_all(file, ignore_unrecognized, structure_only);
+        return read_all(file, ignore_unrecognized, structure_only,
+                                                   structure_only);
     }
 
     LoadIteratorPtr MaeIterator(std::string const& path,

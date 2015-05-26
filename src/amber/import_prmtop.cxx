@@ -178,7 +178,7 @@ static void parse_nonbonded(SystemPtr mol, SectionMap const& map, int ntypes,
 }
 
 static void parse_stretch(SystemPtr mol, SectionMap const& map,
-                          bool structure_only,
+                          bool without_tables,
                           int ntypes, int nbonh, int nbona) {
     
     std::vector<double> r0(ntypes), fc(ntypes);
@@ -190,7 +190,7 @@ static void parse_stretch(SystemPtr mol, SectionMap const& map,
     parse_ints(map, "BONDS_WITHOUT_HYDROGEN", bona);
 
     TermTablePtr tb;
-    if (!structure_only) {
+    if (!without_tables) {
         tb = AddTable(mol, "stretch_harm");
         for (int i=0; i<ntypes; i++) {
             Id param = tb->params()->addParam();
@@ -209,7 +209,7 @@ static void parse_stretch(SystemPtr mol, SectionMap const& map,
             continue;
         }
         mol->addBond(ids[0], ids[1]);
-        if (structure_only) continue;
+        if (without_tables) continue;
         tb->addTerm(ids, bonh[3*i+2]-1);
     }
     for (int i=0; i<nbona; i++) {
@@ -222,7 +222,7 @@ static void parse_stretch(SystemPtr mol, SectionMap const& map,
             continue;
         }
         mol->addBond(ids[0], ids[1]);
-        if (structure_only) continue;
+        if (without_tables) continue;
         tb->addTerm(ids, bona[3*i+2]-1);
     }
 }
@@ -396,7 +396,8 @@ static void parse_exclusions(SystemPtr mol, SectionMap const& map, int n) {
 }
 
 SystemPtr desres::msys::ImportPrmTop( std::string const& path,
-                                      bool structure_only ) {
+                                      bool structure_only,
+                                      bool without_tables ) {
 
     std::string line, flag;
     std::ifstream in(path.c_str());
@@ -489,10 +490,10 @@ SystemPtr desres::msys::ImportPrmTop( std::string const& path,
         mol->atom(atm).atomic_number = GuessAtomicNumber(masses.at(atm));
     }
 
-    parse_stretch(mol, section, structure_only,
+    parse_stretch(mol, section, without_tables,
                   ptrs[Numbnd], ptrs[Nbonh], ptrs[Nbona]);
 
-    if (!structure_only) {
+    if (!without_tables) {
         parse_angle(mol, section, ptrs[Numang], ptrs[Ntheth], ptrs[Ntheta]);
         PairList pairs = parse_torsion(mol, section, 
                                       ptrs[Nptra], ptrs[Nphih], ptrs[Nphia]);

@@ -34,9 +34,10 @@ static void* open_file_read(const char *filename, const char *filetype,
         return NULL;
     }
     SystemPtr mol;
-    const bool structure_only = true;
+    const bool structure_only = false;
+    const bool without_tables = true;
     try {
-        mol = LoadWithFormat(filename, format, structure_only);
+        mol = LoadWithFormat(filename, format, structure_only, without_tables);
     }
     catch (std::exception& e) {
         fprintf(stderr, "%s", e.what());
