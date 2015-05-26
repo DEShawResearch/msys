@@ -392,10 +392,14 @@ namespace desres { namespace molfile {
   class StkReader : public FrameSetReader {
     std::vector<DtrReader*> framesets;
     size_t curframeset;
+    const unsigned _access;
 
   public:
-    explicit StkReader(DtrReader *reader);
-    explicit StkReader(std::string const& path) : curframeset(0) { dtr = path; }
+    explicit StkReader(std::string const& path, 
+                       unsigned access = DtrReader::RandomAccess) 
+    : curframeset(0), _access(access) 
+    { dtr = path; 
+    }
     ~StkReader();
 
     void append(std::vector<std::string> fnames, 

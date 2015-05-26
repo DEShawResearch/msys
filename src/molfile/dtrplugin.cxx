@@ -693,12 +693,6 @@ bool StkReader::recognizes(const std::string &path) {
              isfile(path);
 }
 
-StkReader::StkReader(DtrReader *reader) {
-  dtr=reader->path();
-  framesets.push_back(reader);
-  curframeset=0;
-}
-
 static std::string filename_to_cache_location(std::string const& stk) {
   const char*        cache_prefix = getenv("MOLFILE_STKCACHE_LOCATION");
   if (!cache_prefix) cache_prefix = "/d/en/cache-0/molfile_stk/";
@@ -891,7 +885,7 @@ void StkReader::append(std::vector<std::string> fnames,
 
   /* instantiate dtr readers */
   for (unsigned i=0; i<fnames.size(); i++) {
-      DtrReader *reader = new DtrReader(fnames[i]);
+      DtrReader *reader = new DtrReader(fnames[i], _access);
       if (framesets.size()>0) {
         const DtrReader * first = framesets[0];
         /* reuse information from earlier readers */
@@ -1973,7 +1967,7 @@ std::istream& StkReader::load(std::istream &in) {
   char c; in.get(c);
   for (size_t i=0; i<framesets.size(); i++) {
     delete framesets[i];
-    framesets[i] = new DtrReader("<no file>");
+    framesets[i] = new DtrReader("<no file>", _access);
     framesets[i]->load(in);
     if (i>0) framesets[i]->set_meta(framesets[0]->get_meta());
   }

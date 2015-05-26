@@ -324,7 +324,8 @@ namespace {
         std::string path = extract<std::string>(pathobj);
         FrameSetReader * reader = NULL;
         if (StkReader::recognizes(path)) {
-            reader = new StkReader(path);
+            reader = new StkReader(path,
+                                sequential ? DtrReader::SequentialAccess : 0);
         } else {
             reader = new DtrReader(path, 
                                 sequential ? DtrReader::SequentialAccess : 0);
