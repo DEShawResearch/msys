@@ -694,6 +694,13 @@ bool StkReader::recognizes(const std::string &path) {
 }
 
 static std::string filename_to_cache_location(std::string const& stk) {
+  std::stringstream ss;
+  bfs::path fullpath = bfs::system_complete(stk);
+  ss << fullpath.parent_path().string() << "/." << fullpath.filename().string() << ".cache." << SERIALIZED_VERSION;
+  return ss.str();
+}
+ 
+static std::string filename_to_old_cache_location(std::string const& stk) {
   const char*        cache_prefix = getenv("MOLFILE_STKCACHE_LOCATION");
   if (!cache_prefix) cache_prefix = "/d/en/cache-0/molfile_stk/";
 
@@ -732,12 +739,14 @@ void StkReader::init(int* changed) {
     
     /* get location of cache directory */
     std::string cachepath;
+    std::string old_cachepath;
     bool cache_found = false;
 
     /* use an stk cache if running in DESRES */
     if (use_cache) {
-        /* construct path to cache file */
-        cachepath = filename_to_cache_location(dtr);
+        /* construct path to the new and old cache file locations */
+        cachepath     = filename_to_cache_location(dtr);
+
         if (verbose) printf("StkReader: cachepath %s\n", cachepath.c_str());
 
         /* attempt to read the cache file */
@@ -765,10 +774,42 @@ void StkReader::init(int* changed) {
                 framesets.clear();
             } else {
               cache_found = true;
-                if (verbose) printf("StkReader: reading cache file suceeded.\n");
+	      if (verbose) printf("StkReader: reading cache file suceeded.\n");
             }
             dtr = mypath;
         } else {
+	    old_cachepath = filename_to_old_cache_location(dtr);
+	    if (verbose) printf("StkReader: cachepaths %s %s\n", cachepath.c_str(), old_cachepath.c_str());
+
+	    std::ifstream old_file(old_cachepath.c_str());
+	    if (old_file) {
+		if (verbose) printf("StkReader: cache old file found\n");
+		bio::filtering_istream in;
+		in.push(bio::gzip_decompressor());
+		in.push(old_file);
+
+		/* hold on to the original path that was used to open the file */
+		std::string mypath = dtr;
+		try {
+		    load(in);
+		}
+		catch (std::exception& e) {
+		    if (verbose) 
+			printf("StkReader: Reading old cache file failed, %s\n",
+			       e.what());
+		    in.setstate(std::ios::failbit);
+		}
+		if (!in) {
+		    if (verbose) printf("StkReader: reading old cache file failed.\n");
+		    /* reading failed for some reason.  Clear out any dtrs we
+		     * might have loaded and start over */
+		    framesets.clear();
+		} else {
+		    if (verbose) printf("StkReader: reading old cache file suceeded.\n");
+		}
+		dtr = mypath;
+	    }
+
             if (verbose) printf("StkReader: no cache file found\n");
         }
     }
@@ -876,6 +917,20 @@ void StkReader::init(int* changed) {
         } else {
             if (verbose)
                 printf("StkReader: cache update succeeded.\n");
+
+	    //
+	    // This chmod is needed to deal with umasks that
+	    // might create the file with more restrictive
+	    // permissions than 0666 in the open O_CREAT.
+	    //
+	    int rc = chmod(cachepath.c_str(), 0666);
+	    if (verbose) {
+		if (rc == 0) {
+		    printf("StkReader: cache file %s successfully chmod to 0666.", cachepath.c_str());
+		} else {
+		    printf("StkReader: unable to chmod cache file %s to 0666.", cachepath.c_str());
+		}
+	    }
         }
     }
 }
