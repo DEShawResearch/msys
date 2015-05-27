@@ -20,7 +20,7 @@ for lib in 'molfile', 'python2.7':
 env.Append(
         # SSE2 for src/within.hxx.  It's optional, but way way slower without.
         CCFLAGS='-O2 -g -Wall -msse2',
-        CXXFLAGS='-std=c++03 -Werror',
+        CXXFLAGS='-std=c++11 -Werror',
         LINKFLAGS='-g'
         )
 
