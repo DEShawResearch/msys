@@ -425,6 +425,9 @@ namespace {
     bool alchemically_different(ParamTablePtr alc, Id p, ParamTablePtr src) {
         for (Id i=0; i<src->propCount(); i++) {
             std::string prop = src->propName(i);
+            // If two terms differ only in 'type' or 'memo', but not in
+            // actual parameter values, we do not consider them different.
+            if (prop == "type" || prop == "memo") continue;
             Id colA = alc->propIndex(prop+"A");
             Id colB = alc->propIndex(prop+"B");
             if (!bad(colA) && !bad(colB)) {
