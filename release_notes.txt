@@ -1,4 +1,6 @@
 1.7.112 Disregard difference in type and memo in identifying alchemical terms.
+        Accommodate missing tables in both A and B states in alchemical mapping.
+
 1.7.111 Support for gromacs files (gro, g96, trr, trj, xtc).
         Build with C++11.
         Better error handling in dms export.
