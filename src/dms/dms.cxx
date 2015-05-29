@@ -35,7 +35,6 @@ namespace desres { namespace msys {
         char * path;
 
         static void close(dms_file* dms) {
-            printf("close: dms path %s\n", dms->path);
             if (dms->contents) free(dms->contents);
             if (dms->path)     free(dms->path);
         }
