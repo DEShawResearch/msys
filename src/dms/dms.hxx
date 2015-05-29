@@ -15,20 +15,25 @@ namespace desres { namespace msys {
     struct dms_file;
 
     class Sqlite {
-        boost::shared_ptr<sqlite3> _db;
-        dms_file* _file;
+        boost::shared_ptr<sqlite3>  _db;
+        boost::shared_ptr<dms_file> _file;
 
         const char* errmsg() const;
 
     public:
-        Sqlite() : _file() {}
+        Sqlite() 
+        {}
 
         Sqlite(boost::shared_ptr<sqlite3> db)
-        : _db(db), _file() {}
+        : _db(db) 
+        {}
 
         static Sqlite read(std::string const& path, bool unbuffered = false);
         static Sqlite read_bytes(const char* bytes, int64_t len);
         static Sqlite write(std::string const& path, bool unbuffered = false);
+
+        // finish must be called on an Sqlite returned from write().
+        void finish();
 
         void exec(std::string const& sql);
 

@@ -33,47 +33,17 @@ namespace desres { namespace msys {
         char * contents;
         sqlite3_int64 size;
         char * path;
+
+        static void close(dms_file* dms) {
+            printf("close: dms path %s\n", dms->path);
+            if (dms->contents) free(dms->contents);
+            if (dms->path)     free(dms->path);
+        }
     };
 }}
 
 namespace {
-    /* sqlite seems to ignore the return value from this function!  Hence
-     * we throw an exception on I/O error */
     int dms_xClose(sqlite3_file *file) {
-        dms_file *dms = (dms_file *)file;
-
-        /* ensure the contents get freed even if we throw */
-        boost::shared_ptr<char> cp;
-        if (dms->contents) cp.reset(dms->contents, free);
-
-        /* if path is non-NULL, we need to write the contents */
-        if (dms->path) {
-            boost::shared_ptr<char> pp(dms->path, free);
-            int fd=open(dms->path, O_WRONLY | O_CREAT, 0644);
-            if (fd<0) {
-                MSYS_FAIL("Error opening " << dms->path 
-                    << " for writing: " << strerror(errno));
-            }
-            sqlite3_int64 sz = dms->size;
-            char* ptr = dms->contents;
-            while (sz) {
-                errno = 0;
-                ssize_t rc = write(fd, dms->contents, sz);
-                if (rc<0 || (rc==0 && errno!=0)) {
-                    std::string errmsg = strerror(errno);
-                    close(fd);
-                    MSYS_FAIL("Error writing DMS contents of size " << dms->size
-                        << " bytes to " << dms->path << " : " << errmsg);
-                }
-                sz -= rc;
-                ptr += rc;
-            }
-            if (close(fd)!=0) {
-                std::string errmsg = strerror(errno);
-                MSYS_FAIL("Error closing DMS file at " << dms->path
-                        << " : " << errmsg);
-            }
-        }
         return SQLITE_OK;
     }
 
@@ -232,14 +202,40 @@ namespace {
     } vfs[1];
 }
 
-static void close_db(sqlite3* db) {
-    if (sqlite3_close(db)!=SQLITE_OK) {
-        MSYS_FAIL("Closing db failed: " << sqlite3_errmsg(db));
-    }
-}
-
 const char* Sqlite::errmsg() const {
     return sqlite3_errmsg(_db.get());
+}
+
+void Sqlite::finish() {
+
+    dms_file* dms = _file.get();
+    if (!dms || !dms->path) return;
+
+    /* if path is non-NULL, we need to write the contents */
+    int fd=open(dms->path, O_WRONLY | O_CREAT, 0644);
+    if (fd<0) {
+        MSYS_FAIL("Error opening " << dms->path 
+            << " for writing: " << strerror(errno));
+    }
+    sqlite3_int64 sz = dms->size;
+    char* ptr = dms->contents;
+    while (sz) {
+        errno = 0;
+        ssize_t rc = ::write(fd, dms->contents, sz);
+        if (rc<0 || (rc==0 && errno!=0)) {
+            std::string errmsg = strerror(errno);
+            close(fd);
+            MSYS_FAIL("Error writing DMS contents of size " << dms->size
+                << " bytes to " << dms->path << " : " << errmsg);
+        }
+        sz -= rc;
+        ptr += rc;
+    }
+    if (close(fd)!=0) {
+        std::string errmsg = strerror(errno);
+        MSYS_FAIL("Error closing DMS file at " << dms->path
+                << " : " << errmsg);
+    }
 }
 
 Sqlite Sqlite::read(std::string const& path, bool unbuffered)  {
@@ -248,7 +244,7 @@ Sqlite Sqlite::read(std::string const& path, bool unbuffered)  {
     if (unbuffered) {
         int rc = sqlite3_open_v2( path.data(), &db, SQLITE_OPEN_READONLY, NULL);
         if (rc!=SQLITE_OK) MSYS_FAIL(sqlite3_errmsg(db));
-        return boost::shared_ptr<sqlite3>(db, close_db);
+        return boost::shared_ptr<sqlite3>(db, sqlite3_close);
     }
 
     sqlite3_vfs_register(vfs, 0);
@@ -306,7 +302,7 @@ Sqlite Sqlite::read(std::string const& path, bool unbuffered)  {
             vfs->zName);
     if (g_tmpbuf) free(g_tmpbuf);
     if (rc!=SQLITE_OK) MSYS_FAIL(sqlite3_errmsg(db));
-    return boost::shared_ptr<sqlite3>(db, close_db);
+    return boost::shared_ptr<sqlite3>(db, sqlite3_close);
 }
 
 Sqlite Sqlite::read_bytes(const char * bytes, int64_t len ) {
@@ -328,7 +324,7 @@ Sqlite Sqlite::read_bytes(const char * bytes, int64_t len ) {
             vfs->zName);
     if (g_tmpbuf) free(g_tmpbuf);
     if (rc!=SQLITE_OK) MSYS_FAIL(sqlite3_errmsg(db));
-    return boost::shared_ptr<sqlite3>(db, close_db);
+    return boost::shared_ptr<sqlite3>(db, sqlite3_close);
 }
 
 Sqlite Sqlite::write(std::string const& path, bool unbuffered) {
@@ -342,8 +338,8 @@ Sqlite Sqlite::write(std::string const& path, bool unbuffered) {
             unbuffered ? NULL : vfs->zName);
     if (rc!=SQLITE_OK) MSYS_FAIL(sqlite3_errmsg(db));
 
-    Sqlite result(boost::shared_ptr<sqlite3>(db, close_db));
-    if (!unbuffered) result._file = g_dms_file;
+    Sqlite result(boost::shared_ptr<sqlite3>(db, sqlite3_close));
+    if (!unbuffered) result._file.reset(g_dms_file, dms_file::close);
     return result;
 }
 

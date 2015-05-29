@@ -615,6 +615,8 @@ static void export_dms(SystemPtr h, Sqlite dms, Provenance const& provenance,
 
     export_provenance(sys,provenance,dms);
     export_version(                  dms);
+    
+    dms.finish();
 }
 
 void desres::msys::ExportDMS(SystemPtr h, const std::string& path,
