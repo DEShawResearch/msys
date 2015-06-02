@@ -43,7 +43,9 @@ def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input_files', nargs='+')
     parser.add_argument('--progress', action='store_true', default=False,
-            help="show progress bar")
+                        help="show progress bar")
+    parser.add_argument('--parseable-output', action='store_true', default=False,
+                        help="show parseable output compatible with d_validate")
 
     return parser.parse_args()
 
@@ -71,6 +73,20 @@ def main():
             assert frame.box is not None, "'%s' is missing pos data at frame %d" % (path, i)
             if args.progress:
                 progress(i+1)
+
+	    if (i == 0):
+                first_frame_time = frame.time
+
+        #
+        # Spit out some output that is compatible with d_validate, which
+        # this replaces.
+        #
+	if args.parseable_output:
+            print "first_frame_time = ", first_frame_time
+            print "last_frame_time = ", frame.time
+            if (nframes > 1):
+                print "delta_t = ", (frame.time - first_frame_time) / (nframes - 1)
+                print "num_frames = ", nframes
 
 main()
 
