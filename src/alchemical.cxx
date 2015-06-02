@@ -112,7 +112,7 @@ namespace {
       return false;
     }
 
-    BlockMap make_pairs(SystemPtr mol, 
+    BlockMap make_pairs(SystemPtr mol, SystemPtr molB,
                          TermTablePtr atable, TermTablePtr btable,
                          IdList const& alist,
                          IdList const& blist,
@@ -120,9 +120,10 @@ namespace {
                          IdList const& a2b) {
 
         BlockMap M;
-        if (!btable) return M;
+        if (!btable && !atable) return M;
         if (!atable) atable = copy_table_template(mol, btable);
-
+        if (!btable) btable = copy_table_template(molB, atable);
+        
         /* index the B terms */
         IdList bterms = btable->findWithAny(blist);
         BOOST_FOREACH(Id i, bterms) {
@@ -344,7 +345,7 @@ namespace {
         return M;
     }
 
-    BlockMap make_block(SystemPtr mol, 
+    BlockMap make_block(SystemPtr mol, SystemPtr molB,
                          TermTablePtr atable, TermTablePtr btable,
                          IdList const& alist,
                          IdList const& blist,
@@ -352,8 +353,9 @@ namespace {
                          IdList const& a2b) {
 
         BlockMap M;
-        if (!btable) return M;
+        if (!btable && !atable) return M;
         if (!atable) atable = copy_table_template(mol, btable);
+        if (!btable) btable = copy_table_template(molB, atable);
 
         /* index the B terms */
         IdList bterms = btable->findWithAny(blist);
@@ -425,6 +427,9 @@ namespace {
     bool alchemically_different(ParamTablePtr alc, Id p, ParamTablePtr src) {
         for (Id i=0; i<src->propCount(); i++) {
             std::string prop = src->propName(i);
+            // If two terms differ only in 'type' or 'memo', but not in
+            // actual parameter values, we do not consider them different.
+            if (prop == "type" || prop == "memo") continue;
             Id colA = alc->propIndex(prop+"A");
             Id colB = alc->propIndex(prop+"B");
             if (!bad(colA) && !bad(colB)) {
@@ -1137,15 +1142,15 @@ SystemPtr desres::msys::MakeAlchemical( SystemPtr A, SystemPtr B,
     BlockMap bondmap, anglmap, dihemap, imprmap, pairmap, exclmap;
     String ff;
     ff = "stretch_harm";
-    bondmap=make_block(A,A->table(ff),B->table(ff),alist,blist,b2a,a2b);
+    bondmap=make_block(A, B, A->table(ff),B->table(ff),alist,blist,b2a,a2b);
     ff = "angle_harm";
-    anglmap=make_block(A,A->table(ff),B->table(ff),alist,blist,b2a,a2b);
+    anglmap=make_block(A, B, A->table(ff),B->table(ff),alist,blist,b2a,a2b);
     ff = "dihedral_trig";
-    dihemap=make_block(A,A->table(ff),B->table(ff),alist,blist,b2a,a2b);
+    dihemap=make_block(A, B, A->table(ff),B->table(ff),alist,blist,b2a,a2b);
     ff="improper_harm";
-    imprmap=make_block(A,A->table(ff),B->table(ff),alist,blist,b2a,a2b);
+    imprmap=make_block(A, B, A->table(ff),B->table(ff),alist,blist,b2a,a2b);
     ff="pair_12_6_es";
-    pairmap=make_pairs(A,A->table(ff),B->table(ff),alist,blist,b2a,a2b);
+    pairmap=make_pairs(A, B, A->table(ff),B->table(ff),alist,blist,b2a,a2b);
 
     if (not keep_none) {
       // Some of the interactions between the real atoms and the dummy
