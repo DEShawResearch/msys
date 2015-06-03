@@ -1,3 +1,7 @@
+1.7.113 dtr-validate backwards compatibility.
+        Fix sdf import bug handling entries containing doublet radical.
+        Start using the new stk cache.
+
 1.7.112 Disregard difference in type and memo in identifying alchemical terms.
         Accommodate missing tables in both A and B states in alchemical mapping.
 
