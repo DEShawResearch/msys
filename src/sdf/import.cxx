@@ -133,7 +133,7 @@ SystemPtr iterator::next() {
     boost::trim(bondstr);
     int nbonds = stringToInt(bondstr);
 
-    std::vector<int> valenceList;
+    //std::vector<int> valenceList;
 
     /* Load Atoms */
     for (int i=0; i<natoms; i++) {
@@ -173,12 +173,15 @@ SystemPtr iterator::next() {
             }
             if(q==4){
                 skip_to_end();
-                fprintf(stderr, "WARNING: Treating doublet radical charge specification as q=0\n");
+                MSYS_FAIL("Skipping entry with doublet radical charge specification:\n" << line);
             }
             /* Just set formal charge, not 'charge', for consistency with
              * the exporter, which only looks at formal charge.  */
             atom.formal_charge = q==0 ? 0 : 4-q;
             
+            // we don't currently use the valence info, so let's not waste
+            // our time parsing it.
+#if 0
             if(line.size()>=51){
                 int v=stringToInt(line.substr(48,3));
                 /* Values of parsed valence field: 
@@ -193,6 +196,7 @@ SystemPtr iterator::next() {
                 /* Use valence list to check bonds? */
                 valenceList.push_back(v);
             }
+#endif
         }
     } 
 
