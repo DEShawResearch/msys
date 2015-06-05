@@ -61,6 +61,10 @@ namespace {
         return ss.str();
     }
 
+    MoleculeIterator* scan_sdf(std::string path) {
+        return ScanSdf(path).release();
+    }
+
     LoadIteratorPtr load_iterator_create(std::string const& path,
                                          bool structure_only) {
         return LoadIterator::create(path, structure_only);
@@ -146,6 +150,9 @@ namespace desres { namespace msys {
         def("ImportXYZ", ImportXYZ);
         def("ImportSDF", ImportSdf);
         def("ImportSDFFromBuffer", import_sdf_from_buffer);
+
+        def("ScanSDF", scan_sdf, return_value_policy<manage_new_object>());
+        def("FormatSDF", FormatSdf);
 
         def("ExportSDFBytes", export_sdf_bytes);
         def("Load", load);

@@ -139,4 +139,85 @@ ought to be term properties::
         
     if __name__=="__main__": main()
 
+Processing multi-entry files (e.g. SDF files)
+---------------------------------------------
 
+To iterate over each structure in an SDF file, use msys.LoadMany.
+The LoadMany function is a generator, so you should iterate over its
+results rather than simply calling it.
+
+Each result returned by LoadMany is a System with one ct.  You'll
+need to access the ct member of the System in order to view or modify
+the data values associated with each entry.  
+
+To write entries back out to a new SDF file after filtering or modifying
+them, use msys.SaveSDF.  It's most efficient to create your own file
+object in Python, and write the string returned by SaveSDF to that file.
+
+When entries in the SDF file cannot be parsed, msys skips the next entry,
+and msys.LoadMany returns None for the offending entry.  You should check
+for None in the return values of msys.LoadMany and skip them if that makes
+sense for your script.
+
+Here is an example snippet which reads each entry, filters by atom count,
+modifies a data property, removes another data property, and writes the
+results to another file::
+
+    def process_sdf(ifile, ofile):
+        fp = open(ofile, 'w')
+        for i, mol in enumerate(msys.LoadMany(ifile)):
+            # skip entries which couldn't be parsed
+            if mol is None:
+                print "Warning, skipping entry %d" % (i+1)
+                continue
+            # filter systems with fewer than 5 atoms
+            if mol.natoms < 5:
+                continue
+            ct = mol.ct(0)
+            # update 'THE_SCORE' property.  Note that vlaues returned by
+            # get may be float, int, or string.
+            score = ct.get('THE_SCORE', 0.0)
+            score += 5.0
+            ct['THE_SCORE'] = score
+            # remove 'USELESS' property
+            if ct.get('USELESS') is not None:
+                del ct['USELESS']
+            # write the entry back out
+            fp.write(msys.SaveSDF(mol, None)
+
+
+Processing large SDF files
+--------------------------
+
+If you have large sdf files with many thousands of entries, you may
+benefit from using a set of functions specialized for SDF files.
+The new functions are around 10x faster at reading SDF files and
+20x faster for writing.  However, there is no facility for modifying
+the molecular structures of each entry, though you can inspect and
+modify the data values.  Also, the data values are always returned as
+strings, so you must case them to appropriate types if you wish to
+manipulate them as integers or floats.
+
+The new functions are named ScanSDF and FormatSDF.  Here a snippet
+which performs the same actions as the process_sdf function in the
+previous example, using the new functions::
+
+    def process_sdf_fast(ifile, ofile):
+        fp = open(ofile, 'w')
+        for i, mol in enumerate(msys.ScanSDF(ifile)):
+            # skip entries which couldn't be parsed
+            if mol is None:
+                print "Warning, skipping entry %d" % (i+1)
+                continue
+            # filter systems with fewer than 5 atoms
+            if mol.natoms < 5:
+                continue
+            # update 'THE_SCORE', coverting the existing value to float
+            score = mol.get('THE_SCORE', 0.0)
+            ct['THE_SCORE'] = float(score) + 5.0
+            # remove 'USELESS' property
+            if ct.get('USELESS') is not None:
+                del ct['USELESS']
+            # write the entry back out
+            fp.write(msys.FormatSDF(mol)
+        

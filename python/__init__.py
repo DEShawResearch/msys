@@ -13,6 +13,7 @@ from _msys import RadiusForElement, MassForElement, ElementForAbbreviation
 from _msys import GuessAtomicNumber, AbbreviationForElement
 from _msys import PeriodForElement, GroupForElement
 from _msys import HydrogenBond
+from _msys import Molecule, FormatSDF
 from atomsel import Atomsel
 
 class Handle(object):
@@ -1643,6 +1644,23 @@ def LoadSDF(path=None, buffer=None):
     else:
         raise ValueError("Specifiy either path or buffer")
     return System(ptr)
+
+def ScanSDF(path):
+    ''' Iterate over SDF entries using the Molecule interface.
+    '''
+    it = _msys.ScanSDF(path)
+    i=0
+    while True:
+        i += 1
+        try:
+            mol = it.next()
+        except Exception as e:
+            sys.stderr.write("Error reading structure %d: %s\n" % (i,e.message))
+            yield None
+            continue
+        if mol is None:
+            break
+        yield mol
 
 def Load(path, structure_only=False, without_tables=None):
     ''' Infer the file type of path and load the file.

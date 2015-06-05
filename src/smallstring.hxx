@@ -31,8 +31,16 @@ namespace desres { namespace msys {
             s[0] = 0;
         }
 
+        SmallString(std::string const& o) {
+            *this = o;
+        }
+
         operator std::string() const {
             return std::string(s, s+n);
+        }
+
+        bool operator==(SmallString<N> const& o) const {
+            return !strcmp(s, o.s);
         }
 
         bool operator==(std::string const& o) const {
@@ -46,6 +54,14 @@ namespace desres { namespace msys {
 
         const char* c_str() const {
             return s;
+        }
+
+        size_t size() const {
+            return strlen(s);
+        }
+
+        bool empty() const {
+            return *s == '\0';
         }
 
         char const& operator[](size_t i) const {

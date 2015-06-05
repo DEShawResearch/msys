@@ -60,6 +60,7 @@ env.Command('version.hxx', 'version.py', build_version_hxx )
 
 lexenv = env.Clone()
 lexenv.Append(CPPDEFINES='YY_NO_INPUT')
+lexenv.Append(CXXFLAGS='-Wno-deprecated-register')
 lexobjs = lexenv.AddObject(Split('''
 atomsel/lexer.cxx
 '''))
@@ -171,6 +172,8 @@ mae/destro/Maeff.cxx
 mae/destro/prep_alchemical_mae.cxx
 mae/destro/Tokenizer.cxx
 mae/destro/Zing.cxx
+
+molecule.cxx
 
 mol2/assign.cxx
 mol2/export.cxx

@@ -18,6 +18,7 @@ namespace desres { namespace msys {
     void export_graph();
     void export_inchi();
     void export_spatial_hash();
+    void export_molecule();
 }}
 
 BOOST_PYTHON_MODULE(_msys) {
@@ -39,5 +40,6 @@ BOOST_PYTHON_MODULE(_msys) {
     desres::msys::export_graph();
     desres::msys::export_inchi();
     desres::msys::export_spatial_hash();
+    desres::msys::export_molecule();
 }
 

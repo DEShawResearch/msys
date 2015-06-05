@@ -2,6 +2,7 @@
 #define desres_msys_sdf_hxx
 
 #include "io.hxx"
+#include "molecule.hxx"
 
 namespace desres { namespace msys {
 
@@ -12,6 +13,10 @@ namespace desres { namespace msys {
 
     /* Iterator for SDF files */
     LoadIteratorPtr SdfIterator(std::string const& path);
+
+    MoleculeIteratorPtr ScanSdf(std::string path);
+
+    std::string FormatSdf( Molecule const& mol );
 
     struct SdfExport {
         enum Flags {
