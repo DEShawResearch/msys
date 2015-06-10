@@ -373,25 +373,15 @@ void Timekeys::initWithBytes(size_t tksize, void* bytes) {
 
     /* Check that we didn't get zero-length frames; this would be a strong
      * indicator of file corruption! */
-    int warning_count=0;
     size_t i;
     for (i=0; i<nframes; i++) {
         if (keys[i].size()==0) {
-            if (++warning_count<10) {
-              if (verbose) 
-                fprintf(stderr, "dtrplugin -- WARNING: timekey %d reports 0-length frame; file corruption likely.\n", (int)i);
-            }
-            if (warning_count==10) {
-              if (verbose)
-                fprintf(stderr, 
-                        "dtrplugin -- WARNING: skipping remaining warnings\n");
-            }
-        }
-    }
-    if (warning_count) {
-      if (verbose) 
-        fprintf(stderr, "dtrplugin -- WARNING: found %d likely corrupt timekeys\n",
-                warning_count);
+	    DTR_FAILURE("timekeys frame " << i << " had 0 size");
+	}
+
+	if ((i > 0) && (keys[i].time() <= keys[(i-1)].time())) {
+	    DTR_FAILURE("timekeys frame " << i << " had time " << keys[i].time() << " but frame " << (i-1) << " had time " << keys[(i-1)].time());
+	}
     }
 
     m_size = m_fullsize = keys.size();
@@ -408,10 +398,7 @@ void Timekeys::initWithBytes(size_t tksize, void* bytes) {
 
     int time_interval_warnings = 0;
     for (i=1; i<keys.size(); i++) {
-        if (keys[i].size() == 0) {
-            /* ignore obviously corrupt frames */
-            continue;
-        }
+
         /* constant frame size */
         if (keys[i].size() != m_framesize) {
             if (verbose) {

@@ -1,5 +1,6 @@
 #include "molecule.hxx"
 #include "types.hxx"
+#include <string.h> // memcpy
 
 using namespace desres::msys;
 

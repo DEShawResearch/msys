@@ -12,7 +12,7 @@ Check that each frame in each input file is readable and provides
 position and box data.
 '''
 
-import sys, os
+import sys, os, fnmatch
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
 from msys import molfile
 import numpy
@@ -58,6 +58,14 @@ def main():
         if args.progress: 
             print "(%4d/%4d) %s" % (ipath+1, len(paths), path)
         r = molfile.DtrReader(path, sequential=True)
+
+	total_framebytes = 0
+	for framefile in os.listdir(path):
+	    if fnmatch.fnmatch(framefile, 'frame[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'):
+	       total_framebytes += os.path.getsize(path + "/" + framefile)
+
+	assert total_framebytes == r.total_bytes(), "total frame bytes %d vs expected from timekeys file %d" % (total_framebytes, r.total_bytes())
+
         natoms = r.natoms
         nframes = r.nframes
         if args.progress:
@@ -75,6 +83,16 @@ def main():
 
 	    if (i == 0):
                 first_frame_time = frame.time
+            else:
+                delta_t = frame.time - last_frame_time
+                if (i > 1):
+                    change_delta_t = abs(last_delta_t - delta_t)
+                    assert change_delta_t < 0.02, "delta_t changed from %f to %f" % (last_delta_t, delta_t)
+
+                last_delta_t = delta_t
+
+            last_frame_time = frame.time
+                
 
         #
         # Spit out some output that is compatible with d_validate, which

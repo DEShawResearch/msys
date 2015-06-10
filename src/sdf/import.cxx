@@ -262,11 +262,11 @@ namespace {
                     if (!strncmp(buf+3, "END", 3)) {
                         break;
                     } else if (!strncmp(buf+3, "CHG", 3)) {
-                        for (unsigned i=0; i<natoms; i++) {
+                        for (int i=0; i<natoms; i++) {
                             ptr->atom(i).formal_charge = 0;
                         }
-                        unsigned n = parse_count(buf+6);
-                        for (unsigned i=0; i<n; i++) {
+                        int n = parse_count(buf+6);
+                        for (int i=0; i<n; i++) {
                             short aid = parse_count(buf+10+8*i);
                             short chg = parse_count(buf+14+8*i);
                             if (aid<1) {
@@ -314,7 +314,8 @@ namespace {
                                 auto sz = val.size();
                                 if (sz==1) val.clear(); /* just a newline */
                                 else if (sz>1) val.resize(sz-2);
-                                ptr->data().emplace(key,val);
+                                ptr->data().insert(
+                                        Molecule::Data::value_type(key,val));
                             }
                             needline = false;
                             break;

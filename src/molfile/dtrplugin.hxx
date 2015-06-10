@@ -108,7 +108,7 @@ namespace desres { namespace molfile {
 
       double    m_first;        /* last time in the key list */
       double    m_interval;     /* representative time interval between keys */
-      uint64_t  m_framesize;    /* size of all frames */
+      uint64_t  m_framesize;    /* size of a frames */
       size_t    m_size;         /* number of non-overlapping frames */
       size_t    m_fullsize;     /* total number of frames */
       uint32_t  m_fpf;          /* frames per file */
@@ -173,6 +173,7 @@ namespace desres { namespace molfile {
 
     // number of frames
     virtual ssize_t size() const = 0;
+    virtual ssize_t total_bytes() const = 0;
 
     // read the next frame.  If ts is NULL, skip it.  If there are no more
     // frames to read, return MOLFILE_EOF.  Otherwise, fill in coordinates
@@ -299,6 +300,16 @@ namespace desres { namespace molfile {
 
     virtual void init(int * changed=NULL);
     virtual ssize_t size() const { return keys.size(); }
+    virtual ssize_t total_bytes() const {
+	ssize_t total = 0;
+
+	for (unsigned int i = 0; i < keys.size(); i++) {
+	    total += keys[i].size();
+	}
+
+	return(total);
+    }
+
     virtual ssize_t times(ssize_t start, ssize_t count, double * times) const;
 
     virtual bool next(molfile_timestep_t *ts);
@@ -410,6 +421,7 @@ namespace desres { namespace molfile {
 
     virtual void init(int * changed=NULL);
     virtual ssize_t size() const;
+    virtual ssize_t total_bytes() const { return 0; };
     virtual ssize_t times(ssize_t start, ssize_t count, double * times) const;
     virtual bool next(molfile_timestep_t *ts);
     virtual dtr::KeyMap frame(ssize_t n, molfile_timestep_t *ts,

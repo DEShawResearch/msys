@@ -598,6 +598,9 @@ namespace {
     ssize_t index_gt( const FrameSetReader& self, double T ) {
         return ff::at_time_gt(self.size(), Oracle(self), T);
     }
+    ssize_t total_bytes( const FrameSetReader& self ) {
+	return (self.total_bytes());
+    }
 
     std::string my_path(FrameSetReader const& self) {
         return self.path();
@@ -658,6 +661,7 @@ void desres::molfile::export_dtrreader() {
                 return_value_policy<manage_new_object>())
         .staticmethod("fromTimekeys")
 
+        .def("total_bytes", total_bytes)
         .def("index_near", index_near)
         .def("index_le", index_le)
         .def("index_lt", index_lt)

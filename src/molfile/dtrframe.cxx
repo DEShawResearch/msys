@@ -208,8 +208,8 @@ desres::molfile::dtr::ParseFrame(size_t sz, const void* data) {
     uint64_t scalar_start = label_start + header->labelsize;
     uint64_t field_start = scalar_start + header->scalarsize;
     uint64_t crc_start = field_start + header->fieldsize;
-    if (sz < crc_start+4) {
-        DTR_FAILURE("frame is too short: need " << crc_start+4 << " got " << sz);
+    if (sz != crc_start + 4 + header->padding) {
+        DTR_FAILURE("frame is wrong size: need " << crc_start + 4 + header->padding << " got " << sz);
     }
 
     const char* bytes = (const char *)data;
