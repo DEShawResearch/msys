@@ -1,3 +1,7 @@
+1.7.115 Add checkpoint option to dtr-validate to turn off delta_t checks.
+
+1.7.114 Make dtr-validate perform some additional checks on timekeys.
+
 1.7.113 dtr-validate backwards compatibility.
         Fix sdf import bug handling entries containing doublet radical.
         Start using the new stk cache.

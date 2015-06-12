@@ -43,6 +43,8 @@ def parse_args():
     parser.add_argument('input_files', nargs='+')
     parser.add_argument('--progress', action='store_true', default=False,
                         help="show progress bar")
+    parser.add_argument('--checkpoint', action='store_true', default=False,
+                        help="turn off delta_t checks")
     parser.add_argument('--parseable-output', action='store_true', default=False,
                         help="show parseable output compatible with d_validate")
 
@@ -87,7 +89,8 @@ def main():
                 delta_t = frame.time - last_frame_time
                 if (i > 1):
                     change_delta_t = abs(last_delta_t - delta_t)
-                    assert change_delta_t < 0.02, "delta_t changed from %f to %f" % (last_delta_t, delta_t)
+		    if (args.checkpoint == False):
+                        assert change_delta_t < 0.02, "delta_t changed from %f to %f" % (last_delta_t, delta_t)
 
                 last_delta_t = delta_t
 
