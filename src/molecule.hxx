@@ -23,8 +23,8 @@ namespace desres { namespace msys {
         struct Bond {
             unsigned short i = 0;
             unsigned short j = 0;
-            unsigned short order = 0;
-            unsigned short flags = 0;
+            unsigned short order  = 0;
+            unsigned short stereo = 0;
         };
         typedef std::map<std::string,std::string> Data;
 

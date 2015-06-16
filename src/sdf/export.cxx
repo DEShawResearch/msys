@@ -99,6 +99,7 @@ std::string desres::msys::FormatSdf( Molecule const& mol ) {
         auto fc = atm.formal_charge;
         fc=(fc==0 || fc<-3 || fc>3) ? 0 : 4-fc;
         format_short(atombuf+36, fc);
+        format_short(atombuf+39, atm.stereo_parity);
         ptr = append(ptr, atombuf, sizeof(atombuf)-1);
     }
 
@@ -109,6 +110,7 @@ std::string desres::msys::FormatSdf( Molecule const& mol ) {
         format_short(bondbuf  , bnd.i+1);
         format_short(bondbuf+3, bnd.j+1);
         format_short(bondbuf+6, bnd.order);
+        format_short(bondbuf+9, bnd.stereo);
         ptr = append(ptr, bondbuf, sizeof(bondbuf)-1);
     }
     ptr = append(ptr, "M  END\n", 7);

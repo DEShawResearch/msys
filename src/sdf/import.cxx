@@ -239,6 +239,10 @@ namespace {
                     auto q = parse_count(buf+36);
                     ptr->atom(i).formal_charge = q==0 ? 0 : 4-q;
                 }
+                if (sz>=42) {
+                    auto s = parse_count(buf+39);
+                    ptr->atom(i).stereo_parity = s;
+                }
             }
 
             // bonds
@@ -254,6 +258,7 @@ namespace {
                 ptr->bond(i).i =     parse_count(buf  )-1;
                 ptr->bond(i).j =     parse_count(buf+3)-1;
                 ptr->bond(i).order = parse_count(buf+6);
+                ptr->bond(i).stereo = parse_count(buf+9);
             }
 
             // M entries
