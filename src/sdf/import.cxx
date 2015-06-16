@@ -103,9 +103,10 @@ namespace {
             }
             return current;
         }
+
+        static const short BAD_COUNT = 9999;
         // parse text of the form __z, _yz, or xyz, where underscore
-        // denotes leading space and x,y,z are digits.  Return -1 on
-        // error.
+        // denotes leading space and x,y,z are digits.
         static short parse_count(const char* s) {
             int n=0;
             unsigned short result=0;
@@ -118,7 +119,7 @@ namespace {
                 ++n;
             }
             for (; n<3; n++, s++) {
-                if (!isdigit(*s)) return -1;
+                if (!isdigit(*s)) return BAD_COUNT;
                 unsigned short d = *s - '0';
                 switch (n) {
                     case 0: result += 100*d; break;
@@ -126,7 +127,7 @@ namespace {
                     case 2: result +=     d; break;
                 };
             }
-            return result;
+            return sign*result;
         }
 
         // parse xxxxx.yyyy as float
@@ -213,7 +214,7 @@ namespace {
             if (feof(fp)) return ptr;
             auto natoms = parse_count(buf);
             auto nbonds = parse_count(buf+3);
-            if (bad(natoms) || bad(nbonds)) {
+            if (natoms==BAD_COUNT || nbonds==BAD_COUNT) {
                 MSYS_FAIL("Bad counts line: " << skip_to_end());
             }
 
@@ -237,10 +238,16 @@ namespace {
 
                 if (sz>=39) {
                     auto q = parse_count(buf+36);
+                    if (q==BAD_COUNT) {
+                        MSYS_FAIL("Bad charge: " << skip_to_end());
+                    }
                     ptr->atom(i).formal_charge = q==0 ? 0 : 4-q;
                 }
                 if (sz>=42) {
                     auto s = parse_count(buf+39);
+                    if (s==BAD_COUNT) {
+                        MSYS_FAIL("Bad stereo: " << skip_to_end());
+                    }
                     ptr->atom(i).stereo_parity = s;
                 }
             }
@@ -271,10 +278,13 @@ namespace {
                             ptr->atom(i).formal_charge = 0;
                         }
                         int n = parse_count(buf+6);
+                        if (n==BAD_COUNT) {
+                            MSYS_FAIL("Malformed CHG line: " << skip_to_end());
+                        }
                         for (int i=0; i<n; i++) {
                             short aid = parse_count(buf+10+8*i);
                             short chg = parse_count(buf+14+8*i);
-                            if (aid<1) {
+                            if (aid==BAD_COUNT || chg==BAD_COUNT) {
                                 MSYS_FAIL("Malformed CHG line: " << skip_to_end());
                             }
                             ptr->atom(aid-1).formal_charge = chg;
