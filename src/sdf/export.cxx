@@ -94,8 +94,8 @@ std::string desres::msys::FormatSdf( Molecule const& mol ) {
         format_coord(atombuf+10, atm.y);
         format_coord(atombuf+20, atm.z);
         const char* abbr = AbbreviationForElement(atm.atomic_number);
-        atombuf[31]=abbr[0];
-        if (abbr[1]) atombuf[32]=abbr[1];
+        atombuf[31] = abbr[0];
+        atombuf[32] = abbr[1] ? abbr[1] : ' ';
         auto fc = atm.formal_charge;
         fc=(fc==0 || fc<-3 || fc>3) ? 0 : 4-fc;
         format_short(atombuf+36, fc);
