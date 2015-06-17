@@ -266,6 +266,10 @@ namespace {
                 ptr->bond(i).j =     parse_count(buf+3)-1;
                 ptr->bond(i).order = parse_count(buf+6);
                 ptr->bond(i).stereo = parse_count(buf+9);
+                if (ptr->bond(i).order == 4) {
+                    ptr->bond(i).order = 1;
+                    ptr->bond(i).aromatic = 1;
+                }
             }
 
             // M entries
