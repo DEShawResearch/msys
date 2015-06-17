@@ -16,16 +16,21 @@ namespace desres { namespace msys {
             char atomic_number = 0;
             char formal_charge = 0;
             char stereo_parity = 0;
+            char aromatic      = 0;
+            char implicit_h    = 0;
             float x = 0;
             float y = 0;
             float z = 0;
         };
+
         struct Bond {
             unsigned short i = 0;
             unsigned short j = 0;
-            unsigned short order  = 0;
-            unsigned short stereo = 0;
+            unsigned char order     = 0;
+            unsigned char stereo    = 0;
+            unsigned char aromatic  = 0;
         };
+
         typedef std::map<std::string,std::string> Data;
 
         unsigned short natoms() const { return _natoms; }

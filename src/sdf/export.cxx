@@ -109,7 +109,7 @@ std::string desres::msys::FormatSdf( Molecule const& mol ) {
         memset(bondbuf,' ',9);
         format_short(bondbuf  , bnd.i+1);
         format_short(bondbuf+3, bnd.j+1);
-        format_short(bondbuf+6, bnd.order);
+        format_short(bondbuf+6, bnd.aromatic ? 4 : bnd.order);
         format_short(bondbuf+9, bnd.stereo);
         ptr = append(ptr, bondbuf, sizeof(bondbuf)-1);
     }

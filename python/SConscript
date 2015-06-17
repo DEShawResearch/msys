@@ -35,6 +35,7 @@ vector.cxx
 wrap_obj.cxx
 variant.cxx
 '''.split()
+#variant.cxx
 
 pyext=env.AddPythonExtension('_msys', pymodfiles, prefix='msys')
 env.Requires(pyext, libmsys)
