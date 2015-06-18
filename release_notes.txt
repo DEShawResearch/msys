@@ -1,3 +1,5 @@
+1.7.116 Improvements to ScanSDF and FormatSDF.
+
 1.7.115 Add checkpoint option to dtr-validate to turn off delta_t checks.
 
 1.7.114 Make dtr-validate perform some additional checks on timekeys.
