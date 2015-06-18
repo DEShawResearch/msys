@@ -205,7 +205,7 @@ namespace {
             MoleculePtr ptr;
 
             // three lines for header block, then one for counts
-            getline();
+            if (!getline()) return ptr;
             std::string name = buf;
             name.pop_back();    // remove trailing newline
             getline();
