@@ -16,7 +16,6 @@ namespace desres { namespace msys {
             char atomic_number = 0;
             char formal_charge = 0;
             char stereo_parity = 0;
-            char aromatic      = 0;
             char implicit_h    = 0;
             float x = 0;
             float y = 0;

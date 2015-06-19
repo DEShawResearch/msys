@@ -21,7 +21,7 @@ namespace desres { namespace msys { namespace smiles {
         std::string error;
 
         /* mapping from rnum to <atom,bond> */
-        typedef std::pair<Id,char> rnum_t;
+        typedef std::pair<atom_t*,char> rnum_t;
         typedef std::map<int,rnum_t> ringmap;
         ringmap rnums;
 
@@ -39,7 +39,6 @@ namespace desres { namespace msys { namespace smiles {
 
         void addAtom(atom_t* a, bool organic);
         void add(atom_t* ai, atom_t* aj, char bond);
-        void add(Id i, Id j, char bond);
         void add(atom_t* a, branch_t* branches);
         void add(atom_t* a, ringbond_t* ringbonds);
 

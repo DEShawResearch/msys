@@ -69,12 +69,14 @@ namespace desres { namespace msys { namespace smiles {
     }
 
     void Smiles::addAtom(atom_t* a, bool organic) {
+        char name[4];
+        strcpy(name, a->name);
+        name[0] = toupper(name[0]);
+
         a->id = atoms.size();
         atoms.resize(a->id+1);
-        atoms[a->id].aromatic = islower(a->name[0]);
-        a->name[0] = toupper(a->name[0]);
         atoms[a->id].formal_charge = a->charge;
-        atoms[a->id].atomic_number = ElementForAbbreviation(a->name);
+        atoms[a->id].atomic_number = ElementForAbbreviation(name);
         atoms[a->id].implicit_h = organic;
         atoms[a->id].stereo_parity = a->chiral;
         for (int i=0; i<a->hcount; i++) addh(a->id);
@@ -89,8 +91,8 @@ namespace desres { namespace msys { namespace smiles {
         for (ringbond_t* r = ringbonds; r; r = r->next) {
             ringmap::iterator it = rnums.find(r->id);
             if (it == rnums.end()) {
-                rnums[r->id] = std::make_pair(a->id, r->bond);
-            } else if (it->second.first == a->id) {
+                rnums[r->id] = std::make_pair(a, r->bond);
+            } else if (it->second.first->id == a->id) {
                 fprintf(stderr, "ringbond %d bonded to itself!", r->id);
             } else if (r->bond != it->second.second &&
                        r->bond != 0 && 
@@ -100,23 +102,19 @@ namespace desres { namespace msys { namespace smiles {
                 char bond = r->bond ? r->bond : 
                             it->second.second ? it->second.second :
                             '-';
-                add(a->id, it->second.first, bond);
+                add(a, it->second.first, bond);
                 rnums.erase(it);
             }
         }
     }
 
     void Smiles::add(atom_t* ai, atom_t* aj, char bond) {
-        add(ai->id, aj->id, bond);
-    }
-
-    void Smiles::add(Id i, Id j, char bond) {
         if (bond=='.') return;  /* dot means no bond */
         Id id = bonds.size();
         bonds.resize(id+1);
         auto& bnd = bonds[id];
-        bnd.i = i;
-        bnd.j = j;
+        bnd.i = ai->id;
+        bnd.j = aj->id;
         switch (bond) {
             default:
             MSYS_FAIL("Unsupported bond type '" << bond << "'");
@@ -124,7 +122,7 @@ namespace desres { namespace msys { namespace smiles {
             case '=': bnd.order = 2; break;
             case '#': bnd.order = 3; break;
         }
-        if (bnd.order==1 && atoms[i].aromatic && atoms[j].aromatic) {
+        if (bnd.order==1 && islower(ai->name[0]) && islower(aj->name[0])) {
             bnd.aromatic = true;
         }
     }
