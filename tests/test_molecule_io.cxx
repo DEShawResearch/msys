@@ -4,7 +4,7 @@ using namespace desres::msys;
 
 int main(int argc, char *argv[]) {
     for (int i=1; i<argc; i++) {
-        auto scanner = ScanSdf(argv[i]);
+        auto scanner = ScanSdf(fopen(argv[i], "r"));
         unsigned n=0;
         for (;;) {
             auto mol = scanner->next();

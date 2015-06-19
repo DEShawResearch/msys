@@ -14,8 +14,7 @@ namespace desres { namespace msys {
     /* Iterator for SDF files */
     LoadIteratorPtr SdfIterator(std::string const& path);
 
-    MoleculeIteratorPtr ScanSdf(std::string path);
-
+    MoleculeIteratorPtr ScanSdf(FILE* fp);
     std::string FormatSdf( Molecule const& mol );
 
     struct SdfExport {

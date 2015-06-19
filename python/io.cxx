@@ -63,7 +63,26 @@ namespace {
     }
 
     MoleculeIterator* scan_sdf(std::string path) {
-        return ScanSdf(path).release();
+        FILE* fp = fopen(path.c_str(), "r");
+        if (!fp) {
+            PyErr_Format(PyExc_IOError, strerror(errno));
+            throw_error_already_set();
+        }
+        return ScanSdf(fp).release();
+    }
+
+    MoleculeIterator* scan_sdf_buffer(PyObject* obj) {
+        Py_buffer view[1];
+        if (PyObject_GetBuffer(obj, view, PyBUF_ND)) {
+            throw_error_already_set();
+        }
+        boost::shared_ptr<Py_buffer> ptr(view, PyBuffer_Release);
+        FILE* fp = fmemopen(view->buf, view->len, "r");
+        if (!fp) {
+            PyErr_Format(PyExc_IOError, strerror(errno));
+            throw_error_already_set();
+        }
+        return ScanSdf(fp).release();
     }
 
     LoadIteratorPtr load_iterator_create(std::string const& path,
@@ -152,7 +171,10 @@ namespace desres { namespace msys {
         def("ImportSDF", ImportSdf);
         def("ImportSDFFromBuffer", import_sdf_from_buffer);
 
-        def("ScanSDF", scan_sdf, return_value_policy<manage_new_object>());
+        def("ScanSDF",           scan_sdf, 
+                return_value_policy<manage_new_object>());
+        def("ScanSDFFromBuffer", scan_sdf_buffer, 
+                return_value_policy<manage_new_object>());
         def("FormatSDF", FormatSdf);
 
         def("ExportSDFBytes", export_sdf_bytes);

@@ -1642,13 +1642,18 @@ def LoadSDF(path=None, buffer=None):
     elif buffer is not None:
         ptr = _msys.ImportSDFFromBuffer(buffer)
     else:
-        raise ValueError("Specifiy either path or buffer")
+        raise ValueError("Specify either path or buffer")
     return System(ptr)
 
-def ScanSDF(path):
+def ScanSDF(path=None, buffer=None):
     ''' Iterate over SDF entries using the Molecule interface.
     '''
-    it = _msys.ScanSDF(path)
+    if path is not None:
+        it = _msys.ScanSDF(path)
+    elif buffer is not None:
+        it = _msys.ScanSDFFromBuffer(buffer)
+    else:
+        raise ValueError("Specify either path or buffer")
     i=0
     while True:
         i += 1

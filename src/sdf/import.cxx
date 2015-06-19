@@ -191,16 +191,9 @@ namespace {
         }
 
     public:
-        ~scanner() { 
-            if (fp) fclose(fp); 
-        }
-        explicit scanner(std::string path) {
-            fp = fopen(path.c_str(), "r");
-            if (!fp) {
-                MSYS_FAIL("Error opening " << path << " for reading: " 
-                        << strerror(errno));
-            }
-        }
+        explicit scanner(FILE* fp) : fp(fp) {}
+        ~scanner() { if (fp) fclose(fp); }
+
         MoleculePtr next() {
             MoleculePtr ptr;
 
@@ -350,8 +343,8 @@ namespace {
     };
 }
 
-MoleculeIteratorPtr desres::msys::ScanSdf(std::string path) {
-    return std::unique_ptr<MoleculeIterator>(new scanner(path));
+MoleculeIteratorPtr desres::msys::ScanSdf(FILE* fp) {
+    return std::unique_ptr<MoleculeIterator>(new scanner(fp));
 }
 
 void iterator::skip_to_end() {

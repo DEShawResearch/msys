@@ -4,7 +4,8 @@ using namespace desres::msys;
 
 int main(int argc, char *argv[]) {
     for (int i=1; i<argc; i++) {
-        auto scanner = ScanSdf(argv[i]);
+        FILE* fp = fopen(argv[i], "r");
+        auto scanner = ScanSdf(fp);
         for (;;) {
             auto ptr = scanner->next();
             if (!ptr) break;
