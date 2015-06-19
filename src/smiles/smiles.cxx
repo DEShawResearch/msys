@@ -23,7 +23,7 @@ namespace desres { namespace msys { namespace smiles {
         bonds[bnd].order = 1;
     }
 
-    void Smiles::addh(Id atm, int v1, int v2, int v3) {
+    int Smiles::addh(Id atm, int v1, int v2, int v3) {
         float v = 0;
         for (unsigned i=0; i<bonds.size(); i++) {
             if (bonds[i].i!=atm && bonds[i].j!=atm) continue;
@@ -40,6 +40,7 @@ namespace desres { namespace msys { namespace smiles {
             h = 0;
         }
         for (int i=0; i<h; i++) addh(atm);
+        return h;
     }
 
     MoleculePtr Smiles::parse(std::string const& s) {
@@ -77,7 +78,7 @@ namespace desres { namespace msys { namespace smiles {
         atoms.resize(a->id+1);
         atoms[a->id].formal_charge = a->charge;
         atoms[a->id].atomic_number = ElementForAbbreviation(name);
-        atoms[a->id].implicit_h = organic;
+        atoms[a->id].hcount = organic ? -1 : a->hcount;
         atoms[a->id].stereo_parity = a->chiral;
         for (int i=0; i<a->hcount; i++) addh(a->id);
     }
@@ -140,21 +141,22 @@ namespace desres { namespace msys { namespace smiles {
          * our own AddHydrogen routine, since there could be some differences
          */
         for (unsigned i=0; i<atoms.size(); i++) {
-            if (!atoms[i].implicit_h) continue;
+            if (atoms[i].hcount != -1) continue;
+            int nh = 0;
             switch (atoms[i].atomic_number) {
-                case  5: addh(i, 3); break;
-                case  6: addh(i, 4); break;
-                case  7: addh(i, 3,5); break;
-                case  8: addh(i, 2); break;
-                case 15: addh(i, 3,5); break;
-                case 16: addh(i, 2,4,6); break;
+                case  5: nh = addh(i, 3); break;
+                case  6: nh = addh(i, 4); break;
+                case  7: nh = addh(i, 3,5); break;
+                case  8: nh = addh(i, 2); break;
+                case 15: nh = addh(i, 3,5); break;
+                case 16: nh = addh(i, 2,4,6); break;
                 case  9:
                 case 17:
                 case 35:
-                case 53: addh(i, 1); break;
+                case 53: nh = addh(i, 1); break;
                 default:;
             }
-            atoms[i].implicit_h = 0;
+            atoms[i].hcount = nh;
         }
     }
 

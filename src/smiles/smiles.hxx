@@ -42,7 +42,7 @@ namespace desres { namespace msys { namespace smiles {
         void add(atom_t* a, branch_t* branches);
         void add(atom_t* a, ringbond_t* ringbonds);
 
-        void addh(Id atm, int v1, int v2=0, int v3=0);
+        int addh(Id atm, int v1, int v2=0, int v3=0);
         void addh(Id atm);
 
         void finish(chain_t* chain);
