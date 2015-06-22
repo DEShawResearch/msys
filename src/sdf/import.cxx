@@ -262,6 +262,9 @@ namespace {
                 if (ptr->bond(i).order == 4) {
                     ptr->bond(i).order = 1;
                     ptr->bond(i).aromatic = 1;
+                } else if (ptr->bond(i).order<1 ||
+                           ptr->bond(i).order>4) {
+                    MSYS_FAIL("Unsupported bond type in bond record: " << skip_to_end());
                 }
             }
 
