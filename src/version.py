@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-msys_version = '1.7.117'
+msys_version = '1.7.118'
 if __name__=="__main__":
     print msys_version
 

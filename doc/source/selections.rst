@@ -219,6 +219,31 @@ The following are implemented as macros.
   heme          resname HEM HEME
   ===========   ==========
 
+
+Smarts pattern selections
+-------------------------
+A SMARTS pattern is like a regular expression for molecular structures;
+it's a concise way of specifying what sort of atom types and topology
+you are looking for.  SMARTS patterns can be embedded in an atom selection
+by providing the keyword 'smarts' followed by one or more SMARTS patterns,
+which you will need to surround in single quotes if it contains any special
+characters like parentheses::
+
+    # select benzene rings
+    mol.select("smarts 'c1ccccc1'")
+
+
+Parameter type selections
+-------------------------
+
+If a ParamTable contains a column named 'type', you can query for
+atoms which participate in an interaction involving that type using the
+'paramtype' keyword.  For example::
+
+    # select atoms whose nonbonded type is 'H1'
+    mol.select("paramtype nonbonded H1")
+
+
 Comparison selections
 ---------------------
 
