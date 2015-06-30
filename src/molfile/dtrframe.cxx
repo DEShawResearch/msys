@@ -188,7 +188,7 @@ uint32_t compute_threeroe_hash(const char *datap, uint32_t data_size) {
 
 
 std::map<std::string, Key> 
-desres::molfile::dtr::ParseFrame(size_t sz, const void* data) {
+desres::molfile::dtr::ParseFrame(size_t sz, const void* data, bool *swap) {
     std::map<std::string,Key> map;
 
     // parse header
@@ -283,16 +283,16 @@ desres::molfile::dtr::ParseFrame(size_t sz, const void* data) {
         }
         const uint32_t this_endian = machineEndianism();
         const uint32_t that_endian = header->endianism;
-        bool swap = false;
+        *swap = false;
         if (this_endian!=that_endian) {
             if ((this_endian==1234 && that_endian==4321) ||
                 (this_endian==4321 && that_endian==1234)) {
-            swap = true;
+            *swap = true;
             } else {
                 DTR_FAILURE("Unsupported frame endianism " << that_endian);
             }
         }
-        map[label] = Key(addr, count, types.at(code), swap);
+        map[label] = Key(addr, count, types.at(code), *swap);
     }
 
     return map;

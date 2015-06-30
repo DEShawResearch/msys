@@ -76,13 +76,10 @@ using namespace desres::molfile::dtr;
 namespace bfs = boost::filesystem;
 namespace bio = boost::iostreams;
 
-static const char SERIALIZED_VERSION[] = "0007";
-const char * desres::molfile::dtr_serialized_version() {
-  return SERIALIZED_VERSION;
-}
+static const char SERIALIZED_VERSION[] = "0008";
 
-static bool badversion(const std::string& version) {
-    return version != SERIALIZED_VERSION;
+const char * desres::molfile::dtr_serialized_version() {
+    return SERIALIZED_VERSION;
 }
 
 #ifndef DESRES_WIN32
@@ -649,29 +646,25 @@ double key_record_t::time() const {
   return assembleDouble(ntohl(time_lo), ntohl(time_hi));
 }
 
-static metadata_t * read_meta( const std::string& metafile, unsigned natoms,
-                               bool with_invmass ) {
+void DtrReader::read_meta( const std::string& metafile, unsigned natoms, bool with_invmass ) {
 
-  std::vector<char> buffer;
-  metadata_t *meta = new metadata_t;
-  try {
-    read_file(metafile, buffer);
-  } catch (std::exception &e) {
-    // If the metadata file cannot be read, we return an empty metadata.
-    return meta;
-  }
-  KeyMap meta_blobs = ParseFrame(buffer.size(), &buffer[0]);
-  if (with_invmass && meta_blobs.find("INVMASS")!=meta_blobs.end()) {
-    Key blob=meta_blobs["INVMASS"];
-    if (blob.count != natoms) {
-      delete meta;
-      DTR_FAILURE("bad rmass count in metadata: " << blob.count << " != " << natoms);
-    } else {
-      meta->invmass.resize(natoms);
-      blob.get(&meta->invmass[0]);
+    try {
+	read_file(metafile, meta.frame_bytes);
+    } catch (std::exception &e) {
+	DTR_FAILURE("unable to read metadata frame " << metafile);
     }
-  }
-  return meta;
+
+    bool swap;
+    meta.frame_map = ParseFrame(meta.frame_bytes.size(), meta.frame_bytes.data(), &swap);
+    if (with_invmass && meta.frame_map.find("INVMASS") != meta.frame_map.end()) {
+	Key blob = meta.frame_map["INVMASS"];
+
+	if (blob.count != natoms) {
+	    DTR_FAILURE("bad rmass count in metadata: " << blob.count << " != " << natoms);
+	}
+    }
+
+    has_meta = true;
 }
 
 bool StkReader::recognizes(const std::string &path) {
@@ -680,10 +673,17 @@ bool StkReader::recognizes(const std::string &path) {
              isfile(path);
 }
 
-static std::string filename_to_cache_location(std::string const& stk) {
+static std::string filename_to_cache_location_v8(std::string const& stk) {
   std::stringstream ss;
   bfs::path fullpath = bfs::system_complete(stk);
-  ss << fullpath.parent_path().string() << "/." << fullpath.filename().string() << ".cache." << SERIALIZED_VERSION;
+  ss << fullpath.parent_path().string() << "/." << fullpath.filename().string() << ".cache.0008";
+  return ss.str();
+}
+
+static std::string filename_to_cache_location_v7(std::string const& stk) {
+  std::stringstream ss;
+  bfs::path fullpath = bfs::system_complete(stk);
+  ss << fullpath.parent_path().string() << "/." << fullpath.filename().string() << ".cache.0007";
   return ss.str();
 }
  
@@ -693,7 +693,7 @@ static std::string filename_to_old_cache_location(std::string const& stk) {
 
   std::stringstream ss;
   ss << cache_prefix;
-  ss << SERIALIZED_VERSION;
+  ss << "0007"; // V7 cache file
 
   bfs::path fullpath = bfs::system_complete(stk);
   for (bfs::path::iterator it=fullpath.begin(); it!=fullpath.end(); ++it) {
@@ -723,82 +723,174 @@ void StkReader::init(int* changed) {
     const bool verbose = getenv("DTRPLUGIN_VERBOSE");
     const bool use_cache = getenv("DESRES_ROOT") && 
                           !getenv("MOLFILE_STKCACHE_DISABLE");
+
+    //
+    // In the beginning, desres programmers created frameset.
+    // Frameset was without much form and was void of an index.
+    //
+    // And desres programmers said "let there be an index",
+    // and it was so.
+    //
+    // And desres programmers saw the indices, that it was
+    // good, and divided the data into index files and timeseries
+    // files, and called the indices "timekeys" and the timeseries
+    // files framesXXXXXXXXX.  And it was good.
+    //
+    // And desres programmers said "let there be a cache of
+    // the timekeys" to divide the fast processing of trajectories
+    // from the slow - and it was so.  And on the 7th iteration,
+    // SERIALIZED_VERSION was set to 0007, and it contained the
+    // time indices and the INVMASS from the meta frame.
+    //
+    // And desres programmers called the cached timekeys data
+    // "molfile stk cache files" and placed them in a single
+    // large directory "/d/en/cache-0/molfile_stk/".
+    //
+    // And desres programmers saw that the "molfile stk cache
+    // files" were good, and they multiplied, and in the
+    // 2015th year, desres programmers said "behold, it is a
+    // miracle that one directory can hold over 800K files",
+    // and they were moved to a new location next to the ".stk"
+    // files (see filename_to_*_cache_location).
+    //
+    // And desres programmers formed Time Squared Sampling from
+    // the bits and the bytes, and breathed into it the ability
+    // to create many large text files.  And it was good (mostly).
+    //
+    // And desres programmers said "it is not good that TSS should
+    // alone write large text files over NFS" and I will modify
+    // the frame format for DTRs so that it may contain these data
+    // sets as well, and I will call them ETRs.  And so it was.
+    // 
+    // And desres programmers realized that the smaller framed
+    // ETRs were not able to use the existing 7th version of the
+    // "molfile stk cache" format, and an 8th format would need
+    // to be created, that contained the entirety of the meta
+    // frame.  And so it was.
+    //
+    // To not pay a huge penalty on startup with the conversion
+    // to v8, find any possible v7 cache file and get the time
+    // indices from it, so that only processing of a single meta
+    // frame is needed.
+    //
     
-    /* get location of cache directory */
-    std::string cachepath;
-    std::string old_cachepath;
-    bool cache_found = false;
+    bool found_v7_cache = false;
+    bool found_v8_cache = false;
 
     /* use an stk cache if running in DESRES */
     if (use_cache) {
-        /* construct path to the new and old cache file locations */
-        cachepath     = filename_to_cache_location(dtr);
+
+	std::string cachepath = filename_to_cache_location_v8(dtr);
 
         if (verbose) printf("StkReader: cachepath %s\n", cachepath.c_str());
 
         /* attempt to read the cache file */
         std::ifstream file(cachepath.c_str());
         if (file) {
-            if (verbose) printf("StkReader: cache file found\n");
+            if (verbose) printf("StkReader: cache file %s found\n", cachepath.c_str());
             bio::filtering_istream in;
             in.push(bio::gzip_decompressor());
             in.push(file);
-            /* hold on to the original path that was used to open the file */
-            std::string mypath = dtr;
+
             try {
                 load(in);
             }
-            catch (std::exception& e) {
-                if (verbose) 
+	    catch (std::exception& e) {
+                if (verbose) {
                     printf("StkReader: Reading cache file failed, %s\n",
-                        e.what());
+			   e.what());
+		}
                 in.setstate(std::ios::failbit);
             }
+
             if (!in) {
                 if (verbose) printf("StkReader: reading cache file failed.\n");
-                /* reading failed for some reason.  Clear out any dtrs we
+                /* reading failed for some reason.  Clear out anything we
                  * might have loaded and start over */
                 framesets.clear();
             } else {
-              cache_found = true;
+              found_v8_cache = true;
 	      if (verbose) printf("StkReader: reading cache file suceeded.\n");
             }
-            dtr = mypath;
-        } else {
-	    old_cachepath = filename_to_old_cache_location(dtr);
-	    if (verbose) printf("StkReader: cachepaths %s %s\n", cachepath.c_str(), old_cachepath.c_str());
+        }
 
-	    std::ifstream old_file(old_cachepath.c_str());
-	    if (old_file) {
-		if (verbose) printf("StkReader: cache old file found\n");
+	if (found_v8_cache == false) {
+	    //
+	    // If no v8 file is found, look for a v7 file in 2 locations.
+	    //
+	    cachepath = filename_to_cache_location_v7(dtr);
+
+	    if (verbose) printf("StkReader: cachepath %s\n", cachepath.c_str());
+
+	    /* attempt to read the cache file */
+	    std::ifstream file(cachepath.c_str());
+	    if (file) {
+		if (verbose) printf("StkReader: cache file %s found\n", cachepath.c_str());
 		bio::filtering_istream in;
 		in.push(bio::gzip_decompressor());
-		in.push(old_file);
+		in.push(file);
 
-		/* hold on to the original path that was used to open the file */
-		std::string mypath = dtr;
 		try {
 		    load(in);
 		}
 		catch (std::exception& e) {
-		    if (verbose) 
-			printf("StkReader: Reading old cache file failed, %s\n",
+		    if (verbose) {
+			printf("StkReader: Reading cache file failed, %s\n",
 			       e.what());
+		    }
 		    in.setstate(std::ios::failbit);
 		}
+
 		if (!in) {
-		    if (verbose) printf("StkReader: reading old cache file failed.\n");
-		    /* reading failed for some reason.  Clear out any dtrs we
+		    if (verbose) printf("StkReader: reading cache file failed.\n");
+		    /* reading failed for some reason.  Clear out anything we
 		     * might have loaded and start over */
 		    framesets.clear();
 		} else {
-		    if (verbose) printf("StkReader: reading old cache file suceeded.\n");
+		    found_v7_cache = true;
+		    if (verbose) printf("StkReader: reading cache file suceeded.\n");
 		}
-		dtr = mypath;
 	    }
+	}
 
-            if (verbose) printf("StkReader: no cache file found\n");
-        }
+	if ((found_v8_cache == false) && (found_v7_cache == false)) {
+	    //
+	    // One more place to look for an old v7 cache entry.
+	    //
+	    cachepath = filename_to_old_cache_location(dtr);
+
+	    if (verbose) printf("StkReader: cachepath %s\n", cachepath.c_str());
+
+	    /* attempt to read the cache file */
+	    std::ifstream file(cachepath.c_str());
+	    if (file) {
+		if (verbose) printf("StkReader: cache file %s found\n", cachepath.c_str());
+		bio::filtering_istream in;
+		in.push(bio::gzip_decompressor());
+		in.push(file);
+
+		try {
+		    load(in);
+		}
+		catch (std::exception& e) {
+		    if (verbose) {
+			printf("StkReader: Reading cache file failed, %s\n",
+			       e.what());
+		    }
+		    in.setstate(std::ios::failbit);
+		}
+
+		if (!in) {
+		    if (verbose) printf("StkReader: reading cache file failed.\n");
+		    /* reading failed for some reason.  Clear out anything we
+		     * might have loaded and start over */
+		    framesets.clear();
+		} else {
+		    found_v7_cache = true;
+		    if (verbose) printf("StkReader: reading cache file suceeded.\n");
+		}
+	    }
+	}
     }
 
     /* read stk file */
@@ -845,7 +937,9 @@ void StkReader::init(int* changed) {
         stale_ddparams |= framesets[i]->update_ddparams();
     }
     /* delete any remaining framesets */
-    for (unsigned j=i; j<framesets.size(); j++) delete framesets[j];
+    for (unsigned j=i; j<framesets.size(); j++) {
+	delete framesets[j];
+    }
     framesets.erase(framesets.begin()+i, framesets.end());
 
     /* delete the filenames we've already loaded */
@@ -870,16 +964,15 @@ void StkReader::init(int* changed) {
     if (changed) *changed = fnames.size();
     append(fnames, timekeys);
 
-    if ((fnames.size() || stale_ddparams || !cache_found) && use_cache) {
+    if ((fnames.size() || stale_ddparams || !found_v8_cache) && use_cache) {
 
         /* update the cache */
         if (verbose) printf("StkReader: updating cache\n");
 
         /* create temporary file.  We don't care about errors writing
          * the file because we'll detect any error on rename */
-        std::string tmpfile(
-                bfs::unique_path(
-                    cachepath+"-%%%%-%%%%").string());
+	std::string cachepath = filename_to_cache_location_v8(dtr);
+        std::string tmpfile(bfs::unique_path(cachepath+"-%%%%-%%%%").string());
         int fd = open(tmpfile.c_str(), O_WRONLY|O_CREAT|O_BINARY, 0666);
         if (fd<0) {
           if (verbose)
@@ -933,7 +1026,6 @@ void StkReader::append(std::vector<std::string> fnames,
         /* reuse information from earlier readers */
         reader->set_natoms(first->natoms());
         reader->set_has_velocities(first->has_velocities());
-        reader->set_meta(first->get_meta());
       }
       try {
         reader->initWithTimekeys(timekeys[i]);
@@ -989,7 +1081,7 @@ bool StkReader::next(molfile_timestep_t *ts) {
   return rc;
 }
 
-const DtrReader * StkReader::component(ssize_t &n) const {
+DtrReader * StkReader::component(ssize_t &n) {
   for (size_t i=0; i<framesets.size(); i++) {
     ssize_t size = framesets[i]->size();
     if (n < size) return framesets[i];
@@ -999,8 +1091,8 @@ const DtrReader * StkReader::component(ssize_t &n) const {
 }
 
 dtr::KeyMap StkReader::frame(ssize_t n, molfile_timestep_t *ts,
-                            void ** bufptr) const {
-  const DtrReader *comp = component(n);
+                            void ** bufptr) {
+  DtrReader *comp = component(n);
   if (!comp) DTR_FAILURE("Bad frame index " << n);
   return comp->frame(n, ts, bufptr);
 }
@@ -1052,7 +1144,8 @@ void DtrReader::init_common() {
     }
 
     read_file(fname, buffer);
-    KeyMap blobs = ParseFrame(buffer.size(), &buffer[0]);
+    bool swap;
+    KeyMap blobs = ParseFrame(buffer.size(), &buffer[0], &swap);
     with_momentum = blobs.find("MOMENTUM")!=blobs.end();
 
     // I'm aware of these sources of atom count: 
@@ -1077,11 +1170,13 @@ void DtrReader::init_common() {
     }
   }
 
-  if (_natoms>0 && meta==NULL && owns_meta==false) {
-    meta=read_meta( dtr + s_sep + "metadata",natoms(), with_momentum );
-    owns_meta = true;
+  if (has_meta == false) {
+      read_meta( dtr + s_sep + "metadata", natoms(), with_momentum );
   }
-  if (with_momentum && (!meta || meta->invmass.empty())) {
+
+
+
+  if (with_momentum && (meta.frame_map.find("INVMASS") == meta.frame_map.end())) {
     if (getenv("DTRPLUGIN_VERBOSE")) {
       printf("DtrReader: dtr %s contains MOMENTUM but no RMASS, so no velocities will be read\n", dtr.c_str());
     }
@@ -1159,29 +1254,24 @@ static void read_scalars(
   if (blobs.find("ENERGY")!=blobs.end()) {
       blobs["ENERGY"].get(&ts->total_energy);
   }
-
   if (blobs.find("POT_ENERGY")!=blobs.end()) {
       blobs["POT_ENERGY"].get(&ts->potential_energy);
   }
   if (blobs.find("POTENTIALENERGY")!=blobs.end()) {
       blobs["POTENTIALENERGY"].get(&ts->potential_energy);
   }
-
   if (blobs.find("KIN_ENERGY")!=blobs.end()) {
       blobs["KIN_ENERGY"].get(&ts->kinetic_energy);
   }
   if (blobs.find("KINETICENERGY")!=blobs.end()) {
       blobs["KINETICENERGY"].get(&ts->kinetic_energy);
   }
-
   if (blobs.find("EX_ENERGY")!=blobs.end()) {
       blobs["EX_ENERGY"].get(&ts->extended_energy);
   }
-
   if (blobs.find("PRESSURE")!=blobs.end()) {
       blobs["PRESSURE"].get(&ts->pressure);
   }
-
   if (blobs.find("TEMPERATURE")!=blobs.end()) {
       blobs["TEMPERATURE"].get(&ts->temperature);
   }
@@ -1194,7 +1284,31 @@ static void read_scalars(
 #endif
 }
 
-static void handle_force_v1(
+static void handle_etr_v1(uint32_t len, const void *buf, molfile_timestep_t *ts, dtr::KeyMap meta_blobs, dtr::KeyMap *frame_blobsp, bool swap) {
+
+    //
+    // Iteratre through the meta blobs and add entries to the
+    // frames map pointing into the correct offset within the
+    // single true frame blob named "_D"
+    //
+    auto blob = frame_blobsp->find("_D");
+    if (blob == frame_blobsp->end()) {
+	DTR_FAILURE("etr_v1 frame has no _D blob");
+    }
+    
+    char *base_datap = (char *) (blob->second.data);
+
+    for (KeyMap::const_iterator it = meta_blobs.begin(); it != meta_blobs.end(); ++it) {
+	uint32_t *blobp = (uint32_t *) it->second.data;
+	uint32_t type = blobp[0];
+	uint32_t offset = blobp[1];
+	uint32_t count = blobp[2];
+	void *addr = base_datap + offset;
+        (*frame_blobsp)[it->first] = Key(addr, count, type, swap);
+    }
+}
+
+void handle_force_v1(
     KeyMap &blobs,
     uint32_t natoms,
     bool with_velocity, 
@@ -1603,8 +1717,7 @@ namespace {
     };
 }
 
-dtr::KeyMap DtrReader::frame(ssize_t iframe, molfile_timestep_t *ts,
-                      void ** bufptr) const {
+dtr::KeyMap DtrReader::frame(ssize_t iframe, molfile_timestep_t *ts, void ** bufptr) {
     if (iframe<0 || ((size_t)iframe)>=keys.full_size()) {
         DTR_FAILURE("dtr " << dtr << " has no frame " << iframe << ": nframes=" << keys.full_size());
     }
@@ -1662,15 +1775,32 @@ dtr::KeyMap DtrReader::frame(ssize_t iframe, molfile_timestep_t *ts,
 }
 
 KeyMap DtrReader::frame_from_bytes(const void *buf, uint64_t len, 
-                                molfile_timestep_t *ts) const {
+                                molfile_timestep_t *ts) {
 
-  KeyMap blobs = ParseFrame(len, buf);
+  bool swap;
+  KeyMap blobs = ParseFrame(len, buf, &swap);
   if (ts) {
-    const float * rmass = meta && meta->invmass.size() ? 
-        &meta->invmass[0] : NULL;
 
-    // Now, dispatch to routines based on format
-    std::string format = blobs["FORMAT"].toString();
+      const float * rmass = NULL;
+
+      std::string key = "INVMASS";
+      if (meta.frame_map.find("INVMASS") != meta.frame_map.end()) {
+	  Key blob = meta.frame_map["INVMASS"];
+	  rmass = (float *) blob.data;
+      }
+
+
+    // Now, dispatch to routines based on format, which can be
+    // defined in either the meta frame or the frame.
+
+    std::string format;
+    if (meta.frame_map.find("FORMAT") != meta.frame_map.end()) {
+      Key blob = meta.frame_map["FORMAT"];
+      format = (char *) blob.data;
+    } else {
+      format = blobs["FORMAT"].toString();
+    }
+
     if (format=="WRAPPED_V_2" || format == "DBL_WRAPPED_V_2") {
       handle_wrapped_v2(blobs, _natoms, with_velocity, ts);
 
@@ -1684,7 +1814,10 @@ KeyMap DtrReader::frame_from_bytes(const void *buf, uint64_t len,
       handle_anton_sfxp_v3(blobs, _natoms, with_velocity, rmass, ts);
 
     } else if (format=="FORCE_V_1" || format == "DBL_FORCE_V_1") {
-        handle_force_v1(blobs, _natoms, with_velocity, ts);
+      handle_force_v1(blobs, _natoms, with_velocity, ts);
+
+    } else if (format=="ETR_V1") {
+	handle_etr_v1(len, buf, ts, meta.frame_map, &blobs, swap);
 
     } else {
       DTR_FAILURE("can't handle format " << format);
@@ -1930,12 +2063,11 @@ DtrWriter::~DtrWriter() {
   if (framebuffer) free(framebuffer);
 }
 
-/* compressed form: first write a -1 to indicate the new format.  Then
- * write number of ranges n, followed by (start, count) pairs. */
+/* Write out the size and then the bytes */
 std::ostream& operator<<(std::ostream& out, const metadata_t& meta) {
-    out << meta.invmass.size() << ' ';
-    if (meta.invmass.size()) {
-        out.write( (const char *)&meta.invmass[0], meta.invmass.size()*sizeof(meta.invmass[0]));
+    out << meta.frame_bytes.size() << ' ';
+    if (meta.frame_bytes.size()) {
+        out.write((const char *)meta.frame_bytes.data(), meta.frame_bytes.size() * sizeof(meta.frame_bytes[0]));
     }
     return out;
 }
@@ -1945,52 +2077,103 @@ std::istream& operator>>(std::istream& in, metadata_t& meta) {
     char c;
     in >> sz;
     in.get(c);
-    meta.invmass.resize(sz);
+    meta.frame_bytes.resize(sz);
     if (sz) {
-        in.read((char *)&meta.invmass[0], sz*sizeof(meta.invmass[0]));
+        in.read((char *)meta.frame_bytes.data(), sz*sizeof(meta.frame_bytes[0]));
+    }
+    bool swap;
+    meta.frame_map = ParseFrame(meta.frame_bytes.size(), meta.frame_bytes.data(), &swap);
+    return in;
+}
+
+std::istream& operator>>(std::istream& in, std::vector<float> &inv_mass) {
+    uint32_t sz;
+    char c;
+    in >> sz;
+    in.get(c);
+    inv_mass.resize(sz);
+    if (sz) {
+        in.read((char *)inv_mass.data(), sz*sizeof(float));
     }
     return in;
 }
 
 std::ostream& DtrReader::dump(std::ostream &out) const {
-  bool has_meta = meta!=NULL;
-  out << SERIALIZED_VERSION << ' '
-      << dtr << ' '
-      << _natoms << ' '
-      << with_velocity << ' '
-      << owns_meta << ' '
-      << has_meta << ' ';
-  if (owns_meta && has_meta) {
-      out << *meta;
-  }
-  /* write raw m_ndir values so that we don't read them from .ddparams
-   * if they haven't been read yet */
-  out << m_ndir1 << ' '
-      << m_ndir2 << ' ';
-  keys.dump(out);
-  return out;
+    out << SERIALIZED_VERSION << ' '
+	<< dtr << ' '
+	<< _natoms << ' '
+	<< with_velocity << ' '
+	<< m_ndir1 << ' '
+	<< m_ndir2 << ' '
+	<< meta << ' ';
+
+    /* write raw m_ndir values so that we don't read them from .ddparams
+     * if they haven't been read yet */
+    keys.dump(out);
+    return out;
 }
+
 std::istream& DtrReader::load(std::istream &in) {
-  char c;
-  bool has_meta;
   std::string version;
   in >> version;
-  if (badversion(version)) {
-      DTR_FAILURE("Bad version string: " << version);
+
+  if (version == "0007") {
+      return(load_v7(in));
   }
+
+  if (version == "0008") {
+      return(load_v8(in));
+  }
+
+  DTR_FAILURE("Unparseable version " << version << " in Stk cache file");
+}
+
+std::istream& DtrReader::load_v7(std::istream &in) {
+  char c;
+  bool has_meta;
+  bool owns_meta;
+
   in >> dtr
      >> _natoms
      >> with_velocity
      >> owns_meta
      >> has_meta;
   if (owns_meta && has_meta) {
-    delete meta;
-    meta = new metadata_t;
-    in.get(c);
-    in >> *meta;
+      //
+      // V7 format had a serialized INVMASS vector of floats.
+      // This is now superceded by V8 holding the entire meta
+      // frame, but we still need to parse out correctly the
+      // INVMASS right now.
+      //
+      std::vector<float> inv_mass;
+      in.get(c);
+      in >> inv_mass;
   }
   in >> m_ndir1
      >> m_ndir2;
+  in.get(c);
+  keys.load(in);
+
+  //
+  // Now read in the meta frame to get all of the data needed
+  // in order to be V8 compliant.
+  //
+  read_meta( dtr + s_sep + "metadata", natoms(), false);
+
+  return in;
+}
+
+std::istream& DtrReader::load_v8(std::istream &in) {
+  char c;
+  std::string version;
+
+  in >> dtr
+     >> _natoms
+     >> with_velocity
+     >> m_ndir1
+     >> m_ndir2
+     >> meta;
+
   in.get(c);
   keys.load(in);
   return in;
@@ -2011,7 +2194,6 @@ std::istream& StkReader::load(std::istream &in) {
     delete framesets[i];
     framesets[i] = new DtrReader("<no file>", _access);
     framesets[i]->load(in);
-    if (i>0) framesets[i]->set_meta(framesets[0]->get_meta());
   }
   return in;
 }

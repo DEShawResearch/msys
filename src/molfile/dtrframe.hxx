@@ -51,7 +51,7 @@ namespace desres { namespace molfile { namespace dtr {
     };
 
     typedef std::map<std::string, Key> KeyMap;
-    KeyMap ParseFrame(size_t sz, const void* data);
+    KeyMap ParseFrame(size_t sz, const void* data, bool *swap_endian);
 
     size_t ConstructFrame(KeyMap const& map, void ** bufptr);
 
