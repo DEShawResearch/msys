@@ -165,13 +165,61 @@ namespace {
         }
         void dump(std::ostream& out) const {}
     };
+
+    class ParamTypePredicate : public StringPredicate {
+        SystemPtr mol;
+        std::string tablename;
+        std::vector<std::string> types;
+    public:
+        ParamTypePredicate(SystemPtr mol) : mol(mol) {}
+        void add(std::string const& s) {
+            if (tablename.empty()) {
+                tablename = s;
+            } else {
+                types.push_back(s);
+            }
+        }
+        void eval(Selection& s) {
+            if (tablename.empty()) {
+                MSYS_FAIL("Missing table name");
+            }
+            TermTablePtr table = mol->table(tablename);
+            if (!table) {
+                MSYS_FAIL("No such table '" << tablename << "'");
+            }
+            ParamTablePtr params = table->params();
+            Id index = params->propIndex("type");
+            if (bad(index)) {
+                MSYS_FAIL("Table '" << tablename << "' has no 'type' column");
+            }
+            /* get params matching selection criteria */
+            IdList ids;
+            for (auto const& type : types) {
+                IdList tmp = params->findString(index, type);
+                ids.insert(ids.end(), tmp.begin(), tmp.end());
+            }
+            sort_unique(ids);
+            /* get atoms in terms with these params */
+            const Id natoms = table->atomCount();
+            Selection sub(s.size());
+            for (auto i=table->begin(), e=table->end(); i!=e; ++i) {
+                if (std::binary_search(ids.begin(), ids.end(), i->param())) {
+                    for (Id j=0; j<natoms; j++) {
+                        sub[i->atom(j)] = 1;
+                    }
+                }
+            }
+            s.intersect(sub);
+        }
+        void dump(std::ostream& out) const {}
+    };
 }
 
 StringPredicate* VMD::find_strfctn(const char* s) {
-    StringPredicate* p = 
-        !strcmp(s,"smarts") ? new SmartsPredicate(sys) :
-        NULL;
-    if (!p) return NULL;
+    StringPredicate* p;
+    if      (!strcmp(s,"smarts")) p = new SmartsPredicate(sys);
+    else if (!strcmp(s,"paramtype")) p = new ParamTypePredicate(sys);
+    else    return NULL;
     predicates.push_back(PredicatePtr(p));
     return p;
 }
