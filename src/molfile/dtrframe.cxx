@@ -417,6 +417,10 @@ void Key::set(const double* buf, uint64_t n) {
     type = TYPE_FLOAT64;
 }
 
+uint32_t Key::get_element_size() {
+    return(elemsizes[type]);
+}
+
 static unsigned typename_size(KeyMap const& map) {
     std::set<int> types;
     for (KeyMap::const_iterator m=map.begin(), e=map.end(); m!=e; ++m) {
