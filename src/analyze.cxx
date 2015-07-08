@@ -96,6 +96,7 @@ namespace desres { namespace msys {
                                 const Id aj = src.other(ai);
                                 if (ai>aj) continue;
                                 const Id bj = pmap.at(aj);
+                                if (bad(bj)) continue;
                                 bond_t& dst = mol->bond(mol->findBond(bi,bj));
                                 dst.order = src.order;
                                 dst.resonant_order = src.resonant_order;

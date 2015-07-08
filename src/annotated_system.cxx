@@ -11,6 +11,7 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys)
      * hybridization */
     int nrad=0;
     BOOST_FOREACH(Id ai, sys->atoms()) {
+        if (sys->atomFAST(ai).atomic_number<1) continue;
         atom_data_t& a = _atoms[ai];
         BOOST_FOREACH(Id bi, sys->bondsForAtom(ai)) {
             bond_t const& bnd = sys->bond(bi);
@@ -19,7 +20,7 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys)
             if (anum_j < 1) continue;
             if (bnd.order == 0)
                 MSYS_FAIL("Invalid bond order for bond "
-                        << bi << " of system " << sys->name);
+                        << bi << " atoms " << ai << "," << aj << " of system " << sys->name);
             if (anum_j == 1) ++a.hcount;
             a.valence += bnd.order;
             a.degree += 1;
