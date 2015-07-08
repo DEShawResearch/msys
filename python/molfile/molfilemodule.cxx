@@ -438,11 +438,11 @@ namespace {
         "If keyvals is not None, it should be a dict, and raw data from\n"
         "the frame will be provided.\n";
 
-    object frame(FrameSetReader& self, Py_ssize_t index, object& bytes,
+    object frame(const FrameSetReader& self, Py_ssize_t index, object& bytes,
             bool with_gids, object keyvals) {
         /* The component method modifies index.  What a dumb API. */
         Py_ssize_t global_index = index;
-        DtrReader *comp = self.component(index);
+        const DtrReader *comp = self.component(index);
         if (!comp) {
             PyErr_SetString(PyExc_IndexError, "index out of bounds");
             throw error_already_set();

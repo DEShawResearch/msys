@@ -6,7 +6,7 @@
 #}
 
 '''
-dtr-validate [input.{dtr,atr,etr,stk}]+
+dtr-validate [input.{dtr,atr,stk}]+
 
 Check that each frame in each input file is readable and provides
 position and box data.
@@ -45,8 +45,6 @@ def parse_args():
                         help="show progress bar")
     parser.add_argument('--checkpoint', action='store_true', default=False,
                         help="turn off delta_t checks")
-    parser.add_argument('--energy', action='store_true', default=False,
-                        help="turn off box and atom count checks")
     parser.add_argument('--parseable-output', action='store_true', default=False,
                         help="show parseable output compatible with d_validate")
 
@@ -64,30 +62,24 @@ def main():
         r = molfile.DtrReader(path, sequential=True)
 
 	total_framebytes = 0
-	if (os.path.isdir(path)):
-            for framefile in os.listdir(path):
-                if fnmatch.fnmatch(framefile, 'frame[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'):
-                    total_framebytes += os.path.getsize(path + "/" + framefile)
+	for framefile in os.listdir(path):
+	    if fnmatch.fnmatch(framefile, 'frame[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'):
+	       total_framebytes += os.path.getsize(path + "/" + framefile)
 
-            assert total_framebytes == r.total_bytes(), "total frame bytes %d vs expected from timekeys file %d" % (total_framebytes, r.total_bytes())
+	assert total_framebytes == r.total_bytes(), "total frame bytes %d vs expected from timekeys file %d" % (total_framebytes, r.total_bytes())
 
         natoms = r.natoms
         nframes = r.nframes
         if args.progress:
             print "frames: %-9d atoms: %-9d" % (nframes, natoms)
-        if (args.energy == False):
-            assert natoms > 0, "'%s' contains %d atoms." % (path, natoms)
-
+        assert natoms > 0, "'%s' contains %d atoms." % (path, natoms)
         assert nframes > 0, "'%s' contains %d frames." % (path, nfraems)
         if args.progress:
             progress = Progress(nframes)
         for i in xrange(nframes):
             frame = r.frame(i)
-
-	    if (args.energy == False):
-                assert frame.pos is not None, "'%s' is missing pos data at frame %d" % (path, i)
-                assert frame.box is not None, "'%s' is missing pos data at frame %d" % (path, i)
-
+            assert frame.pos is not None, "'%s' is missing pos data at frame %d" % (path, i)
+            assert frame.box is not None, "'%s' is missing pos data at frame %d" % (path, i)
             if args.progress:
                 progress(i+1)
 
@@ -104,6 +96,7 @@ def main():
 
             last_frame_time = frame.time
                 
+
         #
         # Spit out some output that is compatible with d_validate, which
         # this replaces.

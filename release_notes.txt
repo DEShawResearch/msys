@@ -1,5 +1,4 @@
-
-1.7.119 Added support for ETRs.  New STK cache file format as well.
+1.7.119 
 
 1.7.118 Added paramtype atom selection keyword.
 

@@ -183,7 +183,7 @@ namespace desres { namespace molfile {
 
     // Get the DtrReader component corresponding to frame n.  Change
     // n to the local index within the returned dtr.
-    virtual DtrReader * component(ssize_t &n) = 0;
+    virtual const DtrReader * component(ssize_t &n) const = 0;
 
     // number of framesets
     virtual ssize_t nframesets() const = 0;
@@ -197,7 +197,7 @@ namespace desres { namespace molfile {
     // If no buffer pointer is supplied, only molfile_timestep_t information 
     // will be filled in, and the returned KeyMap will be empty.
     virtual dtr::KeyMap frame(ssize_t n, molfile_timestep_t *ts,
-                              void ** bufptr = NULL) = 0;
+                              void ** bufptr = NULL) const = 0;
 
     // read up to count times beginning at index start into the provided space;
     // return the number of times actually read.
@@ -208,8 +208,7 @@ namespace desres { namespace molfile {
   };
 
   struct metadata_t {
-      std::vector<char> frame_bytes;
-      dtr::KeyMap frame_map;
+      std::vector<float>    invmass;
   };
 
   class DtrReader : public FrameSetReader {
@@ -220,8 +219,8 @@ namespace desres { namespace molfile {
     int m_ndir2;
     ssize_t m_curframe;
 
-    metadata_t meta;
-    bool has_meta;
+    metadata_t * meta;
+    bool owns_meta;
 
     bool eof() const { return m_curframe >= (ssize_t)keys.size(); }
 
@@ -242,13 +241,14 @@ namespace desres { namespace molfile {
     // initializing 
     DtrReader(std::string const& path, unsigned access = RandomAccess) 
     : _natoms(0), with_velocity(false), m_ndir1(-1), m_ndir2(-1), m_curframe(0),
-      has_meta(false), _access(access), _last_fd(0),
+      meta(NULL), owns_meta(false), _access(access), _last_fd(0),
       _last_path("")
     { 
         dtr = path;
     }
 
     virtual ~DtrReader() {
+      set_meta(NULL);
       if (_last_fd>0) close(_last_fd);
     }
 
@@ -268,7 +268,29 @@ namespace desres { namespace molfile {
     /* update ddparams.  Return true if they were stale and updated.  */
     bool update_ddparams();
 
-    void read_meta( const std::string& metafile, unsigned natoms, bool with_invmass );
+    /* meta and owns_meta are initially set to NULL and false.  In init(), 
+     * if meta is NULL and owns_meta is false, we try to read the meta 
+     * from the metadata frame (an expensive operation), in which case 
+     * owns_meta becomes true, whether or not meta was actually read.
+     * Otherwise, we leave those values alone.  In the destructor, we delete 
+     * meta if we own it.  The StkReader class can share the meta between 
+     * DtrReader instances in the following way: if the meta it has to share
+     * is NULL, it should set owns_meta to true in the DtrReader instances,
+     * so that the DtrReaders don't keep searching for their own meta.  If
+     * the meta it has to share is non-NULL, it should set owns_meta to 
+     * false so that the meta pointer doesn't get double-freed.
+     */
+    metadata_t * get_meta() const { return meta; }
+    void set_meta(metadata_t * ptr) {
+      if (meta && owns_meta) delete meta;
+      if (ptr) {
+        meta = ptr;
+        owns_meta = false;
+      } else {
+        meta = NULL;
+        owns_meta = true;
+      }
+    }
 
     ssize_t curframe() const { return m_curframe; }
 
@@ -292,7 +314,7 @@ namespace desres { namespace molfile {
 
     virtual bool next(molfile_timestep_t *ts);
 
-    virtual DtrReader * component(ssize_t &n) {
+    virtual const DtrReader * component(ssize_t &n) const {
       return this;
     }
 
@@ -304,19 +326,17 @@ namespace desres { namespace molfile {
 
     /* WARNING: this method is reentrant only when using RandomAccess */
     virtual dtr::KeyMap frame(ssize_t n, molfile_timestep_t *ts,
-                              void ** bufptr = NULL);
+                              void ** bufptr = NULL) const;
 
     // path for frame at index.  Empty string on not found.
     std::string framefile(ssize_t n) const;
 
     // parse a frame from supplied bytes
     dtr::KeyMap frame_from_bytes( const void *buf, uint64_t len,
-                             molfile_timestep_t *ts );
+                             molfile_timestep_t *ts ) const;
 
     std::ostream& dump(std::ostream &out) const;
     std::istream& load(std::istream &in);
-    std::istream& load_v7(std::istream &in);
-    std::istream& load_v8(std::istream &in);
   };
 
   struct DtrWriter {
@@ -405,8 +425,8 @@ namespace desres { namespace molfile {
     virtual ssize_t times(ssize_t start, ssize_t count, double * times) const;
     virtual bool next(molfile_timestep_t *ts);
     virtual dtr::KeyMap frame(ssize_t n, molfile_timestep_t *ts,
-                              void ** bufptr = NULL);
-    virtual DtrReader * component(ssize_t &n);
+                              void ** bufptr = NULL) const;
+    virtual const DtrReader * component(ssize_t &n) const;
 
     virtual ssize_t nframesets() const { return framesets.size(); }
     virtual const DtrReader * frameset(ssize_t n) const {
