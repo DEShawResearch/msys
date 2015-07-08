@@ -340,11 +340,41 @@ namespace {
         return reader;
     }
 
-    FrameSetReader * dtrreader_init( object& path, bool sequential ) {
-        if (!path.is_none()) {
-	    return dtr_from_path(path, sequential);
-	} else {
-            PyErr_Format(PyExc_ValueError, "Must supply path");
+    FrameSetReader * dtr_from_bytes( object& byteobj ) {
+        const char *buffer;
+        Py_ssize_t buffer_len;
+        if (PyObject_AsCharBuffer(byteobj.ptr(), &buffer, &buffer_len)) {
+            throw error_already_set();
+        }
+        std::string str(buffer, buffer+buffer_len); // null-terminate 
+        /* check the path to see if we have an stk or not */
+        const char * space = strchr(str.c_str(), ' ');
+        if (!space || space-str.c_str() < 4) {
+            PyErr_SetString(PyExc_ValueError, "misformatted bytes");
+            throw error_already_set();
+        }
+        std::string extension(space-4, space);
+        FrameSetReader * reader = NULL;
+        if (extension==".stk") {
+            reader = new StkReader("<from bytes>");
+        } else {
+            reader = new DtrReader("<from bytes>");
+        }
+        std::istringstream in(str);
+        reader->load(in);
+        if (!in) {
+            delete reader;
+            PyErr_SetString(PyExc_ValueError, "reading bytes failed");
+            throw error_already_set();
+        }
+        return reader;
+    }
+
+    FrameSetReader * dtrreader_init( object& path, object& bytes, bool sequential ) {
+        if (!path.is_none()) return dtr_from_path(path, sequential);
+        else if (!bytes.is_none()) return dtr_from_bytes(bytes);
+        else {
+            PyErr_Format(PyExc_ValueError, "Must supply either path or bytes");
             throw error_already_set();
         }
         return NULL;
@@ -412,7 +442,7 @@ namespace {
             bool with_gids, object keyvals) {
         /* The component method modifies index.  What a dumb API. */
         Py_ssize_t global_index = index;
-        const DtrReader *comp = self.component(index);
+        DtrReader *comp = self.component(index);
         if (!comp) {
             PyErr_SetString(PyExc_IndexError, "index out of bounds");
             throw error_already_set();
@@ -500,6 +530,17 @@ namespace {
             if (rc==-1) throw_error_already_set();
         }
         return object(frame);
+    }
+
+    const char * dump_doc = 
+        "dump() -> serialized version of self\n";
+
+    object dump(const FrameSetReader& self) {
+        std::ostringstream out;
+        self.dump(out);
+        const std::string &str = out.str();
+        return object(handle<>(
+                    PyString_FromStringAndSize(str.c_str(), str.size())));
     }
 
     const char reload_doc[] =
@@ -608,6 +649,7 @@ void desres::molfile::export_dtrreader() {
                     dtrreader_init,
                     default_call_policies(),
                     (arg("path")=object(), 
+                     arg("bytes")=object(),
                      /* WARNING: use sequential=True only from one thread! */
                      arg("sequential")=false )))
         .add_property("path", my_path)
@@ -634,6 +676,7 @@ void desres::molfile::export_dtrreader() {
                 ,arg("bytes")=object()
                 ,arg("with_gids")=false
                 ,arg("keyvals")=object()))
+        .def("dump", dump, dump_doc)
         .def("reload", reload, reload_doc)
         .def("times", get_times)
         ;
