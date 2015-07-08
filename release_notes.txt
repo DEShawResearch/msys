@@ -1,4 +1,8 @@
-1.7.119 
+1.7.120 Added --sorted option to dms-select.
+        Fixed .gro box size unit conversion.
+        Fixed bond order assignment for systems with bonds to pseudos.
+
+1.7.119 Experimental ETR support and new STK caching - do not use!
 
 1.7.118 Added paramtype atom selection keyword.
 
