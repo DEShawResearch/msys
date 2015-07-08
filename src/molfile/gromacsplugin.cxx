@@ -117,7 +117,8 @@ static int read_gro_timestep(void *v, int natoms, molfile_timestep_t *ts) {
   if (ts) {
     memcpy(ts->coords, mdts.pos, 3 * sizeof(float) * gmx->natoms);
     if (mdts.box) {
-      for (int i=0; i<9; i++) ts->unit_cell[i] = mdts.box->unit_cell[i];
+      // convert nm to Angstrom
+      for (int i=0; i<9; i++) ts->unit_cell[i] = 10*mdts.box->unit_cell[i];
     }
   }
   mdio_tsfree(&mdts);
