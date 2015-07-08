@@ -30,9 +30,11 @@ def main():
     parser.add_argument('-c', '--coalesce', action='store_true', default=False,
             help='Coalesce input file parameters before saving')
     parser.add_argument('--structure-only', action='store_true', default=False,
-            help='Write no forcefield information')
+            help='Write no forcefield information or pseudos')
     parser.add_argument('-A', '--assign', action='store_true', default=False,
             help='Assign bond order and formal charge')
+    parser.add_argument('--sorted', action='store_true', default=False,
+            help='Write atoms in structurally sorted order')
 
     opts = parser.parse_args()
 
@@ -61,6 +63,10 @@ def main():
         if opts.verbose: print >> sys.stderr, "Coalescing tables"
         mol.coalesceTables()
         mol = mol.clone()
+
+    if opts.sorted:
+        if opts.verbose: print >> sys.stderr, "Sorting atoms"
+        mol = mol.sorted()
 
     if opts.output:
         if opts.verbose: print >> sys.stderr, "Saving", opts.output
