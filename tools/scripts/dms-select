@@ -35,47 +35,57 @@ def main():
             help='Assign bond order and formal charge')
     parser.add_argument('--sorted', action='store_true', default=False,
             help='Write atoms in structurally sorted order')
+    parser.add_argument('--add-hydrogens', action='store_true', default=False,
+            help='Add missing hydrogens based on valence and formal charge')
+    parser.add_argument('--guess-hydrogen-positions', action='store_true',
+            default=False,
+            help='Guess 3d coordinates for hydrogens added by --add-hydrogen')
 
     opts = parser.parse_args()
+    def log(msg, verbose=opts.verbose):
+        if verbose:
+            print >> sys.stderr, msg
 
     path = opts.files[0]
-    if opts.verbose:
-        print >> sys.stderr, "Loading", path
+    log("Loading %s" % path)
     mol = msys.Load(path)
+
     for path in opts.files[1:]:
-        if opts.verbose:
-            print >> sys.stderr, "Loading", path
+        log("Loading %s" % path)
         mol.append(msys.Load(path))
 
+    if opts.add_hydrogens:
+        new = msys.AddHydrogens(mol)
+        for i,n in enumerate(new):
+            n.name = 'H%d' % i
+        log("Added %d hydrogens" % len(new))
+        if opts.guess_hydrogen_positions:
+            log("Guessing 3d coordinates for %d hydrogens" % len(new))
+            msys.GuessHydrogenPositions(new)
+
     if opts.assign:
-        if opts.verbose:
-            print >> sys.stderr, "Assigning bond order and formal charge"
+        log("Assigning bond order and formal charge")
         msys.AssignBondOrderAndFormalCharge(mol)
 
     if opts.selection:
+        log('Cloning "%s"' % opts.selection)
         mol=mol.clone(opts.selection)
 
-    if opts.verbose:
-        print >> sys.stderr, "dms-select: %d chain(s), %d residue(s), %d atom(s)" % (
-                len(mol.chains), len(mol.residues), len(mol.atoms))
+    log("Selected %d chain(s), %d residue(s), %d atom(s)" % (
+                len(mol.chains), len(mol.residues), len(mol.atoms)))
 
     if opts.coalesce:
-        if opts.verbose: print >> sys.stderr, "Coalescing tables"
+        log("Coalescing tables")
         mol.coalesceTables()
         mol = mol.clone()
 
     if opts.sorted:
-        if opts.verbose: print >> sys.stderr, "Sorting atoms"
+        log("Sorting atoms")
         mol = mol.sorted()
 
     if opts.output:
-        if opts.verbose: print >> sys.stderr, "Saving", opts.output
-        import time
-        t=-time.time()
+        log("Saving %s" % opts.output)
         msys.Save(mol, opts.output, structure_only=opts.structure_only)
-        t+=time.time()
-        if opts.verbose:
-            print >> sys.stderr, "Save: %8.3fms" % (t*1000)
 
 if __name__=="__main__": main()
 
