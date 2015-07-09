@@ -1,4 +1,7 @@
+1.7.122 Handle long title lines in ScanSDF.
+
 1.7.121 Fixed charge parsing in ScanSDF.
+        Added --add-hydrogens and --guess-hydrogen-positions to dms-select.
 
 1.7.120 Added --sorted option to dms-select.
         Fixed .gro box size unit conversion.

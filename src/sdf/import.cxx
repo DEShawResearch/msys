@@ -89,7 +89,7 @@ namespace {
 
     class scanner : public MoleculeIterator {
         FILE* fp = 0;
-        char buf[82];
+        char buf[1024];
         bool getline() {
             return fgets(buf, sizeof(buf), fp)!=NULL;
         }
