@@ -269,13 +269,17 @@ namespace {
             }
 
             // M entries
+            bool cleared_charges = false;
             while (getline()) {
                 if (!strncmp(buf, "M  ", 3)) {
                     if (!strncmp(buf+3, "END", 3)) {
                         break;
                     } else if (!strncmp(buf+3, "CHG", 3)) {
-                        for (int i=0; i<natoms; i++) {
-                            ptr->atom(i).formal_charge = 0;
+                        if (!cleared_charges) {
+                            cleared_charges = true;
+                            for (int i=0; i<natoms; i++) {
+                                ptr->atom(i).formal_charge = 0;
+                            }
                         }
                         int n = parse_count(buf+6);
                         if (n==BAD_COUNT) {

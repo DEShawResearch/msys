@@ -1,3 +1,5 @@
+1.7.121 Fixed charge parsing in ScanSDF.
+
 1.7.120 Added --sorted option to dms-select.
         Fixed .gro box size unit conversion.
         Fixed bond order assignment for systems with bonds to pseudos.
