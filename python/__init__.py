@@ -1515,6 +1515,15 @@ class SmartsPattern(object):
             atoms = annotated_system.system.atoms
         return self._pat.findMatches(annotated_system._ptr, _find_ids(atoms)[1])
 
+    def match(self, annotated_system):
+        ''' Return True if a match is found anywhere; False otherwise.
+
+        This is much faster than checking for an empty result from
+        findMatches.
+        '''
+        return self._pat.match(annotated_system._ptr)
+
+
 def CreateSystem():
     ''' Create a new, empty System '''
     return System(_msys.SystemPtr.create())
