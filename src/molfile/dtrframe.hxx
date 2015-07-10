@@ -37,8 +37,8 @@ namespace desres { namespace molfile { namespace dtr {
         bool get(uint64_t* buf) const;
         bool get(float* buf) const;
         bool get(double* buf) const;
-	bool get(char* buf) const;
-	bool get(unsigned char* buf) const;
+        bool get(char* buf) const;
+        bool get(unsigned char* buf) const;
 
         void set(const char* buf, uint64_t n);
         void set(const unsigned char* buf, uint64_t n);
@@ -49,7 +49,7 @@ namespace desres { namespace molfile { namespace dtr {
         void set(const float* buf, uint64_t n);
         void set(const double* buf, uint64_t n);
 
-	uint32_t get_element_size();
+        uint32_t get_element_size();
     };
 
     typedef std::map<std::string, Key> KeyMap;

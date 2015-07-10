@@ -209,71 +209,71 @@ namespace desres { namespace molfile {
   class metadata {
   public:
       metadata(const void *bufptr, ssize_t n, std::string *jobstep_id = NULL) {
-	  
-	  //
-	  // We want to put metadata objects into the stack
-	  // cache file, but that means we only want to copy
-	  // them in once.  Unfortunately, each meta frame
-	  // has a JOBSTEP_ID entry, which changes with each
-	  // new dtr.  So, we now create a copy of everything
-	  // in the meta frame except for key JOBSTEP_ID tags.
-	  // 
-	  // If jobstep_id is not NULL, then the value of the
-	  // key JOBSTEP_ID is stored there.
-	  //
-	  bool swap;
-	  auto full_frame_map = dtr::ParseFrame(n, bufptr, &swap);
+          
+          //
+          // We want to put metadata objects into the stack
+          // cache file, but that means we only want to copy
+          // them in once.  Unfortunately, each meta frame
+          // has a JOBSTEP_ID entry, which changes with each
+          // new dtr.  So, we now create a copy of everything
+          // in the meta frame except for key JOBSTEP_ID tags.
+          // 
+          // If jobstep_id is not NULL, then the value of the
+          // key JOBSTEP_ID is stored there.
+          //
+          bool swap;
+          auto full_frame_map = dtr::ParseFrame(n, bufptr, &swap);
 
-	  frame_data = calloc(n, 1);
-	  memcpy(frame_data, bufptr, n);
-	  frame_size = n;
+          frame_data = calloc(n, 1);
+          memcpy(frame_data, bufptr, n);
+          frame_size = n;
 
-	  ThreeRoe hasher;
+          ThreeRoe hasher;
 
-	  for (auto kv : full_frame_map) {
+          for (auto kv : full_frame_map) {
 
-	      //
-	      // Iterate through the keys, copying all non JOB*
-	      // keys, updating the data pointers to the newly
-	      // copied data region, and computing a ThreeRoe
-	      // hash of the data as we go.
-	      //
-	      uint32_t v_size = kv.second.get_element_size();
-	      if (kv.first != "JOBSTEP_ID") {
-		  void *copied_data_address = (void *) (((char *)kv.second.data - (char *)bufptr) +
-							(char *) frame_data);
-		  frame_map[kv.first] = dtr::Key(copied_data_address, kv.second.count, kv.second.type, swap);
-		  hasher.Update(kv.second.data, v_size);
-	      } else {
-		  if (jobstep_id) {
-		      (*jobstep_id) += (char *) kv.second.data;
-		  }
-	      }
-	  }
+              //
+              // Iterate through the keys, copying all non JOB*
+              // keys, updating the data pointers to the newly
+              // copied data region, and computing a ThreeRoe
+              // hash of the data as we go.
+              //
+              uint32_t v_size = kv.second.get_element_size();
+              if (kv.first != "JOBSTEP_ID") {
+                  void *copied_data_address = (void *) (((char *)kv.second.data - (char *)bufptr) +
+                                                        (char *) frame_data);
+                  frame_map[kv.first] = dtr::Key(copied_data_address, kv.second.count, kv.second.type, swap);
+                  hasher.Update(kv.second.data, v_size);
+              } else {
+                  if (jobstep_id) {
+                      (*jobstep_id) += (char *) kv.second.data;
+                  }
+              }
+          }
 
-	  hash = hasher.Final().first;
+          hash = hasher.Final().first;
       }
 
       ~metadata() {
-	  if (frame_size) {
-	      free(frame_data);
-	  }
+          if (frame_size) {
+              free(frame_data);
+          }
       }
 
       uint64_t get_hash() const {
-	  return(hash);
+          return(hash);
       }
 
       dtr::KeyMap *get_frame_map() {
-	  return &frame_map;
+          return &frame_map;
       }
  
       uint32_t get_frame_size() const {
-	  return frame_size;
+          return frame_size;
       }
 
       void *get_frame_data() {
-	  return frame_data;
+          return frame_data;
       }
 
   private:
@@ -320,15 +320,15 @@ namespace desres { namespace molfile {
     }
 
     void set_meta(boost::shared_ptr < metadata > p) {
-	metap = p;
+        metap = p;
     }
 
     void set_jobstep_id(std::string id) {
-	jobstep_id = id;
+        jobstep_id = id;
     }
 
     boost::shared_ptr <metadata> get_meta() {
-	return metap;
+        return metap;
     }
 
     virtual ~DtrReader() {
@@ -362,13 +362,13 @@ namespace desres { namespace molfile {
     virtual void init(int * changed=NULL);
     virtual ssize_t size() const { return keys.size(); }
     virtual ssize_t total_bytes() const {
-	ssize_t total = 0;
+        ssize_t total = 0;
 
-	for (unsigned int i = 0; i < keys.size(); i++) {
-	    total += keys[i].size();
-	}
+        for (unsigned int i = 0; i < keys.size(); i++) {
+            total += keys[i].size();
+        }
 
-	return(total);
+        return(total);
     }
 
     virtual ssize_t times(ssize_t start, ssize_t count, double * times) const;
@@ -400,7 +400,7 @@ namespace desres { namespace molfile {
     std::istream& load_v7(std::istream &in);
     std::istream& load_v8(std::istream &in);
     const std::string get_path() {
-	return dtr;
+        return dtr;
     }
   };
 

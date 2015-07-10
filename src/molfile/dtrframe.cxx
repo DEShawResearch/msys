@@ -220,26 +220,26 @@ desres::molfile::dtr::ParseFrame(size_t sz, const void* data, bool *swap) {
     uint32_t frame_crc = fletcher(reinterpret_cast<const uint16_t*>(bytes), crc_start/2);
 
     if (frame_crc != crc) {
-	DTR_FAILURE("checksum failure: want " << crc << " got " << frame_crc);
+        DTR_FAILURE("checksum failure: want " << crc << " got " << frame_crc);
     }
 
     if (header->version > 0x00000100) {
-	//
-	// In version 2 and up (as defined by the frameset header), we
-	// compute not just a Fletcher CRC but also a ThreeRoe hash for
-	// additional verification of the frame integrity.  This value
-	// is stored in the header in what were previously unused bytes.
-	// 
-	// The ThreeRoe hash is computed on the header before the hash
-	// value is set, so we need to zero it in the header before
-	// computing the expected value.
-	//
-	uint32_t expected_threeroe_hash = header->threeroe_hash;
-	uint32_t threeroe_hash = compute_threeroe_hash(bytes, crc_start);
-	if (threeroe_hash != expected_threeroe_hash) {
-	    DTR_FAILURE("ThreeRoe hash failure: want " << expected_threeroe_hash << " computed " << threeroe_hash 
-			<< " htonl(expected) = " << htonl(expected_threeroe_hash));
-	}
+        //
+        // In version 2 and up (as defined by the frameset header), we
+        // compute not just a Fletcher CRC but also a ThreeRoe hash for
+        // additional verification of the frame integrity.  This value
+        // is stored in the header in what were previously unused bytes.
+        // 
+        // The ThreeRoe hash is computed on the header before the hash
+        // value is set, so we need to zero it in the header before
+        // computing the expected value.
+        //
+        uint32_t expected_threeroe_hash = header->threeroe_hash;
+        uint32_t threeroe_hash = compute_threeroe_hash(bytes, crc_start);
+        if (threeroe_hash != expected_threeroe_hash) {
+            DTR_FAILURE("ThreeRoe hash failure: want " << expected_threeroe_hash << " computed " << threeroe_hash 
+                        << " htonl(expected) = " << htonl(expected_threeroe_hash));
+        }
     }
 
     if (header->nlabels==0) return map;

@@ -342,8 +342,8 @@ namespace {
 
     FrameSetReader * dtrreader_init( object& path, bool sequential ) {
         if (!path.is_none()) {
-	    return dtr_from_path(path, sequential);
-	} else {
+            return dtr_from_path(path, sequential);
+        } else {
             PyErr_Format(PyExc_ValueError, "Must supply path");
             throw error_already_set();
         }
@@ -558,7 +558,7 @@ namespace {
         return ff::at_time_gt(self.size(), Oracle(self), T);
     }
     ssize_t total_bytes( const FrameSetReader& self ) {
-	return (self.total_bytes());
+        return (self.total_bytes());
     }
 
     std::string my_path(FrameSetReader const& self) {
