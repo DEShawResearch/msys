@@ -85,6 +85,8 @@ typedef int mode_t;
 #include <stdexcept>
 
 #include "dtrframe.hxx"
+#include <boost/shared_ptr.hpp>
+#include "ThreeRoe/ThreeRoe.hpp"
 
 namespace desres { namespace molfile {
   
@@ -202,13 +204,83 @@ namespace desres { namespace molfile {
     // read up to count times beginning at index start into the provided space;
     // return the number of times actually read.
     virtual ssize_t times(ssize_t start, ssize_t count, double * times) const = 0;
-
-    virtual std::ostream& dump(std::ostream &out) const = 0;
-    virtual std::istream& load(std::istream &in) = 0;
   };
 
-  struct metadata_t {
-      std::vector<float>    invmass;
+  class metadata {
+  public:
+      metadata(const void *bufptr, ssize_t n, std::string *jobstep_id = NULL) {
+	  
+	  //
+	  // We want to put metadata objects into the stack
+	  // cache file, but that means we only want to copy
+	  // them in once.  Unfortunately, each meta frame
+	  // has a JOBSTEP_ID entry, which changes with each
+	  // new dtr.  So, we now create a copy of everything
+	  // in the meta frame except for key JOBSTEP_ID tags.
+	  // 
+	  // If jobstep_id is not NULL, then the value of the
+	  // key JOBSTEP_ID is stored there.
+	  //
+	  bool swap;
+	  auto full_frame_map = dtr::ParseFrame(n, bufptr, &swap);
+
+	  frame_data = calloc(n, 1);
+	  memcpy(frame_data, bufptr, n);
+	  frame_size = n;
+
+	  ThreeRoe hasher;
+
+	  for (auto kv : full_frame_map) {
+
+	      //
+	      // Iterate through the keys, copying all non JOB*
+	      // keys, updating the data pointers to the newly
+	      // copied data region, and computing a ThreeRoe
+	      // hash of the data as we go.
+	      //
+	      uint32_t v_size = kv.second.get_element_size();
+	      if (kv.first != "JOBSTEP_ID") {
+		  void *copied_data_address = (void *) (((char *)kv.second.data - (char *)bufptr) +
+							(char *) frame_data);
+		  frame_map[kv.first] = dtr::Key(copied_data_address, kv.second.count, kv.second.type, swap);
+		  hasher.Update(kv.second.data, v_size);
+	      } else {
+		  if (jobstep_id) {
+		      (*jobstep_id) += (char *) kv.second.data;
+		  }
+	      }
+	  }
+
+	  hash = hasher.Final().first;
+      }
+
+      ~metadata() {
+	  if (frame_size) {
+	      free(frame_data);
+	  }
+      }
+
+      uint64_t get_hash() const {
+	  return(hash);
+      }
+
+      dtr::KeyMap *get_frame_map() {
+	  return &frame_map;
+      }
+ 
+      uint32_t get_frame_size() const {
+	  return frame_size;
+      }
+
+      void *get_frame_data() {
+	  return frame_data;
+      }
+
+  private:
+      uint32_t frame_size;
+      void *frame_data;
+      uint64_t hash;
+      dtr::KeyMap frame_map;
   };
 
   class DtrReader : public FrameSetReader {
@@ -219,8 +291,7 @@ namespace desres { namespace molfile {
     int m_ndir2;
     ssize_t m_curframe;
 
-    metadata_t * meta;
-    bool owns_meta;
+    boost::shared_ptr < metadata > metap;
 
     bool eof() const { return m_curframe >= (ssize_t)keys.size(); }
 
@@ -232,6 +303,8 @@ namespace desres { namespace molfile {
     mutable int _last_fd;
     mutable std::string _last_path;
 
+    std::string jobstep_id;
+
   public:
     enum {
         RandomAccess
@@ -241,14 +314,24 @@ namespace desres { namespace molfile {
     // initializing 
     DtrReader(std::string const& path, unsigned access = RandomAccess) 
     : _natoms(0), with_velocity(false), m_ndir1(-1), m_ndir2(-1), m_curframe(0),
-      meta(NULL), owns_meta(false), _access(access), _last_fd(0),
-      _last_path("")
+      _access(access), _last_fd(0), _last_path("")
     { 
         dtr = path;
     }
 
+    void set_meta(boost::shared_ptr < metadata > p) {
+	metap = p;
+    }
+
+    void set_jobstep_id(std::string id) {
+	jobstep_id = id;
+    }
+
+    boost::shared_ptr <metadata> get_meta() {
+	return metap;
+    }
+
     virtual ~DtrReader() {
-      set_meta(NULL);
       if (_last_fd>0) close(_last_fd);
     }
 
@@ -268,29 +351,7 @@ namespace desres { namespace molfile {
     /* update ddparams.  Return true if they were stale and updated.  */
     bool update_ddparams();
 
-    /* meta and owns_meta are initially set to NULL and false.  In init(), 
-     * if meta is NULL and owns_meta is false, we try to read the meta 
-     * from the metadata frame (an expensive operation), in which case 
-     * owns_meta becomes true, whether or not meta was actually read.
-     * Otherwise, we leave those values alone.  In the destructor, we delete 
-     * meta if we own it.  The StkReader class can share the meta between 
-     * DtrReader instances in the following way: if the meta it has to share
-     * is NULL, it should set owns_meta to true in the DtrReader instances,
-     * so that the DtrReaders don't keep searching for their own meta.  If
-     * the meta it has to share is non-NULL, it should set owns_meta to 
-     * false so that the meta pointer doesn't get double-freed.
-     */
-    metadata_t * get_meta() const { return meta; }
-    void set_meta(metadata_t * ptr) {
-      if (meta && owns_meta) delete meta;
-      if (ptr) {
-        meta = ptr;
-        owns_meta = false;
-      } else {
-        meta = NULL;
-        owns_meta = true;
-      }
-    }
+    void read_meta();
 
     ssize_t curframe() const { return m_curframe; }
 
@@ -336,7 +397,11 @@ namespace desres { namespace molfile {
                              molfile_timestep_t *ts ) const;
 
     std::ostream& dump(std::ostream &out) const;
-    std::istream& load(std::istream &in);
+    std::istream& load_v7(std::istream &in);
+    std::istream& load_v8(std::istream &in);
+    const std::string get_path() {
+	return dtr;
+    }
   };
 
   struct DtrWriter {
@@ -404,6 +469,7 @@ namespace desres { namespace molfile {
     std::vector<DtrReader*> framesets;
     size_t curframeset;
     const unsigned _access;
+    std::map<uint64_t, boost::shared_ptr < metadata > > meta_data_map;
 
   public:
     explicit StkReader(std::string const& path, 
@@ -426,6 +492,7 @@ namespace desres { namespace molfile {
     virtual bool next(molfile_timestep_t *ts);
     virtual dtr::KeyMap frame(ssize_t n, molfile_timestep_t *ts,
                               void ** bufptr = NULL) const;
+
     virtual const DtrReader * component(ssize_t &n) const;
 
     virtual ssize_t nframesets() const { return framesets.size(); }
@@ -435,8 +502,12 @@ namespace desres { namespace molfile {
 
     static bool recognizes(const std::string &path);
 
+    bool read_stk_cache_file(const std::string &cachepath, bool verbose, bool v8);
+
     std::ostream& dump(std::ostream &out) const;
-    std::istream& load(std::istream &in);
+    std::istream& load_v7(std::istream &in);
+    std::istream& load_v8(std::istream &in);
+    void process_meta_frames();
   };
 } }
 

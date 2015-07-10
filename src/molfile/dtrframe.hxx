@@ -48,10 +48,12 @@ namespace desres { namespace molfile { namespace dtr {
         void set(const uint64_t* buf, uint64_t n);
         void set(const float* buf, uint64_t n);
         void set(const double* buf, uint64_t n);
+
+	uint32_t get_element_size();
     };
 
     typedef std::map<std::string, Key> KeyMap;
-    KeyMap ParseFrame(size_t sz, const void* data);
+    KeyMap ParseFrame(size_t sz, const void* data, bool *swap_endian);
 
     size_t ConstructFrame(KeyMap const& map, void ** bufptr);
 
