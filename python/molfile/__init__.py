@@ -366,6 +366,8 @@ class StkFile(object):
 
 register_plugin(StkFile)
 
+with_pandas = True
+
 class SeqFile(object):
 
     filename_extensions = 'seq'
@@ -405,21 +407,25 @@ class SeqFile(object):
             Otherwise, use numpy.loadtxt
             '''
             props=None
-            skiprows = 0
             for line in file(path):
-                skiprows += 1
                 cols = line.strip().split()
                 if len(cols)>1 and cols[0]=='#' and cols[1].endswith('time'):
                     props=self._parse_header(line)
                     break
 
-            try:
-                # not working yet...
-                import pandasXXX
-                self.rows = pandas.read_csv(path, sep=' ', header=None, 
-                        skiprows=skiprows)
-            except ImportError:
-                self.rows  = numpy.loadtxt(path)
+
+            self.rows = None
+            if with_pandas:
+                import pandas
+                try:
+                    self.rows = pandas.read_csv(path,
+                            delim_whitespace=True,
+                            header=None,
+                            comment='#').as_matrix()
+                except ValueError:
+                    pass
+            if self.rows is None:
+                self.rows  = numpy.loadtxt(path)    # handles empty rows case
             self.times = self.rows[:,0] if len(self.rows) else numpy.array([])
             self.props=props
 
