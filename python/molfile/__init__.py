@@ -405,15 +405,22 @@ class SeqFile(object):
             Otherwise, use numpy.loadtxt
             '''
             props=None
+            skiprows = 0
             for line in file(path):
+                skiprows += 1
                 cols = line.strip().split()
                 if len(cols)>1 and cols[0]=='#' and cols[1].endswith('time'):
                     props=self._parse_header(line)
                     break
 
-            self.rows  = numpy.loadtxt(path)
-            # Just grab the times from the first column
-            self.times = self.rows[:,0] # Should this be a copy?
+            try:
+                # not working yet...
+                import pandasXXX
+                self.rows = pandas.read_csv(path, sep=' ', header=None, 
+                        skiprows=skiprows)
+            except ImportError:
+                self.rows  = numpy.loadtxt(path)
+            self.times = self.rows[:,0] if len(self.rows) else numpy.array([])
             self.props=props
 
         @property
