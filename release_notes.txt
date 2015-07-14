@@ -1,3 +1,6 @@
+1.7.123 New stk caching ready to roll out.
+        Added SmartsPattern.match for Python.
+
 1.7.122 Handle long title lines in ScanSDF.
 
 1.7.121 Fixed charge parsing in ScanSDF.
