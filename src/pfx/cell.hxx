@@ -61,7 +61,7 @@ namespace desres { namespace msys { namespace pfx {
                          const unsigned* elems,
                          const scalar* pos,
                          center_scalar *center,
-                         const wscalar* wts = NULL) {
+                         const wscalar* wts = nullptr) {
         scalar cx=0, cy=0, cz=0, cw=0;
         for (unsigned i=0; i<nelems; i++) {
             const scalar *p = pos + (elems ? 3*elems[i] : 3*i);

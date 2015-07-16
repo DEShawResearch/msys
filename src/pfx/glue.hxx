@@ -1,9 +1,8 @@
 #ifndef desres_pfx_glue_hxx
 #define desres_pfx_glue_hxx
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <algorithm>
+#include <vector>
 
 namespace desres { namespace msys { namespace pfx {
 
@@ -133,7 +132,7 @@ namespace desres { namespace msys { namespace pfx {
              unsigned n,
              const Id* glue) {
 
-            if (n==0 || glue==NULL || atoms.empty()) return;
+            if (n==0 || glue==nullptr || atoms.empty()) return;
             std::vector<Id> clique;
             const Id* ptr;
 

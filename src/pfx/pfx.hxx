@@ -114,7 +114,7 @@ namespace desres { namespace msys { namespace pfx {
         template <typename scalar>
         void align(unsigned n, const unsigned* atoms,
                                const scalar* coords,
-                               const scalar* weights=NULL) {
+                               const scalar* weights=nullptr) {
 
             _align.resize(n);
             std::copy(atoms, atoms+n, _align.begin());
@@ -122,10 +122,10 @@ namespace desres { namespace msys { namespace pfx {
                 _weights.resize(n);
                 std::copy(weights, weights+n, _weights.begin());
             }
-            const double* wts = _weights.empty() ? NULL : &_weights[0];
+            const double* wts = _weights.empty() ? nullptr : &_weights[0];
 
             if (coords) {
-                compute_center(n, NULL, coords, _cpos, wts);
+                compute_center(n, nullptr, coords, _cpos, wts);
                 _aref.resize(3*n);
                 std::copy(coords, coords+3*n, _aref.begin());
                 apply_shift(n, &_aref[0], -_cpos[0], -_cpos[1], -_cpos[2]);
@@ -143,7 +143,7 @@ namespace desres { namespace msys { namespace pfx {
         void apply(scalar* pos, cell_scalar* cell, scalar* vel) const {
             scalar box[9], proj[9];
             if (!pos) return;
-            const double* wts = _weights.empty() ? NULL : &_weights[0];
+            const double* wts = _weights.empty() ? nullptr : &_weights[0];
 
             if (cell) {
                 std::copy(cell, cell+9, box);
@@ -194,7 +194,7 @@ namespace desres { namespace msys { namespace pfx {
         template <typename scalar>
         double rmsd(const scalar* pos) const {
             if (_aref.empty()) return -1;
-            const double* wts = _weights.empty() ? NULL : &_weights[0];
+            const double* wts = _weights.empty() ? nullptr : &_weights[0];
             return compute_rmsd(_align.size(), &_align[0], 
                                 &_aref[0], _cpos, pos, wts);
         }

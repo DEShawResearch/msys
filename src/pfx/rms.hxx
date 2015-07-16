@@ -63,7 +63,7 @@ namespace desres { namespace msys { namespace pfx {
             const scalar   *ref,        /* nx3 reference positions  */
             const pos_scalar *pos,      /* max|ref| positions       */
             mat_scalar     *mat_3x3,    /* returned matrix          */
-            const scalar   *wts=NULL    /* n optional weights       */
+            const scalar   *wts=nullptr /* n optional weights       */
             ) {
 
 
@@ -130,7 +130,7 @@ namespace desres { namespace msys { namespace pfx {
                         const scalar *ref,
                         const scalar *center,
                         const pos_scalar *pos,
-                        const scalar *wts=NULL) {
+                        const scalar *wts=nullptr) {
         if (n==0) return 0;
         scalar R=0, W=0;
         const scalar cx = center[0];
