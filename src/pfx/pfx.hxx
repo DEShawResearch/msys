@@ -6,6 +6,8 @@
 #include "glue.hxx"
 #include "rms.hxx"
 
+#include "../types.hxx"
+
 namespace desres { namespace msys { namespace pfx {
 
     struct Pfx {
@@ -24,6 +26,15 @@ namespace desres { namespace msys { namespace pfx {
 
         // atoms involved in alignment
         std::vector<unsigned> _align;
+
+        // sorted, unique align atoms for quick lookup
+        std::vector<unsigned> _align_lookup;
+        bool is_aligned(unsigned id) const {
+            return std::binary_search(
+                    _align_lookup.begin(),
+                    _align_lookup.end(),
+                    id);
+        }
 
         // reference coordinates for alignment
         std::vector<double>   _aref;
@@ -61,27 +72,34 @@ namespace desres { namespace msys { namespace pfx {
                 // compute center of fragment
                 scalar s = 1/(scalar)sz;
                 scalar c[3]={0,0,0};
+                bool skip = false;
                 for (unsigned j=0; j<sz; j++) {
-                    const scalar* p = pos+3*atom[j];
+                    auto id = atom[j];
+                    if (is_aligned(id)) {
+                        skip = true;
+                        break;
+                    }
+                    const scalar* p = pos+3*id;
                     c[0] += p[0];
                     c[1] += p[1];
                     c[2] += p[2];
                 }
-                c[0] *= s;
-                c[1] *= s;
-                c[2] *= s;
-                
-                // compute shift for wrapping
-                wrap_vector(cell, proj, c);
+                if (!skip) {
+                    c[0] *= s;
+                    c[1] *= s;
+                    c[2] *= s;
+                    
+                    // compute shift for wrapping
+                    wrap_vector(cell, proj, c);
 
-                // apply shift to fragment
-                for (unsigned j=0; j<sz; j++) {
-                    scalar* p = pos+3*atom[j];
-                    p[0] += c[0];
-                    p[1] += c[1];
-                    p[2] += c[2];
+                    // apply shift to fragment
+                    for (unsigned j=0; j<sz; j++) {
+                        scalar* p = pos+3*atom[j];
+                        p[0] += c[0];
+                        p[1] += c[1];
+                        p[2] += c[2];
+                    }
                 }
-
                 // advance to next fragment
                 atom += sz;
             }
@@ -118,6 +136,8 @@ namespace desres { namespace msys { namespace pfx {
 
             _align.resize(n);
             std::copy(atoms, atoms+n, _align.begin());
+            _align_lookup = _align;
+            sort_unique(_align_lookup);
             if (weights) {
                 _weights.resize(n);
                 std::copy(weights, weights+n, _weights.begin());
