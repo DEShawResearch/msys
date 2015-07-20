@@ -35,8 +35,11 @@ static void format_coord(char* buf, float const x) {
 }
 
 /* Write x in %3d format to buffer */
-static void format_short(char* buf, unsigned short const x) {
+static void format_short(char* buf, short x) {
+    memset(buf, ' ', 3);
     div_t qr;
+    bool neg=x<0;
+    if (neg) x=-x;
     qr = div(x,10);
     buf[2]='0'+qr.rem;
     if (qr.quot!=0) {
@@ -45,6 +48,13 @@ static void format_short(char* buf, unsigned short const x) {
         if (qr.quot!=0) {
             qr = div(qr.quot,10);
             buf[0]='0'+qr.rem;
+        }
+    }
+    if (neg) {
+        if (x<10) {
+            buf[1]='-';
+        } else {
+            buf[0]='-';
         }
     }
 }
@@ -64,6 +74,8 @@ std::string desres::msys::FormatSdf( Molecule const& mol ) {
     char cntsbuf[] = "        0  0  1  0            999 V2000\n";
     char atombuf[] = "     .         .         .     X   0  0  0  0  0  0\n";
     char bondbuf[] = "           0  0  0\n";
+    char mchgbuf[] = "M  CHG  1        \n";
+    std::map<Id,int> chargemap;
 
     /* compute needed size */
     unsigned bufsize = 0;
@@ -71,6 +83,9 @@ std::string desres::msys::FormatSdf( Molecule const& mol ) {
     bufsize += mol.natoms()*(sizeof(atombuf)-1);
     bufsize += mol.nbonds()*(sizeof(bondbuf)-1);
     bufsize += sizeof(cntsbuf)-1;
+    for (unsigned i=0, n=mol.natoms(); i<n; i++) {
+        if (mol.atom(i).formal_charge!=0) bufsize += sizeof(mchgbuf)-1;
+    }
     for (auto const& v : mol.data()) {
         bufsize += v.first.size() + v.second.size() + 7;
     }
@@ -97,8 +112,7 @@ std::string desres::msys::FormatSdf( Molecule const& mol ) {
         atombuf[31] = abbr[0];
         atombuf[32] = abbr[1] ? abbr[1] : ' ';
         auto fc = atm.formal_charge;
-        fc=(fc==0 || fc<-3 || fc>3) ? 0 : 4-fc;
-        format_short(atombuf+36, fc);
+        if (fc!=0) chargemap[i] = fc;
         format_short(atombuf+39, atm.stereo_parity);
         ptr = append(ptr, atombuf, sizeof(atombuf)-1);
     }
@@ -112,6 +126,11 @@ std::string desres::msys::FormatSdf( Molecule const& mol ) {
         format_short(bondbuf+6, bnd.aromatic ? 4 : bnd.order);
         format_short(bondbuf+9, bnd.stereo);
         ptr = append(ptr, bondbuf, sizeof(bondbuf)-1);
+    }
+    for (auto it : chargemap) {
+        format_short(mchgbuf+10, it.first+1);
+        format_short(mchgbuf+14, it.second);
+        ptr = append(ptr, mchgbuf, sizeof(mchgbuf)-1);
     }
     ptr = append(ptr, "M  END\n", 7);
     for (auto const& v : mol.data()) {
@@ -135,6 +154,7 @@ static void export_ct(SystemPtr mol, Id ct, std::ostream& out) {
     IdList atoms = mol->atomsForCt(ct);
     IdList bonds = mol->bondsForCt(ct);
     std::sort(atoms.begin(), atoms.end());
+    std::map<Id,int> chargemap;
 
     /* header */
     out << cmp.name() << std::endl;
@@ -152,13 +172,13 @@ static void export_ct(SystemPtr mol, Id ct, std::ostream& out) {
         atom_t const& atm = mol->atom(atoms[i]);
         const char* elem = AbbreviationForElement(atm.atomic_number);
         int fc=atm.formal_charge;
-        fc=(fc==0 || fc<-3 || fc>3) ? 0 : 4-fc;
+        if (fc!=0) chargemap[i] = fc;
         out << format("%10.4f") % atm.x
             << format("%10.4f") % atm.y
             << format("%10.4f ") % atm.z
             << format("%-3s")   % elem
             << " 0"
-            << format("%3d") % fc
+            << format("%3d") % 0
             << "  0  0  0  0"
             << std::endl;
     }
@@ -183,8 +203,14 @@ static void export_ct(SystemPtr mol, Id ct, std::ostream& out) {
             << "  0  0  0"
             << std::endl;
     }
+    /* charges */
+    for (auto it : chargemap) {
+        out << "M  CHG  1" << format("%4i") % (it.first+1) 
+                           << format("%4i") % (it.second)
+                           << "\n";
+    }
     /* done with molecule section */
-    out << "M  END" << std::endl;
+    out << "M  END\n";
 
     /* write property block */
     std::vector<String> keys = cmp.keys();
