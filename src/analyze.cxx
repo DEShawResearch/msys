@@ -250,6 +250,9 @@ namespace desres { namespace msys {
             int fq = mol->atom(atm).formal_charge;
             int grp = GroupForElement(anum);
             if (anum <= 2 || grp < 13) continue;
+            // Just don't add hydrogens to heavy atoms.  We'll probably
+            // have to revisit this.  -- JRG, 20 July 2015
+            if (anum >= 18) continue;   // Ar and higher
 
             int degree = 0;
             int valence = 0;

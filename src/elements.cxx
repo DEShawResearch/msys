@@ -258,7 +258,8 @@ namespace {
         ChemData(1.850,  2,  8,  0,  6 ),  // Cu  29 (1 rare, 2 common)
         ChemData(1.590,  2,  8,  0,  6 ),  // Zn  30 (2 common)
         // Period 4 - Groups 13-18
-        NODATA, NODATA,                    // Ga - Ge    31 - 32
+        NODATA, // Ga 31
+        ChemData( 1.994, 4,   8, 1,  6 ),  // Ge  32 (JRG, questionable)
         ChemData( 2.211, 5,  10, 2,  6 ),  // As  33
         ChemData( 2.434, 6,  12, 3,  6 ),  // Se  34
         ChemData( 2.685, 7,  14, 4,  6 ),  // Br  35
@@ -269,9 +270,16 @@ namespace {
         // Period 5 - Transition Metals
         // FIXME: should handle biocatalytic metals (Mo) 
         NODATA, NODATA, NODATA, NODATA, NODATA, //  Y - Tc  39-43
-        NODATA, NODATA, NODATA, NODATA, NODATA, // Ru - Cd  44-48
+        NODATA, // Ru 44
+        NODATA,
+        ChemData( 1.59,  2,  8,  0,  6 ),  // Pd 46 (JRG, questionable)
+        NODATA,
+        NODATA, // Cd 48
         // Period 5 - Groups 13-18
-        NODATA, NODATA, NODATA, NODATA,    // In - Te  49-52
+        NODATA, // In 49
+        NODATA,
+        ChemData( 1.984, 3,   8, 1,  6 ),  // Sb  51 (JRG, questionable)
+        ChemData( 2.158, 4,   8, 1,  6 ),  // Te  52 (JRG, questionable)
         ChemData( 2.359, 7,  14, 4,  6 ),  // I   53
         ChemData( 2.582, 8,  8,  4,  0 ),  // Xe  54        
         // Period 6 - Groups 1 & 2
@@ -279,12 +287,26 @@ namespace {
         ChemData( 0.881, 2,  8,  0,  2 ),  // Ba  56
         // Period 6 - Lanthanides (all form M+3, some form M+2 or M+4)
         NODATA, NODATA, NODATA, NODATA, NODATA, NODATA, NODATA, // La - Eu  57 - 63
-        NODATA, NODATA, NODATA, NODATA, NODATA, NODATA, NODATA, // Gd - Yb  64 - 70
+        NODATA, // Gd 64
+        ChemData(0, 3, 8, 0, 6), // Tb 65 (JRG, questionable)
+        NODATA,
+        NODATA,
+        ChemData(0, 3, 8, 0, 6), // Er 68 (JRG, questionable) 
+        ChemData(0, 3, 8, 0, 6), // Tm 69 (JRG, questionable)
+        NODATA, // Yb  70
         // Period 6 - Transition Metals
         NODATA, NODATA, NODATA, NODATA, NODATA, // Lu - Re 71-75
-        NODATA, NODATA, NODATA, NODATA, NODATA, // Os - Hg 76-80
+        NODATA, // Os 76
+        NODATA,
+        NODATA,
+        ChemData(1.92,  3,   8,  0,  6 ), // Au 79  (JRG, questionable)
+        NODATA, // Hg 80
         // Period 6 - Groups 13-18
-        NODATA, NODATA, NODATA, NODATA, NODATA, // Ti - At 81-85
+        NODATA, // Ti 81
+        NODATA,
+        ChemData(2.01,  3,   8,  0,  6 ), // Bi 83  (JRG, questionable)
+        NODATA,
+        NODATA, // At 85
         ChemData( 2.60,  8,  8,  4,  0 ),  // Rn  86     
         // Period 7 - Groups 1 & 2
         ChemData( 0.659, 1,  8,  0,  1 ),  // Fr  87

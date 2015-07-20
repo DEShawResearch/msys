@@ -11,7 +11,8 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys)
      * hybridization */
     int nrad=0;
     BOOST_FOREACH(Id ai, sys->atoms()) {
-        if (sys->atomFAST(ai).atomic_number<1) continue;
+        int anum = sys->atomFAST(ai).atomic_number;
+        if (anum < 1) continue;
         atom_data_t& a = _atoms[ai];
         BOOST_FOREACH(Id bi, sys->bondsForAtom(ai)) {
             bond_t const& bnd = sys->bond(bi);
@@ -26,15 +27,19 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys)
             a.degree += 1;
         }
         int formal_charge = sys->atom(ai).formal_charge;
-        int val = DataForElement(sys->atom(ai).atomic_number).nValence;
+        int val = DataForElement(anum).nValence;
         int electrons = val - a.valence - formal_charge;
-        if (electrons < 0)
+        if (electrons < 0) {
+            //fprintf(stderr, "Atom %s nval %d q %d val %d\n", 
+                    //AbbreviationForElement(anum), val, formal_charge,a.valence);
             MSYS_FAIL("Invalid formal charge or bond orders for atom "
+                    << AbbreviationForElement(anum) << " "
                     << ai << " of system " << sys->name);
+        }
         nrad+=electrons%2;
         a.lone_electrons=electrons;
 
-        if (sys->atom(ai).atomic_number == 1 || a.degree == 0){
+        if (anum == 1 || a.degree == 0){
             a.hybridization = 0;
         }else{
             a.hybridization = std::max(1, a.degree + (a.lone_electrons+1)/2 - 1);
