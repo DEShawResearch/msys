@@ -28,7 +28,11 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys)
         }
         int formal_charge = sys->atom(ai).formal_charge;
         int val = DataForElement(anum).nValence;
+        int aval = DataForElement(anum).additionalValence;
         int electrons = val - a.valence - formal_charge;
+        if (electrons < 0 && aval > 0) {
+            electrons = aval - a.valence - formal_charge;
+        }
         if (electrons < 0) {
             //fprintf(stderr, "Atom %s nval %d q %d val %d\n", 
                     //AbbreviationForElement(anum), val, formal_charge,a.valence);

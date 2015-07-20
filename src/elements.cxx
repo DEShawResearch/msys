@@ -252,11 +252,11 @@ namespace {
         ChemData(1.530,  2,  8,  0,  6 ),  // V   23 (1 rare, 2-5 common)
         ChemData(1.650,  3,  8,  0,  6 ),  // Cr  24 (1,4-5 rare, 2-3,6 common, 3 most stable) 
         ChemData(1.750,  2,  8,  0,  6 ),  // Mn  25 (1,5 rare, 2-4,6-7 common, 2 most stable)
-        ChemData(1.800,  2,  8,  0,  6 ),  // Fe  26 (1,4-6 rare, 2-3 common)
+        ChemData(1.800,  2,  8,  0,  6, 3 ),  // Fe  26 (1,4-6 rare, 2-3 common)
         ChemData(1.840,  2,  8,  0,  6 ),  // Co  27 (1,4-6 rare, 2-3 common)
         ChemData(1.880,  2,  8,  0,  6 ),  // Ni  28 (1,3-4 rare, 2 common)
         ChemData(1.850,  2,  8,  0,  6 ),  // Cu  29 (1 rare, 2 common)
-        ChemData(1.590,  2,  8,  0,  6 ),  // Zn  30 (2 common)
+        ChemData(1.590,  2,  8,  0,  6, 4 ),  // Zn  30 (2 common)
         // Period 4 - Groups 13-18
         NODATA, // Ga 31
         ChemData( 1.994, 4,   8, 1,  6 ),  // Ge  32 (JRG, questionable)
@@ -277,7 +277,7 @@ namespace {
         NODATA, // Cd 48
         // Period 5 - Groups 13-18
         NODATA, // In 49
-        NODATA,
+        ChemData( 1.824, 4,   8, 0,  6 ),  // Sn  50 (JRG, questionable)
         ChemData( 1.984, 3,   8, 1,  6 ),  // Sb  51 (JRG, questionable)
         ChemData( 2.158, 4,   8, 1,  6 ),  // Te  52 (JRG, questionable)
         ChemData( 2.359, 7,  14, 4,  6 ),  // I   53
@@ -295,10 +295,14 @@ namespace {
         ChemData(0, 3, 8, 0, 6), // Tm 69 (JRG, questionable)
         NODATA, // Yb  70
         // Period 6 - Transition Metals
-        NODATA, NODATA, NODATA, NODATA, NODATA, // Lu - Re 71-75
+        NODATA, // Lu 71
+        NODATA,
+        NODATA,
+        NODATA,
+        ChemData(0, 6,  8,   0,  6,  7 ), // Re 75  (JRG, questionable)
         NODATA, // Os 76
         NODATA,
-        NODATA,
+        ChemData(1.72,  4,   8,  0,  6 ), // Pt 78  (JRG, questionable)
         ChemData(1.92,  3,   8,  0,  6 ), // Au 79  (JRG, questionable)
         NODATA, // Hg 80
         // Period 6 - Groups 13-18
