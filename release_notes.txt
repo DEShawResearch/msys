@@ -1,3 +1,10 @@
+1.7.124 Added AllowBadCharges option to AnnotatedSystem.
+        Support more valences for heavy atoms.
+        Fix writing of sdf files with formal charge=4.
+        Fix pfx for very extended system.
+        Use pandas.read_csv for eneseq files when available.
+        Accomodate empty eneseq files.
+
 1.7.123 New stk caching ready to roll out.
         Added SmartsPattern.match for Python.
 
