@@ -4,7 +4,7 @@
 #include <queue>
 #include <assert.h>
 
-desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys)
+desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys, unsigned flags)
 : _sys(sys), _atoms(sys->maxAtomId()), _bonds(sys->maxBondId()) {
 
     /* Assign valence, degree, hcount, lone_electrons, and preliminary
@@ -36,9 +36,18 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys)
         if (electrons < 0) {
             //fprintf(stderr, "Atom %s nval %d q %d val %d\n", 
                     //AbbreviationForElement(anum), val, formal_charge,a.valence);
-            MSYS_FAIL("Invalid formal charge or bond orders for atom "
+            try {
+                MSYS_FAIL("Invalid formal charge or bond orders for atom "
                     << AbbreviationForElement(anum) << " "
                     << ai << " of system " << sys->name);
+            }
+            catch (std::exception &e) {
+                if (flags & AllowBadCharges) {
+                    _errors.push_back(e.what());
+                } else {
+                    throw;
+                }
+            }
         }
         nrad+=electrons%2;
         a.lone_electrons=electrons;
@@ -49,9 +58,19 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys)
             a.hybridization = std::max(1, a.degree + (a.lone_electrons+1)/2 - 1);
         }
     }
-    if (nrad >1)
-        MSYS_FAIL("Invalid formal charge or bond orders ( "<<nrad <<
-                  " radical centers detected ) for system " << sys->name);
+    if (nrad >1) {
+        try {
+            MSYS_FAIL("Invalid formal charge or bond orders ( "<<nrad <<
+                      " radical centers detected ) for system " << sys->name);
+        }
+        catch (std::exception& e) {
+            if (flags & AllowBadCharges) {
+                _errors.push_back(e.what());
+            } else {
+                throw;
+            }
+        }
+    }
 
     /* Get rings and ring systems, assign ring_bonds and rings_idx */
     compute_ring_systems();

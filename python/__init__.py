@@ -1392,10 +1392,13 @@ class System(object):
 class AnnotatedSystem(object):
     ''' System that has been annotated with additional chemical information '''
 
-    def __init__(self, sys):
+    def __init__(self, sys, allow_bad_charges=False):
         ''' Construct from System. AnnotatedSystem is not updated if System is
         subsequently modified. '''
-        self._ptr = _msys.AnnotatedSystemPtr(sys._ptr)
+        flags = _msys.AnnotatedSystemFlags.Default
+        if allow_bad_charges:
+            flags |= _msys.AnnotatedSystemFlags.AllowBadCharges
+        self._ptr = _msys.AnnotatedSystemPtr(sys._ptr, flags)
 
     def __eq__(self, x): 
         return self.__class__==type(x) and self._ptr==x._ptr
@@ -1406,6 +1409,12 @@ class AnnotatedSystem(object):
     def __hash__(self): return self._ptr.__hash__()
 
     def __repr__(self): return "<AnnotatedSystem '%s'>" % self.system.name
+
+    @property
+    def errors(self):
+        ''' List of errors found during system analysis if 
+        allow_bad_charges=True '''
+        return self._ptr.errors()
 
     @property
     def system(self):

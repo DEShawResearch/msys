@@ -23,11 +23,24 @@ namespace {
         sys.rings(rings);
         return rings;
     }
+    list errors(AnnotatedSystem const& a) {
+        list L;
+        for (auto s : a.errors()) {
+            L.append(object(s));
+        }
+        return L;
+    }
 }
 
 namespace desres { namespace msys {
 
     void export_annotated_system() {
+
+        enum_<AnnotatedSystem::Flags>("AnnotatedSystemFlags")
+            .value("Default",           AnnotatedSystem::Default)
+            .value("AllowBadCharges",   AnnotatedSystem::AllowBadCharges)
+            ;
+
         class_<AnnotatedSystem, AnnotatedSystemPtr>("AnnotatedSystemPtr", no_init)
             .def("__eq__", list_eq<AnnotatedSystemPtr>)
             .def("__ne__", list_ne<AnnotatedSystemPtr>)
@@ -50,6 +63,7 @@ namespace desres { namespace msys {
             .def("bondRings", bond_rings)
             .def("ringCount", &AnnotatedSystem::ringCount)
             .def("rings", rings)
+            .def("errors", errors)
             ;
 
         def("RingSystems", RingSystems);
