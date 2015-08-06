@@ -2242,7 +2242,17 @@ std::ostream& StkReader::dump(std::ostream &out) const {
 
 std::istream& StkReader::load_v8(std::istream &in) {
   uint32_t meta_hashes_count;
-  in >> dtr;
+  // The old path isn't useful - we already have the path specified by
+  // the user, and it doesn't matter if all that happened is that the
+  // directory containing the stk was renamed.  One could argue that
+  // we shouldn't use the cache file if the stk was moved, on the
+  // suspicion that something has happened to the dtr files as well.
+  // But if the dtr contents have changed we're screwed anyway because
+  // the positions may already be cached by zendo; all we'd do is
+  // possibly wind up with time values which are different from the
+  // zendo-cached time values, which would be even more confusing.
+  std::string old_path;
+  in >> old_path;
   char c;
   in.get(c);
   in >> meta_hashes_count;
@@ -2347,7 +2357,8 @@ void StkReader::process_meta_frames() {
 
 std::istream& StkReader::load_v7(std::istream &in) {
 
-  in >> dtr;
+  std::string old_path;
+  in >> old_path;
   size_t size; in >> size; framesets.resize(size);
   char c; in.get(c);
   for (size_t i=0; i<framesets.size(); i++) {
