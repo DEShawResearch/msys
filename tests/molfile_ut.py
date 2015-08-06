@@ -136,11 +136,14 @@ class DtrGidTestCase(unittest.TestCase):
         f=molfile.Frame(natoms, with_gids=True)
         gids=numpy.arange(natoms, dtype='int32')
         f.gid[:] = gids
+        f.time=0
         w.frame(f)
         f.gid[-1::-1]=gids
+        f.time=1
         w.frame(f)
 
         f=molfile.Frame(natoms, with_gids=False)
+        f.time=2
         w.frame(f)
 
         w.close()
@@ -241,7 +244,8 @@ class DtrTestCase(unittest.TestCase):
         # Need at least one frame in the dtr or metadata gets ignored 
         self.addFrame(0.0)
         os.unlink('%s/metadata' % self.PATH)
-        molfile.DtrReader(self.PATH)
+        with self.assertRaises(RuntimeError):
+            molfile.DtrReader(self.PATH)
 
     def testOneFramePerFile(self):
         ''' test reading dtr with one frame per file.  DESRESCode#1525 '''
