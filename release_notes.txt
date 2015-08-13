@@ -1,3 +1,5 @@
+1.7.126 Alchemical fix for multiple dihedrals.
+
 1.7.125 Fix reading of stk files whose parent directory changed.
 
 1.7.124 Added AllowBadCharges option to AnnotatedSystem.
