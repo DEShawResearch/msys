@@ -30,7 +30,20 @@ namespace {
     }
 
     typedef std::pair<int,int> IntPair;
-    typedef std::map<IdList, IntPair> BlockMap;
+    //typedef std::map<IdList, IntPair> BlockMap;
+    typedef std::map<IdList, std::vector<IntPair>> BlockMap;
+    void dump_blockmap(BlockMap const& bm) {
+        for (auto p : bm) {
+            std::cout << "(";
+            for (auto i : p.first) std::cout << i << " ";
+            std::cout << ") ";
+            for (auto ip : p.second) {
+                std::cout << "[" << ip.first << "," << ip.second << "] ";
+            }
+            std::cout << "\n";
+        }
+    }
+
 
     TermTablePtr copy_table_template(SystemPtr mol, TermTablePtr B) {
         TermTablePtr A = mol->addTable(B->name(), B->atomCount());
@@ -130,7 +143,7 @@ namespace {
             IdList ids = btable->atoms(i);
             BOOST_FOREACH(Id& id, ids) id = b2a[id];
             canonicalize(ids);
-            M[ids]=IntPair(0,i+1);
+            M[ids].emplace_back(0,i+1);
         }
 
         /* index the A terms, combining them with any existing B terms */
@@ -138,31 +151,48 @@ namespace {
         BOOST_FOREACH(Id i, aterms) {
             IdList ids = atable->atoms(i);
             canonicalize(ids);
+#if 0
             BlockMap::iterator p = M.insert(
                     std::make_pair(ids,IntPair(i+1,0))).first;
             p->second.first = i+1;
+#else
+            BlockMap::iterator p = M.find(ids);
+            if (p==M.end()) {
+                M[ids].emplace_back(i+1, 0);
+            } else {
+                bool found=false;
+                for (auto& b : p->second) {
+                    if (b.first==0) {
+                        b.first=i+1;
+                        found=true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    p->second.emplace_back(i+1, 0);
+                }
+            }
+#endif
         }
 
         /* Change ti,tj=0 to -1 for "kept" terms */
-        for (BlockMap::iterator it=M.begin(); it!=M.end(); ++it) {
-            IdList const& ids = it->first;
-            int& ti = it->second.first;
-            int& tj = it->second.second;
-            if (ti==0) {
-              if (pair_14_in_same_fragment( mol, ids[0], ids[1],
-                                            alist, a2b, __A)) {
-                ti=-1;
-              }
-            } 
-            else if (tj==0) {
-              if (pair_14_in_same_fragment( mol, ids[0], ids[1],
-                                            alist, a2b, __B)) {
-                tj=-1;
-              }
-
+        for (auto& it : M) {
+            IdList const& ids = it.first;
+            for (auto& t : it.second) {
+                if (t.first==0) {
+                    if (pair_14_in_same_fragment( mol, ids[0], ids[1],
+                                                  alist, a2b, __A)) {
+                      t.first=-1;
+                    }
+                } 
+                else if (t.second==0) {
+                    if (pair_14_in_same_fragment( mol, ids[0], ids[1],
+                                                  alist, a2b, __B)) {
+                      t.second=-1;
+                    }
+                }
             }
         }
-
         return M;
     }
 
@@ -226,7 +256,7 @@ namespace {
             IdList ids = btable->atoms(i);
             BOOST_FOREACH(Id& id, ids) id = b2a[id];
             canonicalize(ids);
-            M[ids]=IntPair(-1,i+1);
+            M[ids].emplace_back(-1,i+1);
         }
 
         /* index the A terms combining with existing B */
@@ -235,84 +265,86 @@ namespace {
             IdList ids = atable->atoms(i);
             canonicalize(ids);
             BlockMap::iterator p = M.insert(
-                    std::make_pair(ids,IntPair(i+1,-1))).first;
-            p->second.first = i+1;
+                    std::make_pair(ids,std::vector<IntPair>(1,IntPair(i+1,-1)))).first;
+            p->second.begin()->first = i+1; // begin() because there's only one
         }
 
         /* process merged terms */
-        for (BlockMap::iterator it=M.begin(); it!=M.end(); ++it) {
-            IdList const& ids = it->first;
+        for (auto& it : M) {
+            IdList const& ids = it.first;
             Id ai = ids[0];
             Id aj = ids[1];
-            int& ti = it->second.first;
-            int& tj = it->second.second;
+            for (auto& t : it.second) {
+                int& ti = t.first;
+                int& tj = t.second;
 
-            if (tj==-1) {
-                Id bi = a2b[ai];
-                Id bj = a2b[aj];
-                /* An excluded pair of atoms in A mapped onto an unexcluded
-                 * pair of atoms in B.  */
-                if (std::binary_search(alist.begin(), alist.end(), ai) &&
-                    std::binary_search(alist.begin(), alist.end(), aj) &&
-                    !bad(bi) && !bad(bj)) {
-                    //printf("offset exclusion %u-%u in A by pair in B: %u-%u\n",
-                            //ai,aj, bi,bj);
-                    /* remove non-alchemical pair if it exists */
-                    BOOST_FOREACH(Id id, pairs->findWithAll(ids)) {
-                        pairs->delTerm(id);
+                if (tj==-1) {
+                    Id bi = a2b[ai];
+                    Id bj = a2b[aj];
+                    /* An excluded pair of atoms in A mapped onto an unexcluded
+                     * pair of atoms in B.  */
+                    if (std::binary_search(alist.begin(), alist.end(), ai) &&
+                        std::binary_search(alist.begin(), alist.end(), aj) &&
+                        !bad(bi) && !bad(bj)) {
+                        //printf("offset exclusion %u-%u in A by pair in B: %u-%u\n",
+                                //ai,aj, bi,bj);
+                        /* remove non-alchemical pair if it exists */
+                        BOOST_FOREACH(Id id, pairs->findWithAll(ids)) {
+                            pairs->delTerm(id);
+                        }
+                        /* find or create the alchemical pair */
+                        Id param = BadId;
+                        BOOST_FOREACH(Id id, alcpairs->findWithAll(ids)) {
+                            param = alcpairs->param(id);
+                            break;
+                        }
+                        if (bad(param)) {
+                            param = alcpairs->params()->addParam();
+                            alcpairs->addTerm(ids, param);
+                        }
+                        /* assign alchemical state */
+                        Id full_pair = make_full_pair(pairsB, bi, bj);
+                        for (Id i=0; i<pairsB->params()->propCount(); i++) {
+                            std::string prop = pairsB->params()->propName(i);
+                            prop += "B";
+                            alcpairs->params()->value(param,prop) = 
+                               pairsB->params()->value(full_pair,i);
+                        }
                     }
-                    /* find or create the alchemical pair */
-                    Id param = BadId;
-                    BOOST_FOREACH(Id id, alcpairs->findWithAll(ids)) {
-                        param = alcpairs->param(id);
-                        break;
-                    }
-                    if (bad(param)) {
-                        param = alcpairs->params()->addParam();
-                        alcpairs->addTerm(ids, param);
-                    }
-                    /* assign alchemical state */
-                    Id full_pair = make_full_pair(pairsB, bi, bj);
-                    for (Id i=0; i<pairsB->params()->propCount(); i++) {
-                        std::string prop = pairsB->params()->propName(i);
-                        prop += "B";
-                        alcpairs->params()->value(param,prop) = 
-                           pairsB->params()->value(full_pair,i);
-                    }
-                }
-            } else if (ti==-1) {
-                Id bi = a2b[ai];
-                Id bj = a2b[aj];
-                //printf("B: consider B %u %u mapped to A %u %u\n",
-                        //bi,bj,ai,aj);
-                /* An excluded pair of atoms in B mapped onto an unexcluded
-                 * pair of atoms in A.  */
-                /* FIXME: lots of code duplication with the first path */
-                if (std::binary_search(alist.begin(), alist.end(), ai) &&
-                    std::binary_search(alist.begin(), alist.end(), aj) &&
-                    !bad(bi) && !bad(bj)) {
-                    //printf("offset exclusion %u-%u in B by pair in A\n", ai,aj);
-                    /* remove non-alchemical pair if it exists */
-                    BOOST_FOREACH(Id id, pairs->findWithAll(ids)) {
-                        pairs->delTerm(id);
-                    }
-                    /* find or create the alchemical pair */
-                    Id param = BadId;
-                    BOOST_FOREACH(Id id, alcpairs->findWithAll(ids)) {
-                        param = alcpairs->param(id);
-                        break;
-                    }
-                    if (bad(param)) {
-                        param = alcpairs->params()->addParam();
-                        alcpairs->addTerm(ids, param);
-                    }
-                    /* assign alchemical state */
-                    Id full_pair = make_full_pair(pairs, ai, aj);
-                    for (Id i=0; i<pairs->params()->propCount(); i++) {
-                        std::string prop = pairs->params()->propName(i);
-                        prop += "A";
-                        alcpairs->params()->value(param,prop) = 
-                           pairs->params()->value(full_pair,i);
+                } else if (ti==-1) {
+                    Id bi = a2b[ai];
+                    Id bj = a2b[aj];
+                    //printf("B: consider B %u %u mapped to A %u %u\n",
+                            //bi,bj,ai,aj);
+                    /* An excluded pair of atoms in B mapped onto an unexcluded
+                     * pair of atoms in A.  */
+                    /* FIXME: lots of code duplication with the first path */
+                    if (std::binary_search(alist.begin(), alist.end(), ai) &&
+                        std::binary_search(alist.begin(), alist.end(), aj) &&
+                        !bad(bi) && !bad(bj)) {
+                        //printf("offset exclusion %u-%u in B by pair in A\n", ai,aj);
+                        /* remove non-alchemical pair if it exists */
+                        BOOST_FOREACH(Id id, pairs->findWithAll(ids)) {
+                            pairs->delTerm(id);
+                        }
+                        /* find or create the alchemical pair */
+                        Id param = BadId;
+                        BOOST_FOREACH(Id id, alcpairs->findWithAll(ids)) {
+                            param = alcpairs->param(id);
+                            break;
+                        }
+                        if (bad(param)) {
+                            param = alcpairs->params()->addParam();
+                            alcpairs->addTerm(ids, param);
+                        }
+                        /* assign alchemical state */
+                        Id full_pair = make_full_pair(pairs, ai, aj);
+                        for (Id i=0; i<pairs->params()->propCount(); i++) {
+                            std::string prop = pairs->params()->propName(i);
+                            prop += "A";
+                            alcpairs->params()->value(param,prop) = 
+                               pairs->params()->value(full_pair,i);
+                        }
                     }
                 }
             }
@@ -338,7 +370,7 @@ namespace {
                     IdList ids(2);
                     ids[0] = ai;
                     ids[1] = b2a.at(bi);
-                    M[ids] = IntPair(-1,-1);
+                    M[ids].emplace_back(-1,-1);
                 }
             }
         }
@@ -363,7 +395,7 @@ namespace {
             IdList ids = btable->atoms(i);
             BOOST_FOREACH(Id& id, ids) id = b2a[id];
             canonicalize(ids);
-            M[ids]=IntPair(-1,i+1);
+            M[ids].emplace_back(-1,i+1);
         }
 
         /* index the A terms, combining them with any existing B terms */
@@ -371,29 +403,49 @@ namespace {
         BOOST_FOREACH(Id i, aterms) {
             IdList ids = atable->atoms(i);
             canonicalize(ids);
+#if 0
             BlockMap::iterator p = M.insert(
                     std::make_pair(ids,IntPair(i+1,-1))).first;
             p->second.first = i+1;
-        }
-
-        /* Change ti,tj=-1 to 0 for "non-kept" terms */
-        for (BlockMap::iterator it=M.begin(); it!=M.end(); ++it) {
-            IdList const& ids = it->first;
-            int& ti = it->second.first;
-            int& tj = it->second.second;
-
-            if (ti==-1) {
-                BOOST_FOREACH(Id const& i, ids) { 
-                    if (std::binary_search(alist.begin(),alist.end(),i)) {
-                        ti=0;
+#else
+            auto p = M.find(ids);
+            if (p==M.end()) {
+                M[ids].emplace_back(i+1, -1);
+            } else {
+                bool found=false;
+                for (auto& b : p->second) {
+                    if (b.first==-1) {
+                        b.first=i+1;
+                        found=true;
                         break;
                     }
                 }
-            } else if (tj==-1) {
-                BOOST_FOREACH(Id const& id, ids) {
-                    if (!bad(a2b.at(id))) {
-                        tj=0;
-                        break;
+                if (!found) {
+                    p->second.emplace_back(i+1, -1);
+                }
+            }
+#endif
+        }
+
+        /* Change ti,tj=-1 to 0 for "non-kept" terms */
+        //for (auto it : M) {
+        for (auto it=M.begin(); it!=M.end(); ++it) {
+            IdList const& ids = it->first;
+            for (auto& t : it->second) {
+
+                if (t.first==-1) {
+                    BOOST_FOREACH(Id const& i, ids) { 
+                        if (std::binary_search(alist.begin(),alist.end(),i)) {
+                            t.first=0;
+                            break;
+                        }
+                    }
+                } else if (t.second==-1) {
+                    BOOST_FOREACH(Id const& id, ids) {
+                        if (!bad(a2b.at(id))) {
+                            t.second=0;
+                            break;
+                        }
                     }
                 }
             }
@@ -442,12 +494,12 @@ namespace {
     }
 
     void make_alchemical_excl(TermTablePtr table, BlockMap const& block) {
-        for (BlockMap::const_iterator it=block.begin(); it!=block.end(); ++it) {
-            IdList const& ids = it->first;
-            int const& ti = it->second.first;
-            int const& tj = it->second.second;
-            if (ti==-1 && (tj>0 || tj==-1)) {
-                table->addTerm(ids, BadId);
+        for (auto it : block) {
+            IdList const& ids = it.first;
+            for (auto t : it.second) {
+                if (t.first==-1 && (t.second>0 || t.second==-1)) {
+                    table->addTerm(ids, BadId);
+                }
             }
         }
     }
@@ -469,60 +521,62 @@ namespace {
 
         for (BlockMap::const_iterator it=block.begin(); it!=block.end(); ++it) {
             IdList const& ids = it->first;
-            int ta = it->second.first;
-            int tb = it->second.second;
+            for (auto t : it->second) {
+                int ta = t.first;
+                int tb = t.second;
 
-            if (ta>0 && tb==-1) {
-                /* Keep the A state intact, no alchemical transformation */
+                if (ta>0 && tb==-1) {
+                    /* Keep the A state intact, no alchemical transformation */
 
-            } else if (ta>0 && tb==0) {
-                /* disappear the B state */
-                Id p = copy_alchemical(paramsB, 
-                                       params, atable->param(ta-1),
-                                       ParamTablePtr(), BadId);
-                if (!keeper.empty()) {
-                    Id colA = paramsB->propIndex(keeper+'A');
-                    Id colB = paramsB->propIndex(keeper+'B');
-                    paramsB->value(p,colB)=paramsB->value(p,colA);
-                }
-                alc->addTerm(atable->atoms(ta-1), p);
-                atable->delTerm(ta-1);
-
-            } else if (ta==-1 && tb>0) {
-                /* copy parameters from state B */
-                Id p = copy_param(params, btable->params(), btable->param(tb-1));
-                Id term = atable->addTerm(ids, p);
-                if (!bad(a_constrained)) {
-                    atable->termPropValue(term,a_constrained) =
-                        btable->termPropValue(tb-1, b_constrained);
-                }
-
-            } else if (ta==0 && tb>0) {
-                /* disappear the A state */
-                Id p = copy_alchemical(paramsB, 
-                                       ParamTablePtr(), BadId,
-                                       btable->params(), btable->param(tb-1));
-                if (!keeper.empty()) {
-                    Id colA = paramsB->propIndex(keeper+'A');
-                    Id colB = paramsB->propIndex(keeper+'B');
-                    paramsB->value(p,colA)=paramsB->value(p,colB);
-                }
-                alc->addTerm(ids, p);
-
-            } else if (ta>0 && tb>0) {
-                /* A state morphs into B state */
-                Id p = copy_alchemical(paramsB,
-                                       atable->params(), atable->param(ta-1),
-                                       btable->params(), btable->param(tb-1));
-                if (!avoid_noops || 
-                        alchemically_different(paramsB, p, atable->params())) {
-                    alc->addTerm(ids, p);
+                } else if (ta>0 && tb==0) {
+                    /* disappear the B state */
+                    Id p = copy_alchemical(paramsB, 
+                                           params, atable->param(ta-1),
+                                           ParamTablePtr(), BadId);
+                    if (!keeper.empty()) {
+                        Id colA = paramsB->propIndex(keeper+'A');
+                        Id colB = paramsB->propIndex(keeper+'B');
+                        paramsB->value(p,colB)=paramsB->value(p,colA);
+                    }
+                    alc->addTerm(atable->atoms(ta-1), p);
                     atable->delTerm(ta-1);
-                }
 
-            } else {
-                MSYS_FAIL("Unsupported mapping in " << atable->name()
-                        << ": ta=" << ta << ", tb=" << tb);
+                } else if (ta==-1 && tb>0) {
+                    /* copy parameters from state B */
+                    Id p = copy_param(params, btable->params(), btable->param(tb-1));
+                    Id term = atable->addTerm(ids, p);
+                    if (!bad(a_constrained)) {
+                        atable->termPropValue(term,a_constrained) =
+                            btable->termPropValue(tb-1, b_constrained);
+                    }
+
+                } else if (ta==0 && tb>0) {
+                    /* disappear the A state */
+                    Id p = copy_alchemical(paramsB, 
+                                           ParamTablePtr(), BadId,
+                                           btable->params(), btable->param(tb-1));
+                    if (!keeper.empty()) {
+                        Id colA = paramsB->propIndex(keeper+'A');
+                        Id colB = paramsB->propIndex(keeper+'B');
+                        paramsB->value(p,colA)=paramsB->value(p,colB);
+                    }
+                    alc->addTerm(ids, p);
+
+                } else if (ta>0 && tb>0) {
+                    /* A state morphs into B state */
+                    Id p = copy_alchemical(paramsB,
+                                           atable->params(), atable->param(ta-1),
+                                           btable->params(), btable->param(tb-1));
+                    if (!avoid_noops || 
+                            alchemically_different(paramsB, p, atable->params())) {
+                        alc->addTerm(ids, p);
+                        atable->delTerm(ta-1);
+                    }
+
+                } else {
+                    MSYS_FAIL("Unsupported mapping in " << atable->name()
+                            << ": ta=" << ta << ", tb=" << tb);
+                }
             }
         }
     }
@@ -578,13 +632,15 @@ namespace {
         BlockMap::iterator it=map.find(key);
         if (it==map.end()) return;
 
-        int& ti = it->second.first;
-        int& tj = it->second.second;
-        if (ti==0) ti=-1;
-        else if (tj==0) tj=-1;
-        else {
-          MSYS_FAIL("Invalid term: [" << ti << ", " << tj << "] between " 
-                    << ai << "-" << aj << "-" << ak << "-" << al);
+        for (auto& t : it->second) {
+            int& ti = t.first;
+            int& tj = t.second;
+            if (ti==0) ti=-1;
+            else if (tj==0) tj=-1;
+            else {
+              MSYS_FAIL("Invalid term: [" << ti << ", " << tj << "] between " 
+                        << ai << "-" << aj << "-" << ak << "-" << al);
+            }
         }
     }
 
@@ -688,15 +744,16 @@ namespace {
         }
     }
                                
+    template <class B>
     void my_find_kept(SystemPtr M, 
                       MultiIdList& dummy_fragments,
                       IdSet const& mapped,
                       IdList const& dummies,
                       IdList const& a2a,
-                      BlockMap& bondmap,
-                      BlockMap& anglmap,
-                      BlockMap& dihemap,
-                      BlockMap& pairmap
+                      B& bondmap,
+                      B& anglmap,
+                      B& dihemap,
+                      B& pairmap
     ) {
 
         BOOST_FOREACH(IdList& dfrag, dummy_fragments) {
@@ -815,15 +872,16 @@ namespace {
      * 3) the dihedral interactions of (C,B,A,u), (B,A,u,v), and (A,u,v,w) 
      *    where u,v,w are dummy atoms in the fragment.
      ***/
+    template <class BM>
     void keep_separable_dummy_real_terms(SystemPtr A, SystemPtr B,
                                          IdList const& alist,
                                          IdList const& blist,
                                          IdList const& b2a,
                                          IdList const& a2b,
-                                         BlockMap& bondmap,
-                                         BlockMap& anglmap,
-                                         BlockMap& dihemap,
-                                         BlockMap& pairmap) {
+                                         BM& bondmap,
+                                         BM& anglmap,
+                                         BM& dihemap,
+                                         BM& pairmap) {
 
         IdList a2a(A->atomCount(), BadId);
         for (Id i=0; i<a2a.size(); i++) a2a[i]=i;
@@ -1151,6 +1209,7 @@ SystemPtr desres::msys::MakeAlchemical( SystemPtr A, SystemPtr B,
     imprmap=make_block(A, B, A->table(ff),B->table(ff),alist,blist,b2a,a2b);
     ff="pair_12_6_es";
     pairmap=make_pairs(A, B, A->table(ff),B->table(ff),alist,blist,b2a,a2b);
+    //dump_blockmap(pairmap);
 
     if (not keep_none) {
       // Some of the interactions between the real atoms and the dummy
