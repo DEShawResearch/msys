@@ -2,8 +2,8 @@
 #{
 # exec desres-cleanenv \
 # -m ndiff/2.00-02/bin \
-# -m dms_inputs/1.5.8/share \
-# -m msys/1.7.84/bin \
+# -m dms_inputs/1.5.10/share \
+# -m msys/1.7.126/bin \
 # -- sh $0 "$@"
 #}
 
