@@ -32,6 +32,14 @@ namespace {
     void set_name(Molecule& m, std::string const& s) {
         m.name() = s;
     }
+
+    list mol_keys(Molecule const& m) {
+        list L;
+        for (auto const& it : m.data()) {
+            L.append(object(it.first));
+        }
+        return L;
+    }
 }
 
 namespace desres { namespace msys {
@@ -47,6 +55,7 @@ namespace desres { namespace msys {
             .def("get",         mol_get,
                     (arg("key"),
                      arg("defval")=object()))
+            .def("keys",        mol_keys)
         ;
 
         class_<MoleculeIterator, boost::noncopyable>("MoleculeIterator", no_init)
