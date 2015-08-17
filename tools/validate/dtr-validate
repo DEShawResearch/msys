@@ -45,6 +45,8 @@ def parse_args():
                         help="show progress bar")
     parser.add_argument('--checkpoint', action='store_true', default=False,
                         help="turn off delta_t checks")
+    parser.add_argument('--energy', action='store_true', default=False,
+                        help="turn off box, pos and atom based checks")
     parser.add_argument('--parseable-output', action='store_true', default=False,
                         help="show parseable output compatible with d_validate")
 
@@ -72,14 +74,16 @@ def main():
         nframes = r.nframes
         if args.progress:
             print "frames: %-9d atoms: %-9d" % (nframes, natoms)
-        assert natoms > 0, "'%s' contains %d atoms." % (path, natoms)
+        if not args.energy:
+            assert natoms > 0, "'%s' contains %d atoms." % (path, natoms)
         assert nframes > 0, "'%s' contains %d frames." % (path, nfraems)
         if args.progress:
             progress = Progress(nframes)
         for i in xrange(nframes):
             frame = r.frame(i)
-            assert frame.pos is not None, "'%s' is missing pos data at frame %d" % (path, i)
-            assert frame.box is not None, "'%s' is missing pos data at frame %d" % (path, i)
+            if not args.energy:
+                assert frame.pos is not None, "'%s' is missing pos data at frame %d" % (path, i)
+                assert frame.box is not None, "'%s' is missing pos data at frame %d" % (path, i)
             if args.progress:
                 progress(i+1)
 
