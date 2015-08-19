@@ -1,3 +1,5 @@
+1.7.127 Added --energy option to dtr-validate.
+
 1.7.126 Alchemical fix for multiple dihedrals.
 
 1.7.125 Fix reading of stk files whose parent directory changed.
