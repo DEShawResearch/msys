@@ -1,3 +1,5 @@
+1.7.128 Handle stk files containing empty dtrs (DESRESCode#2406).
+
 1.7.127 Added --energy option to dtr-validate.
 
 1.7.126 Alchemical fix for multiple dihedrals.
