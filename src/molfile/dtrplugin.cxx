@@ -1025,11 +1025,16 @@ void StkReader::append(std::vector<std::string> fnames,
     process_meta_frames();
 
     /* intialize dtr readers */
+    DtrReader* first = NULL;
+    for (unsigned i=0; i<framesets.size(); i++) {
+        if (framesets[i]->natoms()>0) {
+            first=framesets[i];
+            break;
+        }
+    }
     for (unsigned i=0; i<fnames.size(); i++) {
         auto reader = framesets[i + starting_framesets];
-        if (framesets.size() > 0) {
-            const DtrReader * first = framesets[0];
-            /* reuse information from earlier readers */
+        if (first) {
             reader->set_natoms(first->natoms());
             reader->set_has_velocities(first->has_velocities());
         }
@@ -1039,6 +1044,10 @@ void StkReader::append(std::vector<std::string> fnames,
         } catch (std::exception &e) {
             delete reader;
             DTR_FAILURE("Failed opening frameset at " << fnames[i + starting_framesets] << ": " << e.what());
+        }
+        if (first==NULL && reader->natoms()>0) {
+            first = reader;
+            framesets[0]->set_natoms(first->natoms());
         }
     }
 
