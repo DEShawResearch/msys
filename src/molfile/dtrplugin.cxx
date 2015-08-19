@@ -2284,6 +2284,9 @@ std::istream& StkReader::load_v8(std::istream &in) {
     framesets[i] = new DtrReader("<no file>", _access);
     framesets[i]->load_v8(in);
     framesets[i]->set_meta(meta_data_map[meta_hash]);
+    if (framesets[0]->natoms()==0 && framesets[i]->natoms()>0) {
+        framesets[0]->set_natoms(framesets[i]->natoms());
+    }
   }
   return in;
 }
@@ -2374,6 +2377,9 @@ std::istream& StkReader::load_v7(std::istream &in) {
     delete framesets[i];
     framesets[i] = new DtrReader("<no file>", _access);
     framesets[i]->load_v7(in);
+    if (framesets[0]->natoms()==0 && framesets[i]->natoms()>0) {
+        framesets[0]->set_natoms(framesets[i]->natoms());
+    }
   }
 
   process_meta_frames();
