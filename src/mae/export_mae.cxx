@@ -307,6 +307,7 @@ static void constrained_apply(TermTablePtr table, Id term, Destro& row) {
     }
 }
 
+static const char * stretch_morse_params[] = { "r0", "d", "a", NULL };
 static const char * stretch_harm_params[] = { "r0", "fc", NULL };
 static const char * angle_harm_params[] = { "theta0", "fc", NULL };
 static const char * dihedral_trig_params[] = {
@@ -426,6 +427,7 @@ static const char * pseudopol_params[] = { "a", "b", "cutoff", NULL };
 
 static dms_to_mae dtm_map[] = {
     { "stretch_harm", "ffio_bonds", "harm", 2, stretch_harm_params, constrained_apply },
+    { "stretch_morse", "ffio_morsebonds", "Morse", 2, stretch_morse_params },
     { "angle_harm", "ffio_angles", "harm", 3, angle_harm_params, constrained_apply },
     { "dihedral_trig", "ffio_dihedrals", "proper_trig", 
         4, dihedral_trig_params, dihedral_trig_apply },
