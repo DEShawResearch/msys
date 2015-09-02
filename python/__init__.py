@@ -1667,7 +1667,10 @@ def ScanSDF(path=None, buffer=None):
     ''' Iterate over SDF entries using the Molecule interface.
     '''
     if path is not None:
-        it = _msys.ScanSDF(path)
+        if path.endswith('.gz'):
+            it = _msys.ScanSDFGz(path)
+        else:
+            it = _msys.ScanSDF(path)
     elif buffer is not None:
         it = _msys.ScanSDFFromBuffer(buffer)
     else:

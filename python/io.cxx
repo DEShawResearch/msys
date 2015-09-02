@@ -71,6 +71,17 @@ namespace {
         return ScanSdf(fp).release();
     }
 
+    MoleculeIterator* scan_sdf_gz(std::string path) {
+        std::string cmd("zcat ");
+        cmd += path;
+        FILE* fp = popen(cmd.c_str(), "r");
+        if (!fp) {
+            PyErr_Format(PyExc_IOError, strerror(errno));
+            throw_error_already_set();
+        }
+        return ScanSdf(fp).release();
+    }
+
     MoleculeIterator* scan_sdf_buffer(PyObject* obj) {
         Py_buffer view[1];
         if (PyObject_GetBuffer(obj, view, PyBUF_ND)) {
@@ -172,6 +183,8 @@ namespace desres { namespace msys {
         def("ImportSDFFromBuffer", import_sdf_from_buffer);
 
         def("ScanSDF",           scan_sdf, 
+                return_value_policy<manage_new_object>());
+        def("ScanSDFGz",         scan_sdf_gz, 
                 return_value_policy<manage_new_object>());
         def("ScanSDFFromBuffer", scan_sdf_buffer, 
                 return_value_policy<manage_new_object>());

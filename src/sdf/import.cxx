@@ -89,6 +89,7 @@ namespace {
 
     class scanner : public MoleculeIterator {
         FILE* fp = 0;
+        int (*closer)(FILE *) = NULL;
         char buf[1024];
         bool getline() {
             return fgets(buf, sizeof(buf), fp)!=NULL;
@@ -191,8 +192,11 @@ namespace {
         }
 
     public:
-        explicit scanner(FILE* fp) : fp(fp) {}
-        ~scanner() { if (fp) fclose(fp); }
+        explicit scanner(FILE* fp, int (*closer)(FILE *)) 
+        : fp(fp), closer(closer) {
+            if (!closer) this->closer = fclose;
+        }
+        ~scanner() { if (fp) closer(fp); }
 
         MoleculePtr next() {
             MoleculePtr ptr;
@@ -350,8 +354,8 @@ namespace {
     };
 }
 
-MoleculeIteratorPtr desres::msys::ScanSdf(FILE* fp) {
-    return std::unique_ptr<MoleculeIterator>(new scanner(fp));
+MoleculeIteratorPtr desres::msys::ScanSdf(FILE* fp, int (*closer)(FILE *)) {
+    return std::unique_ptr<MoleculeIterator>(new scanner(fp, closer));
 }
 
 void iterator::skip_to_end() {
