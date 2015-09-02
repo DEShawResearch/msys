@@ -3939,6 +3939,17 @@ f_m_ct {
       2 1 LJ12_6_sig_epsilon 0.000000 0.000000 0.000000 0.000000
       :::
     }
+    ffio_morsebonds[1] {
+      i_ffio_ai
+      i_ffio_aj
+      s_ffio_funct
+      r_ffio_c1
+      r_ffio_c2
+      r_ffio_c3
+      :::
+      1 1 4  Morse      1.529    268.000000    2.0
+      :::
+    }
     ffio_bonds[1536] {
       i_ffio_ai
       i_ffio_aj

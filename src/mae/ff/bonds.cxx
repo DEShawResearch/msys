@@ -51,7 +51,38 @@ namespace {
         }
     };
 
+    template <bool alchemical>
+    struct Morse : public Ffio {
+
+        void apply( SystemPtr h,
+                    const Json& blk,
+                    const SiteMap& sitemap,
+                    const VdwMap& ) const {
+
+            std::string name;
+            if (alchemical) name += "alchemical_";
+            name += "stretch_morse";
+            TermTablePtr table = AddTable(h, name);
+            ParamMap map(table->params(), blk, alchemical);
+
+            IdList ids(2);
+
+            const Json& ai = blk.get("ffio_ai");
+            const Json& aj = blk.get("ffio_aj");
+
+            int i,n = blk.get("__size__").as_int();
+            for (i=0; i<n; i++) {
+                Id A = map.add(i);
+                ids[0] = ai.elem(i).as_int();
+                ids[1] = aj.elem(i).as_int();
+                sitemap.addUnrolledTerms( table, A, ids );
+            }
+        }
+    };
+
     RegisterFfio<Bonds<false> > _1("ffio_bonds");
     RegisterFfio<Bonds<true> > _2("ffio_bonds_alchemical");
+    RegisterFfio<Morse<false> > _3("ffio_morsebonds");
+    RegisterFfio<Morse<true> > _4("ffio_morsebonds_alchemical");
 }
 

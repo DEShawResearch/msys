@@ -217,15 +217,27 @@ class TestAmber(unittest.TestCase):
         wat = m1.clone('water')
         self.assertEqual(wat.nbonds, 2*wat.nresidues)
 
-class TestFbhw(unittest.TestCase):
-    def testMae(self):
-        mol=msys.Load('tests/files/noe.mae')
+class TestFunkyStretch(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.mol=msys.Load('tests/files/noe.mae')
+
+    def testFbhw(self):
+        mol=self.mol
         fbhw=mol.table('stretch_fbhw')
         self.assertEqual(set(fbhw.params.props), 
                          set(('lower', 'upper', 'sigma', 'beta', 'fc')))
         self.assertEqual(fbhw.term_props, ['group'])
         self.assertEqual([t.atoms[0].id for t in fbhw.terms], range(6))
         self.assertEqual([t['group'] for t in fbhw.terms], [0]*3+[1]*3)
+
+    def testMorse(self):
+        mol=self.mol
+        morse=mol.table('stretch_morse')
+        p=morse.params.param(0)
+        self.assertEqual(p['r0'], 1.529)
+        self.assertEqual(p['d'],  268)
+        self.assertEqual(p['a'],  2)
 
 class TestAtomsel(unittest.TestCase):
     
