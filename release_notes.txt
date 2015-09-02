@@ -1,3 +1,7 @@
+1.7.129 Support for ffio_morsebonds in mae files.
+        More efficient term table indexing.
+        Support for .gz files in ScanSDF.
+
 1.7.128 Handle stk files containing empty dtrs (DESRESCode#2406).
 
 1.7.127 Added --energy option to dtr-validate.
