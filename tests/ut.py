@@ -239,6 +239,22 @@ class TestFunkyStretch(unittest.TestCase):
         self.assertEqual(p['d'],  268)
         self.assertEqual(p['a'],  2)
 
+class TestAlchemicalMorse(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.mol=msys.Load('tests/files/morse.mae')
+
+    def testMorse(self):
+        mol=self.mol
+        morse=mol.table('alchemical_stretch_morse')
+        p=morse.params.param(0)
+        self.assertEqual(p['r0A'], 1.529)
+        self.assertEqual(p['dA'],  268)
+        self.assertEqual(p['aA'],  2)
+        self.assertEqual(p['r0B'], 1.529)
+        self.assertEqual(p['dB'],  0)
+        self.assertEqual(p['aB'],  0)
+
 class TestAtomsel(unittest.TestCase):
     
     def testFunnyResnames(self):

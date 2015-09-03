@@ -92,7 +92,8 @@ namespace {
   void grovel_fepio_mapping( FepioMapping &m, const desres::msys::Destro &fepio ) {
     static const char *sections[] = {
       "fepio_atommaps", "fepio_bondmaps", "fepio_anglemaps",
-      "fepio_dihedmaps", "fepio_pairmaps", "fepio_exclmaps"
+      "fepio_dihedmaps", "fepio_pairmaps", "fepio_exclmaps",
+      "fepio_morsebondmaps"
     };
     unsigned i,n = sizeof(sections)/sizeof(const char *);
     for (i=0; i<n; i++) {
@@ -524,6 +525,7 @@ namespace {
 
     FepioMapping::const_iterator atoms  = map.find("fepio_atommaps");
     FepioMapping::const_iterator bonds  = map.find("fepio_bondmaps");
+    FepioMapping::const_iterator morses = map.find("fepio_morsebondmaps");
     FepioMapping::const_iterator angles = map.find("fepio_anglemaps");
     FepioMapping::const_iterator diheds = map.find("fepio_dihedmaps");
     FepioMapping::const_iterator pairs  = map.find("fepio_pairmaps");
@@ -573,6 +575,11 @@ namespace {
       const char *alc = "ffio_bonds_alchemical";
       m1.new_array(alc);
       combine_entry( m1, m2, bonds, "ffio_c1", "ffio_bonds", alc);
+    }
+    if (morses != map.end()) {
+      const char *alc = "ffio_morsebonds_alchemical";
+      m1.new_array(alc);
+      combine_entry( m1, m2, morses, "ffio_c1", "ffio_morsebonds", alc);
     }
     if (angles != map.end()) {
       const char *alc = "ffio_angles_alchemical";
