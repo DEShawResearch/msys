@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <vector>
+#include <cstdlib>
 
 namespace desres { namespace msys { namespace pfx {
 

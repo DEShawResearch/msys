@@ -65,7 +65,7 @@ namespace {
     MoleculeIterator* scan_sdf(std::string path) {
         FILE* fp = fopen(path.c_str(), "r");
         if (!fp) {
-            PyErr_Format(PyExc_IOError, strerror(errno));
+            PyErr_Format(PyExc_IOError, "%s", strerror(errno));
             throw_error_already_set();
         }
         return ScanSdf(fp).release();
@@ -76,12 +76,14 @@ namespace {
         cmd += path;
         FILE* fp = popen(cmd.c_str(), "r");
         if (!fp) {
-            PyErr_Format(PyExc_IOError, strerror(errno));
+            PyErr_Format(PyExc_IOError, "%s", strerror(errno));
             throw_error_already_set();
         }
         return ScanSdf(fp).release();
     }
 
+// no fmemopen on the mac.
+#ifndef __APPLE__
     MoleculeIterator* scan_sdf_buffer(PyObject* obj) {
         Py_buffer view[1];
         if (PyObject_GetBuffer(obj, view, PyBUF_ND)) {
@@ -95,6 +97,7 @@ namespace {
         }
         return ScanSdf(fp).release();
     }
+#endif
 
     LoadIteratorPtr load_iterator_create(std::string const& path,
                                          bool structure_only) {
@@ -186,8 +189,10 @@ namespace desres { namespace msys {
                 return_value_policy<manage_new_object>());
         def("ScanSDFGz",         scan_sdf_gz, 
                 return_value_policy<manage_new_object>());
+#ifndef __APPLE__
         def("ScanSDFFromBuffer", scan_sdf_buffer, 
                 return_value_policy<manage_new_object>());
+#endif
         def("FormatSDF", FormatSdf);
 
         def("ExportSDFBytes", export_sdf_bytes);

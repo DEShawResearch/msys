@@ -32,6 +32,7 @@ namespace {
     typedef std::pair<int,int> IntPair;
     //typedef std::map<IdList, IntPair> BlockMap;
     typedef std::map<IdList, std::vector<IntPair>> BlockMap;
+#if 0
     void dump_blockmap(BlockMap const& bm) {
         for (auto p : bm) {
             std::cout << "(";
@@ -43,7 +44,7 @@ namespace {
             std::cout << "\n";
         }
     }
-
+#endif
 
     TermTablePtr copy_table_template(SystemPtr mol, TermTablePtr B) {
         TermTablePtr A = mol->addTable(B->name(), B->atomCount());
