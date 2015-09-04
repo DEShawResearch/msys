@@ -52,6 +52,11 @@ namespace desres { namespace msys {
             return *this;
         }
 
+        SmallString& assign(const char* p, size_t sz) {
+            _copy(p,sz);
+            return *this;
+        }
+
         const char* c_str() const {
             return s;
         }
