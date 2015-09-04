@@ -9,6 +9,7 @@
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp> /* for boost::trim */
 #include <stdio.h>
+#include <ctype.h>
 #ifdef DESRES_OS_Darwin
 #ifndef _DARWIN_C_SOURCE
 #define _DARWIN_C_SOURCE
@@ -1006,3 +1007,16 @@ void GlobalCell::merge(GlobalCell const& gc) {
     if (!memcmp(oldvec,zero,sz)) memcpy(oldvec, newvec,sz);
 }
 
+pfx::Graph *System::topology() const {
+    if (maxAtomId() != atomCount()) {
+        MSYS_FAIL("System has deleted atoms, so graph would be incorrect.");
+    }
+    pfx::Graph* g = new pfx::Graph(atomCount());
+    for (Id i=0, n=maxAtomId(); i<n; i++) {
+        IdList atoms = bondedAtoms(i);
+        for (Id j=0, m=atoms.size(); j<m; j++) {
+            g->add_edge(i,atoms[j]);
+        }
+    }
+    return g;
+}

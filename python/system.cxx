@@ -210,20 +210,6 @@ namespace {
         }
     }
 
-    pfx::Graph* sys_topology(System const& sys) {
-        if (sys.maxAtomId() != sys.atomCount()) {
-            MSYS_FAIL("System has deleted atoms, so graph would be incorrect.");
-        }
-        pfx::Graph* g = new pfx::Graph(sys.atomCount());
-        for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
-            IdList atoms = sys.bondedAtoms(i);
-            for (Id j=0, m=atoms.size(); j<m; j++) {
-                g->add_edge(i,atoms[j]);
-            }
-        }
-        return g;
-    }
-
     struct Finder {
         System const& mol;
         const bool skip_symmetric;
@@ -843,7 +829,7 @@ namespace desres { namespace msys {
             .def("coalesceTables",    &System::coalesceTables)
             .def("translate",       sys_translate)
             .def("findContactIds",  sys_find_contact_ids)
-            .def("topology",        sys_topology, 
+            .def("topology",        &System::topology, 
                     return_value_policy<manage_new_object>())
             .def("getPositions", sys_getpos,
                     (arg("ids")=object()))

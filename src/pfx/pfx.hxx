@@ -6,7 +6,7 @@
 #include "glue.hxx"
 #include "rms.hxx"
 
-#include "../types.hxx"
+#include "../system.hxx"
 
 namespace desres { namespace msys { namespace pfx {
 
@@ -106,7 +106,7 @@ namespace desres { namespace msys { namespace pfx {
         }
 
     public:
-        explicit Pfx(Graph const& g, bool fix_bonds=false) {
+        Pfx(Graph const& g, bool fix_bonds=false) {
 
             if (fix_bonds) {
                 g.copy_bonds(std::back_inserter(_bonds));
@@ -114,6 +114,10 @@ namespace desres { namespace msys { namespace pfx {
             g.copy_components(std::back_inserter(_comps),
                               std::back_inserter(_sizes));
         }
+
+        Pfx(SystemPtr mol, bool fix_bonds=false) 
+        : Pfx(*std::shared_ptr<Graph>(mol->topology()), fix_bonds)
+        {}
 
         // number of atoms as defined by the initial graph
         unsigned size() const { return _comps.size(); }
