@@ -115,10 +115,6 @@ namespace desres { namespace msys { namespace pfx {
                               std::back_inserter(_sizes));
         }
 
-        Pfx(SystemPtr mol, bool fix_bonds=false) 
-        : Pfx(*std::shared_ptr<Graph>(mol->topology()), fix_bonds)
-        {}
-
         // number of atoms as defined by the initial graph
         unsigned size() const { return _comps.size(); }
 

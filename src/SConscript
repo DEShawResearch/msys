@@ -188,6 +188,7 @@ sdf/import.cxx
 pdb/pdb.cxx
 pdb/webpdb.c
 
+pfx/graph.cxx
 psf/import.cxx
 
 schema.cxx

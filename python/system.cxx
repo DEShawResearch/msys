@@ -628,6 +628,8 @@ namespace {
                 carr ? (const double *)PyArray_DATA(carr.get()) : NULL,
                 caarr? (const double *)PyArray_DATA(caarr.get()): NULL);
     }
+
+    pfx::Graph* sys_topology(SystemPtr mol) { return new pfx::Graph(mol); }
 }
 
 namespace desres { namespace msys { 
@@ -829,7 +831,7 @@ namespace desres { namespace msys {
             .def("coalesceTables",    &System::coalesceTables)
             .def("translate",       sys_translate)
             .def("findContactIds",  sys_find_contact_ids)
-            .def("topology",        &System::topology, 
+            .def("topology",        sys_topology,
                     return_value_policy<manage_new_object>())
             .def("getPositions", sys_getpos,
                     (arg("ids")=object()))

@@ -8,7 +8,6 @@
 #include "provenance.hxx"
 #include "value.hxx"
 #include "smallstring.hxx"
-#include "pfx/graph.hxx"
 
 #include <boost/serialization/binary_object.hpp>
 
@@ -610,10 +609,6 @@ namespace desres { namespace msys {
         /* Return ids of atoms based on their order of appearance in
          * a depth-first traversal of the structure hierarchy. */
         IdList orderedIds() const;
-
-        /* Return a pfx graph for the system topology.  Fails if the system
-         * has deleted atoms. */
-        pfx::Graph* topology() const;
     };
 
     typedef boost::shared_ptr<System> SystemPtr;

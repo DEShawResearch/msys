@@ -1007,16 +1007,3 @@ void GlobalCell::merge(GlobalCell const& gc) {
     if (!memcmp(oldvec,zero,sz)) memcpy(oldvec, newvec,sz);
 }
 
-pfx::Graph *System::topology() const {
-    if (maxAtomId() != atomCount()) {
-        MSYS_FAIL("System has deleted atoms, so graph would be incorrect.");
-    }
-    pfx::Graph* g = new pfx::Graph(atomCount());
-    for (Id i=0, n=maxAtomId(); i<n; i++) {
-        IdList atoms = bondedAtoms(i);
-        for (Id j=0, m=atoms.size(); j<m; j++) {
-            g->add_edge(i,atoms[j]);
-        }
-    }
-    return g;
-}

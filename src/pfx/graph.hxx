@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <algorithm>
+#include "../system.hxx"
 
 namespace desres { namespace msys { namespace pfx {
 
@@ -18,6 +19,8 @@ namespace desres { namespace msys { namespace pfx {
 
         explicit Graph(unsigned nverts)
         : g(nverts), edgecount(0) {}
+
+        Graph(SystemPtr mol);
 
         // number of vertices
         unsigned nverts() const { return g.size(); }
