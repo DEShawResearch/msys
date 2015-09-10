@@ -534,7 +534,8 @@ double Reader::get_flt(int col) const {
 const char * Reader::get_str(int col) const {
     if (_strict_types && type(col)!=StringType) 
         MSYS_FAIL("Type error reading string from column " << _cols[col].first << " in table " << _table);
-    return (const char *)sqlite3_column_text(_stmt.get(),col);
+    const char* ret = (const char *)sqlite3_column_text(_stmt.get(),col);
+    return ret ? ret : "";
 }
 
 Writer Sqlite::insert(std::string const& table) const {
