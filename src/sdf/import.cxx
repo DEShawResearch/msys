@@ -345,6 +345,8 @@ namespace {
                         }
                         val += buf;
                     }
+                } else if (buf[0]=='\n') {
+                    // allow blank line
                 } else {
                     MSYS_FAIL("Malformed data field line: " << skip_to_end());
                 }

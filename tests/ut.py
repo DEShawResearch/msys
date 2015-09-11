@@ -280,6 +280,16 @@ class TestAtomsel(unittest.TestCase):
                 self.assertEqual(old, new, "failed on '%s': oldlen %d newlen %d" % (sel, len(old), len(new)))
 
 class TestSdf(unittest.TestCase):
+    def testExtraLineSdfLoad(self):
+        path='tests/files/extra_line_m_end.sdf'
+        for x in msys.LoadMany(path):
+            self.assertFalse(x is None)
+
+    def testExtraLineSdfScan(self):
+        path='tests/files/extra_line_m_end.sdf'
+        for x in msys.ScanSDF(path):
+            self.assertFalse(x is None)
+
     def testFormalCharge(self):
         mol=msys.Load('tests/files/lig.sdf')
         self.assertEqual(mol.atom(12).formal_charge,1)
