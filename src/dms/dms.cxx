@@ -35,14 +35,21 @@ namespace desres { namespace msys {
         char * path;
 
         static void close(dms_file* dms) {
-            if (dms->contents) free(dms->contents);
-            if (dms->path)     free(dms->path);
+            if (dms->contents) {
+                free(dms->contents);
+                dms->contents = NULL;
+            }
+            if (dms->path) {
+                free(dms->path);
+                dms->path = NULL;
+            }
         }
     };
 }}
 
 namespace {
     int dms_xClose(sqlite3_file *file) {
+        dms_file::close(static_cast<dms_file*>(file));
         return SQLITE_OK;
     }
 
