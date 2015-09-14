@@ -1,3 +1,9 @@
+1.7.130 Support for alchemical ffio_morsebonds.
+        Handle NULL chains, segids, etc. in dms files.
+        Allow extra blank line after M END in ScanSDF.
+        C++: make pfx::Graph constructible directly from SystemPtr.
+        Fix a memory leak affecting all dms file reading (!).
+
 1.7.129 Support for ffio_morsebonds in mae files.
         More efficient term table indexing.
         Support for .gz files in ScanSDF.
