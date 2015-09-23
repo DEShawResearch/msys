@@ -10,11 +10,11 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys, unsigned flags)
     /* Assign valence, degree, hcount, lone_electrons, and preliminary
      * hybridization */
     int nrad=0;
-    BOOST_FOREACH(Id ai, sys->atoms()) {
+    for (Id ai : sys->atoms()) {
         int anum = sys->atomFAST(ai).atomic_number;
         if (anum < 1) continue;
         atom_data_t& a = _atoms[ai];
-        BOOST_FOREACH(Id bi, sys->bondsForAtom(ai)) {
+        for(Id bi : sys->bondsForAtom(ai)) {
             bond_t const& bnd = sys->bond(bi);
             Id aj = bnd.other(ai);
             int anum_j = sys->atom(aj).atomic_number;
@@ -25,6 +25,7 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys, unsigned flags)
             if (anum_j == 1) ++a.hcount;
             a.valence += bnd.order;
             a.degree += 1;
+            _bonds[bi].order = bnd.order;
         }
         int formal_charge = sys->atom(ai).formal_charge;
         int val = DataForElement(anum).nValence;
@@ -51,6 +52,8 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys, unsigned flags)
         }
         nrad+=electrons%2;
         a.lone_electrons=electrons;
+        a.formal_charge = formal_charge;
+        a.atomic_number = anum;
 
         if (anum == 1 || a.degree == 0){
             a.hybridization = 0;
@@ -78,7 +81,7 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys, unsigned flags)
     compute_aromaticity();
     /* If sp3 AND have lone electrons AND group={14,15,16} AND
      * (aromatic OR bonded to atom with double bonds): become sp2 */
-    BOOST_FOREACH(Id ai, sys->atoms()) {
+    for (Id ai : sys->atoms()) {
         atom_data_t& a = _atoms[ai];
         int group=GroupForElement(sys->atom(ai).atomic_number);
         bool validGroup=group>=14 && group<=16;
@@ -87,13 +90,13 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys, unsigned flags)
                 a.hybridization = 2;
                 continue;
             }
-            BOOST_FOREACH(Id aj, sys->bondedAtoms(ai)){
+            for (Id aj : sys->bondedAtoms(ai)){
                 if ( _atoms[aj].hybridization == 2){
                     a.hybridization = 2;
                     break;
                 }
                 if(a.degree==1 && _atoms[aj].hybridization == 3){
-                    BOOST_FOREACH(Id bi, _sys->bondsForAtom(aj)){
+                    for (Id bi : _sys->bondsForAtom(aj)){
                         bond_t const& bnd = sys->bond(bi);
                         if(bnd.order != 2) continue;
                         if(_atoms[bnd.other(aj)].degree==1){

@@ -23,6 +23,8 @@ namespace desres { namespace msys {
                 unsigned char lone_electrons;
                 unsigned char ring_bonds;
                 unsigned char hybridization;
+                unsigned char atomic_number = 0;
+                char formal_charge = 0;
                 IdList rings_idx;
 
                 atom_data_t() 
@@ -32,6 +34,7 @@ namespace desres { namespace msys {
             };
             struct bond_data_t {
                 bool aromatic;
+                unsigned char order = 0;
                 IdList rings_idx;
 
                 bond_data_t()
@@ -75,6 +78,14 @@ namespace desres { namespace msys {
             }
             SystemPtr system() const { return _sys; }
             std::vector<std::string> errors() const { return _errors; }
+            Id atomCount() const { return _atoms.size(); }
+            Id bondCount() const { return _bonds.size(); }
+            atom_data_t const& atomFAST(Id atom) const {
+                return _atoms[atom];
+            }
+            bond_data_t const& bondFAST(Id bond) const {
+                return _bonds[bond];
+            }
 
             /* Is atom aromatic */
             bool atomAromatic(Id atom) const {

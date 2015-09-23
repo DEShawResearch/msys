@@ -447,7 +447,7 @@ struct SMARTS_grammar : qi::grammar<Iterator, smarts_pattern_(), ascii::space_ty
 static
 bool match_element(Id atom, AnnotatedSystemPtr sys, const element_& elem) {
     if (elem.first != 0
-            && sys->system()->atom(atom).atomic_number != elem.first)
+            && sys->atomFAST(atom).atomic_number != elem.first)
         return false;
     if (elem.second == NONE)
         return true;
@@ -464,10 +464,10 @@ bool match_charge(Id atom, AnnotatedSystemPtr sys, const charge_& charge) {
             = boost::get<bf::vector2<char, unsigned> >(&charge)) {
         if (bf::at_c<0>(*tmp) == '+')
             return (int(bf::at_c<1>(*tmp))
-                    == sys->system()->atom(atom).formal_charge);
+                    == sys->atomFAST(atom).formal_charge);
         else if (bf::at_c<0>(*tmp) == '-')
             return (-int(bf::at_c<1>(*tmp))
-                    == sys->system()->atom(atom).formal_charge);
+                    == sys->atomFAST(atom).formal_charge);
         else
             MSYS_FAIL("SMARTS BUG; unrecognized charge");
     } else if (const std::vector<char>* tmp
@@ -477,11 +477,11 @@ bool match_charge(Id atom, AnnotatedSystemPtr sys, const charge_& charge) {
         if (tmp->at(0) == '+')
             /* Assume remaining characters are all '+' */
             return (int(tmp->size())
-                    == sys->system()->atom(atom).formal_charge);
+                    == sys->atomFAST(atom).formal_charge);
         else if (tmp->at(0) == '-')
             /* Assume remaining characters are all '-' */
             return (-int(tmp->size())
-                    == sys->system()->atom(atom).formal_charge);
+                    == sys->atomFAST(atom).formal_charge);
         else
             MSYS_FAIL("SMARTS BUG; unrecognized charge");
     } else
@@ -502,7 +502,7 @@ bool match_atom_spec(Id atom, AnnotatedSystemPtr sys, const atom_spec_&
     else if (const atomic_number_* anum = boost::get<atomic_number_>(&aspec))
         /* Atomic number */
         return (int(bf::at_c<1>(*anum))
-                == sys->system()->atom(atom).atomic_number);
+                == sys->atomFAST(atom).atomic_number);
     else if (const charge_* charge = boost::get<charge_>(&aspec))
         /* Charge */
         return match_charge(atom, sys, *charge);
@@ -610,7 +610,7 @@ bool match_raw_atom(Id atom, AnnotatedSystemPtr sys,
 static
 bool match_hydrogen_expression(Id atom, AnnotatedSystemPtr sys,
         const hydrogen_expression_& hexpr) {
-    if (sys->system()->atom(atom).atomic_number != 1)
+    if (sys->atomFAST(atom).atomic_number != 1)
         return false;
     if (!bf::at_c<1>(hexpr))
         return true;
@@ -638,13 +638,13 @@ bool match_bond_spec(Id bond, AnnotatedSystemPtr sys,
     bool reverse = (spec.size() % 2 == 1);
     switch (spec[spec.size()-1]) {
         case '~': return (reverse ^ false);
-        case '-': return (reverse ^ (sys->system()->bond(bond).order != 1
+        case '-': return (reverse ^ (sys->bondFAST(bond).order != 1
                               || sys->bondAromatic(bond)));
-        case '=': return (reverse ^ (sys->system()->bond(bond).order != 2
+        case '=': return (reverse ^ (sys->bondFAST(bond).order != 2
                               || sys->bondAromatic(bond)));
-        case '#': return (reverse ^ (sys->system()->bond(bond).order != 3
+        case '#': return (reverse ^ (sys->bondFAST(bond).order != 3
                               || sys->bondAromatic(bond)));
-        case '$': return (reverse ^ (sys->system()->bond(bond).order != 4
+        case '$': return (reverse ^ (sys->bondFAST(bond).order != 4
                               || sys->bondAromatic(bond)));
         case '@': return (reverse ^ (sys->bondRingCount(bond) == 0));
         case ':': return (reverse ^ (!sys->bondAromatic(bond)));
@@ -679,7 +679,7 @@ bool match_bond_expression(Id bond, AnnotatedSystemPtr sys,
             if (!match_or_bond_spec(bond, sys, expr->at(i)))
                 return false;
         return true;
-    } else if (sys->system()->bond(bond).order == 1
+    } else if (sys->bondFAST(bond).order == 1
             || sys->bondAromatic(bond))
         /* If bond is unspecified, match single and aromatic bonds */
         return true;
@@ -823,7 +823,7 @@ MultiIdList SmartsPattern::findMatches(AnnotatedSystemPtr sys,
 
     MultiIdList matches;
     BOOST_FOREACH(Id id, atoms) {
-        if (sys->system()->atom(id).atomic_number < 1)
+        if (sys->atomFAST(id).atomic_number < 1)
             continue;
         _impl->matchSmartsPattern(sys, id, matches);
     }
@@ -831,11 +831,10 @@ MultiIdList SmartsPattern::findMatches(AnnotatedSystemPtr sys,
 }
 
 bool SmartsPattern::match(AnnotatedSystemPtr sys) const {
-    SystemPtr mol = sys->system();
     MultiIdList matches;
-    for (System::iterator i=mol->atomBegin(), e=mol->atomEnd(); i!=e; ++i) {
-        if (mol->atomFAST(*i).atomic_number < 1) continue;
-        if (_impl->matchSmartsPattern(sys, *i, matches, true)) return true;
+    for (Id i=0, n=sys->atomCount(); i<n; i++) {
+        if (sys->atomFAST(i).atomic_number < 1) continue;
+        if (_impl->matchSmartsPattern(sys, i, matches, true)) return true;
     }
     return false;
 }
