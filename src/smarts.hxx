@@ -33,11 +33,11 @@ namespace desres { namespace msys {
         /* Find matches of the SMARTS pattern that start with the given
          * set of atoms; usually sys->system()->atoms(). Will give duplicate
          * matches for '*~*' in forward and reverse ordering, etc. */
-         MultiIdList findMatches(AnnotatedSystemPtr sys,
+         MultiIdList findMatches(AnnotatedSystem const& sys,
                  IdList const& starts) const;
 
          /* Return true if a match is found anywhere; false otherwise */
-         bool match(AnnotatedSystemPtr sys) const;
+         bool match(AnnotatedSystem const& sys) const;
     };
 
 }}

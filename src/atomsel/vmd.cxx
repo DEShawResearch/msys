@@ -155,7 +155,7 @@ namespace {
             Selection sub(s.size());
             IdList starts = sys->atoms();
             BOOST_FOREACH(SmartsPattern const& pat, pats) {
-                BOOST_FOREACH(IdList ids, pat.findMatches(sys, starts)) {
+                BOOST_FOREACH(IdList ids, pat.findMatches(*sys, starts)) {
                     BOOST_FOREACH(Id id, ids) {
                         sub[id]=1;
                     }

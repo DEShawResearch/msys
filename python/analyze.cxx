@@ -36,7 +36,7 @@ namespace {
         return L;
     }
 
-    list find_matches(SmartsPattern const& s, AnnotatedSystemPtr sys, 
+    list find_matches(SmartsPattern const& s, AnnotatedSystem const& sys, 
                                               IdList const& starts)
     {
         MultiIdList results = s.findMatches(sys, starts);
