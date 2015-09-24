@@ -86,7 +86,7 @@ typedef int mode_t;
 
 #include "dtrframe.hxx"
 #include <boost/shared_ptr.hpp>
-#include "ThreeRoe/ThreeRoe.hpp"
+#include <ThreeRoe/ThreeRoe.hpp>
 
 namespace desres { namespace molfile {
   
