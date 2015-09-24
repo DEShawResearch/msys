@@ -7,27 +7,49 @@
 desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys, unsigned flags)
 : _sys(sys), _atoms(sys->maxAtomId()), _bonds(sys->maxBondId()) {
 
-    /* Assign valence, degree, hcount, lone_electrons, and preliminary
-     * hybridization */
-    int nrad=0;
-    for (Id ai : sys->atoms()) {
-        int anum = sys->atomFAST(ai).atomic_number;
-        if (anum < 1) continue;
-        atom_data_t& a = _atoms[ai];
-        for(Id bi : sys->bondsForAtom(ai)) {
-            bond_t const& bnd = sys->bond(bi);
-            Id aj = bnd.other(ai);
-            int anum_j = sys->atom(aj).atomic_number;
-            if (anum_j < 1) continue;
-            if (bnd.order == 0)
-                MSYS_FAIL("Invalid bond order for bond "
-                        << bi << " atoms " << ai << "," << aj << " of system " << sys->name);
-            if (anum_j == 1) ++a.hcount;
-            a.valence += bnd.order;
-            a.degree += 1;
-            _bonds[bi].order = bnd.order;
+    for (Id b : sys->bonds()) {
+        bond_t const& bnd = sys->bondFAST(b);
+        Id i = bnd.i;
+        Id j = bnd.j;
+        int ni = sys->atomFAST(i).atomic_number;
+        int nj = sys->atomFAST(j).atomic_number;
+        if (ni<1 || nj<1) continue;
+        if (bnd.order<1) {
+            MSYS_FAIL("Invalid bond order for bond " << b << " atoms "
+                    << i << "," << j << " of system " << sys->name);
         }
-        int formal_charge = sys->atom(ai).formal_charge;
+        atom_data_t& ai = _atoms[i];
+        atom_data_t& aj = _atoms[j];
+        if (ai.degree==atom_data_t::MaxBonds) {
+            MSYS_FAIL("Too many bonds (" << atom_data_t::MaxBonds
+                    << ") for atom " << i << " of system " << sys->name);
+        }
+        if (aj.degree==atom_data_t::MaxBonds) {
+            MSYS_FAIL("Too many bonds (" << atom_data_t::MaxBonds
+                    << ") for atom " << j << " of system " << sys->name);
+        }
+        ai.valence += bnd.order;
+        aj.valence += bnd.order;
+        ai.bond[ai.degree++] = b;
+        aj.bond[aj.degree++] = b;
+        if (ni==1) aj.hcount++;
+        if (nj==1) ai.hcount++;
+
+        bond_data_t& bij = _bonds[b];
+        bij.i = i;
+        bij.j = j;
+        bij.order = bnd.order;
+    }
+
+    int nrad=0;
+    for (Id i : sys->atoms()) {
+        atom_t const& atm = sys->atomFAST(i);
+        int anum = atm.atomic_number;
+        if (anum<1) continue;
+
+        atom_data_t& a = _atoms[i];
+
+        int formal_charge = atm.formal_charge;
         int val = DataForElement(anum).nValence;
         int aval = DataForElement(anum).additionalValence;
         int electrons = val - a.valence - formal_charge;
@@ -35,44 +57,32 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys, unsigned flags)
             electrons = aval - a.valence - formal_charge;
         }
         if (electrons < 0) {
-            //fprintf(stderr, "Atom %s nval %d q %d val %d\n", 
-                    //AbbreviationForElement(anum), val, formal_charge,a.valence);
-            try {
-                MSYS_FAIL("Invalid formal charge or bond orders for atom "
-                    << AbbreviationForElement(anum) << " "
-                    << ai << " of system " << sys->name);
-            }
-            catch (std::exception &e) {
-                if (flags & AllowBadCharges) {
-                    _errors.push_back(e.what());
-                } else {
-                    throw;
-                }
-            }
+            std::stringstream ss;
+            ss << "Invalid formal charge or bond orders for atom "
+                << AbbreviationForElement(anum) << " "
+                << i << " of system " << sys->name;
+            if (flags & AllowBadCharges) {
+                _errors.push_back(ss.str());
+            } else MSYS_FAIL(ss.str());
         }
         nrad+=electrons%2;
         a.lone_electrons=electrons;
         a.formal_charge = formal_charge;
         a.atomic_number = anum;
 
-        if (anum == 1 || a.degree == 0){
+        if (anum==1 || a.degree==0) {
             a.hybridization = 0;
-        }else{
-            a.hybridization = std::max(1, a.degree + (a.lone_electrons+1)/2 - 1);
+        } else {
+            a.hybridization = std::max(1, a.degree+(a.lone_electrons+1)/2 - 1);
         }
     }
     if (nrad >1) {
-        try {
-            MSYS_FAIL("Invalid formal charge or bond orders ( "<<nrad <<
-                      " radical centers detected ) for system " << sys->name);
-        }
-        catch (std::exception& e) {
-            if (flags & AllowBadCharges) {
-                _errors.push_back(e.what());
-            } else {
-                throw;
-            }
-        }
+        std::stringstream ss;
+        ss << "Invalid formal charge or bond orders ( "<<nrad <<
+                      " radical centers detected ) for system " << sys->name;
+        if (flags & AllowBadCharges) {
+            _errors.push_back(ss.str());
+        } else MSYS_FAIL(ss.str());
     }
 
     /* Get rings and ring systems, assign ring_bonds and rings_idx */

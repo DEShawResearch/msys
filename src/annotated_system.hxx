@@ -16,30 +16,30 @@ namespace desres { namespace msys {
 
         private:
             struct atom_data_t {
-                bool aromatic;
-                unsigned char hcount;
-                unsigned char valence;
-                unsigned char degree;
-                unsigned char lone_electrons;
-                unsigned char ring_bonds;
-                unsigned char hybridization;
+                static const unsigned char MaxBonds = 6;
+
+                bool          aromatic = false;
+                unsigned char hcount = 0;
+                unsigned char valence = 0;
+                unsigned char degree = 0;
+                unsigned char lone_electrons = 0;
+                unsigned char ring_bonds = 0;
+                unsigned char hybridization = 0;
                 unsigned char atomic_number = 0;
                 char formal_charge = 0;
-                IdList rings_idx;
 
-                atom_data_t() 
-                : aromatic(), hcount(), valence(), degree(),
-                  lone_electrons(), ring_bonds(), hybridization()
-                {}
+                Id bond[MaxBonds];
+                IdList rings_idx;
             };
+
             struct bond_data_t {
-                bool aromatic;
+                Id i=BadId;
+                Id j=BadId;
+                bool aromatic = false;
                 unsigned char order = 0;
                 IdList rings_idx;
 
-                bond_data_t()
-                : aromatic()
-                {}
+                Id other(Id id) const { return id==i ? j : i; }
             };
             struct ring_t {
                 IdList atoms;
