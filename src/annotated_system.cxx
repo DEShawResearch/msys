@@ -4,8 +4,10 @@
 #include <queue>
 #include <assert.h>
 
-desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys, unsigned flags)
-: _sys(sys), _atoms(sys->maxAtomId()), _bonds(sys->maxBondId()) {
+using namespace desres::msys;
+
+AnnotatedSystem::AnnotatedSystem(SystemPtr sys, unsigned flags)
+: _atoms(sys->maxAtomId()), _bonds(sys->maxBondId()) {
 
     for (Id b : sys->bonds()) {
         bond_t const& bnd = sys->bondFAST(b);
@@ -86,9 +88,9 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys, unsigned flags)
     }
 
     /* Get rings and ring systems, assign ring_bonds and rings_idx */
-    compute_ring_systems();
+    compute_ring_systems(sys);
     /* Assign aromatic */
-    compute_aromaticity();
+    compute_aromaticity(sys);
     /* If sp3 AND have lone electrons AND group={14,15,16} AND
      * (aromatic OR bonded to atom with double bonds): become sp2 */
     for (Id ai : sys->atoms()) {
@@ -106,7 +108,7 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys, unsigned flags)
                     break;
                 }
                 if(a.degree==1 && _atoms[aj].hybridization == 3){
-                    for (Id bi : _sys->bondsForAtom(aj)){
+                    for (Id bi : sys->bondsForAtom(aj)){
                         bond_t const& bnd = sys->bond(bi);
                         if(bnd.order != 2) continue;
                         if(_atoms[bnd.other(aj)].degree==1){
@@ -121,7 +123,15 @@ desres::msys::AnnotatedSystem::AnnotatedSystem(SystemPtr sys, unsigned flags)
     }
 }
 
-void desres::msys::AnnotatedSystem::compute_ring_systems() {
+IdList AnnotatedSystem::atoms() const {
+    IdList ids;
+    for (Id i=0, n=_atoms.size(); i<n; i++) {
+        if (_atoms[i].atomic_number>0) ids.push_back(i);
+    }
+    return ids;
+}
+
+void AnnotatedSystem::compute_ring_systems(SystemPtr _sys) {
     MultiIdList SSSR = GetSSSR(_sys, _sys->atoms(), true);
     std::vector<IdSet> ring_bonds(_sys->maxAtomId());
     BOOST_FOREACH(const IdList& ring, SSSR) {
@@ -180,8 +190,7 @@ void desres::msys::AnnotatedSystem::compute_ring_systems() {
     }
 }
 
-bool desres::msys::AnnotatedSystem::is_aromatic(const IdList& atoms,
-        const IdList& bonds) {
+bool AnnotatedSystem::is_aromatic(SystemPtr _sys, const IdList& atoms, const IdList& bonds) {
 
     int electron_count = 0;
     BOOST_FOREACH(Id bond, bonds) {
@@ -219,20 +228,20 @@ bool desres::msys::AnnotatedSystem::is_aromatic(const IdList& atoms,
     return (electron_count % 4 == 2);
 }
 
-void desres::msys::AnnotatedSystem::compute_aromaticity() {
+void AnnotatedSystem::compute_aromaticity(SystemPtr _sys) {
     bool detected = true;
     /* Do while previous iteration marked a new aromatic atom or bond */
     while (detected) {
         std::vector<bool> ring_aromatic(_rings.size(), false);
         BOOST_FOREACH(const ring_system_t& ring_sys, _ring_systems) {
             /* Check if entire ring system is aromatic */
-            if (is_aromatic(ring_sys.atoms, ring_sys.bonds)) {
+            if (is_aromatic(_sys, ring_sys.atoms, ring_sys.bonds)) {
                 BOOST_FOREACH(Id ring, ring_sys.rings)
                     ring_aromatic[ring] = true;
             } else {
                 /* Check if individual rings are aromatic */
                 BOOST_FOREACH(Id ring, ring_sys.rings) {
-                    if (is_aromatic(_rings[ring].atoms, _rings[ring].bonds))
+                    if (is_aromatic(_sys, _rings[ring].atoms, _rings[ring].bonds))
                         ring_aromatic[ring] = true;
                 }
             }

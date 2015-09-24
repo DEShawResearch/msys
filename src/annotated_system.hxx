@@ -51,7 +51,6 @@ namespace desres { namespace msys {
                 IdList rings;
             };
 
-            SystemPtr _sys;
             std::vector<atom_data_t> _atoms;
             std::vector<bond_data_t> _bonds;
             std::vector<ring_t> _rings;
@@ -62,9 +61,9 @@ namespace desres { namespace msys {
             AnnotatedSystem(SystemPtr sys, unsigned flags);
 
             /* Helper functions for constructor */
-            void compute_ring_systems();
-            bool is_aromatic(const IdList& atoms, const IdList& bonds);
-            void compute_aromaticity();
+            void compute_ring_systems(SystemPtr sys);
+            bool is_aromatic(SystemPtr, const IdList& atms, const IdList& bnds);
+            void compute_aromaticity(SystemPtr);
 
         public:
             /* Create an annotated system. sys must have correct bond orders
@@ -76,8 +75,10 @@ namespace desres { namespace msys {
                 return boost::shared_ptr<AnnotatedSystem>(
                         new AnnotatedSystem(sys, flags));
             }
-            SystemPtr system() const { return _sys; }
             std::vector<std::string> errors() const { return _errors; }
+
+            // non-deleted, non-pseudo atom ids
+            IdList atoms() const;
             Id atomCount() const { return _atoms.size(); }
             Id bondCount() const { return _bonds.size(); }
             atom_data_t const& atomFAST(Id atom) const {

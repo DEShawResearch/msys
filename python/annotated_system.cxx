@@ -46,7 +46,6 @@ namespace desres { namespace msys {
             .def("__ne__", list_ne<AnnotatedSystemPtr>)
             .def("__hash__", obj_hash<AnnotatedSystemPtr>)
             .def("__init__", make_constructor(&AnnotatedSystem::create))
-            .def("system", &AnnotatedSystem::system)
             .def("atomAromatic", &AnnotatedSystem::atomAromatic)
             .def("atomHcount", &AnnotatedSystem::atomHcount)
             .def("atomDegree", &AnnotatedSystem::atomDegree)
