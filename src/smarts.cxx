@@ -839,19 +839,6 @@ bool SmartsPattern::match(AnnotatedSystemPtr sys) const {
     return false;
 }
 
-namespace {
-    /* Use this with filteredBondsPerAtom to obtain non-pseudo bonds for
-     * atoms */
-    struct filter_t {
-        filter_t(SystemPtr sys) : _sys(sys) { }
-        bool operator()(const bond_t& b) const {
-            return (_sys->atom(b.i).atomic_number > 0
-                    && _sys->atom(b.j).atomic_number > 0);
-        }
-        SystemPtr _sys;
-    };
-}
-
 bool SmartsPatternImpl::matchSmartsPattern(AnnotatedSystemPtr sys, Id atom,
         std::vector<IdList>& matches, bool match_single) const {
 
@@ -864,14 +851,12 @@ bool SmartsPatternImpl::matchSmartsPattern(AnnotatedSystemPtr sys, Id atom,
         return true;
     }
 
-    filter_t filter(sys->system());
-
-    if (sys->system()->filteredBondsForAtom(atom, filter).size() == 0)
+    if (sys->atomFAST(atom).degree == 0)
         return false;
 
     /* Two-way maps of currently matched atom expressions and atoms in system */
-    IdList smarts_to_sys(_atoms.size(), BadId);
-    IdList sys_to_smarts(sys->system()->maxAtomId(), BadId);
+    IdList smarts_to_sys(_atoms.size(),    BadId);
+    IdList sys_to_smarts(sys->atomCount(), BadId);
 
     /* Stack keeps track of the choice of system bond for each matched bond
      * expression. The next bond expression to match is
@@ -893,24 +878,21 @@ bool SmartsPatternImpl::matchSmartsPattern(AnnotatedSystemPtr sys, Id atom,
             MSYS_FAIL("VIPARR_BUG: Bond refers to unmatched atom");
         if (closure && aj == BadId)
             MSYS_FAIL("VIPARR_BUG: Closure bond refers to unmatched atom");
-        if (bond_choices.top() >= sys->system()->filteredBondsForAtom(ai,
-                    filter).size())
+        if (bond_choices.top() >= sys->atomFAST(ai).degree)
             MSYS_FAIL("SMARTS BUG: Bond choice exceeds number of bonds");
         /* Try matching to the system bond indicated by the top of the stack */
-        Id bond = sys->system()->filteredBondsForAtom(ai,
-                filter)[bond_choices.top()];
+        Id bond = sys->atomFAST(ai).bond[bond_choices.top()];
         if (!match_bond_expression(bond, sys, bond_tuple.get<1>())
-                || (closure && sys->system()->bond(bond).other(ai) != aj)
+                || (closure && sys->bondFAST(bond).other(ai) != aj)
                 || (!closure
-                    && (sys_to_smarts[sys->system()->bond(bond).other(ai)]
+                    && (sys_to_smarts[sys->bondFAST(bond).other(ai)]
                         != BadId || !match_atom(
-                            sys->system()->bond(bond).other(ai), sys,
+                            sys->bondFAST(bond).other(ai), sys,
                         _atoms[bond_tuple.get<2>()])))) {
             /* Bond does not match */
             Id top_atom = smarts_to_sys[_bonds[
                 bond_choices.size()-1].get<0>()];
-            while (bond_choices.top() == sys->system()->filteredBondsForAtom(
-                        top_atom, filter).size()-1) {
+            while (bond_choices.top() == sys->atomFAST(top_atom).degree-1) {
                 /* Have tried all possible system bonds for this atom; pop top
                  * bond choice off of the stack */
                 bond_choices.pop();
@@ -935,9 +917,8 @@ bool SmartsPatternImpl::matchSmartsPattern(AnnotatedSystemPtr sys, Id atom,
             /* Bond matches */
             if (!closure) {
                 /* If bond is not a closure bond, save the matched atom */
-                smarts_to_sys[bond_tuple.get<2>()] = sys->system()->bond(
-                        bond).other(ai);
-                sys_to_smarts[sys->system()->bond(bond).other(ai)]
+                smarts_to_sys[bond_tuple.get<2>()] = sys->bondFAST(bond).other(ai);
+                sys_to_smarts[sys->bondFAST(bond).other(ai)]
                     = bond_tuple.get<2>();
             }
             if (bond_choices.size() == _bonds.size()) {
@@ -949,13 +930,11 @@ bool SmartsPatternImpl::matchSmartsPattern(AnnotatedSystemPtr sys, Id atom,
                 if (!closure) {
                     /* If bond is not a closure bond, undo this last match */
                     smarts_to_sys[bond_tuple.get<2>()] = BadId;
-                    sys_to_smarts[sys->system()->bond(bond).other(ai)] = BadId;
+                    sys_to_smarts[sys->bondFAST(bond).other(ai)] = BadId;
                 }
                 Id top_atom = smarts_to_sys[_bonds[
                     bond_choices.size()-1].get<0>()];
-                while (bond_choices.top()
-                        == sys->system()->filteredBondsForAtom(top_atom,
-                            filter).size()-1) {
+                while (bond_choices.top() == sys->atomFAST(top_atom).degree-1) {
                     /* Have tried all possible system bonds for this atom; pop
                      * top bond choice off of the stack */
                     bond_choices.pop();
