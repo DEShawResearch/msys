@@ -2167,22 +2167,14 @@ class TestMain(unittest.TestCase):
                 
                 }.items():
 
-            mol=msys.Load(path)
-            msys.AssignBondOrderAndFormalCharge(mol)
-            amol=msys.AnnotatedSystem(mol)
-            systems=[]
-            rings=amol.rings(return_systems=systems)
-            self.assertEqual(sorted(systems), match_systems, (path,systems,rings))
 
-    def testAnnotatedSystem(self):
-        # Test rings
+            mol=msys.Load(path)
+            systems = msys.GetRingSystems(mol.atoms)
+            self.assertEqual(sorted(systems), match_systems)
+
+    def testSSSR(self):
         sys = msys.Load('tests/files/cubane.dms')
-        with self.assertRaises(RuntimeError):
-            annot_sys = msys.AnnotatedSystem(sys)
-        msys.AssignBondOrderAndFormalCharge(sys)
-        annot_sys = msys.AnnotatedSystem(sys)
-        assert(annot_sys.system == sys)
-        rings = annot_sys.rings()
+        rings = msys.GetSSSR(sys.atoms, True)
         self.assertTrue(len(rings) == 6)
         for ring in rings:
             self.assertTrue(len(ring) == 4)
@@ -2190,17 +2182,10 @@ class TestMain(unittest.TestCase):
                 if ring != ring2:
                     intersect = set([a.id for a in ring]) & set([a.id for a in ring2])
                     self.assertTrue(len(intersect) == 2 or len(intersect) == 0)
-        rings = annot_sys.rings(sys.atom(0))
-        self.assertTrue(len(rings) == 3)
-        self.assertTrue(sys.atom(0) in rings[0])
-        self.assertTrue(sys.atom(0) in rings[1])
-        self.assertTrue(sys.atom(0) in rings[1])
-        rings = annot_sys.rings(sys.bond(0))
-        self.assertTrue(len(rings) == 2)
-        self.assertTrue(sys.bond(0).atoms[0] in rings[0])
-        self.assertTrue(sys.bond(0).atoms[1] in rings[0])
-        self.assertTrue(sys.bond(0).atoms[0] in rings[1])
-        self.assertTrue(sys.bond(0).atoms[1] in rings[1])
+        r0 = [r for r in rings if sys.atom(0) in r]
+        self.assertTrue(len(r0) == 3)
+
+    def testAnnotatedSystem(self):
         # Test aromaticity and atom props
         sys = msys.CreateSystem()
         res = sys.addChain().addResidue()
@@ -2217,7 +2202,6 @@ class TestMain(unittest.TestCase):
             annot_sys = msys.AnnotatedSystem(sys)
         msys.AssignBondOrderAndFormalCharge(sys)
         annot_sys = msys.AnnotatedSystem(sys)
-        assert(annot_sys.system == sys)
         for i in range(6):
             self.assertTrue(annot_sys.aromatic(c[i]))
             self.assertTrue(annot_sys.aromatic(cc[i]))

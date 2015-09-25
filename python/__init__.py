@@ -1431,23 +1431,6 @@ class AnnotatedSystem(object):
             raise TypeError, \
                     "atom_or_bond must be of type msys.Atom or msys.Bond"
 
-    def rings(self, atom_or_bond=None, return_systems=None):
-        ''' All SSSR rings containing atom or bond. If atom/bond is not
-        specified, returns all SSSR rings in the system. '''
-        if atom_or_bond is None:
-            rings = self._ptr.rings()
-        elif type(atom_or_bond) == Atom:
-            rings = self._ptr.atomRings(atom_or_bond.id)
-        elif type(atom_or_bond) == Bond:
-            rings = self._ptr.bondRings(atom_or_bond.id)
-        else:
-            raise TypeError, \
-                    "atom_or_bond must be of type msys.Atom or msys.Bond"
-        if return_systems is not None:
-            systems = _msys.RingSystems(self._ptr.system(), rings)
-            return_systems[:] = [[x for x in y] for y in systems]
-        return [[Atom(self.system._ptr, i) for i in r] for r in rings]
-
     def hcount(self, atom):
         ''' Number of bonded hydrogens '''
         if type(atom) == Atom:
@@ -1859,6 +1842,13 @@ def GetSSSR(atoms, all_relevant=False):
     ptr, ids = _find_ids(atoms)
     rings = _msys.GetSSSR(ptr, ids, all_relevant)
     return [[Atom(ptr, id) for id in ring] for ring in rings]
+
+def GetRingSystems(atoms):
+    ''' Get ring systems for the given atoms '''
+    ptr, _ids = _find_ids(atoms)
+    rings = _msys.GetSSSR(ptr, _ids, True) 
+    systems = _msys.RingSystems(ptr, rings)
+    return [[x for x in y] for y in systems]
 
 def AssignSybylTypes(system):
     ''' Assign Sybyl atom and bond types to the given system.  
