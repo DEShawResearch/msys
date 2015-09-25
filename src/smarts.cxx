@@ -892,7 +892,7 @@ bool SmartsPatternImpl::matchSmartsPattern(AnnotatedSystem const& sys, Id atom,
             /* Bond does not match */
             Id top_atom = smarts_to_sys[_bonds[
                 bond_choices.size()-1].get<0>()];
-            while (bond_choices.top() == sys.atomFAST(top_atom).degree-1) {
+            while (int(bond_choices.top()) == sys.atomFAST(top_atom).degree-1) {
                 /* Have tried all possible system bonds for this atom; pop top
                  * bond choice off of the stack */
                 bond_choices.pop();
@@ -934,7 +934,7 @@ bool SmartsPatternImpl::matchSmartsPattern(AnnotatedSystem const& sys, Id atom,
                 }
                 Id top_atom = smarts_to_sys[_bonds[
                     bond_choices.size()-1].get<0>()];
-                while (bond_choices.top() == sys.atomFAST(top_atom).degree-1) {
+                while (int(bond_choices.top())==sys.atomFAST(top_atom).degree-1) {
                     /* Have tried all possible system bonds for this atom; pop
                      * top bond choice off of the stack */
                     bond_choices.pop();
