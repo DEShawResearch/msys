@@ -2,6 +2,7 @@
 #include "clone.hxx"
 #include "term_table.hxx"
 #include "schema.hxx"
+#include "inchi.hxx"
 
 #include <stdio.h>
 #include <stack>
@@ -1056,6 +1057,16 @@ namespace {
     }
 }
 
+void add_inchi_info(SystemPtr mol, std::vector<InChI> const& inchis,
+                    std::string attr) {
+    std::stringstream ss;
+    for (auto const& inchi : inchis) {
+        ss << inchi.string() << " ";
+    }
+    auto id = mol->ct(0).add(attr, StringType);
+    mol->ct(0).value(id).assign(ss.str());
+}
+
 SystemPtr desres::msys::MakeAlchemical( SystemPtr A, SystemPtr B,
                                         std::vector<IdPair> pairs,
                                         bool avoid_noops,
@@ -1122,6 +1133,9 @@ SystemPtr desres::msys::MakeAlchemical( SystemPtr A, SystemPtr B,
             }
         }
     }
+
+    add_inchi_info(A, InChI::analyze(A, InChI::DoNotAddH), "msys_alchemical_a");
+    add_inchi_info(A, InChI::analyze(B, InChI::DoNotAddH), "msys_alchemical_b");
 
     SystemImporter imp(A);
     imp.initialize(alist);

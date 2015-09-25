@@ -1,8 +1,8 @@
 #include "inchi.hxx"
 #include "clone.hxx"
 #include "elements.hxx"
+#include "analyze.hxx"
 #include <string.h>
-#include <boost/foreach.hpp>
 
 using namespace desres::msys;
 
@@ -16,6 +16,19 @@ String InChI::key() const {
 #else
 
 #include <inchi/inchi_api.h>
+
+std::vector<InChI> InChI::analyze(SystemPtr mol, unsigned options) {
+    MultiIdList fragments;
+    mol->updateFragids(&fragments);
+    IdList distinct = FindDistinctFragments(mol, fragments);
+    std::vector<InChI> result;
+    for (Id id : distinct) {
+        if (fragments[id].size()<1024) {
+            result.emplace_back(create(Clone(mol, fragments[id]), options));
+        }
+    }
+    return result;
+}
 
 InChI InChI::create(SystemPtr mol, unsigned options) {
 
@@ -44,7 +57,7 @@ InChI InChI::create(SystemPtr mol, unsigned options) {
         iatom.z = matom.z;
         iatom.num_bonds = mol->bondCountForAtom(i);
         Id j=0;
-        BOOST_FOREACH(Id b, mol->bondsForAtom(i)) {
+        for (Id b : mol->bondsForAtom(i)) {
             bond_t const& bond = mol->bond(b);
             iatom.neighbor[j] = bond.other(i);
             iatom.bond_type[j]= bond.order;

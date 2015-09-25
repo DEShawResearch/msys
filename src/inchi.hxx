@@ -33,6 +33,9 @@ namespace desres { namespace msys {
         /* create inchi */
         static InChI create(SystemPtr mol, unsigned options=0);
 
+        /* Return list of distinct inchis for the fragments in the system */
+        static std::vector<InChI> analyze(SystemPtr mol, unsigned options=0);
+
         String const& string() const { return _string; }
         String const& auxinfo() const { return _auxinfo; }
         String const& message() const { return _message; }
