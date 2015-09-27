@@ -13,6 +13,12 @@ InChI InChI::create(SystemPtr mol, unsigned options) {
 String InChI::key() const {
     MSYS_FAIL("No InChI support");
 }
+
+std::vector<InChI> InChI::analyze(SystemPtr mol, unsigned options) {
+    MSYS_FAIL("No InChI support");
+    return std::vector<InChI>();
+}
+
 #else
 
 #include <inchi/inchi_api.h>
