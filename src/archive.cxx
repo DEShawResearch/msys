@@ -47,6 +47,9 @@ SystemPtr desres::msys::LoadArchive(std::istream& in) {
 void desres::msys::ExportArchive(SystemPtr mol, std::string const& path) {
     std::ofstream out(path.c_str());
     SaveArchive(mol, out);
+    if (!out) {
+        MSYS_FAIL("Error writing archive to " << path << ": " << strerror(errno));
+    }
 }
 
 SystemPtr desres::msys::ImportArchive(std::string const& path) {
