@@ -2582,7 +2582,7 @@ int msys_dtrplugin_init() {
   // Make sure that the regular, clobbering dtr plugin is the one that gets 
   // returned by molfile.guess_filetype by initializing this string only
   // after the other plugins have been copied from the desmond template.
-  desmond.filename_extension = "dtr,dtr/,stk,atr,atr/";
+  desmond.filename_extension = "dtr,dtr/,stk,atr,atr/,etr,etr/";
 
   force_dtr.name="force_dtr";
   force_dtr.prettyname = "DESRES Force Trajectory";
