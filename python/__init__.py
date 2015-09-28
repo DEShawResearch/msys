@@ -1503,9 +1503,12 @@ class SmartsPattern(object):
         the given set of atoms. An AnnotatedSystem must be used here, which can
         be constructed from a System after calling
         AssignBondOrderAndFormalCharge. '''
+        ptr = annotated_system._ptr
         if atoms is None:
-            atoms = annotated_system.system.atoms
-        return self._pat.findMatches(annotated_system._ptr, _find_ids(atoms)[1])
+            atoms = ptr.atoms()
+        else:
+            atoms = _find_ids(atoms)[1]
+        return self._pat.findMatches(ptr, atoms)
 
     def match(self, annotated_system):
         ''' Return True if a match is found anywhere; False otherwise.
