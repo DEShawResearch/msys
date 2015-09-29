@@ -144,18 +144,18 @@ Keyword* VMD::find_single(const char* id) {
 
 namespace {
     class SmartsPredicate : public StringPredicate {
-        AnnotatedSystemPtr sys;
+        AnnotatedSystem sys;
         std::vector<SmartsPattern> pats;
     public:
-        SmartsPredicate(SystemPtr sys) : sys(AnnotatedSystem::create(sys)) {}
+        SmartsPredicate(SystemPtr sys) : sys(sys) {}
         void add(std::string const& s) {
             pats.push_back(SmartsPattern(s));
         }
         void eval(Selection& s) {
             Selection sub(s.size());
-            IdList starts = sys->atoms();
+            IdList starts = sys.atoms();
             BOOST_FOREACH(SmartsPattern const& pat, pats) {
-                BOOST_FOREACH(IdList ids, pat.findMatches(*sys, starts)) {
+                BOOST_FOREACH(IdList ids, pat.findMatches(sys, starts)) {
                     BOOST_FOREACH(Id id, ids) {
                         sub[id]=1;
                     }

@@ -41,11 +41,7 @@ namespace desres { namespace msys {
             .value("AllowBadCharges",   AnnotatedSystem::AllowBadCharges)
             ;
 
-        class_<AnnotatedSystem, AnnotatedSystemPtr>("AnnotatedSystemPtr", no_init)
-            .def("__eq__", list_eq<AnnotatedSystemPtr>)
-            .def("__ne__", list_ne<AnnotatedSystemPtr>)
-            .def("__hash__", obj_hash<AnnotatedSystemPtr>)
-            .def("__init__", make_constructor(&AnnotatedSystem::create))
+        class_<AnnotatedSystem, boost::noncopyable>("AnnotatedSystem", init<SystemPtr, unsigned>())
             .def("atoms", &AnnotatedSystem::atoms)
             .def("atomAromatic", &AnnotatedSystem::atomAromatic)
             .def("atomHcount", &AnnotatedSystem::atomHcount)

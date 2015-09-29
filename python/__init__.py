@@ -1398,15 +1398,7 @@ class AnnotatedSystem(object):
         flags = _msys.AnnotatedSystemFlags.Default
         if allow_bad_charges:
             flags |= _msys.AnnotatedSystemFlags.AllowBadCharges
-        self._ptr = _msys.AnnotatedSystemPtr(sys._ptr, flags)
-
-    def __eq__(self, x): 
-        return self.__class__==type(x) and self._ptr==x._ptr
-
-    def __ne__(self, x): 
-        return self.__class__!=type(x) or self._ptr!=x._ptr
-
-    def __hash__(self): return self._ptr.__hash__()
+        self._ptr = _msys.AnnotatedSystem(sys._ptr, flags)
 
     def __repr__(self): return "<AnnotatedSystem '%s'>" % self.system.name
 
@@ -1415,11 +1407,6 @@ class AnnotatedSystem(object):
         ''' List of errors found during system analysis if 
         allow_bad_charges=True '''
         return self._ptr.errors()
-
-    @property
-    def system(self):
-        ''' Contained System object '''
-        return System(self._ptr.system())
 
     def aromatic(self, atom_or_bond):
         ''' Is atom or bond aromatic '''

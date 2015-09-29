@@ -6,8 +6,7 @@
 
 namespace desres { namespace msys {
 
-    class AnnotatedSystem :
-        public boost::enable_shared_from_this<AnnotatedSystem> {
+    class AnnotatedSystem {
 
         public:
         enum Flags { Default            = 0 
@@ -58,8 +57,6 @@ namespace desres { namespace msys {
 
             std::vector<String> _errors;
 
-            AnnotatedSystem(SystemPtr sys, unsigned flags);
-
             /* Helper functions for constructor */
             void compute_ring_systems(SystemPtr sys);
             bool is_aromatic(SystemPtr, const IdList& atms, const IdList& bnds);
@@ -69,12 +66,12 @@ namespace desres { namespace msys {
             /* Create an annotated system. sys must have correct bond orders
              * and formal charges (assigned using AssignBondOrderAndFormalCharge
              * or otherwise) */
-            static boost::shared_ptr<AnnotatedSystem> create(
-                    SystemPtr sys,
-                    unsigned flags = Default) {
-                return boost::shared_ptr<AnnotatedSystem>(
-                        new AnnotatedSystem(sys, flags));
-            }
+            AnnotatedSystem(SystemPtr sys, unsigned flags = Default);
+
+            /* make non-copyable */
+            AnnotatedSystem(AnnotatedSystem const&) = delete;
+            AnnotatedSystem& operator=(AnnotatedSystem const&) = delete;
+
             std::vector<std::string> errors() const { return _errors; }
 
             // non-deleted, non-pseudo atom ids
@@ -151,7 +148,6 @@ namespace desres { namespace msys {
                     rings.push_back(ring.atoms);
             }
     };
-    typedef boost::shared_ptr<AnnotatedSystem> AnnotatedSystemPtr;
 }}
 
 #endif

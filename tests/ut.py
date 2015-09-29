@@ -2242,6 +2242,21 @@ class TestMain(unittest.TestCase):
             self.assertTrue(not annot_sys.aromatic(c[i]))
             self.assertTrue(not annot_sys.aromatic(cc[i]))
 
+    def testHashAnnotatedSystem(self):
+        m1 = msys.CreateSystem()
+        m1.addAtom().atomic_number=6
+        a1 = msys.AnnotatedSystem(m1)
+
+        m2 = msys.CreateSystem()
+        m2.addAtom().atomic_number=6
+        a2 = msys.AnnotatedSystem(m2)
+        self.assertTrue(a1==a1)
+        self.assertTrue(a2==a2)
+        self.assertTrue(a2!=a1)
+        self.assertTrue(a1!=a2)
+        self.assertTrue(hash(a1)!=hash(a2))
+        self.assertTrue(len(set((a1,a2)))==2)
+
     def testSmartsPattern(self):
         import ast
         d=os.path.dirname(__file__)
