@@ -69,6 +69,7 @@ namespace desres { namespace msys {
         /* make non-copyable */
         AnnotatedSystem(AnnotatedSystem const&) = delete;
         AnnotatedSystem& operator=(AnnotatedSystem const&) = delete;
+        ~AnnotatedSystem() = default;
 
         std::vector<std::string> errors() const { return _errors; }
 
