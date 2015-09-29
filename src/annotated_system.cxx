@@ -2,7 +2,6 @@
 #include "elements.hxx"
 #include "sssr.hxx"
 #include <queue>
-#include <assert.h>
 
 using namespace desres::msys;
 
@@ -134,16 +133,14 @@ IdList AnnotatedSystem::atoms() const {
 void AnnotatedSystem::compute_ring_systems(SystemPtr _sys) {
     MultiIdList SSSR = GetSSSR(_sys, _sys->atoms(), true);
     std::vector<IdSet> ring_bonds(_sys->maxAtomId());
-    BOOST_FOREACH(const IdList& ring, SSSR) {
+    for (const IdList& ring : SSSR) {
         _rings.push_back(ring_t());
         _rings.back().atoms = ring;
         for (unsigned i = 0; i < ring.size(); ++i) {
-            assert(ring[i] < _atoms.size());
-            _atoms[ring[i]].rings_idx.push_back(_rings.size()-1);
+            _atoms.at(ring[i]).rings_idx.push_back(_rings.size()-1);
             Id bond = _sys->findBond(ring[i], ring[(i+1)%ring.size()]);
             _rings.back().bonds.push_back(bond);
-            assert(bond < _bonds.size());
-            _bonds[bond].rings_idx.push_back(_rings.size()-1);
+            _bonds.at(bond).rings_idx.push_back(_rings.size()-1);
             ring_bonds[ring[i]].insert(bond);
             ring_bonds[ring[(i+1)%ring.size()]].insert(bond);
         }
@@ -158,7 +155,7 @@ void AnnotatedSystem::compute_ring_systems(SystemPtr _sys) {
         bool possibly_aromatic = true;
         /* All atoms in aromatic ring must be potentially sp2 (meaning sp2 or
          * sp3 with free electrons) */
-        BOOST_FOREACH(Id atom, SSSR[i]) {
+        for (Id atom : SSSR[i]) {
             if (! ( ( _atoms[atom].hybridization == 3 && _atoms[atom].lone_electrons > 1) ||
                     _atoms[atom].hybridization == 2))
                 possibly_aromatic = false;
@@ -170,11 +167,11 @@ void AnnotatedSystem::compute_ring_systems(SystemPtr _sys) {
     }
 
     MultiIdList ring_systems = RingSystems(_sys, SSSR_possibly_aromatic);
-    BOOST_FOREACH(const IdList& ring_sys, ring_systems) {
+    for (const IdList& ring_sys : ring_systems) {
         std::set<Id> atom_set;
         std::set<Id> bond_set;
         std::set<Id> ring_set;
-        BOOST_FOREACH(Id rid, ring_sys) {
+        for (Id rid : ring_sys) {
             const IdList& ring = SSSR_possibly_aromatic[rid];
             for (unsigned i = 0; i < ring.size(); ++i) {
                 atom_set.insert(ring[i]);
@@ -193,16 +190,16 @@ void AnnotatedSystem::compute_ring_systems(SystemPtr _sys) {
 bool AnnotatedSystem::is_aromatic(SystemPtr _sys, const IdList& atoms, const IdList& bonds) {
 
     int electron_count = 0;
-    BOOST_FOREACH(Id bond, bonds) {
+    for (Id bond : bonds) {
         /* Internal double bond, add 2 to electron count */
         if (_sys->bond(bond).order == 2)
             electron_count += 2;
     }
     std::set<Id> atom_set(atoms.begin(), atoms.end());
-    BOOST_FOREACH(Id atom, atoms) {
+    for (Id atom : atoms) {
         IdList bondedAtoms = _sys->bondedAtoms(atom);
         bool has_double = false;
-        BOOST_FOREACH(Id bonded, bondedAtoms) {
+        for (Id bonded : bondedAtoms) {
             int bondedAtomicNumber=_sys->atom(bonded).atomic_number;
             if (bondedAtomicNumber < 1) continue;
             Id bond = _sys->findBond(atom, bonded);
@@ -233,14 +230,14 @@ void AnnotatedSystem::compute_aromaticity(SystemPtr _sys) {
     /* Do while previous iteration marked a new aromatic atom or bond */
     while (detected) {
         std::vector<bool> ring_aromatic(_rings.size(), false);
-        BOOST_FOREACH(const ring_system_t& ring_sys, _ring_systems) {
+        for (const ring_system_t& ring_sys : _ring_systems) {
             /* Check if entire ring system is aromatic */
             if (is_aromatic(_sys, ring_sys.atoms, ring_sys.bonds)) {
-                BOOST_FOREACH(Id ring, ring_sys.rings)
+                for (Id ring : ring_sys.rings)
                     ring_aromatic[ring] = true;
             } else {
                 /* Check if individual rings are aromatic */
-                BOOST_FOREACH(Id ring, ring_sys.rings) {
+                for (Id ring : ring_sys.rings) {
                     if (is_aromatic(_sys, _rings[ring].atoms, _rings[ring].bonds))
                         ring_aromatic[ring] = true;
                 }
@@ -250,11 +247,11 @@ void AnnotatedSystem::compute_aromaticity(SystemPtr _sys) {
         for (unsigned i = 0; i < _rings.size(); ++i) {
             if (ring_aromatic[i]) {
                 /* Set aromaticity for atoms/bonds of this ring */
-                BOOST_FOREACH(Id atom, _rings[i].atoms) {
+                for (Id atom : _rings[i].atoms) {
                     detected |= (!_atoms[atom].aromatic);
                     _atoms[atom].aromatic = true;
                 }
-                BOOST_FOREACH(Id bond, _rings[i].bonds) {
+                for (Id bond : _rings[i].bonds) {
                     detected |= (!_bonds[bond].aromatic);
                     _bonds[bond].aromatic = true;
                 }
