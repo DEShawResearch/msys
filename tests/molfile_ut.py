@@ -329,20 +329,23 @@ class TestStk(unittest.TestCase):
         self.assertEqual(r.nframes, 1)
         self.assertEqual(r.natoms, 10)
         self.assertEqual(r.has_velocities, False)
-        self.assertEqual(r.frame(0).vel, None)
+        self.assertTrue(r.frame(0).vel is None)
 
         #print "----- second read of junk.stk ------"
         r=molfile.dtr.read('junk.stk')
         self.assertEqual(r.nframes, 1)
         self.assertEqual(r.natoms, 10)
         self.assertEqual(r.has_velocities, False)
-        self.assertEqual(r.frame(0).vel, None)
+        self.assertTrue(r.frame(0).vel is None)
 
         #print "----- modify junk.stk ------"
 
         m=molfile.dtr.write('2.dtr', natoms=20)
-        m.frame(molfile.Frame(20, True))
-        m.frame(molfile.Frame(20, True))
+        f = molfile.Frame(20, True)
+        f.time=0
+        m.frame(f)
+        f.time=1
+        m.frame(f)
         m.close()
         with file('junk.stk', 'w') as f:
             print >> f, '2.dtr'
@@ -352,12 +355,15 @@ class TestStk(unittest.TestCase):
         self.assertEqual(r.nframes, 2)
         self.assertEqual(r.natoms, 20)
         self.assertEqual(r.has_velocities, True)
-        self.assertNotEqual(r.frame(0).vel, None)
+        self.assertTrue(r.frame(0).vel is not None)
 
         ## remove the velocities again
         m=molfile.dtr.write('3.dtr', natoms=20)
-        m.frame(molfile.Frame(20, False))
-        m.frame(molfile.Frame(20, False))
+        f = molfile.Frame(20, False)
+        f.time=0
+        m.frame(f)
+        f.time=1
+        m.frame(f)
         m.close()
         with file('junk.stk', 'w') as f:
             print >> f, '3.dtr'
@@ -365,7 +371,7 @@ class TestStk(unittest.TestCase):
         self.assertEqual(r.nframes, 2)
         self.assertEqual(r.natoms, 20)
         self.assertEqual(r.has_velocities, False)
-        self.assertEqual(r.frame(0).vel, None)
+        self.assertTrue(r.frame(0).vel is None)
 
 
     def tearDown(self):
