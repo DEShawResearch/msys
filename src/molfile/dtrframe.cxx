@@ -298,6 +298,9 @@ desres::molfile::dtr::ParseFrame(size_t sz, const void* data, bool *swap) {
     return map;
 }
 
+const char* Key::type_name(int type) {
+    return typenames[type];
+}
 
 std::string Key::toString() const {
     const char* buf = reinterpret_cast<const char *>(data);

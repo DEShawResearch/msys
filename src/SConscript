@@ -220,4 +220,9 @@ env.AddStagedHeaders(Glob('fastjson/*.hxx'), prefix='msys/fastjson')
 env.AddStagedHeaders(Glob('pfx/*.hxx'), prefix='msys/pfx')
 env.AddStagedHeaders(Glob('molfile/*.h*'), prefix='msys/molfile')
 
+prgenv=env.Clone()
+prgenv.Append(LIBS=['msys'])
+prgenv.AddProgram('fstime', 'molfile/fstime.cxx')
+prgenv.AddProgram('fsdump', 'molfile/fsdump.cxx')
+
 Export("libmsys")

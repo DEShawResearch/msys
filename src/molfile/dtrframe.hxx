@@ -50,6 +50,8 @@ namespace desres { namespace molfile { namespace dtr {
         void set(const double* buf, uint64_t n);
 
         uint32_t get_element_size();
+
+        static const char* type_name(int type);
     };
 
     typedef std::map<std::string, Key> KeyMap;
