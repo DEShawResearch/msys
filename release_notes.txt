@@ -1,3 +1,11 @@
+1.7.131 Added near-workalike fstime and fsdump.
+        Added DtrReader.keyvals().
+        C++: AnnotatedSystem no longer holds a SystemPtr, and is itself not
+        a shared_ptr.  
+        Made smarts matching around 3x faster.
+        Better error checking on archive file writing.
+        Added etr as valid extension type for dtr.
+
 1.7.130 Support for alchemical ffio_morsebonds.
         Handle NULL chains, segids, etc. in dms files.
         Allow extra blank line after M END in ScanSDF.
