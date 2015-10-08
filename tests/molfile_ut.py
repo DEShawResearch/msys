@@ -794,6 +794,32 @@ class TestFrameCornerCases(unittest.TestCase):
         with self.assertRaises(TypeError):
             pdb.at_time_near('foobar')
 
+    def testKeyvals(self):
+        dtr=molfile.DtrReader('tests/files/force_groups.dtr')
+        for i in range(dtr.nframes):
+            kv = dtr.keyvals(i)
+            self.assertEqual(len(kv.keys()), 45)
+            want=[170, 169, 2678, 170, 169, 2687, 173, 169, 2678, 173, 169, 2687, 168, 169, 2687, 169, 2687, 2688, 169, 2687, 2689, 1110, 1111, 2679, 2688, 2687, 2689, 168, 169, 2678, 1110, 1111, 1112]
+            self.assertEqual(
+                    kv['gid__alchemical_angle_harm'].tolist(),
+                    want)
+
+    def testKeyvals2(self):
+        dtr=molfile.DtrReader('tests/files/ch4.dtr')
+        for i in range(dtr.nframes):
+            k1 = dtr.keyvals(i)
+            k2 = dict()
+            dtr.frame(i, keyvals=k2)
+            self.assertEqual(k1.keys(),k2.keys())
+            for k in k1:
+                v1 = k1[k]
+                v2 = k2[k]
+                if not isinstance(v1,str):
+                    v1 = v1.tolist()
+                    v2 = v2.tolist()
+                self.assertEqual(v1,v2)
+
+
 class TestFrame2(unittest.TestCase):
   def testFrames(self):
     h=molfile.pdb.read('tests/files/h2o.pdb')

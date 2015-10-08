@@ -402,6 +402,68 @@ namespace {
                 first, last+1, filesize, dtrpath.c_str(), dtrsize );
     }
 
+    void py_keyvals(dtr::KeyMap const& keymap, PyObject *dict) {
+        for (auto it=keymap.begin(), e=keymap.end(); it!=e; ++it) {
+            dtr::Key const& val = it->second;
+            npy_intp dims = val.count;
+            PyObject* arr = NULL;
+            switch (val.type) {
+                case dtr::Key::TYPE_INT32:
+                    arr = PyArray_SimpleNew(1, &dims, NPY_INT32);
+                    val.get((int32_t*)PyArray_DATA(arr)); 
+                    break;
+                case dtr::Key::TYPE_UINT32:
+                    arr = PyArray_SimpleNew(1, &dims, NPY_UINT32);
+                    val.get((uint32_t*)PyArray_DATA(arr)); 
+                    break;
+                case dtr::Key::TYPE_INT64:
+                    arr = PyArray_SimpleNew(1, &dims, NPY_INT64);
+                    val.get((int64_t*)PyArray_DATA(arr)); 
+                    break;
+                case dtr::Key::TYPE_UINT64:
+                    arr = PyArray_SimpleNew(1, &dims, NPY_UINT64);
+                    val.get((uint64_t*)PyArray_DATA(arr)); 
+                    break;
+                case dtr::Key::TYPE_FLOAT32:
+                    arr = PyArray_SimpleNew(1, &dims, NPY_FLOAT32);
+                    val.get((float*)PyArray_DATA(arr)); 
+                    break;
+                case dtr::Key::TYPE_FLOAT64:
+                    arr = PyArray_SimpleNew(1, &dims, NPY_FLOAT64);
+                    val.get((double*)PyArray_DATA(arr)); 
+                    break;
+                case dtr::Key::TYPE_CHAR:
+                case dtr::Key::TYPE_UCHAR:
+                    arr = PyString_FromString(val.toString().c_str());
+                    break;
+                default:;
+            }
+            if (!arr) continue;
+            char* key = const_cast<char*>(it->first.c_str());
+            int rc = PyMapping_SetItemString(dict, key, arr);
+            Py_DECREF(arr);
+            if (rc==-1) throw_error_already_set();
+        }
+    }
+
+    const char* keyvals_doc =
+        "keyvals(index) -> dict()\n"
+        "Read raw fields from frame.\n";
+
+    dict wrap_keyvals(FrameSetReader& self, Py_ssize_t index) {
+       const DtrReader *comp = self.component(index);
+        if (!comp) {
+            PyErr_SetString(PyExc_IndexError, "index out of bounds");
+            throw error_already_set();
+        }
+        void* keybuf = NULL;
+        dtr::KeyMap keymap = comp->frame(index, NULL, &keybuf);
+        boost::shared_ptr<void> dtor(keybuf, free);
+        dict d;
+        py_keyvals(keymap, d.ptr());
+        return d;
+    }
+
     const char * frame_doc = 
         "frame(index, bytes=None, with_gids=False, keyvals=None) -> Frame\n"
         "Read bytes from disk if bytes are not provided\n"
@@ -458,47 +520,8 @@ namespace {
                 throw_error_already_set();
             }
         }
-        for (dtr::KeyMap::const_iterator it=keymap.begin(), e=keymap.end(); it!=e; ++it) {
-            dtr::Key const& val = it->second;
-            npy_intp dims = val.count;
-            PyObject* arr = NULL;
-            switch (val.type) {
-                case dtr::Key::TYPE_INT32:
-                    arr = PyArray_SimpleNew(1, &dims, NPY_INT32);
-                    val.get((int32_t*)PyArray_DATA(arr)); 
-                    break;
-                case dtr::Key::TYPE_UINT32:
-                    arr = PyArray_SimpleNew(1, &dims, NPY_UINT32);
-                    val.get((uint32_t*)PyArray_DATA(arr)); 
-                    break;
-                case dtr::Key::TYPE_INT64:
-                    arr = PyArray_SimpleNew(1, &dims, NPY_INT64);
-                    val.get((int64_t*)PyArray_DATA(arr)); 
-                    break;
-                case dtr::Key::TYPE_UINT64:
-                    arr = PyArray_SimpleNew(1, &dims, NPY_UINT64);
-                    val.get((uint64_t*)PyArray_DATA(arr)); 
-                    break;
-                case dtr::Key::TYPE_FLOAT32:
-                    arr = PyArray_SimpleNew(1, &dims, NPY_FLOAT32);
-                    val.get((float*)PyArray_DATA(arr)); 
-                    break;
-                case dtr::Key::TYPE_FLOAT64:
-                    arr = PyArray_SimpleNew(1, &dims, NPY_FLOAT64);
-                    val.get((double*)PyArray_DATA(arr)); 
-                    break;
-                case dtr::Key::TYPE_CHAR:
-                case dtr::Key::TYPE_UCHAR:
-                    arr = PyString_FromString(val.toString().c_str());
-                    break;
-                default:;
-            }
-            if (!arr) continue;
-            char* key = const_cast<char*>(it->first.c_str());
-            int rc = PyMapping_SetItemString(keyvals.ptr(), key, arr);
-            Py_DECREF(arr);
-            if (rc==-1) throw_error_already_set();
-        }
+        py_keyvals(keymap, keyvals.ptr());
+
         return object(frame);
     }
 
@@ -634,6 +657,7 @@ void desres::molfile::export_dtrreader() {
                 ,arg("bytes")=object()
                 ,arg("with_gids")=false
                 ,arg("keyvals")=object()))
+        .def("keyvals", wrap_keyvals, keyvals_doc)
         .def("reload", reload, reload_doc)
         .def("times", get_times)
         ;
