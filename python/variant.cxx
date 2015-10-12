@@ -17,19 +17,22 @@ namespace {
     }
 
     class get_visitor : public boost::static_visitor<> {
-        object& o;
+        PyObject **o;
     public:
-        explicit get_visitor(object& o) : o(o) {}
-        void operator()(Int& i) const { o=object(i); }
-        void operator()(Float& i) const { o=object(i); }
-        void operator()(String& i) const { o=object(i); }
+        explicit get_visitor(PyObject** o) : o(o) {}
+        void operator()(Int& i) const { *o = PyInt_FromLong(i); }
+        void operator()(Float& i) const { *o = PyFloat_FromDouble(i); }
+        void operator()(String& i) const { *o = PyString_FromString(i.data()); }
     };
 
-    object propmap_get(VariantMap& p, std::string const& key) {
+    PyObject* propmap_get(VariantMap& p, std::string const& key) {
         VariantMap::iterator i=p.find(key);
-        if (i==p.end()) return object();
-        object o;
-        boost::apply_visitor(get_visitor(o), i->second);
+        if (i==p.end()) {
+            Py_INCREF(Py_None);
+            return Py_None;
+        }
+        PyObject* o = NULL;
+        boost::apply_visitor(get_visitor(&o), i->second);
         return o;
     }
 
