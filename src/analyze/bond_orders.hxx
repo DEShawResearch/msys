@@ -8,7 +8,7 @@
 
 /* forward declare so we dont pollute the rest of our code with lpsolves excessive #defines */
 namespace lpsolve{
-    class _lprec;
+    struct _lprec;
 }
 
 namespace desres { namespace msys {

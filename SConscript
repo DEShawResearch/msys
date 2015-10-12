@@ -19,14 +19,13 @@ for lib in 'molfile', 'python2.7':
 
 env.Append(
         # SSE2 for src/within.hxx.  It's optional, but way way slower without.
-        CCFLAGS='-O2 -g -Wall -msse2',
-        CXXFLAGS='-std=c++11 -Werror',
+        CCFLAGS='-O2 -g -msse2',
+        CFLAGS='-Wall',
+        CXXFLAGS='-std=c++11 -Wall -Wno-unused-local-typedefs -Werror',
         LINKFLAGS='-g'
         )
 
-if env['PLATFORM']!='darwin':
-    env.Append(CXXFLAGS='-Wno-unused-local-typedefs')
-else:
+if env['PLATFORM']=='darwin':
     env.Append(CXXFLAGS='-ftemplate-depth=500')
 
 env.SConsignFile('%s/.sconsign' % (env['OBJDIR'].strip('#')))
