@@ -31,7 +31,7 @@ namespace desres { namespace msys {
     typedef boost::shared_ptr<ComponentAssigner> ComponentAssignerPtr;
 
 
-    class BondOrderAssigner : public boost::noncopyable {
+    class BondOrderAssigner {
         friend class ComponentAssigner;
 
 #define GETSETREBUILDVAR(vtype, name)                                   \
@@ -78,27 +78,8 @@ namespace desres { namespace msys {
 
 #undef GETSETREBUILDVAR
     public:
-        BondOrderAssigner(){
-            _needRebuild=true; 
-            _valid=false;
-            atom_lone_pair_scale=0.95;
-            atom_plus_charge_penalty=0.25;
-            atom_minus_charge_penalty=0.25;
-            atom_plus_charge_scale=2.00;
-            atom_minus_charge_scale=1.20;
-            hypervalent_penalty=2.75;
-            component_plus_charge_penalty=0.25;
-            component_minus_charge_penalty=0.25;
-            multi_bond_scale=0.9;
-            aromatic_ring_penalty=0.30;
-            absmax_atom_charge=2;
-            max_component_charge=6; 
-            _filter=NULL;
-        };
-        ~BondOrderAssigner(){ delete _filter;};
-
-        static boost::shared_ptr<BondOrderAssigner> create(SystemPtr sys, 
-                                                           IdList const& fragments);
+        BondOrderAssigner(SystemPtr sys, IdList const& fragment);
+        ~BondOrderAssigner();
 
         bool allow_hextet_for_atom(Id aid1);
         void reset();
@@ -114,10 +95,10 @@ namespace desres { namespace msys {
         bool solveIntegerLinearProgram();
         void assignSolutionToAtoms();
 
-        int getTotalValence(){return _totalValence;}
+        int getTotalValence() const { return _totalValence; }
         double getSolvedObjective();
 
-    protected:
+    private:
         int max_free_pairs(const Id aid);
         int max_bond_order(const Id aid0, const Id aid1);
       
@@ -150,17 +131,19 @@ namespace desres { namespace msys {
         std::map<Id, int> _fixed_component_charges;
 
     };
-    typedef boost::shared_ptr<BondOrderAssigner> BondOrderAssignerPtr;
-    typedef boost::weak_ptr<BondOrderAssigner> BondOrderAssignerWeakPtr;
-
 
     class ComponentAssigner : public boost::noncopyable {
-        ComponentAssigner(): _component_lp(NULL), _component_lpcopy(NULL), _component_reslp(NULL){};
+        ComponentAssigner()
+        : _component_lp(NULL), 
+          _component_lpcopy(NULL), 
+          _component_reslp(NULL)
+        {}
+
     public:
 
         ~ComponentAssigner();
         
-        static boost::shared_ptr<ComponentAssigner> create(BondOrderAssignerPtr boa,
+        static boost::shared_ptr<ComponentAssigner> create(BondOrderAssigner* boa,
                                                            IdList const& comp, 
                                                            Id cid );
 
@@ -180,7 +163,7 @@ namespace desres { namespace msys {
         int getComponentValence(){return _component_valence_count;}
         double getSolvedComponentObjective();
 
-    protected:
+    private:
         struct ilpAtom {
             int ilpCol;
             int ilpLB;
@@ -206,7 +189,7 @@ namespace desres { namespace msys {
 
         /* This has to be a weak_ptr otherwise we can never 
          * destroy parent if we have any componentAssigners */
-        BondOrderAssignerWeakPtr _parent;
+        BondOrderAssigner *_parent;
         Id _component_id;
         std::set<Id> _component_atoms_present;
         

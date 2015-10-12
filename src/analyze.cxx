@@ -125,12 +125,12 @@ namespace desres { namespace msys {
         MSYS_FAIL("LPSOLVE functionality was not included.");
 #else
         if (atoms.empty()) return;
-        BondOrderAssignerPtr boa=BondOrderAssigner::create(mol, atoms);
+        BondOrderAssigner boa(mol, atoms);
         if (total_charge != INT_MAX) {
-            boa->setTotalCharge(total_charge);
+            boa.setTotalCharge(total_charge);
         }
-        boa->solveIntegerLinearProgram();
-        boa->assignSolutionToAtoms();
+        boa.solveIntegerLinearProgram();
+        boa.assignSolutionToAtoms();
 #endif
     }
 

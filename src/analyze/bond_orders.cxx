@@ -115,11 +115,24 @@ namespace {
 }
 
 namespace desres { namespace msys {
+    BondOrderAssigner::BondOrderAssigner(SystemPtr sys,
+                                         IdList const& fragment) {
+        _needRebuild=true; 
+        _valid=false;
+        atom_lone_pair_scale=0.95;
+        atom_plus_charge_penalty=0.25;
+        atom_minus_charge_penalty=0.25;
+        atom_plus_charge_scale=2.00;
+        atom_minus_charge_scale=1.20;
+        hypervalent_penalty=2.75;
+        component_plus_charge_penalty=0.25;
+        component_minus_charge_penalty=0.25;
+        multi_bond_scale=0.9;
+        aromatic_ring_penalty=0.30;
+        absmax_atom_charge=2;
+        max_component_charge=6; 
 
-    BondOrderAssignerPtr BondOrderAssigner::create(SystemPtr sys,  
-                                                   IdList const& fragment){
-        
-        BondOrderAssignerPtr boa(new BondOrderAssigner);
+        BondOrderAssigner* boa = this;
         boa->_needRebuild=true;
         boa->_valid=false;
         boa->_total_charge_set=false;
@@ -310,9 +323,11 @@ namespace desres { namespace msys {
                boa->_totalValence, boa->_fragatoms.size(), boa->_atominfo.size(), boa->_presolved_charge);
 
 #endif
-
-        return boa;
    }
+
+    BondOrderAssigner::~BondOrderAssigner() {
+        delete _filter;
+    }
 
     void BondOrderAssigner::rebuild(){
         
@@ -519,7 +534,7 @@ namespace desres { namespace msys {
         lpsolve::delete_lp(_component_reslp);
     }
 
-     ComponentAssignerPtr ComponentAssigner::create(BondOrderAssignerPtr b, IdList const& comp, Id cid){
+     ComponentAssignerPtr ComponentAssigner::create(BondOrderAssigner* b, IdList const& comp, Id cid){
 
         ComponentAssignerPtr ca(new ComponentAssigner);
 
@@ -572,7 +587,7 @@ namespace desres { namespace msys {
 
     void ComponentAssigner::unsetComponentCharge(){
         if(_component_solution_valid) reset();
-        BondOrderAssignerPtr parent=_parent.lock();
+        BondOrderAssigner* parent=_parent;
         lpsolve::set_bounds(_component_lp, _component_charge_col,  0, parent->max_component_charge);
         lpsolve::set_bounds(_component_lp, _component_charge_col+1,0, parent->max_component_charge);
 
@@ -805,7 +820,7 @@ namespace desres { namespace msys {
     void ComponentAssigner::set_atom_lonepair_penalties(){
 
         _component_atom_cols.clear();
-        BondOrderAssignerPtr parent=_parent.lock();
+        BondOrderAssigner* parent=_parent;
         std::ostringstream ss;
  
         double lps=clamp(parent->atom_lone_pair_scale);
@@ -836,7 +851,7 @@ namespace desres { namespace msys {
     void ComponentAssigner::set_bond_penalties(){
 
         _component_bond_cols.clear();
-        BondOrderAssignerPtr parent=_parent.lock();
+        BondOrderAssigner* parent=_parent;
 
         double boscale=clamp(parent->multi_bond_scale);
 
@@ -894,7 +909,7 @@ namespace desres { namespace msys {
     void ComponentAssigner::set_atom_charge_penalties(){
 
         std::ostringstream ss;
-        BondOrderAssignerPtr parent=_parent.lock();
+        BondOrderAssigner* parent=_parent;
 
         static const double PosZero=0.25*clamp(DataForElement(6).eneg)+0.75*clamp(DataForElement(7).eneg);
         static const double NegZero=clamp(DataForElement(9).eneg);
@@ -949,7 +964,7 @@ namespace desres { namespace msys {
     void ComponentAssigner::set_aromatic_ring_penalties(){
         
         _component_ring_cols.clear();
-        BondOrderAssignerPtr parent=_parent.lock();
+        BondOrderAssigner* parent=_parent;
 
         double objv=clamp(parent->aromatic_ring_penalty);
 
@@ -989,7 +1004,7 @@ namespace desres { namespace msys {
     /* penalize components for having a charge */
     void ComponentAssigner::set_component_charge_penalty(){
 
-        BondOrderAssignerPtr parent=_parent.lock();
+        BondOrderAssigner* parent=_parent;
 
         std::ostringstream ss;
         ss.str("");
@@ -1006,7 +1021,7 @@ namespace desres { namespace msys {
     }
 
     void ComponentAssigner::add_indicator_constraints(){
-        BondOrderAssignerPtr parent=_parent.lock();
+        BondOrderAssigner* parent=_parent;
 
         int ncols=lpsolve::get_Norig_columns(_component_lp);
         std::vector<double> rowdata;
@@ -1058,7 +1073,7 @@ namespace desres { namespace msys {
 
     void ComponentAssigner::add_atom_octet_and_charge_constraints(){
 
-        BondOrderAssignerPtr parent=_parent.lock();
+        BondOrderAssigner* parent=_parent;
 
         int ncols=lpsolve::get_Norig_columns(_component_lp);
         std::vector<double> rowdata;
@@ -1156,7 +1171,7 @@ namespace desres { namespace msys {
 
     void ComponentAssigner::add_component_electron_constraint(){
 
-        BondOrderAssignerPtr parent=_parent.lock();
+        BondOrderAssigner* parent=_parent;
         int ncols=lpsolve::get_Norig_columns(_component_lp);
         std::vector<double> rowdata(ncols+1,0);
             
@@ -1210,7 +1225,7 @@ namespace desres { namespace msys {
 
     void ComponentAssigner::add_aromatic_ring_constraints(){
 
-        BondOrderAssignerPtr parent=_parent.lock();
+        BondOrderAssigner* parent=_parent;
 
         int ncols=lpsolve::get_Norig_columns(_component_lp);
         std::vector<double> rowdata;
