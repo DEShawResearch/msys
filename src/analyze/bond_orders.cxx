@@ -13,6 +13,7 @@
 #include "eigensystem.hxx"
 #include "../elements.hxx"
 #include <boost/foreach.hpp>
+#include <memory>
 
 using namespace desres::msys;
 
@@ -156,7 +157,6 @@ namespace desres { namespace msys {
                 }
             }
             if(boa->_mol->atom(aid).atomic_number<1)
-                //printf("BondOrderAssigner::create - Skipping atomid=%u with atomic_number<1\n",aid);
                 continue;
             boa->_fragatoms.push_back(aid);
         }
@@ -313,8 +313,10 @@ namespace desres { namespace msys {
 #if DEBUGPRINT
             printf("Found %zu seperable components in fragment\n",components.size());
 #endif
-            for(Id cid=0;cid<components.size();++cid){
-                boa->_component_assigners.push_back(ComponentAssigner::create(boa, components[cid], cid));
+            for (Id cid=0; cid<components.size(); ++cid) {
+                boa->_component_assigners.push_back(
+                        std::make_shared<ComponentAssigner>(
+                            boa, components[cid], cid));
             }
         }
 
@@ -528,15 +530,21 @@ namespace desres { namespace msys {
 #endif
     }
 
-    ComponentAssigner::~ComponentAssigner(){
+    ComponentAssigner::~ComponentAssigner() {
         lpsolve::delete_lp(_component_lp);
         lpsolve::delete_lp(_component_lpcopy);  
         lpsolve::delete_lp(_component_reslp);
     }
 
-     ComponentAssignerPtr ComponentAssigner::create(BondOrderAssigner* b, IdList const& comp, Id cid){
+    ComponentAssigner::ComponentAssigner(BondOrderAssigner* b, 
+                                         IdList const& comp, 
+                                         Id cid)
+        : _component_lp(NULL), 
+          _component_lpcopy(NULL), 
+          _component_reslp(NULL)
+    {
 
-        ComponentAssignerPtr ca(new ComponentAssigner);
+        ComponentAssigner* ca = this;
 
         assert(b!=NULL && comp.size()>0 );
         ca->_parent=b;
@@ -551,7 +559,6 @@ namespace desres { namespace msys {
         ca->_component_valence_count=0;
         ca->_component_solution_valid=false;
         ca->_component_charge_set=false;
-        return ca;
     }
 
     void ComponentAssigner::reset(){

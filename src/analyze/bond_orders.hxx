@@ -3,7 +3,6 @@
 
 #include "../system.hxx"
 #include "bondFilters.hxx"
-#include <boost/noncopyable.hpp>
 
 
 /* forward declare so we dont pollute the rest of our code with lpsolves excessive #defines */
@@ -28,7 +27,7 @@ namespace desres { namespace msys {
     typedef std::map<Id, solutionValues> solutionMap;
 
     class ComponentAssigner;
-    typedef boost::shared_ptr<ComponentAssigner> ComponentAssignerPtr;
+    typedef std::shared_ptr<ComponentAssigner> ComponentAssignerPtr;
 
 
     class BondOrderAssigner {
@@ -132,23 +131,13 @@ namespace desres { namespace msys {
 
     };
 
-    class ComponentAssigner : public boost::noncopyable {
-        ComponentAssigner()
-        : _component_lp(NULL), 
-          _component_lpcopy(NULL), 
-          _component_reslp(NULL)
-        {}
-
+    class ComponentAssigner {
     public:
 
+        ComponentAssigner(BondOrderAssigner* boa, IdList const& comp, Id cid);
         ~ComponentAssigner();
-        
-        static boost::shared_ptr<ComponentAssigner> create(BondOrderAssigner* boa,
-                                                           IdList const& comp, 
-                                                           Id cid );
 
         void build_integer_linear_program();
-
         void reset();
 
         void setComponentCharge(int qTotal);
