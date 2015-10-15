@@ -1510,6 +1510,15 @@ def CreateSystem():
     ''' Create a new, empty System '''
     return System(_msys.SystemPtr.create())
 
+def MakeAlchemical(A, B, amap):
+    ''' Construct alchemical system from systems A and B and atom map amap,
+    which should be a list of pairs of ids
+    '''
+    avoid_alchemical_noop = True
+    keep_none = False
+    return System(_msys.MakeAlchemical(A._ptr, B._ptr, amap,
+        avoid_alchemical_noop, keep_none))
+
 def _find_ids(atoms, klass = Atom):
     ''' return the SystemPtr and IdList for the given set of atoms.
     Raise ValueError if atoms come from multiple systems.  Return
