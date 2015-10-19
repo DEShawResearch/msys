@@ -1,3 +1,8 @@
+1.7.132 rst7 support in dms-frame.
+        dms-frame no longer wraps by default.  
+        Added MakeAlchemical python bindings.
+        Build with latest OS X compiler.
+
 1.7.131 Added near-workalike fstime and fsdump.
         Added DtrReader.keyvals().
         C++: AnnotatedSystem no longer holds a SystemPtr, and is itself not
