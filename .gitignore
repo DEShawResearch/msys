@@ -1,4 +1,5 @@
 objs
 *.dms
 /doc/build/
+desres.py
 
