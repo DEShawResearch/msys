@@ -7,6 +7,7 @@
 #include "geom.hxx"
 #include "hbond.hxx"
 #include "contacts.hxx"
+#include "alchemical.hxx"
 
 #include <numpy/ndarrayobject.h>
 #include <pfx/graph.hxx>
@@ -630,6 +631,17 @@ namespace {
     }
 
     pfx::Graph* sys_topology(SystemPtr mol) { return new pfx::Graph(mol); }
+
+    SystemPtr make_alchemical(SystemPtr A, SystemPtr B, object pairs,
+                              bool avoid_alchemical_noop,
+                              bool keep_none) {
+        std::vector<IdPair> idpairs(len(pairs));
+        for (Id i=0, n=len(pairs); i<n; i++) {
+            idpairs[i].first  = extract<Id>(pairs[i][0]);
+            idpairs[i].second = extract<Id>(pairs[i][1]);
+        }
+        return MakeAlchemical(A, B, idpairs, avoid_alchemical_noop, keep_none);
+    }
 }
 
 namespace desres { namespace msys { 
@@ -681,6 +693,8 @@ namespace desres { namespace msys {
 
         def("TableSchemas", table_schemas);
         def("NonbondedSchemas", nonbonded_schemas);
+
+        def("MakeAlchemical", make_alchemical);
 
         class_<System,SystemPtr>("SystemPtr", no_init)
             .def("__eq__",      list_eq<SystemPtr>)
