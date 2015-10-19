@@ -46,8 +46,8 @@ def main():
 
     parser.add_option('-i', "--input-path", default=None,
             help="Input trajectory")
-    parser.add_option('--input-type', default='dtr',
-            help="molfile type for input trajectory (default 'dtr')")
+    parser.add_option('--input-type',
+            help="molfile type for input trajectory")
     parser.add_option('-t', "--time", default=None, type='float',
             help="Selected frame time")
     parser.add_option('-n', "--index", default=None, type='int',
@@ -89,12 +89,20 @@ def main():
             dbl=False
         print "Trajectory contains %d frames, %d atoms" % (T.nframes, T.natoms)
         if T.natoms != mol.natoms:
-            raise ValueError, "Trajectory and DMS file have different #atoms"
+            raise ValueError, "Trajectory and structure file have different #atoms"
         if opts.time is not None:
             F = T.at_time_near(opts.time)
             ind = molfile.findframe.at_time_near(T.times, F.time)
         elif opts.index is not None:
-            F = T.frame(opts.index)
+            if T.nframes==-1:
+                if opts.index<0:
+                    raise ValueError("Specify non-negative index for this filetype")
+                for i, F in enumerate(T.frames()):
+                    if i==opts.index: break
+                else:
+                    raise ValueError("Could not find frame %d in file" % opts.index)
+            else:
+                F = T.frame(opts.index)
             ind = opts.index
         else:
             raise ValueError, "Specify either --index or --frame"
@@ -123,9 +131,10 @@ def main():
                 for i, a in enumerate(mol.atoms):
                     a.vel = vel[i]
 
-    print "Applying periodic wrapping"
-    w=Wrapper(mol, center=opts.center, glue=opts.glue, unrotate=opts.unrotate)
-    w.wrap()
+    if opts.wrap or opts.glue or opts.center or opts.unrotate:
+        print "Applying periodic wrapping"
+        w=Wrapper(mol, center=opts.center, glue=opts.glue, unrotate=opts.unrotate)
+        w.wrap()
 
     print "Writing", args[1]
     msys.Save(mol, args[1])

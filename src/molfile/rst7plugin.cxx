@@ -139,8 +139,16 @@ static int read_next_timestep(void* v, int natoms, molfile_timestep_t* ts) {
     return MOLFILE_SUCCESS;
 }
 
+static int 
+read_timestep_metadata(void *v, molfile_timestep_metadata *m) {
+  m->has_velocities = 1;
+  m->count = -1;
+  m->supports_double_precision = false;
+  return MOLFILE_SUCCESS;
+}
+
 static molfile_plugin_t plugin;
-int msys_rstplugin_init() {
+extern "C" int msys_rstplugin_init() {
     plugin.abiversion = vmdplugin_ABIVERSION;
     plugin.type = MOLFILE_PLUGIN_TYPE;
     plugin.name = "rst";
@@ -151,12 +159,13 @@ int msys_rstplugin_init() {
     plugin.minorv = 0;
     plugin.is_reentrant = VMDPLUGIN_THREADSAFE;
     plugin.open_file_read = open_read;
+    plugin.read_timestep_metadata = read_timestep_metadata;
     plugin.read_next_timestep = read_next_timestep;
     plugin.close_file_read = close_read;
     return VMDPLUGIN_SUCCESS;
 }
 
-int msys_rstplugin_register(void* v, vmdplugin_register_cb cb) {
+extern "C" int msys_rstplugin_register(void* v, vmdplugin_register_cb cb) {
     (*cb)(v, (vmdplugin_t *)&plugin);
     return VMDPLUGIN_SUCCESS;
 }
