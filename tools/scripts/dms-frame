@@ -39,7 +39,6 @@ sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
 import msys
 from msys.wrap import Wrapper
 from msys import molfile
-from msys.molfile import findframe
 
 def main():
     import optparse
@@ -73,9 +72,15 @@ def main():
     print "Input file contains %d atoms, %d bonds" % (mol.natoms, mol.nbonds)
 
     if opts.input_path is not None:
-        print "Reading trajectory of type %s at %s" % (
-                opts.input_type, opts.input_path)
-        plugin=getattr(molfile, opts.input_type)
+        if opts.input_type is None:
+            plugin = molfile.guess_filetype(opts.input_path)
+            if plugin is None:
+                plugin = molfile.dtr
+        else:
+            plugin = getattr(molfile, opts.input_type)
+
+        print "Reading trajectory of type %s (%s) at %s" % (
+                plugin.name, plugin.prettyname, opts.input_path)
         try:
             T=plugin.read(opts.input_path, double_precision=True)
             dbl=True
@@ -87,7 +92,7 @@ def main():
             raise ValueError, "Trajectory and DMS file have different #atoms"
         if opts.time is not None:
             F = T.at_time_near(opts.time)
-            ind = findframe.at_time_near(T.times, F.time)
+            ind = molfile.findframe.at_time_near(T.times, F.time)
         elif opts.index is not None:
             F = T.frame(opts.index)
             ind = opts.index

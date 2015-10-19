@@ -92,7 +92,6 @@ alchemical.cxx
 analyze/eigensystem.cxx
 analyze/get_fragments.cxx
 
-amber/import_crd.cxx
 amber/import_prmtop.cxx
 
 archive.cxx
@@ -119,6 +118,7 @@ molfile/dtrplugin.cxx
 molfile/dxplugin.cxx
 molfile/dcdplugin.c
 molfile/gromacsplugin.cxx
+molfile/rst7plugin.cxx
 molfile/psfplugin.c
 molfile/xyzplugin.c
 
