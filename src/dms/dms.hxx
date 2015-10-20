@@ -12,11 +12,9 @@ namespace desres { namespace msys {
 
     class Reader;
     class Writer;
-    struct dms_file;
 
     class Sqlite {
         std::shared_ptr<sqlite3>  _db;
-        std::shared_ptr<dms_file> _file;
 
         const char* errmsg() const;
 

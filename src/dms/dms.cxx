@@ -24,28 +24,63 @@
 using namespace desres::msys;
 namespace bio = boost::iostreams;
 
-namespace desres { namespace msys {
+namespace {
     struct dms_file : sqlite3_file {
         char * contents;
         sqlite3_int64 size;
         char * path;
 
-        static void close(dms_file* dms) {
-            if (dms->contents) {
-                free(dms->contents);
-                dms->contents = NULL;
+        std::string hash() const {
+            ThreeRoe::result_type h = ThreeRoe::Hash128(
+                    contents, size);
+            std::stringstream ss;
+            ss << std::hex << std::setw(16) << std::setfill('0');
+            ss << h.first << h.second;
+            return ss.str();
+        }
+
+        void write() const {
+            if (!path) return;
+            /* if path is non-NULL, we need to write the contents */
+            int fd=open(path, O_WRONLY | O_CREAT, 0644);
+            if (fd<0) {
+                MSYS_FAIL("Error opening " << path 
+                    << " for writing: " << strerror(errno));
             }
-            if (dms->path) {
-                free(dms->path);
-                dms->path = NULL;
+            sqlite3_int64 sz = size;
+            char* ptr = contents;
+            while (sz) {
+                errno = 0;
+                ssize_t rc = ::write(fd, contents, sz);
+                if (rc<0 || (rc==0 && errno!=0)) {
+                    std::string errmsg = strerror(errno);
+                    close(fd);
+                    MSYS_FAIL("Error writing DMS contents of size " << size
+                        << " bytes to " << path << " : " << errmsg);
+                }
+                sz -= rc;
+                ptr += rc;
+            }
+            if (close(fd)!=0) {
+                std::string errmsg = strerror(errno);
+                MSYS_FAIL("Error closing DMS file at " << path
+                        << " : " << errmsg);
             }
         }
     };
-}}
+}
 
 namespace {
     int dms_xClose(sqlite3_file *file) {
-        dms_file::close(static_cast<dms_file*>(file));
+        dms_file* dms = static_cast<dms_file*>(file);
+        if (dms->contents) {
+            free(dms->contents);
+            dms->contents = NULL;
+        }
+        if (dms->path) {
+            free(dms->path);
+            dms->path = NULL;
+        }
         return SQLITE_OK;
     }
 
@@ -95,7 +130,7 @@ namespace {
     int dms_xDeviceCharacteristics(sqlite3_file *file) {
         return 0;
     }
-    int dms_xFileControl(sqlite3_file*, int op, void *pArg) {
+    int dms_xFileControl(sqlite3_file* file, int op, void *pArg) {
         return SQLITE_NOTFOUND;
     }
   
@@ -207,35 +242,15 @@ const char* Sqlite::errmsg() const {
 }
 
 void Sqlite::finish() {
+    dms_file* dms;
+    sqlite3_file_control(_db.get(), "main", SQLITE_FCNTL_FILE_POINTER, &dms);
+    dms->write();
+}
 
-    dms_file* dms = _file.get();
-    if (!dms || !dms->path) return;
-
-    /* if path is non-NULL, we need to write the contents */
-    int fd=open(dms->path, O_WRONLY | O_CREAT, 0644);
-    if (fd<0) {
-        MSYS_FAIL("Error opening " << dms->path 
-            << " for writing: " << strerror(errno));
-    }
-    sqlite3_int64 sz = dms->size;
-    char* ptr = dms->contents;
-    while (sz) {
-        errno = 0;
-        ssize_t rc = ::write(fd, dms->contents, sz);
-        if (rc<0 || (rc==0 && errno!=0)) {
-            std::string errmsg = strerror(errno);
-            close(fd);
-            MSYS_FAIL("Error writing DMS contents of size " << dms->size
-                << " bytes to " << dms->path << " : " << errmsg);
-        }
-        sz -= rc;
-        ptr += rc;
-    }
-    if (close(fd)!=0) {
-        std::string errmsg = strerror(errno);
-        MSYS_FAIL("Error closing DMS file at " << dms->path
-                << " : " << errmsg);
-    }
+String Sqlite::hash() const {
+    dms_file* dms;
+    sqlite3_file_control(_db.get(), "main", SQLITE_FCNTL_FILE_POINTER, &dms);
+    return dms->hash();
 }
 
 Sqlite Sqlite::read(std::string const& path, bool unbuffered)  {
@@ -331,20 +346,7 @@ Sqlite Sqlite::write(std::string const& path, bool unbuffered) {
     if (rc!=SQLITE_OK) MSYS_FAIL(sqlite3_errmsg(db));
 
     Sqlite result(std::shared_ptr<sqlite3>(db, sqlite3_close));
-    if (!unbuffered) result._file.reset(g_dms_file, dms_file::close);
     return result;
-}
-
-String Sqlite::hash() const {
-    if (_file) {
-        ThreeRoe::result_type h = ThreeRoe::Hash128(
-                _file->contents, _file->size);
-        std::stringstream ss;
-        ss << std::hex << std::setw(16) << std::setfill('0');
-        ss << h.first << h.second;
-        return ss.str();
-    }
-    return "";
 }
 
 void Sqlite::exec(std::string const& sql) {
