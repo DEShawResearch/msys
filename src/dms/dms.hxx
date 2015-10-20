@@ -2,7 +2,7 @@
 #define desres_msys_dms_dms_hxx 
 
 #include "../value.hxx"
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 struct sqlite3;
 struct sqlite3_stmt;
@@ -15,8 +15,8 @@ namespace desres { namespace msys {
     struct dms_file;
 
     class Sqlite {
-        boost::shared_ptr<sqlite3>  _db;
-        boost::shared_ptr<dms_file> _file;
+        std::shared_ptr<sqlite3>  _db;
+        std::shared_ptr<dms_file> _file;
 
         const char* errmsg() const;
 
@@ -24,7 +24,7 @@ namespace desres { namespace msys {
         Sqlite() 
         {}
 
-        Sqlite(boost::shared_ptr<sqlite3> db)
+        Sqlite(std::shared_ptr<sqlite3> db)
         : _db(db) 
         {}
 
@@ -47,8 +47,8 @@ namespace desres { namespace msys {
     };
 
     class Reader {
-        boost::shared_ptr<sqlite3> _db;
-        boost::shared_ptr<sqlite3_stmt> _stmt;
+        std::shared_ptr<sqlite3> _db;
+        std::shared_ptr<sqlite3_stmt> _stmt;
         std::string _table;
 
         typedef std::pair<std::string, ValueType> column_t;
@@ -58,7 +58,7 @@ namespace desres { namespace msys {
         const char* errmsg() const;
 
     public:
-        Reader(boost::shared_ptr<sqlite3> db, std::string const& table,
+        Reader(std::shared_ptr<sqlite3> db, std::string const& table,
                bool strict_types);
         bool strict_types() const { return _strict_types; }
         void next();
@@ -77,11 +77,11 @@ namespace desres { namespace msys {
     };
 
     class Writer {
-        boost::shared_ptr<sqlite3> _db;
-        boost::shared_ptr<sqlite3_stmt> _stmt;
+        std::shared_ptr<sqlite3> _db;
+        std::shared_ptr<sqlite3_stmt> _stmt;
 
     public:
-        Writer(boost::shared_ptr<sqlite3> db, std::string const& table);
+        Writer(std::shared_ptr<sqlite3> db, std::string const& table);
         void next();
         void bind_int(int col, int v);
         void bind_flt(int col, double v);

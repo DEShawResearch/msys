@@ -642,7 +642,7 @@ static void no_close(sqlite3* db) {}
 
 void desres::msys::sqlite::ExportDMS(SystemPtr h, sqlite3* db,
                                      Provenance const& provenance) {
-    export_dms(h, boost::shared_ptr<sqlite3>(db,no_close), provenance, 0);
+    export_dms(h, std::shared_ptr<sqlite3>(db,no_close), provenance, 0);
 }
 
 String desres::msys::HashDMS(String const& path) {

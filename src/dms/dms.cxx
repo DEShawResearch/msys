@@ -11,8 +11,6 @@
 #include <cerrno>
 #include <iomanip>
 
-#include <boost/shared_ptr.hpp>
-#include <boost/scoped_ptr.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include <boost/iostreams/filtering_stream.hpp>
@@ -246,7 +244,7 @@ Sqlite Sqlite::read(std::string const& path, bool unbuffered)  {
     if (unbuffered) {
         int rc = sqlite3_open_v2( path.data(), &db, SQLITE_OPEN_READONLY, NULL);
         if (rc!=SQLITE_OK) MSYS_FAIL(sqlite3_errmsg(db));
-        return boost::shared_ptr<sqlite3>(db, sqlite3_close);
+        return std::shared_ptr<sqlite3>(db, sqlite3_close);
     }
 
     sqlite3_vfs_register(vfs, 0);
@@ -301,7 +299,7 @@ Sqlite Sqlite::read(std::string const& path, bool unbuffered)  {
             vfs->zName);
     if (g_tmpbuf) free(g_tmpbuf);
     if (rc!=SQLITE_OK) MSYS_FAIL(sqlite3_errmsg(db));
-    return boost::shared_ptr<sqlite3>(db, sqlite3_close);
+    return std::shared_ptr<sqlite3>(db, sqlite3_close);
 }
 
 Sqlite Sqlite::read_bytes(const char * bytes, int64_t len ) {
@@ -320,7 +318,7 @@ Sqlite Sqlite::read_bytes(const char * bytes, int64_t len ) {
             vfs->zName);
     if (g_tmpbuf) free(g_tmpbuf);
     if (rc!=SQLITE_OK) MSYS_FAIL(sqlite3_errmsg(db));
-    return boost::shared_ptr<sqlite3>(db, sqlite3_close);
+    return std::shared_ptr<sqlite3>(db, sqlite3_close);
 }
 
 Sqlite Sqlite::write(std::string const& path, bool unbuffered) {
@@ -332,7 +330,7 @@ Sqlite Sqlite::write(std::string const& path, bool unbuffered) {
             unbuffered ? NULL : vfs->zName);
     if (rc!=SQLITE_OK) MSYS_FAIL(sqlite3_errmsg(db));
 
-    Sqlite result(boost::shared_ptr<sqlite3>(db, sqlite3_close));
+    Sqlite result(std::shared_ptr<sqlite3>(db, sqlite3_close));
     if (!unbuffered) result._file.reset(g_dms_file, dms_file::close);
     return result;
 }
@@ -393,7 +391,7 @@ static void close_stmt(sqlite3_stmt* stmt) {
         MSYS_FAIL("Error finalizing statement: " << sqlite3_errmsg(sqlite3_db_handle(stmt)));
 }
 
-Reader::Reader(boost::shared_ptr<sqlite3> db, std::string const& table,
+Reader::Reader(std::shared_ptr<sqlite3> db, std::string const& table,
                bool strict) 
 : _db(db), _table(table), _strict_types(strict) {
 
@@ -445,7 +443,7 @@ Reader::Reader(boost::shared_ptr<sqlite3> db, std::string const& table,
     sqlite3_free(sql);
     if (rc) MSYS_FAIL("Error getting schema for " << table << errmsg());
     /* we expect name and type to be columns 1 and 2, respectively */
-    boost::shared_ptr<sqlite3_stmt> tmp(stmt, close_stmt);
+    std::shared_ptr<sqlite3_stmt> tmp(stmt, close_stmt);
     while (sqlite3_step(stmt)==SQLITE_ROW) {
         std::string name = (const char *)sqlite3_column_text(stmt,1);
         std::string type = (const char *)sqlite3_column_text(stmt,2);
@@ -537,7 +535,7 @@ Writer Sqlite::insert(std::string const& table) const {
     return Writer(_db, table);
 }
 
-Writer::Writer(boost::shared_ptr<sqlite3> db, std::string const& table) 
+Writer::Writer(std::shared_ptr<sqlite3> db, std::string const& table) 
 : _db(db) {
 
     sqlite3_stmt * stmt;

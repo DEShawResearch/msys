@@ -9,8 +9,6 @@
 #include <string.h>
 #include <stdexcept>
 
-#include <boost/scoped_ptr.hpp>
-
 using namespace desres::msys;
 
 typedef std::set<String> KnownSet;
@@ -748,7 +746,7 @@ static void no_close(sqlite3*) {}
 SystemPtr desres::msys::sqlite::ImportDMS(sqlite3* db,
                                   bool structure_only,
                                   bool without_tables) {
-    Sqlite dms(boost::shared_ptr<sqlite3>(db,no_close));
+    Sqlite dms(std::shared_ptr<sqlite3>(db,no_close));
     return import_dms(dms, structure_only, without_tables);
 }
 
