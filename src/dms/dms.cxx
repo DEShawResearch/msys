@@ -18,8 +18,6 @@
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 
-#include <boost/thread/mutex.hpp>
-
 #include <sys/stat.h>
 #include <fcntl.h>
 
@@ -123,8 +121,6 @@ namespace {
     char *g_tmpbuf = NULL;
     sqlite3_int64 g_tmpsize = -1;
     dms_file *g_dms_file = NULL;
-    // mutex protecting g_tmpbuf and g_tmpsize
-    boost::mutex sqlite_open_mutex;
 
     /* if buf looks like gzipped data, decompress it, and update *sz.  
      * Return buf, which may now point to new space. */
@@ -270,9 +266,6 @@ Sqlite Sqlite::read(std::string const& path, bool unbuffered)  {
         throw std::runtime_error(ss.str());
     }
 
-    /* allow access to g_tmpsize and g_tmpbuf */
-    boost::mutex::scoped_lock lock(sqlite_open_mutex);
-
     g_tmpsize = statbuf->st_size;
     if (g_tmpsize==0) {
         close(fd);
@@ -315,9 +308,6 @@ Sqlite Sqlite::read_bytes(const char * bytes, int64_t len ) {
     sqlite3* db;
     sqlite3_vfs_register(vfs, 0);
 
-    /* allow access to g_tmpsize and g_tmpbuf */
-    boost::mutex::scoped_lock lock(sqlite_open_mutex);
-
     g_tmpsize = len;
     g_tmpbuf = (char *)malloc(len);
     if (!g_tmpbuf) {
@@ -336,8 +326,6 @@ Sqlite Sqlite::read_bytes(const char * bytes, int64_t len ) {
 Sqlite Sqlite::write(std::string const& path, bool unbuffered) {
     sqlite3* db;
     sqlite3_vfs_register(vfs, 0);
-
-    boost::mutex::scoped_lock lock(sqlite_open_mutex);
 
     int rc = sqlite3_open_v2(path.c_str(), &db, 
             SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, 

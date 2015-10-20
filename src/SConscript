@@ -10,7 +10,7 @@ opts.Update(env)
 bsx=env.get('MSYS_BOOST_SUFFIX', '')
 boost_libs=[(x+bsx) for x in ( 
     'boost_iostreams', 'boost_filesystem', 'boost_system', 
-    'boost_thread', 'boost_regex', 'boost_serialization')]
+    'boost_regex', 'boost_serialization')]
 env.Append(LIBS=boost_libs)
 env.AppendUnique(LIBS=['sqlite3', 'z', 'snappy' ])
 if env['PLATFORM'] == 'darwin':

@@ -2,4 +2,5 @@ objs
 *.dms
 /doc/build/
 desres.py
+build.sh
 
