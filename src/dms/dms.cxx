@@ -150,11 +150,6 @@ namespace {
         dms_xDeviceCharacteristics //int (*xDeviceCharacteristics)(sqlite3_file*);
     };
 
-    // static variables for passing buffer through the open call
-    char *g_tmpbuf = NULL;
-    sqlite3_int64 g_tmpsize = -1;
-    dms_file *g_dms_file = NULL;
-
     /* if buf looks like gzipped data, decompress it, and update *sz.  
      * Return buf, which may now point to new space. */
     char* maybe_decompress(char* buf, sqlite3_int64 *sz) {
@@ -197,18 +192,11 @@ namespace {
             dms->pMethods = &iomethods;
             dms->path = NULL;
             if (flags & SQLITE_OPEN_CREATE) {
-                g_dms_file = dms;
                 dms->contents = NULL;
                 dms->size = 0;
                 if (flags & SQLITE_OPEN_MAIN_DB) {
                     dms->path = strdup(zName);
                 }
-            } else {
-                g_tmpbuf = maybe_decompress(g_tmpbuf, &g_tmpsize);
-                dms->contents = g_tmpbuf;
-                dms->size     = g_tmpsize;
-                g_tmpbuf = NULL;
-                g_tmpsize = -1;
             }
             return SQLITE_OK;
         }
@@ -279,30 +267,30 @@ Sqlite Sqlite::read(std::string const& path, bool unbuffered)  {
         throw std::runtime_error(ss.str());
     }
 
-    g_tmpsize = statbuf->st_size;
-    if (g_tmpsize==0) {
+    ssize_t tmpsize = statbuf->st_size;
+    if (tmpsize==0) {
         close(fd);
         std::stringstream ss;
         ss << "DMS file at '" << path << "' has zero size";
         throw std::runtime_error(ss.str());
     }
-    g_tmpbuf = (char *)malloc(g_tmpsize);
-    if (!g_tmpbuf) {
+    char* tmpbuf = (char *)malloc(tmpsize);
+    if (!tmpbuf) {
         close(fd);
         std::stringstream ss;
         ss << "Failed to allocate read buffer for DMS file at '" << path 
-           << "' of size " << g_tmpsize;
+           << "' of size " << tmpsize;
         throw std::runtime_error(ss.str());
     }
-    ssize_t sz = g_tmpsize;
-    char* ptr = g_tmpbuf;
+    ssize_t sz = tmpsize;
+    char* ptr = tmpbuf;
     while (sz) {
         errno = 0;
         ssize_t rc = ::read(fd, ptr, sz);
         if (rc<0 || (rc==0 && errno!=0)) {
             std::string errmsg = strerror(errno);
             close(fd);
-            free(g_tmpbuf);
+            free(tmpbuf);
             MSYS_FAIL("Error reading DMS contents at " << path 
                     << ": " << errmsg);
         }
@@ -312,8 +300,14 @@ Sqlite Sqlite::read(std::string const& path, bool unbuffered)  {
     close(fd);
     int rc = sqlite3_open_v2( "::dms::", &db, SQLITE_OPEN_READONLY, 
             vfs->zName);
-    if (g_tmpbuf) free(g_tmpbuf);
-    if (rc!=SQLITE_OK) MSYS_FAIL(sqlite3_errmsg(db));
+    if (rc!=SQLITE_OK) {
+        free(tmpbuf);
+        MSYS_FAIL(sqlite3_errmsg(db));
+    }
+    dms_file* dms;
+    sqlite3_file_control(db, "main", SQLITE_FCNTL_FILE_POINTER, &dms);
+    dms->size = tmpsize;
+    dms->contents = maybe_decompress(tmpbuf, &dms->size);
     return std::shared_ptr<sqlite3>(db, sqlite3_close);
 }
 
@@ -321,18 +315,20 @@ Sqlite Sqlite::read_bytes(const char * bytes, int64_t len ) {
     sqlite3* db;
     sqlite3_vfs_register(vfs, 0);
 
-    g_tmpsize = len;
-    g_tmpbuf = (char *)malloc(len);
-    if (!g_tmpbuf) {
-        std::stringstream ss;
-        ss << "Failed to allocate read buffer for DMS file of size " << len;
-        throw std::runtime_error(ss.str());
-    }
-    memcpy(g_tmpbuf, bytes, len);
+    ssize_t tmpsize = len;
+    char* tmpbuf = (char *)malloc(len);
+    MSYS_FAIL("Failed to allocate read buffer for DMS file of size " << len);
+    memcpy(tmpbuf, bytes, len);
     int rc = sqlite3_open_v2( "::dms::", &db, SQLITE_OPEN_READONLY, 
             vfs->zName);
-    if (g_tmpbuf) free(g_tmpbuf);
-    if (rc!=SQLITE_OK) MSYS_FAIL(sqlite3_errmsg(db));
+    if (rc!=SQLITE_OK) {
+        free(tmpbuf);
+        MSYS_FAIL(sqlite3_errmsg(db));
+    }
+    dms_file* dms;
+    sqlite3_file_control(db, "main", SQLITE_FCNTL_FILE_POINTER, &dms);
+    dms->size = tmpsize;
+    dms->contents = maybe_decompress(tmpbuf, &dms->size);
     return std::shared_ptr<sqlite3>(db, sqlite3_close);
 }
 
