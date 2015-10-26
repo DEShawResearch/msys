@@ -23,8 +23,20 @@ std::vector<InChI> InChI::analyze(SystemPtr mol, unsigned options) {
 
 #include <inchi/inchi_api.h>
 
+static SystemPtr without_pseudos(SystemPtr mol) {
+    IdList ids;
+    for (auto id : mol->atoms()) {
+        if (mol->atomFAST(id).atomic_number > 0) ids.push_back(id);
+    }
+    if (ids.size()<mol->atomCount()) {
+        mol = Clone(mol, ids);
+    }
+    return mol;
+}
+
 std::vector<InChI> InChI::analyze(SystemPtr mol, unsigned options) {
     MultiIdList fragments;
+    mol = without_pseudos(mol);
     mol->updateFragids(&fragments);
     IdList distinct = FindDistinctFragments(mol, fragments);
     std::vector<InChI> result;
