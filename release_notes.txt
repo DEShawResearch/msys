@@ -1,3 +1,5 @@
+1.7.133 Don't put inchi strings in alchemical dms.
+
 1.7.132 rst7 support in dms-frame.
         dms-frame no longer wraps by default.  
         Added MakeAlchemical python bindings.
