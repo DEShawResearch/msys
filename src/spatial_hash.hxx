@@ -86,6 +86,9 @@ namespace desres { namespace msys {
         IdList find_within(float r, const float* pos, 
                           int n, const Id* ids) const;
 
+        IdList find_within_small(float r, const float* pos, 
+                                 int n, const Id* ids) const;
+
         /* Return true if point px,py,pz is within r of some hashed
          * point assuming an orthorhombic periodic cell with lengths
          * ga,gb,gc. */

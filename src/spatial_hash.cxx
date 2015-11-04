@@ -297,8 +297,84 @@ IdList SpatialHash::findNearest(unsigned k, const float* pos,
     return smin;
 }
 
+IdList SpatialHash::find_within_small(float r, const float* pos,
+    int n, const Id* ids) const {
+
+    IdList result;
+    const float r2 = r*r;
+    __m128 rad2 = _mm_set1_ps(r2);
+    float xlo = xmin - r;
+    float ylo = ymin - r;
+    float zlo = zmin - r;
+
+    float xhi = xmax + r;
+    float yhi = ymax + r;
+    float zhi = zmax + r;
+
+    __m128 lo = _mm_set_ps(0,zlo,ylo,xlo);
+    __m128 hi = _mm_set_ps(0,zhi,yhi,xhi);
+
+    for (int i=0; i<n; i++) {
+        Id id = ids[i];
+        const float* p = pos + 3*id;
+        const float x = p[0];
+        const float y = p[1];
+        const float z = p[2];
+
+        __m128 xyz = _mm_set_ps(0,z,y,x);
+        if (_mm_movemask_ps(_mm_cmplt_ps(xyz, lo)) |
+            _mm_movemask_ps(_mm_cmpgt_ps(xyz, hi))) {
+            continue;
+        }
+
+        int j=0;
+        __m128 xj = _mm_set1_ps(x);
+        __m128 yj = _mm_set1_ps(y);
+        __m128 zj = _mm_set1_ps(z);
+
+        for (; j<ntarget-4; j+=4) {
+            __m128 p0, p1, p2;
+            __m128 q0, q1, q2;
+
+            p0 = _mm_load_ps(_x + j);
+            p1 = _mm_load_ps(_y + j);
+            p2 = _mm_load_ps(_z + j);
+
+            q0 = _mm_sub_ps(p0, xj);    /* dx */
+            q1 = _mm_sub_ps(p1, yj);    /* dy */
+            q2 = _mm_sub_ps(p2, zj);    /* dz */
+            
+            p0 = _mm_mul_ps(q0, q0);    /* dx**2 */
+            p1 = _mm_mul_ps(q1, q1);    /* dy**2 */
+            p2 = _mm_mul_ps(q2, q2);    /* dz**2 */
+
+            q0 = _mm_add_ps(_mm_add_ps(p0,p1),p2);
+            if (_mm_movemask_ps(_mm_cmple_ps(q0, rad2))) {
+                result.push_back(id);
+                j = ntarget;    // skip the next loop
+                break;
+            }
+        }
+        for (; j<ntarget; j++) {
+            float dx = x - _x[j];
+            float dy = y - _y[j];
+            float dz = z - _z[j];
+            float d2 = dx*dx + dy*dy + dz*dz;
+            if (d2 <= r2) {
+                result.push_back(id);
+                break;
+            }
+        }
+    }
+    return result;
+}
+
+
 IdList SpatialHash::find_within(float r, const float* pos, 
                   int n, const Id* ids) const {
+
+    if (ntarget < 50) return find_within_small(r,pos,n,ids);
+
     IdList result;
     result.reserve(n);
     int j=0;
