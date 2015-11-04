@@ -297,6 +297,7 @@ IdList SpatialHash::findNearest(unsigned k, const float* pos,
     return smin;
 }
 
+// do only bounding box checks on query atoms, no spatial hashing.
 IdList SpatialHash::find_within_small(float r, const float* pos,
     int n, const Id* ids) const {
 
@@ -373,13 +374,16 @@ IdList SpatialHash::find_within_small(float r, const float* pos,
 IdList SpatialHash::find_within(float r, const float* pos, 
                   int n, const Id* ids) const {
 
-    if (ntarget < 50) return find_within_small(r,pos,n,ids);
+    bool periodic = cx!=0 || cy!=0 || cz!=0;
+
+    // pbwithin not implemented for find_within_small.
+    // threshold based on minimal testing.
+    if (!periodic && ntarget < 800) return find_within_small(r,pos,n,ids);
 
     IdList result;
     result.reserve(n);
     int j=0;
 
-    bool periodic = cx!=0 || cy!=0 || cz!=0;
     float tmp[12];
 
 #ifdef __SSE2__
