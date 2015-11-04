@@ -1,3 +1,5 @@
+1.7.134 Double the speed of within searches for small target selections.
+
 1.7.133 Don't put inchi strings in alchemical dms.
 
 1.7.132 rst7 support in dms-frame.
