@@ -29,11 +29,6 @@ namespace {
                 if (s[i]) v[i] = exp(v[i]);
             }
         }
-        void dump(std::ostream& str) const {
-            str << sym << "(";
-            sub->dump(str);
-            str << ")";
-        }
     };
 
     template <typename T>
@@ -62,11 +57,6 @@ namespace {
                     if (s[i]) v[i] = op(L[i], R[i]);
                 }
             }
-            void dump(std::ostream& str) const {
-                lhs->dump(str);
-                str << sym;
-                rhs->dump(str);
-            }
         };
 
     class LiteralExpression : public Expression {
@@ -75,9 +65,6 @@ namespace {
         LiteralExpression(double _d) : d(_d) {}
         void eval( const Selection& s, std::vector<Dbl>& v) {
             for (unsigned i=0; i<s.size(); i++) v[i]=d;
-        }
-        void dump(std::ostream& str) const {
-            str << d;
         }
     };
 
@@ -105,9 +92,6 @@ namespace {
 
             }
         }
-        void dump(std::ostream& str) const {
-            str << key->name;
-        }
     };
 
     template <class OP>
@@ -127,11 +111,6 @@ namespace {
                 for (unsigned i=0; i<s.size(); i++) {
                     s[i] &= op(L[i],R[i]);
                 }
-            }
-            void dump(std::ostream& str) const {
-                lhs->dump(str);
-                str << sym;
-                rhs->dump(str);
             }
         };
 }

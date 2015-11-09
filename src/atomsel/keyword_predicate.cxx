@@ -18,9 +18,6 @@ namespace {
       targets->select(s, key);
     }
 
-    void dump(std::ostream& str) const {
-      str << key->name << " <values>"; 
-    }
   };
 
   class SamePredicate : public Predicate {
@@ -32,10 +29,6 @@ namespace {
       : key(_key), all(_all), sub(_sub) {}
 
     void eval(Selection& s);
-    void dump(std::ostream& str) const {
-      str << "same " << key->name << " as ";
-      sub->dump(str);
-    }
   };
 }
 

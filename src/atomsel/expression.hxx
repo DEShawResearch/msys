@@ -11,7 +11,6 @@ namespace desres { namespace msys { namespace atomsel {
   struct Expression : public boost::enable_shared_from_this<Expression> {
     virtual ~Expression() {}
     virtual void eval( const Selection& s, std::vector<Dbl>& v ) = 0;
-    virtual void dump(std::ostream& str) const = 0;
   };
   typedef boost::shared_ptr<Expression> ExpressionPtr;
 

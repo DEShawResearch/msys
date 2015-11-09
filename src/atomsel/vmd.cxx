@@ -163,7 +163,6 @@ namespace {
             }
             s.intersect(sub);
         }
-        void dump(std::ostream& out) const {}
     };
 
     class ParamTypePredicate : public StringPredicate {
@@ -211,7 +210,6 @@ namespace {
             }
             s.intersect(sub);
         }
-        void dump(std::ostream& out) const {}
     };
 }
 

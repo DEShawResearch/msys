@@ -2,7 +2,6 @@
 #define desres_msys_atomsel_predicate_hxx
 
 #include "selection.hxx"
-#include <ostream>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
@@ -14,7 +13,6 @@ namespace desres { namespace msys { namespace atomsel {
   public:
     virtual ~Predicate() {}
     virtual void eval( Selection& s ) = 0;
-    virtual void dump(std::ostream& str) const = 0;
   };
 
   typedef boost::shared_ptr<Predicate> PredicatePtr;

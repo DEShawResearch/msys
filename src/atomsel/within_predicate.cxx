@@ -22,13 +22,6 @@ namespace {
       : sys(e), pos(pos), cell(cell), rad(r), sub(s), exclude(excl), periodic(per) {}
 
     void eval( Selection& s );
-    void dump( std::ostream& str ) const {
-      if (periodic) str << "pb";
-      if (exclude) str << "ex";
-      str << "within " << rad << " of [";
-      sub->dump(str);
-      str << "]";
-    }
   };
   class WithinBondsPredicate : public Predicate {
     SystemPtr sys;
@@ -40,11 +33,6 @@ namespace {
       : sys(e), N(n), sub(s) {}
 
     void eval( Selection& s );
-    void dump( std::ostream& str ) const {
-      str << "withinbonds " << N << " of [";
-      sub->dump(str);
-      str << "]";
-    }
   };
   class KNearestPredicate : public Predicate {
     SystemPtr _sys;
@@ -59,12 +47,6 @@ namespace {
     : _sys(sys), pos(pos), cell(cell), _N(k), periodic(per), _sub(sub) {}
 
     void eval(Selection& s);
-    void dump( std::ostream& str ) const {
-        str << (periodic ? "pb" : "")
-            << "nearest " << _N << " to [";
-        _sub->dump(str);
-        str << "]";
-    }
   };
 }
 

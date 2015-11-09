@@ -5,12 +5,10 @@ namespace {
 
   struct AllPredicate : Predicate {
     void eval(Selection& s) {}
-    void dump(std::ostream& str) const { str << "all"; }
   };
 
   struct NonePredicate : Predicate {
     void eval(Selection& s) { s.clear(); }
-    void dump(std::ostream& str) const { str << "none"; }
   };
 
   struct AndPredicate : Predicate {
@@ -19,13 +17,6 @@ namespace {
     void eval(Selection& s) {
       left->eval(s);
       right->eval(s);
-    }
-    void dump(std::ostream& str) const {
-      str << "[";
-      left->dump(str);
-      str << "] and [";
-      right->dump(str);
-      str << "]";
     }
   };
   struct OrPredicate : Predicate {
@@ -37,13 +28,6 @@ namespace {
       right->eval(s2);
       s.add(s2);
     }
-    void dump(std::ostream& str) const {
-      str << "[";
-      left->dump(str);
-      str << "] or [";
-      right->dump(str);
-      str << "]";
-    }
   };
   struct NotPredicate : Predicate {
     PredicatePtr sub;
@@ -52,11 +36,6 @@ namespace {
       Selection s2(s);
       sub->eval(s2);
       s.subtract(s2);
-    }
-    void dump(std::ostream& str) const {
-      str << "not [";
-      sub->dump(str);
-      str << "]";
     }
   };
 }
