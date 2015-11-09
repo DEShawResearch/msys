@@ -31,14 +31,14 @@ namespace {
   using namespace desres::msys::atomsel;
 
   struct AllKeyword : Keyword {
-      AllKeyword() : Keyword("all", KEY_INT) {}
+      AllKeyword() : Keyword(KEY_INT) {}
       void iget(const Selection& s, std::vector<Int>& v) const {
         Id i,n=s.size();
         for (i=0; i<n; i++) if (s[i]) v[i]=1;
       }
   };
   struct NoneKeyword : Keyword {
-      NoneKeyword() : Keyword("none", KEY_INT) {}
+      NoneKeyword() : Keyword(KEY_INT) {}
       void iget(const Selection& s, std::vector<Int>& v) const {
         Id i,n=s.size();
         for (i=0; i<n; i++) if (s[i]) v[i]=0;
@@ -46,14 +46,14 @@ namespace {
   };
 
   struct MsysKeyword : Keyword {
-    MsysKeyword( const std::string& n, KeywordType t, SystemPtr _sys)
-      : Keyword(n,t), sys(_sys) {}
+    MsysKeyword( KeywordType t, SystemPtr _sys)
+      : Keyword(t), sys(_sys) {}
     SystemPtr sys;
   };
 
   struct AtomPropKeyword : Keyword {
     AtomPropKeyword( const std::string& n, KeywordType t, SystemPtr _sys)
-    : Keyword(n,t), sys(_sys), col(_sys->atomPropIndex(n)) {}
+    : Keyword(t), sys(_sys), col(_sys->atomPropIndex(n)) {}
 
     SystemPtr sys;
     Id col;
@@ -76,7 +76,7 @@ namespace {
 #define INT_KEY(attr,path) \
   namespace { \
     struct Keyword_##attr : MsysKeyword { \
-      Keyword_##attr(SystemPtr _ent) : MsysKeyword(#attr,KEY_INT,_ent) {} \
+      Keyword_##attr(SystemPtr _ent) : MsysKeyword(KEY_INT,_ent) {} \
       void iget(const Selection& s, std::vector<Int>& v) const { \
         Id i,n=s.size(); \
         for (i=0; i<n; i++) if (s[i]) v[i]=path; \
@@ -91,7 +91,7 @@ desres::msys::atomsel::keyword_##attr( SystemPtr ent ) { \
 #define DBL_KEY(attr,path) \
   namespace { \
     struct Keyword_##attr : MsysKeyword { \
-      Keyword_##attr(SystemPtr _ent) : MsysKeyword(#attr,KEY_DBL,_ent) {} \
+      Keyword_##attr(SystemPtr _ent) : MsysKeyword(KEY_DBL,_ent) {} \
       void dget(const Selection& s, std::vector<Dbl>& v) const { \
         Id i,n=s.size(); \
         for (i=0; i<n; i++) if (s[i]) v[i]=sys->path; \
@@ -107,7 +107,7 @@ namespace {
     struct Keyword_x : MsysKeyword {
         const float* pos;
         Keyword_x(SystemPtr mol, const float* pos) 
-        : MsysKeyword("x", KEY_DBL, mol), pos(pos) {}
+        : MsysKeyword(KEY_DBL, mol), pos(pos) {}
         void dget(Selection const& s, std::vector<Dbl>& v) const {
             Id i,n = s.size();
             for (i=0; i<n; i++) {
@@ -118,7 +118,7 @@ namespace {
     struct Keyword_y : MsysKeyword {
         const float* pos;
         Keyword_y(SystemPtr mol, const float* pos) 
-        : MsysKeyword("y", KEY_DBL, mol), pos(pos) {}
+        : MsysKeyword(KEY_DBL, mol), pos(pos) {}
         void dget(Selection const& s, std::vector<Dbl>& v) const {
             Id i,n = s.size();
             for (i=0; i<n; i++) {
@@ -129,7 +129,7 @@ namespace {
     struct Keyword_z : MsysKeyword {
         const float* pos;
         Keyword_z(SystemPtr mol, const float* pos) 
-        : MsysKeyword("z", KEY_DBL, mol), pos(pos) {}
+        : MsysKeyword(KEY_DBL, mol), pos(pos) {}
         void dget(Selection const& s, std::vector<Dbl>& v) const {
             Id i,n = s.size();
             for (i=0; i<n; i++) {
@@ -153,7 +153,7 @@ namespace desres { namespace msys { namespace atomsel {
 #define STR_KEY(attr,path) \
   namespace { \
     struct Keyword_##attr : MsysKeyword { \
-      Keyword_##attr(SystemPtr _ent) : MsysKeyword(#attr,KEY_STR,_ent) {} \
+      Keyword_##attr(SystemPtr _ent) : MsysKeyword(KEY_STR,_ent) {} \
       void sget(const Selection& s, std::vector<Str>& v) const { \
         Id i,n=s.size(); \
         for (i=0; i<n; i++) if (s[i]) v[i]=path; \

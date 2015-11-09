@@ -102,7 +102,6 @@ atomsel/keyword_predicate.cxx
 atomsel/msys_keyword.cxx
 atomsel/predicate.cxx
 atomsel/vmd.cxx
-atomsel/vmd_keyword.cxx
 atomsel/parser.cxx
 atomsel/within_predicate.cxx
 

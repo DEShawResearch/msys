@@ -19,11 +19,10 @@ namespace desres { namespace msys { namespace atomsel {
     typedef std::string Str;
 
     struct Keyword : public boost::enable_shared_from_this<Keyword> {
-        const std::string name;
         const KeywordType type;
 
-        explicit Keyword(const std::string& n, KeywordType t) 
-        : name(n), type(t) {}
+        explicit Keyword(KeywordType t) 
+        : type(t) {}
         virtual ~Keyword() {}
 
         virtual void iget(const Selection& s, std::vector<Int>& ) const;

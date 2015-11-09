@@ -1,6 +1,5 @@
 #include "vmd.hxx"
 #include "msys_keyword.hxx"
-#include "vmd_keyword.hxx"
 #include "keyword_predicate.hxx"
 #include "within_predicate.hxx"
 
@@ -100,7 +99,7 @@ Keyword* VMD::find_key(const char* id) {
       !strcmp(id,"ctnumber") ? keyword_ctnumber(sys) :
       !strcmp(id,"charge") ? keyword_charge(sys) :
       !strcmp(id,"element") ? keyword_element(sys) :
-      !strcmp(id,"fragment") ? keyword_fragment(sys) :
+      !strcmp(id,"fragment") ? keyword_fragid(sys) :
       !strcmp(id,"index") ? keyword_index(sys) :
       !strcmp(id,"mass") ? keyword_mass(sys) :
       !strcmp(id,"name") ? keyword_name(sys) :
@@ -110,6 +109,7 @@ Keyword* VMD::find_key(const char* id) {
       !strcmp(id,"resname") ? keyword_resname(sys) :
       !strcmp(id,"insertion") ? keyword_insertion(sys) :
       !strcmp(id,"fragid") ? keyword_fragid(sys) :
+      !strcmp(id,"fragment") ? keyword_fragid(sys) :
       !strcmp(id,"x") ? keyword_x(sys, pos) :
       !strcmp(id,"y") ? keyword_y(sys, pos) :
       !strcmp(id,"z") ? keyword_z(sys, pos) :
