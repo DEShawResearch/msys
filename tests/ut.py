@@ -257,6 +257,22 @@ class TestAlchemicalMorse(unittest.TestCase):
 
 class TestAtomsel(unittest.TestCase):
     
+    def testTrajectory(self):
+        mol=msys.Load('tests/files/alanin.pdb')
+        trj=molfile.dcd.read('tests/files/alanin.dcd')
+        for f in trj.frames():
+            box = NP.diag(NP.max(f.pos,0)-NP.min(f.pos,0))
+            id1 = mol.selectIds('within 5 of residue 3', pos=f.pos, box=box)
+            id2 = mol.selectIds('pbwithin 7 of residue 3', pos=f.pos, box=box)
+
+            mol.setPositions(f.pos)
+            mol.setCell(box)
+            id3 = mol.selectIds('within 5 of residue 3')
+            id4 = mol.selectIds('pbwithin 7 of residue 3')
+
+            self.assertEqual(id1, id3)
+            self.assertEqual(id2, id4)
+
     def testFunnyResnames(self):
         mol=msys.CreateSystem()
         a=mol.addAtom()

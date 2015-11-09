@@ -1232,11 +1232,17 @@ class System(object):
         atms=self._update_atoms()
         return [atms[i] for i in ids]
 
-    def selectIds(self, seltext):
+    def selectIds(self, seltext, pos=None, box=None):
         ''' Return the ids of the Atoms satisfying the given VMD atom
         selection.  This can be considerably faster than calling select().
+
+        if pos is supplied, it should be an Nx3 numpy array of positions,
+        where N=self.natoms.
+
+        If box is supplied, it should be a 3x3 numpy array of cell vectors,
+        like System.cell.
         '''
-        return self._ptr.selectAsList(seltext)
+        return self._ptr.selectAsList(seltext, pos, box)
 
     def selectArr(self, seltext):
         ''' Return the ids of the Atoms satisfying the given VMD atom
