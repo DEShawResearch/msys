@@ -103,6 +103,53 @@ desres::msys::atomsel::keyword_##attr( SystemPtr ent ) { \
   return KeywordPtr(new Keyword_##attr(ent)); \
 }
 
+namespace {
+    struct Keyword_x : MsysKeyword {
+        const float* pos;
+        Keyword_x(SystemPtr mol, const float* pos) 
+        : MsysKeyword("x", KEY_DBL, mol), pos(pos) {}
+        void dget(Selection const& s, std::vector<Dbl>& v) const {
+            Id i,n = s.size();
+            for (i=0; i<n; i++) {
+                if (s[i]) v[i] = pos ? pos[3*i] : sys->atomFAST(i).x;
+            }
+        }
+    };
+    struct Keyword_y : MsysKeyword {
+        const float* pos;
+        Keyword_y(SystemPtr mol, const float* pos) 
+        : MsysKeyword("y", KEY_DBL, mol), pos(pos) {}
+        void dget(Selection const& s, std::vector<Dbl>& v) const {
+            Id i,n = s.size();
+            for (i=0; i<n; i++) {
+                if (s[i]) v[i] = pos ? pos[3*i+1] : sys->atomFAST(i).y;
+            }
+        }
+    };
+    struct Keyword_z : MsysKeyword {
+        const float* pos;
+        Keyword_z(SystemPtr mol, const float* pos) 
+        : MsysKeyword("z", KEY_DBL, mol), pos(pos) {}
+        void dget(Selection const& s, std::vector<Dbl>& v) const {
+            Id i,n = s.size();
+            for (i=0; i<n; i++) {
+                if (s[i]) v[i] = pos ? pos[3*i+2] : sys->atomFAST(i).z;
+            }
+        }
+    };
+}
+namespace desres { namespace msys { namespace atomsel {
+    KeywordPtr keyword_x(SystemPtr mol, const float* pos) {
+        return KeywordPtr(new Keyword_x(mol, pos));
+    }
+    KeywordPtr keyword_y(SystemPtr mol, const float* pos) {
+        return KeywordPtr(new Keyword_y(mol, pos));
+    }
+    KeywordPtr keyword_z(SystemPtr mol, const float* pos) {
+        return KeywordPtr(new Keyword_z(mol, pos));
+    }
+}}}
+
 #define STR_KEY(attr,path) \
   namespace { \
     struct Keyword_##attr : MsysKeyword { \
@@ -137,9 +184,6 @@ INT_KEY(ctnumber,1+sys->chainFAST(sys->residueFAST(sys->atomFAST(i).residue).cha
 
 DBL_KEY(charge,atomFAST(i).charge)
 DBL_KEY(mass,atomFAST(i).mass)
-DBL_KEY(x,atomFAST(i).x)
-DBL_KEY(y,atomFAST(i).y)
-DBL_KEY(z,atomFAST(i).z)
 DBL_KEY(vx,atomFAST(i).vx)
 DBL_KEY(vy,atomFAST(i).vy)
 DBL_KEY(vz,atomFAST(i).vz)

@@ -10,14 +10,16 @@ using namespace desres::msys::atomsel;
 namespace {
   class WithinPredicate : public Predicate {
     SystemPtr sys;
+    const float* pos;
+    const double* cell;
     const float rad;
     PredicatePtr sub;
     const bool exclude;
     const bool periodic;
 
   public:
-    WithinPredicate( SystemPtr e, float r, bool excl, bool per, PredicatePtr s )
-      : sys(e), rad(r), sub(s), exclude(excl), periodic(per) {}
+    WithinPredicate( SystemPtr e, const float* pos, const double* cell, float r, bool excl, bool per, PredicatePtr s )
+      : sys(e), pos(pos), cell(cell), rad(r), sub(s), exclude(excl), periodic(per) {}
 
     void eval( Selection& s );
     void dump( std::ostream& str ) const {
@@ -46,13 +48,15 @@ namespace {
   };
   class KNearestPredicate : public Predicate {
     SystemPtr _sys;
+    const float* pos;
+    const double* cell;
     const unsigned _N;
     const bool periodic;
     PredicatePtr _sub;
 
   public:
-    KNearestPredicate(SystemPtr sys, unsigned k, bool per, PredicatePtr sub)
-    : _sys(sys), _N(k), periodic(per), _sub(sub) {}
+    KNearestPredicate(SystemPtr sys, const float* pos, const double* cell, unsigned k, bool per, PredicatePtr sub)
+    : _sys(sys), pos(pos), cell(cell), _N(k), periodic(per), _sub(sub) {}
 
     void eval(Selection& s);
     void dump( std::ostream& str ) const {
@@ -75,9 +79,13 @@ void WithinPredicate::eval( Selection& S ) {
     }
 
     std::vector<float> coords;
-    sys->getPositions(std::back_inserter(coords));
-    const float* pos = &coords[0];
-    const double* cell = periodic ? sys->global_cell[0] : NULL;
+    if (!pos) {
+        sys->getPositions(std::back_inserter(coords));
+        pos = &coords[0];
+    }
+    if (periodic && !cell) {
+        cell = sys->global_cell[0];
+    }
     IdList subsel_ids = subsel.ids();
     IdList S_ids = S.ids();
 
@@ -119,9 +127,13 @@ void KNearestPredicate::eval( Selection& S ) {
     S.subtract(subsel);
 
     std::vector<float> coords;
-    _sys->getPositions(std::back_inserter(coords));
-    const float* pos = &coords[0];
-    const double* cell = periodic ? _sys->global_cell[0] : NULL;
+    if (!pos) {
+        _sys->getPositions(std::back_inserter(coords));
+        pos = &coords[0];
+    }
+    if (periodic && !cell) {
+        cell = _sys->global_cell[0];
+    }
     IdList subsel_ids = subsel.ids();
     IdList S_ids = S.ids();
 
@@ -133,27 +145,27 @@ void KNearestPredicate::eval( Selection& S ) {
 
 namespace desres { namespace msys { namespace atomsel {
 
-  PredicatePtr within_predicate( SystemPtr sys, double r, PredicatePtr s ) {
-    return PredicatePtr(new WithinPredicate(sys,r,false,false,s));
+  PredicatePtr within_predicate( SystemPtr sys, const float* pos, double r, PredicatePtr s ) {
+    return PredicatePtr(new WithinPredicate(sys,pos,nullptr,r,false,false,s));
   }
 
-  PredicatePtr exwithin_predicate( SystemPtr sys, double r, PredicatePtr s ) {
-    return PredicatePtr(new WithinPredicate(sys,r,true,false,s));
+  PredicatePtr exwithin_predicate( SystemPtr sys, const float* pos, double r, PredicatePtr s ) {
+    return PredicatePtr(new WithinPredicate(sys,pos,nullptr,r,true,false,s));
   }
 
-  PredicatePtr pbwithin_predicate( SystemPtr sys, double r, PredicatePtr s ) {
-    return PredicatePtr(new WithinPredicate(sys,r,false,true,s));
+  PredicatePtr pbwithin_predicate( SystemPtr sys, const float* pos, const double* cell, double r, PredicatePtr s ) {
+    return PredicatePtr(new WithinPredicate(sys,pos,cell,r,false,true,s));
   }
 
   PredicatePtr withinbonds_predicate( SystemPtr sys, int n, PredicatePtr s ) {
     return PredicatePtr(new WithinBondsPredicate(sys,n,s));
   }
 
-    PredicatePtr k_nearest_predicate(SystemPtr sys, unsigned k, PredicatePtr S) {
-        return PredicatePtr(new KNearestPredicate(sys,k,false,S));
+    PredicatePtr k_nearest_predicate(SystemPtr sys, const float* pos, unsigned k, PredicatePtr S) {
+        return PredicatePtr(new KNearestPredicate(sys,pos,nullptr,k,false,S));
     }
-    PredicatePtr k_pbnearest_predicate(SystemPtr sys, unsigned k, PredicatePtr S) {
-        return PredicatePtr(new KNearestPredicate(sys,k,true,S));
+    PredicatePtr k_pbnearest_predicate(SystemPtr sys, const float* pos, const double* cell, unsigned k, PredicatePtr S) {
+        return PredicatePtr(new KNearestPredicate(sys,pos,cell,k,true,S));
     }
 
 }}}

@@ -12,7 +12,9 @@ namespace desres { namespace msys { namespace atomsel {
         void destroy_scanner();
     
         SystemPtr sys;
-        const char* txt;
+        const float* pos;
+        const double* cell;
+        const char* txt = 0;
 
         /* containers to keep pointers alive */
         std::vector<PredicatePtr> predicates;
@@ -23,12 +25,12 @@ namespace desres { namespace msys { namespace atomsel {
         Expression* add(ExpressionPtr e);
 
     public:
-        void* scanner;
-        Predicate* result;
+        void* scanner = 0;
+        Predicate* result = 0;
         std::string error;
     
-        VMD(SystemPtr ptr) 
-        : sys(ptr), txt(), scanner(), result()
+        VMD(SystemPtr mol, const float* pos, const double* cell) 
+        : sys(mol), pos(pos), cell(cell)
         {}
 
         inline char getc() { return *txt++; }

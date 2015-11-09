@@ -110,12 +110,12 @@ Keyword* VMD::find_key(const char* id) {
       !strcmp(id,"resname") ? keyword_resname(sys) :
       !strcmp(id,"insertion") ? keyword_insertion(sys) :
       !strcmp(id,"fragid") ? keyword_fragid(sys) :
-      !strcmp(id,"x") ? keyword_x(sys) :
-      !strcmp(id,"y") ? keyword_y(sys) :
-      !strcmp(id,"z") ? keyword_z(sys) :
-      !strcmp(id,"vx") ? keyword_x(sys) :
-      !strcmp(id,"vy") ? keyword_y(sys) :
-      !strcmp(id,"vz") ? keyword_z(sys) :
+      !strcmp(id,"x") ? keyword_x(sys, pos) :
+      !strcmp(id,"y") ? keyword_y(sys, pos) :
+      !strcmp(id,"z") ? keyword_z(sys, pos) :
+      !strcmp(id,"vx") ? keyword_vx(sys) :
+      !strcmp(id,"vy") ? keyword_vy(sys) :
+      !strcmp(id,"vz") ? keyword_vz(sys) :
       KeywordPtr();
     if (!key) key = keyword_atomprop(sys, id);
     if (key) {
@@ -241,7 +241,7 @@ Predicate* VMD::find_macro(const char* s) {
         }
     }
     if (!macro) return NULL;
-    return add(VMD(sys).parse(macro));
+    return add(VMD(sys, pos, cell).parse(macro));
 }
 
 bool VMD::find_function(const char* s) {
@@ -272,13 +272,13 @@ Predicate* VMD::make_key(Keyword* key, TargetList* targets) {
 }
 
 Predicate* VMD::make_within(double r, Predicate* sub) {
-    return add(within_predicate(sys, r, sub->shared_from_this()));
+    return add(within_predicate(sys, pos, r, sub->shared_from_this()));
 }
 Predicate* VMD::make_pbwithin(double r, Predicate* sub) {
-    return add(pbwithin_predicate(sys, r, sub->shared_from_this()));
+    return add(pbwithin_predicate(sys, pos, cell, r, sub->shared_from_this()));
 }
 Predicate* VMD::make_exwithin(double r, Predicate* sub) {
-    return add(exwithin_predicate(sys, r, sub->shared_from_this()));
+    return add(exwithin_predicate(sys, pos, r, sub->shared_from_this()));
 }
 Predicate* VMD::make_withinbonds(int n, Predicate* sub) {
     return add(withinbonds_predicate(sys, n, sub->shared_from_this()));
@@ -291,11 +291,11 @@ Predicate* VMD::make_same(Keyword* k, Predicate* sub) {
 }
 
 Predicate* VMD::make_nearest(int r, Predicate* sub) {
-    return add(k_nearest_predicate(sys, r, sub->shared_from_this()));
+    return add(k_nearest_predicate(sys, pos, r, sub->shared_from_this()));
 }
 
 Predicate* VMD::make_pbnearest(int r, Predicate* sub) {
-    return add(k_pbnearest_predicate(sys, r, sub->shared_from_this()));
+    return add(k_pbnearest_predicate(sys, pos, cell, r, sub->shared_from_this()));
 }
 
 Expression* VMD::make_exp(int v) {

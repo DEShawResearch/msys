@@ -5,7 +5,13 @@
 namespace desres { namespace msys { 
 
     IdList Atomselect(SystemPtr ptr, const std::string& txt) {
-        atomsel::VMD vmd(ptr);
+        return Atomselect(ptr, txt, nullptr, nullptr);
+    }
+
+    IdList Atomselect(SystemPtr ptr, const std::string& txt,
+                      const float* pos, const double* cell) {
+
+        atomsel::VMD vmd(ptr, pos, cell);
         atomsel::PredicatePtr result = vmd.parse(txt);
         if (!result) {
             MSYS_FAIL("invalid selection:" << vmd.error);

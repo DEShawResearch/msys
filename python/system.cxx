@@ -548,8 +548,41 @@ namespace {
         return L;
     }
 
-    PyObject* list_Atomselect(SystemPtr mol, std::string const& sel) {
-        IdList ids = Atomselect(mol,sel);
+    IdList wrap_atomselect(SystemPtr mol, std::string const& sel,
+                           PyObject* posobj, PyObject* boxobj) {
+        objptr posarr, boxarr;
+        float* pos = NULL;
+        double* box = NULL;
+        if (posobj != Py_None) {
+            posarr.reset(PyArray_FromAny(
+                        posobj, PyArray_DescrFromType(NPY_FLOAT32),
+                        2,2, NPY_C_CONTIGUOUS, NULL), destructor);
+            if (!posarr) throw_error_already_set();
+            if (PyArray_DIM(posarr.get(),0)!=mol->atomCount() ||
+                PyArray_DIM(posarr.get(),1)!=3) {
+                PyErr_Format(PyExc_ValueError, "pos has wrong shape");
+                throw_error_already_set();
+            }
+            pos = static_cast<float*>(PyArray_DATA(posarr.get()));
+        }
+        if (boxobj != Py_None) {
+            boxarr.reset(PyArray_FromAny(
+                        boxobj, PyArray_DescrFromType(NPY_FLOAT64),
+                        2,2, NPY_C_CONTIGUOUS, NULL), destructor);
+            if (!boxarr) throw_error_already_set();
+            if (PyArray_DIM(boxarr.get(),0)!=3 ||
+                PyArray_DIM(boxarr.get(),1)!=3) {
+                PyErr_Format(PyExc_ValueError, "box has wrong shape");
+                throw_error_already_set();
+            }
+            box = static_cast<double*>(PyArray_DATA(boxarr.get()));
+        }
+        return Atomselect(mol, sel, pos, box);
+    }
+
+    PyObject* list_Atomselect(SystemPtr mol, std::string const& sel,
+                               PyObject* pos, PyObject* box) {
+        IdList ids = wrap_atomselect(mol,sel, pos, box);
         PyObject *L = PyList_New(ids.size());
         if (!L) throw_error_already_set();
         for (unsigned i=0; i<ids.size(); i++) {
@@ -558,8 +591,9 @@ namespace {
         return L;
     }
 
-    PyObject* array_Atomselect(SystemPtr mol, std::string const& sel) {
-        IdList ids = Atomselect(mol,sel);
+    PyObject* array_Atomselect(SystemPtr mol, std::string const& sel,
+                               PyObject* pos, PyObject* box) {
+        IdList ids = wrap_atomselect(mol,sel, pos, box);
         npy_intp dims[1];
         dims[0] = ids.size();
         PyObject *arr = PyArray_SimpleNew(1,dims,NPY_UINT32);
@@ -828,9 +862,21 @@ namespace desres { namespace msys {
             .def("addNonbondedFromSchema", AddNonbonded)
 
             /* atom selection */
-            .def("select", Atomselect)
-            .def("selectAsList", list_Atomselect)
-            .def("selectAsArray", array_Atomselect)
+            .def("select", wrap_atomselect,
+                    (arg("mol"),
+                     arg("sel"),
+                     arg("pos")=object(),
+                     arg("box")=object()))
+            .def("selectAsList", list_Atomselect,
+                    (arg("mol"),
+                     arg("sel"),
+                     arg("pos")=object(),
+                     arg("box")=object()))
+            .def("selectAsArray", array_Atomselect,
+                    (arg("mol"),
+                     arg("sel"),
+                     arg("pos")=object(),
+                     arg("box")=object()))
 
             /* append */
             .def("append", AppendSystem)
