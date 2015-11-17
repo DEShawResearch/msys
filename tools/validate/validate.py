@@ -36,18 +36,19 @@ class TestAnton(TestCase):
 
     def testContacts(self):
         ''' No nonbonded atoms within 1A of each other '''
-        contacts = self.mol.findContactIds(1.0)
-        formatted_results = '\n'.join('%6d %6d %f' % x for x in contacts)
+        ids = self.mol.selectIds('atomicnumber > 0')
+        contacts = self.mol.findContactIds(1.0, ids)
+        formatted_results = '\n'.join('%6d %6d %f' % x for x in contacts[:10])
+        num = len(contacts)
         self.assertEqual(len(contacts), 0,
-                "Found nonbonded atoms within 1A of each other: \n%s" % formatted_results)
+                "Found %d nonbonded atom pairs within 1A of each other: \n%s" % (num, formatted_results))
 
     def testPeriodicContacts(self):
         ''' No contacts crossing periodic boundaries within 1A '''
         mol=self.mol.clone()
         natoms=mol.natoms
-        ct=mol.ncts+1
         mol.append(mol)
-        sel='(not ctnumber %d) and within 1 of ctnumber %d' % (ct,ct)
+        sel='(index < %d) and within 1 of (index >= %d)' % (natoms, natoms)
         pos = mol.positions
         a,b,c = mol.cell
         bad=[]
