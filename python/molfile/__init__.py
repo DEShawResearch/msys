@@ -425,7 +425,7 @@ class SeqFile(object):
                 except ValueError:
                     pass
             if self.rows is None:
-                self.rows  = numpy.loadtxt(path)    # handles empty rows case
+                self.rows  = numpy.loadtxt(path, ndmin=2)
             self.times = self.rows[:,0] if len(self.rows) else numpy.array([])
             self.props=props
 
