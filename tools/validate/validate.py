@@ -67,13 +67,14 @@ class TestAnton(TestCase):
 class TestStrict(TestCase):
     def testSplitWaterResids(self):
         '''every water molecule must have its own resid'''
-        water_atoms = self.mol.select('water')
+        water_atoms = self.mol.select('water and atomicnumber 8')
 
         help_string="Use dms-fix-water-residues to put each water in its own residue."
 
         for water_atom in water_atoms:
             res = water_atom.residue
-            self.assertEqual(len(res.atoms), 3,
+            heavy = [a for a in res.atoms if a.atomic_number > 0]
+            self.assertEqual(len(heavy), 3,
                              help_string)
             fragids = set(map(lambda x: x.fragid, res.atoms))
             self.assertEqual(len(fragids), 1,
