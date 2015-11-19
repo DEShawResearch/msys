@@ -1,3 +1,9 @@
+1.7.135 System.selectIds takes optional pos and box.
+        The 'fragment' atom selection keyword is now a synonym for 'fragid'.
+        dtr-validate now takes only a single path.
+        Molfile handles single-row seqfiles.
+        Make dms-validate handle systems with virtuals more intelligently.
+
 1.7.134 Double the speed of within searches for small target selections.
 
 1.7.133 Don't put inchi strings in alchemical dms.
