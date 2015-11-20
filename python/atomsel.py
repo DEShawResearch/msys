@@ -56,7 +56,7 @@ class Atomsel(object):
         is_reflection = (numpy.linalg.det(v) * numpy.linalg.det(w_tr)) < 0.0
         if is_reflection:
             s[-1] = -s[-1]
-            v[:-1] = -v[:-1]
+            v[:,-1] = -v[:,-1]
         rx = numpy.dot(v, w_tr).transpose()
         rpos *= rpos
         opos *= opos

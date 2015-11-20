@@ -1,3 +1,5 @@
+1.7.136 Fix bug in System.atomsel when alignment produces reflections.
+
 1.7.135 System.selectIds takes optional pos and box.
         The 'fragment' atom selection keyword is now a synonym for 'fragid'.
         dtr-validate now takes only a single path.
