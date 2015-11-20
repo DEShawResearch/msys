@@ -131,6 +131,9 @@ namespace {
         return Load(path, NULL, structure_only, without_tables);
     }
 
+    Molecule* from_smiles(std::string const& s) {
+        return FromSmilesString(s).release();
+    }
 }
 
 namespace desres { namespace msys { 
@@ -197,7 +200,8 @@ namespace desres { namespace msys {
 
         def("ExportSDFBytes", export_sdf_bytes);
         def("Load", load);
-        def("FromSmilesString", FromSmilesString);
+        def("FromSmilesString", from_smiles,
+                return_value_policy<manage_new_object>());
         def("Save", save);
 
 
