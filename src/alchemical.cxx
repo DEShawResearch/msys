@@ -1250,9 +1250,10 @@ SystemPtr desres::msys::MakeAlchemical( SystemPtr A, SystemPtr B,
             std::set_difference(atoms.begin(), atoms.end(), 
                 dummies.begin(), dummies.end(), ids.begin()) - ids.begin());
     /* insert the dummies after the last alist atom */
-    IdList::iterator pos = std::find(ids.begin(), ids.end(), alist.back());
-    ids.insert(pos+1, dummies.begin(), dummies.end());
-    assert(ids.size()==atoms.size());
+    if (!alist.empty()) {
+        IdList::iterator pos = std::find(ids.begin(), ids.end(), alist.back());
+        if (pos != ids.end()) ids.insert(pos+1, dummies.begin(), dummies.end());
+    }
     return Clone(A, ids);
 }
 

@@ -1913,6 +1913,10 @@ class TestMain(unittest.TestCase):
         self.assertEqual(T.name, '')
         self.assertEqual([t.id for t in T.terms], [])
 
+    def testEmptyAlchemical(self):
+        mol = msys.Load('tests/files/ch4.dms')
+        msys.MakeAlchemical(mol, mol, [])
+
     def testChargeC(self):
         m=msys.CreateSystem()
         nb=m.addNonbondedFromSchema('vdw_12_6')
