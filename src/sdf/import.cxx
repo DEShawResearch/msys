@@ -1,10 +1,6 @@
 #include "../sdf.hxx"
 #include "elements.hxx"
 #include "../append.hxx"
-#include <boost/foreach.hpp>
-#include <boost/algorithm/string.hpp> /* for boost::trim */
-#include <boost/iostreams/filtering_stream.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
 
 #include <stdio.h>
@@ -14,7 +10,6 @@
 
 #include <fstream>
 #include <sstream>
-
 
 using namespace desres::msys;
 
@@ -57,39 +52,7 @@ namespace {
     }
 
     class iterator : public LoadIterator {
-        std::ifstream file;
-        boost::iostreams::filtering_istream in;
-
-        void skip_to_end();
-
-    public:
-        explicit iterator(std::string const& path)
-        : file(path.c_str()) {
-            if (!file) {
-                MSYS_FAIL("Failed opening SDF file for reading at " << path);
-            }
-            init(file);
-        }
-        explicit iterator(std::istream& in) {
-            init(in);
-        }
-
-        void init(std::istream& input) {
-            /* FIXME - copied from mae/mae.cxx */
-            /* check for gzip magic number */
-            if (input.get()==0x1f && input.get()==0x8b) {
-                in.push(boost::iostreams::gzip_decompressor());
-            }
-            input.seekg(0);
-            in.push(input);
-        }
-
-        SystemPtr next();
-    };
-
-    class scanner : public MoleculeIterator {
         FILE* fp = 0;
-        int (*closer)(FILE *) = NULL;
         char buf[1024];
         bool getline() {
             return fgets(buf, sizeof(buf), fp)!=NULL;
@@ -192,14 +155,11 @@ namespace {
         }
 
     public:
-        explicit scanner(FILE* fp, int (*closer)(FILE *)) 
-        : fp(fp), closer(closer) {
-            if (!closer) this->closer = fclose;
-        }
-        ~scanner() { if (fp) closer(fp); }
+        explicit iterator(FILE* fp) : fp(fp) {}
+        ~iterator() { if (fp) fclose(fp); }
 
-        MoleculePtr next() {
-            MoleculePtr ptr;
+        SystemPtr next() {
+            SystemPtr ptr;
 
             // three lines for header block, then one for counts
             if (!getline()) return ptr;
@@ -215,8 +175,12 @@ namespace {
                 MSYS_FAIL("Bad counts line: " << skip_to_end());
             }
 
-            ptr.reset(new Molecule(natoms, nbonds));
-            ptr->name() = name;
+            ptr = System::create();
+            System& mol = *ptr;
+            mol.addChain();
+            mol.addResidue(0);
+            mol.name = name;
+            mol.ct(0).setName(name);
 
             // atoms
             for (unsigned short i=0; i<natoms; i++) {
@@ -228,24 +192,26 @@ namespace {
                 if (sz<34) {
                     MSYS_FAIL("Malformed atom line: " << skip_to_end());
                 }
-                ptr->atom(i).x = parse_coord(buf   );
-                ptr->atom(i).y = parse_coord(buf+10);
-                ptr->atom(i).z = parse_coord(buf+20);
-                ptr->atom(i).atomic_number = parse_element(buf+31);
+                auto& atm = mol.atomFAST(mol.addAtom(0));
+                atm.x = parse_coord(buf   );
+                atm.y = parse_coord(buf+10);
+                atm.z = parse_coord(buf+20);
+                atm.atomic_number = parse_element(buf+31);
+                atm.name = AbbreviationForElement(atm.atomic_number);
 
                 if (sz>=39) {
                     auto q = parse_count(buf+36);
                     if (q==BAD_COUNT) {
                         MSYS_FAIL("Bad charge: " << skip_to_end());
                     }
-                    ptr->atom(i).formal_charge = q==0 ? 0 : 4-q;
+                    atm.formal_charge = q==0 ? 0 : 4-q;
                 }
                 if (sz>=42) {
                     auto s = parse_count(buf+39);
                     if (s==BAD_COUNT) {
                         MSYS_FAIL("Bad stereo: " << skip_to_end());
                     }
-                    ptr->atom(i).stereo_parity = s;
+                    atm.stereo_parity = s;
                 }
             }
 
@@ -259,15 +225,16 @@ namespace {
                 if (sz<9) {
                     MSYS_FAIL("Malformed bond line: " << skip_to_end());
                 }
-                ptr->bond(i).i =     parse_count(buf  )-1;
-                ptr->bond(i).j =     parse_count(buf+3)-1;
-                ptr->bond(i).order = parse_count(buf+6);
-                ptr->bond(i).stereo = parse_count(buf+9);
-                if (ptr->bond(i).order == 4) {
-                    ptr->bond(i).order = 1;
-                    ptr->bond(i).aromatic = 1;
-                } else if (ptr->bond(i).order<1 ||
-                           ptr->bond(i).order>4) {
+                auto ai = parse_count(buf  )-1;
+                auto aj = parse_count(buf+3)-1;
+                auto& bnd = mol.bondFAST(mol.addBond(ai,aj));
+                bnd.order = parse_count(buf+6);
+                bnd.stereo = parse_count(buf+9);
+                if (bnd.order == 4) {
+                    bnd.order = 1;
+                    bnd.resonant_order = 1.5;       
+                    bnd.aromatic = 1;
+                } else if (bnd.order<1 || bnd.order>4) {
                     MSYS_FAIL("Unsupported bond type in bond record: " << skip_to_end());
                 }
             }
@@ -282,7 +249,7 @@ namespace {
                         if (!cleared_charges) {
                             cleared_charges = true;
                             for (int i=0; i<natoms; i++) {
-                                ptr->atom(i).formal_charge = 0;
+                                mol.atomFAST(i).formal_charge = 0;
                             }
                         }
                         int n = parse_count(buf+6);
@@ -295,7 +262,7 @@ namespace {
                             if (aid==BAD_COUNT || chg==BAD_COUNT) {
                                 MSYS_FAIL("Malformed CHG line: " << skip_to_end());
                             }
-                            ptr->atom(aid-1).formal_charge = chg;
+                            mol.atom(aid-1).formal_charge = chg;
                         }
                     }
                 } else if (!strncmp(buf, "A  ", 3)) {
@@ -337,8 +304,7 @@ namespace {
                                 auto sz = val.size();
                                 if (sz==1) val.clear(); /* just a newline */
                                 else if (sz>1) val.resize(sz-2);
-                                ptr->data().insert(
-                                        Molecule::Data::value_type(key,val));
+                                add_typed_keyval(key,val,mol.ct(0));
                             }
                             needline = false;
                             break;
@@ -356,242 +322,23 @@ namespace {
     };
 }
 
-MoleculeIteratorPtr desres::msys::ScanSdf(FILE* fp, int (*closer)(FILE *)) {
-    return std::unique_ptr<MoleculeIterator>(new scanner(fp, closer));
-}
-
-void iterator::skip_to_end() {
-    std::string line;
-    while (std::getline(in,line)) {
-        if (line.compare(0,4,"$$$$")==0) break;
-    }
-}
-
-SystemPtr iterator::next() {
-    if (in.eof()) return SystemPtr();
-
-    /* Header block contains exactly three lines.  */
-    std::string h1, h2, h3;
-    std::getline(in,h1);
-    std::getline(in,h2);
-    std::getline(in,h3);
-    if (!in) {
-        if (in.eof()) return SystemPtr();
-        skip_to_end();
-        MSYS_FAIL("Failed reading header block.");
-    }
-
-    /* create system; assign molecule name from line 1*/
-    SystemPtr mol = System::create();
-    Id chn = mol->addChain();
-    Id res = mol->addResidue(chn);
-    boost::trim(h1);
-    mol->name = h1;
-    mol->ct(0).setName(h1);
-
-    /* parse counts line */
-    std::string line;
-    if (!std::getline(in,line)) {
-        skip_to_end();
-        MSYS_FAIL("Failed reading counts");
-    }
-
-    int natoms = stringToInt(line.substr(0,3));
-    //int nbonds = stringToInt(line.substr(3,3));
-    /* HACK: Support lines like that which were produced by older msys:
-9301001  0  0  1  0            999 V2000
-    */
-    std::string bondstr = line.substr(3,4);
-    boost::trim(bondstr);
-    int nbonds = stringToInt(bondstr);
-
-    //std::vector<int> valenceList;
-
-    /* Load Atoms */
-    for (int i=0; i<natoms; i++) {
-        if (!std::getline(in, line)) {
-            skip_to_end();
-            MSYS_FAIL("Missing expected Atom record " << i+1);
-        }
-
-        /* Allow atom lines to have incomplete info (must have up to element) */
-        if(line.size()<34){
-            skip_to_end();
-            MSYS_FAIL("Malformed atom line:\n"<<line);
-        }
-    
-        Id atm = mol->addAtom(res);
-        atom_t& atom = mol->atom(atm);
-    
-        atom.x = stringToDouble(line.substr(0,10));
-        atom.y = stringToDouble(line.substr(10,10));
-        atom.z = stringToDouble(line.substr(20,10));
-        std::string sym=line.substr(31,3);
-        boost::trim(sym);
-        atom.name = sym;
-        atom.atomic_number = ElementForAbbreviation(sym.c_str());
-
-        if(line.size()>=39){
-            int q=stringToInt(line.substr(36,3));
-            /* Values of parsed charge field: 
-               0 = uncharged or value other than these:
-               1 = +3, 2 = +2, 3 = +1,
-               4 = doublet radical, 
-               5 = -1, 6 = -2, 7 = -3 
-            */
-            if(q<0 || q>7){
-                skip_to_end();
-                MSYS_FAIL("charge specification for atom is out of range:\n" << line);
-            }
-            if(q==4){
-                skip_to_end();
-                MSYS_FAIL("Skipping entry with doublet radical charge specification:\n" << line);
-            }
-            /* Just set formal charge, not 'charge', for consistency with
-             * the exporter, which only looks at formal charge.  */
-            atom.formal_charge = q==0 ? 0 : 4-q;
-            
-            // we don't currently use the valence info, so let's not waste
-            // our time parsing it.
-#if 0
-            if(line.size()>=51){
-                int v=stringToInt(line.substr(48,3));
-                /* Values of parsed valence field: 
-                   0 = no marking (default)
-                   (1 to 14) = (1 to 14) 
-                   15 = zero valence
-                */
-                if(v<0 || v>15){
-                    skip_to_end();
-                    MSYS_FAIL("valence specification for atom is out of range:\n" << line);
-                }
-                /* Use valence list to check bonds? */
-                valenceList.push_back(v);
-            }
-#endif
-        }
-    } 
-
-    /* Load Bonds */
-    for (int i=0; i<nbonds; i++) {
-
-        if (!std::getline(in, line)) {
-            skip_to_end();
-            MSYS_FAIL("Missing expected Bond record " << i+1);
-        }
-        if(line.size()<9){
-            skip_to_end();
-            MSYS_FAIL("Malformed bond line:\n"<<line);
-        }
-
-        int ai=stringToInt(line.substr(0,3));
-        int aj=stringToInt(line.substr(3,3));
-        int type=stringToInt(line.substr(6,3));
-
-        if (ai<1 || aj<1 || ai>natoms || aj>natoms) {
-            skip_to_end();
-            MSYS_FAIL("Invalid atom reference in Bond record:\n" << line);
-        }
-        if(type<1 || type>4){
-            skip_to_end();
-            MSYS_FAIL("Invalid bond type in Bond record:\n" << line);
-        }
-        Id bnd = mol->addBond(ai-1, aj-1);
-        bond_t& bond = mol->bond(bnd);
-        if (type==4) {
-            bond.order = 1;
-            bond.resonant_order = 1.5;       
-        }else{
-            bond.order = bond.resonant_order = type;
-        }
-    }
-    /* properties, data and end of molecule delimeter scanning.
-     * Incompletely parsed. */
-    bool cleared_m_chg = false;
-    bool needline = true;
-    for(;;) {
-        if (needline && !std::getline(in, line)) break;
-        if (line.compare(0,3,"M  ")==0){
-            if (line.compare(3,3,"CHG")==0){
-                /* Atom Charge Info supersedes atom record lines */
-                if (!cleared_m_chg) {
-                    cleared_m_chg = true;
-                    for (Id i=0; i<mol->atomCount(); i++) {
-                        mol->atom(i).formal_charge=0;
-                    }
-                }
-                std::istringstream ss(line.substr(6));
-                int i, n;
-                ss >> n;
-                for (i=0; i<n; i++) {
-                    int ai,fc;
-                    ss >> ai >> fc;
-                    if (!ss) {
-                        skip_to_end();
-                        MSYS_FAIL("Failed parsing CHG line " << line);
-                    }
-                    mol->atom(ai-1).formal_charge = fc;
-                }
-
-            } else if(line.compare(3,3,"END")==0){
-                // End of molecule properties block
-            }
-        }else if(line.compare(0,3,"A  ")==0 || line.compare(0,3,"G  ")==0){
-            std::getline(in, line);
-        }else if(line.compare(0,3,"V  ")==0){
-        }else if(line.compare(0,2,"> ")==0){
-            /* If <xxx> is found on the line, use xxx as the key value */
-            std::string key,val;
-            size_t langle = line.find('<', 2);
-            size_t rangle = line.find('>', langle+1);
-            if (langle!=std::string::npos &&
-                rangle!=std::string::npos) {
-                key = line.substr(langle+1, rangle-langle-1);
-            }
-            while (std::getline(in, line)) {
-                if(line.compare(0,2,"> ")==0 ||
-                   line.compare(0,4,"$$$$")==0) break;
-                if (!val.empty()) val += '\n';
-                val += line;
-            }
-            boost::trim(val);
-            add_typed_keyval(key,val,mol->ct(0));
-            needline = false;
-            continue;
-        }else if (line.compare(0,4,"$$$$")==0){
-            // End of molecule
-            break;
-        }else{
-            /* According to the spec, we shouldnt find any other blank lines,
-               but we will be forgiving just in case */
-            boost::trim(line);
-            if(line != "") {
-                skip_to_end();
-                MSYS_FAIL("Unknown line in SDF file:\n"<<line);
-            }
-        }
-        needline = true;
-    }
-    return mol;
-}
-
 SystemPtr desres::msys::ImportSdf(std::string const& path) {
+    auto iter = SdfIterator(path);
     SystemPtr ct, mol = System::create();
-    iterator it(path);
-    while ((ct=it.next())) AppendSystem(mol,ct);
     mol->name = path;
+    while ((ct = iter->next())) {
+        AppendSystem(mol, ct);
+    }
     return mol;
 }
-
-SystemPtr desres::msys::ImportSdfFromStream(std::istream& in) {
-    SystemPtr ct, mol = System::create();
-    iterator it(in);
-    while ((ct=it.next())) AppendSystem(mol,ct);
-    return mol;
-}
-
 
 LoadIteratorPtr desres::msys::SdfIterator(std::string const& path) {
-    return LoadIteratorPtr(new iterator(path));
+    FILE* fp = fopen(path.data(), "r");
+    if (!fp) MSYS_FAIL(strerror(errno));
+    return ScanSdf(fp);
+}
+
+LoadIteratorPtr desres::msys::ScanSdf(FILE* fp) {
+    return LoadIteratorPtr(fp ? new iterator(fp) : nullptr);
 }
 

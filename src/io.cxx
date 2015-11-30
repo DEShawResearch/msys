@@ -1,5 +1,4 @@
 #include "io.hxx"
-#include "atomsel/regex.hxx"
 #include "dms.hxx"
 #include "mae.hxx"
 #include "pdb.hxx"
@@ -8,28 +7,29 @@
 #include "mol2.hxx"
 #include "xyz.hxx"
 #include "sdf.hxx"
-#include "archive.hxx"
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string.hpp>
 
 using namespace desres::msys;
 
 namespace {
+    // true if path ends with any of the endings in expr, separated by ','
     bool match(std::string const& path, std::string const& expr) {
         std::vector<std::string> endings;
         boost::split(endings, expr, boost::is_any_of(","));
-        for (unsigned i=0; i<endings.size(); i++) {
-            std::string p(".+\\.");
-            p += endings[i];
-            if (regex_match(path,atomsel::Regex(p))) {
-                return true;
-            }
+        for (auto const& ending : endings) {
+            if (boost::ends_with(path, ending)) return true;
         }
         return false;
     }
 
     bool match_web(std::string const& path) {
-        return regex_match(path, atomsel::Regex("[0-9][a-z][a-z0-9][a-z0-9]"));
+        return path.size()==4 && 
+               isdigit(path[0]) &&
+               isalpha(path[1]) &&
+               isalnum(path[2]) &&
+               isalnum(path[3]);
     }
 
     const char *format_names[] = {
@@ -42,8 +42,7 @@ namespace {
         "XYZ",
         "SDF",
         "WEBPDB",
-        "PSF",
-        "ARCHIVE"
+        "PSF"
     };
 
     class DefaultIterator : public LoadIterator {
@@ -76,7 +75,6 @@ namespace desres { namespace msys {
         const char* XYZ = "xyz";
         const char* SDF = "sdf,sdf.gz,sdfgz";
         const char* PSF = "psf";
-        const char* MSYS= "msys";
 
         if (match(path, DMS)) return DmsFileFormat;
         if (match(path, MAE)) return MaeFileFormat;
@@ -86,7 +84,6 @@ namespace desres { namespace msys {
         if (match(path, XYZ)) return XyzFileFormat;
         if (match(path, SDF)) return SdfFileFormat;
         if (match(path, PSF)) return PsfFileFormat;
-        if (match(path,MSYS)) return MsysFileFormat;
         if (match_web(path))  return WebPdbFileFormat;
         return UnrecognizedFileFormat;
     }
@@ -132,9 +129,6 @@ namespace desres { namespace msys {
                 break;
             case PsfFileFormat:
                 m=ImportPSF(path);
-                break;
-            case MsysFileFormat:
-                m=ImportArchive(path);
                 break;
             case WebPdbFileFormat:
                 m=ImportWebPDB(path);
@@ -220,9 +214,6 @@ namespace desres { namespace msys {
                 ExportSdf(mol, path,
                       (flags & SaveOptions::Append ? SdfExport::Append : 0)
                     );
-                break;
-            case MsysFileFormat:
-                ExportArchive(mol, path);
                 break;
             default:
                 MSYS_FAIL("No support for saving file '" << path << "' of type "

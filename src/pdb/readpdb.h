@@ -142,7 +142,7 @@ void desres_msys_get_pdb_cryst1(const char *record,
 static void desres_msys_get_pdb_coordinates(const char *record, 
                                 double *x, double *y, double *z,
                                 double *occup, double *beta,
-                                int *formal_charge) {
+                                int8_t *formal_charge) {
   char numstr[60]; /* store all fields in one array to save memset calls */
   memset(numstr, 0, sizeof(numstr));
 
@@ -297,7 +297,7 @@ static void desres_msys_get_pdb_fields(const char *record, int reclength, int *s
                            char *altloc, char *elementsymbol,
                            double *x, double *y, double *z, 
                            double *occup, double *beta,
-                           int* formal_charge) {
+                           int8_t* formal_charge) {
   char serialbuf[6];
 
   /* get atom serial number */

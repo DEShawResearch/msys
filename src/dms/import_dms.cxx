@@ -1,8 +1,10 @@
 #include "dms.hxx"
+#include "../analyze.hxx"
 #include "../clone.hxx"
 #include "../dms.hxx"
-#include "../term_table.hxx"
+#include "../import.hxx"
 #include "../override.hxx"
+#include "../term_table.hxx"
 
 #include <sstream>
 #include <stdio.h>
@@ -704,7 +706,7 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only,
         }
     }
 
-    h->analyze();
+    Analyze(h);
     return h;
 }
 

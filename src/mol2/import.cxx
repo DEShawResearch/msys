@@ -1,5 +1,7 @@
 #include "../mol2.hxx"
 #include "../sssr.hxx"
+#include "../import.hxx"
+#include "../analyze.hxx"
 #include "elements.hxx"
 #include "append.hxx"
 #include <boost/foreach.hpp>
@@ -203,6 +205,6 @@ SystemPtr iterator::next() {
             default: ;
         }
     }
-    mol->analyze();
+    Analyze(mol);
     return mol;
 }

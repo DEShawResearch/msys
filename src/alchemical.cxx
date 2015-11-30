@@ -1,4 +1,5 @@
 #include "alchemical.hxx"
+#include "import.hxx"
 #include "clone.hxx"
 #include "term_table.hxx"
 #include "schema.hxx"

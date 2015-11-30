@@ -9,8 +9,6 @@
 #include "value.hxx"
 #include "smallstring.hxx"
 
-#include <boost/serialization/binary_object.hpp>
-
 namespace desres { namespace msys {
 
     class TermTable;
@@ -22,8 +20,6 @@ namespace desres { namespace msys {
     class GlobalCell {
         std::vector<double> data;
 
-        friend class boost::serialization::access;
-        template <typename Ar> void serialize(Ar& a, unsigned) { a & data; }
     public:
         GlobalCell() : data(9) {}
         double*       operator[](unsigned i)       { return &data.at(3*i); }
@@ -45,10 +41,6 @@ namespace desres { namespace msys {
          * of them is empty, in which case the non-empty value is adopted.
          */
         void merge(NonbondedInfo const& other);
-
-        template <typename Ar> void serialize(Ar& a, unsigned) {
-            a & vdw_funct & vdw_rule & es_funct;
-        }
     };
 
     enum AtomType {
@@ -61,8 +53,11 @@ namespace desres { namespace msys {
     struct atom_t {
         Id  fragid;
         Id  residue;
-        int atomic_number;
-        int formal_charge;
+
+        int8_t atomic_number;
+        int8_t formal_charge;
+        int8_t stereo_parity;
+        int8_t aromatic;
     
         Float x,y,z;    /* position */
         Float charge;   /* partial charge */
@@ -73,19 +68,8 @@ namespace desres { namespace msys {
         AtomType type;
         Float resonant_charge;
     
-        atom_t() 
-        : fragid(BadId), residue(BadId), atomic_number(0), formal_charge(0),
-          x(0), y(0), z(0), charge(0), vx(0), vy(0), vz(0), mass(0), type(),
-          resonant_charge()
-        {}
-
-        template <class Ar>
-        void serialize(Ar& a, const unsigned int) {
-            a & fragid & residue & atomic_number & formal_charge
-              & x & y & z & charge 
-              & vx & vy & vz & mass
-              & name & type & resonant_charge
-              ;
+        atom_t() {
+            memset(this,0,sizeof(*this));
         }
 
         /* Don't abuse these.  In particular, bear in mind that that an atom's
@@ -95,19 +79,17 @@ namespace desres { namespace msys {
     };
     
     struct bond_t {
-        Id  i;                  /* id of first bond partner     */
-        Id  j;                  /* id of second bond partner    */
-        int order;              /* formal bond order            */
-        Float resonant_order;   /* resonant bond order          */
-    
-        bond_t() : i(BadId), j(BadId), order(1), resonant_order(1) {}
-        bond_t(Id ai, Id aj) : i(ai), j(aj), order(1), resonant_order(1) {}
-        Id other(Id id) const { return id==i ? j : i; }
+        Id  i=BadId;                /* id of first bond partner     */
+        Id  j=BadId;                /* id of second bond partner    */
+        int8_t order=1;             /* formal bond order            */
+        int8_t stereo=0;
 
-        template <class Ar>
-        void serialize(Ar& a, const unsigned int) {
-            a & i & j & order & resonant_order;
-        }
+        int8_t aromatic=0;          /* no Kekule form specified     */
+        Float resonant_order=1;     /* resonant bond order          */
+
+        bond_t() {}
+        bond_t(Id ai, Id aj) { i=ai; j=aj; }
+        Id other(Id id) const { return id==i ? j : i; }
     };
     
     enum ResidueType {
@@ -133,11 +115,6 @@ namespace desres { namespace msys {
         String  segid;
     
         chain_t() : ct(BadId) {}
-
-        template <class Ar>
-        void serialize(Ar& a, const unsigned int) {
-            a & ct & name & segid;
-        }
     };
 
     class component_t {
@@ -165,11 +142,6 @@ namespace desres { namespace msys {
         bool has(String const& key) const;
         ValueRef value(String const& key);
         ValueRef value(Id key);
-
-        template <class Ar>
-        void serialize(Ar& a, const unsigned int) {
-            a & _kv;
-        }
     };
 
     class System : public boost::enable_shared_from_this<System> {
@@ -224,47 +196,6 @@ namespace desres { namespace msys {
 
         /* create only as shared pointer. */
         System();
-
-        /* Cerealization */
-        friend class boost::serialization::access;
-        template <typename Ar> void serialize(Ar& a, unsigned) {
-            using boost::serialization::binary_object;
-            a & _deadatoms & _atomprops;
-            Id an, bn, rn;
-            if (Ar::is_saving::value) {
-                an = _atoms.size();
-                bn = _bonds.size();
-                rn = _residues.size();
-                a & an & bn & rn;
-            } else {
-                a & an & bn & rn;
-                _atoms.resize(an);
-                _bonds.resize(bn);
-                _residues.resize(rn);
-            }
-            if (an) {
-                binary_object b(&_atoms[0],an*sizeof(atom_t));
-                a & b;
-            }
-            if (bn) {
-                binary_object b(&_bonds[0],bn*sizeof(bond_t));
-                a & b;
-            }
-            if (rn) {
-                binary_object b(&_residues[0],rn*sizeof(residue_t));
-                a & b;
-            }
-
-            a & _deadbonds & _bondprops;
-            a & _deadresidues;
-            a & _chains & _deadchains;
-            a & _cts & _deadcts;
-            a & _tables & _auxtables;
-            a & _provenance;
-            a & name & global_cell & nonbonded_info;
-            if (Ar::is_loading::value) restore_indices();
-        }
-        void restore_indices();
 
     public:
         static boost::shared_ptr<System> create();
@@ -606,11 +537,6 @@ namespace desres { namespace msys {
             return dst;
         }
     
-        /* Assign atom and residue types; do this after loading a new
-         * system from a file or creating it from scratch.  This method
-         * also calls updateFragids() for you. */
-        void analyze();
-
         /* update the fragid of each atom according to its bond topology:
          * bonded atoms share the same fragid.  Return the number of
          * frags found, and atomid to fragment partitioning if requested */
@@ -622,75 +548,6 @@ namespace desres { namespace msys {
     };
 
     typedef boost::shared_ptr<System> SystemPtr;
-
-    /* A helper object for importers that manages the logic of 
-     * mapping atoms to residues and residue to chains */
-    class SystemImporter {
-        SystemPtr sys;
-
-        struct ChnKey {
-            Id     ct;
-            String name;
-            String segid;
-
-            ChnKey() {}
-            ChnKey(Id c, String const& nm, String const& seg)
-            : ct(c), name(nm), segid(seg) {}
-
-            bool operator<(ChnKey const& c) const {
-                if (ct!=c.ct) return ct<c.ct;
-                int rc = name.compare(c.name);
-                if (rc) return rc<0;
-                return segid.compare(c.segid)<0;
-            }
-        };
-                
-        struct ResKey {
-            Id      chain;
-            int     resnum;
-            String  resname;
-            String  insertion;
-
-            ResKey() {}
-            ResKey(Id chn, int num, String const& name, String const& insert) 
-            : chain(chn), resnum(num), resname(name), insertion(insert) {}
-
-            bool operator<(const ResKey& r) const {
-                if (chain!=r.chain) return chain<r.chain;
-                if (resnum!=r.resnum) return resnum<r.resnum;
-                if (resname!=r.resname) return resname<r.resname;
-                return insertion.compare(r.insertion)<0;
-            }
-        };
-
-        typedef std::map<ChnKey,Id> ChnMap;
-        typedef std::map<ResKey,Id> ResMap;
-        ResMap resmap;
-        ChnMap chnmap;
-
-        Id chnid;
-        Id resid;
-
-    public:
-        explicit SystemImporter(SystemPtr s) 
-        : sys(s), chnid(BadId), resid(BadId) {}
-
-        /* process existing atoms in the system */
-        void initialize(IdList const& atoms);
-
-        /* mark a chain as terminated, so that subsequent atoms with
-         * the same chain name will be added to a new chain object. */
-        bool terminateChain(std::string chain, std::string segid, Id ct=0);
-
-        /* add an atom, after first constructing necessary parent
-         * chain and/or residue object.  All string inputs will
-         * have leading and trailing whitespace removed. */
-        Id addAtom(std::string chain, std::string segid, 
-                   int resnum, std::string resname, 
-                   std::string atomname,
-                   std::string insertion="",
-                   Id ct=0);
-    };
 
 }}
 

@@ -1,6 +1,7 @@
 #include "molfile_plugin.h"
 #include "libmolfile_plugin.h"
 #include "../io.hxx"
+#include "../import.hxx"
 
 #include <boost/algorithm/string.hpp>
 #include <stdio.h>

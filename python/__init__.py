@@ -13,7 +13,6 @@ from _msys import RadiusForElement, MassForElement, ElementForAbbreviation
 from _msys import GuessAtomicNumber, AbbreviationForElement
 from _msys import PeriodForElement, GroupForElement
 from _msys import HydrogenBond
-from _msys import Molecule, FormatSDF
 from atomsel import Atomsel
 
 class Handle(object):
@@ -1351,7 +1350,7 @@ class System(object):
             ptr.delBonds(ptr.bonds())
         _msys.GuessBondConnectivity(ptr)
         if reanalyze:
-            ptr.analyze()
+            self.analyze()
 
     def analyze(self):
         ''' Assign atom and residue types.  This needs to be called
@@ -1359,7 +1358,7 @@ class System(object):
         msys.CreateSystem(); in that case, analyze() should be called
         before performing any atom selections.
         '''
-        self._ptr.analyze()
+        _msys.Analyze(self._ptr)
 
     def updateFragids(self):
         ''' Find connected sets of atoms, and assign each a 0-based id,
@@ -1640,42 +1639,6 @@ def LoadXYZ(path):
     '''
     return System(_msys.ImportXYZ(path))
 
-
-def LoadSDF(path=None, buffer=None):
-    ''' Load an sdf file from either path or buffer '''
-    if path is not None:
-        ptr = _msys.ImportSDF(path)
-    elif buffer is not None:
-        ptr = _msys.ImportSDFFromBuffer(buffer)
-    else:
-        raise ValueError("Specify either path or buffer")
-    return System(ptr)
-
-def ScanSDF(path=None, buffer=None):
-    ''' Iterate over SDF entries using the Molecule interface.
-    '''
-    if path is not None:
-        if path.endswith('.gz'):
-            it = _msys.ScanSDFGz(path)
-        else:
-            it = _msys.ScanSDF(path)
-    elif buffer is not None:
-        it = _msys.ScanSDFFromBuffer(buffer)
-    else:
-        raise ValueError("Specify either path or buffer")
-    i=0
-    while True:
-        i += 1
-        try:
-            mol = it.next()
-        except Exception as e:
-            sys.stderr.write("Error reading structure %d: %s\n" % (i,e.message))
-            yield None
-            continue
-        if mol is None:
-            break
-        yield mol
-
 def Load(path, structure_only=False, without_tables=None):
     ''' Infer the file type of path and load the file.
     If without_tables is True or False, it specifies whether TermTables
@@ -1725,6 +1688,10 @@ def Save(mol, path, append=False, structure_only=False):
     '''
     return _msys.Save(mol._ptr, str(path), _msys.Provenance.fromArgs(sys.argv),
             bool(append), bool(structure_only))
+
+def FormatSDF(mol):
+    ''' Return System in sdf format '''
+    return _msys.FormatSDF(mol._ptr)
 
 def ReadPDBCoordinates(mol, path):
     ''' Read coordinates and box from the given pdb file into the given 
@@ -1802,26 +1769,9 @@ def SaveMol2(system, path, append=False):
         flags |= _msys.Mol2ExportFlags.Append
     _msys.ExportMOL2(ptr,path,prov,flags)
 
-def SaveSDF(system, path_or_file, append=False):
-    ''' Export the system to the given path or file.  If path_or_file is
-    a string, it is assumed to be a path; if None, the bytes are returned;
-    otherwise, it is assumed to be a file object implementing the write()
-    method.
-    '''
-    s = _msys.ExportSDFBytes(system._ptr)
-    if path_or_file is None:
-        return s
-    if isinstance(path_or_file, str):
-        mode = 'a' if append else 'w'
-        f = file(path_or_file, mode)
-    else:
-        f = path_or_file
-    f.write(s)
-    f.flush()
-
 def FromSmilesString(smiles):
     ''' Construct a System from a smiles string '''
-    return _msys.FromSmilesString(smiles)
+    return System(_msys.FromSmilesString(smiles))
 
 def TableSchemas():
     ''' available schemas for System.addTableFromSchema '''

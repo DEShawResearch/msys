@@ -67,6 +67,7 @@ namespace desres { namespace msys {
         def("ElementForAbbreviation", ElementForAbbreviation);
         def("AbbreviationForElement", AbbreviationForElement);
         def("AddHydrogens", AddHydrogens);
+        def("Analyze", Analyze);
         def("GuessHydrogenPositions", GuessHydrogenPositions);
         def("GuessAtomicNumber", GuessAtomicNumber);
 

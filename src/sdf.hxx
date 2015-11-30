@@ -2,21 +2,20 @@
 #define desres_msys_sdf_hxx
 
 #include "io.hxx"
-#include "molecule.hxx"
 
 namespace desres { namespace msys {
 
-    /* Read the given MDL MOL/SDF file.  Return the first MOLECULE record */
+    /* Read all entries from given SDF file */
     SystemPtr ImportSdf(std::string const& path);
-
-    SystemPtr ImportSdfFromStream(std::istream& in);
 
     /* Iterator for SDF files */
     LoadIteratorPtr SdfIterator(std::string const& path);
 
-    MoleculeIteratorPtr ScanSdf(FILE* fp, int (*closer)(FILE *) = NULL);
-    std::string FormatSdf( Molecule const& mol );
+    /* Iterator using a file handle.  The returned iterator takes ownership
+     * of the file handle. */
+    LoadIteratorPtr ScanSdf(FILE* fp);
 
+    /* Export options */
     struct SdfExport {
         enum Flags {
             Default = 0,
@@ -24,12 +23,8 @@ namespace desres { namespace msys {
         };
     };
 
-    /* Write the structure to the given stream.  A single molecule
-     * entry wil be created. */
-    void ExportSdf( SystemPtr mol, std::ostream& out );
-    
-    /* For commonality with other Export functions */
-    void ExportSdf( SystemPtr mol, std::string const& path, unsigned flags=0);
+    void ExportSdf(SystemPtr mol, std::string const& path, unsigned flags=0);
+    std::string FormatSdf(SystemPtr mol);
 
 }}
 

@@ -885,7 +885,6 @@ namespace desres { namespace msys {
             .def("validPermutation", valid_permutation)
             .def("orderedIds",    &System::orderedIds)
             .def("updateFragids", update_fragids)
-            .def("analyze",     &System::analyze)
             .def("findBond",    &System::findBond)
             .def("provenance",      sys_provenance)
             .def("coalesceTables",    &System::coalesceTables)

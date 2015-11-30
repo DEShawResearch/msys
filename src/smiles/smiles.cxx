@@ -12,22 +12,20 @@ namespace desres { namespace msys { namespace smiles {
     : txt(), pos(), scanner() 
     {}
 
-    void Smiles::addh(Id atm) {
-        Id idH = atoms.size();
-        atoms.resize(idH+1);
-        atoms[idH].atomic_number = 1;
-        Id bnd = bonds.size();
-        bonds.resize(bnd+1);
-        bonds[bnd].i = atm;
-        bonds[bnd].j = idH;
-        bonds[bnd].order = 1;
+    void Smiles::addh(Id id) {
+        auto idH = mol->addAtom(0);
+        auto& atm = mol->atomFAST(idH);
+        atm.atomic_number = 1;
+        atm.name = "H";
+        mol->addBond(id, idH);
     }
 
     int Smiles::addh(Id atm, int v1, int v2, int v3) {
         float v = 0;
-        for (unsigned i=0; i<bonds.size(); i++) {
-            if (bonds[i].i!=atm && bonds[i].j!=atm) continue;
-            v += bonds[i].aromatic ? 1.5 : bonds[i].order;
+        for (unsigned i=0; i<mol->maxBondId(); i++) {
+            auto const& bnd = mol->bondFAST(i);
+            if (bnd.i != atm && bnd.j != atm) continue;
+            v += bnd.aromatic ? 1.5 : bnd.order;
         }
         int h;
         if (v<=v1) {
@@ -43,13 +41,16 @@ namespace desres { namespace msys { namespace smiles {
         return h;
     }
 
-    MoleculePtr Smiles::parse(std::string const& s) {
+    SystemPtr Smiles::parse(std::string const& s) {
         if (getenv("MSYS_SMILES_DEBUG")) {
             msys_smiles_debug = 1;
         }
 
-        atoms.clear();
-        bonds.clear();
+        hcount.clear();
+        mol = System::create();
+        mol->addChain();
+        mol->addResidue(0);
+        mol->ct(0).setName(s);
         txt = s.data();
         pos = 0;
         init_scanner();
@@ -63,10 +64,7 @@ namespace desres { namespace msys { namespace smiles {
             ss << "^-\n" << error;
             MSYS_FAIL(ss.str());
         }
-        MoleculePtr ptr(new Molecule(atoms.size(), bonds.size()));
-        for (unsigned i=0; i<atoms.size(); i++) ptr->atom(i) = atoms[i];
-        for (unsigned i=0; i<bonds.size(); i++) ptr->bond(i) = bonds[i];
-        return ptr;
+        return mol;
     }
 
     void Smiles::addAtom(atom_t* a, bool organic) {
@@ -74,12 +72,12 @@ namespace desres { namespace msys { namespace smiles {
         strcpy(name, a->name);
         name[0] = toupper(name[0]);
 
-        a->id = atoms.size();
-        atoms.resize(a->id+1);
-        atoms[a->id].formal_charge = a->charge;
-        atoms[a->id].atomic_number = ElementForAbbreviation(name);
-        atoms[a->id].hcount = organic ? -1 : a->hcount;
-        atoms[a->id].stereo_parity = a->chiral;
+        a->id = mol->addAtom(0);
+        auto& atm = mol->atomFAST(a->id);
+        atm.formal_charge = a->charge;
+        atm.atomic_number = ElementForAbbreviation(name);
+        hcount.push_back(organic ? -1 : a->hcount);
+        atm.stereo_parity = a->chiral;
         for (int i=0; i<a->hcount; i++) addh(a->id);
     }
 
@@ -111,11 +109,8 @@ namespace desres { namespace msys { namespace smiles {
 
     void Smiles::add(atom_t* ai, atom_t* aj, char bond) {
         if (bond=='.') return;  /* dot means no bond */
-        Id id = bonds.size();
-        bonds.resize(id+1);
-        auto& bnd = bonds[id];
-        bnd.i = ai->id;
-        bnd.j = aj->id;
+        Id id = mol->addBond(ai->id, aj->id);
+        auto& bnd = mol->bondFAST(id);
         switch (bond) {
             default:
             MSYS_FAIL("Unsupported bond type '" << bond << "'");
@@ -140,23 +135,21 @@ namespace desres { namespace msys { namespace smiles {
         /* add hydrogens.  We use the OpenSmiles specification rather than
          * our own AddHydrogen routine, since there could be some differences
          */
-        for (unsigned i=0; i<atoms.size(); i++) {
-            if (atoms[i].hcount != -1) continue;
-            int nh = 0;
-            switch (atoms[i].atomic_number) {
-                case  5: nh = addh(i, 3); break;
-                case  6: nh = addh(i, 4); break;
-                case  7: nh = addh(i, 3,5); break;
-                case  8: nh = addh(i, 2); break;
-                case 15: nh = addh(i, 3,5); break;
-                case 16: nh = addh(i, 2,4,6); break;
+        for (unsigned i=0; i<mol->maxAtomId(); i++) {
+            if (hcount[i] != -1) continue;
+            switch (mol->atomFAST(i).atomic_number) {
+                case  5: addh(i, 3); break;
+                case  6: addh(i, 4); break;
+                case  7: addh(i, 3,5); break;
+                case  8: addh(i, 2); break;
+                case 15: addh(i, 3,5); break;
+                case 16: addh(i, 2,4,6); break;
                 case  9:
                 case 17:
                 case 35:
-                case 53: nh = addh(i, 1); break;
+                case 53: addh(i, 1); break;
                 default:;
             }
-            atoms[i].hcount = nh;
         }
     }
 
@@ -164,7 +157,7 @@ namespace desres { namespace msys { namespace smiles {
 
 namespace desres { namespace msys {
 
-    MoleculePtr FromSmilesString(std::string const& smiles) {
+    SystemPtr FromSmilesString(std::string const& smiles) {
         return smiles::Smiles().parse(smiles);
     }
 

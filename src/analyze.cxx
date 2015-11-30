@@ -6,6 +6,7 @@
 #include "contacts.hxx"
 #include <stdio.h>
 #include <boost/foreach.hpp>
+#include <queue>
 
 namespace {
     using namespace desres::msys;
@@ -458,3 +459,193 @@ namespace desres { namespace msys {
         }
     }
 }}
+
+namespace {
+
+    bool has_water_residue_name( const std::string& resname ) {
+        static const char * names[] = {
+            "H2O", "HH0", "OHH", "HOH", "OH2", "SOL", "WAT", "TIP",
+            "TIP2", "TIP3", "TIP4", "SPC"
+        };
+        unsigned i,n = sizeof(names)/sizeof(names[0]);
+        for (i=0; i<n; i++) {
+            if (resname==names[i]) return true;
+        }
+        return false;
+    }
+
+    void find_sidechain(System* mol, Id res, Id ca) {
+        /* pick a c-beta atom, or settle for a hydrogen */
+        Id cb=BadId;
+        BOOST_FOREACH(Id nbr, mol->bondedAtoms(ca)) {
+            if (mol->atomFAST(nbr).type==AtomProBack) continue;
+            if (bad(cb)) {
+                cb=nbr;
+            } else {
+                /* already have a cb candidate.  Pick the better one. */
+                if (mol->atomFAST(nbr).atomic_number==1 || 
+                    toupper(mol->atomFAST(nbr).name[0]=='H')) continue;
+                cb=nbr;
+            }
+        }
+        if (bad(cb)) return;
+        /* starting from cb, recursively add all atoms in the residue
+         * which are bonded to the cb but are not backbone. */
+        std::queue<Id> q;
+        q.push(cb);
+        while (!q.empty()) {
+            Id atm = q.front();
+            mol->atomFAST(atm).type = AtomProSide;
+            BOOST_FOREACH(Id nbr, mol->bondedAtoms(atm)) {
+                atom_t const& nbratm = mol->atomFAST(nbr);
+                if (nbratm.type==AtomOther && nbratm.residue==res) {
+                    q.push(nbr);
+                }
+            }
+            q.pop();
+        }
+    }
+
+    // FIXME: I've tried writing a water topology check by hand, but it's
+    // always been slower than using Graph::match.  Go figure.
+    static std::string waterhash;
+    static GraphPtr watergraph;
+    struct _ { 
+        _() {
+            SystemPtr m = System::create();
+            m->addChain();
+            m->addResidue(0);
+            m->addAtom(0);
+            m->addAtom(0);
+            m->addAtom(0);
+            m->atom(0).atomic_number=8;
+            m->atom(1).atomic_number=1;
+            m->atom(2).atomic_number=1;
+            m->addBond(0,1);
+            m->addBond(0,2);
+            watergraph = Graph::create(m,m->atoms());
+            waterhash = Graph::hash(m,m->atoms());
+        }
+    } static_initializer;
+
+    typedef std::map<std::string,AtomType> NameMap;
+
+    NameMap types = {
+          { "CA", AtomProBack }
+        , { "C",  AtomProBack }
+        , { "O",  AtomProBack }
+        , { "N",  AtomProBack }
+        , { "P",  AtomNucBack }
+        , { "O1P",  AtomNucBack }
+        , { "O2P",  AtomNucBack }
+        , { "OP1",  AtomNucBack }
+        , { "OP2",  AtomNucBack }
+        , { "C3*",  AtomNucBack }
+        , { "C3'",  AtomNucBack }
+        , { "O3*",  AtomNucBack }
+        , { "O3'",  AtomNucBack }
+        , { "C4*",  AtomNucBack }
+        , { "C4'",  AtomNucBack }
+        , { "C5*",  AtomNucBack }
+        , { "C5'",  AtomNucBack }
+        , { "O5*",  AtomNucBack }
+        , { "O5'",  AtomNucBack }
+    };
+
+    NameMap terms = {
+          { "OT1", AtomProBack }
+        , { "OT2", AtomProBack }
+        , { "OX1", AtomProBack }
+        , { "O1",  AtomProBack }
+        , { "O2",  AtomProBack }
+        , { "H5T", AtomNucBack }
+        , { "H3T", AtomNucBack }
+    };
+
+    void analyze_residue(SystemPtr self, Id res) {
+        std::vector<IdPair> perm;
+
+        /* clear structure */
+        IdList const& atoms = self->atomsForResidue(res);
+        for (Id i=0; i<atoms.size(); i++) self->atomFAST(atoms[i]).type=AtomOther;
+        self->residueFAST(res).type = ResidueOther;
+
+        /* check for water */
+        if (has_water_residue_name(self->residueFAST(res).name) || (
+            Graph::hash(self,atoms)==waterhash &&
+            Graph::create(self,atoms)->match(watergraph,perm))) {
+            self->residueFAST(res).type = ResidueWater;
+            return;
+        }
+
+        /* need at least four atoms to determine protein or nucleic */
+        if (atoms.size()<4) return;
+
+        int npro=0, nnuc=0;
+        std::set<std::string> names;
+
+        Id ca_atm = BadId;
+        Id c_atm = BadId;
+        Id n_atm = BadId;
+        for (Id i=0; i<atoms.size(); i++) {
+            Id id = atoms[i];
+            const atom_t& atm = self->atomFAST(id);
+            const std::string& aname = atm.name;
+            if (!names.insert(aname).second) continue;
+            /* check for nucleic or protein backbone */
+            NameMap::const_iterator iter=types.find(aname);
+            AtomType atype=AtomOther;
+            if (iter!=types.end()) {
+                atype=iter->second;
+                if (atype==AtomProBack) {
+                    if (aname=="CA") ca_atm = id;
+                    else if (aname=="C") c_atm = id;
+                    else if (aname=="N") n_atm = id;
+                }
+            } else {
+                /* try terminal names */
+                iter=terms.find(aname);
+                if (iter!=terms.end()) {
+                    /* must be bonded to atom of the same type */
+                    IdList const& bonds = self->bondsForAtom(id);
+                    for (Id j=0; j<bonds.size(); j++) {
+                        Id o = self->bondFAST(bonds[j]).other(id);
+                        AtomType otype = self->atomFAST(o).type;
+                        if (otype==iter->second) {
+                            atype=otype;
+                            break;
+                        }
+                    }
+                }
+            }
+            self->atomFAST(id).type = atype;
+            if (atype==AtomProBack) ++npro;
+            if (atype==AtomNucBack) ++nnuc;
+        }
+        ResidueType rtype=ResidueOther;
+        if (npro>=4 && 
+            ca_atm!=BadId && c_atm!=BadId && n_atm != BadId &&
+            !bad(self->findBond(ca_atm,n_atm)) &&
+            !bad(self->findBond(ca_atm,c_atm)) &&
+             bad(self->findBond(c_atm,n_atm))) {
+            rtype=ResidueProtein;
+        } else if (nnuc>=4) {
+            rtype=ResidueNucleic;
+        } else for (Id i=0; i<atoms.size(); i++) {
+            self->atomFAST(atoms[i]).type = AtomOther;
+        }
+        if (rtype==ResidueProtein) {
+            find_sidechain(self.get(), res, ca_atm);
+        }
+        self->residueFAST(res).type=rtype;
+    }
+}
+
+void desres::msys::Analyze(SystemPtr self) {
+    
+    self->updateFragids();
+    for (auto it=self->residueBegin(), e=self->residueEnd(); it!=e; ++it) {
+        analyze_residue(self, *it);
+    }
+}
+

@@ -4,6 +4,7 @@
 #include "../elements.hxx"
 #include "../analyze.hxx"
 #include "../append.hxx"
+#include "../import.hxx"
 #include "readpdb.h"
 
 #include <vector>
@@ -75,7 +76,7 @@ SystemPtr iterator::next() {
         indx = desres_msys_read_pdb_record(fd.get(), pdbstr);
 
         double x, y, z, occup, beta;
-        int formal_charge;
+        int8_t formal_charge;
         if (indx == PDB_ATOM) {
 
             desres_msys_get_pdb_fields(pdbstr, PDB_BUFFER_LENGTH, &serial,
@@ -155,7 +156,7 @@ SystemPtr iterator::next() {
     if (indx==PDB_EOF && mol->maxAtomId()==0) return SystemPtr();
 
     GuessBondConnectivity(mol);
-    mol->analyze();
+    Analyze(mol);
 
     return mol;
 }

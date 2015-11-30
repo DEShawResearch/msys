@@ -1,4 +1,4 @@
-#!/usr/bin/env desres-exec
+#!/usr/bin/env garden-exec
 #{
 # source `dirname $0`/../MODULES
 # exec desres-cleanenv -e TMPDIR -m $PYTHON/bin -- python $0 "$@"
@@ -177,12 +177,6 @@ class TestInChI(unittest.TestCase):
 
     gold['lig.sdf'] = "InChI=1/C15H27N3O2/c1-18-7-6-9-12(18)5-4-10-14-11(8-13(16-14)19-2)17-15(9,10)20-3/h9-14,16-17H,4-8H2,1-3H3/p+2/fC15H29N3O2/h16,18H/q+2"
 
-    def testSubprocess(self):
-        from msys import inchi
-        for k,v in self.gold.items():
-            m = msys.Load('tests/files/%s' % k)
-            self.assertEqual(inchi.Strings(m), [v])
-
     def testBuiltin(self):
         from msys import InChI
         for k,v in self.gold.items():
@@ -296,6 +290,24 @@ class TestAtomsel(unittest.TestCase):
                 self.assertEqual(old, new, "failed on '%s': oldlen %d newlen %d" % (sel, len(old), len(new)))
 
 class TestSdf(unittest.TestCase):
+
+    def testCoordPrecision(self):
+        tmp = tempfile.NamedTemporaryFile(suffix='.sdf')
+        mol = msys.CreateSystem()
+        for i in range(999):
+            a = mol.addAtom()
+            a.atomic_number = 6
+            a.x = 0.0001 * (i+1)
+        msys.Save(mol, tmp.name)
+        s = msys.FormatSDF(mol)
+        lines = s.split('\n')[4:999+4]
+        xs = [line.split()[0] for line in lines]
+        mol2 = msys.Load(tmp.name)
+        for i in range(999):
+            self.assertEqual(xs[i], '%.4f' % ((i+1)/10000.))
+            a = mol.atom(i)
+            self.assertEqual(a.x, 0.0001 * (i+1))
+
     def testExtraLineSdfLoad(self):
         path='tests/files/extra_line_m_end.sdf'
         for x in msys.LoadMany(path):
@@ -303,7 +315,7 @@ class TestSdf(unittest.TestCase):
 
     def testExtraLineSdfScan(self):
         path='tests/files/extra_line_m_end.sdf'
-        for x in msys.ScanSDF(path):
+        for x in msys.LoadMany(path):
             self.assertFalse(x is None)
 
     def testFormalCharge(self):
@@ -314,12 +326,13 @@ class TestSdf(unittest.TestCase):
         self.assertEqual(mol.atom(21).formal_charge,0)
 
     def testSingleCt(self):
-        path='/tmp/msys_test.sdf'
+        tmp=tempfile.NamedTemporaryFile(suffix='.sdf')
+        path=tmp.name
         mol=msys.CreateSystem()
         a=mol.addAtom()
         mol.ct(0).name="XYZ"
         a.atomic_number=11
-        msys.SaveSDF(mol, path)
+        msys.Save(mol, path)
         mol2=msys.Load(path)
         self.assertEqual(mol2.ct(0).name, "XYZ")
 
@@ -341,7 +354,8 @@ class TestSdf(unittest.TestCase):
             0, ' ', 0, 0.03, 0, 0.03, 0, 0])))
 
     def testMultipleCt(self):
-        path='/tmp/msys_test.sdf'
+        tmp=tempfile.NamedTemporaryFile(suffix='.sdf')
+        path=tmp.name
         ct=msys.CreateSystem()
         a=ct.addAtom()
         a.atomic_number=11
@@ -353,7 +367,7 @@ class TestSdf(unittest.TestCase):
         self.assertEqual(mol.ct(0).name, "XYZ")
         self.assertEqual(mol.ct(1).name, "ABC")
 
-        msys.SaveSDF(mol, path)
+        msys.Save(mol, path)
         mol2=msys.Load(path)
         self.assertEqual(mol2.ct(0).name, "XYZ")
         self.assertEqual(mol2.ct(1).name, "ABC")
@@ -431,8 +445,10 @@ class TestPdb(unittest.TestCase):
             a=r.addAtom()
             a.name='CA'
             a.atomic_number=6
-        msys.Save(mol, '/tmp/msys_ter.pdb')
-        m2=msys.Load('/tmp/msys_ter.pdb')
+        tmp=tempfile.NamedTemporaryFile(suffix='.pdb')
+        path=tmp.name
+        msys.Save(mol, path)
+        m2=msys.Load(path)
         self.assertEqual(m2.nchains, 2)
 
     def testCell(self):
@@ -487,7 +503,8 @@ class TestMain(unittest.TestCase):
         o.atomic_number = 8
         h.atomic_number = 0
         p.atomic_number = 1
-        path = '/tmp/_msys_.mae'
+        tmp=tempfile.NamedTemporaryFile(suffix='.mae')
+        path=tmp.name
         msys.Save(m, path)
         mol=msys.Load(path)
         self.assertEqual(mol.nbonds, 1)
@@ -501,7 +518,8 @@ class TestMain(unittest.TestCase):
         aget=op.attrgetter('name', 'atomic_number', 'charge')
         bget=op.attrgetter('first.id', 'second.id', 'order')
         for fmt in 'dms mae mol2 sdf'.split():
-            dst = '/tmp/_msys.%s' % fmt
+            tmp=tempfile.NamedTemporaryFile(suffix='.%s' % fmt)
+            dst=tmp.name
             msys.Save(old, dst)
             new = msys.Load(dst)
             self.assertEqual(map(aget, old.atoms), map(aget, new.atoms))
@@ -513,7 +531,8 @@ class TestMain(unittest.TestCase):
         aget=op.attrgetter('name', 'atomic_number', 'charge')
         bget=op.attrgetter('first.id', 'second.id', 'order')
         for fmt in 'dms mae mol2 sdf'.split():
-            dst = '/tmp/_msys.%s' % fmt
+            tmp=tempfile.NamedTemporaryFile(suffix='.%s' % fmt)
+            dst=tmp.name
             msys.Save(old, dst)
             msys.Save(old, dst, append=True)
             new = msys.Load(dst)
@@ -661,8 +680,10 @@ class TestMain(unittest.TestCase):
         ct1.addAtom().atomic_number=1
         ct2.addAtom().atomic_number=2
         ct2.addAtom().atomic_number=3
-        msys.SaveMAE([ct1, ct2], '/tmp/multi.mae')
-        cts=[x for x in msys.LoadMany('/tmp/multi.mae')]
+        tmp=tempfile.NamedTemporaryFile(suffix='.mae')
+        dst=tmp.name
+        msys.SaveMAE([ct1, ct2], dst)
+        cts=[x for x in msys.LoadMany(dst)]
         self.assertEqual(len(cts), 2)
         self.assertEqual(cts[0].natoms, 1)
         self.assertEqual(cts[1].natoms, 2)
@@ -675,8 +696,10 @@ class TestMain(unittest.TestCase):
         123
         '''
         m.ct(0)['prop']=prop
-        msys.SaveMAE(m, '/tmp/multi.mae')
-        m=msys.Load('/tmp/multi.mae')
+        tmp=tempfile.NamedTemporaryFile(suffix='.mae')
+        dst=tmp.name
+        msys.SaveMAE(m, dst)
+        m=msys.Load(dst)
         self.assertEqual(m.ct(0)['prop'], prop)
 
 
@@ -998,16 +1021,17 @@ class TestMain(unittest.TestCase):
 
     def testExportMAEContents(self):
         m=msys.Load('tests/files/noFused1.mae')
-        path='/tmp/_msys1.mae'
+        tmp=tempfile.NamedTemporaryFile(suffix='.mae')
+        path=tmp.name
         msys.Save(m, path)
         b1=open(path).read()
-        os.unlink(path)
         b2=msys.SerializeMAE(m)
         self.assertEqual(b1,b2)
 
     def testExportMaeGz(self):
         m=msys.Load('tests/files/noFused1.mae')
-        path='/tmp/_msys.maegz'
+        tmp=tempfile.NamedTemporaryFile(suffix='.maegz')
+        path=tmp.name
         f=gzip.open(path, 'w')
         f.write(msys.SerializeMAE(m))
         f.write(msys.SerializeMAE(m))
@@ -1069,9 +1093,11 @@ class TestMain(unittest.TestCase):
         a1=r.addAtom()
         a2=r.addAtom()
         r.chain.segid="WAT1"
-        msys.SaveDMS(m,'foo.dms')
-        m2=msys.LoadDMS('foo.dms')
-        msys.Load("foo.dms")
+        tmp=tempfile.NamedTemporaryFile(suffix='.dms')
+        path=tmp.name
+        msys.SaveDMS(m, path)
+        m2=msys.LoadDMS(path)
+        msys.Load(path)
         self.assertEqual(1,m.nresidues)
         self.assertEqual(1,m2.nresidues)
 
@@ -1363,7 +1389,9 @@ class TestMain(unittest.TestCase):
         table.addTerm([a], p)
         table.category='bond'
         self.assertEqual(table.category, 'bond')
-        msys.SaveDMS(m, 'foo.dms')
+        tmp=tempfile.NamedTemporaryFile(suffix='.dms')
+        path=tmp.name
+        msys.SaveDMS(m, path)
 
     def testSaveDmsStructureOnly(self):
         m=msys.CreateSystem()
@@ -1373,14 +1401,16 @@ class TestMain(unittest.TestCase):
         table.addTerm([a], p)
         table.category='bond'
         self.assertEqual(table.category, 'bond')
-        msys.SaveDMS(m, 'foo.dms', structure_only=False)
-        self.assertEqual(len(msys.Load("foo.dms").tables), 1)
-        msys.Save(m, 'foo.dms', structure_only=False)
-        self.assertEqual(len(msys.Load("foo.dms").tables), 1)
-        msys.SaveDMS(m, 'foo.dms', structure_only=True)
-        self.assertEqual(len(msys.Load("foo.dms").tables), 0)
-        msys.Save(m, 'foo.dms', structure_only=True)
-        self.assertEqual(len(msys.Load("foo.dms").tables), 0)
+        tmp=tempfile.NamedTemporaryFile(suffix='.dms')
+        path=tmp.name
+        msys.SaveDMS(m, path, structure_only=False)
+        self.assertEqual(len(msys.Load(path).tables), 1)
+        msys.Save(m, path, structure_only=False)
+        self.assertEqual(len(msys.Load(path).tables), 1)
+        msys.SaveDMS(m, path, structure_only=True)
+        self.assertEqual(len(msys.Load(path).tables), 0)
+        msys.Save(m, path, structure_only=True)
+        self.assertEqual(len(msys.Load(path).tables), 0)
 
     def testLoadStructureOnly(self):
         m=msys.CreateSystem()
@@ -1450,30 +1480,15 @@ class TestMain(unittest.TestCase):
                 self.assertEqual(t, None)
 
 
-    def testArchive(self):
-        ''' check that saving and loading from .msys preserves the checksum
-        '''
-        mol=msys.Load('tests/files/1vcc.mae')
-        tmp_arc = tmpfile(prefix='/tmp/', suffix='.msys')
-        tmp_dms = tmpfile(prefix='/tmp/', suffix='.dms')
-        msys.Save(mol, tmp_arc.name)
-        msys.Save(mol, tmp_dms.name)
-        conn = sqlite3.Connection(tmp_dms.name)
-        cksum1 = conn.execute('select system from msys_hash').fetchone()[0]
-        newmol = msys.Load(tmp_arc.name)
-        msys.Save(newmol, tmp_dms.name)
-        conn = sqlite3.Connection(tmp_dms.name)
-        cksum2 = conn.execute('select system from msys_hash').fetchone()[0]
-        self.assertEqual(cksum1, cksum2)
-
-
     def testFunnyNames(self):
+        tmp=tempfile.NamedTemporaryFile(suffix='.dms')
+        path=tmp.name
         m=msys.CreateSystem()
         aux=msys.CreateParamTable()
         aux.addProp('group', float)
         aux.addParam()
         m.addAuxTable('aux', aux)
-        msys.SaveDMS(m, 'foo.dms')
+        msys.SaveDMS(m, path)
 
         m2=m.clone()
         aux2=m2.auxtable('aux')
@@ -1493,9 +1508,11 @@ class TestMain(unittest.TestCase):
         table.params.addProp('group', float)
         m.addAtom()
         table.addTerm(m.atoms, table.params.addParam())
-        msys.SaveDMS(m, 'bar.dms')
+        msys.SaveDMS(m, path)
 
     def testFormalCharge(self):
+        tmp=tempfile.NamedTemporaryFile(suffix='.dms')
+        path=tmp.name
         m=msys.CreateSystem()
         a=m.addAtom()
         self.assertEqual(a.formal_charge, 0)
@@ -1503,8 +1520,8 @@ class TestMain(unittest.TestCase):
         self.assertEqual(a.formal_charge, 32)
         a.formal_charge=-10
         self.assertEqual(a.formal_charge, -10)
-        msys.SaveDMS(m, 'bar.dms')
-        m2=msys.LoadDMS('bar.dms')
+        msys.SaveDMS(m, path)
+        m2=msys.LoadDMS(path)
         self.assertEqual(m.atom(0).formal_charge, -10)
                 
     def testRefcount(self):
@@ -1635,14 +1652,16 @@ class TestMain(unittest.TestCase):
         self.assertFalse(e in m.auxtables)
 
     def testSchemas(self):
+        tmp=tempfile.NamedTemporaryFile(suffix='.dms')
+        path=tmp.name
         m=msys.CreateSystem()
         for s in msys.TableSchemas():
             m.addTableFromSchema(s)
         for s in msys.NonbondedSchemas():
             m.addNonbondedFromSchema(s)
             m.nonbonded_info.vdw_funct=""
-        msys.Save(m, '/tmp/_schema_.dms')
-        msys.Load('/tmp/_schema_.dms')
+        msys.Save(m, path)
+        msys.Load(path)
 
     def testSchemaWithName(self):
         m=msys.CreateSystem()
@@ -1705,20 +1724,20 @@ class TestMain(unittest.TestCase):
         m.nonbonded_info.vdw_funct = "disp_repl_charge"
         m.nonbonded_info.vdw_rule = "geom/geom/geom"
 
-        fname='/tmp/saveit.dms'
+        tmp=tempfile.NamedTemporaryFile(suffix='.dms')
+        path=tmp.name
+
         try:
-            msys.SaveDMS(m,fname)
+            msys.SaveDMS(m,path)
         finally:
             pass
-            #if os.path.exists(fname):
-                #os.unlink(fname)
         t=m.addTable('nonbonded', 1)
         t.category='nonbonded'
         p=t.params.addParam()
         t.addTerm([a], p)
         t.addTerm([m.atom(1)], p)
         try:
-            msys.SaveDMS(m,fname)
+            msys.SaveDMS(m,path)
         finally:
             pass
         
@@ -1908,9 +1927,11 @@ class TestMain(unittest.TestCase):
         t=alc.addTerm([a], p)
         t['chargeC']=0.5
 
-        msys.SaveDMS(m, 'foo.dms')
-        m2=msys.LoadDMS('foo.dms')
-        msys.SaveDMS(m2, 'foo.dms')
+        tmp=tempfile.NamedTemporaryFile(suffix='.dms')
+        path=tmp.name
+        msys.SaveDMS(m, path)
+        m2=msys.LoadDMS(path)
+        msys.SaveDMS(m2, path)
         alc=m2.table('alchemical_nonbonded')
         self.assertEqual(alc.term(0)['chargeC'], 0.5)
 
@@ -1931,7 +1952,8 @@ class TestMain(unittest.TestCase):
         self.assertEqual(frags, [[m.atom(0), m.atom(2)], [m.atom(1)]])
 
     def testBadDMS(self):
-        path='/tmp/_tmp_.dms'
+        tmp=tempfile.NamedTemporaryFile(suffix='.dms')
+        path=tmp.name
         m=msys.CreateSystem()
         msys.SaveDMS(m, path)
         a0=m.addAtom()
@@ -1944,6 +1966,7 @@ class TestMain(unittest.TestCase):
         # can't save - no param
         with self.assertRaises(RuntimeError):
             msys.SaveDMS(m, path)
+
         p0=nb.params.addParam()
         t.param=p0
         # now we can save
@@ -1964,6 +1987,11 @@ class TestMain(unittest.TestCase):
         t._ptr.setParam(t.id, None)
         with self.assertRaises(RuntimeError):
             msys.SaveDMS(m, path)
+
+        # the failed saves deleted the tmpfile, which causes a warning
+        # message when the tmpfile object is closed.  Suppress that.
+        try: tmp.close()
+        except: pass
 
     def testPositions(self):
         m=msys.CreateSystem()
@@ -2102,20 +2130,18 @@ class TestMain(unittest.TestCase):
         self.assertEqual(m.natoms, 9498)
 
     def testAppendMae(self):
+        tmp=tempfile.NamedTemporaryFile(suffix='.mae')
+        path=tmp.name
         m=msys.CreateSystem()
         m.addAtom().atomic_number=1
-        path="/tmp/app.mae"
 
-        try: os.unlink(path)
-        except: pass
         msys.SaveMAE(m,path, append=True)
         msys.SaveMAE(m,path, append=True)
         m2=msys.Load(path)
         self.assertEqual(m2.natoms, 2)
 
-        path="/tmp/app2.mae"
-        try: os.unlink(path)
-        except: pass
+        tmp=tempfile.NamedTemporaryFile(suffix='.mae')
+        path=tmp.name
         msys.SaveMAE([m,m],path, append=True)
         m2=msys.Load(path)
         self.assertEqual(m2.natoms, 2)
@@ -2124,10 +2150,9 @@ class TestMain(unittest.TestCase):
     def testAppendMol2(self):
         m=msys.CreateSystem()
         m.addAtom().atomic_number=1
-        path="/tmp/app.mol2"
 
-        try: os.unlink(path)
-        except: pass
+        tmp=tempfile.NamedTemporaryFile(suffix='.mol2')
+        path=tmp.name
         m.ct(0).name = 'XYZ'
         msys.SaveMol2(m,path, append=True)
         m.ct(0).name = 'ABC'
@@ -2141,13 +2166,11 @@ class TestMain(unittest.TestCase):
     def testAppendSDF(self):
         m=msys.CreateSystem()
         m.addAtom().atomic_number=1
-        path="/tmp/app.sdf"
+        tmp = tempfile.NamedTemporaryFile(suffix='.sdf')
 
-        try: os.unlink(path)
-        except: pass
-        msys.SaveSDF(m,path, append=True)
-        msys.SaveSDF(m,path, append=True)
-        for i,m in enumerate(msys.LoadMany(path)):
+        msys.Save(m,tmp.name, append=True)
+        msys.Save(m,tmp.name, append=True)
+        for i,m in enumerate(msys.LoadMany(tmp.name)):
             self.assertEqual(m.natoms, 1)
         self.assertEqual(i,1)
 

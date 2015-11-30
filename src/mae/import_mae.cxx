@@ -5,6 +5,8 @@
 #include "ff.hxx"
 #include "../clone.hxx"
 #include "../mae.hxx"
+#include "../import.hxx"
+#include "../analyze.hxx"
 
 #include "destro/prep_alchemical_mae.hxx"
 
@@ -462,7 +464,7 @@ namespace {
                 if (structure_only) h = clone_structure_only(h);
                 h->ct(0).add("msys_file_offset", IntType);
                 h->ct(0).value("msys_file_offset") = it->offset();
-                h->analyze();
+                Analyze(h);
                 return h;
             }
             return SystemPtr();
@@ -503,7 +505,7 @@ namespace {
             append_system(h, ct, ignore_unrecognized, without_tables);
         }
         if (structure_only) h = clone_structure_only(h);
-        h->analyze();
+        Analyze(h);
         return h;
     }
 }

@@ -23,12 +23,6 @@ namespace desres { namespace msys {
         /* constructor: the parameter table we override */
         explicit OverrideTable( ParamTablePtr target );
 
-        friend class boost::serialization::access;
-        OverrideTable() {}
-        template <typename Ar> void serialize(Ar& a, unsigned) {
-            a & _target & _params & _map;
-        }
-
     public:
         /* create an override table */
         static OverrideTablePtr create(ParamTablePtr target);

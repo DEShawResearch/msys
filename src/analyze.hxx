@@ -34,6 +34,12 @@ namespace desres { namespace msys {
     IdList AddHydrogens(SystemPtr mol, IdList const& parents);
 
     void GuessHydrogenPositions(SystemPtr mol, IdList const& hatoms);
+
+    /* Assign atom and residue types; do this after loading a new
+     * system from a file or creating it from scratch.  This method
+     * also calls updateFragids() for you. */
+    void Analyze(SystemPtr mol);
+
 }}
 
 #endif

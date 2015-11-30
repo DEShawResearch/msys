@@ -1,19 +1,16 @@
 #include "sdf.hxx"
 #include "elements.hxx"
+#include "clone.hxx"
 #include <fastjson/print.hxx>
-#include <boost/format.hpp>
-#include <boost/math/special_functions/fpclassify.hpp>
-#include <fstream>
-#include <math.h>
 #include <errno.h>
 
 using namespace desres::msys;
-using boost::format;
 using desres::msys::fastjson::floatify;
 
 /* Write x in %10.4f format to buffer */
 static void format_coord(char* buf, float const x) {
     memset(buf,' ',10); // FIXME: set the whole buffer to whitespace first
+#if 0
     int sign = x<0 ? -1 : 1;
     int i, n = x*(sign*10000);
     for (i=9; i>5; --i) {
@@ -32,6 +29,11 @@ static void format_coord(char* buf, float const x) {
         MSYS_FAIL("Input " << x << " too large for sdf coordinate");
     }
     if (sign<0) buf[--i]='-';
+#else
+    char tmp[32];
+    sprintf(tmp, "%10.4f", x);
+    memcpy(buf, tmp, strlen(tmp));
+#endif
 }
 
 /* Write x in %3d format to buffer */
@@ -59,16 +61,20 @@ static void format_short(char* buf, short x) {
     }
 }
 
+
 static inline char* append(char* ptr, const char* buf, size_t sz) {
     memcpy(ptr, buf, sz);
     ptr += sz;
     return ptr;
 }
 
-std::string desres::msys::FormatSdf( Molecule const& mol ) {
-    if (mol.natoms() > 999 || mol.nbonds() > 999) {
-        MSYS_FAIL("too many atoms (" << mol.natoms() <<
-                  ") or bonds (" << mol.nbonds() <<
+// construct an sdf entry from a System assuming one ct
+static std::string format_ct( SystemPtr mol ) {
+    Id natoms = mol->maxAtomId();
+    Id nbonds = mol->maxBondId();
+    if (natoms > 999 || nbonds > 999) {
+        MSYS_FAIL("too many atoms (" << natoms <<
+                  ") or bonds (" << nbonds <<
                   ") for sdf format");
     }
     char cntsbuf[] = "        0  0  1  0            999 V2000\n";
@@ -76,35 +82,34 @@ std::string desres::msys::FormatSdf( Molecule const& mol ) {
     char bondbuf[] = "           0  0  0\n";
     char mchgbuf[] = "M  CHG  1        \n";
     std::map<Id,int> chargemap;
+    auto& ct = mol->ct(0);
+    std::string name = ct.name();
 
-    /* compute needed size */
+    /* compute needed size for atoms, bonds, formal charges and M_END */
     unsigned bufsize = 0;
-    bufsize += mol.name().size()+3; // 3 newlines
-    bufsize += mol.natoms()*(sizeof(atombuf)-1);
-    bufsize += mol.nbonds()*(sizeof(bondbuf)-1);
+    bufsize += name.size()+3; // 3 newlines
+    bufsize += natoms*(sizeof(atombuf)-1);
+    bufsize += nbonds*(sizeof(bondbuf)-1);
     bufsize += sizeof(cntsbuf)-1;
-    for (unsigned i=0, n=mol.natoms(); i<n; i++) {
-        if (mol.atom(i).formal_charge!=0) bufsize += sizeof(mchgbuf)-1;
+    for (unsigned i=0; i<natoms; i++) {
+        if (mol->atomFAST(i).formal_charge!=0) bufsize += sizeof(mchgbuf)-1;
     }
-    for (auto const& v : mol.data()) {
-        bufsize += v.first.size() + v.second.size() + 7;
-    }
-    bufsize += 7+5; // M_END + $$$$.
+    bufsize += 7;
     std::string sdf(bufsize, ' ');
     char* ptr = const_cast<char *>(sdf.data());
 
     // header
-    ptr = append(ptr, mol.name().c_str(), mol.name().size());
+    ptr = append(ptr, name.c_str(), name.size());
     ptr = append(ptr, "\n\n\n", 3);
 
     // counts
-    format_short(cntsbuf  , mol.natoms());
-    format_short(cntsbuf+3, mol.nbonds());
+    format_short(cntsbuf  , natoms);
+    format_short(cntsbuf+3, nbonds);
     ptr = append(ptr, cntsbuf, sizeof(cntsbuf)-1);
 
     // atoms
-    for (unsigned i=0, n=mol.natoms(); i<n; i++) {
-        Molecule::Atom const& atm = mol.atom(i);
+    for (unsigned i=0; i<natoms; i++) {
+        auto const& atm = mol->atomFAST(i);
         format_coord(atombuf   , atm.x);
         format_coord(atombuf+10, atm.y);
         format_coord(atombuf+20, atm.z);
@@ -118,8 +123,8 @@ std::string desres::msys::FormatSdf( Molecule const& mol ) {
     }
 
     // bonds
-    for (unsigned i=0, n=mol.nbonds(); i<n; i++) {
-        Molecule::Bond const& bnd = mol.bond(i);
+    for (unsigned i=0; i<nbonds; i++) {
+        auto const& bnd = mol->bondFAST(i);
         memset(bondbuf,' ',9);
         format_short(bondbuf  , bnd.i+1);
         format_short(bondbuf+3, bnd.j+1);
@@ -127,137 +132,78 @@ std::string desres::msys::FormatSdf( Molecule const& mol ) {
         format_short(bondbuf+9, bnd.stereo);
         ptr = append(ptr, bondbuf, sizeof(bondbuf)-1);
     }
+    
+    // charges
     for (auto it : chargemap) {
         format_short(mchgbuf+10, it.first+1);
         format_short(mchgbuf+14, it.second);
         ptr = append(ptr, mchgbuf, sizeof(mchgbuf)-1);
     }
     ptr = append(ptr, "M  END\n", 7);
-    for (auto const& v : mol.data()) {
-        ptr = append(ptr, "> <", 3);
-        ptr = append(ptr, v.first.c_str(), v.first.size());
-        ptr = append(ptr, ">\n", 2);
-        ptr = append(ptr, v.second.c_str(), v.second.size());
-        ptr = append(ptr, "\n\n", 2);
-    }
-    ptr = append(ptr, "$$$$\n", 5);
-    return sdf;
-}
 
-static void export_ct(SystemPtr mol, Id ct, std::ostream& out) {
-
-    if (mol->atomCountForCt(ct) > 999) {
-        MSYS_FAIL("SDF export not support for > 999 atoms, have ct " << ct
-                << " with " << mol->atomCountForCt(ct) << " atoms.");
-    }
-    component_t& cmp = mol->ct(ct);
-    IdList atoms = mol->atomsForCt(ct);
-    IdList bonds = mol->bondsForCt(ct);
-    std::sort(atoms.begin(), atoms.end());
-    std::map<Id,int> chargemap;
-
-    /* header */
-    out << cmp.name() << std::endl;
-    out << std::endl;
-    out << std::endl;
-
-    /* counts */
-    out << format("%3d") % atoms.size()
-        << format("%3d") % bonds.size()
-        << "  0  0  1  0            999 V2000"
-        << std::endl;
-
-    /* atoms */
-    for (Id i=0; i<atoms.size(); i++) {
-        atom_t const& atm = mol->atom(atoms[i]);
-        const char* elem = AbbreviationForElement(atm.atomic_number);
-        int fc=atm.formal_charge;
-        if (fc!=0) chargemap[i] = fc;
-        out << format("%10.4f") % atm.x
-            << format("%10.4f") % atm.y
-            << format("%10.4f ") % atm.z
-            << format("%-3s")   % elem
-            << " 0"
-            << format("%3d") % 0
-            << "  0  0  0  0"
-            << std::endl;
-    }
-
-    /* bonds */
-    for (Id i=0; i<bonds.size(); i++) {
-        bond_t const& bnd = mol->bond(bonds[i]);
-        Id ai = bnd.i;
-        Id aj = bnd.j;
-        Id si = std::lower_bound(atoms.begin(), atoms.end(), ai)-atoms.begin();
-        Id sj = std::lower_bound(atoms.begin(), atoms.end(), aj)-atoms.begin();
-        if (si==atoms.size() || sj==atoms.size()) {
-            MSYS_FAIL("Ct " << ct << " has bonds which cross ct boundaries.  Cannot export to SDF.");
-        }
-        int btype = bnd.order;
-        if (bnd.resonant_order==1.5) {
-            btype=4;
-        }
-        out << format("%3i") % (si+1)
-            << format("%3i") % (sj+1)
-            << format("%3i") % btype
-            << "  0  0  0"
-            << std::endl;
-    }
-    /* charges */
-    for (auto it : chargemap) {
-        out << "M  CHG  1" << format("%4i") % (it.first+1) 
-                           << format("%4i") % (it.second)
-                           << "\n";
-    }
-    /* done with molecule section */
-    out << "M  END\n";
-
-    /* write property block */
-    std::vector<String> keys = cmp.keys();
+    // additional data fields
     char floatbuf[32];
-    for (unsigned i=0; i<keys.size(); i++) {
-        out << ">  <" << keys[i] << ">\n";
-        ValueRef v = cmp.value(keys[i]);
+    for (auto const& key : ct.keys()) {
+        sdf += ">  <";
+        sdf += key;
+        sdf += ">\n";
+
+        ValueRef v = ct.value(key);
         switch (v.type()) {
         default:
         case StringType: 
-            out << v.asString(); break;
+            sdf += v.c_str();
+            break;
         case IntType: 
-            out << v.asInt(); break;
+            sdf += std::to_string(v.asInt());
+            break;
         case FloatType: 
-            if (boost::math::isfinite(v.asFloat())) {
+            if (std::isfinite(v.asFloat())) {
                 floatify(v.asFloat(), floatbuf); 
             } else {
                 sprintf(floatbuf, "%f", v.asFloat());
             }
-            out << floatbuf; break;
+            sdf += floatbuf;
+            break;
         }
-        out << "\n\n";
+        sdf += "\n\n";
     }
-    out << "$$$$" << std::endl;
+
+    // end of entry
+    sdf += "$$$$\n";
+    return sdf;
+}
+
+static bool is_single_ct(SystemPtr mol) {
+    return mol->ctCount()==1 && 
+           mol->atomCount() == mol->maxAtomId() &&
+           mol->bondCount() == mol->maxBondId();
 }
 
 namespace desres { namespace msys {
 
-    void ExportSdf( SystemPtr mol, std::string const& path, unsigned flags) {
-        if (path.substr(0,6)=="stdout") {
-            ExportSdf(mol, std::cout);
-            return;
-        } 
-        std::ios_base::openmode mode = std::ofstream::out;
-        if (flags & SdfExport::Append) {
-            mode |= std::ofstream::app;
+    std::string FormatSdf( SystemPtr mol ) {
+        if (is_single_ct(mol)) {
+            return format_ct(mol);
         }
-        std::ofstream out(path.c_str(), mode);
-        if (!out) {
-            MSYS_FAIL("Error opening " << path << " for writing: "
-                    << strerror(errno));
+        std::string sdf;
+        for (auto ct : mol->cts()) {
+            sdf += format_ct(Clone(mol, mol->atomsForCt(ct)));
         }
-        ExportSdf(mol, out);
+        return sdf;
     }
 
-    void ExportSdf( SystemPtr mol, std::ostream& out ) {
-        for (Id ct=0; ct<mol->ctCount(); ct++) export_ct(mol,ct,out);
+    void ExportSdf( SystemPtr mol, std::string const& path, unsigned flags) {
+        const char* mode = flags & SdfExport::Append ? "a" : "w";
+        std::shared_ptr<FILE> fp(fopen(path.c_str(), mode), fclose);
+        if (!fp) {
+            MSYS_FAIL("Error opening " << path << " for writing: " 
+                    << strerror(errno));
+        }
+        auto sdf = FormatSdf(mol);
+        if (fwrite(sdf.data(), sdf.size(), 1, fp.get()) != 1) {
+            MSYS_FAIL("Error writing " << path << ": " << strerror(errno));
+        }
     }
 }}
 

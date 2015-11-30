@@ -1,6 +1,7 @@
 #include "../psf.hxx"
 #include "../schema.hxx"
 #include "../elements.hxx"
+#include "../import.hxx"
 #include "../term_table.hxx"
 #include <stdio.h>
 

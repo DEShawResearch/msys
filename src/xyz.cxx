@@ -84,7 +84,7 @@ namespace desres { namespace msys {
         }
 
         GuessBondConnectivity(mol);
-        mol->analyze();
+        Analyze(mol);
         return mol;
     }
 

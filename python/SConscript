@@ -23,7 +23,6 @@ chain.cxx
 graph.cxx
 inchi.cxx
 io.cxx
-molecule.cxx
 override.cxx
 param.cxx
 pymod.cxx

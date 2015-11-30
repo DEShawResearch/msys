@@ -71,14 +71,6 @@ namespace desres { namespace msys {
         /* table properties */
         VariantMap _tableprops;
 
-        friend class boost::serialization::access;
-        TermTable() {}
-        template <typename Ar> void serialize(Ar& a, unsigned) {
-            a & _system & _params & _natoms & _ndead & _terms;
-            a & _props & _overrides & _index & _maxIndexId & _tableprops;
-            a & category;
-        }
-
     public:
         TermTable( SystemPtr system, Id natoms, 
                    ParamTablePtr ptr = ParamTablePtr() );

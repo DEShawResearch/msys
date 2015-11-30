@@ -3,6 +3,7 @@
 #include "../schema.hxx"
 #include "../clone.hxx"
 #include "../elements.hxx"
+#include "../analyze.hxx"
 #include "../term_table.hxx"
 
 #include <fstream>
@@ -501,7 +502,7 @@ SystemPtr desres::msys::ImportPrmTop( std::string const& path,
         parse_exclusions(mol, section, ptrs[Nnb]);
     }
 
-    mol->analyze();
+    Analyze(mol);
     mol->coalesceTables();
     return Clone(mol, mol->atoms());
 }

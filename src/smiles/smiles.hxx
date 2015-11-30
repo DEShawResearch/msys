@@ -1,7 +1,7 @@
 #ifndef desres_msys_smiles_smiles_hxx
 #define desres_msys_smiles_smiles_hxx
 
-#include "../molecule.hxx"
+#include "../system.hxx"
 #include "../types.hxx"
 #include <string>
 #include <map>
@@ -26,8 +26,8 @@ namespace desres { namespace msys { namespace smiles {
         ringmap rnums;
 
         void* scanner;
-        std::vector<Molecule::Atom> atoms;
-        std::vector<Molecule::Bond> bonds;
+        SystemPtr mol;
+        std::vector<int> hcount;
 
         Smiles();
 
@@ -35,7 +35,7 @@ namespace desres { namespace msys { namespace smiles {
         void init_scanner();
         void destroy_scanner();
 
-        MoleculePtr parse(std::string const& s);
+        SystemPtr parse(std::string const& s);
 
         void addAtom(atom_t* a, bool organic);
         void add(atom_t* ai, atom_t* aj, char bond);
