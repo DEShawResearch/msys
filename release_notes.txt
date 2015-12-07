@@ -1,3 +1,6 @@
+1.7.137 SDF file processing just uses LoadMany now.
+        ScanSDF is gone; use LoadMany, to read, FormatSDF to write.
+
 1.7.136 Fix bug in System.atomsel when alignment produces reflections.
 
 1.7.135 System.selectIds takes optional pos and box.
