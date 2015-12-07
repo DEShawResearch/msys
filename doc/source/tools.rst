@@ -23,10 +23,6 @@ dms-version
 -----------
 .. include:: ../build/genhelp/dms-version
 
-dms-inchi
----------
-.. include:: ../build/genhelp/dms-inchi
-
 dms-info
 --------
 .. include:: ../build/genhelp/dms-info
@@ -127,4 +123,8 @@ dms-validate
 dms-check-groups
 ----------------
 .. include:: ../build/genhelp/dms-check-groups
+
+dtr-validate
+----------------
+.. include:: ../build/genhelp/dtr-validate
 
