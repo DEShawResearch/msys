@@ -131,6 +131,11 @@ def main():
                 for i, a in enumerate(mol.atoms):
                     a.vel = vel[i]
 
+    else:   # opts.input_path
+        if opts.time is not None or opts.index is not None:
+            raise ValueError("time (-t) or index (-n) specified, but no input trajectory (-i)")
+        print "Reading coordinates from input structure file."
+
     if opts.wrap or opts.glue or opts.center or opts.unrotate:
         print "Applying periodic wrapping"
         w=Wrapper(mol, center=opts.center, glue=opts.glue, unrotate=opts.unrotate)
