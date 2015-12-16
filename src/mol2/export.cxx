@@ -110,20 +110,39 @@ static void export_ct(SystemPtr mol, Id ct, FILE* fd,
     }
 }
 
+static bool missing_sybyl_types(SystemPtr mol) {
+    Id aprop = mol->atomPropIndex("sybyl_type");
+    Id bprop = mol->bondPropIndex("sybyl_type");
+    if (bad(aprop) || bad(bprop)) return true;
+    for (auto id : mol->atoms()) {
+        if (*mol->atomPropValue(id, aprop).c_str()=='\0') {
+            return true;
+        }
+    }
+    for (auto id : mol->bonds()) {
+        if (*mol->bondPropValue(id, bprop).c_str()=='\0') {
+            return true;
+        }
+    }
+    return false;
+}
+
 void desres::msys::ExportMol2( SystemPtr mol, std::string const& path,
                                Provenance const& provenance,
                                unsigned flags) {
 
     /* make sure we have sybyl atom types for everything */
-    SystemPtr newmol = Clone(mol, mol->atoms());
-    AssignSybylTypes(newmol);
+    if (missing_sybyl_types(mol)) {
+        mol = Clone(mol, mol->atoms());
+        AssignSybylTypes(mol);
+    }
 
     const char* mode = flags & Mol2Export::Append ? "ab" : "wb";
     FILE* fd = fopen(path.c_str(), mode);
     if (!fd) MSYS_FAIL("Could not open '" << "' for writing.");
     boost::shared_ptr<FILE> dtor(fd, fclose);
-    for (Id ct=0; ct<newmol->ctCount(); ct++) {
-        export_ct(newmol,ct,fd,provenance,flags);
+    for (Id ct=0; ct<mol->ctCount(); ct++) {
+        export_ct(mol,ct,fd,provenance,flags);
     }
 }
 
