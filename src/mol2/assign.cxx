@@ -218,7 +218,8 @@ static String guess_bond_type( SystemPtr mol, Id bnd,
         }
     }
     if (itype=="C.ar" && jtype=="C.ar") return "ar";
-    int order = mol->bond(bnd).order;
+    if (mol->bondFAST(bnd).resonant_order==1.5) return "ar";
+    int order = mol->bondFAST(bnd).order;
     if (order==1) return "1";
     if (order==2) return "2";
     if (order==3) return "3";
