@@ -1,3 +1,7 @@
+1.7.138 mol2 processing fixes: preserve sybyl_type; fix aromatic bond type.
+        Make dms-frame complain about -t or -n without -i.
+        Added dtr-validate to tools documentation.
+
 1.7.137 SDF file processing just uses LoadMany now.
         ScanSDF is gone; use LoadMany, to read, FormatSDF to write.
 
