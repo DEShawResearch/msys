@@ -2417,7 +2417,7 @@ open_file_read( const char *filename, const char *filetype, int *natoms ) {
 
   // check for .stk file
   if (StkReader::recognizes(filename)) {
-    h = new StkReader(filename);
+    h = new StkReader(filename, DtrReader::SequentialAccess);
 
   } else {
     // check for "clickme.dtr"
@@ -2427,7 +2427,7 @@ open_file_read( const char *filename, const char *filetype, int *natoms ) {
       fname.resize(pos);
       filename = fname.c_str();
     }
-    h = new DtrReader(fname);
+    h = new DtrReader(fname, DtrReader::SequentialAccess);
   }
 
   try {
