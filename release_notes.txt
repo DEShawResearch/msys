@@ -1,3 +1,6 @@
+1.7.139 Make molfile use sequential access for dtr.
+        Fix bug with ETRs if no TSS values followed FORMAT.
+
 1.7.138 mol2 processing fixes: preserve sybyl_type; fix aromatic bond type.
         Make dms-frame complain about -t or -n without -i.
         Added dtr-validate to tools documentation.
