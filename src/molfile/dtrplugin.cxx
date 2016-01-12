@@ -1326,12 +1326,29 @@ static void handle_etr_v1(uint32_t len, const void *buf, molfile_timestep_t *ts,
     char *base_datap = (char *) (blob->second.data);
 
     for (auto it = meta_blobs.begin(); it != meta_blobs.end(); ++it) {
-        uint32_t *blobp = (uint32_t *) it->second.data;
-        uint32_t type = blobp[0];
-        uint32_t offset = blobp[1];
-        uint32_t count = blobp[2];
-        void *addr = base_datap + offset;
-        (*frame_blobsp)[it->first] = Key(addr, count, type, swap);
+
+	if (it->first != "FORMAT") {
+	    uint32_t *blobp = (uint32_t *) it->second.data;
+	    uint32_t type = blobp[0];
+	    uint32_t offset = blobp[1];
+	    uint32_t count = blobp[2];
+	    void *addr = base_datap + offset;
+	    (*frame_blobsp)[it->first] = Key(addr, count, type, swap);
+	} else {
+	    //
+	    // Add a blob for FORMAT, which is 6 characters for "ETR_V1".
+	    // Prior to version 1.7.140, there was an error in which the
+	    // FORMAT key was added as any other ETR_V1 type blob.  This
+	    // wasn't caught due to a fluke in common usage in which TSS
+	    // blobs followed the format, and the types, offset and count
+	    // that were decoded above magically worked for getting the
+	    // FORMAT value either correct, or nearly correct ("ETR_V").
+	    // Once an etr was generated in which there were not TSS
+	    // values following the FORMAT, things went off the rails
+	    // exposing this bug.
+	    //
+	    (*frame_blobsp)[it->first] = Key(it->second.data, 6, Key::TYPE_CHAR, false);
+	}
     }
 
     //

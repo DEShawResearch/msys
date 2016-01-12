@@ -292,9 +292,10 @@ desres::molfile::dtr::ParseFrame(size_t sz, const void* data, bool *swap) {
                 DTR_FAILURE("Unsupported frame endianism " << that_endian);
             }
         }
+
         map[label] = Key(addr, count, types.at(code), *swap);
     }
-
+    
     return map;
 }
 
