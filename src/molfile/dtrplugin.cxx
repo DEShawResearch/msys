@@ -1337,7 +1337,7 @@ static void handle_etr_v1(uint32_t len, const void *buf, molfile_timestep_t *ts,
 	} else {
 	    //
 	    // Add a blob for FORMAT, which is 6 characters for "ETR_V1".
-	    // Prior to version 1.7.140, there was an error in which the
+	    // Prior to version 1.7.139, there was an error in which the
 	    // FORMAT key was added as any other ETR_V1 type blob.  This
 	    // wasn't caught due to a fluke in common usage in which TSS
 	    // blobs followed the format, and the types, offset and count
