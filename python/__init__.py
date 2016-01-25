@@ -13,6 +13,7 @@ from _msys import RadiusForElement, MassForElement, ElementForAbbreviation
 from _msys import GuessAtomicNumber, AbbreviationForElement
 from _msys import PeriodForElement, GroupForElement
 from _msys import HydrogenBond
+from _msys import BadId
 from atomsel import Atomsel
 
 class Handle(object):
@@ -419,7 +420,7 @@ class Param(Handle):
         ''' update the value of prop with val '''
         p=self._ptr
         col=p.propIndex(prop)
-        if col==_msys.BadId:
+        if col==BadId:
             raise KeyError, "No such property '%s'" % prop
         p.setProp(self._id, col, val)
 
@@ -427,7 +428,7 @@ class Param(Handle):
         ''' get the value of prop '''
         p=self._ptr
         col=p.propIndex(prop)
-        if col==_msys.BadId:
+        if col==BadId:
             raise KeyError, "No such property '%s'" % prop
         return p.getProp(self._id, col)
 
@@ -575,10 +576,10 @@ class Term(Handle):
         # otherwise use param properties
         p = ptr.params()
         col = p.propIndex(prop)
-        if col==_msys.BadId:
+        if col==BadId:
             raise KeyError, "No such property '%s'" % prop
         id=self.paramid
-        if id==_msys.BadId:
+        if id==BadId:
             # The user asked for a valid property, but the term doesn't
             # have an assigned param.  
             raise RuntimeError, "No assigned param for '%s'" % repr(self)
@@ -594,10 +595,10 @@ class Term(Handle):
         # otherwise use param properties, duplicating if necessary
         p = ptr.params()
         col=p.propIndex(prop)
-        if col==_msys.BadId:
+        if col==BadId:
             raise KeyError, "No such property '%s'" % prop
         id=self.paramid
-        if id==_msys.BadId:
+        if id==BadId:
             raise RuntimeError, "No assigned param for '%s'" % repr(self)
         if p.refcount(id) > 1:
             id=p.duplicate(id)
@@ -859,7 +860,7 @@ class System(object):
         ''' add and return a new Residue in its own chain '''
         return self.addChain().addResidue()
 
-    def addChain(self, ct=_msys.BadId):
+    def addChain(self, ct=BadId):
         ''' add and return a new Chain.
         If no ct is given, the chain will be added to the first ct,
         creating one if necessary. '''
@@ -1275,7 +1276,7 @@ class System(object):
         with system.global_cell only when self.global_cell is all zeros.
         '''
         p=self._ptr
-        ids=p.append(system._ptr, _msys.BadId)
+        ids=p.append(system._ptr, BadId)
         atms=self._update_atoms()
         return [atms[i] for i in ids]
 

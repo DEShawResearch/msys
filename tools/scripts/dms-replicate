@@ -143,11 +143,11 @@ def replicate(mol, x, y, z, density, randomize=False):
     zshift = -0.5 * (nz-1)*cell[2]
 
     out = msys.CreateSystem()
-    out.addCt()
     out.setCell(numpy.diag((x,y,z)))
     pos = mol.getPositions()
     pos -= pos.mean(0)
 
+    r=0
     for i in range(nx):
         xdelta = xshift + i*cell[0]
         for j in range(ny):
@@ -155,14 +155,31 @@ def replicate(mol, x, y, z, density, randomize=False):
             for k in range(nz):
                 zdelta = zshift + k*cell[2]
                 delta = xdelta + ydelta + zdelta
+                r += 1
+
+                # if input system contains only one residue, then assign
+                # a new resid to each replica.  If one chain, assingn
+                # a new chain for each replica.  Otherwise, construct
+                # separate cts for eah replica.
+                ctid = 0
+                if mol.nresidues == 1:
+                    mol.residue(0).resid = r
+                    if out.ncts==0: out.addCt()
+                elif mol.nchains == 1:
+                    mol.chain(0).name = 'R%d' % r
+                    if out.ncts==0: out.addCt()
+                else:
+                    #ctid = out.addCt().id
+                    ctid = msys.BadId
+                    
                 if randomize:
                     newpos = numpy.dot(pos, randomrot())
                     newpos += delta
                     mol.setPositions(newpos)
-                    out._ptr.append(mol._ptr, 0)
+                    out._ptr.append(mol._ptr, ctid)
                 else:
                     mol.translate(delta)
-                    out._ptr.append(mol._ptr, 0)
+                    out._ptr.append(mol._ptr, ctid)
                     mol.translate(-delta)
 
     return out
