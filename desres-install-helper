@@ -9,13 +9,14 @@ DESCRIPTION="Biomolecular Structure Library"
 . ./MODULES
 
 # shared library dependencies
-GCC=gcc/4.7.2-23A
-BOOST=boost/1_51_0-30A/Release
+GCC=gcc/4.9.2-30B
+BOOST=boost/1.59.0-02
 LPSOLVE=lp_solve/5.5.2.0-05A
 INCHI=inchi/1.04-05
 SNAPPY=snappy/1.1.2-01
 TEXLIVE=texlive/20120701-03
 THREEROE=ThreeRoe/0.04
+SQLITE=sqlite/3.10.2-06A
 
 # build and documentation
 SCONS=scons/2.3.4-10A
@@ -32,6 +33,7 @@ loadmodules() {
         $LPSOLVE/lib \
         $SNAPPY/lib \
         $INCHI/lib \
+        $SQLITE/lib \
 	$THREEROE/lib \
 	$TEXLIVE/bin
     
