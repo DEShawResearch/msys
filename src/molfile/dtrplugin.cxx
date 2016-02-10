@@ -67,6 +67,8 @@ using namespace desres::molfile::dtr;
 
 #include "vmddir.h"
 
+#include <ThreeRoe/ThreeRoe.hpp>
+
 #define BOOST_FILESYSTEM_VERSION 3
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
@@ -643,6 +645,50 @@ double key_record_t::time() const {
   return assembleDouble(ntohl(time_lo), ntohl(time_hi));
 }
 
+metadata::metadata(const void *bufptr, ssize_t n, std::string *jobstep_id) {
+    
+    //
+    // We want to put metadata objects into the stack
+    // cache file, but that means we only want to copy
+    // them in once.  Unfortunately, each meta frame
+    // has a JOBSTEP_ID entry, which changes with each
+    // new dtr.  So, we now create a copy of everything
+    // in the meta frame except for key JOBSTEP_ID tags.
+    // 
+    // If jobstep_id is not NULL, then the value of the
+    // key JOBSTEP_ID is stored there.
+    //
+    bool swap;
+    auto full_frame_map = dtr::ParseFrame(n, bufptr, &swap);
+
+    frame_data = calloc(n, 1);
+    memcpy(frame_data, bufptr, n);
+    frame_size = n;
+
+    ThreeRoe hasher;
+
+    for (auto kv : full_frame_map) {
+
+        //
+        // Iterate through the keys, copying all non JOB*
+        // keys, updating the data pointers to the newly
+        // copied data region, and computing a ThreeRoe
+        // hash of the data as we go.
+        //
+        uint32_t v_size = kv.second.get_element_size();
+        if (kv.first != "JOBSTEP_ID") {
+            void *copied_data_address = (void *) (((char *)kv.second.data - (char *)bufptr) +
+                                                  (char *) frame_data);
+            frame_map[kv.first] = dtr::Key(copied_data_address, kv.second.count, kv.second.type, swap);
+            hasher.Update(kv.second.data, v_size);
+        } else {
+            if (jobstep_id) {
+                (*jobstep_id) += (char *) kv.second.data;
+            }
+        }
+    }
+    hash = hasher.Final().first;
+}
 void DtrReader::read_meta() {
     
     if (metap) {

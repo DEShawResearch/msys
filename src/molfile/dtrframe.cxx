@@ -1,7 +1,7 @@
 #include "dtrframe.hxx"
 #include "dtrutil.hxx"
 #include "endianswap.h"
-#include "ThreeRoe/ThreeRoe.hpp"
+#include <ThreeRoe/ThreeRoe.hpp>
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
