@@ -10,7 +10,7 @@ DESCRIPTION="Biomolecular Structure Library"
 
 # shared library dependencies
 GCC=gcc/4.9.2-30B
-BOOST=boost/1.59.0-02
+BOOST=boost/1.59.0-03
 LPSOLVE=lp_solve/5.5.2.0-05A
 INCHI=inchi/1.04-05
 SNAPPY=snappy/1.1.2-01
