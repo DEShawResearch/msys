@@ -11,7 +11,7 @@ bsx=env.get('MSYS_BOOST_SUFFIX', '')
 boost_libs=[(x+bsx) for x in ( 
     'boost_iostreams', 'boost_filesystem', 'boost_system', 'boost_regex' )]
 env.Append(LIBS=boost_libs)
-env.AppendUnique(LIBS=['sqlite3', 'z', 'snappy' ])
+env.AppendUnique(LIBS=['sqlite3', 'z' ])
 if env['PLATFORM'] == 'darwin':
     env.AppendUnique(LIBS=['lpsolve55'])
 

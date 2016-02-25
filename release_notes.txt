@@ -1,3 +1,8 @@
+1.7.140 Using Python/2.7.11-03st
+        DESRESCode#2857: Fix msys.Term.system property.
+        DESRESCode#2779: dms-replicate sets resid, chain or ct as needed.
+        C++: Move ThreeRoe out of dtrplugin header.
+
 1.7.139 Make molfile use sequential access for dtr.
         Fix bug with ETRs if no TSS values followed FORMAT.
 

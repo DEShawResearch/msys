@@ -13,7 +13,6 @@ GCC=gcc/4.9.2-30B
 BOOST=boost/1.59.0-03
 LPSOLVE=lp_solve/5.5.2.0-05A
 INCHI=inchi/1.04-05
-SNAPPY=snappy/1.1.2-01
 TEXLIVE=texlive/20120701-03
 THREEROE=ThreeRoe/0.04
 SQLITE=sqlite/3.10.2-06A
@@ -31,7 +30,6 @@ loadmodules() {
         $SCONSUTILS/lib-python \
         $BOOST/lib \
         $LPSOLVE/lib \
-        $SNAPPY/lib \
         $INCHI/lib \
         $SQLITE/lib \
 	$THREEROE/lib \
@@ -52,6 +50,9 @@ EOF
     cat << EOF > $GARDENDIR/lib
 prepend-path DESRES_MODULE_CPPFLAGS -I$PREFIX/include
 prepend-path DESRES_MODULE_LDFLAGS  -L$PREFIX/lib -Wl,-rpath,$PREFIX/lib
+prereq $PYTHON/lib
+prereq $BOOST/lib
+prereq $SQLITE/lib
 setenv MSYS_PREFIX "$PREFIX"
 EOF
 
@@ -68,7 +69,7 @@ genhelp() {
     cat <<EOF >> $PREFIX/ModulesHelp
 
 See documentation in 
-http://gardendoc.nyc.desres.deshaw.com/$NAME/$VERSION/doc/html/index.html
+http://gardendoc.nyc.desres.deshaw.com/$NAME/`basename $PREFIX`/doc/html/index.html
 
 EOF
 
