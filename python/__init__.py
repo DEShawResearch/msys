@@ -412,6 +412,10 @@ class Param(Handle):
         ''' parent ParamTable '''
         return ParamTable(self._ptr)
 
+    @property
+    def system(self):
+        raise AttributeError('system')
+
     def keys(self):
         ''' sorted list of available properties '''
         return sorted(self.table.props)
@@ -535,6 +539,11 @@ class Term(Handle):
     def id(self): 
         ''' id of this term in its TermTable '''
         return self._id
+
+    @property
+    def system(self):
+        ''' parent System of parent TermTable '''
+        return TermTable(self._ptr).system
 
     @property
     def param(self): 

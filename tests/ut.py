@@ -551,6 +551,21 @@ class TestMain(unittest.TestCase):
         with self.assertRaises(ValueError):
             m.atom('A')
 
+    def testTermSystem(self):
+        m = msys.CreateSystem()
+        m.addAtom()
+        s = m.addTableFromSchema('stretch_harm')
+        s.addTerm((m.atom(0), m.atom(0)))
+        self.assertEqual(m, s.term(0).system)
+
+    def testParamSystem(self):
+        m = msys.CreateSystem()
+        m.addAtom()
+        s = m.addTableFromSchema('stretch_harm')
+        p = s.params.addParam()
+        with self.assertRaises(AttributeError):
+            p.system
+
     def testCtOrder(self):
         ''' atom order in ct should be the same as the original order '''
         mol = msys.CreateSystem()
