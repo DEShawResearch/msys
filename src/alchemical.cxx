@@ -646,11 +646,22 @@ namespace {
         }
     }
 
+    /** There are two types of dihedral terms: trignometry and harmonic terms,
+     * and they reside in separate term tables. When keeping dihedrals, we
+     *  need to keep both types.
+     **/
+    void keep_dihedrals( BlockMap &trigmap, BlockMap &harmmap,
+                         Id ai, Id aj, Id ak, Id al) {
+        keep(trigmap, ai, aj, ak, al);
+        keep(harmmap, ai, aj, ak, al);
+    }
+  
     /** For improper dihedral centered on ai, there are 6 possible
      *  improper dihedral terms: aj-ai-ak-al, aj-ai-al-ak, ak-ai-aj-al,
      *  ak-ai-al-aj, al-ai-aj-ak, al-ai-ak-aj.
      **/
-    void keep_improper_dihedrals( BlockMap& map, Id ai, Id aj, Id ak, Id al,
+    void keep_improper_dihedrals( BlockMap& trigmap, BlockMap &harmmap,
+                                  Id ai, Id aj, Id ak, Id al,
                                   bool bondedjk, bool bondedkl, bool bondedjl,
                                   bool dont_repeat_dihedrals) {
         // We check whether ak and al are bonded, in which case aj-ai-ak-al
@@ -658,16 +669,16 @@ namespace {
         // is set to true.
         // This happens when ai, ak, al form a three-membered ring.
         if (!bondedkl and dont_repeat_dihedrals) {
-            keep( map, aj, ai, ak, al);
-            keep( map, aj, ai, al, ak);
+            keep_dihedrals( trigmap, harmmap, aj, ai, ak, al);
+            keep_dihedrals( trigmap, harmmap, aj, ai, al, ak);
         }
         if (!bondedjl and dont_repeat_dihedrals) {
-            keep( map, ak, ai, aj, al);
-            keep( map, ak, ai, al, aj);
+            keep_dihedrals( trigmap, harmmap, ak, ai, aj, al);
+            keep_dihedrals( trigmap, harmmap, ak, ai, al, aj);
         }
         if (!bondedjk and dont_repeat_dihedrals) {
-            keep( map, al, ai, aj, ak);
-            keep( map, al, ai, ak, aj);
+            keep_dihedrals( trigmap, harmmap, al, ai, aj, ak);
+            keep_dihedrals( trigmap, harmmap, al, ai, ak, aj);
         }
     }
   
@@ -755,6 +766,7 @@ namespace {
                       B& bondmap,
                       B& anglmap,
                       B& dihemap,
+                      B& imprmap,
                       B& pairmap
     ) {
 
@@ -802,18 +814,22 @@ namespace {
                 // keep angle B-A-u
                 if (n2.size() >= 2) keep(anglmap, n2[1],n2[0],a2a.at(d));
                 // keep dihedral C-B-A-u
-                if (n2.size() >= 3) keep(dihemap, n2[2],n2[1],n2[0],a2a.at(d));
+                if (n2.size() >= 3)
+                    keep_dihedrals(dihemap, imprmap,
+                                   n2[2],n2[1],n2[0],a2a.at(d));
                 BOOST_FOREACH(Id bonded, M->bondedAtoms(d)) {
                     if (dset.find(bonded) == dset.end()) continue;
                     // keep angle A-u-v
                     keep(anglmap, a2a.at(bonded),a2a.at(d),n2[0]);
                     // keep dihedral B-A-u-v
-                    if (n2.size() >= 2) keep(dihemap, a2a.at(bonded),a2a.at(d),n2[0],n2[1]);
+                    if (n2.size() >= 2)
+                        keep_dihedrals(dihemap, imprmap,
+                             a2a.at(bonded),a2a.at(d),n2[0],n2[1]);
                     BOOST_FOREACH(Id bonded2, M->bondedAtoms(bonded)) {
                         if (bonded2 == d) continue;
                         if (dset.find(bonded2) == dset.end()) continue;
                         // keep dihedral A-u-v-w
-                        keep(dihemap, a2a.at(bonded2),a2a.at(bonded),a2a.at(d),n2[0]);
+                        keep_dihedrals(dihemap, imprmap, a2a.at(bonded2),a2a.at(bonded),a2a.at(d),n2[0]);
                         // We can keep any pairwise interactions
                         // between n2[0] and any dummy atoms,
                         // including the 1-4 interactions.  This is
@@ -832,7 +848,7 @@ namespace {
                       if (bonded2 <= bonded) continue; // hit u,v and v,u only once
                       if (dset.find(bonded2) == dset.end()) continue;
                       // keep improper dihedral centered on d, involving A.
-                      keep_improper_dihedrals( dihemap, a2a.at(d), n2[0], a2a.at(bonded), a2a.at(bonded2), !bad(M->findBond(abc[0],bonded)), !bad(M->findBond(bonded,bonded2)), !bad(M->findBond(abc[0],bonded2)), true);
+                      keep_improper_dihedrals( dihemap, imprmap, a2a.at(d), n2[0], a2a.at(bonded), a2a.at(bonded2), !bad(M->findBond(abc[0],bonded)), !bad(M->findBond(bonded,bonded2)), !bad(M->findBond(abc[0],bonded2)), true);
                     }
                 }
 
@@ -843,17 +859,17 @@ namespace {
                     // keep any improper dihedral centered on A,
                     // involving B, u, v
                     if (n2.size() >= 2) {
-                      keep_improper_dihedrals( dihemap, n2[0], n2[1], a2a.at(d), a2a.at(d2), !bad(M->findBond(abc[1],d)), !bad(M->findBond(d,d2)), !bad(M->findBond(abc[1],d2)), true);
+                      keep_improper_dihedrals( dihemap, imprmap, n2[0], n2[1], a2a.at(d), a2a.at(d2), !bad(M->findBond(abc[1],d)), !bad(M->findBond(d,d2)), !bad(M->findBond(abc[1],d2)), true);
                     }
                     BOOST_FOREACH(Id d3, M->bondedAtoms(d2)) {
                         if (dset.find(d3) == dset.end()) continue;
                         // keep dihedral u-A-v-w
-                        keep(dihemap, a2a.at(d), n2[0], a2a.at(d2), a2a.at(d3));
+                        keep_dihedrals(dihemap, imprmap, a2a.at(d), n2[0], a2a.at(d2), a2a.at(d3));
                     }
                     BOOST_FOREACH(Id d3, M->bondedAtoms(d)) {
                         if (dset.find(d3) == dset.end()) continue;
                         // keep dihedral w-u-A-v
-                        keep(dihemap, a2a.at(d3), a2a.at(d), n2[0], a2a.at(d2));
+                        keep_dihedrals(dihemap, imprmap, a2a.at(d3), a2a.at(d), n2[0], a2a.at(d2));
                     }
                 }
             }
@@ -883,6 +899,7 @@ namespace {
                                          BM& bondmap,
                                          BM& anglmap,
                                          BM& dihemap,
+                                         BM& imprmap,
                                          BM& pairmap) {
 
         IdList a2a(A->atomCount(), BadId);
@@ -926,11 +943,11 @@ namespace {
 
         //printf("** A ** \n");
         my_find_kept(A, dummy_fragmentsA, mappedA, dummiesA, a2a,
-                     bondmap, anglmap, dihemap, pairmap);
+                     bondmap, anglmap, dihemap, imprmap, pairmap);
 
         //printf("** B ** \n");
         my_find_kept(B, dummy_fragmentsB, mappedB, dummiesB, b2a,
-                     bondmap, anglmap, dihemap, pairmap);
+                     bondmap, anglmap, dihemap, imprmap, pairmap);
 
         //printf("stage A\n");
         //find_kept_atoms(A,alist,mappedA, a2a, bondmap, anglmap, dihemap);
@@ -1219,7 +1236,7 @@ SystemPtr desres::msys::MakeAlchemical( SystemPtr A, SystemPtr B,
       // to the partition function.
       // printf( "Keeping separable interactions between dummy and real atoms!\n");
       keep_separable_dummy_real_terms(A,B, alist, blist, b2a, a2b, 
-                                      bondmap, anglmap, dihemap, pairmap);
+                                      bondmap, anglmap, dihemap, imprmap, pairmap);
     }
 
     ff = "stretch_harm";
