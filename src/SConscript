@@ -86,7 +86,6 @@ else:
     inchi = env.AddObject('inchi.cxx')
 
 libmsys=env.AddLibrary('msys', lexobjs + lpobjs + [inchi] + Split('''
-alchemical.cxx
 
 analyze/eigensystem.cxx
 analyze/get_fragments.cxx
