@@ -69,7 +69,7 @@ genhelp() {
     cat <<EOF >> $PREFIX/ModulesHelp
 
 See documentation in 
-http://gardendoc.nyc.desres.deshaw.com/$NAME/`basename $PREFIX`/doc/html/index.html
+http://gardendoc.nyc.desres.deshaw.com/$PREFIX/doc/html/index.html
 
 EOF
 
