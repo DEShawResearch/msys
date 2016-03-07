@@ -3,6 +3,7 @@
 #include "clone.hxx"
 #include <fastjson/print.hxx>
 #include <errno.h>
+#include <math.h>
 
 using namespace desres::msys;
 using desres::msys::fastjson::floatify;
@@ -158,7 +159,7 @@ static std::string format_ct( SystemPtr mol ) {
             sdf += std::to_string(v.asInt());
             break;
         case FloatType: 
-            if (std::isfinite(v.asFloat())) {
+            if (isfinite(v.asFloat())) {
                 floatify(v.asFloat(), floatbuf); 
             } else {
                 sprintf(floatbuf, "%f", v.asFloat());
