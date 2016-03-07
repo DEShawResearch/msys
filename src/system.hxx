@@ -82,7 +82,7 @@ namespace desres { namespace msys {
         Id  i=BadId;                /* id of first bond partner     */
         Id  j=BadId;                /* id of second bond partner    */
         int8_t order=1;             /* formal bond order            */
-        int8_t stereo=0;
+        int8_t stereo=0;            /* negative when atom order is flipped */
 
         int8_t aromatic=0;          /* no Kekule form specified     */
         Float resonant_order=1;     /* resonant bond order          */

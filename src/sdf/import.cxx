@@ -230,6 +230,12 @@ namespace {
                 auto& bnd = mol.bondFAST(mol.addBond(ai,aj));
                 bnd.order = parse_count(buf+6);
                 bnd.stereo = parse_count(buf+9);
+                if ((bnd.stereo==1 || bnd.stereo==6) && ai>aj) {
+                    // msys stores the bonds with ai<aj, but flipping the
+                    // order of the atoms necessitates flipping the
+                    // absolute stereo specification.
+                    bnd.stereo = -bnd.stereo;
+                }
                 if (bnd.order == 4) {
                     bnd.order = 1;
                     bnd.resonant_order = 1.5;       

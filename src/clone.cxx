@@ -113,6 +113,8 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms,
                 Id dstbnd = dst->addBond(dstatm, dstother);
                 dst->bond(dstbnd).order = srcbond.order;
                 dst->bond(dstbnd).resonant_order = srcbond.resonant_order;
+                dst->bond(dstbnd).stereo = srcbond.stereo;
+                dst->bond(dstbnd).aromatic = srcbond.aromatic;
 
                 /* Copy additional bond properties */
                 for (Id k=0; k<nbprops; k++) {

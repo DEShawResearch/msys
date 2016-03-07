@@ -127,10 +127,19 @@ static std::string format_ct( SystemPtr mol ) {
     for (unsigned i=0; i<nbonds; i++) {
         auto const& bnd = mol->bondFAST(i);
         memset(bondbuf,' ',9);
-        format_short(bondbuf  , bnd.i+1);
-        format_short(bondbuf+3, bnd.j+1);
+        if (bnd.stereo<0) {
+            format_short(bondbuf  , bnd.j+1);
+            format_short(bondbuf+3, bnd.i+1);
+        } else {
+            format_short(bondbuf  , bnd.i+1);
+            format_short(bondbuf+3, bnd.j+1);
+        }
         format_short(bondbuf+6, bnd.aromatic ? 4 : bnd.order);
-        format_short(bondbuf+9, bnd.stereo);
+        if (bnd.stereo<0) {
+            format_short(bondbuf+9, -bnd.stereo);
+        } else {
+            format_short(bondbuf+9,  bnd.stereo);
+        }
         ptr = append(ptr, bondbuf, sizeof(bondbuf)-1);
     }
     

@@ -188,6 +188,8 @@ IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr, Id ctid) 
         Id dstj = atmmap[srcj];
         Id dstbnd = dst.addBond(dsti, dstj);
         dst.bond(dstbnd).order = src.bond(srcbnd).order;
+        dst.bond(dstbnd).stereo = src.bond(srcbnd).stereo;
+        dst.bond(dstbnd).aromatic = src.bond(srcbnd).aromatic;
         dst.bond(dstbnd).resonant_order = src.bond(srcbnd).resonant_order;
 
         /* Copy additional bond properties */
