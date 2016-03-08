@@ -168,7 +168,11 @@ static std::string format_ct( SystemPtr mol ) {
             sdf += std::to_string(v.asInt());
             break;
         case FloatType: 
+#ifdef __APPLE__
             if (isfinite(v.asFloat())) {
+#else
+            if (std::isfinite(v.asFloat())) {
+#endif
                 floatify(v.asFloat(), floatbuf); 
             } else {
                 sprintf(floatbuf, "%f", v.asFloat());
