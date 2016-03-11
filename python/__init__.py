@@ -1233,7 +1233,7 @@ class System(object):
 
     def atomsel(self, seltext):
         ''' Create and return an atom selection object (Atomsel). '''
-        return Atomsel(self._ptr, self._ptr.select(seltext))
+        return Atomsel(self._ptr, seltext)
 
     def select(self, seltext):
         ''' return a list of Atoms satisfying the given VMD atom selection. '''

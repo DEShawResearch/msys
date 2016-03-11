@@ -1,16 +1,23 @@
 import numpy
 
 class Atomsel(object):
-    __slots__ = ('_ptr', '_ids', '_pos')
+    __slots__ = ('_ptr', '_ids', '_seltext')
     ''' atom selection object '''
-    def __init__(self, ptr, ids):
+    def __init__(self, ptr, seltext):
         ''' don't use directly - use System.atomsel() '''
         self._ptr = ptr
-        self._ids = numpy.array(ids)
+        self._ids = ptr.selectAsArray(seltext)
+        self._seltext = seltext
 
     def __len__(self):
         ''' number of selected atoms '''
         return len(self._ids)
+
+    def __str__(self):
+        return self._seltext
+
+    def __repr__(self):
+        return "<Atomsel '%s'>" % self._seltext
 
     @property
     def ids(self):
@@ -46,8 +53,10 @@ class Atomsel(object):
         ''' Compute alignment to other object.  Compute and return
         aligned rmsd, and rotational and translational transformations. '''
         rpos = self.getPositions()
-        rcenter = rpos.mean(0)
         opos = self._positions(other)
+        if len(rpos)==0:
+            raise RuntimeError("Empty atom selection '%s' - cannot compute alignment" % self)
+        rcenter = rpos.mean(0)
         ocenter = opos.mean(0)
         rpos -= rcenter
         opos -= ocenter

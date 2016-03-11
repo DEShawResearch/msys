@@ -751,7 +751,11 @@ class TestMain(unittest.TestCase):
         ref.alignCoordinates(sel2)
         self.assertAlmostEqual(ref.currentRMSD(sel2), newrms)
 
-
+    def testEmptyAtomsel(self):
+        A=msys.Load('tests/files/alanin.pdb')
+        B=A.clone()
+        with self.assertRaises(RuntimeError):
+            A.atomsel('none').alignCoordinates(B.atomsel('none'))
 
     def testRadius(self):
         for i,r in (1,1.1), (6,1.7), (19, 1.76):
