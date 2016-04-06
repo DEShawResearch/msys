@@ -221,3 +221,16 @@ previous example, using the new functions::
             # write the entry back out
             fp.write(msys.FormatSDF(mol)
         
+Change the mass of selected atoms
+---------------------------------
+
+Change the mass of selected hydrogens to 4, and compensate by increasing
+the mass of the atom bonded to the hydrogen by the appropriate amount::
+
+    def adjust_masses(mol, sel, compensate=True):
+        for a in mol.select('hydrogen and %s' % sel):
+            old = a.mass
+            a.mass = 4
+            if compensate:
+                a.bonded_atoms[0].mass -= 4-old
+
