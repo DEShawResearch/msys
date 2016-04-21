@@ -54,14 +54,16 @@ namespace {
     class iterator : public LoadIterator {
         FILE* fp = 0;
         char buf[1024];
+        int line = 0;
         bool getline() {
+            ++line;
             return fgets(buf, sizeof(buf), fp)!=NULL;
         }
         bool eof() {
             return feof(fp);
         }
         std::string skip_to_end() {
-            std::string current(buf);
+            std::string current = std::to_string(line)+": " + buf;
             while (getline()) {
                 if (!strncmp(buf, "$$$$", 4)) break;
             }
