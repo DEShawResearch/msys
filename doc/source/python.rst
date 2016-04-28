@@ -1,14 +1,18 @@
-````````````````
+****************
 Python Scripting
-````````````````
+****************
 
 Most of the functionality in msys is exposed in its Python interface.
+
+Overview
+========
+
 This section introduces the Python interface and explains how to use
 it effectively.  We begin by introducing some concepts that pervade
 the Python interface, then move to some examples.
 
 Msys ids
-========
+--------
 
 In Msys, instances of the `Atom`, `Bond`, `Residue`, and `Chain` classes
 are all `Handles`, in the sense that they refer to a piece of data held
@@ -32,7 +36,7 @@ if the primary keys happen to be noncontiguous, Msys will still create a
 `System` with the usual contiguous ids.
 
 Msys properties
-===============
+---------------
 
 Many objects in Msys (in particular, `Atoms`, `Bonds`, `Terms`, and
 `Params`) can have typed attributes given to all members of the set
@@ -63,7 +67,7 @@ An exception is thrown if you try to add a property with the same name
 but different type from an existing property.
 
 Getting started
-===============
+---------------
 
 Once you have your Python environment by loading the appropriate
 modules, fire up Python, import the msys module, and load a dms
@@ -192,7 +196,7 @@ dictionary-like interface::
 
 
 Adding new forcefield terms
-===========================
+---------------------------
 
 Msys provides an interface for adding a `TermTable` corresponding
 to a "standard" forcefield term and configuring that table with
@@ -232,7 +236,7 @@ and ``addTableFromSchema`` will just return the existing table.
 
 
 Files with multiple components
-==============================
+------------------------------
 
 To examine every structure in a multi-component file without having to
 load them all into memory at once, use **LoadMany**.  Unlike the **Load**
@@ -272,5 +276,437 @@ You can create a multi-ct system from existing `Systems` using the
   assert pro.ncts == 2     # assuming there was 1 ct in protein.dms and wat.dms
   assert pro.ct(1).name == 'water'
   msys.Save(pro, 'combined.dms')
+
+
+ParamTable
+==========
+
+The `ParamTable` class is a 2d table, whose rows are indexed by ``id``
+and whose columns are properties; see the discussion of properties in
+the Overview.  A `ParamTable` is used by `TermTables` to hold the shared
+parameters for its `Terms`.
+
+.. autoclass:: msys.ParamTable
+   :members:
+   :special-members:
+
+Param
+-----
+
+A `Param` instance is a reference to a row in a `ParamTable`.  Use the
+``dict``-style interface to get and set values in the row.  Msys will
+take care of converting input values to the type of the corresponding
+column, and raise an exception if the conversion cannot be performed.
+
+.. autoclass:: msys.Param
+   :members:
+   :special-members:
+
+
+
+TermTable
+=========
+
+Interactions between atoms in a `System` are described by the `TermTable`
+class.  Each instance of the `TermTable` class describes a particular
+kind of interaction; e.g., stretch terms, angle terms, dihedrals, etc.
+Individual records within the `TermTable`, called `Terms`, describe the
+interaction between particular sets of atoms.  Each `TermTable` holds one
+`ParamTable`, which holds properties that can be shared by any number
+of `Terms`.   A `TermTable` may also map additional properties, called
+"term properties", to each `Term`.
+
+Each `Term` in the TermTable uses the following attributes to represent
+an interaction:
+
+ * ``id``: the immutable id of the `Term`;
+
+ * ``table``: the parent `TermTable`;
+
+ * ``atoms``: a list of `Atoms`; the ``atoms`` in a `Term` cannot be changed;
+
+ * ``param``: the `Param` in the `ParamTable` holding the parameters for
+   the `Term`; multiple `Terms` may have the same ``param``.  ``param`` may
+   be ``None``, indicating that the `Term` has not been assigned any 
+   parameters.
+
+The properties of a `Term` can be read and updated using a dictionary like
+interface.  Both "term properties" and properties from the `ParamTable`
+are accessed through the same interface.  To add or remove properties,
+use the provided methods in the `TermTable` or `ParamTable` instance.
+If a `Term`'s ``param`` is shared by another `Term` in any other `TermTable`,
+Msys will take care of providing the `Term` with its own `Param` containing
+a copy of the original properties before applying the changes.  However,
+if you a modify a `Param` through its dictionary interface, you will affect
+all `Terms` that happen to share that `Param`::
+
+
+  # fetch the stretch_harm table
+  table = mol.table('stretch_harm')
+  # update the properties of just the first Term
+  table.term(0)['fc'] = 320
+  # update the properties of all terms that use this param!
+  table.term(0).param['fc'] = 320
+
+
+
+Dealing with duplicate parameters
+---------------------------------
+
+After performing various modifications to a `TermTable`, you may find
+that the associated `ParamTable` contains many entries whose values
+are all identical.  The redundant parameters can be removed by first
+"coalescing" the parameter assignments of each `Term` to a set of distinct
+`Params`, then cloning the `System`.  When a `System` is cloned, only the
+`Params` which are referenced by at least one `Term` in the `TermTable` are
+copied to the new `System`:: 
+
+  import msys
+  mol=msys.CreateSystem()
+  a1=mol.addAtom()
+  a2=mol.addAtom()
+  a3=mol.addAtom()
+  table = mol.addTableFromSchema('stretch_harm')
+  p1=table.params.addParam()
+  p1['fc']=320
+  p1['r0']=1.0
+  t1=table.addTerm([a1,a2], p1)
+  t2=table.addTerm([a1,a3], p1)
+  
+  # At this point we have two terms and one param.  Suppose we ignore the
+  # fact that t1 and t2 share a Param, and we just update their properties
+  # to the same value:
+  
+  t1['r0']=1.2
+  t2['r0']=1.2
+  
+  # Now we have two Params, because when we updated t1, we created a second
+  # Param that was unshared by t2.  When we updated t2, p1 was unshared, so
+  # no duplicate was made.
+  assert table.params.nparams==2
+  
+  # But we could get by with only a single Param.  Let's do that:
+  mol.coalesceTables()
+  
+  # At this point t1 and t2 are sharing a Param, and the other one is unused:
+  assert t1.param==t2.param
+  assert table.params.nparams==2
+  assert table.nterms==2
+  
+  # When we clone, the unused params are not copied to the new system.
+  mol2=mol.clone()
+  assert mol2.table('stretch_harm').params.nparams==1
+
+
+.. autoclass:: msys.TermTable
+   :members:
+
+
+Sharing ParamTables
+-------------------
+
+
+Forcefield developers will (we hope!) appreciate the ability for Msys to
+parameterize multiple `TermTables` from potentially different `Systems`
+using a single `ParamTable` instance.  Normally, when a `System` is loaded
+from an input file, or a `TermTable` is created using the scripting interface,
+each `TermTable` refer to a `ParamTable` of its very own, and no other
+`TermTable` can or will reference it.  However, at the time that a `TermTable`
+is created, a `ParamTable` can be provided which will be used to hold
+the `Param` entries for the `Terms` in the `TermTable`::
+
+
+  # create two independent systems
+  m1=msys.CreateSystem()
+  m2=msys.CreateSystem()
+
+  # add some atoms
+  m1.addAtom()
+  m2.addAtom()
+  m2.addAtom()
+
+  # create a free-standing ParamTable and add some Params
+  params=msys.CreateParamTable()
+  p1=params.addParam()
+  p2=params.addParam()
+
+  # create a table in system 1 which uses the free ParamTable
+  table1=m1.addTable("table", 1, params)
+
+  # no other TermTable is using the ParamTable
+  assert not params.shared
+
+  # create a table in system 2 which also uses the free ParamTable
+  table2=m2.addTable("table", 1, params)
+
+  # now the ParamTable is shared
+  assert params.shared
+  assert table1.params == table2.params
+
+  # Add some terms to each table
+  t1=table1.addTerm(m1.atoms, p2)
+  t2=table2.addTerm(m2.atoms[1:], p2)
+
+  assert t1.param == t2.param
+  assert t2.param == p2
+
+  # modifications to the the original table and its params are propagated
+  # to each table
+  params.addProp("fc", float)
+  p1['fc']=32
+  p2['fc']=42
+  assert t1['fc']==42
+  assert t2['fc']==42
+
+  # p1 is shared by multiple TermTables, but within a TermTable, p1 is not
+  # shared.  Modifications to t1['fc'] will affect t2!
+  t1['fc'] = 52
+  assert t2['fc'] == 52
+  
+
+
+Term
+----
+
+A `Term` is a handle for an entry in a `TermTable`.  
+
+.. autoclass:: msys.Term
+   :members:
+   :special-members:
+
+
+
+System
+======
+
+The `System` class holds all structure and forcefield data for a single
+chemical system.  Create a new `System` using ``msys.CreateSystem()``, or 
+from a file using ``msys.LoadDMS`` or ``msys.LoadMAE.`` 
+
+
+A `System` organizes the information in a DMS file into several different
+groups:
+
+ * Tables - `TermTables` are grouped and accessed by name
+
+ * cell - the unit cell vectors for the `System`, in the form of a 3x3
+   NumPy array.
+
+ * nonbonded_info - the NonbondedInfo object describing the type of
+   nonbonded interactions.
+
+ * provenance - a list of Provenance objects describing how the input
+   file has been processed. 
+
+ * Auxiliary tables: Everything else in the DMS file that does not fit into
+   one of the above categories finds its way into an auxiliary table.  
+   Notable denizens of this category include:
+
+   - cmap tables
+
+   - forcefield (annotation for parameters in the DMS file)
+
+
+
+.. autoclass:: msys.System
+   :members:
+
+
+Atom
+----
+
+.. autoclass:: msys.Atom
+   :members:
+   :special-members:
+
+.. autoattribute:: msys.Atom.id
+.. autoattribute:: msys.Atom.system
+
+Bond
+----
+
+.. autoclass:: msys.Bond
+   :members:
+   :special-members:
+
+.. autoattribute:: msys.Bond.id
+.. autoattribute:: msys.Bond.system
+
+Example::
+
+  # create a list of bonded atoms for each atom in a System
+  bondlists = [[b.id for b in a.bonded_atoms] for a in mol.atoms]
+  # create a list of atom id pairs for each bond in a System
+  bonds = [(b.first.id, b.second.id) for b in mol.bonds]
+
+Residue
+-------
+
+.. autoclass:: msys.Residue
+   :members:
+   :special-members:
+
+.. autoattribute:: msys.Residue.id
+.. autoattribute:: msys.Residue.system
+
+Chain
+-----
+
+.. autoclass:: msys.Chain
+   :members:
+   :special-members:
+
+.. autoattribute:: msys.Chain.id
+.. autoattribute:: msys.Chain.system
+
+
+Ct
+--
+
+.. autoclass:: msys.Ct
+   :members:
+   :special-members:
+
+.. autoattribute:: msys.Ct.id
+.. autoattribute:: msys.Ct.system
+
+
+Pfx
+===
+
+.. toctree::
+   :maxdepth: 2
+
+.. automodule:: msys.pfx
+    :members:
+
+What pfx does
+-------------
+
+**Pfx** can be configured to perform a number of tasks related to
+postprocessing of trajectories of molecular systems.  There are four
+main issues which **Pfx** is designed to deal with:
+
+1. *Fixing bonds*.  If two atoms with a bond between them are found in
+   different periodic images, one of them must be shifted by some integer
+   linear combination of the unit cell vectors so that the distance
+   between them is no greater than half a unit cell vector along each
+   cell vector direction.  When there are multiple atoms bonded together,
+   the bond fixing operation must be applied to the bonds composing this 
+   connected component in topologically sorted order.
+
+2. *Gluing components*.  Some molecular systems, such as multimeric
+   ion channels, contain components which are not explicitly bonded
+   to each other, but which do stay together during the simulation and
+   should therefore be kept together during postprocessing.  For each
+   set of glued components, **Pfx** finds the transformations which 
+   minimize the square distance between the centers of each component.
+
+3. *Centering and alignment*.  **Pfx** can either center a selected set
+   of atoms on the origin, or align a selected set to a reference
+   structure.  
+
+4. *Wrapping components*.  Any of the preceeding operations could place
+   the center of a connected set of atoms outside the unit cell
+   centered at the origin.  **Pfx** shifts each connected component to
+   bring it as close to the origin as possible, which maintaining any
+   glued components.  Importantly, if an alignment has been performed
+   in the previous step, then the rotational part of the alignment
+   transformation must be applied to the unit cell before performing
+   the wrapping.  Another subtlety is that when alignemnt has been
+   performed, the wrapping should be performed about the center of the
+   reference selection, not necessarily the origin.  Otherwise, if the
+   reference structure is far from the origin, wrapping could undo the
+   alignment.
+
+The main work of **pfx** is does in the *apply* method.  The arguments
+to *apply* are a coordinate set and, optionally, a periodic cell and/or
+a set of velocities.  Here's what happens when you call *apply*, assuming
+that both the periodic cell and the velocities have been provided:
+
+#. Fix bonds.
+#. Glue components.
+#. Translate the entire system to bring the centered or aligned atoms to
+   the origin.
+#. Compute a rotational transformation which aligns the system to the
+   centered reference structure.
+#. Apply the rotation to the input positions, unit cel, and velocities.
+#. Wrap connected and glued components.
+#. Shift the entire system to the center of the reference structure.
+
+Specifying topology
+-------------------
+
+A **Pfx** instance is constructed from a bond topology.  The bond topology
+indicates both how many atoms are in the molecular system as well as
+which atoms are bonded together.  **Pfx** analyzes this topology to
+find the connected components comprising the system.  If the *fixbonds*
+argument is True, then **Pfx** also computes and caches a topologically
+sorted list of bonds from the topology, so that the bond fixing step
+can be performed efficiently.
+
+
+Specifying glue
+---------------
+
+The *glue* method of **Pfx** lets you specify atoms which should be kept
+together even if there is no explicit bond between them.  Suppose the
+ids of all the protein atoms in a multimeric protein are passed as the
+argument to *glue*.  **Pfx** first finds the set of connected components
+which overlap with the selection.  In the *glue components* step, the
+centers of these components will be brought together.  Moreover, in the
+*wrap components* step, all the protein atoms will be treated as a single
+component for the purpose of wrapping.
+
+Suppose now that only one residue from each monomer of a multicomponent
+protein is included in a *glue* selection.  The same set of connected
+components will be kept together as before, when the entire protein was
+glued; however, the centers of the connected components will be computed
+from just the glued residue in each monomer, rather than from all atoms
+of each monomer.  The *wrap components* step will be unchanged.
+
+The *glue* method can be called multiple times on the same **Pfx** instance.
+It is perfectly valid for glue selections in different invocations to 
+overlap.  
+
+
+Performing both centering and alignment
+---------------------------------------
+
+When viewing trajectories, chemists often want to specify both "center"
+and "fit" selections.  But what does this mean?  If you center on, say,
+atoms 1-10, and align atoms 10-20, one operation will undo the other.
+The only sensible approach seems to be to apply the "center" specification
+to whatever is being used for the reference structure, and then use the
+"fit" selection to align non-reference frames to that selection.
+
+
+What about periodicfix?
+-----------------------
+
+The algorithms in this module are essentially the same as those in 
+periodicfix.  So why a new module?  Here are some reasons:
+
+ * Periodicfix isn't consistent about its use of float and double, and
+   does a lot of interconversion.  This makes it slow.
+
+ * Periodicfix doesn't have both single and double precision versions
+   available from Python.  This one does.
+
+ * Periodicfix makes you specify weights to align a subset of atoms. 
+   Pfx doesn't use weights; or, if you like, the weights must be zero
+   or one.  In practice it's been found that that's all anyone needs.
+   Having to specify weights is cumbersome.  If someone really wants to
+   have weight support in pfx we can add it some day.
+
+ * Periodicfix has separate topology and fragment wrapper types, which
+   make the Python interface more cumbersome.  Pfx has just one type.
+
+ * Periodicfix has accreted additional functionality which has nothing
+   to do with periodic images or alignment, including contact finding
+   and a hydrogen bond energy function. 
+
+ * The svd in periodicfix is greatly inferior to the one here.  Yes,
+   it would be easy replace the one in periodicfix with this one.
 
 

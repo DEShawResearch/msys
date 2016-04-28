@@ -1,0 +1,3 @@
+#!/bin/sh
+PREFIX=$PWD/objs/CentOS6/x86_64/ ./desres-install-helper --exec gendocs
+

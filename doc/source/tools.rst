@@ -1,4 +1,11 @@
 
+******************
+Command line tools
+******************
+
+Msys is packaged with a set of command line tools that wrap functionality
+present in the Python interface.
+
 ----------
 Conversion
 ----------
@@ -95,18 +102,6 @@ dms-replicate
 -------------
 .. include:: ../build/genhelp/dms-replicate
 
-
-------------------------
-Free Energy Perturbation
-------------------------
-
-dms-uncharge
-------------
-.. include:: ../build/genhelp/dms-uncharge
-
-dms-alchemical
---------------
-.. include:: ../build/genhelp/dms-alchemical
 
 ----------
 Validation

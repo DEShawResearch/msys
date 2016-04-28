@@ -1,7 +1,51 @@
 
-*******************
 The DMS file format
-*******************
+===================
+
+The preferred file format for Msys structures is the DMS file.
+
+
+DMS versioning
+--------------
+
+Beginning with msys 1.7.0, a **dms_version** table is included in DMS
+files written by msys.  The version table schema consists of a major
+and minor version number, and will correspond to the major and minor
+version of msys.  Going forward, msys will refuse to load DMS files
+whose version is is higher than the msys version; thus, if and when
+msys reaches version 1.8, files written by that version of msys will not
+(necessarily) be readable by msys 1.7.  There is always the possibility
+that forward compatibility could be ported to a later msys 1.7 version.
+Backward compatibility with older dms versions will always be maintained.
+
+The DMS versioning scheme serves to prevent problems arising from new
+data structures being added to the DMS file in newer versions of msys 
+which are not properly recognized by older versions.  For example,
+the **nonbonded_combined_param** table was added in msys 1.4.0, but
+because there was no dms version string at that time, older versions of
+msys would have treated that table as an auxiliary table instead of
+as a set of overrides to the nonbonded table.
+
+In order to maintain this dms version semantics, it behooves the developers
+of msys to think carefully about any new artifact appearing in the dms
+file, or how data in the dms file is represented.  Any new dms table that
+changes the forcefield or the result of atom selection must bring with
+it an increment to the msys minor version.  
+
+Schema changes in 1.7
+^^^^^^^^^^^^^^^^^^^^^
+
+An **msys_ct** table was added, which stores arbitrary key-value pairs
+for components of the full system.  The **particle** table has a new
+column called *ct* which assigns the particle to a row of the **msys_ct**
+table.  
+
+Msys 1.6.x should be able to read msys 1.7.x files with no problems, since
+the ct information will just be ignored with no effect on atom selections
+or forcefield.
+
+DMS Schema
+----------
 
 All data in a DMS file lives in a flat list of two-dimensional tables.
 Each table has a unique name.  Columns in the tables have a name, a
@@ -44,9 +88,6 @@ the views will be described in terms of the data in their columns,
 just as for tables.  Importantly, views cannot be written to directly;
 one instead updates the tables to which they refer.
 
-Molecules
-=========
-
 The DMS file contains the identity of all particles in the structure
 as well as their positions and velocities in a global coordinate system.
 The particle list includes both physical atoms as well as pseudoparticles
@@ -57,7 +98,7 @@ the **particle** table.  References to particles should follow a naming
 convention of *p0*, *p1*, *p2*, ... for each particle referenced.
 
 Particles
----------
+^^^^^^^^^
 
 The **particle** table associates a unique *id* to all particles
 in the structure.  The ids of the particles must all be contiguous,
@@ -77,7 +118,7 @@ their ids.  The minimal schema for the **particle** table is:
 
 
 Bonds
------
+^^^^^
 
   ======    =======     ===========
   Column    Type        Description
@@ -99,7 +140,7 @@ The *p0* and *p1* values correspond to an id in the **particle** table.
 Each *p0*, *p1* pair should be unique, non-NULL, and satisfy *p0 < p1*.
 
 The global cell
----------------
+^^^^^^^^^^^^^^^
 
   ======    =======     ===========
   Column    Type        Description
@@ -117,7 +158,7 @@ matters, and one would otherwise have difficulty referring to or updating
 a particular record in the table.
 
 Additional particle properties
-------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Additional per-particle properties not already specified in the
 **particle** table should be added to the particle table as columns.
@@ -147,7 +188,7 @@ recognized by Desmond and by Viparr.
   ===============   =======     ===========
 
 Forcefields
-===========
+-----------
 
 A description of a forcefield comprises the functional form of the
 interactions between particles in a chemical system, the particles that
@@ -161,7 +202,7 @@ the potential is typically range-limited.  These include van der Waals
 (vdw) interactions as well as electrostatics.  
 
 Local particle interactions
----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In order to evaluate all the different forces between particles, a
 program needs to be able to find them within a DMS file that may well
@@ -190,7 +231,7 @@ view, rather than as a pure table; a reader of a DMS file should not assume
 anything about how the columns in the table name have been assembled.
 
 Nonbonded interactions
-----------------------
+^^^^^^^^^^^^^^^^^^^^^^
 
 The functional form for nonbonded interactions, as well as the
 tables containing the interaction parameters and type assignments,
@@ -246,7 +287,7 @@ the interaction-dependent coefficients.
 
 
 Alchemical systems
-==================
+------------------
 
 Methods for calculating relative free energies or energies of solvation
 using free energy perturbation (FEP) involve mutating one or more chemical
@@ -257,7 +298,7 @@ mutations to be carried out in the same simulation, a 'moiety' label is
 applied to each mutating particle and bonded term.
 
 Alchemical particles
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 Any particle whose charge or nonbonded parameters changes in going
 from state A to state B, is considered to be an alchemical particle
@@ -279,12 +320,12 @@ below:
   ===============   =======     ===========
 
 Bonded terms
-------------
+^^^^^^^^^^^^
 
 Alchemical bonded terms are to be treated by creating a table analogous
 to the non-alchemical version, but replacing each interaction parameter
 with an 'A' and a 'B' version.  As a naming convention, the string
-'alchemical_' should be prepended to the name of the table.  An example
+`alchemical_` should be prepended to the name of the table.  An example
 is given below for **alchemical_stretch_harm** records, corresponding
 to alchemical harmonic stretch terms with a functional form given by
 interpolating between the parameters for states A and B.
@@ -303,7 +344,7 @@ interpolating between the parameters for states A and B.
   ===============   =======     ===========
 
 Constraint terms
-----------------
+^^^^^^^^^^^^^^^^
 
 No support is offered for alchemical constraint terms at this time.
 If particles A, b, and c are covered by an AH2 constraint in the A
@@ -312,12 +353,12 @@ the B state, then the set of constraint terms in the alchemical DMS file
 should include an AH4 constraint between A and b, c, d and e.
 
 Virtual sites
--------------
+^^^^^^^^^^^^^
 
 No support is offered for alchemical virtual sites at this time.
 
 Polar terms
------------
+^^^^^^^^^^^
 
 No support is offered for alchemical polar terms at this time.
 

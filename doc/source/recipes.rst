@@ -1,3 +1,9 @@
+*******
+Recipes
+*******
+
+Here are some illustrative Python scripts for situations when a command line
+tool isn't available.
 
 Adding artificial bonds
 -----------------------

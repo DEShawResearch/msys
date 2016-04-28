@@ -1,6 +1,6 @@
-````````
+********
 Overview
-````````
+********
 
 This section describes how msys represents particles and forcefields,
 and the relationship between the msys representation and the various

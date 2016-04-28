@@ -1,7 +1,6 @@
 
-*************************
-Notes on MAE file support
-*************************
+MAE file support
+================
 
 As of this writing (January 2013), the MAE file format still sees 
 common use within DESRES and beyond.  The following notes are intended
@@ -95,10 +94,8 @@ Multiple nonbonded tables
 Although Msys permits multiple nonbonded tables to be defined, there is
 currently no facility to represent these tables in MAE files.
 
-
-********************
 Supported MAE tables
-********************
+--------------------
 
 Msys understands the following forcefield tables and functional forms
 (ffio_funct field):
