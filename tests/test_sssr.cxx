@@ -266,14 +266,10 @@ static void test_sssr(const char* input_dms) {
 }
 
 int main(int argc,char **argv){
-    if (argc != 2) {
-        std::cerr << "Usage: test_sssr_rings input.dms" << std::endl;
-        return 2;
-    }
-    const char* input_dms = argv[1];
-
     test_biconnected_components();
     test_min_cycle_basis();
-    test_sssr(input_dms);
+    for (int i=1; i<argc; i++) {
+        test_sssr(argv[i]);
+    }
     return 0;
 }
