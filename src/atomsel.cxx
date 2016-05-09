@@ -12,13 +12,18 @@ namespace desres { namespace msys {
                       const float* pos, const double* cell) {
 
         atomsel::VMD vmd(ptr, pos, cell);
-        atomsel::PredicatePtr result = vmd.parse(txt);
-        if (!result) {
-            MSYS_FAIL("invalid selection:" << vmd.error);
+        try {
+            atomsel::PredicatePtr result = vmd.parse(txt);
+            if (!result) {
+                MSYS_FAIL("invalid selection:" << vmd.error);
+            }
+            atomsel::Selection s(atomsel::full_selection(ptr));
+            result->eval(s);
+            return s.ids();
         }
-        atomsel::Selection s(atomsel::full_selection(ptr));
-        result->eval(s);
-        return s.ids();
+        catch (std::exception& e) {
+            MSYS_FAIL("Failed on selection: " << txt);
+        }
     }
 
 }}

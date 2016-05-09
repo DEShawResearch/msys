@@ -79,7 +79,7 @@
 typedef union YYSTYPE
 {
 
-/* Line 2132 of yacc.c  */
+/* Line 2068 of yacc.c  */
 #line 14 "vmd.y"
 
     int         ival;
@@ -99,7 +99,7 @@ typedef union YYSTYPE
 
 
 
-/* Line 2132 of yacc.c  */
+/* Line 2068 of yacc.c  */
 #line 104 "parser.hxx"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1

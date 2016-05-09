@@ -27,6 +27,7 @@ float           ([0-9]+\.|([0-9]*\.[0-9]+)([eE][-+]?[0-9]+)?)
 digit           [0-9]
 alpha           [a-zA-Z_]
 alphanum        ({alpha}|{digit})
+integer         ([-+]?){digit}+
 
 weird           [\'\"]
 like_1A         {digit}+({alpha}|{weird})+({alphanum}|{weird})*
@@ -83,6 +84,17 @@ of                      { return OF;  }
                             return SVAL;
                         }
 
+
+{integer}           { try {
+                        yylval->ival = parse_int(yytext); 
+                        return IVAL;
+                      } catch (std::exception& e) {
+                        yyextra->error = e.what();
+                        return ERR;
+                      }
+                    }
+
+
 \"[^\"]*    { return ERR; } /* unterminated double-quoted string */
 \'[^\']*    { return ERR; } /* unterminated single-quoted string */
 
@@ -107,15 +119,6 @@ of                      { return OF;  }
                            return SVAL;
                         }
 
-
-{digit}+            { try {
-                        yylval->ival = parse_int(yytext); 
-                        return IVAL;
-                      } catch (std::exception& e) {
-                        yyextra->error = e.what();
-                        return ERR;
-                      }
-                    }
 {float}             { yylval->fval = atof(yytext); return FVAL; }
 
 

@@ -150,7 +150,7 @@
 typedef union YYSTYPE
 {
 
-/* Line 301 of yacc.c  */
+/* Line 293 of yacc.c  */
 #line 14 "vmd.y"
 
     int         ival;
@@ -170,7 +170,7 @@ typedef union YYSTYPE
 
 
 
-/* Line 301 of yacc.c  */
+/* Line 293 of yacc.c  */
 #line 175 "parser.cxx"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
@@ -1622,259 +1622,259 @@ yyreduce:
     {
         case 2:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 81 "vmd.y"
     { context->result = (yyvsp[(1) - (1)].pred); }
     break;
 
   case 3:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 82 "vmd.y"
     { context->result = NULL; }
     break;
 
   case 4:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 86 "vmd.y"
     { (yyval.pred) = (yyvsp[(2) - (3)].pred);                       }
     break;
 
   case 5:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 87 "vmd.y"
     { (yyval.pred) = context->make_not((yyvsp[(2) - (2)].pred));    }
     break;
 
   case 6:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 88 "vmd.y"
     { (yyval.pred) = context->make_single((yyvsp[(1) - (1)].key)); }
     break;
 
   case 7:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 89 "vmd.y"
     { (yyval.pred) = (yyvsp[(1) - (1)].pred); }
     break;
 
   case 8:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 90 "vmd.y"
     { (yyval.pred) = context->make_and((yyvsp[(1) - (3)].pred),(yyvsp[(3) - (3)].pred)); }
     break;
 
   case 9:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 91 "vmd.y"
     { (yyval.pred) = context->make_or((yyvsp[(1) - (3)].pred),(yyvsp[(3) - (3)].pred));  }
     break;
 
   case 10:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 92 "vmd.y"
     { (yyval.pred) = (yyvsp[(1) - (1)].pred); }
     break;
 
   case 11:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 93 "vmd.y"
     { (yyval.pred) = context->make_within((yyvsp[(2) - (4)].fval),(yyvsp[(4) - (4)].pred)); }
     break;
 
   case 12:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 94 "vmd.y"
     { (yyval.pred) = context->make_exwithin((yyvsp[(2) - (4)].fval),(yyvsp[(4) - (4)].pred)); }
     break;
 
   case 13:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 95 "vmd.y"
     { (yyval.pred) = context->make_pbwithin((yyvsp[(2) - (4)].fval),(yyvsp[(4) - (4)].pred)); }
     break;
 
   case 14:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 96 "vmd.y"
     { (yyval.pred) = context->make_withinbonds((yyvsp[(2) - (4)].ival),(yyvsp[(4) - (4)].pred)); }
     break;
 
   case 15:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 97 "vmd.y"
     { (yyval.pred)= context->make_same((yyvsp[(2) - (4)].key),(yyvsp[(4) - (4)].pred)); }
     break;
 
   case 16:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 98 "vmd.y"
     { (yyval.pred) = context->make_nearest((yyvsp[(2) - (4)].ival),(yyvsp[(4) - (4)].pred)); }
     break;
 
   case 17:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 99 "vmd.y"
     { (yyval.pred) = context->make_pbnearest((yyvsp[(2) - (4)].ival),(yyvsp[(4) - (4)].pred)); }
     break;
 
   case 18:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 100 "vmd.y"
     { (yyval.pred) = context->make_compare((yyvsp[(2) - (3)].ival),(yyvsp[(1) - (3)].expr),(yyvsp[(3) - (3)].expr)); }
     break;
 
   case 19:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 104 "vmd.y"
     { (yyval.key) = (yyvsp[(1) - (1)].key); }
     break;
 
   case 20:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 105 "vmd.y"
     { (yyval.key) = (yyvsp[(1) - (1)].key); }
     break;
 
   case 21:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 106 "vmd.y"
     { (yyval.key) = (yyvsp[(1) - (1)].key); }
     break;
 
   case 22:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 110 "vmd.y"
     { (yyval.pred) = context->make_key((yyvsp[(1) - (2)].key),(yyvsp[(2) - (2)].ilist)); }
     break;
 
   case 23:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 111 "vmd.y"
     { (yyval.pred) = context->make_key((yyvsp[(1) - (2)].key),(yyvsp[(2) - (2)].flist)); }
     break;
 
   case 24:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 112 "vmd.y"
     { (yyval.pred) = context->make_key((yyvsp[(1) - (2)].key),(yyvsp[(2) - (2)].slist)); }
     break;
 
   case 25:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 113 "vmd.y"
     { (yyval.pred) = context->make_strfctn((yyvsp[(1) - (2)].strfctn),(yyvsp[(2) - (2)].slist)); }
     break;
 
   case 26:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 117 "vmd.y"
     { (yyval.fval) = (yyvsp[(1) - (1)].ival); }
     break;
 
   case 27:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 118 "vmd.y"
     { (yyval.fval) = (yyvsp[(1) - (1)].fval); }
     break;
 
   case 28:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 122 "vmd.y"
     { (yyval.ilist) = new IntList((yyvsp[(1) - (1)].ival)); }
     break;
 
   case 29:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 123 "vmd.y"
     { (yyval.ilist) = new IntList((yyvsp[(1) - (3)].ival),(yyvsp[(3) - (3)].ival)); }
     break;
 
   case 30:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 124 "vmd.y"
     { (yyvsp[(1) - (2)].ilist)->add((yyvsp[(2) - (2)].ival)); (yyval.ilist)=(yyvsp[(1) - (2)].ilist); }
     break;
 
   case 31:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 125 "vmd.y"
     { (yyvsp[(1) - (4)].ilist)->add((yyvsp[(2) - (4)].ival),(yyvsp[(4) - (4)].ival)); (yyval.ilist)=(yyvsp[(1) - (4)].ilist); }
     break;
 
   case 32:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 129 "vmd.y"
     { (yyval.flist) = new FloatList((yyvsp[(1) - (1)].fval)); }
     break;
 
   case 33:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 130 "vmd.y"
     { (yyval.flist) = new FloatList((yyvsp[(1) - (3)].fval),(yyvsp[(3) - (3)].fval)); }
     break;
 
   case 34:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 131 "vmd.y"
     { (yyvsp[(1) - (2)].flist)->add((yyvsp[(2) - (2)].fval)); (yyval.flist)=(yyvsp[(1) - (2)].flist); }
     break;
 
   case 35:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 132 "vmd.y"
     { (yyvsp[(1) - (4)].flist)->add((yyvsp[(2) - (4)].fval),(yyvsp[(4) - (4)].fval)); (yyval.flist)=(yyvsp[(1) - (4)].flist); }
     break;
 
   case 36:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 136 "vmd.y"
     { (yyval.slist) = new StringList((yyvsp[(1) - (1)].sval)); free((yyvsp[(1) - (1)].sval)); }
     break;
 
   case 37:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 137 "vmd.y"
     { (yyval.slist) = new StringList((yyvsp[(1) - (1)].regex)); }
     break;
 
   case 38:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 138 "vmd.y"
     { char buf[32];
                                   sprintf(buf, "%d", (yyvsp[(1) - (1)].ival)); 
@@ -1883,21 +1883,21 @@ yyreduce:
 
   case 39:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 141 "vmd.y"
     { (yyvsp[(1) - (2)].slist)->add((yyvsp[(2) - (2)].sval)); free((yyvsp[(2) - (2)].sval)); (yyval.slist)=(yyvsp[(1) - (2)].slist);      }
     break;
 
   case 40:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 142 "vmd.y"
     { (yyvsp[(1) - (2)].slist)->add((yyvsp[(2) - (2)].regex)); (yyval.slist)=(yyvsp[(1) - (2)].slist);      }
     break;
 
   case 41:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 143 "vmd.y"
     { char buf[32];
                                   sprintf(buf, "%d", (yyvsp[(2) - (2)].ival)); 
@@ -1906,112 +1906,112 @@ yyreduce:
 
   case 42:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 149 "vmd.y"
     { (yyval.slist) = new StringList((yyvsp[(1) - (1)].sval)); free((yyvsp[(1) - (1)].sval)); }
     break;
 
   case 43:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 150 "vmd.y"
     { (yyvsp[(1) - (2)].slist)->add((yyvsp[(2) - (2)].sval)); free((yyvsp[(2) - (2)].sval)); (yyval.slist)=(yyvsp[(1) - (2)].slist); }
     break;
 
   case 44:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 154 "vmd.y"
     { (yyval.expr) = context->make_exp((yyvsp[(1) - (1)].fval)); }
     break;
 
   case 45:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 155 "vmd.y"
     { (yyval.expr) = context->make_exp((yyvsp[(1) - (1)].ival)); }
     break;
 
   case 46:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 156 "vmd.y"
     { (yyval.expr) = context->make_exp((yyvsp[(1) - (1)].key)); }
     break;
 
   case 47:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 157 "vmd.y"
     { (yyval.expr) = context->make_exp((yyvsp[(1) - (1)].key)); }
     break;
 
   case 48:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 158 "vmd.y"
     { (yyval.expr) = context->make_unaexp("-", (yyvsp[(2) - (2)].expr)); }
     break;
 
   case 49:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 159 "vmd.y"
     { (yyval.expr) = (yyvsp[(2) - (3)].expr); }
     break;
 
   case 50:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 160 "vmd.y"
     { (yyval.expr) = context->make_unaexp((yyvsp[(1) - (4)].sval),(yyvsp[(3) - (4)].expr)); free((yyvsp[(1) - (4)].sval)); }
     break;
 
   case 51:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 161 "vmd.y"
     { (yyval.expr) = context->make_binexp("+", (yyvsp[(1) - (3)].expr),(yyvsp[(3) - (3)].expr)); }
     break;
 
   case 52:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 162 "vmd.y"
     { (yyval.expr) = context->make_binexp("-", (yyvsp[(1) - (3)].expr),(yyvsp[(3) - (3)].expr)); }
     break;
 
   case 53:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 163 "vmd.y"
     { (yyval.expr) = context->make_binexp("*", (yyvsp[(1) - (3)].expr),(yyvsp[(3) - (3)].expr)); }
     break;
 
   case 54:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 164 "vmd.y"
     { (yyval.expr) = context->make_binexp("/", (yyvsp[(1) - (3)].expr),(yyvsp[(3) - (3)].expr)); }
     break;
 
   case 55:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 165 "vmd.y"
     { (yyval.expr) = context->make_binexp("%", (yyvsp[(1) - (3)].expr),(yyvsp[(3) - (3)].expr)); }
     break;
 
   case 56:
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 166 "vmd.y"
     { (yyval.expr) = context->make_binexp("^", (yyvsp[(1) - (3)].expr),(yyvsp[(3) - (3)].expr)); }
     break;
 
 
 
-/* Line 1821 of yacc.c  */
+/* Line 1806 of yacc.c  */
 #line 2016 "parser.cxx"
       default: break;
     }
