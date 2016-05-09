@@ -488,13 +488,15 @@ static int parse_parse_buffer(JSON_parser jc)
 {
 
     if (jc->type == JSON_T_INTEGER){
-        int s;
+        int s=0;
         // Find the start of the integer
-        for(s=0;s<jc->parse_buffer_count;++s){
-            if(jc->parse_buffer[s]>='0' && jc->parse_buffer[s]<='9') break;
+        for (; s<jc->parse_buffer_count; s++) {
+            if (isdigit(jc->parse_buffer[s])) break;
         }
-        // Integers with more than one digit cant have leading 0's
-        if(jc->parse_buffer_count-s > 1 && jc->parse_buffer[s]=='0') return false;
+        // can't have leading zero on an integer
+        if (jc->parse_buffer[s]=='0' && isdigit(jc->parse_buffer[s+1])) {
+            return false;
+        }
     }
 
     if (jc->callback) {

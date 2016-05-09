@@ -12,10 +12,11 @@ using desres::msys::fastjson::Json;
  * 1.0 gets written as 1.0 and not integer 1.
  * true/false preserved 
  * keys with embedded quotes
+ * 0 after key
  */
 
 static const char js1[] = 
-"[60.3, -0.001, 0., -0.0, 0.01, 0.1, -0.333, 1.0, 1.37, 60.000, true, false, { \"quote \\\"key\" : 32 }, \"embedded \\\"quotes\\\"\"]";
+"[60.3, -0.001, 0., -0.0, 0.01, 0.1, -0.333, 1.0, 1.37, 60.000, true, false, { \"quote \\\"key\" : 32, \"a\" : 0 }, \"embedded \\\"quotes\\\"\"]";
 
 static void unit_test() {
     std::stringstream ss(js1);
