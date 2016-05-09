@@ -135,12 +135,9 @@ namespace {
     // gidobj: list of atom ids, ngids long
     // posbuffers: list of nfids float buffers of size ngidsx3
     // boxbuffers: list of nfids double buffers of size 3x3
-    // maxthreads: 0 to read in current thread, otherwise use 
-    //             min(maxthreads, nfids to read frames)
     void read_frames(Reader& r, PyObject* fidobj, PyObject* gidobj,
                      PyObject* posbuffers,
-                     PyObject* boxbuffers,
-                     ssize_t maxthreads) {
+                     PyObject* boxbuffers) {
 
         objptr fidarr, gidarr;
         fidarr.reset(PyArray_FromAny(fidobj, PyArray_DescrFromType(NPY_INT64),
@@ -185,6 +182,9 @@ namespace {
             boxptrs[i] = (double *)PyArray_DATA(buf.get());
         }
 
+#if 0
+        // not safe to use multiple threads since DtrReader is 
+        // not thread safe by default anymore.
         ssize_t nthreads = std::min(nfids, maxthreads);
         if (nthreads>0) {
             typedef boost::shared_ptr<boost::thread> ThreadPtr;
@@ -197,9 +197,9 @@ namespace {
             for (unsigned i=0; i<nthreads; i++) {
                 threads[i]->join();
             }
-        } else {
+        } else
+#endif
             worker(1, 0, nfids, &r, fids, ngids, gids, &posptrs, &boxptrs);
-        }
     }
 
     DtrWriter* dtr_init(std::string const& path,
