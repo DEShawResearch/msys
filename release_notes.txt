@@ -1,3 +1,11 @@
+1.7.141 Fix incorrect check for leading zero in json int.
+        Disable multithreaded molfile.read_frames.
+        Handle negative integers in atom selections.
+        Report line number in sdf import errors.
+        Fix empty atom selections in System.atomsel.
+        Fix preservation of absolute stereo in sdf I/O.
+        Move alchemical system generation to sw/libs/atommatch.
+
 1.7.140 Using Python/2.7.11-03st
         DESRESCode#2857: Fix msys.Term.system property.
         DESRESCode#2779: dms-replicate sets resid, chain or ct as needed.
