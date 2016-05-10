@@ -2,52 +2,44 @@
 '''
 Structure and coordinate file manipulation library.
 
---------------------------
-# Synopsis of common tasks
---------------------------
+Reading a structure file::
 
-Reading a structure file:
+    reader = molfile.mae.read('/path/to/foo.mae')
 
-  reader = molfile.mae.read('/path/to/foo.mae')
+Iterating through the frames in a file::
 
-Iterating through the frames in a file:
+    for frame in molfile.dtr.read('/path/to/foo.dtr').frames():
+        function( frame.pos, frame.vel, frame.time, frame.box )
 
-  for frame in molfile.dtr.read('/path/to/foo.dtr').frames():
-    function( frame.pos, frame.vel, frame.time, frame.box )
+Random access to frames (only dtr files support this currently)::
 
-Random access to frames (only dtr files support this currently):
+    f27 = molfile.dtr.read('/path/to/foo.dtr').frame(27) # 0-based index
 
-  f27 = molfile.dtr.read('/path/to/foo.dtr').frame(27) # 0-based index
+Convert an mae file to a pdb file::
 
-Convert an mae file to a pdb file:
+    input=molfile.mae.read('foo.mae')
+    output=molfile.pdb.write('foo.pdb', atoms=input.atoms)
+    output.frame(input.frames().next())
+    output.close()
 
-  input=molfile.mae.read('foo.mae')
-  output=molfile.pdb.write('foo.pdb', atoms=input.atoms)
-  output.frame(input.frames().next())
-  output.close()
+Write every 10th frame in a dtr to a trr::
 
-Write every 10th frame in a dtr to a trr:
-
-  input=molfile.dtr.read('big.dtr')
-  output=molfile.trr.write('out.trr, natoms=input.natoms)
-  for i in range(0,input.nframes, 10):
-    output.frame( input.frame(i) )
-  output.close()
+    input=molfile.dtr.read('big.dtr')
+    output=molfile.trr.write('out.trr, natoms=input.natoms)
+    for i in range(0,input.nframes, 10):
+        output.frame( input.frame(i) )
+    output.close()
 
 
-Write a frame with a specified set of gids:
+Write a frame with a specified set of gids::
+
     f = molfile.Frame(natoms, with_gids=True
     f.gid[:] = my_gids
     f.pos[:] = my_positions
     w.frame(f)
 
-Read a trajectory possibly containing dynamically varying gids.
-    r = molfile.dtr.read(path, with_gids=True)
-    f = r.frame(0)
-    gids = f.gid    # None if not present
+Read the raw fields from a frameset (dtr)::
 
-
-Read the raw fields from a frameset (dtr):
     dtr = molfile.DtrReader('input.dtr')    # also works for stk
     for i in range(dtr.nframes):
         f = dtr.frame(i)
@@ -55,76 +47,15 @@ Read the raw fields from a frameset (dtr):
         frame = dtr.frame(i, keyvals=keyvals)
         ## use data in keyvals
 
-Write raw fields to a frameset (dtr):
+
+Write raw fields to a frameset (dtr)::
+
     dtr = molfile.DtrWriter('output.dtr', natoms=natoms)
     keyvals = dict( s = "a string",
                     f = positions.flatten(),    # must be 1d arrays
                     i = numpy.array([1,2,3]),
                     )
     dtr.append( time = my_time, keyvals = keyvals )
-
---------------------------
-# The molfile data module
---------------------------
-All data is read to and from molfile objects in terms of a small number of
-classes defined within the module:
-
-  Atom:  Represents fixed particle attributes; i.e. no position or
-         velocity!  Atoms hold references to other atoms through their
-         bonds member; use Atom.addbond and Atom.delbond to change the
-         bond topology.
-
-  Frame: Data from a single timestep.  Contains position, velocity,
-         unit cell, and physical time.
-
---------------------------
-# Plugin objects
---------------------------
-For each supported file type, e.g., 'pdb', 'mae', trr', there is a Plugin
-object with that name in the module.  A Plugin can be queried for its 
-capabilities using its 'can_*' methods.  Nearly all plugins can read files,
-but only some can write.  Use the Plugin.read method to create a Reader,
-and Plugin.write to create a write.
-
-Some plugins, e.g., psf, read only structure data (atoms), while others,
-e.g., dtr, read only coordinate data (frames).  If you try to read atoms
-from a dtr, or frames from a psf, you'll get an error.
-
---------------------------
-# Reader objects
---------------------------
-A Reader is a handle to an open file.  Use the atoms member to fetch the
-atomic structure from the file, assuming it exists.  To access frames,
-there are two methods.
-
-  Reader.frames() -- returns a FrameIter object for iteration over frames.
-  FrameIter has two methods: the usual next() method which returns a
-  Frame, and skip(n=1), which advances the iterator by n frames without
-  (necessarily) reading anything.  FrameIter is a very poor iterator:
-  once a frame has been read or skipped, it can't be loaded again;
-  you have use a brand new Reader.
-
-  Reader.frame(n) -- returns the nth frame (0-based index).  Currently
-  only the dtr plugin supports this method.
-
-  Reader.grid(n) -- return the nth grid.  For dx and ccp4 files.
-
---------------------------
-# Writer objects
---------------------------
-Writers are initialized with a path and either an array of Atoms or an
-atom count.  If the Writer supports structure writing, Atoms must be 
-provided; if the Writer only writes frames, either one will do.
-
-If the writer supports frame writing, Writer.frame(f) appends frame f
-to the end of the file.  
-
-If the writer supports grid writing, Writer.grid(g) writes Grid g 
-to the file, where g is an instance of molfile.Grid, either returned
-from reader.grid(n) or created from scratch.
-
-Writer.close() will be invoked when the Writer goes out of scope, but
-it's not a bad idea to invoke it explicitly.
 
 '''
 
@@ -138,9 +69,10 @@ import os
 
 extensiondict=dict()
 
-def register_plugin(plugin, d=extensiondict):
+def register_plugin(plugin):
     ''' put plugin in the global namespace, and add to extensiondict '''
     globals()[plugin.name]=plugin
+    d = extensiondict
     for ext in plugin.filename_extensions.split(','):
         ext=ext.strip()
         if ext:
@@ -151,7 +83,7 @@ _molfile.register_all(register_plugin)
 def load_shared_library(path):
     register_shared_library(path, register_plugin)
 
-def guess_filetype(filename, default=None, extensiondict=extensiondict):
+def guess_filetype(filename, default=None):
     ''' return plugin name based on filename, or default if none found. '''
     dot=filename.rfind('.')
     if dot>0:
@@ -257,7 +189,6 @@ class Grid(object):
         return self._origin
 
 def _grid_from_reader(reader, n):
-    ''' construct from reader and index of dataset '''
     meta = reader.grid_meta(n)
     data = numpy.empty(meta["dims"], 'f')
     reader.grid_data(n, data)
@@ -269,7 +200,6 @@ def _grid_from_reader(reader, n):
     return Grid(data, name=name, axis=[x,y,z], origin=origin)
 
 def _grid_to_writer(writer, grid):
-    ''' Write grid to writer '''
     d={
             'name' : grid.name,
             'origin' : grid.origin.tolist(),
@@ -369,6 +299,8 @@ register_plugin(StkFile)
 with_pandas = True
 
 class SeqFile(object):
+    '''Read csv-like files with column names in the first row
+    '''
 
     filename_extensions = 'seq'
     name = 'seq'

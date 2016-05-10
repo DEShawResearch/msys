@@ -40,7 +40,7 @@ namespace {
 
 void desres::molfile::export_writer() {
 
-    class_<Writer>("Writer", no_init)
+    class_<Writer>("Writer", "Structure or trajectory open for writing",no_init)
         .add_property("natoms", &Writer::natoms)
         .add_property("path", &Writer::path)
         .add_property("can_sync", &Writer::can_sync)

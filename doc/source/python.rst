@@ -710,3 +710,65 @@ periodicfix.  So why a new module?  Here are some reasons:
    it would be easy replace the one in periodicfix with this one.
 
 
+Molfile
+=======
+
+
+.. automodule:: msys.molfile
+    :members: Plugin, DtrReader, Frame, Atom, SeqFile, Grid
+    :undoc-members:
+
+Reader
+------
+
+.. autoclass:: msys.molfile.Reader
+    :members:
+
+    A Reader is a handle to an open file.  Use the atoms member to fetch the
+    atomic structure from the file, assuming it exists.  To access frames,
+    there are two methods.
+
+    .. method:: frames()
+
+       returns a FrameIter object for iteration over frames.  FrameIter
+       has two methods: the usual next() method which returns a Frame,
+       and skip(n=1), which advances the iterator by n frames without
+       (necessarily) reading anything.  FrameIter is a very poor iterator:
+       once a frame has been read or skipped, it can't be loaded again;
+       you have use a brand new Reader.
+
+    .. method:: frame(n)
+
+       returns the nth frame (0-based index).  Currently only the dtr
+       plugin supports this method.
+
+    .. method:: grid(n)
+
+       return the nth grid.  For dx and ccp4 files.
+
+Writer
+------
+
+.. autoclass:: msys.molfile.Writer
+    :members:
+
+    Writers are initialized with a path and either an array of Atoms or
+    an atom count.  If the Writer supports structure writing, Atoms must
+    be provided; if the Writer only writes frames, either one will do.
+
+    .. method:: frame(f)
+
+       If the writer supports frame writing, appends frame f to the end
+       of the file.
+
+    .. method:: grid(g)
+
+       If the writer supports grid writing, writes Grid g to the file,
+       where g is an instance of molfile.Grid, either returned from
+       reader.grid(n) or created from scratch.
+
+    .. method:: close()
+
+       Invoked when the Writer goes out of scope, but it's not a bad
+       idea to invoke it explicitly.
+

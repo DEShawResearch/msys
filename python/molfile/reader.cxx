@@ -154,22 +154,22 @@ namespace {
 
 void desres::molfile::export_reader() {
 
-    class_<Reader>("Reader", no_init)
-        .add_property("natoms", &Reader::natoms)
-        .add_property("nframes",&Reader::nframes)
-        .add_property("ngrids", reader_ngrids)
-        .add_property("has_velocities", &Reader::has_velocities)
-        .add_property("atoms", reader_atoms)
-        .add_property("topology", reader_topology)
-        .add_property("bondorders", reader_bondorders)
-        .add_property("times", reader_times)
-        .def("reopen", &Reader::reopen,
+    class_<Reader>("Reader", "Structure or trajectory open for reading", no_init)
+        .add_property("natoms", &Reader::natoms, "number of atoms")
+        .add_property("nframes",&Reader::nframes, "number of frames")
+        .add_property("ngrids", reader_ngrids, "number of grids")
+        .add_property("has_velocities", &Reader::has_velocities, "reads velocities")
+        .add_property("atoms", reader_atoms, "list of Atoms")
+        .add_property("topology", reader_topology, "bond adjacency graph")
+        .add_property("bondorders", reader_bondorders, "list of bond orders")
+        .add_property("times", reader_times, "all times for frames in trajectory")
+        .def("reopen", &Reader::reopen, "reopen file for reading",
                 return_value_policy<manage_new_object>())
-        .def("frame", &Reader::frame, 
+        .def("frame", &Reader::frame,
                 return_value_policy<manage_new_object>())
-        .def("next", reader_next,
+        .def("next", reader_next, "Return the next frame",
                 return_value_policy<manage_new_object>())
-        .def("skip", &Reader::skip)
+        .def("skip", &Reader::skip, "Skip the next frame")
         .def("at_time_near", &wrap<&Reader::at_time_near>,
                 arg("time"),
                 return_value_policy<manage_new_object>())

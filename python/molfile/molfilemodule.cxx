@@ -10,6 +10,7 @@
 
 #include <boost/python.hpp>
 #include <boost/thread.hpp>
+#include <boost/python/docstring_options.hpp>
 
 using namespace desres::molfile;
 using namespace boost::python;
@@ -295,6 +296,11 @@ BOOST_PYTHON_MODULE(_molfile) {
 
     import_array();
     if (PyErr_Occurred()) return;
+
+    docstring_options doc_options;
+    doc_options.enable_user_defined();
+    doc_options.enable_signatures();
+    doc_options.disable_cpp_signatures();
 
     export_plugin();
     export_reader();

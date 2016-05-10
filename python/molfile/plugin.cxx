@@ -127,7 +127,7 @@ namespace {
 
 void desres::molfile::export_plugin() {
 
-    class_<molfile_plugin_t>("Plugin", init<>())
+    class_<molfile_plugin_t>("Plugin", "Interface to readers and writers", init<>())
         .add_property("name", &molfile_plugin_t::name)
         .add_property("prettyname", &molfile_plugin_t::prettyname)
         .add_property("version", plugin_version)
@@ -139,6 +139,7 @@ void desres::molfile::export_plugin() {
                 (arg("path")
                 ,arg("double_precision")=false
                 ,arg("with_gids")=false),
+                "Open a file for reading",
                 return_value_policy<manage_new_object,
                 return_internal_reference<1> >())
         .def("write", plugin_write,
