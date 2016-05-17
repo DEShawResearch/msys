@@ -7,6 +7,7 @@ namespace desres { namespace msys {
 
     SystemPtr ImportPDB( std::string const& path );
     SystemPtr ImportWebPDB( std::string const& code);
+    std::string FetchPDB(std::string const& code);
     LoadIteratorPtr PDBIterator(std::string const& path);
 
     void ImportPDBCoordinates( SystemPtr mol, std::string const& path );

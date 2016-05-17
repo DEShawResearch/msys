@@ -161,6 +161,16 @@ SystemPtr iterator::next() {
     return mol;
 }
 
+std::string desres::msys::FetchPDB(std::string const& code) {
+    char* buf = desres_msys_import_webpdb(code.c_str());
+    if (!buf) {
+        MSYS_FAIL("Could not read pdb code " << code);
+    }
+    std::string s(buf);
+    free(buf);
+    return s;
+}
+
 SystemPtr desres::msys::ImportWebPDB(std::string const& code) {
     char* buf = desres_msys_import_webpdb(code.c_str());
     if (!buf) {
