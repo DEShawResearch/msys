@@ -120,6 +120,7 @@ namespace desres { namespace msys {
         def("ExportMAEContents", ExportMAEContents);
         def("ImportPDB", ImportPDB);
         def("ExportPDB", ExportPDB);
+        def("FetchPDB",  FetchPDB);
         def("ImportPrmTop", import_prmtop);
         def("ImportCrdCoordinates", ImportCrdCoordinates);
         def("ImportPDBCoordinates", ImportPDBCoordinates);
