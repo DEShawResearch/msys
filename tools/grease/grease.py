@@ -66,6 +66,11 @@ def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
     xmax = -xmin
     ymax = -ymin
 
+    # update the cell
+    mol.cell[0][:]=[xsize,0,0]
+    mol.cell[1][:]=[0,ysize,0]
+    mol.cell[2][:]=[0,0,max(mol.cell[2][2], lipsize[2])]
+
     # Create a new Ct for the lipids
     ct = mol.addCt()
     ct.name = 'grease'
@@ -105,13 +110,6 @@ def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
             for r in c.residues:
                 r.resid = lipnum
                 lipnum += 1
-
-    if verbose: print "updating global cell"
-
-    # update the cell
-    mol.cell[0][:]=[xsize,0,0]
-    mol.cell[1][:]=[0,ysize,0]
-    mol.cell[2][:]=[0,0,max(mol.cell[2][2], lipsize[2])]
 
     return mol
 
