@@ -1,0 +1,1705 @@
+State 0:
+          input ::= * selection
+      (1) input ::= *
+          selection ::= * VAL
+          selection ::= * KEY list
+          selection ::= * selection AND selection
+          selection ::= * selection OR selection
+          selection ::= * LPAREN selection RPAREN
+          selection ::= * MACRO
+          selection ::= * NOT selection
+          selection ::= * WITHIN num OF selection
+          selection ::= * EXWITHIN num OF selection
+          selection ::= * PBWITHIN num OF selection
+          selection ::= * NEAREST INT TO selection
+          selection ::= * WITHINBONDS INT OF selection
+          selection ::= * PBNEAREST INT TO selection
+          selection ::= * SAME KEY AS selection
+          selection ::= * expr CMP expr
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+          expr ::= * num
+          expr ::= * nexpr
+          expr ::= * NEG nexpr
+          nexpr ::= * KEY
+          nexpr ::= * LPAREN expr RPAREN
+          nexpr ::= * FUNC LPAREN expr RPAREN
+          expr ::= * expr ADD expr
+          expr ::= * expr SUB expr
+          expr ::= * expr MUL expr
+          expr ::= * expr DIV expr
+          expr ::= * expr MOD expr
+          expr ::= * expr EXP expr
+
+                             $ reduce 1
+                           NEG shift  23
+                           NOT shift  4
+                           VAL shift  72
+                           KEY shift  21
+                        LPAREN shift  3
+                         MACRO shift  87
+                        WITHIN shift  24
+                      EXWITHIN shift  25
+                      PBWITHIN shift  26
+                       NEAREST shift  60
+                           INT shift  89
+                   WITHINBONDS shift  62
+                     PBNEAREST shift  64
+                          SAME shift  66
+                           FLT shift  90
+                          PLUS shift  48
+                          FUNC shift  68
+                          expr shift  32
+                         nexpr shift  98
+                     selection shift  38
+                           num shift  97
+                         input accept
+
+State 1:
+          selection ::= * VAL
+          selection ::= * KEY list
+          selection ::= * selection AND selection
+          selection ::= selection AND * selection
+          selection ::= * selection OR selection
+          selection ::= * LPAREN selection RPAREN
+          selection ::= * MACRO
+          selection ::= * NOT selection
+          selection ::= * WITHIN num OF selection
+          selection ::= * EXWITHIN num OF selection
+          selection ::= * PBWITHIN num OF selection
+          selection ::= * NEAREST INT TO selection
+          selection ::= * WITHINBONDS INT OF selection
+          selection ::= * PBNEAREST INT TO selection
+          selection ::= * SAME KEY AS selection
+          selection ::= * expr CMP expr
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+          expr ::= * num
+          expr ::= * nexpr
+          expr ::= * NEG nexpr
+          nexpr ::= * KEY
+          nexpr ::= * LPAREN expr RPAREN
+          nexpr ::= * FUNC LPAREN expr RPAREN
+          expr ::= * expr ADD expr
+          expr ::= * expr SUB expr
+          expr ::= * expr MUL expr
+          expr ::= * expr DIV expr
+          expr ::= * expr MOD expr
+          expr ::= * expr EXP expr
+
+                           NEG shift  23
+                           NOT shift  4
+                           VAL shift  72
+                           KEY shift  21
+                        LPAREN shift  3
+                         MACRO shift  87
+                        WITHIN shift  24
+                      EXWITHIN shift  25
+                      PBWITHIN shift  26
+                       NEAREST shift  60
+                           INT shift  89
+                   WITHINBONDS shift  62
+                     PBNEAREST shift  64
+                          SAME shift  66
+                           FLT shift  90
+                          PLUS shift  48
+                          FUNC shift  68
+                          expr shift  32
+                         nexpr shift  98
+                     selection shift  85
+                           num shift  97
+
+State 2:
+          selection ::= * VAL
+          selection ::= * KEY list
+          selection ::= * selection AND selection
+          selection ::= * selection OR selection
+          selection ::= selection OR * selection
+          selection ::= * LPAREN selection RPAREN
+          selection ::= * MACRO
+          selection ::= * NOT selection
+          selection ::= * WITHIN num OF selection
+          selection ::= * EXWITHIN num OF selection
+          selection ::= * PBWITHIN num OF selection
+          selection ::= * NEAREST INT TO selection
+          selection ::= * WITHINBONDS INT OF selection
+          selection ::= * PBNEAREST INT TO selection
+          selection ::= * SAME KEY AS selection
+          selection ::= * expr CMP expr
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+          expr ::= * num
+          expr ::= * nexpr
+          expr ::= * NEG nexpr
+          nexpr ::= * KEY
+          nexpr ::= * LPAREN expr RPAREN
+          nexpr ::= * FUNC LPAREN expr RPAREN
+          expr ::= * expr ADD expr
+          expr ::= * expr SUB expr
+          expr ::= * expr MUL expr
+          expr ::= * expr DIV expr
+          expr ::= * expr MOD expr
+          expr ::= * expr EXP expr
+
+                           NEG shift  23
+                           NOT shift  4
+                           VAL shift  72
+                           KEY shift  21
+                        LPAREN shift  3
+                         MACRO shift  87
+                        WITHIN shift  24
+                      EXWITHIN shift  25
+                      PBWITHIN shift  26
+                       NEAREST shift  60
+                           INT shift  89
+                   WITHINBONDS shift  62
+                     PBNEAREST shift  64
+                          SAME shift  66
+                           FLT shift  90
+                          PLUS shift  48
+                          FUNC shift  68
+                          expr shift  32
+                         nexpr shift  98
+                     selection shift  56
+                           num shift  97
+
+State 3:
+          selection ::= * VAL
+          selection ::= * KEY list
+          selection ::= * selection AND selection
+          selection ::= * selection OR selection
+          selection ::= * LPAREN selection RPAREN
+          selection ::= LPAREN * selection RPAREN
+          selection ::= * MACRO
+          selection ::= * NOT selection
+          selection ::= * WITHIN num OF selection
+          selection ::= * EXWITHIN num OF selection
+          selection ::= * PBWITHIN num OF selection
+          selection ::= * NEAREST INT TO selection
+          selection ::= * WITHINBONDS INT OF selection
+          selection ::= * PBNEAREST INT TO selection
+          selection ::= * SAME KEY AS selection
+          selection ::= * expr CMP expr
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+          expr ::= * num
+          expr ::= * nexpr
+          expr ::= * NEG nexpr
+          nexpr ::= * KEY
+          nexpr ::= * LPAREN expr RPAREN
+          nexpr ::= LPAREN * expr RPAREN
+          nexpr ::= * FUNC LPAREN expr RPAREN
+          expr ::= * expr ADD expr
+          expr ::= * expr SUB expr
+          expr ::= * expr MUL expr
+          expr ::= * expr DIV expr
+          expr ::= * expr MOD expr
+          expr ::= * expr EXP expr
+
+                           NEG shift  23
+                           NOT shift  4
+                           VAL shift  72
+                           KEY shift  21
+                        LPAREN shift  3
+                         MACRO shift  87
+                        WITHIN shift  24
+                      EXWITHIN shift  25
+                      PBWITHIN shift  26
+                       NEAREST shift  60
+                           INT shift  89
+                   WITHINBONDS shift  62
+                     PBNEAREST shift  64
+                          SAME shift  66
+                           FLT shift  90
+                          PLUS shift  48
+                          FUNC shift  68
+                          expr shift  31
+                         nexpr shift  98
+                     selection shift  39
+                           num shift  97
+
+State 4:
+          selection ::= * VAL
+          selection ::= * KEY list
+          selection ::= * selection AND selection
+          selection ::= * selection OR selection
+          selection ::= * LPAREN selection RPAREN
+          selection ::= * MACRO
+          selection ::= * NOT selection
+          selection ::= NOT * selection
+          selection ::= * WITHIN num OF selection
+          selection ::= * EXWITHIN num OF selection
+          selection ::= * PBWITHIN num OF selection
+          selection ::= * NEAREST INT TO selection
+          selection ::= * WITHINBONDS INT OF selection
+          selection ::= * PBNEAREST INT TO selection
+          selection ::= * SAME KEY AS selection
+          selection ::= * expr CMP expr
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+          expr ::= * num
+          expr ::= * nexpr
+          expr ::= * NEG nexpr
+          nexpr ::= * KEY
+          nexpr ::= * LPAREN expr RPAREN
+          nexpr ::= * FUNC LPAREN expr RPAREN
+          expr ::= * expr ADD expr
+          expr ::= * expr SUB expr
+          expr ::= * expr MUL expr
+          expr ::= * expr DIV expr
+          expr ::= * expr MOD expr
+          expr ::= * expr EXP expr
+
+                           NEG shift  23
+                           NOT shift  4
+                           VAL shift  72
+                           KEY shift  21
+                        LPAREN shift  3
+                         MACRO shift  87
+                        WITHIN shift  24
+                      EXWITHIN shift  25
+                      PBWITHIN shift  26
+                       NEAREST shift  60
+                           INT shift  89
+                   WITHINBONDS shift  62
+                     PBNEAREST shift  64
+                          SAME shift  66
+                           FLT shift  90
+                          PLUS shift  48
+                          FUNC shift  68
+                          expr shift  32
+                         nexpr shift  98
+                     selection shift  88
+                           num shift  97
+
+State 5:
+          selection ::= * VAL
+          selection ::= * KEY list
+          selection ::= * selection AND selection
+          selection ::= * selection OR selection
+          selection ::= * LPAREN selection RPAREN
+          selection ::= * MACRO
+          selection ::= * NOT selection
+          selection ::= * WITHIN num OF selection
+          selection ::= WITHIN num OF * selection
+          selection ::= * EXWITHIN num OF selection
+          selection ::= * PBWITHIN num OF selection
+          selection ::= * NEAREST INT TO selection
+          selection ::= * WITHINBONDS INT OF selection
+          selection ::= * PBNEAREST INT TO selection
+          selection ::= * SAME KEY AS selection
+          selection ::= * expr CMP expr
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+          expr ::= * num
+          expr ::= * nexpr
+          expr ::= * NEG nexpr
+          nexpr ::= * KEY
+          nexpr ::= * LPAREN expr RPAREN
+          nexpr ::= * FUNC LPAREN expr RPAREN
+          expr ::= * expr ADD expr
+          expr ::= * expr SUB expr
+          expr ::= * expr MUL expr
+          expr ::= * expr DIV expr
+          expr ::= * expr MOD expr
+          expr ::= * expr EXP expr
+
+                           NEG shift  23
+                           NOT shift  4
+                           VAL shift  72
+                           KEY shift  21
+                        LPAREN shift  3
+                         MACRO shift  87
+                        WITHIN shift  24
+                      EXWITHIN shift  25
+                      PBWITHIN shift  26
+                       NEAREST shift  60
+                           INT shift  89
+                   WITHINBONDS shift  62
+                     PBNEAREST shift  64
+                          SAME shift  66
+                           FLT shift  90
+                          PLUS shift  48
+                          FUNC shift  68
+                          expr shift  32
+                         nexpr shift  98
+                     selection shift  41
+                           num shift  97
+
+State 6:
+          selection ::= * VAL
+          selection ::= * KEY list
+          selection ::= * selection AND selection
+          selection ::= * selection OR selection
+          selection ::= * LPAREN selection RPAREN
+          selection ::= * MACRO
+          selection ::= * NOT selection
+          selection ::= * WITHIN num OF selection
+          selection ::= * EXWITHIN num OF selection
+          selection ::= EXWITHIN num OF * selection
+          selection ::= * PBWITHIN num OF selection
+          selection ::= * NEAREST INT TO selection
+          selection ::= * WITHINBONDS INT OF selection
+          selection ::= * PBNEAREST INT TO selection
+          selection ::= * SAME KEY AS selection
+          selection ::= * expr CMP expr
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+          expr ::= * num
+          expr ::= * nexpr
+          expr ::= * NEG nexpr
+          nexpr ::= * KEY
+          nexpr ::= * LPAREN expr RPAREN
+          nexpr ::= * FUNC LPAREN expr RPAREN
+          expr ::= * expr ADD expr
+          expr ::= * expr SUB expr
+          expr ::= * expr MUL expr
+          expr ::= * expr DIV expr
+          expr ::= * expr MOD expr
+          expr ::= * expr EXP expr
+
+                           NEG shift  23
+                           NOT shift  4
+                           VAL shift  72
+                           KEY shift  21
+                        LPAREN shift  3
+                         MACRO shift  87
+                        WITHIN shift  24
+                      EXWITHIN shift  25
+                      PBWITHIN shift  26
+                       NEAREST shift  60
+                           INT shift  89
+                   WITHINBONDS shift  62
+                     PBNEAREST shift  64
+                          SAME shift  66
+                           FLT shift  90
+                          PLUS shift  48
+                          FUNC shift  68
+                          expr shift  32
+                         nexpr shift  98
+                     selection shift  42
+                           num shift  97
+
+State 7:
+          selection ::= * VAL
+          selection ::= * KEY list
+          selection ::= * selection AND selection
+          selection ::= * selection OR selection
+          selection ::= * LPAREN selection RPAREN
+          selection ::= * MACRO
+          selection ::= * NOT selection
+          selection ::= * WITHIN num OF selection
+          selection ::= * EXWITHIN num OF selection
+          selection ::= * PBWITHIN num OF selection
+          selection ::= PBWITHIN num OF * selection
+          selection ::= * NEAREST INT TO selection
+          selection ::= * WITHINBONDS INT OF selection
+          selection ::= * PBNEAREST INT TO selection
+          selection ::= * SAME KEY AS selection
+          selection ::= * expr CMP expr
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+          expr ::= * num
+          expr ::= * nexpr
+          expr ::= * NEG nexpr
+          nexpr ::= * KEY
+          nexpr ::= * LPAREN expr RPAREN
+          nexpr ::= * FUNC LPAREN expr RPAREN
+          expr ::= * expr ADD expr
+          expr ::= * expr SUB expr
+          expr ::= * expr MUL expr
+          expr ::= * expr DIV expr
+          expr ::= * expr MOD expr
+          expr ::= * expr EXP expr
+
+                           NEG shift  23
+                           NOT shift  4
+                           VAL shift  72
+                           KEY shift  21
+                        LPAREN shift  3
+                         MACRO shift  87
+                        WITHIN shift  24
+                      EXWITHIN shift  25
+                      PBWITHIN shift  26
+                       NEAREST shift  60
+                           INT shift  89
+                   WITHINBONDS shift  62
+                     PBNEAREST shift  64
+                          SAME shift  66
+                           FLT shift  90
+                          PLUS shift  48
+                          FUNC shift  68
+                          expr shift  32
+                         nexpr shift  98
+                     selection shift  43
+                           num shift  97
+
+State 8:
+          selection ::= * VAL
+          selection ::= * KEY list
+          selection ::= * selection AND selection
+          selection ::= * selection OR selection
+          selection ::= * LPAREN selection RPAREN
+          selection ::= * MACRO
+          selection ::= * NOT selection
+          selection ::= * WITHIN num OF selection
+          selection ::= * EXWITHIN num OF selection
+          selection ::= * PBWITHIN num OF selection
+          selection ::= * NEAREST INT TO selection
+          selection ::= NEAREST INT TO * selection
+          selection ::= * WITHINBONDS INT OF selection
+          selection ::= * PBNEAREST INT TO selection
+          selection ::= * SAME KEY AS selection
+          selection ::= * expr CMP expr
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+          expr ::= * num
+          expr ::= * nexpr
+          expr ::= * NEG nexpr
+          nexpr ::= * KEY
+          nexpr ::= * LPAREN expr RPAREN
+          nexpr ::= * FUNC LPAREN expr RPAREN
+          expr ::= * expr ADD expr
+          expr ::= * expr SUB expr
+          expr ::= * expr MUL expr
+          expr ::= * expr DIV expr
+          expr ::= * expr MOD expr
+          expr ::= * expr EXP expr
+
+                           NEG shift  23
+                           NOT shift  4
+                           VAL shift  72
+                           KEY shift  21
+                        LPAREN shift  3
+                         MACRO shift  87
+                        WITHIN shift  24
+                      EXWITHIN shift  25
+                      PBWITHIN shift  26
+                       NEAREST shift  60
+                           INT shift  89
+                   WITHINBONDS shift  62
+                     PBNEAREST shift  64
+                          SAME shift  66
+                           FLT shift  90
+                          PLUS shift  48
+                          FUNC shift  68
+                          expr shift  32
+                         nexpr shift  98
+                     selection shift  44
+                           num shift  97
+
+State 9:
+          selection ::= * VAL
+          selection ::= * KEY list
+          selection ::= * selection AND selection
+          selection ::= * selection OR selection
+          selection ::= * LPAREN selection RPAREN
+          selection ::= * MACRO
+          selection ::= * NOT selection
+          selection ::= * WITHIN num OF selection
+          selection ::= * EXWITHIN num OF selection
+          selection ::= * PBWITHIN num OF selection
+          selection ::= * NEAREST INT TO selection
+          selection ::= * WITHINBONDS INT OF selection
+          selection ::= WITHINBONDS INT OF * selection
+          selection ::= * PBNEAREST INT TO selection
+          selection ::= * SAME KEY AS selection
+          selection ::= * expr CMP expr
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+          expr ::= * num
+          expr ::= * nexpr
+          expr ::= * NEG nexpr
+          nexpr ::= * KEY
+          nexpr ::= * LPAREN expr RPAREN
+          nexpr ::= * FUNC LPAREN expr RPAREN
+          expr ::= * expr ADD expr
+          expr ::= * expr SUB expr
+          expr ::= * expr MUL expr
+          expr ::= * expr DIV expr
+          expr ::= * expr MOD expr
+          expr ::= * expr EXP expr
+
+                           NEG shift  23
+                           NOT shift  4
+                           VAL shift  72
+                           KEY shift  21
+                        LPAREN shift  3
+                         MACRO shift  87
+                        WITHIN shift  24
+                      EXWITHIN shift  25
+                      PBWITHIN shift  26
+                       NEAREST shift  60
+                           INT shift  89
+                   WITHINBONDS shift  62
+                     PBNEAREST shift  64
+                          SAME shift  66
+                           FLT shift  90
+                          PLUS shift  48
+                          FUNC shift  68
+                          expr shift  32
+                         nexpr shift  98
+                     selection shift  45
+                           num shift  97
+
+State 10:
+          selection ::= * VAL
+          selection ::= * KEY list
+          selection ::= * selection AND selection
+          selection ::= * selection OR selection
+          selection ::= * LPAREN selection RPAREN
+          selection ::= * MACRO
+          selection ::= * NOT selection
+          selection ::= * WITHIN num OF selection
+          selection ::= * EXWITHIN num OF selection
+          selection ::= * PBWITHIN num OF selection
+          selection ::= * NEAREST INT TO selection
+          selection ::= * WITHINBONDS INT OF selection
+          selection ::= * PBNEAREST INT TO selection
+          selection ::= PBNEAREST INT TO * selection
+          selection ::= * SAME KEY AS selection
+          selection ::= * expr CMP expr
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+          expr ::= * num
+          expr ::= * nexpr
+          expr ::= * NEG nexpr
+          nexpr ::= * KEY
+          nexpr ::= * LPAREN expr RPAREN
+          nexpr ::= * FUNC LPAREN expr RPAREN
+          expr ::= * expr ADD expr
+          expr ::= * expr SUB expr
+          expr ::= * expr MUL expr
+          expr ::= * expr DIV expr
+          expr ::= * expr MOD expr
+          expr ::= * expr EXP expr
+
+                           NEG shift  23
+                           NOT shift  4
+                           VAL shift  72
+                           KEY shift  21
+                        LPAREN shift  3
+                         MACRO shift  87
+                        WITHIN shift  24
+                      EXWITHIN shift  25
+                      PBWITHIN shift  26
+                       NEAREST shift  60
+                           INT shift  89
+                   WITHINBONDS shift  62
+                     PBNEAREST shift  64
+                          SAME shift  66
+                           FLT shift  90
+                          PLUS shift  48
+                          FUNC shift  68
+                          expr shift  32
+                         nexpr shift  98
+                     selection shift  46
+                           num shift  97
+
+State 11:
+          selection ::= * VAL
+          selection ::= * KEY list
+          selection ::= * selection AND selection
+          selection ::= * selection OR selection
+          selection ::= * LPAREN selection RPAREN
+          selection ::= * MACRO
+          selection ::= * NOT selection
+          selection ::= * WITHIN num OF selection
+          selection ::= * EXWITHIN num OF selection
+          selection ::= * PBWITHIN num OF selection
+          selection ::= * NEAREST INT TO selection
+          selection ::= * WITHINBONDS INT OF selection
+          selection ::= * PBNEAREST INT TO selection
+          selection ::= * SAME KEY AS selection
+          selection ::= SAME KEY AS * selection
+          selection ::= * expr CMP expr
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+          expr ::= * num
+          expr ::= * nexpr
+          expr ::= * NEG nexpr
+          nexpr ::= * KEY
+          nexpr ::= * LPAREN expr RPAREN
+          nexpr ::= * FUNC LPAREN expr RPAREN
+          expr ::= * expr ADD expr
+          expr ::= * expr SUB expr
+          expr ::= * expr MUL expr
+          expr ::= * expr DIV expr
+          expr ::= * expr MOD expr
+          expr ::= * expr EXP expr
+
+                           NEG shift  23
+                           NOT shift  4
+                           VAL shift  72
+                           KEY shift  21
+                        LPAREN shift  3
+                         MACRO shift  87
+                        WITHIN shift  24
+                      EXWITHIN shift  25
+                      PBWITHIN shift  26
+                       NEAREST shift  60
+                           INT shift  89
+                   WITHINBONDS shift  62
+                     PBNEAREST shift  64
+                          SAME shift  66
+                           FLT shift  90
+                          PLUS shift  48
+                          FUNC shift  68
+                          expr shift  32
+                         nexpr shift  98
+                     selection shift  47
+                           num shift  97
+
+State 12:
+          selection ::= expr CMP * expr
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+          expr ::= * num
+          expr ::= * nexpr
+          expr ::= * NEG nexpr
+          nexpr ::= * KEY
+          nexpr ::= * LPAREN expr RPAREN
+          nexpr ::= * FUNC LPAREN expr RPAREN
+          expr ::= * expr ADD expr
+          expr ::= * expr SUB expr
+          expr ::= * expr MUL expr
+          expr ::= * expr DIV expr
+          expr ::= * expr MOD expr
+          expr ::= * expr EXP expr
+
+                           NEG shift  23
+                           KEY shift  94
+                        LPAREN shift  14
+                           INT shift  89
+                           FLT shift  90
+                          PLUS shift  48
+                          FUNC shift  68
+                          expr shift  35
+                         nexpr shift  98
+                           num shift  97
+
+State 13:
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+          expr ::= * num
+          expr ::= * nexpr
+          expr ::= * NEG nexpr
+          nexpr ::= * KEY
+          nexpr ::= * LPAREN expr RPAREN
+          nexpr ::= * FUNC LPAREN expr RPAREN
+          expr ::= * expr ADD expr
+          expr ::= expr ADD * expr
+          expr ::= * expr SUB expr
+          expr ::= * expr MUL expr
+          expr ::= * expr DIV expr
+          expr ::= * expr MOD expr
+          expr ::= * expr EXP expr
+
+                           NEG shift  23
+                           KEY shift  94
+                        LPAREN shift  14
+                           INT shift  89
+                           FLT shift  90
+                          PLUS shift  48
+                          FUNC shift  68
+                          expr shift  37
+                         nexpr shift  98
+                           num shift  97
+
+State 14:
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+          expr ::= * num
+          expr ::= * nexpr
+          expr ::= * NEG nexpr
+          nexpr ::= * KEY
+          nexpr ::= * LPAREN expr RPAREN
+          nexpr ::= LPAREN * expr RPAREN
+          nexpr ::= * FUNC LPAREN expr RPAREN
+          expr ::= * expr ADD expr
+          expr ::= * expr SUB expr
+          expr ::= * expr MUL expr
+          expr ::= * expr DIV expr
+          expr ::= * expr MOD expr
+          expr ::= * expr EXP expr
+
+                           NEG shift  23
+                           KEY shift  94
+                        LPAREN shift  14
+                           INT shift  89
+                           FLT shift  90
+                          PLUS shift  48
+                          FUNC shift  68
+                          expr shift  33
+                         nexpr shift  98
+                           num shift  97
+
+State 15:
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+          expr ::= * num
+          expr ::= * nexpr
+          expr ::= * NEG nexpr
+          nexpr ::= * KEY
+          nexpr ::= * LPAREN expr RPAREN
+          nexpr ::= * FUNC LPAREN expr RPAREN
+          expr ::= * expr ADD expr
+          expr ::= * expr SUB expr
+          expr ::= expr SUB * expr
+          expr ::= * expr MUL expr
+          expr ::= * expr DIV expr
+          expr ::= * expr MOD expr
+          expr ::= * expr EXP expr
+
+                           NEG shift  23
+                           KEY shift  94
+                        LPAREN shift  14
+                           INT shift  89
+                           FLT shift  90
+                          PLUS shift  48
+                          FUNC shift  68
+                          expr shift  36
+                         nexpr shift  98
+                           num shift  97
+
+State 16:
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+          expr ::= * num
+          expr ::= * nexpr
+          expr ::= * NEG nexpr
+          nexpr ::= * KEY
+          nexpr ::= * LPAREN expr RPAREN
+          nexpr ::= * FUNC LPAREN expr RPAREN
+          nexpr ::= FUNC LPAREN * expr RPAREN
+          expr ::= * expr ADD expr
+          expr ::= * expr SUB expr
+          expr ::= * expr MUL expr
+          expr ::= * expr DIV expr
+          expr ::= * expr MOD expr
+          expr ::= * expr EXP expr
+
+                           NEG shift  23
+                           KEY shift  94
+                        LPAREN shift  14
+                           INT shift  89
+                           FLT shift  90
+                          PLUS shift  48
+                          FUNC shift  68
+                          expr shift  34
+                         nexpr shift  98
+                           num shift  97
+
+State 17:
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+          expr ::= * num
+          expr ::= * nexpr
+          expr ::= * NEG nexpr
+          nexpr ::= * KEY
+          nexpr ::= * LPAREN expr RPAREN
+          nexpr ::= * FUNC LPAREN expr RPAREN
+          expr ::= * expr ADD expr
+          expr ::= * expr SUB expr
+          expr ::= * expr MUL expr
+          expr ::= expr MUL * expr
+          expr ::= * expr DIV expr
+          expr ::= * expr MOD expr
+          expr ::= * expr EXP expr
+
+                           NEG shift  23
+                           KEY shift  94
+                        LPAREN shift  14
+                           INT shift  89
+                           FLT shift  90
+                          PLUS shift  48
+                          FUNC shift  68
+                          expr shift  69
+                         nexpr shift  98
+                           num shift  97
+
+State 18:
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+          expr ::= * num
+          expr ::= * nexpr
+          expr ::= * NEG nexpr
+          nexpr ::= * KEY
+          nexpr ::= * LPAREN expr RPAREN
+          nexpr ::= * FUNC LPAREN expr RPAREN
+          expr ::= * expr ADD expr
+          expr ::= * expr SUB expr
+          expr ::= * expr MUL expr
+          expr ::= * expr DIV expr
+          expr ::= expr DIV * expr
+          expr ::= * expr MOD expr
+          expr ::= * expr EXP expr
+
+                           NEG shift  23
+                           KEY shift  94
+                        LPAREN shift  14
+                           INT shift  89
+                           FLT shift  90
+                          PLUS shift  48
+                          FUNC shift  68
+                          expr shift  70
+                         nexpr shift  98
+                           num shift  97
+
+State 19:
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+          expr ::= * num
+          expr ::= * nexpr
+          expr ::= * NEG nexpr
+          nexpr ::= * KEY
+          nexpr ::= * LPAREN expr RPAREN
+          nexpr ::= * FUNC LPAREN expr RPAREN
+          expr ::= * expr ADD expr
+          expr ::= * expr SUB expr
+          expr ::= * expr MUL expr
+          expr ::= * expr DIV expr
+          expr ::= * expr MOD expr
+          expr ::= expr MOD * expr
+          expr ::= * expr EXP expr
+
+                           NEG shift  23
+                           KEY shift  94
+                        LPAREN shift  14
+                           INT shift  89
+                           FLT shift  90
+                          PLUS shift  48
+                          FUNC shift  68
+                          expr shift  71
+                         nexpr shift  98
+                           num shift  97
+
+State 20:
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+          expr ::= * num
+          expr ::= * nexpr
+          expr ::= * NEG nexpr
+          nexpr ::= * KEY
+          nexpr ::= * LPAREN expr RPAREN
+          nexpr ::= * FUNC LPAREN expr RPAREN
+          expr ::= * expr ADD expr
+          expr ::= * expr SUB expr
+          expr ::= * expr MUL expr
+          expr ::= * expr DIV expr
+          expr ::= * expr MOD expr
+          expr ::= * expr EXP expr
+          expr ::= expr EXP * expr
+
+                           NEG shift  23
+                           KEY shift  94
+                        LPAREN shift  14
+                           INT shift  89
+                           FLT shift  90
+                          PLUS shift  48
+                          FUNC shift  68
+                          expr shift  101
+                         nexpr shift  98
+                           num shift  97
+
+State 21:
+          selection ::= KEY * list
+          list ::= * integer
+          list ::= * integer TO integer
+          list ::= * VAL
+          list ::= * REGEX
+          list ::= * flt
+          list ::= * flt TO flt
+          list ::= * list integer
+          list ::= * list integer TO integer
+          list ::= * list VAL
+          list ::= * list REGEX
+          list ::= * list flt
+          list ::= * list flt TO flt
+          integer ::= * INT
+          integer ::= * NEG INT
+          flt ::= * FLT
+          flt ::= * NEG FLT
+     (42) nexpr ::= KEY *
+
+                           NEG shift  40
+                           VAL shift  82
+                           INT shift  74
+                         REGEX shift  83
+                           FLT shift  79
+                       integer shift  54
+                           flt shift  55
+                          list shift  22
+                     {default} reduce 42
+
+State 22:
+      (3) selection ::= KEY list *
+          list ::= list * integer
+          list ::= list * integer TO integer
+          list ::= list * VAL
+          list ::= list * REGEX
+          list ::= list * flt
+          list ::= list * flt TO flt
+          integer ::= * INT
+          integer ::= * NEG INT
+          flt ::= * FLT
+          flt ::= * NEG FLT
+
+                           NEG shift  40
+                           VAL shift  76
+                           INT shift  74
+                         REGEX shift  77
+                           FLT shift  79
+                       integer shift  50
+                           flt shift  52
+                     {default} reduce 3
+
+State 23:
+          num ::= NEG * INT
+          num ::= NEG * FLT
+          expr ::= NEG * nexpr
+          nexpr ::= * KEY
+          nexpr ::= * LPAREN expr RPAREN
+          nexpr ::= * FUNC LPAREN expr RPAREN
+
+                           KEY shift  94
+                        LPAREN shift  14
+                           INT shift  91
+                           FLT shift  92
+                          FUNC shift  68
+                         nexpr shift  93
+
+State 24:
+          selection ::= WITHIN * num OF selection
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+
+                           NEG shift  49
+                           INT shift  89
+                           FLT shift  90
+                          PLUS shift  48
+                           num shift  57
+
+State 25:
+          selection ::= EXWITHIN * num OF selection
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+
+                           NEG shift  49
+                           INT shift  89
+                           FLT shift  90
+                          PLUS shift  48
+                           num shift  58
+
+State 26:
+          selection ::= PBWITHIN * num OF selection
+          num ::= * INT
+          num ::= * FLT
+          num ::= * NEG INT
+          num ::= * NEG FLT
+          num ::= * PLUS INT
+          num ::= * PLUS FLT
+
+                           NEG shift  49
+                           INT shift  89
+                           FLT shift  90
+                          PLUS shift  48
+                           num shift  59
+
+State 27:
+          list ::= list integer TO * integer
+          integer ::= * INT
+          integer ::= * NEG INT
+
+                           NEG shift  51
+                           INT shift  74
+                       integer shift  73
+
+State 28:
+          list ::= list flt TO * flt
+          flt ::= * FLT
+          flt ::= * NEG FLT
+
+                           NEG shift  53
+                           FLT shift  79
+                           flt shift  78
+
+State 29:
+          list ::= integer TO * integer
+          integer ::= * INT
+          integer ::= * NEG INT
+
+                           NEG shift  51
+                           INT shift  74
+                       integer shift  81
+
+State 30:
+          list ::= flt TO * flt
+          flt ::= * FLT
+          flt ::= * NEG FLT
+
+                           NEG shift  53
+                           FLT shift  79
+                           flt shift  84
+
+State 31:
+          selection ::= expr * CMP expr
+          nexpr ::= LPAREN expr * RPAREN
+          expr ::= expr * ADD expr
+          expr ::= expr * SUB expr
+          expr ::= expr * MUL expr
+          expr ::= expr * DIV expr
+          expr ::= expr * MOD expr
+          expr ::= expr * EXP expr
+
+                           ADD shift  13
+                           SUB shift  15
+                           MUL shift  17
+                           DIV shift  18
+                           MOD shift  19
+                           EXP shift  20
+                        RPAREN shift  99
+                           CMP shift  12
+
+State 32:
+          selection ::= expr * CMP expr
+          expr ::= expr * ADD expr
+          expr ::= expr * SUB expr
+          expr ::= expr * MUL expr
+          expr ::= expr * DIV expr
+          expr ::= expr * MOD expr
+          expr ::= expr * EXP expr
+
+                           ADD shift  13
+                           SUB shift  15
+                           MUL shift  17
+                           DIV shift  18
+                           MOD shift  19
+                           EXP shift  20
+                           CMP shift  12
+
+State 33:
+          nexpr ::= LPAREN expr * RPAREN
+          expr ::= expr * ADD expr
+          expr ::= expr * SUB expr
+          expr ::= expr * MUL expr
+          expr ::= expr * DIV expr
+          expr ::= expr * MOD expr
+          expr ::= expr * EXP expr
+
+                           ADD shift  13
+                           SUB shift  15
+                           MUL shift  17
+                           DIV shift  18
+                           MOD shift  19
+                           EXP shift  20
+                        RPAREN shift  99
+
+State 34:
+          nexpr ::= FUNC LPAREN expr * RPAREN
+          expr ::= expr * ADD expr
+          expr ::= expr * SUB expr
+          expr ::= expr * MUL expr
+          expr ::= expr * DIV expr
+          expr ::= expr * MOD expr
+          expr ::= expr * EXP expr
+
+                           ADD shift  13
+                           SUB shift  15
+                           MUL shift  17
+                           DIV shift  18
+                           MOD shift  19
+                           EXP shift  20
+                        RPAREN shift  100
+
+State 35:
+     (16) selection ::= expr CMP expr *
+          expr ::= expr * ADD expr
+          expr ::= expr * SUB expr
+          expr ::= expr * MUL expr
+          expr ::= expr * DIV expr
+          expr ::= expr * MOD expr
+          expr ::= expr * EXP expr
+
+                           ADD shift  13
+                           SUB shift  15
+                           MUL shift  17
+                           DIV shift  18
+                           MOD shift  19
+                           EXP shift  20
+                     {default} reduce 16
+
+State 36:
+          expr ::= expr * ADD expr
+          expr ::= expr * SUB expr
+     (46) expr ::= expr SUB expr *
+          expr ::= expr * MUL expr
+          expr ::= expr * DIV expr
+          expr ::= expr * MOD expr
+          expr ::= expr * EXP expr
+
+                           MUL shift  17
+                           DIV shift  18
+                           MOD shift  19
+                           EXP shift  20
+                     {default} reduce 46
+
+State 37:
+          expr ::= expr * ADD expr
+     (45) expr ::= expr ADD expr *
+          expr ::= expr * SUB expr
+          expr ::= expr * MUL expr
+          expr ::= expr * DIV expr
+          expr ::= expr * MOD expr
+          expr ::= expr * EXP expr
+
+                           MUL shift  17
+                           DIV shift  18
+                           MOD shift  19
+                           EXP shift  20
+                     {default} reduce 45
+
+State 38:
+      (0) input ::= selection *
+          selection ::= selection * AND selection
+          selection ::= selection * OR selection
+
+                             $ reduce 0
+                            OR shift  2
+                           AND shift  1
+
+State 39:
+          selection ::= selection * AND selection
+          selection ::= selection * OR selection
+          selection ::= LPAREN selection * RPAREN
+
+                            OR shift  2
+                           AND shift  1
+                        RPAREN shift  86
+
+State 40:
+          integer ::= NEG * INT
+          flt ::= NEG * FLT
+
+                           INT shift  75
+                           FLT shift  80
+
+State 41:
+          selection ::= selection * AND selection
+          selection ::= selection * OR selection
+      (9) selection ::= WITHIN num OF selection *
+
+                            OR shift  2
+                           AND shift  1
+                     {default} reduce 9
+
+State 42:
+          selection ::= selection * AND selection
+          selection ::= selection * OR selection
+     (10) selection ::= EXWITHIN num OF selection *
+
+                            OR shift  2
+                           AND shift  1
+                     {default} reduce 10
+
+State 43:
+          selection ::= selection * AND selection
+          selection ::= selection * OR selection
+     (11) selection ::= PBWITHIN num OF selection *
+
+                            OR shift  2
+                           AND shift  1
+                     {default} reduce 11
+
+State 44:
+          selection ::= selection * AND selection
+          selection ::= selection * OR selection
+     (12) selection ::= NEAREST INT TO selection *
+
+                            OR shift  2
+                           AND shift  1
+                     {default} reduce 12
+
+State 45:
+          selection ::= selection * AND selection
+          selection ::= selection * OR selection
+     (13) selection ::= WITHINBONDS INT OF selection *
+
+                            OR shift  2
+                           AND shift  1
+                     {default} reduce 13
+
+State 46:
+          selection ::= selection * AND selection
+          selection ::= selection * OR selection
+     (14) selection ::= PBNEAREST INT TO selection *
+
+                            OR shift  2
+                           AND shift  1
+                     {default} reduce 14
+
+State 47:
+          selection ::= selection * AND selection
+          selection ::= selection * OR selection
+     (15) selection ::= SAME KEY AS selection *
+
+                            OR shift  2
+                           AND shift  1
+                     {default} reduce 15
+
+State 48:
+          num ::= PLUS * INT
+          num ::= PLUS * FLT
+
+                           INT shift  95
+                           FLT shift  96
+
+State 49:
+          num ::= NEG * INT
+          num ::= NEG * FLT
+
+                           INT shift  91
+                           FLT shift  92
+
+State 50:
+     (23) list ::= list integer *
+          list ::= list integer * TO integer
+
+                            TO shift  27
+                     {default} reduce 23
+
+State 51:
+          integer ::= NEG * INT
+
+                           INT shift  75
+
+State 52:
+     (27) list ::= list flt *
+          list ::= list flt * TO flt
+
+                            TO shift  28
+                     {default} reduce 27
+
+State 53:
+          flt ::= NEG * FLT
+
+                           FLT shift  80
+
+State 54:
+     (17) list ::= integer *
+          list ::= integer * TO integer
+
+                            TO shift  29
+                     {default} reduce 17
+
+State 55:
+     (21) list ::= flt *
+          list ::= flt * TO flt
+
+                            TO shift  30
+                     {default} reduce 21
+
+State 56:
+          selection ::= selection * AND selection
+          selection ::= selection * OR selection
+      (5) selection ::= selection OR selection *
+
+                           AND shift  1
+                     {default} reduce 5
+
+State 57:
+          selection ::= WITHIN num * OF selection
+
+                            OF shift  5
+
+State 58:
+          selection ::= EXWITHIN num * OF selection
+
+                            OF shift  6
+
+State 59:
+          selection ::= PBWITHIN num * OF selection
+
+                            OF shift  7
+
+State 60:
+          selection ::= NEAREST * INT TO selection
+
+                           INT shift  61
+
+State 61:
+          selection ::= NEAREST INT * TO selection
+
+                            TO shift  8
+
+State 62:
+          selection ::= WITHINBONDS * INT OF selection
+
+                           INT shift  63
+
+State 63:
+          selection ::= WITHINBONDS INT * OF selection
+
+                            OF shift  9
+
+State 64:
+          selection ::= PBNEAREST * INT TO selection
+
+                           INT shift  65
+
+State 65:
+          selection ::= PBNEAREST INT * TO selection
+
+                            TO shift  10
+
+State 66:
+          selection ::= SAME * KEY AS selection
+
+                           KEY shift  67
+
+State 67:
+          selection ::= SAME KEY * AS selection
+
+                            AS shift  11
+
+State 68:
+          nexpr ::= FUNC * LPAREN expr RPAREN
+
+                        LPAREN shift  16
+
+State 69:
+          expr ::= expr * ADD expr
+          expr ::= expr * SUB expr
+          expr ::= expr * MUL expr
+     (47) expr ::= expr MUL expr *
+          expr ::= expr * DIV expr
+          expr ::= expr * MOD expr
+          expr ::= expr * EXP expr
+
+                           EXP shift  20
+                     {default} reduce 47
+
+State 70:
+          expr ::= expr * ADD expr
+          expr ::= expr * SUB expr
+          expr ::= expr * MUL expr
+          expr ::= expr * DIV expr
+     (48) expr ::= expr DIV expr *
+          expr ::= expr * MOD expr
+          expr ::= expr * EXP expr
+
+                           EXP shift  20
+                     {default} reduce 48
+
+State 71:
+          expr ::= expr * ADD expr
+          expr ::= expr * SUB expr
+          expr ::= expr * MUL expr
+          expr ::= expr * DIV expr
+          expr ::= expr * MOD expr
+     (49) expr ::= expr MOD expr *
+          expr ::= expr * EXP expr
+
+                           EXP shift  20
+                     {default} reduce 49
+
+State 72:
+      (2) selection ::= VAL *
+
+                     {default} reduce 2
+
+State 73:
+     (24) list ::= list integer TO integer *
+
+                     {default} reduce 24
+
+State 74:
+     (29) integer ::= INT *
+
+                     {default} reduce 29
+
+State 75:
+     (30) integer ::= NEG INT *
+
+                     {default} reduce 30
+
+State 76:
+     (25) list ::= list VAL *
+
+                     {default} reduce 25
+
+State 77:
+     (26) list ::= list REGEX *
+
+                     {default} reduce 26
+
+State 78:
+     (28) list ::= list flt TO flt *
+
+                     {default} reduce 28
+
+State 79:
+     (31) flt ::= FLT *
+
+                     {default} reduce 31
+
+State 80:
+     (32) flt ::= NEG FLT *
+
+                     {default} reduce 32
+
+State 81:
+     (18) list ::= integer TO integer *
+
+                     {default} reduce 18
+
+State 82:
+     (19) list ::= VAL *
+
+                     {default} reduce 19
+
+State 83:
+     (20) list ::= REGEX *
+
+                     {default} reduce 20
+
+State 84:
+     (22) list ::= flt TO flt *
+
+                     {default} reduce 22
+
+State 85:
+          selection ::= selection * AND selection
+      (4) selection ::= selection AND selection *
+          selection ::= selection * OR selection
+
+                     {default} reduce 4
+
+State 86:
+      (6) selection ::= LPAREN selection RPAREN *
+
+                     {default} reduce 6
+
+State 87:
+      (7) selection ::= MACRO *
+
+                     {default} reduce 7
+
+State 88:
+          selection ::= selection * AND selection
+          selection ::= selection * OR selection
+      (8) selection ::= NOT selection *
+
+                     {default} reduce 8
+
+State 89:
+     (33) num ::= INT *
+
+                     {default} reduce 33
+
+State 90:
+     (34) num ::= FLT *
+
+                     {default} reduce 34
+
+State 91:
+     (35) num ::= NEG INT *
+
+                     {default} reduce 35
+
+State 92:
+     (36) num ::= NEG FLT *
+
+                     {default} reduce 36
+
+State 93:
+     (41) expr ::= NEG nexpr *
+
+                     {default} reduce 41
+
+State 94:
+     (42) nexpr ::= KEY *
+
+                     {default} reduce 42
+
+State 95:
+     (37) num ::= PLUS INT *
+
+                     {default} reduce 37
+
+State 96:
+     (38) num ::= PLUS FLT *
+
+                     {default} reduce 38
+
+State 97:
+     (39) expr ::= num *
+
+                     {default} reduce 39
+
+State 98:
+     (40) expr ::= nexpr *
+
+                     {default} reduce 40
+
+State 99:
+     (43) nexpr ::= LPAREN expr RPAREN *
+
+                     {default} reduce 43
+
+State 100:
+     (44) nexpr ::= FUNC LPAREN expr RPAREN *
+
+                     {default} reduce 44
+
+State 101:
+          expr ::= expr * ADD expr
+          expr ::= expr * SUB expr
+          expr ::= expr * MUL expr
+          expr ::= expr * DIV expr
+          expr ::= expr * MOD expr
+          expr ::= expr * EXP expr
+     (50) expr ::= expr EXP expr *
+
+                     {default} reduce 50
+
+----------------------------------------------------
+Symbols:
+    0: $:
+    1: OF
+    2: AS
+    3: TO
+    4: OR
+    5: AND
+    6: ADD
+    7: SUB
+    8: MUL
+    9: DIV
+   10: MOD
+   11: EXP
+   12: NEG
+   13: NOT
+   14: VAL
+   15: KEY
+   16: LPAREN
+   17: RPAREN
+   18: MACRO
+   19: WITHIN
+   20: EXWITHIN
+   21: PBWITHIN
+   22: NEAREST
+   23: INT
+   24: WITHINBONDS
+   25: PBNEAREST
+   26: SAME
+   27: CMP
+   28: REGEX
+   29: FLT
+   30: PLUS
+   31: FUNC
+   32: error:
+   33: expr: NEG KEY LPAREN INT FLT PLUS FUNC
+   34: pexpr:
+   35: nexpr: KEY LPAREN FUNC
+   36: binexpr:
+   37: selection: NEG NOT VAL KEY LPAREN MACRO WITHIN EXWITHIN PBWITHIN NEAREST INT WITHINBONDS PBNEAREST SAME FLT PLUS FUNC
+   38: num: NEG INT FLT PLUS
+   39: integer: NEG INT
+   40: flt: NEG FLT
+   41: list: NEG VAL INT REGEX FLT
+   42: intlist:
+   43: fltlist:
+   44: strlist:
+   45: input: <lambda> NEG NOT VAL KEY LPAREN MACRO WITHIN EXWITHIN PBWITHIN NEAREST INT WITHINBONDS PBNEAREST SAME FLT PLUS FUNC

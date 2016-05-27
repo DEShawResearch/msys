@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
         double t=-now();
         IdList atoms = Atomselect(sys, argv[i]);
         t+=now();
-        printf("%s -> %d atoms (%8.3fms)\n", argv[i], (int)atoms.size(), t*1000);
+        printf("%s -> %d atoms\n", argv[i], (int)atoms.size());
     }
     return 0;
 }

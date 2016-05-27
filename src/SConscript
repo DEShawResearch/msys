@@ -9,7 +9,7 @@ opts.Update(env)
 
 bsx=env.get('MSYS_BOOST_SUFFIX', '')
 boost_libs=[(x+bsx) for x in ( 
-    'boost_iostreams', 'boost_filesystem', 'boost_system', 'boost_regex' )]
+    'boost_iostreams', 'boost_filesystem', 'boost_system')]
 env.Append(LIBS=boost_libs)
 env.AppendUnique(LIBS=['sqlite3', 'z' ])
 if env['PLATFORM'] == 'darwin':
@@ -63,7 +63,6 @@ lexenv = env.Clone()
 lexenv.Append(CPPDEFINES='YY_NO_INPUT')
 lexenv.Append(CXXFLAGS='-Wno-deprecated-register')
 lexobjs = lexenv.AddObject(Split('''
-atomsel/lexer.cxx
 smiles/lexer.cxx
 '''))
 
@@ -93,14 +92,13 @@ analyze/get_fragments.cxx
 amber/import_prmtop.cxx
 
 atomsel.cxx
-atomsel/expression.cxx
-atomsel/keyword.cxx
-atomsel/keyword_predicate.cxx
-atomsel/msys_keyword.cxx
-atomsel/predicate.cxx
-atomsel/vmd.cxx
-atomsel/parser.cxx
-atomsel/within_predicate.cxx
+atomsel/token.cxx
+atomsel/atomsel.cxx
+atomsel/bool.cxx
+atomsel/expr.cxx
+atomsel/key.cxx
+atomsel/within.cxx
+atomsel/query.cxx
 
 dms/dms.cxx
 dms/export_dms.cxx

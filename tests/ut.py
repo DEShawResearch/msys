@@ -1,7 +1,10 @@
-#!/usr/bin/env garden-exec
+#!/usr/bin/garden-exec
 #{
 # source `dirname $0`/../MODULES
-# exec desres-cleanenv -e TMPDIR -m $PYTHON/bin -- python $0 "$@"
+# exec garden with -c \
+# -e TMPDIR \
+# -m $PYTHON/bin \
+# -- python $0 "$@"
 #}
 
 import os, sys, unittest
@@ -249,8 +252,154 @@ class TestAlchemicalMorse(unittest.TestCase):
         self.assertEqual(p['dB'],  0)
         self.assertEqual(p['aB'],  0)
 
+class TestAtomselCoverage(unittest.TestCase):
+    def setUp(self):
+        '''Check that all keywords are implemented'''
+        m=msys.CreateSystem()
+        c1=m.addCt()
+        c2=m.addCt()
+        s1=c1.addChain()
+        s2=c2.addChain()
+        r1=s1.addResidue()
+        r2=s2.addResidue()
+        a1=r1.addAtom()
+        a2=r2.addAtom()
+        a3=r2.addAtom()
+        a1.atomic_number=6
+        a2.atomic_number=1
+        a2.charge=0.5
+        a1.name='0A'
+        a2.name="5'"
+        a2.addBond(a3)
+        r1.name = 'A'
+        r2.name = 'T'
+
+        s1.name='A'
+        s2.name=' A '
+        s1.segid='XYZ'
+        s2.segid=''
+        a2.vy = 42
+
+        m.updateFragids()
+        self.mol = m
+
+    def check(self, sel, ids):
+        got = self.mol.selectIds(sel)
+        self.assertEqual(got, ids, "Failed on '%s', want %s, got %s" % (sel, ids, got))
+
+    def testAnum(self):
+        self.check('atomicnumber 6', [0])
+        self.check('atomicnumber 1', [1])
+        self.check('atomicnumber 1 6', [0,1])
+        self.check('atomicnumber 7', [])
+
+    def testChain(self):
+        self.check('chain A', [0])
+        self.check("chain ' A '", [1,2])
+
+    def testSegid(self):
+        self.check('segid XYZ', [0])
+        self.check("segid ''", [1,2])
+
+    def testCtnumber(self):
+        self.check('ctnumber 0', [])
+        self.check('ctnumber 1', [0])
+        self.check('ctnumber 2', [1,2])
+        self.check('ctnumber 3', [])
+
+    def testCt(self):
+        self.check('ct 0', [0])
+        self.check('ct 1', [1,2])
+        self.check('ct 2', [])
+
+    def testCharge(self):
+        self.check('charge 0.0', [0,2])
+        self.check('charge 0.5', [1])
+        self.check('charge==0', [0,2])
+        self.check('charge==1/2', [1])
+
+    def testElement(self):
+        self.check('element C', [0])
+        self.check('element H', [1])
+        self.check('element H C', [0,1])
+        self.check('element C H', [0,1])
+        self.check('element N', [])
+        self.check('element XYZ', [])
+
+    def testFragment(self):
+        self.check('fragment 0', [0])
+        self.check('fragment 1', [1,2])
+        self.check('fragid 0', [0])
+        self.check('fragid 1', [1,2])
+
+    def testIndex(self):
+        self.check('index 0', [0])
+        self.check('index 1', [1])
+        self.check('index 99', [])
+
+    def testMass(self):
+        self.check('mass 0', [0,1,2])
+        self.check('mass<0', [])
+        self.check('mass<=0', [0,1,2])
+        self.check('mass>=0', [0,1,2])
+        self.check('mass>0', [])
+
+    def testName(self):
+        self.check("name 0A", [0])
+        self.check("name '0A'", [0])
+        self.check("name 5'", [1])
+
+    def testNumbonds(self):
+        self.check('numbonds 0', [0])
+        self.check('numbonds 1', [1,2])
+
+    def testRes(self):
+        self.check('residue 0', [0])
+        self.check('residue 1', [1,2])
+
+        self.check('resid 0', [0,1,2])
+        self.check('resname A', [0])
+        self.check('resname T', [1,2])
+        self.check('insertion ""', [0,1,2])
+
+    def testPosVel(self):
+        self.check('x 0', [0,1,2])
+        self.check('y 0', [0,1,2])
+        self.check('z 0', [0,1,2])
+        self.check('vx 0', [0,1,2])
+        self.check('vy 0', [0,2])
+        self.check('vz 0', [0,1,2])
+        import numpy
+        pos=numpy.ones((3,3), dtype='f')
+        pos[2,2]=42
+        pos[1,1]=-3
+        self.assertEqual(self.mol.selectIds('x 0', pos), [])
+        self.assertEqual(self.mol.selectIds('x 1', pos), [0,1,2])
+        self.assertEqual(self.mol.selectIds('y -3', pos), [1])
+        self.assertEqual(self.mol.selectIds('z 42', pos), [2])
+
 class TestAtomsel(unittest.TestCase):
     
+    def testSmarts(self):
+        mol=msys.Load('tests/files/ch4.dms')
+        self.assertEqual(mol.selectIds('smarts C'), [0])
+        self.assertEqual(mol.selectIds("smarts '[H]'"), [1,2,3,4])
+
+    def testPrecedence(self):
+        mol=msys.Load('tests/files/2f4k.dms')
+        sels = {'within 3 of name CA or name CB':482,
+                'within 3 of resname ALA and noh':63,
+                'not resname ALA or hydrogen':13198,
+                'not resname ALA and hydrogen':8697,
+                'nearest 5 to name CA or name CB':5,
+                }
+        for sel,cnt in sels.iteritems():
+            self.assertEqual(len(mol.selectIds(sel)), cnt)
+
+    #def testParamtype(self):
+        #mol=msys.Load('tests/files/2f4k.dms')
+        #self.assertEqual(mol.selectIds('paramtype nonbonded'), [])
+
     def testTrajectory(self):
         mol=msys.Load('tests/files/alanin.pdb')
         trj=molfile.dcd.read('tests/files/alanin.dcd')
@@ -266,18 +415,6 @@ class TestAtomsel(unittest.TestCase):
 
             self.assertEqual(id1, id3)
             self.assertEqual(id2, id4)
-
-    def testFunnyResnames(self):
-        mol=msys.CreateSystem()
-        a=mol.addAtom()
-        a.name='0A'
-        self.assertEqual(mol.selectIds("name '0A'"), [0])
-        self.assertEqual(mol.selectIds("name 0A"), [0])
-
-    def testSpaces(self):
-        mol=msys.CreateSystem()
-        for i in range(2):
-            mol.selectIds('name CA')
 
     def testBaselines(self):
         with open('tests/atomsel_tests.json') as f:

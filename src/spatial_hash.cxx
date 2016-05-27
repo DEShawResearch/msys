@@ -103,6 +103,9 @@ SpatialHash::SpatialHash( const float *pos, int n, const Id* ids,
         cx = sqrt(cell[0]*cell[0] + cell[1]*cell[1] + cell[2]*cell[2]);
         cy = sqrt(cell[3]*cell[3] + cell[4]*cell[4] + cell[5]*cell[5]);
         cz = sqrt(cell[6]*cell[6] + cell[7]*cell[7] + cell[8]*cell[8]);
+        if (cx==0 || cy==0 || cz==0) {
+            MSYS_FAIL("cell has zero-length dimensions");
+        }
         posix_memalign((void **)&rot, 16, 9*sizeof(*rot));
         double d1=0, d2=0, d3=0; /* row dot-products */
         for (int i=0; i<3; i++) {

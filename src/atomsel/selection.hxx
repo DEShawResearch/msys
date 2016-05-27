@@ -1,5 +1,5 @@
-#ifndef desres_msys_atomsel_selection_hxx
-#define desres_msys_atomsel_selection_hxx
+#ifndef desres_msys_atomsel_selection2_hxx
+#define desres_msys_atomsel_selection2_hxx
 
 #include "../types.hxx"
 #include <string.h>

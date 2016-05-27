@@ -18,7 +18,7 @@ y>=1
 z<=-5
 pbwithin 3 of protein
 (not atomicnumber 1) and pbwithin 3 of protein
-backbone and pbwithin 4 of water 
+backbone and pbwithin 4 of water
 same residue as within 4 of protein 
 (not atomicnumber 1) and within 1.5 of protein 
 (not atomicnumber 1) and within 2.5 of protein 
@@ -69,7 +69,6 @@ element N
 element O
 element P
 
-# macros
 at
 acidic
 cyclic
