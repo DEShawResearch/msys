@@ -622,7 +622,9 @@ void SpatialHash::find_contacts(float r2, int voxid, float x, float y, float z,
         const Id    * ii = _ids+b;
 
         for (; b<e; ++b, ++xi, ++yi, ++zi, ++ii) {
-            if (*ii == id) continue;
+            // can't do this - position arrays passed to SpatialHash 
+            // constructor and findContacts method might be different.
+            //if (*ii == id) continue;
             float dx = x - *xi;
             float dy = y - *yi;
             float dz = z - *zi;
