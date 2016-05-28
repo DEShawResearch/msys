@@ -145,6 +145,12 @@ class TestSpatialHash(unittest.TestCase):
         # why does this return a bool in this case instead of an array???
         self.assertTrue(old1!=old2)
 
+    def testEmptyWithin(self):
+        mol=msys.CreateSystem()
+        mol.addAtom()
+        self.assertEqual(mol.selectIds('within 3 of none'), [])
+        self.assertEqual(mol.selectIds('pbwithin 3 of none'), [])
+        self.assertEqual(mol.selectIds('exwithin 3 of none'), [])
 
 class TestReorder(unittest.TestCase):
     def setUp(self):

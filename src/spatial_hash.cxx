@@ -95,7 +95,7 @@ SpatialHash::SpatialHash( const float *pos, int n, const Id* ids,
   ntarget(n), 
   _x(), _y(), _z(), 
   _tmpx(), _tmpy(), _tmpz(), 
-  _counts() {
+  _counts(), _ids(), _tmpids() {
 
     nx = ny = nz = 0;
     ox = oy = oz = 0;
