@@ -127,6 +127,12 @@ namespace desres { namespace msys {
                     (arg("k"), 
                      arg("pos"), 
                      arg("ids")))
+#if 0
+            .def("findContacts", hash_find_contacts,
+                    (arg("r"),
+                     arg("pos"),
+                     arg("ids")=object()))
+#endif
             ;
     }
 }}

@@ -41,6 +41,10 @@ namespace desres { namespace msys {
         std::vector<uint32_t> _countspace;
         uint32_t *_counts;
 
+        /* ids of hashed particles */
+        Id* _ids;
+        Id *_tmpids;
+
         void compute_full_shell();
         bool test2(float r2, int voxid, float x, float y, float z) const;
 
@@ -80,6 +84,16 @@ namespace desres { namespace msys {
             return find_within(r,pos,n,ids);
         }
 
+        struct contact_t {
+            Id i;
+            Id j;
+            float d;
+            contact_t(Id i, Id j, float d) : i(i), j(j), d(d) {}
+        };
+        typedef std::vector<contact_t> ContactList;
+        ContactList findContacts(float r, const float* pos,
+                                 int n, const Id* ids);
+
         /* For expert users only.  Finds points within r of the
          * hashed points assuming the hashed points have already
          * been voxelized with a grid spacing of at least r. */
@@ -88,7 +102,14 @@ namespace desres { namespace msys {
 
         IdList find_within_small(float r, const float* pos, 
                                  int n, const Id* ids) const;
+ 
+        void find_contacts(float r2, int voxid, float x, float y, float z,
+                           Id id, ContactList& result) const;
 
+        void minimage_contacts(float r, float ga, float gb, float gc,
+                               float px, float py, float pz,
+                               Id id, ContactList& result) const;
+    
         /* Return true if point px,py,pz is within r of some hashed
          * point assuming an orthorhombic periodic cell with lengths
          * ga,gb,gc. */

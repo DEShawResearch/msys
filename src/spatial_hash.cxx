@@ -82,6 +82,8 @@ SpatialHash::~SpatialHash() {
     free(_tmpy);
     free(_tmpz);
     free(rot);
+    free(_ids);
+    free(_tmpids);
 }
 
 SpatialHash::SpatialHash( const float *pos, int n, const Id* ids, 
@@ -133,8 +135,11 @@ SpatialHash::SpatialHash( const float *pos, int n, const Id* ids,
     posix_memalign((void **)&_tmpx, 16, ntarget*sizeof(*_tmpx));
     posix_memalign((void **)&_tmpy, 16, ntarget*sizeof(*_tmpy));
     posix_memalign((void **)&_tmpz, 16, ntarget*sizeof(*_tmpz));
+    posix_memalign((void **)&_ids, 16, ntarget*sizeof(*_ids));
+    posix_memalign((void **)&_tmpids, 16, ntarget*sizeof(*_tmpids));
     for (int i=0; i<ntarget; i++) {
-        const float *xyz = pos+3*ids[i];
+        Id id = ids ? ids[i] : i;
+        const float *xyz = pos+3*id;
         if(rot) {
             float pos[3]={xyz[0],xyz[1],xyz[2]};
             pfx::apply_rotation(1,pos,rot);
@@ -146,6 +151,7 @@ SpatialHash::SpatialHash( const float *pos, int n, const Id* ids,
             _y[i] = xyz[1];
             _z[i] = xyz[2];
         }
+        _ids[i] = id;
     }
 
     /* compute bounds for positions */
@@ -207,11 +213,13 @@ SpatialHash& SpatialHash::voxelize(float r) {
         _tmpx[j] = _x[i];
         _tmpy[j] = _y[i];
         _tmpz[j] = _z[i];
+        _tmpids[j] = _ids[i];
         ++j;
     }
     std::swap(_x,_tmpx);
     std::swap(_y,_tmpy);
     std::swap(_z,_tmpz);
+    std::swap(_ids, _tmpids);
 
     /* shift counts up by to undo the counting sort we just did */
     --_counts;
@@ -373,7 +381,6 @@ IdList SpatialHash::find_within_small(float r, const float* pos,
     return result;
 }
 
-
 IdList SpatialHash::find_within(float r, const float* pos, 
                   int n, const Id* ids) const {
 
@@ -513,6 +520,71 @@ IdList SpatialHash::find_within(float r, const float* pos,
     return result;
 }
 
+SpatialHash::ContactList 
+SpatialHash::findContacts(float r, const float* pos,
+                          int n, const Id* ids) {
+    voxelize(r);
+    bool periodic = cx!=0 || cy!=0 || cz!=0;
+    ContactList result;
+    float tmp[3];
+
+    for (int j=0; j<n; j++) {
+        unsigned id = ids ? ids[j] : j;
+        const float *xyz = pos + 3*id;
+        if (rot) {
+            memcpy(tmp,xyz,3*sizeof(float));
+            pfx::apply_rotation(1,tmp,rot);
+            xyz = tmp;
+        }
+        float x=xyz[0], y=xyz[1], z=xyz[2];
+        int xi = (x-ox) * ir;
+        int yi = (y-oy) * ir;
+        int zi = (z-oz) * ir;
+        if (!(xi<0 || xi>=nx ||
+              yi<0 || yi>=ny ||
+              zi<0 || zi>=nz)) {
+            int voxid = zi + nz*(yi + ny*xi);
+            find_contacts(r*r, voxid, x,y,z, id, result);
+        }
+        if (periodic) {
+            minimage_contacts(r, cx,cy,cz, x,y,z, id, result);
+        }
+    }
+    return result;
+}
+
+void SpatialHash::minimage_contacts(float r, float ga, float gb, float gc,
+                                    float px, float py, float pz,
+                                    Id id, ContactList& result) const {
+    float xlo = xmin - r;
+    float ylo = ymin - r;
+    float zlo = zmin - r;
+    float xhi = xmax + r;
+    float yhi = ymax + r;
+    float zhi = zmax + r;
+    for (int i=-1; i<=1; i++) {
+        float x = px + ga*i;
+        if (x<xlo || x>xhi) continue;
+        for (int j=-1; j<=1; j++) {
+            float y = py + gb*j;
+            if (y<ylo || y>yhi) continue;
+            for (int k=-1; k<=1; k++) {
+                float z = pz + gc*k;
+                if (z<zlo || z>zhi) continue;
+                if (i==0 && j==0 && k==0) continue;
+                int xi = (x-ox) * ir;
+                int yi = (y-oy) * ir;
+                int zi = (z-oz) * ir;
+                if (xi<0 || xi>=nx ||
+                    yi<0 || yi>=ny ||
+                    zi<0 || zi>=nz) continue;
+                int voxid = zi + nz*(yi + ny*xi);
+                find_contacts(r*r, voxid, x,y,z, id, result);
+            }
+        }
+    }
+}
+
 bool SpatialHash::minimage(float r, float ga, float gb, float gc,
                            float px, float py, float pz) const {
     float xlo = xmin - r;
@@ -538,6 +610,29 @@ bool SpatialHash::minimage(float r, float ga, float gb, float gc,
     return false;
 }
 
+void SpatialHash::find_contacts(float r2, int voxid, float x, float y, float z,
+                           Id id, ContactList& result) const {
+
+    for (int i=0; i<10; i++) {
+        int vox = voxid + full_shell[i];
+        uint32_t b = _counts[vox], e = _counts[vox+strip_lens[i]];
+        const float * xi = _x+b;
+        const float * yi = _y+b;
+        const float * zi = _z+b;
+        const Id    * ii = _ids+b;
+
+        for (; b<e; ++b, ++xi, ++yi, ++zi, ++ii) {
+            if (*ii == id) continue;
+            float dx = x - *xi;
+            float dy = y - *yi;
+            float dz = z - *zi;
+            float d2 = dx*dx + dy*dy + dz*dz;
+            if (d2<=r2) {
+                result.emplace_back(id, *ii, sqrt(d2));
+            }
+        }
+    }
+}
 
  bool SpatialHash::test2(float r2, int voxid, float x, float y, float z) const {
 #ifdef __SSE2__
