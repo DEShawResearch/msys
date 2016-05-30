@@ -1405,7 +1405,38 @@ class System(object):
         return self._ptr.findContactIds(cutoff, ids, other, pos)
 
 class AnnotatedSystem(object):
-    ''' System that has been annotated with additional chemical information '''
+    ''' System that has been annotated with additional chemical information
+
+    The AnnotatedSystem class provides chemical annotation useful
+    primarily for evaluating smarts patterns.  The system is expected to
+    already have have chemical reasonable bond orders and formal charges,
+    and to have no missing atoms (e.g. hydrogens).  If these criteria
+    cannot be met, set allow_bad_charges=True in the constructor to bypass
+    these checks; in that case the AnnotatedSystem can still be used to
+    evaluate smarts patterns, but patterns making use of the electronic
+    state of the system (e.g. aromaticity, hybridization, etc.) will
+    not be correct (the system will appear to be entirely aliphatic).
+    You may also use the AssignBondOrderAndFormalCharge function to
+    assign reasonable bond orders and formal charges, assuming there
+    are no missing atoms.
+
+    The AnnotatedSystem defines a model for aromaticity.  First, the SSSR
+    (smallest set of smallest rings) is determined.  Next, rings which
+    share bonds are detected and grouped into ring systems.  Rings are
+    initially marked as nonaromatic.  If the ring system taken as a whole
+    is deemed to be aromatic, then all rings within it are aromatic as
+    well; otherwise, individual rings are checked for aromaticity.  Rings
+    are checked in this fashion until no new rings are found to be aromatic.
+    
+    A ring system is deemed to be aromatic if it satisfies Huckel's
+    4N+2 rule for the number of electrons in the ring(s).  An internal
+    double bond (i.e. a bond between two atoms in the ring) adds 2 to the 
+    electron count.  An external double bond (a bond between a ring atom
+    and an atom not in that ring) adds 1 to the electron count.  An
+    external double bond between a carbon and a nonaromatic carbon makes
+    the ring unconditionally nonaromtic.  An atom with a lone pair and
+    no double bonds adds 2 to the electron count.
+    '''
 
     def __init__(self, sys, allow_bad_charges=False):
         ''' Construct from System. AnnotatedSystem is not updated if System is
@@ -1462,7 +1493,11 @@ class AnnotatedSystem(object):
             raise TypeError, "atom must be of type msys.Atom"
 
     def hybridization(self, atom):
-        ''' Atom hybridization -- 1=sp, 2=sp2, 3=sp3, 4=sp3d, etc. '''
+        ''' Atom hybridization -- 1=sp, 2=sp2, 3=sp3, 4=sp3d, etc.
+        
+        Equal to 0 for hydrogen and atoms with no bonds, otherwise
+        max(1, a.degree() + (a.lone_electrons+1)/2 - 1). 
+        '''
         if type(atom) == Atom:
             return self._ptr.atomHybridization(atom.id)
         else:
@@ -1476,7 +1511,33 @@ class AnnotatedSystem(object):
             raise TypeError, "atom must be of type msys.Atom"
 
 class SmartsPattern(object):
-    ''' A class representing a compiled SMARTS pattern '''
+    ''' A class representing a compiled SMARTS pattern 
+
+    The Msys smarts implementation is similar to that of `Daylight smarts
+    <http://www.daylight.com/dayhtml/doc/theory/theory.smarts.html>`, with
+    support for arbitrarily nested recursive smarts.  A few features are 
+    not currently supported; warnings will be generated when these constructs
+    are used in a smarts pattern.
+    
+    * Directional bonds; e.g. ``\\`` and `/`; these are treated as single bonds
+      (i.e. as a `-` character).
+    
+    * Chiral specification (``@``, ``@@``, etc); ignored.
+    
+    * Implicit hydrogen (``h``): treated as explicit ``H``.
+    
+    * Explicit degree (``D``): treated as bond count ``X``.
+    
+    * Isotopes: (``[12C]``): ignored.
+    
+    * Atom class (``[C:6]``): ignored.
+    
+    On the other hand, Msys does support hybridization using the ``^`` token,
+    as in OpenBabel::
+    
+        [c^2]       select sp2 aromatic carbon
+
+    '''
     def __init__(self, pattern):
         ''' Initialize with SMARTS pattern '''
         self._pat = _msys.SmartsPattern(str(pattern))

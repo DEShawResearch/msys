@@ -2,64 +2,18 @@
 Atom selections
 ***************
 
-Msys implements essentially all of the atom selection language of VMD.
-Differences between Msys and VMD's implementations (other than as yet
-undiscovered bugs in Msys!) fall into the following categories:
-
-* Element matching: In Msys, the atom selections "carbon", "hydrogen",
-  "oxygen", etc. are based on the atomic number of the atoms.  In 
-  VMD, you maybe shocked and surprised to learn, these atom selections
-  are computed using a regular expression based on the atom name::
-  
-    vmd > atomselect macro oxygen
-    name "O.*"
-    
-    vmd > atomselect macro hydrogen
-    name "[0-9]?H.*"
-    
-    vmd > atomselect macro nitrogen
-    name "N.*"
-    
-    vmd > atomselect macro carbon
-    name "C.*" and not ion
-  
-
-  It was felt that, rather than follow VMD in this respect, Msys
-  should try to get the correct answer.  Do you really want your "nitrogen"
-  atom selection to include sodium (NA)?  
-
-* Implicit 'and': in VMD, selections can sometimes be concatenated with
-  an implicit 'and'; e.g. "water within 3 of protein" will be parsed by
-  VMD as "water and within 3 of protein".  In Msys, omitting the 'and' will
-  result in a parse error.
-
-* Field size: DMS and MAE files can hold chain, segment, and residue names
-  of arbitrary length.  In Msys, these values are used as-is.  In VMD,
-  the values are truncated; in particular, chain will be truncated to
-  a single character in VMD, but not by Msys.
-
-* Data representation: Msys has no concept of secondary structure, so the
-  "sheet", helix", etc. atom selection keywords are not implemented in 
-  msys.
-  
-* Floating-point roundoff: There may occasionally be differences in the
-  results of distance based atom selections simply due the fact that Msys
-  stores positions as doubles, while VMD stores them as floats.  
-
-The Msys atom selection language
---------------------------------
-
-For those not already familiar with the VMD atom selection language,
-the following is a summary of the built-in atom selection facilities
-of Msys.  The selection language can be extended on a per-System basis
-in two ways, described in the subsequent sections.
-
+Msys implements an atom selection language similar to that of VMD.
+From Python, the language may be used to select atoms or clone subsets
+of a ``System``, using the ``select``, ``selectIds``, or ``clone``
+methods of ``System``.  In C++, the ``Atomselect`` function provides
+all atom selection functionality.
 
 Grammar
-*******
+--------
 
-The Msys atom selection grammar supports the following primitive types of
-selections.
+The Msys atom selection grammar supports several primitive types which 
+can be combined in various ways using logical operators.  Primitive
+types include the following:
 
 * Keyword selections: an attribute followed by one or more values, ranges,
   or regular expressions::
@@ -72,10 +26,16 @@ selections.
 
 * Singleword selections: A boolean attribute.  This includes both
   built-in singlewords such as ``protein``, as well as those defined
-  as macros, such as ``hydrogen`` ::
+  as macros, such as ``acidic`` ::
 
     protein             # selects atoms identified as protein
-    hydrogen            # defined as 'atomicnumber 1'
+    acidic              # expands to 'resname ASP GLU
+
+* String functions: these are similar in form to keyword selections, but
+  they use their arguments in special ways::
+
+    smarts 'c[$(c[Ox1])]c'  # a smarts query.
+    paramtype nonbonded HP  # query on the nonbonded type of a particle
 
 * Comparisons: An inequality formed by two expressions, at least one of which
   should be a function of atom attributes:: 
@@ -102,6 +62,11 @@ using the following constructs.
     pbwithin 3 of protein       # uses minimum image distance
     withinbonds 2 of resid 10   # atoms within two bonds of resid 10
      
+* ``Nearest selections``::
+
+    nearest 10 to residue 2     # nearest 10 atoms to any atom in residue 2
+    pbnearest 10 to residue 2   # same, but with minimum image distance
+
 In comparisons, expressions can be formed in the following ways.
 
 * Numeric literals, and keywords with numeric types::
@@ -114,6 +79,44 @@ In comparisons, expressions can be formed in the following ways.
     x + y * z < 3               # the usual precedence rules apply
     sqr(x)/36 + sqr(z)/125 < 1  # an ellipsoidal cylinder
 
+
+Differences with VMD
+---------------------
+
+Although the atom selection language in msys is similar to VMD's, there
+are some important differences to bear in mind if you switch between
+them:
+
+* Element matching: In Msys, the atom selections "carbon", "hydrogen",
+  "oxygen", etc. are based on the atomic number of the atoms.  In VMD,
+  these atom selections are computed using a regular expression based
+  on the atom name::
+
+    vmd > atomselect macro oxygen name "O.*"
+
+    vmd > atomselect macro hydrogen name "[0-9]?H.*"
+
+    vmd > atomselect macro nitrogen name "N.*"
+
+    vmd > atomselect macro carbon name "C.*" and not ion
+
+* Implicit 'and': in VMD, selections can sometimes be concatenated with
+  an implicit 'and'; e.g. "water within 3 of protein" will be parsed by
+  VMD as "water and within 3 of protein".  In Msys, omitting the 'and' will
+  result in a parse error.
+
+* Field size: DMS and MAE files can hold chain, segment, and residue names
+  of arbitrary length.  In Msys, these values are used as-is.  In VMD,
+  the values are truncated; in particular, chain will be truncated to
+  a single character in VMD, but not by Msys.
+
+* Data representation: Msys has no concept of secondary structure, so the
+  "sheet", helix", etc. atom selection keywords are not implemented in 
+  msys.
+  
+* Floating-point roundoff: There may occasionally be differences in the
+  results of distance based atom selections simply due the fact that Msys
+  stores positions as doubles, while VMD stores them as floats.  
 
 Built-in selections
 *******************
@@ -231,6 +234,8 @@ characters like parentheses::
 
     # select benzene rings
     mol.select("smarts 'c1ccccc1'")
+
+See the description of the ``Smarts`` class for more information.
 
 
 Parameter type selections

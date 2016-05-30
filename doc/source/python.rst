@@ -772,3 +772,18 @@ Writer
        Invoked when the Writer goes out of scope, but it's not a bad
        idea to invoke it explicitly.
 
+
+AnnotatedSystem
+===============
+
+.. autoclass:: msys.AnnotatedSystem
+    :members:
+
+
+SmartsPattern
+=============
+
+.. autoclass:: msys.SmartsPattern
+    :members:
+
+
