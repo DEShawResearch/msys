@@ -89,6 +89,13 @@ namespace desres { namespace msys {
             Id j;
             float d;
             contact_t(Id i, Id j, float d) : i(i), j(j), d(d) {}
+            bool operator==(contact_t const& c) const {
+                return i==c.i && j==c.j && d==c.d;
+            }
+            bool operator<(contact_t const& c) const {
+                if (i!=c.i) return i<c.i;
+                return j<c.j;
+            }
         };
         typedef std::vector<contact_t> ContactList;
         ContactList findContacts(float r, const float* pos,
