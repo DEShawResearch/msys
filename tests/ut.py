@@ -23,6 +23,7 @@ import json
 import gzip
 import tempfile
 import sqlite3
+from itertools import izip
 
 def tmpfile(**kwds):
     return tempfile.NamedTemporaryFile(**kwds)
@@ -41,6 +42,48 @@ class TestHbond(unittest.TestCase):
         hbonds = finder.find(mol.positions)
         self.assertEqual(len(hbonds), 168)
         
+class TestContacts(unittest.TestCase):
+    def compare(self, p1, p2):
+        assert len(p1)>0
+        self.assertEqual(len(p1), len(p2))
+
+        for e1, e2 in izip(p1,p2):
+            self.assertEqual(e1[:2], e2[:2])
+            d1 = e1[2]
+            d2 = e2[2]
+            self.assertTrue(abs(d1-d2)<1e-6)
+
+    def testNonbonded(self):
+        ''' atom sets with no bonds in common
+        '''
+        mol = msys.Load('tests/files/2f4k.dms')
+        pro = mol.selectIds('protein')
+        wat = mol.selectIds('water')
+        pos = mol.positions.astype('f')
+
+        p1 = mol.findContactIds(3.2, pro, wat, pos)
+        p1.sort()
+
+        ids, dists = msys.SpatialHash(pos, wat).findContacts(3.2, pos, pro)
+        p2 = zip(ids[:,0], ids[:,1], dists)
+        p2.sort()
+        self.compare(p1,p2)
+
+    def testSelf(self):
+        ''' self-contacts
+        '''
+        mol = msys.Load('tests/files/jandor.sdf')
+        pos = mol.positions.astype('f')
+        p1 = mol.findContactIds(2.9)
+        p1.sort()
+
+        h = msys.SpatialHash(pos)
+        ids, dists = h.findContacts(2.9, pos)
+        p2 = izip(ids[:,0], ids[:,1], dists)
+        p2 = [(i,j,d) for i,j,d in p2 if i<j and not mol.atom(i).findBond(mol.atom(j))]
+        p2.sort()
+        self.compare(p1,p2)
+
 class TestPropmap(unittest.TestCase):
 
     TABLE_NAME = 'stretch_harm'

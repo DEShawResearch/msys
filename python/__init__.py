@@ -2121,6 +2121,24 @@ class SpatialHash(object):
         if ids is None: ids = numpy.arange(len(pos), dtype='uint32')
         return self._hash.findNearest(k, pos, ids)
 
+    def findContacts(self, radius, pos, ids=None):
+        ''' Find pairs of particles within radius of each other.
+
+        Args:
+            radius (float): search radius
+            pos (array[float]): Nx3 particle positions
+            ids (array[uint]): particle indices
+
+        Returns:
+           ids, dists (tuple): Mx2 array of ids, M array of pairwise distances
+
+        The first column in the returned ids array corresponds to ids
+        in the call to findContacts; the second column to the ids passed
+        to the SpatialHash constructor.
+        '''
+        return self._hash.findContacts(radius, pos, ids)
+
+
 HydrogenBond.__repr__ = lambda self: "<Hbond %s %s %s>" % (self.donor_id, self.acceptor_id, self.hydrogen_id)
 HydrogenBond.donor = property(lambda x: x.donor_id, doc="Donor atom id")
 HydrogenBond.acceptor = property(lambda x: x.acceptor_id, doc="Acceptor atom id")
