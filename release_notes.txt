@@ -1,3 +1,10 @@
+1.7.142 NEW: msys-fetch-pdb tool
+        NEW: SpatialHash.findContacts (supports minimum image checks)
+        FIXED: parsing of negative integers in atom selections
+        FIXED: dms-grease periodic wrapping.
+        IMPROVED: error reporting in atom selections.
+        Tracking ticket: DESRESCode#3040.
+
 1.7.141 Fix incorrect check for leading zero in json int.
         Disable multithreaded molfile.read_frames.
         Handle negative integers in atom selections.
