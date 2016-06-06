@@ -84,6 +84,25 @@ class TestContacts(unittest.TestCase):
         p2.sort()
         self.compare(p1,p2)
 
+    def testPeriodicWater(self):
+        mol = msys.Load('tests/files/2f4k.dms')
+        pos = mol.positions.astype('f')
+        os = mol.selectIds('oxygen and x>24')
+        hs = mol.selectIds('hydrogen and x<-24')
+        id1, d1 = msys.SpatialHash(pos, hs, mol.cell).findContacts(2.5, pos, os)
+        id2, d2 = msys.SpatialHash(pos, os, mol.cell).findContacts(2.5, pos, hs)
+        id3 = NP.zeros_like(id2)
+        id3[:,0] = id2[:,1]
+        id3[:,1] = id2[:,0]
+        assert len(id1)==106
+        self.assertEqual(id1.shape, id2.shape)
+        m1 = dict(zip(map(tuple, id1), d1))
+        m2 = dict(zip(map(tuple, id3), d2))
+        self.assertEqual(sorted(m1.keys()), sorted(m2.keys()))
+        for k,v1 in m1.items():
+            v2 = m2[k]
+            self.assertTrue(abs(v1-v2)<1e-6)
+
 class TestPropmap(unittest.TestCase):
 
     TABLE_NAME = 'stretch_harm'
