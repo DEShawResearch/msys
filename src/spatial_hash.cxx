@@ -630,13 +630,14 @@ void SpatialHash::find_contacts(float r2, int voxid, float x, float y, float z,
             float dz = z - *zi;
             float d2 = dx*dx + dy*dy + dz*dz;
             if (d2<=r2) {
-                result.emplace_back(id, *ii, sqrt(d2));
+                result.emplace_back(id, *ii, d2);
             }
         }
     }
 }
 
- bool SpatialHash::test2(float r2, int voxid, float x, float y, float z) const {
+
+bool SpatialHash::test2(float r2, int voxid, float x, float y, float z) const {
 #ifdef __SSE2__
     __m128 xj = _mm_set1_ps(x);
     __m128 yj = _mm_set1_ps(y);

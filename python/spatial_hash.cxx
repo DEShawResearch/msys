@@ -148,7 +148,7 @@ static PyObject* hash_find_contacts(SpatialHash& hash,
     double t2=now();
     list result;
     for (auto&& c : contacts) {
-        result.append(make_tuple(c.i, c.j, c.d));
+        result.append(make_tuple(c.i, c.j, sqrt(c.d2)));
     }
     double t3=now();
     return result;
@@ -165,7 +165,7 @@ static PyObject* hash_find_contacts(SpatialHash& hash,
     for (auto&&c : contacts) {
         *i++ = c.i;
         *i++ = c.j;
-        *d++ = c.d;
+        *d++ = sqrt(c.d2);
     }
     PyObject* result = PyTuple_New(2);
     PyTuple_SET_ITEM(result, 0, iarr);

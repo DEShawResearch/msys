@@ -87,10 +87,10 @@ namespace desres { namespace msys {
         struct contact_t {
             Id i;
             Id j;
-            float d;
-            contact_t(Id i, Id j, float d) : i(i), j(j), d(d) {}
+            float d2;
+            contact_t(Id i, Id j, float d2) : i(i), j(j), d2(d2) {}
             bool operator==(contact_t const& c) const {
-                return i==c.i && j==c.j && d==c.d;
+                return i==c.i && j==c.j && d2==c.d2;
             }
             bool operator<(contact_t const& c) const {
                 if (i!=c.i) return i<c.i;
@@ -116,12 +116,12 @@ namespace desres { namespace msys {
         void minimage_contacts(float r, float ga, float gb, float gc,
                                float px, float py, float pz,
                                Id id, ContactList& result) const;
-    
+
         /* Return true if point px,py,pz is within r of some hashed
          * point assuming an orthorhombic periodic cell with lengths
          * ga,gb,gc. */
         bool minimage(float r, float ga, float gb, float gc,
-                                float px, float py, float pz) const;
+		      float px, float py, float pz) const;
 
         /* last voxelization radius */
         float radius() const { return rad; }
