@@ -18,6 +18,7 @@ static void fail_with_error(std::string const& sel, int start, int stop) {
 }
 
 void Query::parse(std::string const& sel) {
+    if (sel.empty()) MSYS_FAIL("empty selection");
     void* p = atomselParseAlloc(malloc);
     std::shared_ptr<void> dtpr(p, [](void *v) { atomselParseFree(v,free); });
     atomsel::Tokenizer tk(sel.data());

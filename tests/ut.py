@@ -355,6 +355,10 @@ class TestAtomselCoverage(unittest.TestCase):
         got = self.mol.selectIds(sel)
         self.assertEqual(got, ids, "Failed on '%s', want %s, got %s" % (sel, ids, got))
 
+    def testEmpty(self):
+        with self.assertRaises(RuntimeError):
+            self.mol.select('')
+
     def testAnum(self):
         self.check('atomicnumber 6', [0])
         self.check('atomicnumber 1', [1])
