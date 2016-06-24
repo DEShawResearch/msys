@@ -428,16 +428,16 @@ static PyObject* wrap_svd(PyObject* self, PyObject* args, PyObject* kwds) {
 
 
 PyDoc_STRVAR(aligned_rmsd_doc,
-"aligned_rmsd(X, Y) -> mat, rmsd\n\n"
-"Compute the matrix aligning Y onto X.  Return the matrix and the rmsd.\n"
+"aligned_rmsd(X, Y, weight=None) -> mat, rmsd\n\n"
+"Compute the matrix aligning Y onto X, optionally with weights.  Return the matrix and the rmsd.\n"
 );
 
 static 
 PyObject* wrap_aligned_rmsd(PyObject* self, PyObject* args, PyObject* kwds) {
-    static char *kwlist[] = {(char *)"X", (char *)"Y", 0};
-    PyObject *Xobj, *Yobj;
-    PyObject *Xarr, *Yarr, *Marr;
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO", kwlist, &Xobj, &Yobj))
+    static char *kwlist[] = {(char *)"X", (char *)"Y", (char *)"weight", 0};
+    PyObject *Xobj, *Yobj, *Wobj=NULL;
+    PyObject *Xarr, *Yarr, *Marr, *Warr=NULL;
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO|O", kwlist, &Xobj, &Yobj, &Wobj))
         return NULL;
     if (!(Xarr = PyArray_FromAny(
                     Xobj,
@@ -455,12 +455,30 @@ PyObject* wrap_aligned_rmsd(PyObject* self, PyObject* args, PyObject* kwds) {
         Py_DECREF(Xarr);
         return NULL;
     }
+    if (Wobj && !(Warr = PyArray_FromAny(
+                    Wobj,
+                    PyArray_DescrFromType(NPY_FLOAT64),
+                    1,1,
+                    NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_FORCECAST,
+                    NULL))) {
+        Py_DECREF(Xarr);
+        Py_DECREF(Yarr);
+        return NULL;
+    }
     unsigned n = PyArray_DIM(Xarr,0);
     if (PyArray_DIM(Xarr,1)!=3 || PyArray_DIM(Yarr,1)!=3 ||
         n==0 || PyArray_DIM(Yarr,0)!=n) {
         PyErr_Format(PyExc_ValueError, "Require equal sized nx3 matrices");
         Py_DECREF(Xarr);
         Py_DECREF(Yarr);
+        Py_XDECREF(Warr);
+        return NULL;
+    }
+    if (Warr && (PyArray_DIM(Warr,0)!=n)) {
+        PyErr_Format(PyExc_ValueError, "Require weights of same length as X, Y");
+        Py_DECREF(Xarr);
+        Py_DECREF(Yarr);
+        Py_XDECREF(Warr);
         return NULL;
     }
 
@@ -468,10 +486,13 @@ PyObject* wrap_aligned_rmsd(PyObject* self, PyObject* args, PyObject* kwds) {
     Marr = PyArray_SimpleNew(2,dims,NPY_FLOAT64);
     const double* X = (double *)PyArray_DATA(Xarr);
     const double* Y = (double *)PyArray_DATA(Yarr);
+    const double* W = Warr ? (double *)PyArray_DATA(Warr) : (double *)NULL;
+
     double* mat = (double *)PyArray_DATA(Marr);
-    double rmsd = desres::msys::pfx::compute_alignment(n, NULL, X, Y, mat);
+    double rmsd = desres::msys::pfx::compute_alignment(n, NULL, X, Y, mat, W);
     Py_DECREF(Xarr);
     Py_DECREF(Yarr);
+    Py_XDECREF(Warr);
     PyObject* obj = Py_BuildValue("(O,d)", Marr, rmsd);
     Py_DECREF(Marr);
     return obj;
