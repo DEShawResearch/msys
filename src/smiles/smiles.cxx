@@ -114,6 +114,8 @@ namespace desres { namespace msys { namespace smiles {
         switch (bond) {
             default:
             MSYS_FAIL("Unsupported bond type '" << bond << "'");
+            case '/':
+            case '\\':
             case '-': bnd.order = 1; break;
             case '=': bnd.order = 2; break;
             case '#': bnd.order = 3; break;
