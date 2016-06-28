@@ -12,7 +12,7 @@ struct output {
     output(SpatialHash::ContactList& c) : contacts(c) {}
     bool exclude(Id i, Id j) const { return false; }
     void operator()(Id i, Id j, float d2) const {
-        contacts.emplace_back(i,j,std::sqrt(d2));
+        contacts.emplace_back(i,j,d2);
     }
 };
 
