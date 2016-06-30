@@ -704,8 +704,8 @@ void SpatialHash::find_contacts(float r2, int voxid, float x, float y, float z,
             __m128i packed_ii = _mm_shuffle_epi8(i4, shuf);
 
             // write to destination arrays and update count
-            _mm_storeu_ps(_cond2+count, packed_d2);
-            _mm_storeu_ps((float*)(_conii+count), packed_ii);
+            _mm_storeu_si128((__m128i*)(_cond2+count), packed_d2);
+            _mm_storeu_si128((__m128i*)(_conii+count), packed_ii);
             count += _mm_popcnt_u32(mask);
         }
 #endif
