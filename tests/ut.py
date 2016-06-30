@@ -2469,6 +2469,7 @@ class TestMain(unittest.TestCase):
             annot_sys = msys.AnnotatedSystem(sys)
         msys.AssignBondOrderAndFormalCharge(sys)
         annot_sys = msys.AnnotatedSystem(sys)
+        repr(annot_sys)
         for i in range(6):
             self.assertTrue(annot_sys.aromatic(c[i]))
             self.assertTrue(annot_sys.aromatic(cc[i]))

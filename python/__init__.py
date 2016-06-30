@@ -1445,8 +1445,9 @@ class AnnotatedSystem(object):
         if allow_bad_charges:
             flags |= _msys.AnnotatedSystemFlags.AllowBadCharges
         self._ptr = _msys.AnnotatedSystem(sys._ptr, flags)
+        self._name = sys.name
 
-    def __repr__(self): return "<AnnotatedSystem '%s'>" % self.system.name
+    def __repr__(self): return "<AnnotatedSystem '%s'>" % self._name
 
     @property
     def errors(self):
