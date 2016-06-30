@@ -45,6 +45,9 @@ namespace desres { namespace msys {
         Id* _ids;
         Id *_tmpids;
 
+        float* _cond2 = nullptr;
+        Id*    _conii = nullptr;
+
         void compute_full_shell();
         bool test2(float r2, int voxid, float x, float y, float z) const;
 

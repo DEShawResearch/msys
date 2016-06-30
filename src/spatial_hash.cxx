@@ -84,6 +84,8 @@ SpatialHash::~SpatialHash() {
     free(rot);
     free(_ids);
     free(_tmpids);
+    free(_conii);
+    free(_cond2);
 }
 
 SpatialHash::SpatialHash( const float *pos, int n, const Id* ids, 
@@ -200,8 +202,10 @@ SpatialHash& SpatialHash::voxelize(float r) {
 
     /* compute starting index for each voxel */
     uint32_t cnt = 0;
+    unsigned maxcount = 0;
     for (int i=0; i<=nvoxels; i++) {
         uint32_t tmp = _counts[i];
+        maxcount = std::max(maxcount, tmp);
         _counts[i] = cnt;
         cnt += tmp;
     }
@@ -220,6 +224,14 @@ SpatialHash& SpatialHash::voxelize(float r) {
     std::swap(_y,_tmpy);
     std::swap(_z,_tmpz);
     std::swap(_ids, _tmpids);
+
+    /* space for contacts */
+    free(_cond2);
+    free(_conii);
+    maxcount += 3;  // since we're writing in chunks of four
+    posix_memalign((void **)&_cond2, 16, 27*maxcount*sizeof(*_cond2));
+    posix_memalign((void **)&_conii, 16, 27*maxcount*sizeof(*_conii));
+
 
     /* shift counts up by to undo the counting sort we just did */
     --_counts;
@@ -610,9 +622,37 @@ bool SpatialHash::minimage(float r, float ga, float gb, float gc,
     return false;
 }
 
+static const uint64_t lut_zero = 0x8080808080808080;
+static const uint64_t lutvals[] = {
+    lut_zero,              lut_zero,  // 0
+    0x8080808003020100,    lut_zero,  // 1
+    0x8080808007060504,    lut_zero,  // 2
+    0x0706050403020100,    lut_zero,  // 3
+    0x808080800b0a0908,    lut_zero,  // 4
+    0x0b0a090803020100,    lut_zero,  // 5
+    0x0b0a090807060504,    lut_zero,  // 6    0110
+    0x0706050403020100,    0x808080800b0a0908,  // 7    0111
+    0x808080800f0e0d0c,    lut_zero,  // 8
+    0x0f0e0d0c03020100,    lut_zero,  // 9    1001
+    0x0f0e0d0c07060504,    lut_zero,  // 10   1010
+    0x0706050403020100,    0x808080800f0e0d0c,  // 11   1011
+    0x0f0e0d0c0b0a0908,    lut_zero,  // 12   1100
+    0x0b0a090803020100,    0x808080800f0e0d0c,  // 13   1101
+    0x0b0a090807060504,    0x808080800f0e0d0c,  // 14   1110
+    0x0706050403020100,    0x0f0e0d0c0b0a0908,  // 15   1111
+};
+static const __m128i* lut = (const __m128i*)(lutvals);
+
 void SpatialHash::find_contacts(float r2, int voxid, float x, float y, float z,
                            Id id, ContactList& result) const {
 
+#ifdef __SSE4_1__
+    __m128 xj = _mm_set1_ps(x);
+    __m128 yj = _mm_set1_ps(y);
+    __m128 zj = _mm_set1_ps(z);
+    __m128 R2 = _mm_set1_ps(r2);
+    int count=0;
+#endif
     for (int i=0; i<10; i++) {
         int vox = voxid + full_shell[i];
         uint32_t b = _counts[vox], e = _counts[vox+strip_lens[i]];
@@ -621,10 +661,9 @@ void SpatialHash::find_contacts(float r2, int voxid, float x, float y, float z,
         const float * zi = _z+b;
         const Id    * ii = _ids+b;
 
-        for (; b<e; ++b, ++xi, ++yi, ++zi, ++ii) {
-            // can't do this - position arrays passed to SpatialHash 
-            // constructor and findContacts method might be different.
-            //if (*ii == id) continue;
+#ifdef __SSE4_1__
+        /* advance to aligned offset */
+        for (; b<e && (b&3); ++b, ++xi, ++yi, ++zi, ++ii) {
             float dx = x - *xi;
             float dy = y - *yi;
             float dz = z - *zi;
@@ -633,6 +672,56 @@ void SpatialHash::find_contacts(float r2, int voxid, float x, float y, float z,
                 result.emplace_back(id, *ii, d2);
             }
         }
+
+        /* simd for chunks of four */
+        for (; b+4<e; b+=4, xi+=4, yi+=4, zi+=4, ii+=4) {
+            __m128 p0, p1, p2;
+            __m128 q0, q1, q2;
+            __m128i i4;
+
+            p0 = _mm_load_ps(xi);
+            p1 = _mm_load_ps(yi);
+            p2 = _mm_load_ps(zi);
+            i4 = _mm_load_si128((const __m128i*)ii);
+
+            q0 = _mm_sub_ps(p0, xj);    /* dx */
+            q1 = _mm_sub_ps(p1, yj);    /* dy */
+            q2 = _mm_sub_ps(p2, zj);    /* dz */
+            
+            p0 = _mm_mul_ps(q0, q0);    /* dx**2 */
+            p1 = _mm_mul_ps(q1, q1);    /* dy**2 */
+            p2 = _mm_mul_ps(q2, q2);    /* dz**2 */
+
+            q0 = _mm_add_ps(_mm_add_ps(p0,p1),p2);  // d2
+
+            // mask contains a value in the range [0,15] whose bits 
+            // correspond to the values in range.
+            int mask = _mm_movemask_ps(_mm_cmple_ps(q0, R2));
+
+            // push the kept indices and distances into a contiguous chunk
+            __m128i shuf = lut[mask];
+            __m128i packed_d2 = _mm_shuffle_epi8(_mm_castps_si128(q0), shuf);
+            __m128i packed_ii = _mm_shuffle_epi8(i4, shuf);
+
+            // write to destination arrays and update count
+            _mm_storeu_ps(_cond2+count, packed_d2);
+            _mm_storeu_ps((float*)(_conii+count), packed_ii);
+            count += _mm_popcnt_u32(mask);
+        }
+#endif
+        /* stragglers */
+        for (; b<e; ++b, ++xi, ++yi, ++zi, ++ii) {
+            float dx = x - *xi;
+            float dy = y - *yi;
+            float dz = z - *zi;
+            float d2 = dx*dx + dy*dy + dz*dz;
+            if (d2<=r2) {
+                result.emplace_back(id, *ii, d2);
+            }
+        }
+    }
+    for (int i=0; i<count; i++) {
+        result.emplace_back(id, _conii[i], _cond2[i]);
     }
 }
 
