@@ -136,43 +136,25 @@ static PyObject* hash_find_contacts(SpatialHash& hash,
     }
 
     const float* pos = (const float*)PyArray_DATA(posarr);
-    //double t0=now();
-    auto contacts = hash.findContacts(r, pos, n, ids);
-    //double t1=now();
+    SpatialHash::contact_array_t contacts;
+    hash.findContacts(r, pos, n, ids, &contacts);
     Py_XDECREF(idsarr);
     Py_DECREF(posarr);
 
-#if 0
-    // 2f4k (13k atoms), contacts at 3.3 between protein and water
-    // building this result set takes about as long as computing it!
-    double t2=now();
-    list result;
-    for (auto&& c : contacts) {
-        result.append(make_tuple(c.i, c.j, sqrt(c.d2)));
-    }
-    double t3=now();
-    return result;
-#else
-    // This is around 100x faster
-    //double t2=now();
-    npy_intp idim[2]={0,2}, ddim[1];
-    idim[0] = contacts.size();
-    ddim[0] = contacts.size();
-    PyObject* iarr = PyArray_SimpleNew(2,idim,NPY_UINT32);
-    PyObject* darr = PyArray_SimpleNew(1,ddim,NPY_FLOAT);
-    Id* i = (Id*)PyArray_DATA(iarr);
-    float* d = (float*)PyArray_DATA(darr);
-    for (auto&&c : contacts) {
-        *i++ = c.i;
-        *i++ = c.j;
-        *d++ = sqrt(c.d2);
-    }
-    PyObject* result = PyTuple_New(2);
+    npy_intp dim = contacts.count;
+    std::for_each(contacts.d2, contacts.d2+dim, [](float& x) {x=std::sqrt(x);});
+
+    PyObject* iarr = PyArray_SimpleNew(1,&dim,NPY_UINT32);
+    PyObject* jarr = PyArray_SimpleNew(1,&dim,NPY_UINT32);
+    PyObject* darr = PyArray_SimpleNew(1,&dim,NPY_FLOAT);
+    memcpy(PyArray_DATA(iarr), contacts.i, dim*sizeof(*contacts.i));
+    memcpy(PyArray_DATA(jarr), contacts.j, dim*sizeof(*contacts.j));
+    memcpy(PyArray_DATA(darr), contacts.d2,dim*sizeof(*contacts.d2));
+
+    PyObject* result = PyTuple_New(3);
     PyTuple_SET_ITEM(result, 0, iarr);
-    PyTuple_SET_ITEM(result, 1, darr);
-    //double t3=now();
-#endif
-    //printf("compute %u: %.3f build %.3f\n", (Id)contacts.size(), (t1-t0)*1000, (t3-t2)*1000);
+    PyTuple_SET_ITEM(result, 1, jarr);
+    PyTuple_SET_ITEM(result, 2, darr);
     return result;
 }
 

@@ -2127,15 +2127,21 @@ class SpatialHash(object):
 
         Args:
             radius (float): search radius
-            pos (array[float]): Nx3 particle positions
+            pos (array[float]): positions
             ids (array[uint]): particle indices
 
         Returns:
-           ids, dists (tuple): Mx2 array of ids, M array of pairwise distances
+           i, j, dists (tuple): Mx1 arrays of ids and distances.
 
-        The first column in the returned ids array corresponds to ids
-        in the call to findContacts; the second column to the ids passed
-        to the SpatialHash constructor.
+        The first array corresponds to ids in the call to findContacts;
+        the second column to the ids passed to the SpatialHash
+        constructor.  
+
+        IMPORTANT: pairs with the same id in the constructor and the call
+        the findContacts are excluded from the output set.  Therefore,
+        the positions passsed to findContacts should correspond to the
+        same atom indices as the positions passed to the SpatialHash
+        constructor.
         '''
         return self._hash.findContacts(radius, pos, ids)
 

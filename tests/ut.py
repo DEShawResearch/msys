@@ -64,8 +64,8 @@ class TestContacts(unittest.TestCase):
         p1 = mol.findContactIds(3.2, pro, wat, pos)
         p1.sort()
 
-        ids, dists = msys.SpatialHash(pos, wat).findContacts(3.2, pos, pro)
-        p2 = zip(ids[:,0], ids[:,1], dists)
+        i,j,d = msys.SpatialHash(pos, wat).findContacts(3.2, pos, pro)
+        p2 = zip(i,j,d)
         p2.sort()
         self.compare(p1,p2)
 
@@ -78,8 +78,8 @@ class TestContacts(unittest.TestCase):
         p1.sort()
 
         h = msys.SpatialHash(pos)
-        ids, dists = h.findContacts(2.9, pos)
-        p2 = izip(ids[:,0], ids[:,1], dists)
+        i,j,d = h.findContacts(2.9, pos)
+        p2 = izip(i,j,d)
         p2 = [(i,j,d) for i,j,d in p2 if i<j and not mol.atom(i).findBond(mol.atom(j))]
         p2.sort()
         self.compare(p1,p2)
@@ -89,11 +89,11 @@ class TestContacts(unittest.TestCase):
         pos = mol.positions.astype('f')
         os = mol.selectIds('oxygen and x>24')
         hs = mol.selectIds('hydrogen and x<-24')
-        id1, d1 = msys.SpatialHash(pos, hs, mol.cell).findContacts(2.5, pos, os)
-        id2, d2 = msys.SpatialHash(pos, os, mol.cell).findContacts(2.5, pos, hs)
-        id3 = NP.zeros_like(id2)
-        id3[:,0] = id2[:,1]
-        id3[:,1] = id2[:,0]
+        i1,j1,d1 = msys.SpatialHash(pos, hs, mol.cell).findContacts(2.5, pos, os)
+        i2,j2,d2 = msys.SpatialHash(pos, os, mol.cell).findContacts(2.5, pos, hs)
+        id1 = NP.stack((i1,j1),1)
+        id2 = NP.stack((i2,j2),1)
+        id3 = NP.stack((j2,i2),1)
         assert len(id1)==106
         self.assertEqual(id1.shape, id2.shape)
         m1 = dict(zip(map(tuple, id1), d1))
