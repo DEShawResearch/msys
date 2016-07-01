@@ -40,13 +40,11 @@ namespace desres { namespace msys {
         /* cumulative number of particles hashed to the i'th voxel */
         std::vector<uint32_t> _countspace;
         uint32_t *_counts;
+        uint32_t maxcount=0;
 
         /* ids of hashed particles */
         Id* _ids;
         Id *_tmpids;
-
-        float* _cond2 = nullptr;
-        Id*    _conii = nullptr;
 
         void compute_full_shell();
         bool test2(float r2, int voxid, float x, float y, float z) const;
@@ -104,6 +102,37 @@ namespace desres { namespace msys {
         ContactList findContacts(float r, const float* pos,
                                  int n, const Id* ids);
 
+        struct contact_array_t {
+            Id* i = nullptr;
+            Id* j = nullptr;
+            float* d2 = nullptr;
+            uint64_t count = 0;
+            uint64_t max_size = 0;
+            
+            ~contact_array_t() {
+                free(i);
+                free(j);
+                free(d2);
+            }
+            contact_array_t() {}
+            contact_array_t(contact_array_t const&) = delete;
+            contact_array_t& operator=(contact_array_t const&) = delete;
+
+            void reserve_additional(uint64_t extra) {
+                uint64_t size = count + extra;
+                if (size > max_size) {
+                    max_size = std::max(max_size + max_size/2, size);
+                    i = (Id*)realloc(i, max_size*sizeof(*i));
+                    j = (Id*)realloc(j, max_size*sizeof(*j));
+                    d2= (float*)realloc(d2,max_size*sizeof(*d2));
+                }
+            }
+        };
+
+        void findContacts(float r, const float* pos,
+                          int n, const Id* ids,
+                          contact_array_t* result);
+
         /* For expert users only.  Finds points within r of the
          * hashed points assuming the hashed points have already
          * been voxelized with a grid spacing of at least r. */
@@ -114,11 +143,11 @@ namespace desres { namespace msys {
                                  int n, const Id* ids) const;
  
         void find_contacts(float r2, int voxid, float x, float y, float z,
-                           Id id, ContactList& result) const;
+                           Id id, contact_array_t* result) const;
 
         void minimage_contacts(float r, float ga, float gb, float gc,
                                float px, float py, float pz,
-                               Id id, ContactList& result) const;
+                               Id id, contact_array_t* result) const;
 
         /* Return true if point px,py,pz is within r of some hashed
          * point assuming an orthorhombic periodic cell with lengths
