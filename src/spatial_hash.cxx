@@ -530,8 +530,11 @@ IdList SpatialHash::find_within(float r, const float* pos,
 SpatialHash::ContactList
 SpatialHash::findContacts(float r, const float* pos,
                                int n, const Id* ids) {
+    //double t=-now();
     contact_array_t arr;
     findContacts(r, pos, n, ids, &arr);
+    //t+=now();
+    //printf("raw: %.3fms\n", t*1000);
     ContactList result;
     result.reserve(arr.count);
     for (uint64_t i=0, n=arr.count; i<n; i++) {
@@ -716,8 +719,8 @@ void SpatialHash::find_contacts(float r2, int voxid, float x, float y, float z,
             // correspond to the values in range.
             int mask = _mm_movemask_ps(
 #ifdef EXCLUDE_SELF_CONTACTS
-                    _mm_andnot_si128(
-                        _mm_cmpeq_epi32(i4, packed_i),
+                    _mm_andnot_ps(
+                        _mm_castsi128_ps(_mm_cmpeq_epi32(i4, packed_i)),
                         _mm_cmple_ps(q0, R2)));
 #else
                     _mm_cmple_ps(q0, R2));
