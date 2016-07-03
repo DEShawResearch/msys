@@ -41,7 +41,10 @@ symbol  ({element}|{aromatic}|"*")
 
 chiral  (@|@@)
 hcount  H{digit}?
-charge  [\-+]{digit}?{digit}?
+ncharge [\-+]{digit}?{digit}?
+plus2   [+][+]
+minus2  [\-][\-]
+charge  ({plus2}|{minus2}|{ncharge})
 class   :{number}
 
 lbracket "["
@@ -63,25 +66,25 @@ rbracket "]"
 <symbol>{chiral}    { yylval->num = strlen(yytext); return CHIRAL;}
 <symbol>{hcount}    { yylval->num = yytext[1] ? atoi(yytext+1) : 1; return HCOUNT;}
 <symbol>{class}     { yylval->num = atoi(yytext+1); return CLASS; }
-<symbol>{charge}    { yylval->num = yytext[1] ? atoi(yytext) :
-                          yytext[0]=='+' ? 1 : -1;  return CHARGE;}
+<symbol>{charge}    { yylval->num = (yytext[1]=='-' ? -1 : 1) * (yytext[0]=='+' ? 1 : -1); return CHARGE; }
+
 <symbol>{rbracket}  { BEGIN(INITIAL); return RBRACKET; }
 
 {bond}{digit}  { 
-                    yylval->ringbond = new ringbond_t(*yytext,atoi(yytext+1));
+                    yylval->ringbond = yyextra->makeRingbond(*yytext,atoi(yytext+1));
                     return RINGBOND;
                }
 
 {bond}{percent}{digit}{digit}  { 
-                    yylval->ringbond = new ringbond_t(*yytext,atoi(yytext+2));
+                    yylval->ringbond = yyextra->makeRingbond(*yytext,atoi(yytext+2));
                     return RINGBOND;
                }
 
-{digit}         {   yylval->ringbond = new ringbond_t(0,      atoi(yytext));
+{digit}         {   yylval->ringbond = yyextra->makeRingbond(0,      atoi(yytext));
                     return RINGBOND;
                 }
 {percent}{digit}{digit} {   
-                    yylval->ringbond = new ringbond_t(0,      atoi(yytext+1));
+                    yylval->ringbond = yyextra->makeRingbond(0,      atoi(yytext+1));
                     return RINGBOND;
                 }
 {bond} { yylval->bond = *yytext; return SBOND; }

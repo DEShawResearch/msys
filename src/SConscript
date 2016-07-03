@@ -74,6 +74,7 @@ else:
     lpobjs=env.AddObject(Split('''
 analyze.cxx
 analyze/bond_orders.cxx
+analyze/kekulize.cxx
 analyze/topological_ids.cxx
 '''))
 

@@ -20,10 +20,8 @@ namespace desres { namespace msys { namespace smiles {
         inline char getc() { return txt[pos++]; }
         std::string error;
 
-        /* mapping from rnum to <atom,bond> */
-        typedef std::pair<atom_t*,char> rnum_t;
-        typedef std::map<int,rnum_t> ringmap;
-        ringmap rnums;
+        typedef std::pair<atom_t*, ringbond_t*> ring_t;
+        std::vector<ring_t> rings;
 
         void* scanner;
         SystemPtr mol;
@@ -37,10 +35,20 @@ namespace desres { namespace msys { namespace smiles {
 
         SystemPtr parse(std::string const& s);
 
+        std::vector<std::unique_ptr<atom_t>> _atoms;
+        std::vector<std::unique_ptr<chain_t>> _chains;
+        std::vector<std::unique_ptr<branch_t>> _branches;
+        std::vector<std::unique_ptr<ringbond_t>> _ringbonds;
+
+        atom_t* makeAtom();
+        chain_t* makeChain(atom_t* first);
+        branch_t* makeBranch(char b, chain_t* c);
+        ringbond_t* makeRingbond(char b, int i);
+
         void addAtom(atom_t* a, bool organic);
-        void add(atom_t* ai, atom_t* aj, char bond);
-        void add(atom_t* a, branch_t* branches);
-        void add(atom_t* a, ringbond_t* ringbonds);
+        void addBond(atom_t* ai, atom_t* aj, char bond);
+        void addBranch(atom_t* a, branch_t* branches);
+        void addRing(atom_t* a, ringbond_t* ringbonds);
 
         int addh(Id atm, int v1, int v2=0, int v3=0);
         void addh(Id atm);

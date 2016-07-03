@@ -24,6 +24,7 @@ namespace desres { namespace msys {
             .def_readwrite("mass",      &atom_t::mass)
             .def_readwrite("atomic_number", &atom_t::atomic_number)
             .def_readwrite("formal_charge", &atom_t::formal_charge)
+            .def_readwrite("aromatic",  &atom_t::aromatic)
             .add_property("name", get_name, set_name)
             //.def_readwrite("name",      &atom_t::name)
             ;

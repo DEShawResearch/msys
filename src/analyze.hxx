@@ -17,6 +17,11 @@ namespace desres { namespace msys {
                                         IdList const& atoms,
                                         int total_charge = INT_MAX);
 
+    /* Assign bond orders to aromatic bonds, leaving formal charges
+     * and bonds between nonaromatic atoms alone.
+     */
+    void AssignAromaticBondOrders(SystemPtr mol);
+
     /* Compute topology ids.  FIXME definition please */
     IdList ComputeTopologicalIds(SystemPtr mol);
 

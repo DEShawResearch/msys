@@ -12,6 +12,23 @@ namespace desres { namespace msys { namespace smiles {
     : txt(), pos(), scanner() 
     {}
 
+    atom_t* Smiles::makeAtom() {
+        _atoms.emplace_back(new atom_t);
+        return _atoms.back().get();
+    }
+    branch_t* Smiles::makeBranch(char b, chain_t* c) {
+        _branches.emplace_back(new branch_t(b,c));
+        return _branches.back().get();
+    }
+    chain_t* Smiles::makeChain(atom_t* first) {
+        _chains.emplace_back(new chain_t(first));
+        return _chains.back().get();
+    }
+    ringbond_t* Smiles::makeRingbond(char b, int i) {
+        _ringbonds.emplace_back(new ringbond_t(b,i));
+        return _ringbonds.back().get();
+    }
+
     void Smiles::addh(Id id) {
         auto idH = mol->addAtom(0);
         auto& atm = mol->atomFAST(idH);
@@ -21,21 +38,30 @@ namespace desres { namespace msys { namespace smiles {
     }
 
     int Smiles::addh(Id atm, int v1, int v2, int v3) {
-        float v = 0;
-        for (unsigned i=0; i<mol->maxBondId(); i++) {
-            auto const& bnd = mol->bondFAST(i);
-            if (bnd.i != atm && bnd.j != atm) continue;
-            v += bnd.aromatic ? 1.5 : bnd.order;
-        }
-        int h;
-        if (v<=v1) {
-            h = v1 - v;
-        } else if (v<=v2) {
-            h = v2 - v;
-        } else if (v<=v3) {
-            h = v3 - v;
+        auto const& a = mol->atomFAST(atm);
+        int h = 0;
+        if (a.aromatic) {
+            if (a.atomic_number==6) {
+                auto degree = mol->bondCountForAtom(atm);
+                h = degree == 2 ? 1 : 0;
+            }
         } else {
-            h = 0;
+            float v = 0;
+            for (unsigned i=0; i<mol->maxBondId(); i++) {
+                auto const& bnd = mol->bondFAST(i);
+                if (bnd.i != atm && bnd.j != atm) continue;
+                v += bnd.order;
+                //v += bnd.aromatic ? 1.5 : bnd.order;
+            }
+            if (v<=v1) {
+                h = v1 - v;
+            } else if (v<=v2) {
+                h = v2 - v;
+            } else if (v<=v3) {
+                h = v3 - v;
+            } else {
+                h = 0;
+            }
         }
         for (int i=0; i<h; i++) addh(atm);
         return h;
@@ -74,40 +100,29 @@ namespace desres { namespace msys { namespace smiles {
 
         a->id = mol->addAtom(0);
         auto& atm = mol->atomFAST(a->id);
+        atm.aromatic = islower(a->name[0]);
         atm.formal_charge = a->charge;
         atm.atomic_number = ElementForAbbreviation(name);
         hcount.push_back(organic ? -1 : a->hcount);
         atm.stereo_parity = a->chiral;
-        for (int i=0; i<a->hcount; i++) addh(a->id);
+        for (int i=0; i<a->hcount; i++) {
+            addh(a->id);
+            hcount.push_back(0);
+        }
     }
 
-    void Smiles::add(atom_t* a, branch_t* branches) {
+    void Smiles::addBranch(atom_t* a, branch_t* branches) {
         for (branch_t* b = branches; b; b = b->next) {
-            add(a, b->chain->first, b->bond);
-        }
-    }
-    void Smiles::add(atom_t* a, ringbond_t* ringbonds) {
-        for (ringbond_t* r = ringbonds; r; r = r->next) {
-            ringmap::iterator it = rnums.find(r->id);
-            if (it == rnums.end()) {
-                rnums[r->id] = std::make_pair(a, r->bond);
-            } else if (it->second.first->id == a->id) {
-                fprintf(stderr, "ringbond %d bonded to itself!", r->id);
-            } else if (r->bond != it->second.second &&
-                       r->bond != 0 && 
-                       it->second.second != 0) {
-                fprintf(stderr, "ringbond %d has conflicting bond spec: %c and %c\n", r->id, r->bond, it->second.second);
-            } else {
-                char bond = r->bond ? r->bond : 
-                            it->second.second ? it->second.second :
-                            '-';
-                add(a, it->second.first, bond);
-                rnums.erase(it);
-            }
+            addBond(a, b->chain->first, b->bond);
         }
     }
 
-    void Smiles::add(atom_t* ai, atom_t* aj, char bond) {
+    void Smiles::addRing(atom_t* a, ringbond_t* ringbonds) {
+        rings.emplace_back(a, ringbonds);
+    }
+
+
+    void Smiles::addBond(atom_t* ai, atom_t* aj, char bond) {
         if (bond=='.') return;  /* dot means no bond */
         Id id = mol->addBond(ai->id, aj->id);
         auto& bnd = mol->bondFAST(id);
@@ -126,19 +141,45 @@ namespace desres { namespace msys { namespace smiles {
     }
 
     void Smiles::finish(chain_t* chain) {
-        if (!rnums.empty()) {
+        std::sort(rings.begin(), rings.end(), [](ring_t const& a, ring_t const& b) { return a.first->id<b.first->id; });
+        std::map<int,std::pair<atom_t*,char>> rmap;   // mapping from ring id to atom,bond type
+        for (auto p : rings) {
+            atom_t* a = p.first;
+
+            for (auto r = p.second; r; r = r->next) {
+                auto it = rmap.find(r->id);
+                if (it == rmap.end()) {
+                    rmap[r->id] = std::make_pair(a, r->bond);
+
+                } else if (it->second.first->id == a->id) {
+                    fprintf(stderr, "ringbond %d bonded to itself!", r->id);
+
+                } else if (r->bond != it->second.second &&
+                           r->bond != 0 && 
+                           it->second.second != 0) {
+                    fprintf(stderr, "ringbond %d has conflicting bond spec: %c and %c\n", r->id, r->bond, it->second.second);
+                } else {
+                    char bond = r->bond ? r->bond : 
+                                it->second.second ? it->second.second :
+                                '-';
+                    addBond(a, it->second.first, bond);
+                    rmap.erase(it);
+                }
+            }
+        }
+        if (!rmap.empty()) {
             std::stringstream ss;
             ss << "Unclosed rings:\n";
-            for (ringmap::iterator it=rnums.begin(); it!=rnums.end(); ++it) {
-                ss << it->first << " " << it->second.second << "\n";
-            }
+            for (auto p : rings) ss << p.first << " " << p.second->bond << "\n";
             MSYS_FAIL(ss.str());
         }
         /* add hydrogens.  We use the OpenSmiles specification rather than
          * our own AddHydrogen routine, since there could be some differences
          */
         for (unsigned i=0; i<mol->maxAtomId(); i++) {
-            if (hcount[i] != -1) continue;
+            if (hcount[i] != -1) {
+                continue;
+            }
             switch (mol->atomFAST(i).atomic_number) {
                 case  5: addh(i, 3); break;
                 case  6: addh(i, 4); break;

@@ -51,20 +51,20 @@ start:
         
 chain:
         branched_atom { 
-            $$ = new chain_t($1);
+            $$ = context->makeChain($1);
         }
       | chain branched_atom { 
-            context->add($2->next=$1->last,$2,'-'); 
+            context->addBond($2->next=$1->last,$2,'-'); 
             $1->last = $2;
             $$ = $1; 
         }
       | chain SBOND branched_atom {
-            context->add($3->next=$1->last,$3,$2); 
+            context->addBond($3->next=$1->last,$3,$2); 
             $1->last = $3;
             $$ = $1; 
         }
       | chain DOT  branched_atom { 
-            context->add($3->next=$1->last,$3,'.');
+            context->addBond($3->next=$1->last,$3,'.');
             $1->last = $3;
             $$ = $1; 
         }
@@ -74,21 +74,21 @@ branched_atom:
         atom                { $$ = $1; }
       | atom ringbondlist   { 
             $$ = $1; 
-            context->add($1,$2);
+            context->addRing($1,$2);
         }
       | atom branchlist { 
             $$ = $1; 
-            context->add($1,$2);
+            context->addBranch($1,$2);
         }
       | atom branchlist ringbondlist { 
             $$ = $1;
-            context->add($1,$2);
-            context->add($1,$3);
+            context->addBranch($1,$2);
+            context->addRing($1,$3);
         }
       | atom ringbondlist branchlist { 
             $$ = $1;
-            context->add($1,$2);
-            context->add($1,$3);
+            context->addRing($1,$2);
+            context->addBranch($1,$3);
         }
       ;
 
@@ -102,9 +102,9 @@ branch:
       ; 
 
 branchspec:
-        chain               { $$ = new branch_t('-', $1); }
-      | SBOND chain         { $$ = new branch_t($1 , $2); }
-      | DOT chain           { $$ = new branch_t('.', $2);}
+        chain               { $$ = context->makeBranch('-', $1); }
+      | SBOND chain         { $$ = context->makeBranch($1 , $2); }
+      | DOT chain           { $$ = context->makeBranch('.', $2);}
       ;
 
 ringbondlist:
@@ -113,7 +113,7 @@ ringbondlist:
       ;
 
 atom:
-        ATOM    { $$ = new atom_t; $$->setName($1); context->addAtom($$,true); }
+        ATOM    { $$ = context->makeAtom(); $$->setName($1); context->addAtom($$,true); }
       | bracket_atom    { $$ = $1;                  context->addAtom($$,false);}
       ;
 
@@ -151,6 +151,6 @@ class:
       ;
 
 rbracket:
-        RBRACKET        { $$ = new atom_t;          }
+        RBRACKET        { $$ = context->makeAtom(); }
       ;
 

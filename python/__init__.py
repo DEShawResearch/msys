@@ -168,12 +168,21 @@ class Atom(Handle):
         ''' number of bonds to this atom '''
         return self._ptr.bondCountForAtom(self._id)
 
+    @property
+    def nhydrogens(self):
+        ''' number of bonded hydrogens '''
+        return len([a for a in self.bonded_atoms if a.atomic_number==1])
+
+    @property
+    def valence(self):
+        ''' sum of bond orders '''
+        return sum([b.order for b in self.bonds if b.other(self).atomic_number > 0])
 
 __add_properties(Atom, 
         'fragid', 'x', 'y', 'z', 'charge',
         'vx', 'vy', 'vz', 'mass',
         'atomic_number', 'formal_charge',
-        'name')
+        'name', 'aromatic')
 
 class Residue(Handle):
     __slots__ = ()
