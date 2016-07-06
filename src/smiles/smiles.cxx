@@ -100,7 +100,7 @@ namespace desres { namespace msys { namespace smiles {
 
         a->id = mol->addAtom(0);
         auto& atm = mol->atomFAST(a->id);
-        atm.aromatic = islower(a->name[0]);
+        atm.aromatic = islower(a->name[0]) ? true : false;
         atm.formal_charge = a->charge;
         atm.atomic_number = ElementForAbbreviation(name);
         hcount.push_back(organic ? -1 : a->hcount);
