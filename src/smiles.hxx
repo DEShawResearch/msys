@@ -6,7 +6,8 @@
 namespace desres { namespace msys {
 
     /* Construct a Molecule from a smiles string */
-    SystemPtr FromSmilesString(std::string const& smiles);
+    SystemPtr FromSmilesString(std::string const& smiles,
+                               bool forbid_stereo=true);
 
 }}
 

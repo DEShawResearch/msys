@@ -1841,9 +1841,20 @@ def SaveMol2(system, path, append=False):
         flags |= _msys.Mol2ExportFlags.Append
     _msys.ExportMOL2(ptr,path,prov,flags)
 
-def FromSmilesString(smiles):
-    ''' Construct a System from a smiles string '''
-    return System(_msys.FromSmilesString(smiles))
+def FromSmilesString(smiles, forbid_stereo=True):
+    ''' Construct a System from a smiles string.
+
+    Args:
+        smiles (str): the smiles string
+        forbid_stereo (bool): if True, raise exception if smiles has stereo
+
+    EXPERIMENTAL.  In particular, stereo information in the smiles string
+    is ignored.  Set forbid_stereo=False to permit stereo specifications
+    to be silently ignored.  This flag may be removed at a later date once
+    stereo support has been added.
+    '''
+
+    return System(_msys.FromSmilesString(smiles, forbid_stereo))
 
 def TableSchemas():
     ''' available schemas for System.addTableFromSchema '''

@@ -26,8 +26,9 @@ namespace desres { namespace msys { namespace smiles {
         void* scanner;
         SystemPtr mol;
         std::vector<int> hcount;
+        bool forbid_stereo;
 
-        Smiles();
+        Smiles(bool forbid_stereo);
 
         /* defined in smiles.l */
         void init_scanner();

@@ -8,8 +8,8 @@ extern int msys_smiles_debug;
 
 namespace desres { namespace msys { namespace smiles {
 
-    Smiles::Smiles() 
-    : txt(), pos(), scanner() 
+    Smiles::Smiles(bool forbid_stereo)
+    : txt(), pos(), scanner(), forbid_stereo(forbid_stereo)
     {}
 
     atom_t* Smiles::makeAtom() {
@@ -94,6 +94,10 @@ namespace desres { namespace msys { namespace smiles {
     }
 
     void Smiles::addAtom(atom_t* a, bool organic) {
+        if (forbid_stereo && a->chiral) {
+            MSYS_FAIL("chiral smiles forbidden; set forbid_stereo=False to allow");
+        }
+
         char name[4];
         strcpy(name, a->name);
         name[0] = toupper(name[0]);
@@ -130,7 +134,7 @@ namespace desres { namespace msys { namespace smiles {
             default:
             MSYS_FAIL("Unsupported bond type '" << bond << "'");
             case '/':
-            case '\\':
+            case '\\': if (forbid_stereo) MSYS_FAIL("chiral smiles forbidden; set forbid_stereo=False to allow");
             case '-': bnd.order = 1; break;
             case '=': bnd.order = 2; break;
             case '#': bnd.order = 3; break;
@@ -200,8 +204,8 @@ namespace desres { namespace msys { namespace smiles {
 
 namespace desres { namespace msys {
 
-    SystemPtr FromSmilesString(std::string const& smiles) {
-        return smiles::Smiles().parse(smiles);
+    SystemPtr FromSmilesString(std::string const& smiles, bool forbid_stereo) {
+        return smiles::Smiles(forbid_stereo).parse(smiles);
     }
 
 }}
