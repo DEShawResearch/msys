@@ -78,8 +78,8 @@ namespace desres { namespace msys {
         NonbondedInfo& info = sys->nonbonded_info;
         if (rule.size()) {
             std::string newrule(rule), oldrule(info.vdw_rule);
-            boost::to_lower(newrule);
-            boost::to_lower(oldrule);
+            to_lower(newrule);
+            to_lower(oldrule);
             if (oldrule.size() && newrule != oldrule) {
                 std::stringstream ss;
                 ss << "Cannot add nonbonded table with vdw_rule '" << rule
@@ -91,8 +91,8 @@ namespace desres { namespace msys {
         }
         if (funct.size()) {
             std::string newfunct(funct), oldfunct(info.vdw_funct);
-            boost::to_lower(newfunct);
-            boost::to_lower(oldfunct);
+            to_lower(newfunct);
+            to_lower(oldfunct);
             if (oldfunct.size() && newfunct!= oldfunct) {
                 std::stringstream ss;
                 ss << "Cannot add nonbonded table with vdw_funct'" << funct

@@ -52,7 +52,7 @@ static void build_ct_fields( SystemPtr mol, Destro& M ) {
     std::map<String,Int> m_depends;
 
     /* other fields */
-    BOOST_FOREACH(String key, mol->ct(0).keys()) {
+    for (String key : mol->ct(0).keys()) {
         ValueRef val = mol->ct(0).value(key);
         char type = "irs"[val.type()];
         if (!strncmp(key.c_str(), "m_depend/", 9)) {
@@ -615,7 +615,7 @@ static void build_nonbonded(SystemPtr mol, TermTablePtr table,
     IdList terms = table->terms();
     if (compress.size()) {
         Id index=0;
-        BOOST_FOREACH(Id atom, compress) {
+        for (Id atom : compress) {
             Id id = table->findWithAny(IdList(1,atom)).at(0);
             Id param = table->param(id);
             sites[++index]["ffio_vdwtype"] = vdwtypes[param];
@@ -639,7 +639,7 @@ static void build_nonbonded(SystemPtr mol, TermTablePtr table,
         combined.add_schema('r', "ffio_c1");
         combined.add_schema('r', "ffio_c2");
         ParamTablePtr oparams = overrides->params();
-        BOOST_FOREACH(IdPair pair, overrides->list()) {
+        for (IdPair pair : overrides->list()) {
             Id param = overrides->get(pair);
             Destro& row = combined.append();
             row["ffio_name1"] = vdwtypes.at(pair.first);
@@ -673,7 +673,7 @@ static void build_ff( SystemPtr mol, IdList const& compress, Destro& ffio_ff ) {
         arr.add_schema('s', "info");
         Id pathcol = ffinfo->propIndex("path");
         Id infocol = ffinfo->propIndex("info");
-        BOOST_FOREACH(Id i, ffinfo->params()) {
+        for (Id i : ffinfo->params()) {
             Destro& row = arr.append();
             if (!bad(pathcol)) row["path"]=ffinfo->value(i,pathcol).asString();
             if (!bad(infocol)) {
@@ -707,7 +707,7 @@ static void write_provenance(Destro& ct, SystemPtr sys,
     std::vector<Provenance> prov = sys->provenance();
     prov.push_back(provenance);
 
-    BOOST_FOREACH(Provenance const& p, prov) {
+    for (Provenance const& p : prov) {
         Destro& row = arr.append();
         row["version"] = p.version;
         row["timestamp"] = p.timestamp;
@@ -769,7 +769,7 @@ namespace {
 
         Maeff M;
 
-        BOOST_FOREACH(Id ct, h->cts()) {
+        for (Id ct : h->cts()) {
             write_ct(M, Clone(h, h->atomsForCt(ct)), p, flags);
         }
 

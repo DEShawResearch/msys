@@ -356,7 +356,7 @@ IdList TermTable::findWithOnly(IdList const& _ids) {
     for (unsigned i=0; i<ids.size(); i++) {
         IdList const& q = _index.at(ids[i]);
         IdList p;
-        BOOST_FOREACH(Id t, q) {
+        for (Id t : q) {
             bool keep = true;
             for (Id j=0; j<_natoms; j++) {
                 if (!std::binary_search(ids.begin(), ids.end(), atom(t,j))) {

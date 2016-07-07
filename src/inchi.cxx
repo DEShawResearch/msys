@@ -98,7 +98,7 @@ InChI InChI::create(SystemPtr mol, unsigned options) {
     }
 
     int rc = GetINCHI(input, output);
-    boost::shared_ptr<inchi_Output> dtor(output, FreeINCHI);
+    std::shared_ptr<inchi_Output> dtor(output, FreeINCHI);
 
     if (!(rc==0 || rc==1)) {
         MSYS_FAIL("InChI failed: " << output->szMessage);

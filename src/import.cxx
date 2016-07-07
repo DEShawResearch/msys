@@ -7,7 +7,7 @@ void SystemImporter::initialize(IdList const& atoms) {
     resmap.clear();
     chnmap.clear();
     IdList reslist, chnlist;
-    BOOST_FOREACH(Id atm, atoms) {
+    for (Id atm : atoms) {
         Id res = sys->atom(atm).residue;
         Id chn = sys->residue(res).chain;
         reslist.push_back(res);
@@ -16,10 +16,10 @@ void SystemImporter::initialize(IdList const& atoms) {
     sort_unique(reslist);
     sort_unique(chnlist);
 
-    BOOST_FOREACH(Id chn, chnlist) {
+    for (Id chn : chnlist) {
         chain_t const& chain = sys->chain(chn);
         chnmap[ChnKey(chain.ct, chain.name, chain.segid)] = chn;
-        BOOST_FOREACH(Id res, sys->residuesForChain(chn)) {
+        for (Id res : sys->residuesForChain(chn)) {
             if (std::binary_search(reslist.begin(), reslist.end(), res)) {
                 residue_t const& residue = sys->residue(res);
                 resmap[ResKey(chn, residue.resid, residue.name, residue.insertion)] = res;

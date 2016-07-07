@@ -83,9 +83,9 @@ typedef int mode_t;
 #include <vector>
 #include <string>
 #include <stdexcept>
+#include <memory>
 
 #include "dtrframe.hxx"
-#include <boost/shared_ptr.hpp>
 
 namespace desres { namespace molfile {
   
@@ -245,7 +245,7 @@ namespace desres { namespace molfile {
     int m_ndir2;
     ssize_t m_curframe;
 
-    boost::shared_ptr < metadata > metap;
+    std::shared_ptr < metadata > metap;
 
     bool eof() const { return m_curframe >= (ssize_t)keys.size(); }
 
@@ -273,7 +273,7 @@ namespace desres { namespace molfile {
         dtr = path;
     }
 
-    void set_meta(boost::shared_ptr < metadata > p) {
+    void set_meta(std::shared_ptr < metadata > p) {
         metap = p;
     }
 
@@ -281,7 +281,7 @@ namespace desres { namespace molfile {
         jobstep_id = id;
     }
 
-    boost::shared_ptr <metadata> get_meta() {
+    std::shared_ptr <metadata> get_meta() {
         return metap;
     }
 
@@ -423,7 +423,7 @@ namespace desres { namespace molfile {
     std::vector<DtrReader*> framesets;
     size_t curframeset;
     const unsigned _access;
-    std::map<uint64_t, boost::shared_ptr < metadata > > meta_data_map;
+    std::map<uint64_t, std::shared_ptr < metadata > > meta_data_map;
 
   public:
     explicit StkReader(std::string const& path, 

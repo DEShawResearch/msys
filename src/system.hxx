@@ -11,12 +11,6 @@
 
 namespace desres { namespace msys {
 
-    class TermTable;
-    typedef boost::shared_ptr<TermTable> TermTablePtr;
-
-    class ParamTable;
-    typedef boost::shared_ptr<ParamTable> ParamTablePtr;
-
     class GlobalCell {
         std::vector<double> data;
 
@@ -144,7 +138,7 @@ namespace desres { namespace msys {
         ValueRef value(Id key);
     };
 
-    class System : public boost::enable_shared_from_this<System> {
+    class System : public std::enable_shared_from_this<System> {
     
         static IdList _empty;
     
@@ -198,7 +192,7 @@ namespace desres { namespace msys {
         System();
 
     public:
-        static boost::shared_ptr<System> create();
+        static std::shared_ptr<System> create();
         ~System();
 
         String          name;
@@ -463,7 +457,7 @@ namespace desres { namespace msys {
         /* fetch the table with the given name; return NULL if not present */
         TermTablePtr table(const String& name) const;
         /* get the name of the table; throw if table doesn't belong to this */
-        String tableName(boost::shared_ptr<TermTable const> table) const;
+        String tableName(std::shared_ptr<TermTable const> table) const;
         /* rename the table with the given name; throw if no such table,
          * or if a table named newname already exists.  */
         void renameTable(String const& oldname, String const& newname);
@@ -547,7 +541,7 @@ namespace desres { namespace msys {
         IdList orderedIds() const;
     };
 
-    typedef boost::shared_ptr<System> SystemPtr;
+    typedef std::shared_ptr<System> SystemPtr;
 
 }}
 

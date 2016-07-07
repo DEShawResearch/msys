@@ -1,4 +1,5 @@
 #include "molfile/dtrplugin.hxx"
+#include <algorithm>
 
 static void usage(FILE* fp) {
     fprintf(fp, "fsdump [--begin=n] [--end=n] [--match=xxx] [--max=n] framesetdir framesetdir...\n");

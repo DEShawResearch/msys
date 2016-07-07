@@ -8,7 +8,6 @@
 #include "readpdb.h"
 
 #include <vector>
-#include <boost/foreach.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <string>
 #include <math.h>
@@ -47,7 +46,7 @@ static void Fclose(FILE* fp) { if (fp) fclose(fp); }
 
 namespace {
     class iterator : public LoadIterator {
-        boost::shared_ptr<FILE> fd;
+        std::shared_ptr<FILE> fd;
     public:
         explicit iterator(std::string const& path) {
             fd.reset(fopen(path.c_str(), "r"), Fclose);
@@ -176,7 +175,7 @@ SystemPtr desres::msys::ImportWebPDB(std::string const& code) {
     if (!buf) {
         MSYS_FAIL("Could not read pdb code " << code);
     }
-    boost::shared_ptr<char> ptr(buf, free);
+    std::shared_ptr<char> ptr(buf, free);
     char temp[] = "/tmp/msys_webpdb_XXXXXX";
     int fd = mkstemp(temp);
     if (fd<0) {
@@ -321,7 +320,7 @@ void desres::msys::ExportPDB(SystemPtr mol, std::string const& path,
                              unsigned flags) {
     FILE* fd = fopen(path.c_str(), flags & PDBExport::Append ? "ab" : "wb");
     if (!fd) MSYS_FAIL("Failed opening pdb file for writing at " << path);
-    boost::shared_ptr<FILE> defer_close(fd, fclose);
+    std::shared_ptr<FILE> defer_close(fd, fclose);
 
     if (flags & PDBExport::Append) {
         fprintf(fd, "ENDMDL\n");
@@ -358,12 +357,12 @@ void desres::msys::ExportPDB(SystemPtr mol, std::string const& path,
         if (chn>0 && mol->chain(chn).name == mol->chain(chn-1).name) {
             desres_msys_write_ter_record(fd, ++index, resname, chain, resid);
         }
-        BOOST_FOREACH(Id res, mol->residuesForChain(chn)) {
+        for (Id res : mol->residuesForChain(chn)) {
             resid = mol->residue(res).resid;
             resname = mol->residue(res).name.c_str();
             const char* insertion = mol->residue(res).insertion.c_str();
 
-            BOOST_FOREACH(Id atm, mol->atomsForResidue(res)) {
+            for (Id atm : mol->atomsForResidue(res)) {
                 int anum = mol->atom(atm).atomic_number;
                 const char* name = mol->atom(atm).name.c_str();
                 const char* elementsym = AbbreviationForElement(anum);

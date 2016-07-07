@@ -28,7 +28,7 @@ namespace desres { namespace msys {
         static bool match_node(const Node& g, const Node& h,
                 const std::vector<int>& GtoH, const std::vector<int>& HtoG,
                 bool include_nnbr=true);
-        bool match_common(const boost::shared_ptr<Graph> other, int this_root,
+        bool match_common(const std::shared_ptr<Graph> other, int this_root,
                 int other_root, std::vector<IdPair>& matches) const;
 
         /* Constructor is private; must use create() function */
@@ -45,7 +45,7 @@ namespace desres { namespace msys {
          * Atoms outside the atom set count towards the degree of
          * the internal atoms but are also not part of the graph.
          * Atoms with atomic_number 0 are ignored. */
-        static boost::shared_ptr<Graph> create(SystemPtr sys,
+        static std::shared_ptr<Graph> create(SystemPtr sys,
                 const IdList& atoms);
 
         /* number of particles used in the isomorphism check */
@@ -55,12 +55,12 @@ namespace desres { namespace msys {
          * matched pairs in matches. Stored IDs are the original atom IDs
          * in the two systems, and external atoms (with atomic number 0) are not
          * included. */
-        bool match(const boost::shared_ptr<Graph> other,
+        bool match(const std::shared_ptr<Graph> other,
                 MatchList& matches) const;
 
         /* Match under the constraint that atom this_root of this graph must
          * match atom other_root of other graph */
-        bool match(const boost::shared_ptr<Graph> other, Id this_root,
+        bool match(const std::shared_ptr<Graph> other, Id this_root,
                 Id other_root, MatchList& matches) const;
 
         /* Find all permutations that match, returning the number of matches
@@ -68,7 +68,7 @@ namespace desres { namespace msys {
          * true, will return matches of this graph to all matching subgraphs
          * of other without requiring that this graph and the other graph are of
          * the same size. */
-        unsigned matchAll(const boost::shared_ptr<Graph> other,
+        unsigned matchAll(const std::shared_ptr<Graph> other,
                 std::vector<MatchList>& matches, bool substructure=false) const;
         
         /* Ordering of atoms in the graph structure... Used in conjuntion with 
@@ -82,7 +82,7 @@ namespace desres { namespace msys {
         void setNodeAttributes(std::vector<int> const& newattr);
         
     };
-    typedef boost::shared_ptr<Graph> GraphPtr;
+    typedef std::shared_ptr<Graph> GraphPtr;
 
 }}
 

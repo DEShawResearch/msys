@@ -56,11 +56,11 @@ namespace {
                 itable->value(itc,"param" ) = p;
                 IdList group1 = parse_ids(g1.elem(i).as_string());
                 IdList group2 = parse_ids(g2.elem(i).as_string());
-                BOOST_FOREACH(Id id, group1) {
+                for (Id id : group1) {
                     Id t = table->addTerm(IdList(1,id), p);
                     table->termPropValue(t,"group") = max_group;
                 }
-                BOOST_FOREACH(Id id, group2) {
+                for (Id id : group2) {
                     Id t = table->addTerm(IdList(1,id), p);
                     table->termPropValue(t,"group") = max_group+1;
                 }

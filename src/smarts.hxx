@@ -9,7 +9,7 @@ namespace desres { namespace msys {
      * stuff that we'd prefer not to expose.
      */
     class SmartsPatternImpl;
-    typedef boost::shared_ptr<SmartsPatternImpl> SmartsPatternImplPtr;
+    typedef std::shared_ptr<SmartsPatternImpl> SmartsPatternImplPtr;
 
     /* The SmartsPattern class holds a parsed SMARTS pattern and can
      * efficiently find matches of that pattern in a given query 

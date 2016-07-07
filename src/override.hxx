@@ -6,7 +6,7 @@
 namespace desres { namespace msys {
 
     class OverrideTable;
-    typedef boost::shared_ptr<OverrideTable> OverrideTablePtr;
+    typedef std::shared_ptr<OverrideTable> OverrideTablePtr;
 
     class OverrideTable {
 

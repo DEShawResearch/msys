@@ -6,7 +6,7 @@ using namespace desres::msys;
 using namespace boost::python;
 
 typedef CEAlign<double> Engine;
-typedef boost::shared_ptr<PyObject> objptr;
+typedef std::shared_ptr<PyObject> objptr;
 static void dtor(PyObject* obj) { Py_DECREF(obj); }
 
 static list compute(Engine const& engine, list Aatoms, object Aobj,

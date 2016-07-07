@@ -4,8 +4,7 @@
 #include <set>
 #include <cstdio>
 #include <cmath>    // for HUGE_VAL
-
-#include <boost/algorithm/string.hpp>
+#include "ff.hxx"
 
 using namespace desres::msys::mae;
 using desres::msys::fastjson::Json;
@@ -65,8 +64,8 @@ VdwMap::VdwMap( const Json& ffio_ff ) {
             }
         }
     }
-    boost::to_lower(_funct);
-    boost::to_lower(_rule);
+    to_lower(_funct);
+    to_lower(_rule);
 
     const Json& combined = ffio_ff.get("ffio_vdwtypes_combined");
     if (combined.valid()) {

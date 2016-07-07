@@ -157,7 +157,7 @@ namespace {
                     }
                 }
                 std::string f = fn.elem(i).as_string();
-                boost::to_lower(f);
+                to_lower(f);
                 if (f=="coulomb" || f=="coulomb_scale") {
                     if (params.back()!=HUGE_VAL) continue;
                     Id iatom = sitemap.site(ai.elem(i).as_int());

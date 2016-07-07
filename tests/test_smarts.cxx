@@ -21,9 +21,9 @@ int main(int argc, char *argv[]) {
     for (int i=2; i<argc; i++) {
         printf("%s\n", argv[i]);
         MultiIdList matches=SmartsPattern(argv[i]).findMatches(*annot_mol, sel);
-        BOOST_FOREACH(IdList l, matches){
+        for (IdList l : matches){
            printf(" --> [ ");
-           BOOST_FOREACH(Id i, l){
+           for (Id i : l){
              printf("%u ",i);
            }
            printf("]\n");

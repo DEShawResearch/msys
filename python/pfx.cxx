@@ -19,7 +19,7 @@ static PyObject* pfx_new(PyTypeObject* type, PyObject* args, PyObject* kwds) {
     PyObject *topobj, *fixobj=Py_False;
     PfxObject* self;
     graph_t* g = NULL;
-    boost::shared_ptr<graph_t> gptr;
+    std::shared_ptr<graph_t> gptr;
 
     int i, n, fixbonds;
 

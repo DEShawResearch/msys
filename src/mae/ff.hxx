@@ -7,7 +7,6 @@
 #include "../schema.hxx"
 #include <stdexcept>
 #include <sstream>
-#include <boost/algorithm/string.hpp>
 
 using namespace desres::msys;
 using namespace desres::msys::mae;
@@ -96,7 +95,7 @@ namespace desres { namespace msys { namespace mae {
         Id add(const ParamList& param);
     };
 
-    typedef boost::shared_ptr<ParamMap> ParamMapPtr;
+    typedef std::shared_ptr<ParamMap> ParamMapPtr;
 
 }}}
 

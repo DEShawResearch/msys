@@ -65,7 +65,7 @@ namespace desres { namespace msys {
 
     /* Interface class to iterate over structures */
     class LoadIterator;
-    typedef boost::shared_ptr<LoadIterator> LoadIteratorPtr;
+    typedef std::shared_ptr<LoadIterator> LoadIteratorPtr;
 
     class LoadIterator {
     public:

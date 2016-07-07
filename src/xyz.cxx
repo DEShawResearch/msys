@@ -3,8 +3,8 @@
 #include "analyze.hxx"
 #include <errno.h>
 #include <stdio.h>
-#include <boost/algorithm/string.hpp>
 #include <fastjson/print.hxx>
+#include <boost/algorithm/string.hpp>
 #include <string.h>
 
 namespace desres { namespace msys {
@@ -14,7 +14,7 @@ namespace desres { namespace msys {
         if (!fd) {
             MSYS_FAIL("Error opening '" << path << "' for writing: " << strerror(errno));
         }
-        boost::shared_ptr<FILE> dtor(fd, fclose);
+        std::shared_ptr<FILE> dtor(fd, fclose);
         char x[20], y[20], z[20];
 
         fprintf(fd, "%u\n", mol->atomCount());
@@ -35,7 +35,7 @@ namespace desres { namespace msys {
         if (!fd) {
             MSYS_FAIL("Error opening '" << path << "' for reading: " << strerror(errno));
         }
-        boost::shared_ptr<FILE> dtor(fd, fclose);
+        std::shared_ptr<FILE> dtor(fd, fclose);
         int natoms;
         char buf[256];
 

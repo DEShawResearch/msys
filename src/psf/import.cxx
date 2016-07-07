@@ -405,7 +405,7 @@ desres::msys::SystemPtr desres::msys::ImportPSF( std::string const& path ) {
     if ((fp = fopen(path.c_str(), "r")) == NULL) {
         MSYS_FAIL("Couldn't open psf file at " << path);
     }
-    boost::shared_ptr<FILE> fp_closer(fp, fclose);
+    std::shared_ptr<FILE> fp_closer(fp, fclose);
 
     bool namdfmt = 0;   /* off unless we discover otherwise */
     //bool charmmfmt = 0; /* off unless we discover otherwise */

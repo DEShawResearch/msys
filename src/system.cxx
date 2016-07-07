@@ -507,7 +507,7 @@ void System::renameTable(String const& oldname, String const& newname) {
 }
 
 
-String System::tableName(boost::shared_ptr<TermTable const> table) const {
+String System::tableName(std::shared_ptr<TermTable const> table) const {
     if (table->system() != shared_from_this()) {
         throw std::runtime_error(
                 "tableName: table does not belong to this System");

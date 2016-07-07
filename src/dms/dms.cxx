@@ -11,7 +11,7 @@
 #include <cerrno>
 #include <iomanip>
 
-#include <boost/algorithm/string.hpp>
+//#include <boost/algorithm/string.hpp>
 
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
@@ -446,7 +446,7 @@ Reader::Reader(std::shared_ptr<sqlite3> db, std::string const& table,
         std::string name = (const char *)sqlite3_column_text(stmt,1);
         std::string type = (const char *)sqlite3_column_text(stmt,2);
         ValueType t;
-        boost::to_upper(type);
+        to_upper(type);
         /* see http://www.sqlite.org/datatype3.html, section 2.1 */
         if (strstr(type.c_str(), "INT")) {
             t = IntType;

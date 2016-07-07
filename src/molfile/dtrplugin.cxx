@@ -2167,7 +2167,7 @@ DtrWriter::~DtrWriter() {
 }
 
 /* Write out the size and then the bytes */
-std::ostream& operator<<(std::ostream& out, const boost::shared_ptr < metadata > &mp) {
+std::ostream& operator<<(std::ostream& out, const std::shared_ptr < metadata > &mp) {
     out << mp->get_frame_size() << ' ';
     if (mp->get_frame_size()) {
         out.write((const char *)mp->get_frame_data(), mp->get_frame_size());
@@ -2176,7 +2176,7 @@ std::ostream& operator<<(std::ostream& out, const boost::shared_ptr < metadata >
     return out;
 }
 
-std::istream& operator>>(std::istream& in, boost::shared_ptr < metadata > &mp) {
+std::istream& operator>>(std::istream& in, std::shared_ptr < metadata > &mp) {
     char c;
     uint32_t frame_size;
     in >> frame_size;
@@ -2331,7 +2331,7 @@ std::istream& StkReader::load_v8(std::istream &in) {
   in.get(c);
 
   for (unsigned int i = 0; i < meta_hashes_count; i++) {
-      boost::shared_ptr<metadata> mp;
+      std::shared_ptr<metadata> mp;
       in >> mp;
       meta_data_map[mp->get_hash()] = mp;
   }

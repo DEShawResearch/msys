@@ -18,7 +18,7 @@ namespace {
         if (PyObject_GetBuffer(obj, view, PyBUF_ND)) {
             throw_error_already_set();
         }
-        boost::shared_ptr<Py_buffer> ptr(view, PyBuffer_Release);
+        std::shared_ptr<Py_buffer> ptr(view, PyBuffer_Release);
         const char* bytes = reinterpret_cast<const char *>(view->buf);
         return ImportMAEFromBytes(bytes, view->len, 
                                   ignore_unrecognized,
@@ -30,7 +30,7 @@ namespace {
         if (PyObject_GetBuffer(obj, view, PyBUF_ND)) {
             throw_error_already_set();
         }
-        boost::shared_ptr<Py_buffer> ptr(view, PyBuffer_Release);
+        std::shared_ptr<Py_buffer> ptr(view, PyBuffer_Release);
         char* bytes = reinterpret_cast<char *>(view->buf);
         return ImportDMSFromBytes(bytes, view->len, structure_only);
     }

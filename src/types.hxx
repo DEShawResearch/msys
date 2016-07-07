@@ -49,6 +49,15 @@ namespace desres { namespace msys {
         return oldsize - t.size();
     }
 
+    template <typename T>
+    void to_lower(T& s) {
+        std::for_each(std::begin(s), std::end(s), [](char& c) {c=tolower(c);});
+    }
+    template <typename T>
+    void to_upper(T& s) {
+        std::for_each(std::begin(s), std::end(s), [](char& c) {c=toupper(c);});
+    }
+
     /* gettimeofday() */
     double now();
 

@@ -134,7 +134,7 @@ IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr, Id ctid) 
     }
 
     /* add cts */
-    BOOST_FOREACH(Id srcct, src.cts()) {
+    for (Id srcct : src.cts()) {
         Id dstct = ctid;
         if (bad(dstct)) {
             dstct = dst.addCt();
@@ -144,7 +144,7 @@ IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr, Id ctid) 
     }
 
     /* add chains */
-    BOOST_FOREACH(Id srcchn, src.chains()) {
+    for (Id srcchn : src.chains()) {
         Id srcct = src.chain(srcchn).ct;
         Id dstct = ctmap[srcct];
         Id dstchn = chnmap[srcchn] = dst.addChain(dstct);
@@ -154,7 +154,7 @@ IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr, Id ctid) 
     }
 
     /* add residues */
-    BOOST_FOREACH(Id srcres, src.residues()) {
+    for (Id srcres : src.residues()) {
         Id srcchn = src.residue(srcres).chain;
         Id dstchn = chnmap[srcchn];
         Id dstres = resmap[srcres] = dst.addResidue(dstchn);
@@ -164,7 +164,7 @@ IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr, Id ctid) 
     }
 
     /* add atoms */
-    BOOST_FOREACH(Id srcatm, src.atoms()) {
+    for (Id srcatm : src.atoms()) {
         Id srcres = src.atom(srcatm).residue;
         Id dstres = resmap[srcres];
         Id dstatm = atmmap[srcatm] = dst.addAtom(dstres);

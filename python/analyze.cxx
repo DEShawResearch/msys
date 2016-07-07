@@ -25,7 +25,7 @@ namespace {
         mol->updateFragids(&fragments);
         IdList frags = FindDistinctFragments(mol, fragments);
         list L;
-        BOOST_FOREACH(Id frag, frags) L.append(frag);
+        for (Id frag : frags) L.append(frag);
         return L;
     }
 
@@ -34,9 +34,9 @@ namespace {
     {
         MultiIdList results = s.findMatches(sys, starts);
         list L;
-        BOOST_FOREACH(IdList const& ids, results) {
+        for (IdList const& ids : results) {
             list m;
-            BOOST_FOREACH(Id id, ids) m.append(id);
+            for (Id id : ids) m.append(id);
             L.append(m);
         }
         return L;

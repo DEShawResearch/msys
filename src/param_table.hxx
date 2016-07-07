@@ -4,14 +4,14 @@
 #include "value.hxx"
 #include <deque>
 #include <map>
-#include <boost/enable_shared_from_this.hpp>
+#include <memory>
 #include <string.h>
 
 namespace desres { namespace msys {
 
     /* A ParamTable instance is a table whose rows are indexed by id and whose
      * columns are named and can have int, float, and string types. */
-    class ParamTable : public boost::enable_shared_from_this<ParamTable> {
+    class ParamTable : public std::enable_shared_from_this<ParamTable> {
     
         /* we use deque so that references to values returned by the value()
          * method aren't invalidated by later calls to addProp(). */
@@ -56,7 +56,7 @@ namespace desres { namespace msys {
         ParamTable();
 
     public:
-        static boost::shared_ptr<ParamTable> create();
+        static std::shared_ptr<ParamTable> create();
         ~ParamTable();
 
         /* increment/decrement the reference count of the given parameter */
@@ -114,7 +114,7 @@ namespace desres { namespace msys {
         IdList findString(Id col, String const& val);
         IdList findValue(Id col, ValueRef const& v);
     };
-    typedef boost::shared_ptr<ParamTable> ParamTablePtr;
+    typedef std::shared_ptr<ParamTable> ParamTablePtr;
 }}
 
 #endif

@@ -108,7 +108,7 @@ namespace {
     void destructor(PyObject* obj) { 
         Py_XDECREF(obj); 
     }
-    typedef boost::shared_ptr<PyObject> objptr;
+    typedef std::shared_ptr<PyObject> objptr;
 
     PyObject* global_cell(object sysobj) {
         System& sys = extract<System&>(sysobj);
@@ -177,7 +177,7 @@ namespace {
                 NPY_C_CONTIGUOUS | NPY_ALIGNED,
                 NULL);
         if (!arr) throw_error_already_set();
-        boost::shared_ptr<PyObject> _(arr, destructor);
+        std::shared_ptr<PyObject> _(arr, destructor);
         Id n = PyArray_DIM(arr,0);
         if (PyArray_DIM(arr,1)!=3) {
             PyErr_Format(PyExc_ValueError, 
@@ -324,7 +324,7 @@ namespace {
                 NULL);
             if (!idarr) throw_error_already_set();
             const int64_t* ids = (const int64_t *)PyArray_DATA(idarr);
-            boost::shared_ptr<PyObject> _(idarr, destructor);
+            std::shared_ptr<PyObject> _(idarr, destructor);
 
             /* allocate return array */
             dims[0] = PyArray_DIM(idarr,0);
@@ -417,7 +417,7 @@ namespace {
                 NPY_C_CONTIGUOUS | NPY_ALIGNED,
                 NULL);
         if (!arr) throw_error_already_set();
-        boost::shared_ptr<PyObject> _(arr, destructor);
+        std::shared_ptr<PyObject> _(arr, destructor);
         Id n = PyArray_DIM(arr,0);
         if (PyArray_DIM(arr,1)!=3) {
             PyErr_Format(PyExc_ValueError, 
@@ -473,7 +473,7 @@ namespace {
                 NPY_C_CONTIGUOUS | NPY_ALIGNED,
                 NULL);
         if (!arr) throw_error_already_set();
-        boost::shared_ptr<PyObject> _(arr, destructor);
+        std::shared_ptr<PyObject> _(arr, destructor);
         Id n = PyArray_DIM(arr,0);
         if (PyArray_DIM(arr,1)!=3) {
             PyErr_Format(PyExc_ValueError, 
@@ -665,6 +665,15 @@ namespace {
 
     pfx::Graph* sys_topology(SystemPtr mol) { return new pfx::Graph(mol); }
 
+    TermTablePtr wrap_system_add_table(SystemPtr mol, std::string const& name,
+            Id natoms, PyObject* obj) {
+        ParamTablePtr params;
+        if (obj!=Py_None) {
+            params = extract<ParamTablePtr>(obj);
+        }
+        return mol->addTable(name, natoms, params);
+    }
+
 }
 
 namespace desres { namespace msys { 
@@ -802,7 +811,7 @@ namespace desres { namespace msys {
             .def("tableNames",  table_names)
             .def("tableName",   &System::tableName)
             .def("table",       &System::table)
-            .def("addTable",    &System::addTable)
+            .def("addTable",    wrap_system_add_table)
             .def("delTable",    &System::delTable)
             .def("removeTable", &System::removeTable)
             .def("renameTable", &System::renameTable)

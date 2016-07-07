@@ -93,7 +93,7 @@ namespace {
     }
 
     void destructor(PyObject* obj) { Py_XDECREF(obj); }
-    typedef boost::shared_ptr<PyObject> objptr;
+    typedef std::shared_ptr<PyObject> objptr;
 
 #define DIVVY_BEGIN_END(ntasks,rank,nprocs,begin,end) do {\
   unsigned int __quo__, __rem__;                                          \
@@ -106,7 +106,7 @@ namespace {
     // read a single frame from the given reader and store in provided buffers
     static void read_frame(Reader& r, int64_t fid, 
             unsigned ngids, const unsigned* gids, float* pos, double* box) {
-        boost::shared_ptr<Frame> frame(r.frame(fid));
+        std::shared_ptr<Frame> frame(r.frame(fid));
         memcpy(box, frame->box(), 9*sizeof(double));
         const float* src = frame->pos();
         for (unsigned i=0; i<ngids; i++) {
@@ -188,7 +188,7 @@ namespace {
         // not thread safe by default anymore.
         ssize_t nthreads = std::min(nfids, maxthreads);
         if (nthreads>0) {
-            typedef boost::shared_ptr<boost::thread> ThreadPtr;
+            typedef std::shared_ptr<boost::thread> ThreadPtr;
             std::vector<ThreadPtr> threads(nthreads);
             for (unsigned i=0; i<nthreads; i++) {
                 threads[i].reset(new boost::thread(worker,
@@ -464,7 +464,7 @@ namespace {
         }
         void* keybuf = NULL;
         dtr::KeyMap keymap = comp->frame(index, NULL, &keybuf);
-        boost::shared_ptr<void> dtor(keybuf, free);
+        std::shared_ptr<void> dtor(keybuf, free);
         dict d;
         py_keyvals(keymap, d.ptr());
         return d;
@@ -491,7 +491,7 @@ namespace {
         dtr::KeyMap keymap;
         void* keybuf = NULL;
         void** keybufptr = keyvals.ptr() == Py_None ? NULL : &keybuf;
-        boost::shared_ptr<void> keybuf_dtor(keybuf, free);
+        std::shared_ptr<void> keybuf_dtor(keybuf, free);
         if (bytes.is_none()) {
             PyThreadState *_save;
             _save = PyEval_SaveThread();
@@ -615,7 +615,7 @@ namespace {
     void tk_init(Timekeys& tk, std::string const& path) {
         PyThreadState *_save;
         _save = PyEval_SaveThread();
-        boost::shared_ptr<PyThreadState> rst(_save, PyEval_RestoreThread);
+        std::shared_ptr<PyThreadState> rst(_save, PyEval_RestoreThread);
         tk.init(path);
     }
 

@@ -11,7 +11,7 @@ namespace {
 
             MaeAtoms atoms(blk);
 
-            typedef boost::shared_ptr<ParamMap> ParamMapPtr;
+            typedef std::shared_ptr<ParamMap> ParamMapPtr;
             typedef std::pair<TermTablePtr, ParamMapPtr> type_t;
             typedef std::map<std::string, type_t> TypeMap;
             TypeMap typemap;
@@ -20,7 +20,7 @@ namespace {
             int i,n = blk.get("__size__").as_int();
             for (i=0; i<n; i++) {
                 std::string f = fn.elem(i).as_string();
-                boost::to_lower(f);
+                to_lower(f);
                 type_t type = typemap[f];
                 if (!type.first) {
                     std::string name = std::string("constraint_")+f.substr(0,3);

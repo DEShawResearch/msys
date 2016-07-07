@@ -3,7 +3,6 @@
 #include "../io.hxx"
 #include "../import.hxx"
 
-#include <boost/algorithm/string.hpp>
 #include <stdio.h>
 
 using namespace desres::msys;
@@ -28,7 +27,7 @@ struct system_t {
 static void* open_file_read(const char *filename, const char *filetype, 
         int *natoms ) {
     std::string uppercase_type(filetype);
-    boost::to_upper(uppercase_type);
+    to_upper(uppercase_type);
     FileFormat format = FileFormatFromString(uppercase_type);
     if (format == UnrecognizedFileFormat) {
         fprintf(stderr, "Unrecognized format '%s'\n", filetype);
@@ -152,7 +151,7 @@ static void* open_file_write(const char *filepath, const char *filetype,
           int natoms) {
 
     std::string uppercase_type(filetype);
-    boost::to_upper(uppercase_type);
+    to_upper(uppercase_type);
     FileFormat format = FileFormatFromString(uppercase_type);
     if (format == UnrecognizedFileFormat) {
         fprintf(stderr, "Unrecognized format '%s'\n", filetype);

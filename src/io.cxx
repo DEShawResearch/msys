@@ -66,7 +66,7 @@ namespace desres { namespace msys {
     FileFormat GuessFileFormat(std::string const& _path) {
 
         std::string path(_path);
-        boost::to_lower(path);
+        to_lower(path);
         const char* DMS = "dms,dms.gz";
         const char* MAE = "mae,mae.gz,maegz,maeff,maeff.gz,cms,cms.gz";
         const char* PDB = "pdb";

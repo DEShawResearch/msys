@@ -2,7 +2,6 @@
 #define desres_msys_term_table_hxx
 
 #include "override.hxx"
-#include <boost/foreach.hpp>
 
 namespace desres { namespace msys {
 
@@ -10,10 +9,7 @@ namespace desres { namespace msys {
      * from n-tuples of atoms to a parameter set.  */
     
     class System;
-    typedef boost::shared_ptr<System> SystemPtr;
-
-    class OverrideTable;
-    typedef boost::shared_ptr<OverrideTable> OverrideTablePtr;
+    typedef std::shared_ptr<System> SystemPtr;
 
     /* Every term table should be assigned a category based on its type. */
     enum Category {
@@ -32,8 +28,8 @@ namespace desres { namespace msys {
     /* convert string to category */
     Category parse(std::string const& s);
 
-    class TermTable : public boost::enable_shared_from_this<TermTable> {
-        boost::weak_ptr<System> _system;
+    class TermTable : public std::enable_shared_from_this<TermTable> {
+        std::weak_ptr<System> _system;
         ParamTablePtr   _params;
     
         /* number of atoms in each term */
@@ -224,17 +220,9 @@ namespace desres { namespace msys {
         void resetParams(ParamTablePtr params);
     };
 
-    typedef boost::shared_ptr<TermTable> TermTablePtr;
+    typedef std::shared_ptr<TermTable> TermTablePtr;
 
 }}
-
-namespace boost {
-    template<>
-    struct range_const_iterator<desres::msys::TermTable> {
-        //typedef typename desres::msys::TermTable::const_iterator type;
-        typedef desres::msys::TermTable::const_iterator type;
-    };
-}
 
 #endif
 

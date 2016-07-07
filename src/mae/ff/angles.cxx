@@ -35,7 +35,7 @@ namespace {
             int i,n = blk.get("__size__").as_int();
             for (i=0; i<n; i++) {
                 std::string f = fn.elem(i).as_string();
-                boost::to_lower(f);
+                to_lower(f);
                 bool constrained=false;
                 TermTablePtr table;
                 Id A=BadId;

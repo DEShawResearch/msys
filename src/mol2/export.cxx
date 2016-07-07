@@ -140,7 +140,7 @@ void desres::msys::ExportMol2( SystemPtr mol, std::string const& path,
     const char* mode = flags & Mol2Export::Append ? "ab" : "wb";
     FILE* fd = fopen(path.c_str(), mode);
     if (!fd) MSYS_FAIL("Could not open '" << "' for writing.");
-    boost::shared_ptr<FILE> dtor(fd, fclose);
+    std::shared_ptr<FILE> dtor(fd, fclose);
     for (Id ct=0; ct<mol->ctCount(); ct++) {
         export_ct(mol,ct,fd,provenance,flags);
     }

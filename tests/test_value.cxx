@@ -7,6 +7,18 @@ using namespace desres::msys;
 
 int main() {
 
+    {
+    std::string s1, s2("a"), s3("A"), s4("aAaA");
+    to_lower(s1);
+    to_lower(s2);
+    to_lower(s3);
+    to_lower(s4);
+    assert(s1=="");
+    assert(s2=="a");
+    assert(s3=="a");
+    assert(s4=="aaaa");
+    }
+
     Int i1=1;
     Float f1=1;
     char* s1 = strdup("1");

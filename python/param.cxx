@@ -5,11 +5,6 @@ using namespace desres::msys;
 
 namespace {
 
-    template <typename T>
-    bool ptr_eq(boost::shared_ptr<T> p, boost::shared_ptr<T> q) {
-        return p==q;
-    }
-
     Id param_add_prop(ParamTable& p, const std::string& name, object typeobj) {
         return p.addProp(name, as_value_type(typeobj));
     }
