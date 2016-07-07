@@ -624,6 +624,20 @@ class Term(Handle):
         p.setProp(id, col, val)
 
 class TermTable(object):
+    ''' A collection of atom tuples and parameters for how they interact.
+
+    Each TermTable is intended to describe a specific type of interaction,
+    e.g. stretch, angle, Lennard-Jones, constraint_hoh, etc.  A TermTable
+    has an arity (given by the natoms property) which specifies how many
+    atoms are involved in each interaction: one for nonbonded terms, two
+    for stretch terms, etc.  Each interaction instance is described by
+    a Term.  Each Term references the appropriate number of atoms,
+    and exactly one Param, which lives in a ParamTable owned (or possible
+    shared) by the TermTable.  
+
+    The functional form described by a TermTable is not part of msys; all
+    msys does is represent the forcefield parameters in a generic way.
+    '''
 
     __slots__=('_ptr',)
 
