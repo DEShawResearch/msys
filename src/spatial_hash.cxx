@@ -652,6 +652,17 @@ static const uint64_t lutvals[] = {
 };
 static const __m128i* lut = (const __m128i*)(lutvals);
 
+// popcnt for 0-15
+static const uint8_t popcnt_u4_data[] = {
+    0,1,1,2,
+    1,2,2,3,
+    1,2,2,3,
+    2,3,3,4
+};
+static inline uint8_t my_popcnt_u4(int mask) {
+    return popcnt_u4_data[mask];
+}
+
 void SpatialHash::find_contacts(float r2, int voxid, float x, float y, float z,
                            Id id, contact_array_t* result) const {
 
@@ -736,7 +747,8 @@ void SpatialHash::find_contacts(float r2, int voxid, float x, float y, float z,
             _mm_storeu_si128((__m128i*)(ri+count), packed_i);
             _mm_storeu_si128((__m128i*)(rj+count), packed_j);
             _mm_storeu_si128((__m128i*)(rd+count), packed_d2);
-            count += _mm_popcnt_u32(mask);
+            //count += _mm_popcnt_u32(mask);    // needs sse4_2
+            count += my_popcnt_u4(mask);
         }
 #endif
         /* stragglers */

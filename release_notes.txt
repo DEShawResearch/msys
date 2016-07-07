@@ -1,3 +1,5 @@
+1.7.145 Use just SSE4_1 for findContacts since drdb has only that.
+
 1.7.144 C++: Replace boost::shared_ptr with std::shared_ptr.
         Better smiles support (DESRESCode#3109)
         SSE4 acceleration of findContacts.
