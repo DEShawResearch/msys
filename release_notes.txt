@@ -1,3 +1,14 @@
+1.7.144 C++: Replace boost::shared_ptr with std::shared_ptr.
+        Better smiles support (DESRESCode#3109)
+        SSE4 acceleration of findContacts.
+        Fix AnnotatedSystem.repr (DESRESCode#3108)
+        Added optional weights argument to pfx.aligned_rmsd.
+        Throw exception on empty atom selections.
+
+1.7.143 C++: Spatial hash doesn't compute the square root anymore.
+        C++: Fix installation of atomsel headers.
+        Skip over newlines and tabs in atom selections.
+        
 1.7.142 NEW: msys-fetch-pdb tool
         NEW: SpatialHash.findContacts (supports minimum image checks)
         FIXED: parsing of negative integers in atom selections
