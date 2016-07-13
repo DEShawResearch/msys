@@ -12,7 +12,7 @@ boost_libs=[(x+bsx) for x in (
     'boost_iostreams', 'boost_filesystem', 'boost_system')]
 env.Append(LIBS=boost_libs)
 env.AppendUnique(LIBS=['sqlite3', 'z' ])
-if env['PLATFORM'] == 'darwin':
+if env['PLATFORM'] == 'darwin' and not env.get('MSYS_WITHOUT_LPSOLVE'):
     env.AppendUnique(LIBS=['lpsolve55'])
 
 env.Append(CPPPATH='.')
