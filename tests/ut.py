@@ -938,7 +938,7 @@ class TestMain(unittest.TestCase):
             #mol.select('residue -99999999')
 
     def testAtomsel(self):
-        ww='/proj/desres/root/Linux/x86_64/dms_inputs/1.5.5/share/ww.dms'
+        ww='tests/files/ww.dms'
         mol=msys.Load(ww)
         ref=mol.atomsel('residue 1')
         sel=mol.atomsel('residue 3')
@@ -982,7 +982,7 @@ class TestMain(unittest.TestCase):
 
     def testAssignBondOrdersAndFormalCharges(self):
         # Smoke test only
-        sys = msys.LoadDMS('/proj/desres/root/Linux/x86_64/dms_inputs/1.5.5/share/ww.dms')
+        sys = msys.LoadDMS('tests/files/ww.dms')
         msys.AssignBondOrderAndFormalCharge(sys)
         self.assertFalse('resonant_charge' in sys.atom_props)
         self.assertFalse('resonant_order' in sys.bond_props)
