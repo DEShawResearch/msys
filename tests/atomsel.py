@@ -48,7 +48,7 @@ def compare_atomsel(coord_ent,sel, dump=False, perf=False):
   return rc
 
 if len(sys.argv)<2:
-    DMSROOT='/proj/desres/root/Linux/x86_64/dms_inputs/1.5.5/share'
+    DMSROOT='tests/files'
     path='%s/2f4k.dms' % DMSROOT
 else:
     path=sys.argv[1]
