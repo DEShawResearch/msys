@@ -49,6 +49,8 @@ def __add_properties(cls, *names):
             doc=attr))
 
 class Bond(Handle):
+    ''' Represents a bond in a System '''
+
     __slots__ = ()
 
     def __repr__(self): return '<Bond %d>' % self._id
@@ -95,6 +97,7 @@ __add_properties(Bond, 'order')
 __add_properties(Bond, 'resonant_order')
 
 class Atom(Handle):
+    ''' Represents an atom (or pseudoparticle) in a chemical system '''
     __slots__ = ()
 
     def __repr__(self): return '<Atom %d>' % self._id
@@ -185,6 +188,7 @@ __add_properties(Atom,
         'name', 'aromatic')
 
 class Residue(Handle):
+    ''' Represents a residue (group of Atoms) in a System '''
     __slots__ = ()
 
     def __repr__(self):
@@ -259,6 +263,7 @@ class Residue(Handle):
         raise ValueError, "Found %d atoms with given name" % (len(atoms))
 
 class Chain(Handle):
+    ''' Represents a chain (of Residues) in a System '''
     __slots__ = ()
 
     def __repr__(self): return '<Chain %s>' % self.name
@@ -306,6 +311,16 @@ class Chain(Handle):
 __add_properties(Chain, 'name', 'segid')
 
 class Ct(Handle):
+    ''' Represents a list of Chains in a System
+
+    The Ct class exists mainly to provide a separate namespace for chains.
+    If you merge two systems each of which has a chain A, you probably
+    want the chains to remain separate.  Cts accomplish this.
+
+    The Ct class also provides a key-value namespace for assigning 
+    arbitrary properties to Systems.
+    '''
+
     __slots__ = ()
     def data(self): return self._ptr.ct(self._id)
 
@@ -357,6 +372,7 @@ class Ct(Handle):
 
     @property
     def name(self):
+        ''' Name of Ct '''
         return self.data().name
     @name.setter
     def name(self, s):
@@ -407,6 +423,13 @@ class PropertyMap(object):
 
 
 class Param(Handle):
+    '''
+    A `Param` instance is a reference to a row in a `ParamTable`.  Use the
+    ``dict``-style interface to get and set values in the row.  Msys will
+    take care of converting input values to the type of the corresponding
+    column, and raise an exception if the conversion cannot be performed.
+    '''
+
     __slots__=()
 
     def __repr__(self): return '<Param %d>' % self._id
@@ -451,6 +474,13 @@ class Param(Handle):
         return Param(self._ptr, self._ptr.duplicate(self._id))
 
 class ParamTable(object):
+    '''
+    The `ParamTable` class is a 2d table, whose rows are indexed by ``id``
+    and whose columns are properties; see the discussion of properties in
+    the Overview.  A `ParamTable` is used by `TermTables` to hold the shared
+    parameters for its `Terms`.
+    '''
+
     __slots__=('_ptr',)
 
     def __init__(self, _ptr):
@@ -529,6 +559,28 @@ class ParamTable(object):
         return [self.param(x) for x in f(col, value)]
         
 class Term(Handle):
+    '''
+    A `Term` is a handle for an entry in a `TermTable`.  
+
+    The properties of a `Term` can be read and updated using a dictionary
+    like interface.  Both "term properties" and properties from the
+    `ParamTable` are accessed through the same interface.  To add or
+    remove properties, use the provided methods in the `TermTable` or
+    `ParamTable` instance.  If a `Term`'s ``param`` is shared by another
+    `Term` in any other `TermTable`, Msys will take care of providing
+    the `Term` with its own `Param` containing a copy of the original
+    properties before applying the changes.  However, if you a modify a
+    `Param` through its dictionary interface, you will affect all `Terms`
+    that happen to share that `Param`::
+
+        # fetch the stretch_harm table
+        table = mol.table('stretch_harm')
+        # update the properties of just the first Term
+        table.term(0)['fc'] = 320
+        # update the properties of all terms that use this param!
+        table.term(0).param['fc'] = 320
+    '''
+
     __slots__=()
 
     def __repr__(self): return '<Term %d>' % self._id
@@ -624,14 +676,13 @@ class Term(Handle):
         p.setProp(id, col, val)
 
 class TermTable(object):
-    ''' A collection of atom tuples and parameters for how they interact.
-
+    '''
     Each TermTable is intended to describe a specific type of interaction,
     e.g. stretch, angle, Lennard-Jones, constraint_hoh, etc.  A TermTable
     has an arity (given by the natoms property) which specifies how many
     atoms are involved in each interaction: one for nonbonded terms, two
     for stretch terms, etc.  Each interaction instance is described by
-    a Term.  Each Term references the appropriate number of atoms,
+    a `Term`.  Each Term references the appropriate number of atoms,
     and exactly one Param, which lives in a ParamTable owned (or possible
     shared) by the TermTable.  
 
@@ -857,6 +908,37 @@ class TermTable(object):
         return self.override_params.param(id)
 
 class System(object):
+    '''
+
+    The `System` class holds all structure and forcefield data
+    for a single chemical system.  Create a new `System` using
+    ``msys.CreateSystem()``, or from a file using ``msys.LoadDMS`` or
+    ``msys.LoadMAE.``
+
+
+    A `System` organizes the information in a DMS file into several
+    different groups:
+
+     * Tables - `TermTables` are grouped and accessed by name
+
+     * cell - the unit cell vectors for the `System`, in the form of a 3x3
+       NumPy array.
+
+     * nonbonded_info - the NonbondedInfo object describing the type of
+       nonbonded interactions.
+
+     * provenance - a list of Provenance objects describing how the input
+       file has been processed.
+
+     * Auxiliary tables: Everything else in the DMS file that does not
+     fit into
+       one of the above categories finds its way into an auxiliary table.
+       Notable denizens of this category include:
+
+       - cmap tables
+
+       - forcefield (annotation for parameters in the DMS file)
+    '''
 
     __slots__ = ('_ptr', '_atoms')
 
@@ -1944,6 +2026,11 @@ def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge = None):
         _msys.AssignBondOrderAndFormalCharge(ptr, ids, int(total_charge))
 
 class Graph(object):
+    ''' Represents the chemical topology of a System
+
+    Used mainly to implement graph isomorphism; see the match() method
+    '''
+
     @classmethod
     def _from_boost(cls, _ptr, _sys):
         graph = cls(CreateSystem())
@@ -1998,6 +2085,7 @@ class Graph(object):
                 for item in t]
 
 def AddHydrogens(system_or_atoms):
+    ''' Experimental '''
     if isinstance(system_or_atoms, System):
         ptr = system_or_atoms._ptr
         ids = ptr.atoms()
@@ -2006,6 +2094,7 @@ def AddHydrogens(system_or_atoms):
     return [Atom(ptr, x) for x in _msys.AddHydrogens(ptr, ids)]
 
 def GuessHydrogenPositions(atoms):
+    ''' Experimental '''
     ptr, ids = _find_ids(atoms)
     _msys.GuessHydrogenPositions(ptr, ids)
 

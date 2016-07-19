@@ -277,77 +277,12 @@ You can create a multi-ct system from existing `Systems` using the
   assert pro.ct(1).name == 'water'
   msys.Save(pro, 'combined.dms')
 
+The msys module
+===============
 
-ParamTable
-==========
-
-The `ParamTable` class is a 2d table, whose rows are indexed by ``id``
-and whose columns are properties; see the discussion of properties in
-the Overview.  A `ParamTable` is used by `TermTables` to hold the shared
-parameters for its `Terms`.
-
-.. autoclass:: msys.ParamTable
-   :members:
-   :special-members:
-
-Param
------
-
-A `Param` instance is a reference to a row in a `ParamTable`.  Use the
-``dict``-style interface to get and set values in the row.  Msys will
-take care of converting input values to the type of the corresponding
-column, and raise an exception if the conversion cannot be performed.
-
-.. autoclass:: msys.Param
-   :members:
-   :special-members:
-
-
-
-TermTable
-=========
-
-Interactions between atoms in a `System` are described by the `TermTable`
-class.  Each instance of the `TermTable` class describes a particular
-kind of interaction; e.g., stretch terms, angle terms, dihedrals, etc.
-Individual records within the `TermTable`, called `Terms`, describe the
-interaction between particular sets of atoms.  Each `TermTable` holds one
-`ParamTable`, which holds properties that can be shared by any number
-of `Terms`.   A `TermTable` may also map additional properties, called
-"term properties", to each `Term`.
-
-Each `Term` in the TermTable uses the following attributes to represent
-an interaction:
-
- * ``id``: the immutable id of the `Term`;
-
- * ``table``: the parent `TermTable`;
-
- * ``atoms``: a list of `Atoms`; the ``atoms`` in a `Term` cannot be changed;
-
- * ``param``: the `Param` in the `ParamTable` holding the parameters for
-   the `Term`; multiple `Terms` may have the same ``param``.  ``param`` may
-   be ``None``, indicating that the `Term` has not been assigned any 
-   parameters.
-
-The properties of a `Term` can be read and updated using a dictionary like
-interface.  Both "term properties" and properties from the `ParamTable`
-are accessed through the same interface.  To add or remove properties,
-use the provided methods in the `TermTable` or `ParamTable` instance.
-If a `Term`'s ``param`` is shared by another `Term` in any other `TermTable`,
-Msys will take care of providing the `Term` with its own `Param` containing
-a copy of the original properties before applying the changes.  However,
-if you a modify a `Param` through its dictionary interface, you will affect
-all `Terms` that happen to share that `Param`::
-
-
-  # fetch the stretch_harm table
-  table = mol.table('stretch_harm')
-  # update the properties of just the first Term
-  table.term(0)['fc'] = 320
-  # update the properties of all terms that use this param!
-  table.term(0).param['fc'] = 320
-
+.. automodule:: msys
+    :members:
+    :special-members:
 
 
 Dealing with duplicate parameters
@@ -463,114 +398,6 @@ the `Param` entries for the `Terms` in the `TermTable`::
   t1['fc'] = 52
   assert t2['fc'] == 52
   
-
-
-Term
-----
-
-A `Term` is a handle for an entry in a `TermTable`.  
-
-.. autoclass:: msys.Term
-   :members:
-   :special-members:
-
-
-
-System
-======
-
-The `System` class holds all structure and forcefield data for a single
-chemical system.  Create a new `System` using ``msys.CreateSystem()``, or 
-from a file using ``msys.LoadDMS`` or ``msys.LoadMAE.`` 
-
-
-A `System` organizes the information in a DMS file into several different
-groups:
-
- * Tables - `TermTables` are grouped and accessed by name
-
- * cell - the unit cell vectors for the `System`, in the form of a 3x3
-   NumPy array.
-
- * nonbonded_info - the NonbondedInfo object describing the type of
-   nonbonded interactions.
-
- * provenance - a list of Provenance objects describing how the input
-   file has been processed. 
-
- * Auxiliary tables: Everything else in the DMS file that does not fit into
-   one of the above categories finds its way into an auxiliary table.  
-   Notable denizens of this category include:
-
-   - cmap tables
-
-   - forcefield (annotation for parameters in the DMS file)
-
-
-
-.. autoclass:: msys.System
-   :members:
-
-
-Atom
-----
-
-.. autoclass:: msys.Atom
-   :members:
-   :special-members:
-
-.. autoattribute:: msys.Atom.id
-.. autoattribute:: msys.Atom.system
-
-Bond
-----
-
-.. autoclass:: msys.Bond
-   :members:
-   :special-members:
-
-.. autoattribute:: msys.Bond.id
-.. autoattribute:: msys.Bond.system
-
-Example::
-
-  # create a list of bonded atoms for each atom in a System
-  bondlists = [[b.id for b in a.bonded_atoms] for a in mol.atoms]
-  # create a list of atom id pairs for each bond in a System
-  bonds = [(b.first.id, b.second.id) for b in mol.bonds]
-
-Residue
--------
-
-.. autoclass:: msys.Residue
-   :members:
-   :special-members:
-
-.. autoattribute:: msys.Residue.id
-.. autoattribute:: msys.Residue.system
-
-Chain
------
-
-.. autoclass:: msys.Chain
-   :members:
-   :special-members:
-
-.. autoattribute:: msys.Chain.id
-.. autoattribute:: msys.Chain.system
-
-
-Ct
---
-
-.. autoclass:: msys.Ct
-   :members:
-   :special-members:
-
-.. autoattribute:: msys.Ct.id
-.. autoattribute:: msys.Ct.system
-
-
 Pfx
 ===
 
