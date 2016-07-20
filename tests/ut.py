@@ -690,6 +690,15 @@ class TestValidate(unittest.TestCase):
 
 class TestMain(unittest.TestCase):
 
+    def testPickle(self):
+        import cPickle as pkl
+        old = msys.Load('tests/files/2f4k.dms')
+        s = pkl.dumps(old)
+        new = pkl.loads(s)
+        self.assertEqual(old.natoms, new.natoms)
+        self.assertEqual(old.nbonds, new.nbonds)
+        self.assertEqual(old.table_names, new.table_names)
+
     def testGeometry(self):
         p=NP.array(((1,0,0),
                     (2,3,1),

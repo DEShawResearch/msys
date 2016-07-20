@@ -7,6 +7,7 @@ by chemists.
 import _msys
 import numpy
 import sys
+import tempfile
 
 from _msys import NonbondedInfo, version, hexversion
 from _msys import RadiusForElement, MassForElement, ElementForAbbreviation
@@ -907,6 +908,16 @@ class TermTable(object):
         if _msys.bad(id): return None
         return self.override_params.param(id)
 
+def deserialize_system(data, suffix='.dms'):
+    ''' helper function for System pickle support '''
+    import msys
+    import tempfile
+    with tempfile.NamedTemporaryFile(suffix=suffix) as fp:
+        fp.write(data)
+        fp.flush()
+        return msys.Load(fp.name)
+deserialize_system.__safe_for_unpickling__ = True
+
 class System(object):
     '''
 
@@ -958,6 +969,17 @@ class System(object):
     def __hash__(self): return self._ptr.__hash__()
 
     def __repr__(self): return "<System '%s'>" % self.name
+
+    def __reduce__(self):
+        ''' Pickle support for System.
+
+        Saves a copy of self in dms format to a temporary file, then
+        reads the contents.
+        '''
+        with tempfile.NamedTemporaryFile(suffix='.dms') as fp:
+            Save(self, fp.name)
+            contents = fp.read()
+        return deserialize_system, (contents,)
 
     @property
     def name(self): 
