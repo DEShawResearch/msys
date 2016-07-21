@@ -194,6 +194,9 @@ namespace desres { namespace msys {
         const Id* atomsFAST(Id term) const {
             return &_terms[term*(1+_natoms)];
         }
+        Id paramFAST(Id term) const {
+            return _terms[(1+term)*(1+_natoms)-1];
+        }
 
         /* look up the value of a property of the term from the associated
          * ParamTable */
