@@ -942,13 +942,13 @@ class System(object):
        file has been processed.
 
      * Auxiliary tables: Everything else in the DMS file that does not
-     fit into
-       one of the above categories finds its way into an auxiliary table.
+       fit into one of the above categories finds its way into an auxiliary table.
        Notable denizens of this category include:
 
        - cmap tables
 
        - forcefield (annotation for parameters in the DMS file)
+
     '''
 
     __slots__ = ('_ptr', '_atoms')
@@ -978,7 +978,7 @@ class System(object):
         '''
         with tempfile.NamedTemporaryFile(suffix='.dms') as fp:
             Save(self, fp.name)
-            contents = fp.read()
+            contents = open(fp.name).read()
         return deserialize_system, (contents,)
 
     @property

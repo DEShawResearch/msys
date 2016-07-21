@@ -1,6 +1,8 @@
 #!/bin/sh
 eval "$(/usr/bin/garden-exec)"
 
+set -e
+
 NAME=msys
 VERSION=`src/version.py`
 DESCRIPTION="Biomolecular Structure Library"
@@ -76,11 +78,8 @@ EOF
 }
 
 gendocs() {
-    (cd doc && VERSION=$VERSION BINDIR=${PREFIX}/bin make clean genhelp man html )
-    mkdir -p $PREFIX/doc/man/man1
+    (cd doc && VERSION=$VERSION BINDIR=${PREFIX}/bin make clean genhelp html )
     cp -r doc/build/html $PREFIX/doc/
-    cp doc/build/latex/Msys.pdf $PREFIX/doc/
-    cp doc/build/man/*.1 $PREFIX/doc/man/man1
 }
 
 case $1 in
