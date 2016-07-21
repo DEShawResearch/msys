@@ -1,3 +1,8 @@
+1.7.146 C++: TermTable::atomsFast() and paramFAST().
+        Pickle support for Systems (DESRESCode#3148).
+        Include all of msys module in the docs.
+        Fixes for Mac build/test.
+
 1.7.145 Use just SSE4_1 for findContacts since drdb has only that.
 
 1.7.144 C++: Replace boost::shared_ptr with std::shared_ptr.
