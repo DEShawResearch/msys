@@ -268,8 +268,11 @@ namespace {
         ChemData( 0.706, 1,  8,  0,  1 ),  // Rb  37
         ChemData( 0.963, 2,  8,  0,  2 ),  // Sr  38
         // Period 5 - Transition Metals
-        // FIXME: should handle biocatalytic metals (Mo) 
-        NODATA, NODATA, NODATA, NODATA, NODATA, //  Y - Tc  39-43
+        NODATA,  // 39 Y
+        NODATA,
+        NODATA,
+        ChemData( 1.47,  6,  8,  0,  6, 4 ),  // 42 Mo
+        NODATA, // Tc 43
         NODATA, // Ru 44
         NODATA,
         ChemData( 1.59,  2,  8,  0,  6 ),  // Pd 46 (JRG, questionable)
