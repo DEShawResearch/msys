@@ -31,6 +31,10 @@ namespace {
         return L;
     }
 
+    list wrap_atoms(AnnotatedSystem const& a) {
+        return to_python(a.atoms());
+    }
+
 }
 
 namespace desres { namespace msys {
@@ -43,7 +47,7 @@ namespace desres { namespace msys {
             ;
 
         class_<AnnotatedSystem, boost::noncopyable>("AnnotatedSystem", init<SystemPtr, unsigned>())
-            .def("atoms", &AnnotatedSystem::atoms)
+            .def("atoms", wrap_atoms)
             .def("atomAromatic", &AnnotatedSystem::atomAromatic)
             .def("atomHcount", &AnnotatedSystem::atomHcount)
             .def("atomDegree", &AnnotatedSystem::atomDegree)

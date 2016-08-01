@@ -28,8 +28,8 @@ namespace {
     }
 
     list find_matches(SmartsPattern const& s, AnnotatedSystem const& sys, 
-                                              IdList const& starts) {
-        return to_python(s.findMatches(sys, starts));
+                                              list const& starts) {
+        return to_python(s.findMatches(sys, ids_from_python(starts)));
     }
 
     list wrap_sssr(SystemPtr mol, IdList const& atoms, bool all_relevant=false)

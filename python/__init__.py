@@ -1668,7 +1668,7 @@ class SmartsPattern(object):
         if atoms is None:
             atoms = ptr.atoms()
         else:
-            atoms = _find_ids(atoms)[1]
+            atoms = _convert_ids(atoms)[1]
         return self._pat.findMatches(ptr, atoms)
 
     def match(self, annotated_system):
