@@ -60,5 +60,14 @@ namespace desres { namespace msys {
         return result;
     }
 
+    IdList ids_from_python(list m) {
+        IdList ids;
+        ids.reserve(len(m));
+        for (Id i=0, n=len(m); i<n; i++) {
+            ids.push_back(extract<Id>(m[i]));
+        }
+        return ids;
+    }
+
 }}
 

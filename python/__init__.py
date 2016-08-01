@@ -778,7 +778,7 @@ class TermTable(object):
     def findWithAll(self, atoms):
         ''' return the terms that contain all the given atoms in any order '''
         if not atoms: return []
-        ptr, ids = _find_ids(atoms)
+        ptr, ids = _convert_ids(atoms)
         if ptr!=self.system._ptr:
             raise ValueError, "atoms are from a different System"
         return [self.term(x) for x in self._ptr.findWithAll(ids)]
@@ -786,7 +786,7 @@ class TermTable(object):
     def findWithAny(self, atoms):
         ''' return the terms that contain at least one of the given atoms '''
         if not atoms: return []
-        ptr, ids = _find_ids(atoms)
+        ptr, ids = _convert_ids(atoms)
         if ptr!=self.system._ptr:
             raise ValueError, "atoms are from a different System"
         return [self.term(x) for x in self._ptr.findWithAny(ids)]
@@ -794,7 +794,7 @@ class TermTable(object):
     def findWithOnly(self, atoms):
         ''' return the terms that contain only the given atoms '''
         if not atoms: return []
-        ptr, ids = _find_ids(atoms)
+        ptr, ids = _convert_ids(atoms)
         if ptr!=self.system._ptr:
             raise ValueError, "atoms are from a different System"
         return [self.term(x) for x in self._ptr.findWithOnly(ids)]
@@ -803,7 +803,7 @@ class TermTable(object):
         ''' return the terms that contain precisely the given atoms in the 
         given order. '''
         if not atoms: return []
-        ptr, ids = _find_ids(atoms)
+        ptr, ids = _convert_ids(atoms)
         if ptr!=self.system._ptr:
             raise ValueError, "atoms are from a different System"
         return [self.term(x) for x in self._ptr.findExact(ids)]
@@ -1006,37 +1006,29 @@ class System(object):
         ''' add and return a new Ct '''
         return Ct(self._ptr, self._ptr.addCt())
 
+    def _remove(self, elems, klass):
+        for a in elems:
+            if a._ptr != self._ptr:
+                raise ValueError("elements come from a different system")
+            if not isinstance(a, klass):
+                raise TypeError("expected list of %s; got %s" % (klass,type(a)))
+            a.remove()
+
     def delAtoms(self, atoms):
         ''' remove the given Atoms from the System '''
-        if not atoms: return
-        ptr, ids = _find_ids(atoms)
-        if ptr != self._ptr:
-            raise ValueError("atoms come from a different system")
-        ptr.delAtoms(ids)
+        self._remove(atoms, Atom)
 
     def delBonds(self, bonds):
         ''' remove the given Bonds from the System '''
-        if not bonds: return
-        ptr, ids = _find_ids(bonds, Bond)
-        if ptr != self._ptr:
-            raise ValueError("bonds come from a different system")
-        ptr.delBonds(ids)
+        self._remove(bonds, Bond)
 
     def delResidues(self, residues):
         ''' remove the given Residues from the System '''
-        if not residues: return
-        ptr, ids = _find_ids(residues, Residue)
-        if ptr != self._ptr:
-            raise ValueError("residues come from a different system")
-        ptr.delResidues(ids)
+        self._remove(residues, Residue)
 
     def delChains(self, chains):
         ''' remove the given Chains from the System '''
-        if not chains: return
-        ptr, ids = _find_ids(chains, Chain)
-        if ptr != self._ptr:
-            raise ValueError("chains come from a different system")
-        ptr.delChains(ids)
+        self._remove(chains, Chain)
 
     def atom(self, id):
         ''' return the atom with the specified id '''
@@ -1731,6 +1723,20 @@ def _find_ids(atoms, klass = Atom):
     if len(sys) > 1:
         raise ValueError, "Input atoms come from multiple systems"
     ptr = sys.pop()._ptr
+    return ptr, ids
+
+def _convert_ids(hs, klass=Atom):
+    if not hs:
+        return None, []
+    ids = list()
+    ptr = None
+    for h in hs:
+        if not isinstance(h, klass):
+            raise TypeError("Expect list of %s; got %s" % (klass,type(h)))
+        ids.append(h.id)
+        ptr = ptr or h._ptr
+        if ptr != h._ptr:
+            raise ValueError("Inputs come from multiple systems")
     return ptr, ids
 
 def CloneSystem(atoms):

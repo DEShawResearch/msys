@@ -429,29 +429,6 @@ namespace desres { namespace msys {
             return id<_cts.size() && !_deadcts.count(id);
         }
 
-
-        /* delete multiple elements at once (convenience) */
-        template <typename T> void delAtoms(const T& ids) {
-            typedef typename T::const_iterator iterator;
-            for (iterator i=ids.begin(), e=ids.end(); i!=e; ++i) delAtom(*i);
-        }
-        template <typename T> void delBonds(const T& ids) {
-            typedef typename T::const_iterator iterator;
-            for (iterator i=ids.begin(), e=ids.end(); i!=e; ++i) delBond(*i);
-        }
-        template <typename T> void delResidues(const T& ids) {
-            typedef typename T::const_iterator iterator;
-            for (iterator i=ids.begin(), e=ids.end(); i!=e; ++i) delResidue(*i);
-        }
-        template <typename T> void delChains(const T& ids) {
-            typedef typename T::const_iterator iterator;
-            for (iterator i=ids.begin(), e=ids.end(); i!=e; ++i) delChain(*i);
-        }
-        template <typename T> void delCts(const T& ids) {
-            typedef typename T::const_iterator iterator;
-            for (iterator i=ids.begin(), e=ids.end(); i!=e; ++i) delCt(*i);
-        }
-
         /* operations on term tables */
         std::vector<String> tableNames() const;
         /* fetch the table with the given name; return NULL if not present */

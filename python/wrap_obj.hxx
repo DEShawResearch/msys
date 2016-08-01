@@ -38,5 +38,7 @@ namespace desres { namespace msys {
     list to_python(MultiIdList const& m);
     list to_python(IdList const& m);
 
+    IdList ids_from_python(list m);
+
 }}
 

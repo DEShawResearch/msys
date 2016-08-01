@@ -42,6 +42,19 @@ namespace {
     void set_prop(TermTable& p, Id row, Id col, object newval) {
         to_value_ref(newval, p.propValue(row,col));
     }
+
+    list find_all(TermTable& p, list ids) {
+        return to_python(p.findWithAll(ids_from_python(ids)));
+    }
+    list find_any(TermTable& p, list ids) {
+        return to_python(p.findWithAny(ids_from_python(ids)));
+    }
+    list find_only(TermTable& p, list ids) {
+        return to_python(p.findWithOnly(ids_from_python(ids)));
+    }
+    list find_exact(TermTable& p, list ids) {
+        return to_python(p.findExact(ids_from_python(ids)));
+    }
 }
 
 namespace desres { namespace msys { 
@@ -101,10 +114,10 @@ namespace desres { namespace msys {
 
             /* lookup terms based on atom */
             .def("delTermsWithAtom",    &TermTable::delTermsWithAtom)
-            .def("findWithAll", &TermTable::findWithAll)
-            .def("findWithAny", &TermTable::findWithAny)
-            .def("findWithOnly",&TermTable::findWithOnly)
-            .def("findExact",   &TermTable::findExact)
+            .def("findWithAll", find_all)
+            .def("findWithAny", find_any)
+            .def("findWithOnly",find_only)
+            .def("findExact"  , find_exact)
 
             /* coalesce */
             .def("coalesce",    &TermTable::coalesce)

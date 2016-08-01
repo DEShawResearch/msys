@@ -763,12 +763,6 @@ namespace desres { namespace msys {
             .def("delChain",    &System::delChain)
             .def("delCt",       &System::delCt)
 
-            /* delete list of elements */
-            .def("delAtoms",    &System::delAtoms<IdList>)
-            .def("delBonds",    &System::delBonds<IdList>)
-            .def("delResidues", &System::delResidues<IdList>)
-            .def("delChains",   &System::delChains<IdList>)
-
             /* max element */
             .def("maxAtomId",   &System::maxAtomId)
             .def("maxBondId",   &System::maxBondId)
