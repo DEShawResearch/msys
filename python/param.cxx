@@ -29,6 +29,10 @@ namespace {
         return to_python(p.findString(col,val));
     }
 
+    list wrap_params(ParamTable& p) {
+        return to_python(p.params());
+    }
+
 }
 
 namespace desres { namespace msys { 
@@ -49,7 +53,7 @@ namespace desres { namespace msys {
             .def("propIndex",  &ParamTable::propIndex)
             .def("addProp",    param_add_prop)
             .def("delProp",    &ParamTable::delProp)
-            .def("params",     &ParamTable::params)
+            .def("params",     wrap_params)
             .def("getProp",    param_get_value)
             .def("setProp",    param_set_value)
             .def("duplicate",  &ParamTable::duplicate)
