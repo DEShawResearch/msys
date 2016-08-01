@@ -33,13 +33,6 @@ namespace desres { namespace msys {
      * topologically distinct fragments, as determined by atomic number. */
     IdList FindDistinctFragments(SystemPtr mol, MultiIdList const& fragments);
 
-    /* Add hydrogens to the given parent atoms, assuming current bond order 
-     * and formal charges are correct.  Returns the ids of the added 
-     * hydrogens. */
-    IdList AddHydrogens(SystemPtr mol, IdList const& parents);
-
-    void GuessHydrogenPositions(SystemPtr mol, IdList const& hatoms);
-
     /* Assign atom and residue types; do this after loading a new
      * system from a file or creating it from scratch.  This method
      * also calls updateFragids() for you. */

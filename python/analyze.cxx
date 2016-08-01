@@ -66,9 +66,7 @@ namespace desres { namespace msys {
         def("GroupForElement", GroupForElement);
         def("ElementForAbbreviation", ElementForAbbreviation);
         def("AbbreviationForElement", AbbreviationForElement);
-        def("AddHydrogens", AddHydrogens);
         def("Analyze", Analyze);
-        def("GuessHydrogenPositions", GuessHydrogenPositions);
         def("GuessAtomicNumber", GuessAtomicNumber);
 
         class_<SmartsPattern>("SmartsPattern", init<std::string const&>())

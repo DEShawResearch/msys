@@ -2079,20 +2079,6 @@ class Graph(object):
         return [dict((Atom(self._sys, i), Atom(graph._sys, j)) for i,j in item)
                 for item in t]
 
-def AddHydrogens(system_or_atoms):
-    ''' Experimental '''
-    if isinstance(system_or_atoms, System):
-        ptr = system_or_atoms._ptr
-        ids = ptr.atoms()
-    else:
-        ptr, ids = _find_ids(system_or_atoms)
-    return [Atom(ptr, x) for x in _msys.AddHydrogens(ptr, ids)]
-
-def GuessHydrogenPositions(atoms):
-    ''' Experimental '''
-    ptr, ids = _find_ids(atoms)
-    _msys.GuessHydrogenPositions(ptr, ids)
-
 def FindDistinctFragments(system):
     ''' Return fragids of representative fragments.  '''
     return _msys.FindDistinctFragments(system._ptr)
