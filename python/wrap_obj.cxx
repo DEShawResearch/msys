@@ -48,5 +48,17 @@ namespace desres { namespace msys {
         return obj;
     }
 
+    list to_python(IdList const& mm) {
+        list result;
+        for (auto id : mm) result.append(id);
+        return result;
+    }
+
+    list to_python(MultiIdList const& m) {
+        list result;
+        for (auto const& mm : m)  result.append(to_python(mm));
+        return result;
+    }
+
 }}
 

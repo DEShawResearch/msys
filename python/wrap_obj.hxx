@@ -35,5 +35,8 @@ namespace desres { namespace msys {
     ValueType as_value_type(object& typeobj);
     PyObject* from_value_type(ValueType type);
 
+    list to_python(MultiIdList const& m);
+    list to_python(IdList const& m);
+
 }}
 

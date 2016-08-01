@@ -1,5 +1,6 @@
 #include <boost/python.hpp>
 
+#include "wrap_obj.hxx"
 #include "analyze.hxx"
 #include "sssr.hxx"
 #include "mol2.hxx"
@@ -23,24 +24,22 @@ namespace {
     list find_distinct_fragments(SystemPtr mol) {
         MultiIdList fragments;
         mol->updateFragids(&fragments);
-        IdList frags = FindDistinctFragments(mol, fragments);
-        list L;
-        for (Id frag : frags) L.append(frag);
-        return L;
+        return to_python(FindDistinctFragments(mol, fragments));
     }
 
     list find_matches(SmartsPattern const& s, AnnotatedSystem const& sys, 
-                                              IdList const& starts)
-    {
-        MultiIdList results = s.findMatches(sys, starts);
-        list L;
-        for (IdList const& ids : results) {
-            list m;
-            for (Id id : ids) m.append(id);
-            L.append(m);
-        }
-        return L;
+                                              IdList const& starts) {
+        return to_python(s.findMatches(sys, starts));
     }
+
+    list wrap_sssr(SystemPtr mol, IdList const& atoms, bool all_relevant=false)
+    {
+        return to_python(GetSSSR(mol, atoms, all_relevant));
+    }
+    list ring_systems(SystemPtr mol, IdList const& atoms) {
+        return to_python(RingSystems(mol, GetSSSR(mol, atoms, true)));
+    }
+
 }
 
 namespace desres { namespace msys { 
@@ -56,7 +55,8 @@ namespace desres { namespace msys {
          * which is what we want.  AnnotatedSystem's rings() method only
          * lets you find rings connected to specific atoms or bonds. 
          */
-        def("GetSSSR", GetSSSR);
+        def("GetSSSR", wrap_sssr);
+        def("RingSystems", ring_systems);
         def("ComputeTopologicalIds", ComputeTopologicalIds);
         def("GuessBondConnectivity", GuessBondConnectivity);
         def("FindDistinctFragments", find_distinct_fragments);

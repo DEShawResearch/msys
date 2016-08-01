@@ -6,22 +6,22 @@ using namespace desres::msys;
 
 namespace {
 
-    MultiIdList atom_rings(const AnnotatedSystem& sys, Id atom) {
+    list atom_rings(const AnnotatedSystem& sys, Id atom) {
         MultiIdList rings;
         sys.atomRings(atom, rings);
-        return rings;
+        return to_python(rings);
     }
 
-    MultiIdList bond_rings(const AnnotatedSystem& sys, Id bond) {
+    list bond_rings(const AnnotatedSystem& sys, Id bond) {
         MultiIdList rings;
         sys.bondRings(bond, rings);
-        return rings;
+        return to_python(rings);
     }
 
-    MultiIdList rings(const AnnotatedSystem& sys) {
+    list rings(const AnnotatedSystem& sys) {
         MultiIdList rings;
         sys.rings(rings);
-        return rings;
+        return to_python(rings);
     }
     list errors(AnnotatedSystem const& a) {
         list L;
@@ -30,6 +30,7 @@ namespace {
         }
         return L;
     }
+
 }
 
 namespace desres { namespace msys {
@@ -61,7 +62,5 @@ namespace desres { namespace msys {
             .def("rings", rings)
             .def("errors", errors)
             ;
-
-        def("RingSystems", RingSystems);
     }
 }}

@@ -2002,9 +2002,7 @@ def GetSSSR(atoms, all_relevant=False):
 def GetRingSystems(atoms):
     ''' Get ring systems for the given atoms '''
     ptr, _ids = _find_ids(atoms)
-    rings = _msys.GetSSSR(ptr, _ids, True) 
-    systems = _msys.RingSystems(ptr, rings)
-    return [[x for x in y] for y in systems]
+    return _msys.RingSystems(ptr, _ids)
 
 def AssignSybylTypes(system):
     ''' Assign Sybyl atom and bond types to the given system.  
