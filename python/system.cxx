@@ -615,15 +615,6 @@ namespace {
         return L;
     }
 
-    bool valid_permutation(SystemPtr mol, IdList ids) {
-        /* check for duplicates */
-        if (sort_unique(ids)) return false;
-        /* check for dead atoms */
-        BOOST_FOREACH(Id id, ids) if (!mol->hasAtom(id)) return false;
-        /* check size */
-        return ids.size() == mol->atomCount();
-    }
-
     objptr get_vec3d(PyObject* obj) {
         if (obj==Py_None) return objptr();
         PyObject* arr = PyArray_FromAny(
@@ -673,6 +664,13 @@ namespace {
         }
         return mol->addTable(name, natoms, params);
     }
+    list ordered_ids(System& mol) {
+        return to_python(mol.orderedIds());
+    }
+
+    SystemPtr wrap_clone(SystemPtr mol, list ids, CloneOption::Flags flags) {
+        return Clone(mol, ids_from_python(ids), flags);
+    }
 
 }
 
@@ -717,11 +715,6 @@ namespace desres { namespace msys {
             .value("Default",       CloneOption::Default)
             .value("ShareParams",   CloneOption::ShareParams)
             ;
-
-        def("Clone", Clone, 
-                (arg("system"),
-                 arg("ids"),
-                 arg("flags")=CloneOption::Default));
 
         def("TableSchemas", table_schemas);
         def("NonbondedSchemas", nonbonded_schemas);
@@ -870,10 +863,10 @@ namespace desres { namespace msys {
 
             /* append */
             .def("append", AppendSystem)
+            .def("clone",  wrap_clone)
 
             /* miscellaneous */
-            .def("validPermutation", valid_permutation)
-            .def("orderedIds",    &System::orderedIds)
+            .def("orderedIds",    ordered_ids)
             .def("updateFragids", update_fragids)
             .def("findBond",    &System::findBond)
             .def("provenance",      sys_provenance)

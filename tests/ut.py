@@ -2081,16 +2081,16 @@ class TestMain(unittest.TestCase):
         m.addBondProp('res_order', float)
         b1['res_order']=3.5
 
-        c=msys.CloneSystem(m.atoms[::-1])
+        c=m.clone(m.atoms[::-1])
         self.assertEqual( [a.name for a in c.atoms], ['c', 'b', 'a'])
         self.assertEqual(c.bond(0)['res_order'], 3.5)
 
         with self.assertRaises(RuntimeError):
-            msys.CloneSystem([m.atoms[0], m.atoms[1], m.atoms[0]])
+            m.clone([m.atoms[0], m.atoms[1], m.atoms[0]])
 
         m.atom(2).remove()
         with self.assertRaises(RuntimeError):
-            msys.CloneSystem([m.atom(0), m.atom(1), m.atom(2)])
+            m.clone([m.atom(0), m.atom(1), m.atom(2)])
 
     def testKeys(self):
         m=msys.CreateSystem()

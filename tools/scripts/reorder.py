@@ -65,5 +65,5 @@ def Reorder(ref, tgt, refsel, targetsel):
             atoms.extend(perms[0][1])
         else:
             atoms.extend(t_res.atoms)
-    return tgt.permuted(atoms)
+    return tgt.clone(atoms)
 

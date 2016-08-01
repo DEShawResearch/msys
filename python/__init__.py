@@ -1408,13 +1408,10 @@ class System(object):
         atms=self._update_atoms()
         return [atms[i] for i in ids]
 
-    def clone(self, seltext=None, share_params=False):
-        ''' Clone the System, returning a new System.  If seltext is provided,
-        it should be a valid VMD atom selection, and only the selected atoms 
-        will be cloned.
-
-        If seltext is a sequence (and not a string), it will be treated as 
-        a list of atom ids.
+    def clone(self, sel=None, share_params=False):
+        ''' Clone the System, returning a new System.  If selection is
+        provided, it should be an atom selection string, a list of ids,
+        or a list of Atoms.
 
         If share_params is True, then ParamTables will be shared between
         the old and new systems.  By default, copies of the ParamTables
@@ -1422,47 +1419,28 @@ class System(object):
         also be shared in the new system.
         '''
         ptr = self._ptr
-        if seltext is None:
-            ids = ptr.atoms()
-        elif isinstance(seltext, str):
-            ids = ptr.select(seltext)
+        if not sel:
+            ids = ptr.atomsAsList()
+        elif isinstance(sel, str):
+            ids = ptr.selectAsList(sel)
         else:
-            ids = _msys.IdList()
-            for a in seltext: ids.append(a)
+            ids = list(sel)
+            if isinstance(ids[0], Atom):
+                ptr, ids = _convert_ids(sel)
+                if ptr != self._ptr:
+                    raise ValueError, "Atoms in sel are not from this System"
         flags = _msys.CloneOption.Default
         if share_params:
             flags = _msys.CloneOption.ShareParams
 
-        return System( _msys.Clone(ptr, ids, flags))
+        return System(ptr.clone(ids, flags))
 
     def sorted(self):
         ''' Return a clone of the system with atoms reordered based on their 
         order of appearance in a depth-first traversal of the structure 
         hierarchy.
         '''
-        ptr=self._ptr
-        return System(_msys.Clone(ptr, ptr.orderedIds()))
-
-    def permuted(self, perm):
-        ''' Return a permutation of the atoms in the system.  perm should
-        be either a permutation of range(natoms), or a permutation of the
-        atoms in the system.
-        '''
-        if len(perm)!=self.natoms:
-            raise ValueError, "perm has %d elements, expected natoms=%d" % (
-                    len(perm), self.natoms)
-        if isinstance(perm[0], Atom):
-            ptr, ids = _find_ids(perm)
-            if ptr != self._ptr:
-                raise ValueError, "Atoms in perm are not from this System"
-        else:
-            ptr = self._ptr
-            ids = _msys.IdList()
-            for p in perm: ids.append(p)
-        if not ptr.validPermutation(ids):
-            raise ValueError, "Not a valid permutation"
-        return System(_msys.Clone(self._ptr, ids))
-
+        return self.clone(self._ptr.orderedIds())
 
     def guessBonds(self, replace=True, reanalyze=True):
         ''' Guess bond connectivity based on an atomic-number based
@@ -1738,15 +1716,6 @@ def _convert_ids(hs, klass=Atom):
         if ptr != h._ptr:
             raise ValueError("Inputs come from multiple systems")
     return ptr, ids
-
-def CloneSystem(atoms):
-    ''' create a new system from the given list of atoms, which must all
-    be from the same System and have different ids.  The order of the atoms
-    in the new system will be that of the input atoms.  '''
-    ptr, ids = _find_ids(atoms)
-    if ptr is None:
-        raise ValueError, "Cannot clone an empty list of atoms"
-    return System( _msys.Clone(ptr, ids))
 
 def CreateParamTable():
     ''' Create a new, empty ParamTable '''
