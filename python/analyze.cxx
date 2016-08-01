@@ -14,11 +14,11 @@ namespace {
     void assign_1(SystemPtr mol) {
         AssignBondOrderAndFormalCharge(mol);
     }
-    void assign_2(SystemPtr mol, IdList const& ids) {
-        AssignBondOrderAndFormalCharge(mol, ids);
+    void assign_2(SystemPtr mol, list ids) {
+        AssignBondOrderAndFormalCharge(mol, ids_from_python(ids));
     }
-    void assign_3(SystemPtr mol, IdList const& ids, int total_charge) {
-        AssignBondOrderAndFormalCharge(mol, ids, total_charge);
+    void assign_3(SystemPtr mol, list ids, int total_charge) {
+        AssignBondOrderAndFormalCharge(mol, ids_from_python(ids), total_charge);
     }
 
     list find_distinct_fragments(SystemPtr mol) {
@@ -32,12 +32,12 @@ namespace {
         return to_python(s.findMatches(sys, ids_from_python(starts)));
     }
 
-    list wrap_sssr(SystemPtr mol, IdList const& atoms, bool all_relevant=false)
+    list wrap_sssr(SystemPtr mol, list atoms, bool all_relevant=false)
     {
-        return to_python(GetSSSR(mol, atoms, all_relevant));
+        return to_python(GetSSSR(mol, ids_from_python(atoms), all_relevant));
     }
-    list ring_systems(SystemPtr mol, IdList const& atoms) {
-        return to_python(RingSystems(mol, GetSSSR(mol, atoms, true)));
+    list ring_systems(SystemPtr mol, list atoms) {
+        return to_python(RingSystems(mol, GetSSSR(mol, ids_from_python(atoms), true)));
     }
 
 }

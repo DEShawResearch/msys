@@ -5,6 +5,10 @@ using namespace desres::msys;
 
 namespace {
 
+    GraphPtr create(SystemPtr mol, list atoms) {
+        return Graph::create(mol, ids_from_python(atoms));
+    }
+
     std::string hash(Graph const& self) {
         return Graph::hash(self.system(), self.atoms());
     }
@@ -43,7 +47,7 @@ namespace desres { namespace msys {
             .def("__eq__",      list_eq<GraphPtr>)
             .def("__ne__",      list_ne<GraphPtr>)
             .def("__hash__",    obj_hash<GraphPtr>)
-            .def("create",  &Graph::create).staticmethod("create")
+            .def("create",  create).staticmethod("create")
             .def("hash", hash)
             .def("size", &Graph::size)
             .def("atoms", &Graph::atoms, return_const())

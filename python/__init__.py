@@ -1679,29 +1679,9 @@ class SmartsPattern(object):
         '''
         return self._pat.match(annotated_system._ptr)
 
-
 def CreateSystem():
     ''' Create a new, empty System '''
     return System(_msys.SystemPtr.create())
-
-def _find_ids(atoms, klass = Atom):
-    ''' return the SystemPtr and IdList for the given set of atoms.
-    Raise ValueError if atoms come from multiple systems.  Return
-    None, [] if the input list is empty.
-    '''
-    if not atoms:
-        return None, []
-    ids = _msys.IdList()
-    sys = set()
-    for a in atoms:
-        if not isinstance(a, klass):
-            raise TypeError("Expect list of %s; got %s" % (klass, type(a)))
-        ids.append(a.id)
-        sys.add(a.system)
-    if len(sys) > 1:
-        raise ValueError, "Input atoms come from multiple systems"
-    ptr = sys.pop()._ptr
-    return ptr, ids
 
 def _convert_ids(hs, klass=Atom):
     if not hs:
@@ -1970,13 +1950,13 @@ def GetSSSR(atoms, all_relevant=False):
     all_relevant -- bool
     Returns: [[msys.Atom, ..., msys.Atom], ..., [msys.Atom, ..., msys.Atom]]
     """
-    ptr, ids = _find_ids(atoms)
+    ptr, ids = _convert_ids(atoms)
     rings = _msys.GetSSSR(ptr, ids, all_relevant)
     return [[Atom(ptr, id) for id in ring] for ring in rings]
 
 def GetRingSystems(atoms):
     ''' Get ring systems for the given atoms '''
-    ptr, _ids = _find_ids(atoms)
+    ptr, _ids = _convert_ids(atoms)
     return _msys.RingSystems(ptr, _ids)
 
 def AssignSybylTypes(system):
@@ -2011,9 +1991,9 @@ def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge = None):
         ptr = system_or_atoms._ptr
         if total_charge is None:
             return _msys.AssignBondOrderAndFormalCharge(ptr)
-        ids = ptr.atoms()
+        ids = ptr.atomsAsList()
     else:
-        ptr, ids = _find_ids(system_or_atoms)
+        ptr, ids = _convert_ids(system_or_atoms)
 
     if total_charge is None:
         _msys.AssignBondOrderAndFormalCharge(ptr, ids)
@@ -2036,9 +2016,9 @@ class Graph(object):
     def __init__(self, system_or_atoms):
         if isinstance(system_or_atoms, System):
             ptr = system_or_atoms._ptr
-            ids = ptr.atoms()
+            ids = ptr.atomsAsList()
         else:
-            ptr, ids = _find_ids(system_or_atoms)
+            ptr, ids = _convert_ids(system_or_atoms)
         self._ptr = _msys.GraphPtr.create(ptr,ids)
         self._sys = ptr
 
