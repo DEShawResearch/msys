@@ -6,6 +6,13 @@ using namespace desres::msys;
 
 namespace {
 
+    list list_terms(TermTable& table) {
+        return to_python(table.terms());
+    }
+    list list_atoms(TermTable& table, Id i) {
+        return to_python(table.atoms(i));
+    }
+
     Id add_term(TermTable& table, object atoms, object param) {
         Id id=BadId;
         if (param.ptr()!=Py_None) id=extract<Id>(param);
@@ -85,11 +92,11 @@ namespace desres { namespace msys {
             .def_readwrite("category", &TermTable::category)
             .def("name",        &TermTable::name)
             .def("rename",      &TermTable::rename)
-            .def("terms",       &TermTable::terms)
+            .def("terms",       list_terms)
             .def("addTerm",     add_term)
             .def("hasTerm",     &TermTable::hasTerm)
             .def("delTerm",     &TermTable::delTerm)
-            .def("atoms",       &TermTable::atoms)
+            .def("atoms",       list_atoms)
             .def("atom",        &TermTable::atom)
             .def("params",      &TermTable::params)
             .def("param",       &TermTable::param)

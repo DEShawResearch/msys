@@ -19,6 +19,16 @@ namespace {
         return from_value_type(p.propType(col));
     }
 
+    list find_int(ParamTable& p, Id col, Int val) {
+        return to_python(p.findInt(col,val));
+    }
+    list find_float(ParamTable& p, Id col, Float val) {
+        return to_python(p.findFloat(col,val));
+    }
+    list find_string(ParamTable& p, Id col, String const& val) {
+        return to_python(p.findString(col,val));
+    }
+
 }
 
 namespace desres { namespace msys { 
@@ -45,9 +55,9 @@ namespace desres { namespace msys {
             .def("duplicate",  &ParamTable::duplicate)
             .def("refcount",   &ParamTable::refcount)
             .def("compare",    &ParamTable::compare)
-            .def("findInt",     &ParamTable::findInt)
-            .def("findFloat",     &ParamTable::findFloat)
-            .def("findString",     &ParamTable::findString)
+            .def("findInt",    find_int)
+            .def("findFloat",  find_float)
+            .def("findString", find_string)
             ;
     }
 

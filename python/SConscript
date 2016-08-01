@@ -30,7 +30,6 @@ residue.cxx
 system.cxx
 spatial_hash.cxx
 term.cxx
-vector.cxx
 wrap_obj.cxx
 variant.cxx
 '''.split()

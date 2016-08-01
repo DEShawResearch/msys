@@ -2253,7 +2253,7 @@ class TestMain(unittest.TestCase):
             m.positions=p[:,1:]
 
         # test of the low level Id-based accessors for positions
-        ids=m._ptr.select('index 1')
+        ids=m._ptr.selectAsList('index 1')
         m._ptr.setPositions([[8,9,10]], ids)
         self.assertEqual(list(m.positions[1]), [8,9,10])
         self.assertEqual(list(m._ptr.getPositions(ids)[0]), [8,9,10])
@@ -2281,7 +2281,7 @@ class TestMain(unittest.TestCase):
             m.setVelocities(p[:,1:])
 
         # test of the low level Id-based accessors for velocities
-        ids=m._ptr.select('index 1')
+        ids=m._ptr.selectAsList('index 1')
         m._ptr.setVelocities([[8,9,10]], ids)
         self.assertEqual(list(m.getVelocities()[1]), [8,9,10])
         self.assertEqual(list(m._ptr.getVelocities(ids)[0]), [8,9,10])

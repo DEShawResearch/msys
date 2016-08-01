@@ -75,11 +75,7 @@ namespace {
     list update_fragids(System& p) {
         MultiIdList fragments;
         p.updateFragids(&fragments);
-        list result;
-        for (unsigned i=0; i<fragments.size(); i++) {
-            result.append(object(fragments[i]));
-        }
-        return result;
+        return to_python(fragments);
     }
 
     Provenance prov_from_args( object o ) {
@@ -314,7 +310,7 @@ namespace {
                 ptr[2] = atm.z;
                 ptr += 3;
             }
-        } else if (PyArray_Check(idobj.ptr())) {
+        } else {
             /* convert to int64 */
             PyObject* idarr = PyArray_FromAny(
                 idobj.ptr(),
@@ -333,26 +329,6 @@ namespace {
             double* ptr = (double *)PyArray_DATA(arr);
             Py_ssize_t i,n = dims[0];
             for (i=0; i<n; i++) {
-                Id id = ids[i];
-                if (!sys.hasAtom(id)) {
-                    Py_DECREF(arr);
-                    PyErr_Format(PyExc_ValueError, "Invalid id %u", id);
-                    throw_error_already_set();
-                }
-                atom_t const& atm = sys.atom(id);
-                ptr[0] = atm.x;
-                ptr[1] = atm.y;
-                ptr[2] = atm.z;
-                ptr += 3;
-            }
-
-        } else {
-            IdList const& ids = extract<IdList const&>(idobj);
-            dims[0] = ids.size();
-            arr = PyArray_SimpleNew(2,dims,NPY_FLOAT64);
-            if (!arr) throw_error_already_set();
-            double* ptr = (double *)PyArray_DATA(arr);
-            for (Id i=0, n = ids.size(); i<n; i++) {
                 Id id = ids[i];
                 if (!sys.hasAtom(id)) {
                     Py_DECREF(arr);
@@ -387,12 +363,24 @@ namespace {
                 ptr += 3;
             }
         } else {
-            IdList const& ids = extract<IdList const&>(idobj);
-            dims[0] = ids.size();
+            /* convert to int64 */
+            PyObject* idarr = PyArray_FromAny(
+                idobj.ptr(),
+                PyArray_DescrFromType(NPY_INT64),
+                1, 1,   /* must be 1-dimensional */
+                NPY_C_CONTIGUOUS | NPY_ALIGNED,
+                NULL);
+            if (!idarr) throw_error_already_set();
+            const int64_t* ids = (const int64_t *)PyArray_DATA(idarr);
+            std::shared_ptr<PyObject> _(idarr, destructor);
+
+            /* allocate return array */
+            dims[0] = PyArray_DIM(idarr,0);
             arr = PyArray_SimpleNew(2,dims,NPY_FLOAT64);
             if (!arr) throw_error_already_set();
             double* ptr = (double *)PyArray_DATA(arr);
-            for (Id i=0, n = ids.size(); i<n; i++) {
+            Py_ssize_t i,n = dims[0];
+            for (i=0; i<n; i++) {
                 Id id = ids[i];
                 if (!sys.hasAtom(id)) {
                     Py_DECREF(arr);
@@ -409,7 +397,7 @@ namespace {
         return arr;
     }
 
-    void sys_setpos(System& sys, PyObject* obj, object idobj) {
+    void sys_setpos(System& sys, PyObject* obj, PyObject* idobj) {
         PyObject* arr = PyArray_FromAny(
                 obj,
                 PyArray_DescrFromType(NPY_FLOAT64),
@@ -427,7 +415,7 @@ namespace {
         }
         const double* pos = (const double *)PyArray_DATA(arr);
 
-        if (idobj.ptr()==Py_None) {
+        if (idobj==Py_None) {
             if (n!=sys.atomCount()) {
                 PyErr_Format(PyExc_ValueError, 
                         "Supplied %u positions, but system has %u atoms", 
@@ -443,12 +431,21 @@ namespace {
                 pos += 3;
             }
         } else {
-            IdList const& ids = extract<IdList const&>(idobj);
-            if (n != ids.size()) {
+            PyObject* idarr = PyArray_FromAny(
+                    idobj,
+                    PyArray_DescrFromType(NPY_INT64),
+                    1,1,
+                    NPY_C_CONTIGUOUS | NPY_ALIGNED,
+                    NULL);
+            if (!idarr) throw_error_already_set();
+            std::shared_ptr<PyObject> _(idarr, destructor);
+            if (n != (Id)PyArray_DIM(idarr,0)) {
                 PyErr_Format(PyExc_ValueError,
-                        "Supplied %u positions != %lu ids", n, ids.size());
+                        "Supplied %u positions != %u ids",
+                        n, (Id)PyArray_DIM(idarr,0));
                 throw_error_already_set();
             }
+            const Id* ids = (const Id*)PyArray_DATA(idarr);
             for (Py_ssize_t i=0; i<n; i++) {
                 Id id = ids[i];
                 if (!sys.hasAtom(id)) {
@@ -465,7 +462,7 @@ namespace {
         }
     }
 
-    void sys_setvel(System& sys, PyObject* obj, object idobj) {
+    void sys_setvel(System& sys, PyObject* obj, PyObject* idobj) {
         PyObject* arr = PyArray_FromAny(
                 obj,
                 PyArray_DescrFromType(NPY_FLOAT64),
@@ -483,7 +480,7 @@ namespace {
         }
         const double* pos = (const double *)PyArray_DATA(arr);
 
-        if (idobj.ptr()==Py_None) {
+        if (idobj==Py_None) {
             if (n!=sys.atomCount()) {
                 PyErr_Format(PyExc_ValueError, 
                         "Supplied %u velocities, but system has %u atoms", 
@@ -499,12 +496,21 @@ namespace {
                 pos += 3;
             }
         } else {
-            IdList const& ids = extract<IdList const&>(idobj);
-            if (n != ids.size()) {
+            PyObject* idarr = PyArray_FromAny(
+                    idobj,
+                    PyArray_DescrFromType(NPY_INT64),
+                    1,1,
+                    NPY_C_CONTIGUOUS | NPY_ALIGNED,
+                    NULL);
+            if (!idarr) throw_error_already_set();
+            std::shared_ptr<PyObject> _(idarr, destructor);
+            if (n != (Id)PyArray_DIM(idarr,0)) {
                 PyErr_Format(PyExc_ValueError,
-                        "Supplied %u velocities != %lu ids", n, ids.size());
+                        "Supplied %u velocities != %u ids",
+                        n, (Id)PyArray_DIM(idarr,0));
                 throw_error_already_set();
             }
+            const Id* ids = (const Id*)PyArray_DATA(idarr);
             for (Py_ssize_t i=0; i<n; i++) {
                 Id id = ids[i];
                 if (!sys.hasAtom(id)) {
@@ -615,6 +621,19 @@ namespace {
         return L;
     }
 
+    list list_bonds(System& mol) { return to_python(mol.bonds()); }
+    list list_residues(System& mol) { return to_python(mol.residues()); }
+    list list_chains(System& mol) { return to_python(mol.chains()); }
+    list list_cts(System& mol) { return to_python(mol.cts()); }
+
+    list bonded_atoms(System& mol,Id i) { return to_python(mol.bondedAtoms(i));}
+    list residue_atoms(System& mol,Id i) { return to_python(mol.atomsForResidue(i)); }
+    list atom_bonds(System& mol,Id i) { return to_python(mol.bondsForAtom(i)); }
+    list chain_residues(System& mol,Id i) { return to_python(mol.residuesForChain(i)); }
+    list ct_chains(System& mol,Id i) { return to_python(mol.chainsForCt(i)); }
+    list ct_atoms(System& mol,Id i) { return to_python(mol.atomsForCt(i)); }
+    list ct_bonds(System& mol,Id i) { return to_python(mol.bondsForCt(i)); }
+
     objptr get_vec3d(PyObject* obj) {
         if (obj==Py_None) return objptr();
         PyObject* arr = PyArray_FromAny(
@@ -671,6 +690,9 @@ namespace {
     SystemPtr wrap_clone(SystemPtr mol, list ids, CloneOption::Flags flags) {
         return Clone(mol, ids_from_python(ids), flags);
     }
+    list append_system(SystemPtr dst, SystemPtr src, Id ct=BadId) {
+        return to_python(AppendSystem(dst, src, ct));
+    }
 
 }
 
@@ -680,6 +702,9 @@ namespace desres { namespace msys {
         import_array();
         if (PyErr_Occurred()) return;
         
+        def("bad", bad);
+        scope().attr("BadId") = (Id)BadId;
+
         def("calc_distance", py_calc_distance);
         def("calc_angle", py_calc_angle);
         def("calc_dihedral", py_calc_dihedral);
@@ -764,12 +789,12 @@ namespace desres { namespace msys {
             .def("maxCtId",     &System::maxCtId)
 
             /* list of element ids */
-            .def("atoms",       &System::atoms)
+            .def("atoms",       list_atoms)
             .def("atomsAsList", list_atoms)
-            .def("bonds",       &System::bonds)
-            .def("residues",    &System::residues)
-            .def("chains",      &System::chains)
-            .def("cts",         &System::cts)
+            .def("bonds",       list_bonds)
+            .def("residues",    list_residues)
+            .def("chains",      list_chains)
+            .def("cts",         list_cts)
 
 
             /* count of elements */
@@ -787,12 +812,12 @@ namespace desres { namespace msys {
             .def("atomCountForCt",      &System::atomCountForCt)
             
             /* list of subelements */
-            .def("atomsForResidue", &System::atomsForResidue, return_const() )
-            .def("bondsForAtom",    &System::bondsForAtom, return_const())
-            .def("residuesForChain",&System::residuesForChain, return_const())
-            .def("chainsForCt",     &System::chainsForCt, return_const())
-            .def("atomsForCt",      &System::atomsForCt)
-            .def("bondsForCt",      &System::bondsForCt)
+            .def("atomsForResidue", residue_atoms)
+            .def("bondsForAtom",    atom_bonds)
+            .def("residuesForChain",chain_residues)
+            .def("chainsForCt",     ct_chains)
+            .def("atomsForCt",      ct_atoms)
+            .def("bondsForCt",      ct_bonds)
 
             /* tables */
             .def("tableNames",  table_names)
@@ -805,7 +830,7 @@ namespace desres { namespace msys {
 
             /* atom props */
             .def("setResidue",  &System::setResidue)
-            .def("bondedAtoms", &System::bondedAtoms)
+            .def("bondedAtoms", bonded_atoms)
 
             /* residue props */
             .def("setChain",    &System::setChain)
@@ -845,11 +870,6 @@ namespace desres { namespace msys {
             .def("addNonbondedFromSchema", AddNonbonded)
 
             /* atom selection */
-            .def("select", wrap_atomselect,
-                    (arg("mol"),
-                     arg("sel"),
-                     arg("pos")=object(),
-                     arg("box")=object()))
             .def("selectAsList", list_Atomselect,
                     (arg("mol"),
                      arg("sel"),
@@ -862,7 +882,7 @@ namespace desres { namespace msys {
                      arg("box")=object()))
 
             /* append */
-            .def("append", AppendSystem)
+            .def("append", append_system)
             .def("clone",  wrap_clone)
 
             /* miscellaneous */
