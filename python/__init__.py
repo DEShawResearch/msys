@@ -2157,6 +2157,14 @@ class InChI(object):
         ''' inchi key for this object's string. '''
         return self._inchi.key()
 
+def CloneSystem(atoms):
+    ''' Call System.clone(atoms) using the System from the first atom.
+
+    DEPRECATED.  Use System.clone directly instead.
+    '''
+    if not atoms: raise ValueError("empty atoms list")
+    return atoms[0].system.clone(atoms)
+
 class SpatialHash(object):
     ''' SpatialHash provides an interface for efficient spatial queries
     on particle positions. '''
