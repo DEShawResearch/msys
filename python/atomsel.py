@@ -1,6 +1,8 @@
 import numpy
 
 class Atomsel(object):
+    ''' Supports alignment of molecular structures '''
+
     __slots__ = ('_ptr', '_ids', '_seltext')
     ''' atom selection object '''
     def __init__(self, ptr, seltext):

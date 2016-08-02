@@ -284,7 +284,14 @@ The msys module
     :members:
     :special-members:
 
+The Atomsel class
+-----------------
 
+.. automodule:: msys.atomsel
+    :members:
+    :special-members:
+
+    
 Dealing with duplicate parameters
 ---------------------------------
 
