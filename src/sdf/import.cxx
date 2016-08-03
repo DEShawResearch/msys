@@ -52,16 +52,13 @@ namespace {
     }
 
     class iterator : public LoadIterator {
-        FILE* fp = 0;
+    protected:
         char buf[1024];
         int line = 0;
-        bool getline() {
-            ++line;
-            return fgets(buf, sizeof(buf), fp)!=NULL;
-        }
-        bool eof() {
-            return feof(fp);
-        }
+        virtual bool getline() = 0;
+        virtual bool eof() = 0;
+
+    private:
         std::string skip_to_end() {
             std::string current = std::to_string(line)+": " + buf;
             while (getline()) {
@@ -157,9 +154,6 @@ namespace {
         }
 
     public:
-        explicit iterator(FILE* fp) : fp(fp) {}
-        ~iterator() { if (fp) fclose(fp); }
-
         SystemPtr next() {
             SystemPtr ptr;
 
@@ -170,7 +164,7 @@ namespace {
             getline();
             getline();
             getline();
-            if (feof(fp)) return ptr;
+            if (eof()) return ptr;
             auto natoms = parse_count(buf);
             auto nbonds = parse_count(buf+3);
             if (natoms==BAD_COUNT || nbonds==BAD_COUNT) {
@@ -328,25 +322,90 @@ namespace {
             return ptr;
         }
     };
+
+    class text_iterator : public iterator {
+        std::string data;
+        size_t pos = 0;
+
+    protected:
+        bool getline() {
+            if (pos>=data.size()) return false;
+            ++line;
+            size_t len = strcspn(&data[pos], "\n");
+            if (len>sizeof(buf)) MSYS_FAIL("Line " << line << " too long");
+            memcpy(buf, &data[pos], len+1);
+            buf[len+1]='\0';
+            pos += len+1;
+            return true;
+        }
+        bool eof() {
+            return pos>=data.size();
+        }
+
+    public:
+        text_iterator(std::string const& d) : data(d) {}
+    };
+
+    class file_iterator : public iterator {
+        FILE* fp = nullptr;
+        int (*closer)(FILE *);
+
+    protected:
+        bool getline() {
+            ++line;
+            return fgets(buf, sizeof(buf), fp)!=NULL;
+        }
+        bool eof() {
+            return feof(fp);
+        }
+
+    public:
+        file_iterator(std::string const& path) {
+            fp = fopen(path.data(), "rb");
+            if (!fp) MSYS_FAIL(strerror(errno));
+            closer = fclose;
+
+            // handle gzipped files
+            unsigned char buf[2];
+            size_t rc = fread(buf, 1, 2, fp);
+            if (rc<2) {
+                if (feof(fp)) return;
+                MSYS_FAIL(strerror(errno));
+            }
+            fseek(fp, 0, SEEK_SET);
+            if (buf[0]==0x1f && buf[1]==0x8b) {
+                fclose(fp);
+                fp = NULL;
+                std::string cmd("gzip -dc \"");
+                cmd += path;
+                cmd += "\"";
+                fp = popen(cmd.data(), "r");
+                if (!fp) {
+                    MSYS_FAIL("popen failed: " << strerror(errno));
+                }
+                closer = pclose;
+            }
+        }
+        ~file_iterator() {
+            if (fp) closer(fp);
+        }
+    };
 }
 
 SystemPtr desres::msys::ImportSdf(std::string const& path) {
-    auto iter = SdfIterator(path);
+    file_iterator iter(path);
     SystemPtr ct, mol = System::create();
     mol->name = path;
-    while ((ct = iter->next())) {
+    while ((ct = iter.next())) {
         AppendSystem(mol, ct);
     }
     return mol;
 }
 
-LoadIteratorPtr desres::msys::SdfIterator(std::string const& path) {
-    FILE* fp = fopen(path.data(), "r");
-    if (!fp) MSYS_FAIL(strerror(errno));
-    return ScanSdf(fp);
+LoadIteratorPtr desres::msys::SdfFileIterator(std::string const& path) {
+    return LoadIteratorPtr(new file_iterator(path));
 }
-
-LoadIteratorPtr desres::msys::ScanSdf(FILE* fp) {
-    return LoadIteratorPtr(fp ? new iterator(fp) : nullptr);
+LoadIteratorPtr desres::msys::SdfTextIterator(std::string const& data) {
+    return LoadIteratorPtr(new text_iterator(data));
 }
 

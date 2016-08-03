@@ -164,7 +164,7 @@ namespace desres { namespace msys {
             case MaeFileFormat:
                     return MaeIterator(path, structure_only);
             case SdfFileFormat:
-                    return SdfIterator(path);
+                    return SdfFileIterator(path);
             case PdbFileFormat:
                     return PDBIterator(path);
             case UnrecognizedFileFormat:

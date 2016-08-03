@@ -131,6 +131,7 @@ namespace desres { namespace msys {
         def("Load", load);
         def("FromSmilesString", FromSmilesString);
         def("Save", save);
+        def("ParseSDF", SdfTextIterator);
         def("FormatSDF", FormatSdf);
 
     }

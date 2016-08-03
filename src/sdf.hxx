@@ -9,11 +9,10 @@ namespace desres { namespace msys {
     SystemPtr ImportSdf(std::string const& path);
 
     /* Iterator for SDF files */
-    LoadIteratorPtr SdfIterator(std::string const& path);
+    LoadIteratorPtr SdfFileIterator(std::string const& path);
 
-    /* Iterator using a file handle.  The returned iterator takes ownership
-     * of the file handle. */
-    LoadIteratorPtr ScanSdf(FILE* fp);
+    /* Iterator for SDF text */
+    LoadIteratorPtr SdfTextIterator(std::string const& data);
 
     /* Export options */
     struct SdfExport {

@@ -1838,6 +1838,17 @@ def FormatSDF(mol):
     ''' Return System in sdf format '''
     return _msys.FormatSDF(mol._ptr)
 
+def ParseSDF(text):
+    ''' Iterate over blocks in sdf format text.
+    Accepts normal and gzipped text.
+    '''
+    it = _msys.ParseSDF(text)
+    while True:
+        mol = it.next()
+        if mol is None:
+            break
+        yield System(mol)
+
 def ReadPDBCoordinates(mol, path):
     ''' Read coordinates and box from the given pdb file into the given 
     System. 
