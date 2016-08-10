@@ -167,22 +167,36 @@ static bool find_in_ranges(std::vector<std::pair<T,T>> const& rng, T i) {
     return false;
 }
 
-static Selection eval_smarts(System* mol, std::vector<std::string> const& pats) {
+static void eval_smarts(System* mol, std::vector<std::string> const& pats,
+        Selection& s) {
     AnnotatedSystem a(mol->shared_from_this());
-    Selection s(mol->atomCount());
-    IdList starts = mol->atoms();
+    /* get fragids of selected atoms */
+    std::unordered_set<Id> fragids;
+    for (Id i=0, n=s.size(); i<n; i++) {
+        if (s[i]) fragids.insert(mol->atomFAST(i).fragid);
+    }
+    /* use as starts atoms in same fragment as selected atoms */
+    IdList starts;
+    for (Id i=0, n=s.size(); i<n; i++) {
+        if (fragids.count(mol->atomFAST(i).fragid)) starts.push_back(i);
+    }
+
+    /* find atoms matched by smarts pattern */
+    Selection sel(s.size());
     for (auto&& pat : pats) {
         SmartsPattern p(pat);
         for (auto&& ids : p.findMatches(a, starts)) {
+            //printf("hits: %u\n", (Id)ids.size());
             for (auto id : ids) {
-                s[id]=1;
+                sel[id]=1;
             }
         }
     }
-    return s;
+    s.intersect(sel);
 }
 
-static Selection eval_paramtype(System* mol, std::vector<std::string> const& pats) {
+static void eval_paramtype(System* mol, std::vector<std::string> const& pats,
+        Selection& s) {
     if (pats.empty()) {
         MSYS_FAIL("paramtype selection requires table name as first argument");
     }
@@ -201,19 +215,18 @@ static Selection eval_paramtype(System* mol, std::vector<std::string> const& pat
         ids.insert(tmp.begin(), tmp.end());
     }
     const Id natoms = table->atomCount();
-    Selection s(mol->atomCount());
+    Selection sel(mol->atomCount());
     for (auto i=table->begin(), e=table->end(); i!=e; ++i) {
         if (ids.count(i->param())) {
             for (Id j=0; j<natoms; j++) {
-                s[i->atom(j)] = 1;
+                sel[i->atom(j)] = 1;
             }
         }
     }
-    return s;
-
+    s.intersect(sel);
 }
 
-typedef Selection (*sfunc)(System*, std::vector<std::string>const&);
+typedef void (*sfunc)(System*, std::vector<std::string>const&, Selection&);
 static const std::unordered_map<std::string,sfunc> strfuncs = {
     {"smarts", eval_smarts},
     {"paramtype", eval_paramtype},
@@ -263,7 +276,7 @@ void KeyExpr::eval(Selection const& s, std::vector<double>& v) {
 void KeyPredicate::eval(Selection& s) {
     auto f = strfuncs.find(name);
     if (f!=strfuncs.end()) {
-        s.intersect(f->second(q->mol,va->sval));
+        f->second(q->mol, va->sval, s);
         return;
     }
 
@@ -327,6 +340,8 @@ void KeyPredicate::eval(Selection& s) {
             }
             break;
     case StrFuncType:
+            /* FIXME: can never get here because of logic at the top of
+             * this function */
             if (!(va->ival.empty() && va->fval.empty() && va->irng.empty() && va->frng.empty() && va->regex.empty())) {
                 MSYS_FAIL("Selection keyword '" << name << "' expects only string arguments, but got float, integer or regex.");
             }
