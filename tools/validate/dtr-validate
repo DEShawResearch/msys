@@ -71,7 +71,7 @@ def main():
         print "frames: %-9d atoms: %-9d" % (nframes, natoms)
     if not args.energy:
         assert natoms > 0, "'%s' contains %d atoms." % (path, natoms)
-    assert nframes > 0, "'%s' contains %d frames." % (path, nfraems)
+    assert nframes > 0, "'%s' contains %d frames." % (path, nframes)
     if args.progress:
         progress = Progress(nframes)
     for i in xrange(nframes):
