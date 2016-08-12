@@ -67,9 +67,9 @@ def main():
     parser.add_argument('ofile', metavar='output.dms',
             help='output structure file')
 
-    args = parser.parse_args()
-    print "Reading input file", args.ifile
-    mol=msys.Load(args.ifile)
+    opts = parser.parse_args()
+    print "Reading input file", opts.ifile
+    mol=msys.Load(opts.ifile)
     print "Input file contains %d atoms, %d bonds" % (mol.natoms, mol.nbonds)
 
     if opts.input_path is not None:
@@ -142,8 +142,8 @@ def main():
         w=Wrapper(mol, center=opts.center, glue=opts.glue, unrotate=opts.unrotate)
         w.wrap()
 
-    print "Writing", args.ofile
-    msys.Save(mol, args.ofile)
+    print "Writing", opts.ofile
+    msys.Save(mol, opts.ofile)
 
 if __name__=="__main__": main()
 
