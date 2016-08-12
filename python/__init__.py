@@ -1127,12 +1127,6 @@ class System(object):
         ptr = self._ptr
         return [Ct(ptr, i) for i in ptr.cts()]
 
-    @property
-    def residues(self):
-        ''' return list of all residues in the sytem '''
-        ptr=self._ptr
-        return [Residue(ptr, i) for i in ptr.residues()]
-
     def addAtomProp(self, name, type):
         ''' add a custom atom property with the given name and type.
         type should be int, float, or str.
