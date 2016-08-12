@@ -1,3 +1,5 @@
+1.7.148 Fixed typo in dtr-validate.
+
 1.7.147 C++: TermTable::atomsFast() and paramFAST().
         Pickle support for Systems (DESRESCode#3148).
         Include all of msys module in the docs.
