@@ -1,3 +1,5 @@
+1.7.149 Pass --reorder to dms-dump in dms-diff
+
 1.7.148 Fixed typo in dtr-validate.
 
 1.7.147 C++: TermTable::atomsFast() and paramFAST().

@@ -2,7 +2,7 @@
 
 : ${DMSDIFF:=diff}
 
-opts="--without-provenance --without-forcefield --without-paraminfo" 
+opts="--without-provenance --without-forcefield --without-paraminfo --reorder" 
 
 [ -z "$1" -o -z "$2" ] && {
     echo "`basename $0` <dms1> <dms2> [options]" 
