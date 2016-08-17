@@ -1,4 +1,6 @@
-1.7.149 Pass --reorder to dms-dump in dms-diff
+1.7.149 Pass --reorder to dms-dump in dms-diff.
+        Handle coordinate-only Amber crd files. (DESRESCode#3183).
+        Fix dms-frame (DESRESCode#3205).
 
 1.7.148 Fixed typo in dtr-validate.
 
