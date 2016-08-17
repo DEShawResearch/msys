@@ -51,6 +51,7 @@ static void read_frame(std::istream& in, int natoms,
     static const Float SCALE = 20.455;
     for (int i=0; i<natoms;) {
         if (!std::getline(in, line)) {
+            if (i==0) return;
             MSYS_FAIL("Reading velocities of rst file");
         }
         for (int j=0; j<2; j++) { /* at most two positions per line */
