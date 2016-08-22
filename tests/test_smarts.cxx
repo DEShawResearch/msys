@@ -14,20 +14,13 @@ int main(int argc, char *argv[]) {
     }
     SystemPtr mol = Load(argv[1]);
     AssignBondOrderAndFormalCharge(mol);
-    //AnnotatedSystem annot_mol(mol);
     std::unique_ptr<AnnotatedSystem> annot_mol(new AnnotatedSystem(mol));
-    IdList sel = Atomselect(mol, "not water");
-    //IdList sel = mol->atoms();
+    IdList sel = mol->atoms();
     for (int i=2; i<argc; i++) {
-        printf("%s\n", argv[i]);
+        double t=-now();
         MultiIdList matches=SmartsPattern(argv[i]).findMatches(*annot_mol, sel);
-        for (IdList l : matches){
-           printf(" --> [ ");
-           for (Id i : l){
-             printf("%u ",i);
-           }
-           printf("]\n");
-        }
+        t+=now();
+        printf("%s: %lu matches in %.3fms\n", argv[i], matches.size(), t*1000);
     }
     return 0;
 }
