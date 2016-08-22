@@ -1760,6 +1760,10 @@ class TestMain(unittest.TestCase):
         msys.SaveDMS(m, path)
         m2=msys.LoadDMS(path)
         self.assertEqual(m.atom(0).formal_charge, -10)
+
+    def testLoadDmsBuffer(self):
+        s=open('tests/files/2f4k.dms').read()
+        msys.LoadDMS(buffer=s)
                 
     def testRefcount(self):
         m=msys.CreateSystem()

@@ -317,7 +317,7 @@ Sqlite Sqlite::read_bytes(const char * bytes, int64_t len ) {
 
     ssize_t tmpsize = len;
     char* tmpbuf = (char *)malloc(len);
-    MSYS_FAIL("Failed to allocate read buffer for DMS file of size " << len);
+    if (!tmpbuf) MSYS_FAIL("Failed to allocate read buffer for DMS file of size " << len);
     memcpy(tmpbuf, bytes, len);
     int rc = sqlite3_open_v2( "::dms::", &db, SQLITE_OPEN_READONLY, 
             vfs->zName);
