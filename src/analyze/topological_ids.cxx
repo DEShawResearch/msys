@@ -3,8 +3,6 @@
 #include <sstream>
 #include <cstdio>
 
-#include <boost/foreach.hpp>
-
 #include "../param_table.hxx"
 #include "../analyze.hxx"
 #include "../graph.hxx"
@@ -23,7 +21,7 @@ namespace {
         uint32_t nbonds=bonds.size();
         uint32_t nterminal=0;
         uint32_t aenv=1;
-        BOOST_FOREACH(Id bid, bonds){
+        for (Id bid : bonds){
             Id aid2= mol->bond(bid).other(aid1);
             if(mol->bondCountForAtom(aid2)==1) nterminal+=1;
             int anum=mol->atom(aid2).atomic_number;
@@ -73,7 +71,7 @@ namespace {
                 ntid+=1;
                 citer=cache.insert(citer, cache_t::value_type(titer->first,primes.at(ntid)));
             }
-            BOOST_FOREACH(Id aid1, titer->second){
+            for (Id aid1 : titer->second){
                 alltids[aid1]=citer->second;
             }
         }
@@ -90,14 +88,14 @@ namespace {
         Id ntid=tid_offset;
         for(tidmap_t::const_iterator titer=fragTids.begin(); titer != fragTids.end(); ++titer){
             ntid+=1;
-            BOOST_FOREACH(Id aid1, titer->second){
+            for (Id aid1 : titer->second){
                 alltids[aid1]=ntid;
             }
         }
         
         /* assign tids to unclassified (terminal) atoms */
         cache_t cache;
-        BOOST_FOREACH(Id aid1, atomIds){
+        for (Id aid1 : atomIds){
             if(alltids[aid1]==DEFAULTTID){
                 assert(mol->bondCountForAtom(aid1)==1);
                 Id aid2=mol->bondedAtoms(aid1)[0];
@@ -162,7 +160,7 @@ Id assign_fragment_topological_ids(SystemPtr mol,
     
     /* Initalize atom tids -
        skip terminal atoms, rest are active (could freeze ions but its not necessary) */
-    BOOST_FOREACH(Id aid1, fragment){
+    for (Id aid1 : fragment){
         if(skip_this_atom(mol,aid1)) continue;
         uint32_t prop = atomic_invariant(mol,aid1);
         /* Initial atom classes are (0, atom invarient) */
@@ -184,13 +182,13 @@ Id assign_fragment_topological_ids(SystemPtr mol,
             fragTids.clear();
         
             /* calculate new atom properties based local environment */
-            BOOST_FOREACH(Id aid1, fragment){
+            for (Id aid1 : fragment){
                 /* skip non branched atoms... We can add them back later */
                 if(skip_this_atom(mol,aid1)) continue;
             
                 Id prop=1;  
                 IdList const& bonds=mol->bondsForAtom(aid1);
-                BOOST_FOREACH(Id bid, bonds){
+                for (Id bid : bonds){
                     Id aid2 = mol->bond(bid).other(aid1);
                     if(skip_this_atom(mol, aid2)) continue;
                     prop*=alltids[aid2];
@@ -222,7 +220,7 @@ Id assign_fragment_topological_ids(SystemPtr mol,
         GraphPtr fGraph=Graph::create(mol, fragment);
         IdList const& gids=fGraph->atoms();
         std::vector<int> attr;
-        BOOST_FOREACH(Id aid1, gids){
+        for (Id aid1 : gids){
             if(alltids[aid1]==DEFAULTTID){
                 attr.push_back(primes[ntid_simple]+mol->atom(aid1).atomic_number);
             }else{
@@ -233,7 +231,7 @@ Id assign_fragment_topological_ids(SystemPtr mol,
         tidmap_t extTids;
         for(tidmap_t::const_iterator titer=fragTids.begin(); titer != fragTids.end(); ++titer){
             IdList primaryNodes;
-            BOOST_FOREACH(Id aid1, titer->second){
+            for (Id aid1 : titer->second){
                 bool matched=false;
                 std::vector<IdPair> matches;
                 for(uint32_t pidx=0; pidx<primaryNodes.size();++pidx){
@@ -298,15 +296,15 @@ namespace desres { namespace msys {
             IdList const& fragIdlist=frags->second;
    
             std::vector<GraphPtr> primaryGraphs;
-            BOOST_FOREACH(Id fragid, fragIdlist){
+            for (Id fragid : fragIdlist){
                 bool matched=false;
                 GraphPtr gCurrent=Graph::create(mol, fragments[fragid]);
                 std::vector<IdPair> matches;
-                BOOST_FOREACH(GraphPtr const& gPrimary, primaryGraphs){
+                for (GraphPtr const& gPrimary : primaryGraphs){
                     if( gCurrent->match(gPrimary, matches)){
                         matched=true;
                         /* Clone tids from matched to current */
-                        BOOST_FOREACH(IdPair const& p, matches){
+                        for (IdPair const& p : matches){
                             alltids[p.first]=alltids[p.second];
                         }
                         break;

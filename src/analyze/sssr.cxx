@@ -4,7 +4,6 @@
 #include <queue>
 #include <set>
 #include <algorithm>
-#include <boost/foreach.hpp>
 
 using namespace desres::msys;
 using namespace desres::msys::SSSR;
@@ -648,7 +647,7 @@ MultiIdList desres::msys::RingSystems(SystemPtr mol, MultiIdList const& rings) {
 
     std::vector<bool> processed_bonds(mol->maxBondId(), false);
     MultiIdList ring_systems;
-    BOOST_FOREACH(Id bond, mol->bonds()) {
+    for (Id bond : mol->bonds()) {
         if (processed_bonds[bond]) continue;
         processed_bonds[bond] = true;
         if (bond_to_rings[bond].size() == 0) continue;
@@ -663,7 +662,7 @@ MultiIdList desres::msys::RingSystems(SystemPtr mol, MultiIdList const& rings) {
             unprocessed_bonds.pop();
             /* Loop through all potentially aromatic SSSR rings containing
              * bond 'front' */
-            BOOST_FOREACH(Id ring, bond_to_rings[front]) {
+            for (Id ring : bond_to_rings[front]) {
                 ring_set.insert(ring);
                 for (unsigned i = 0; i < rings[ring].size(); ++i) {
                     Id ring_bond = mol->findBond(rings[ring][i],

@@ -1,8 +1,5 @@
 #include "../ff.hxx"
 #include "../../override.hxx"
-//#include <cstdio>
-#include <boost/foreach.hpp>
-#include <assert.h>
 
 namespace {
 
@@ -88,9 +85,9 @@ namespace {
                 for (Id i=0; i<params->propCount(); i++) {
                     p->addProp(params->propName(i), params->propType(i));
                 }
-                BOOST_FOREACH(TypeMap::value_type ti, map) {
+                for (auto ti : map) {
                     VdwType const& itype = ti.first;
-                    BOOST_FOREACH(TypeMap::value_type tj, map) {
+                    for (auto tj : map) {
                         VdwType const& jtype = tj.first;
                         if (vdwmap.has_combined(itype, jtype)) {
                             Id row = p->addParam();

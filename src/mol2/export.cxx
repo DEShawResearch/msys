@@ -1,7 +1,6 @@
 #include "../mol2.hxx"
 #include "elements.hxx"
 #include "../clone.hxx"
-#include <boost/foreach.hpp>
 #include <stdio.h>
 #include <math.h>
 

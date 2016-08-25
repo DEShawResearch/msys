@@ -4,7 +4,6 @@
 #include "../analyze.hxx"
 #include "elements.hxx"
 #include "append.hxx"
-#include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp> /* for boost::trim */
 #include <stdio.h>
 #include <string.h>

@@ -3,8 +3,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <sstream>
-#include <boost/unordered_map.hpp>
-#include <boost/foreach.hpp>
+#include <unordered_map>
 
 using namespace desres::msys;
 
@@ -127,7 +126,7 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms,
 
     if (flags & CloneOption::ShareParams) {
         TermTablePtr srctable, dsttable;
-        BOOST_FOREACH(String name, src->tableNames()) {
+        for (String name : src->tableNames()) {
             srctable = src->table(name);
             dsttable = dst->addTable(name, 
                                      srctable->atomCount(),
@@ -145,7 +144,7 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms,
         /* Detect when term tables share a ParamTable.  First pass: sort
          * by param table.  */
         typedef std::vector<std::string> StringList;
-        typedef boost::unordered_map<ParamTablePtr, StringList> TableMap;
+        typedef std::unordered_map<ParamTablePtr, StringList> TableMap;
         TableMap tables;
         TableMap::const_iterator it;
         std::vector<String> tablenames = src->tableNames();
@@ -228,7 +227,7 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms,
     dst->name = src->name;
     dst->global_cell = src->global_cell;
     dst->nonbonded_info = src->nonbonded_info;
-    BOOST_FOREACH(Provenance const& p, src->provenance()) dst->addProvenance(p);
+    for (Provenance const& p : src->provenance()) dst->addProvenance(p);
 
     /* add/replace extra tables */
     std::vector<String> extras = src->auxTableNames();

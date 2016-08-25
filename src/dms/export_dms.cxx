@@ -9,7 +9,6 @@
 #include <string.h>
 #include <stdexcept>
 #include <boost/scoped_ptr.hpp>
-#include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 
 using namespace desres::msys;
@@ -346,11 +345,11 @@ static void export_cts(System& sys, Sqlite dms) {
     /* merge the keyvals for each ct */
     ParamTablePtr keyvals = ParamTable::create();
     keyvals->addProp("msys_name", StringType);
-    BOOST_FOREACH(Id ct, sys.cts()) {
+    for (Id ct : sys.cts()) {
         component_t& c = sys.ct(ct);
         Id row = keyvals->addParam();
         keyvals->value(row,0) = c.name();
-        BOOST_FOREACH(String key, c.keys()) {
+        for (String key : c.keys()) {
             ValueRef val = c.value(key);
             Id col = keyvals->addProp(key, val.type());
             keyvals->value(row,col) = val;
@@ -490,7 +489,7 @@ static void export_tables( const System& sys, const IdList& map, Sqlite dms) {
             }
             Writer w = dms.insert("msys_table_properties");
             w.bind_str(0,name.c_str());
-            BOOST_FOREACH(VariantMap::value_type keyval, map) {
+            for (auto keyval : map) {
                 w.bind_str(1,keyval.first.c_str());
                 boost::apply_visitor(prop_visitor(w), keyval.second);
                 w.next();

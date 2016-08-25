@@ -5,7 +5,6 @@
 #include <sstream>
 #include <stack>
 #include <stdexcept>
-#include <boost/foreach.hpp>
 #include <stdio.h>
 #include <ctype.h>
 #ifdef DESRES_OS_Darwin
@@ -240,8 +239,8 @@ void System::setCt(Id chn, Id ct) {
 
 IdList System::atomsForCt(Id ct) const {
     IdList ids;
-    BOOST_FOREACH(Id const& chn, chainsForCt(ct)) {
-        BOOST_FOREACH(Id const& res, residuesForChain(chn)) {
+    for (Id const& chn : chainsForCt(ct)) {
+        for (Id const& res : residuesForChain(chn)) {
             IdList const& atms = atomsForResidue(res);
             ids.insert(ids.end(), atms.begin(), atms.end());
         }
@@ -254,8 +253,8 @@ IdList System::atomsForCt(Id ct) const {
 
 Id System::atomCountForCt(Id ct) const {
     Id n=0;
-    BOOST_FOREACH(Id const& chn, chainsForCt(ct)) {
-        BOOST_FOREACH(Id const& res, residuesForChain(chn)) {
+    for (Id const& chn : chainsForCt(ct)) {
+        for (Id const& res : residuesForChain(chn)) {
             n += atomCountForResidue(res);
         }
     }
@@ -264,12 +263,12 @@ Id System::atomCountForCt(Id ct) const {
 
 IdList System::bondsForCt(Id ct) const {
     IdList ids;
-    BOOST_FOREACH(Id const& chn, chainsForCt(ct)) {
-        BOOST_FOREACH(Id res, residuesForChain(chn)) {
+    for (Id const& chn : chainsForCt(ct)) {
+        for (Id res : residuesForChain(chn)) {
             IdList const& atms = atomsForResidue(res);
-            BOOST_FOREACH(Id atm, atms) {
+            for (Id atm : atms) {
                 IdList const& bonds = bondsForAtom(atm);
-                BOOST_FOREACH(Id bnd, bonds) {
+                for (Id bnd : bonds) {
                     if (bond(bnd).i == atm) ids.push_back(bnd);
                 }
             }
@@ -283,9 +282,9 @@ IdList System::bondsForCt(Id ct) const {
 
 Id System::bondCountForCt(Id ct) const {
     Id n=0;
-    BOOST_FOREACH(Id const& chn, chainsForCt(ct)) {
-        BOOST_FOREACH(Id res, residuesForChain(chn)) {
-            BOOST_FOREACH(Id atm, atomsForResidue(res)) {
+    for (Id const& chn : chainsForCt(ct)) {
+        for (Id res : residuesForChain(chn)) {
+            for (Id atm : atomsForResidue(res)) {
                 n += bondCountForAtom(atm);
             }
         }
@@ -295,7 +294,7 @@ Id System::bondCountForCt(Id ct) const {
 
 IdList System::residuesForCt(Id ct) const {
     IdList ids;
-    BOOST_FOREACH(Id const& chn, chainsForCt(ct)) {
+    for (Id const& chn : chainsForCt(ct)) {
         IdList const& reslist = residuesForChain(chn);
         ids.insert(ids.end(), reslist.begin(), reslist.end());
     }
@@ -404,7 +403,7 @@ IdList System::orderedIds() const {
     IdList ids;
     for (Id c=0; c<_chains.size(); c++) {
         if (_deadchains.count(c)) continue;
-        BOOST_FOREACH(Id r, _chainresidues[c]) {
+        for (Id r : _chainresidues[c]) {
             if (_deadresidues.count(r)) continue;
             /* Give pseudos an id adjacent to their parents.  On the first 
              * pass through the atom list, consider only pseudos.  Make
@@ -415,11 +414,11 @@ IdList System::orderedIds() const {
              * will be given gids at the end of the residue's range. */
             std::map<Id,IdList> pseudos;
             std::vector<Id> lone_pseudos;
-            BOOST_FOREACH(Id a, _residueatoms[r]) {
+            for (Id a : _residueatoms[r]) {
                 if (_deadatoms.count(a)) continue;
                 if (_atoms[a].atomic_number==0) {
                     Id parent = BadId;
-                    BOOST_FOREACH(Id b, _bondindex[a]) {
+                    for (Id b : _bondindex[a]) {
                         Id other = _bonds[b].other(a);
                         if (_atoms[other].residue==r &&
                             _atoms[other].atomic_number>0) {
@@ -434,20 +433,20 @@ IdList System::orderedIds() const {
                     }
                 }
             }
-            BOOST_FOREACH(Id a, _residueatoms[r]) {
+            for (Id a : _residueatoms[r]) {
                 if (_deadatoms.count(a)) continue;
                 if (_atoms[a].atomic_number==0) continue;
                 ids.push_back(a);
                 //_atoms[a].gid=gid++;
                 std::map<Id,IdList>::const_iterator plist=pseudos.find(a);
                 if (plist!=pseudos.end()) {
-                    BOOST_FOREACH(Id p, plist->second) {
+                    for (Id p : plist->second) {
                         //_atoms[p].gid=gid++;
                         ids.push_back(p);
                     }
                 }
             }
-            BOOST_FOREACH(Id p, lone_pseudos) {
+            for (Id p : lone_pseudos) {
                 //_atoms[p].gid=gid++;
                 ids.push_back(p);
             }

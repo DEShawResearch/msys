@@ -1,5 +1,4 @@
 #include <boost/python.hpp>
-#include <boost/foreach.hpp>
 #include "system.hxx"
 
 using namespace boost::python;

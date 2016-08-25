@@ -17,7 +17,7 @@ namespace {
         std::vector<IdPair> matches;
         if (self.match(other, matches)) {
             list L;
-            BOOST_FOREACH(IdPair const& p, matches) {
+            for (IdPair const& p : matches) {
                 L.append(make_tuple(p.first, p.second));
             }
             return L;
@@ -29,9 +29,9 @@ namespace {
         std::vector<std::vector<IdPair> > matches;
         self.matchAll(other, matches, substructure);
         list outer_L;
-        BOOST_FOREACH(std::vector<IdPair> const& v, matches) {
+        for (std::vector<IdPair> const& v : matches) {
             list L;
-            BOOST_FOREACH(IdPair const& p, v)
+            for (IdPair const& p : v)
                 L.append(make_tuple(p.first, p.second));
             outer_L.append(L);
         }

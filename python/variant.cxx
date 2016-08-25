@@ -1,6 +1,5 @@
 #include "wrap_obj.hxx"
 #include "value.hxx"
-#include <boost/foreach.hpp>
 
 using namespace boost::python;
 using namespace desres::msys;
@@ -10,7 +9,7 @@ namespace {
 
     object propmap_keys(VariantMap& p) {
         list s;
-        BOOST_FOREACH(VariantMap::value_type keyvals, p) {
+        for (VariantMap::value_type keyvals : p) {
             s.append(keyvals.first);
         }
         return s;

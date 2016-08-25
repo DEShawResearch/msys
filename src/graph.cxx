@@ -1,6 +1,4 @@
 #include "graph.hxx"
-//#include "../base.hxx"
-#include <boost/foreach.hpp>
 #include <stack>
 #include <queue>
 #include <sstream> // for ostringstream
@@ -14,7 +12,7 @@ std::string Graph::hash(SystemPtr sys, IdList const& atoms){
     std::vector<Id> countmap(max_atomic_number,0);
     int biggest=0;
     Id bcount=0;
-    BOOST_FOREACH(Id id, atoms){
+    for (Id id : atoms){
         int anum=sys->atom(id).atomic_number;
         if (anum < 1) continue;
         ++countmap.at(anum);
@@ -50,7 +48,7 @@ Graph::Graph(SystemPtr sys, const IdList& atoms) {
     countMap count_to_idx;
     msys::MultiIdList freq_partition;
     /* Initialize frequency of atom occurance */
-    BOOST_FOREACH(Id id, atoms){
+    for (Id id : atoms){
         atom_t const& atm = sys->atom(id);
         if (atm.atomic_number < 1) continue;    
         std::pair<int,Id> key(atm.atomic_number, sys->bondCountForAtom(id));
@@ -71,8 +69,8 @@ Graph::Graph(SystemPtr sys, const IdList& atoms) {
     std::map<Id, int> id_map;
 
     /* first pass: construct the offsets into the nbr table */
-    BOOST_FOREACH(countMap::value_type const& entry, count_to_idx){
-        BOOST_FOREACH(Id id, freq_partition[entry.second]){
+    for (auto const& entry : count_to_idx){
+        for (Id id : freq_partition[entry.second]){
             /* Already checked above 
              * atom_t const& atm = sys->atom(id);
              * if (atm.atomic_number < 1) continue; 
@@ -91,8 +89,8 @@ Graph::Graph(SystemPtr sys, const IdList& atoms) {
      * the atom set, and compute the node attribute as the atomic number
      * combined with the number of non-pseudo bonds */
     int nidx=0;
-    BOOST_FOREACH(countMap::value_type const& entry, count_to_idx){
-        BOOST_FOREACH(Id id, freq_partition[entry.second]){
+    for (auto const& entry : count_to_idx){
+        for (Id id : freq_partition[entry.second]){
             atom_t const& atm = sys->atom(id);
             /* Already checked above
              * if (atm.atomic_number < 1) continue;
@@ -102,7 +100,7 @@ Graph::Graph(SystemPtr sys, const IdList& atoms) {
             node.nnbr = 0;
             int degree = 0;
             IdList const& bonded = sys->bondedAtoms(id);
-            BOOST_FOREACH(Id other, bonded) {
+            for (Id other : bonded) {
                 if (sys->atom(other).atomic_number == 0) continue; // Pseudo atom
                 ++degree;
                 if (sys->atom(other).atomic_number == -1) continue; // External atom

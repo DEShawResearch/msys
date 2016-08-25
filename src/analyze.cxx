@@ -5,7 +5,6 @@
 #include "geom.hxx"
 #include "contacts.hxx"
 #include <stdio.h>
-#include <boost/foreach.hpp>
 #include <queue>
 
 namespace {
@@ -65,7 +64,7 @@ namespace desres { namespace msys {
             }
 
             /* We have multiple fragments with the same formula.  */
-            BOOST_FOREACH(Id frag, frags) {
+            for (Id frag : frags) {
                 graphs[frag] = Graph::create(mol, fragments[frag]);
             }
             std::vector<IdPair> perm;
@@ -81,7 +80,7 @@ namespace desres { namespace msys {
                         unmatched.push_back(frags[i]);
                     } else {
                         /* map atom properties */
-                        BOOST_FOREACH(IdPair const&p, perm) {
+                        for (IdPair const&p : perm) {
                             const Id ai = p.first;
                             const Id bi = p.second;
                             mol->atom(bi).formal_charge = mol->atom(ai).formal_charge;
@@ -89,10 +88,10 @@ namespace desres { namespace msys {
                             pmap.at(ai) = bi;
                         }
                         /* map bond properties */
-                        BOOST_FOREACH(IdPair const&p, perm) {
+                        for (IdPair const&p : perm) {
                             const Id ai = p.first;
                             const Id bi = p.second;
-                            BOOST_FOREACH(Id bnd, mol->bondsForAtom(ai)) {
+                            for (Id bnd : mol->bondsForAtom(ai)) {
                                 bond_t const& src = mol->bond(bnd);
                                 const Id aj = src.other(ai);
                                 if (ai>aj) continue;
@@ -141,7 +140,7 @@ namespace desres { namespace msys {
         static const double cutoff = 4.0;
         if (pos.empty()) return;
         IdList atoms(mol->atoms());
-        BOOST_FOREACH(Id i, atoms) {
+        for (Id i : atoms) {
             atom_t const& atom = mol->atom(i);
             pos[3*i  ] = atom.x;
             pos[3*i+1] = atom.y;
@@ -173,7 +172,7 @@ namespace desres { namespace msys {
             if (anum>1) continue;
             if (mol->bondCountForAtom(i)<=1) continue;
             IdList candidates;
-            BOOST_FOREACH(Id b,  mol->bondsForAtom(i)){
+            for (Id b : mol->bondsForAtom(i)){
                 int anum2=mol->atomFAST(mol->bond(b).other(i)).atomic_number;
                 if(anum2 <= anum) continue;
                 candidates.push_back(b);
@@ -185,7 +184,7 @@ namespace desres { namespace msys {
             const double x=pi[0];
             const double y=pi[1];
             const double z=pi[2];
-            BOOST_FOREACH(Id b, candidates) {
+            for (Id b : candidates) {
                 Id j = mol->bond(b).other(i);
                 const double* pj = &pos[3*j];
                 const double dx = pj[0]-x;
@@ -198,7 +197,7 @@ namespace desres { namespace msys {
                 }
             }
             assert(!bad(shortest_bond));
-            BOOST_FOREACH(Id b, candidates) {
+            for (Id b : candidates) {
                 if (b!=shortest_bond) mol->delBond(b);
             }
         }
@@ -222,7 +221,7 @@ namespace desres { namespace msys {
                 continue;
             }
             /* must do isomorphism checks. */
-            BOOST_FOREACH(Id frag, frags) {
+            for (Id frag : frags) {
                 graphs[frag] = Graph::create(mol, fragments[frag]);
             }
             std::vector<IdPair> perm;
@@ -262,7 +261,7 @@ namespace {
     void find_sidechain(System* mol, Id res, Id ca) {
         /* pick a c-beta atom, or settle for a hydrogen */
         Id cb=BadId;
-        BOOST_FOREACH(Id nbr, mol->bondedAtoms(ca)) {
+        for (Id nbr : mol->bondedAtoms(ca)) {
             if (mol->atomFAST(nbr).type==AtomProBack) continue;
             if (bad(cb)) {
                 cb=nbr;
@@ -281,7 +280,7 @@ namespace {
         while (!q.empty()) {
             Id atm = q.front();
             mol->atomFAST(atm).type = AtomProSide;
-            BOOST_FOREACH(Id nbr, mol->bondedAtoms(atm)) {
+            for (Id nbr : mol->bondedAtoms(atm)) {
                 atom_t const& nbratm = mol->atomFAST(nbr);
                 if (nbratm.type==AtomOther && nbratm.residue==res) {
                     q.push(nbr);

@@ -1,7 +1,6 @@
 #include "../mol2.hxx"
 #include "../sssr.hxx"
 #include "elements.hxx"
-#include <boost/foreach.hpp>
 #include <stdio.h>
 #include <math.h>
 
@@ -61,7 +60,7 @@ static String guess_atom_type(SystemPtr mol, IdList const& cyclic, Id id) {
     Id ncar=0;  /* number of bonds to carbon */
     Id npho=0;  /* number of bonds to phosphorus */
     Id nhyd=0;  /* number of bonds to hydrogen */
-    BOOST_FOREACH(Id bid, mol->bondsForAtom(id)) {
+    for (Id bid : mol->bondsForAtom(id)) {
         bond_t const& bond = mol->bond(bid);
         if (bond.resonant_order==1.5) ++nres;
         if (bond.order==1) ++nsng;
@@ -95,9 +94,9 @@ static String guess_atom_type(SystemPtr mol, IdList const& cyclic, Id id) {
                 /* check that each nitrogen forms bonds to two other atoms,
                  * neither of which is oxygen */
                 bool ok=true;
-                BOOST_FOREACH(Id atm, mol->bondedAtoms(id)) {
+                for (Id atm : mol->bondedAtoms(id)) {
                     if (mol->bondCountForAtom(atm)!=3) { ok=false; break; }
-                    BOOST_FOREACH(Id nbr, mol->bondedAtoms(atm)) {
+                    for (Id nbr : mol->bondedAtoms(atm)) {
                         if (mol->atom(nbr).atomic_number==8) {ok=false; break;}
                     }
                 }
@@ -113,7 +112,7 @@ static String guess_atom_type(SystemPtr mol, IdList const& cyclic, Id id) {
                     Id parent = mol->bondedAtoms(id).at(0);
                     if (mol->bondCountForAtom(parent)==3) {
                         bool found=false;
-                        BOOST_FOREACH(Id nbr, mol->bondedAtoms(parent)) {
+                        for (Id nbr : mol->bondedAtoms(parent)) {
                             if (nbr==id) continue;
                             if (mol->atom(nbr).atomic_number==8 &&
                                 mol->bondCountForAtom(nbr)==1) {
@@ -136,9 +135,9 @@ static String guess_atom_type(SystemPtr mol, IdList const& cyclic, Id id) {
             if (nbnd==3 && nhyd<=1 && ncar>=1) {        /* 1.8.5 */
                 /* check for amide */
                 int namide=0;
-                BOOST_FOREACH(Id car, mol->bondedAtoms(id)) {
+                for (Id car : mol->bondedAtoms(id)) {
                     if (mol->atom(car).atomic_number==6) {
-                        BOOST_FOREACH(Id bnd, mol->bondsForAtom(car)) {
+                        for (Id bnd : mol->bondsForAtom(car)) {
                             Id other = mol->bond(bnd).other(car);
                             if (mol->bond(bnd).order==2 && (
                                 mol->atom(other).atomic_number==8 ||
@@ -154,9 +153,9 @@ static String guess_atom_type(SystemPtr mol, IdList const& cyclic, Id id) {
                 if (nsng==2) return "N.pl3";            /* 1.8.6.1 */
                 if (nsng==3) {                          /* 1.8.6.2 */
                     int nh=0, nd=0;
-                    BOOST_FOREACH(Id nbr, mol->bondedAtoms(id)) {
+                    for (Id nbr : mol->bondedAtoms(id)) {
                         if (mol->atom(nbr).atomic_number==1) ++nh;
-                        else BOOST_FOREACH(Id bnd, mol->bondsForAtom(nbr)) {
+                        else for (Id bnd : mol->bondsForAtom(nbr)) {
                             if (mol->bond(bnd).resonant_order>1) {
                                 ++nd;
                                 break;
@@ -184,7 +183,7 @@ static String guess_atom_type(SystemPtr mol, IdList const& cyclic, Id id) {
         case 16:                                        /* 1.9 */
             {
                 int nox=0;
-                BOOST_FOREACH(Id nbr, mol->bondedAtoms(id)) {
+                for (Id nbr : mol->bondedAtoms(id)) {
                     if (mol->atom(nbr).atomic_number==8 &&
                         mol->bondCountForAtom(nbr)==1) ++nox;
                 }
@@ -207,7 +206,7 @@ static String guess_bond_type( SystemPtr mol, Id bnd,
         if (mol->atom(n).atomic_number!=7) n = mol->bond(bnd).j;
         Id car = mol->bond(bnd).other(n);
         if (mol->atom(car).atomic_number==6) {
-            BOOST_FOREACH(Id bnd, mol->bondsForAtom(car)) {
+            for (Id bnd : mol->bondsForAtom(car)) {
                 Id other = mol->bond(bnd).other(car);
                 if (mol->bond(bnd).order==2 && (
                     mol->atom(other).atomic_number==8 ||

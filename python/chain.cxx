@@ -3,7 +3,7 @@
 namespace {
     list ct_keys(component_t& ct) {
         list L;
-        BOOST_FOREACH(String const& key, ct.keys()) {
+        for (String const& key : ct.keys()) {
             L.append(key);
         }
         return L;
