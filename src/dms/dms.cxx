@@ -1,4 +1,5 @@
 #include "dms.hxx"
+#include "../istream.hxx"
 #include <sqlite3.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,18 +12,12 @@
 #include <cerrno>
 #include <iomanip>
 
-//#include <boost/algorithm/string.hpp>
-
-#include <boost/iostreams/filtering_stream.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
-
 #include <sys/stat.h>
 #include <fcntl.h>
 
 #include <ThreeRoe/ThreeRoe.hpp>
 
 using namespace desres::msys;
-namespace bio = boost::iostreams;
 
 namespace {
     struct dms_file : sqlite3_file {
@@ -158,17 +153,21 @@ namespace {
         unsigned char s0 = buf[0];
         unsigned char s1 = buf[1];
         if (s0==0x1f && s1==0x8b) {
-            bio::filtering_istream in;
-            in.push(bio::gzip_decompressor());
             std::istringstream file;
-            file.rdbuf()->pubsetbuf(buf, *sz);
-            in.push(file);
-            std::stringstream ss;
-            ss << in.rdbuf();
-            std::string s = ss.str();
-            buf = (char *)realloc(buf, s.size());
-            *sz = s.size();
-            memcpy(buf, s.data(), *sz);
+            //this ought to work but doesn't, at least on MacOS.
+            //file.rdbuf()->pubsetbuf(buf, *sz);
+            file.str(std::string(buf, buf+*sz));    // extra copy :(
+            std::unique_ptr<istream> in(istream::wrap(file));
+            char tmp[16384];
+            std::vector<char> contents;
+            for (;;) {
+                auto rc = in->read(tmp, sizeof(tmp));
+                if (rc<=0) break;
+                contents.insert(contents.end(), tmp, tmp+rc);
+            }
+            *sz = contents.size();
+            buf = (char *)realloc(buf, contents.size());
+            memcpy(buf, contents.data(), contents.size());
         }
         return buf;
     }
