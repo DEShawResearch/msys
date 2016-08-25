@@ -8,8 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdexcept>
-#include <boost/scoped_ptr.hpp>
-#include <boost/filesystem.hpp>
+#include <sys/stat.h>
 
 using namespace desres::msys;
 
@@ -622,7 +621,8 @@ void desres::msys::ExportDMS(SystemPtr h, const std::string& path,
                              Provenance const& provenance,
                              unsigned flags ) {
 
-    if ((flags & DMSExport::Append) && boost::filesystem::exists(path)) {
+    struct stat statbuf;
+    if ((flags & DMSExport::Append) && 0==stat(path.data(), &statbuf)) {
         SystemPtr pre = ImportDMS(path);
         AppendSystem(pre, h);
         h = pre;
