@@ -4,12 +4,11 @@
 #include "system.hxx"
 #include <vector>
 #include <map>
-#include <boost/noncopyable.hpp>
 
 namespace desres { namespace msys {
 
     /* Checks graph isomorphism for two sets of atoms */ 
-    class Graph : boost::noncopyable {
+    class Graph {
 
     private:
         struct Node {
@@ -35,6 +34,8 @@ namespace desres { namespace msys {
         Graph(SystemPtr sys, const IdList& atoms);
 
     public:
+        Graph(Graph const&) = delete;
+        Graph& operator=(Graph const&) = delete;
 
         typedef std::vector<IdPair> MatchList;
 
