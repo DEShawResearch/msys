@@ -8,18 +8,16 @@
 #include "xyz.hxx"
 #include "sdf.hxx"
 
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/algorithm/string.hpp>
-
 using namespace desres::msys;
 
 namespace {
     // true if path ends with any of the endings in expr, separated by ','
-    bool match(std::string const& path, std::string const& expr) {
-        std::vector<std::string> endings;
-        boost::split(endings, expr, boost::is_any_of(","));
-        for (auto const& ending : endings) {
-            if (boost::ends_with(path, ending)) return true;
+    bool match(std::string const& path, const char** endings) {
+        while (*endings) {
+            const char* end = *endings;
+            if (strlen(end)<path.size() &&
+                path.rfind(end)==path.size()-strlen(end)) return true;
+            ++endings;
         }
         return false;
     }
@@ -67,14 +65,14 @@ namespace desres { namespace msys {
 
         std::string path(_path);
         to_lower(path);
-        const char* DMS = "dms,dms.gz";
-        const char* MAE = "mae,mae.gz,maegz,maeff,maeff.gz,cms,cms.gz";
-        const char* PDB = "pdb";
-        const char* PRM = "prmtop,prm7";
-        const char* MOL2= "mol2";
-        const char* XYZ = "xyz";
-        const char* SDF = "sdf,sdf.gz,sdfgz";
-        const char* PSF = "psf";
+        const char* DMS[] = {"dms","dms.gz", 0};
+        const char* MAE[] = {"mae","mae.gz","maegz","maeff","maeff.gz","cms","cms.gz", 0};
+        const char* PDB[] = {"pdb", 0};
+        const char* PRM[] = {"prmtop","prm7", 0};
+        const char* MOL2[]= {"mol2", 0};
+        const char* XYZ[] = {"xyz", 0};
+        const char* SDF[] = {"sdf","sdf.gz","sdfgz", 0};
+        const char* PSF[] = {"psf", 0};
 
         if (match(path, DMS)) return DmsFileFormat;
         if (match(path, MAE)) return MaeFileFormat;
