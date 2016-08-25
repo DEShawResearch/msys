@@ -7,7 +7,6 @@
 #include "../term_table.hxx"
 
 #include <fstream>
-#include <boost/algorithm/string.hpp>
 #include <cstring>
 #include <cmath>
 

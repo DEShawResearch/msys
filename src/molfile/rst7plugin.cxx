@@ -1,7 +1,6 @@
 #include "../amber.hxx"
 #include "molfile_homebox.h"
 #include <fstream>
-#include <boost/lexical_cast.hpp>
 
 #include "molfile_plugin.h"
 
@@ -36,7 +35,7 @@ static void read_frame(std::istream& in, int natoms,
                 for (int k=0; k<3; k++) {
                     std::string s = line.substr(width*(3*j+k),width);
                     trim(s);
-                    if (pos) *pos++ = boost::lexical_cast<Float>(s);
+                    if (pos) *pos++ = stringToDouble(s);
                 }
                 if (++i == natoms) break;
             }
@@ -58,7 +57,7 @@ static void read_frame(std::istream& in, int natoms,
                 for (int k=0; k<3; k++) {
                     std::string s = line.substr(width*(3*j+k),width);
                     trim(s);
-                    if (vel) *vel++ = SCALE * boost::lexical_cast<Float>(s);
+                    if (vel) *vel++ = SCALE * stringToDouble(s);
                 }
                 if (++i == natoms) break;
             }
@@ -76,7 +75,7 @@ static void read_frame(std::istream& in, int natoms,
             std::string s = line.substr(width*k,width);
             trim(s);
             try {
-                pdbbox[k] = boost::lexical_cast<Float>(s);
+                pdbbox[k] = stringToDouble(s);
             }
             catch (std::exception& e) {
                 MSYS_FAIL("Parsing unit cell in rst file: " << line << "\n" << e.what());

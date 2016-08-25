@@ -1,7 +1,6 @@
 #include "../sdf.hxx"
 #include "elements.hxx"
 #include "../append.hxx"
-#include <boost/math/special_functions/fpclassify.hpp>
 
 #include <stdio.h>
 #include <errno.h>
@@ -14,21 +13,6 @@
 using namespace desres::msys;
 
 namespace {
-    /* FIXME: these are also implemented in atomsel.. */
-    int stringToInt(std::string const& str){
-        char* stop;
-        int res = strtol( str.c_str(), &stop, 10 );
-        if ( *stop != 0 ) MSYS_FAIL("Bad int Specification: '" << str << "'");
-        return res;
-    }
-    
-    double stringToDouble(std::string const& str){
-        char* stop;
-        double res = strtod( str.c_str(), &stop );
-        if ( *stop != 0 ) MSYS_FAIL("Bad double Specification:\n" << str);
-        return res;
-    }
-
     void add_typed_keyval(String const& key, String const& val, 
                           component_t& ct) {
         try {
@@ -40,7 +24,7 @@ namespace {
         }
         try {
             double v = stringToDouble(val);
-            if (boost::math::isfinite(v)) {
+            if (isfinite(v)) {
                 ct.add(key,FloatType);
                 ct.value(key)=v;
                 return;

@@ -15,6 +15,12 @@
 #define MSYS_LOC __FILE__ << ":" << __LINE__ << "\n" << __PRETTY_FUNCTION__
 #endif
 
+#define MSYS_FAIL(args) do { \
+    std::stringstream _msys_fail_tmp_ss_; \
+    _msys_fail_tmp_ss_ << args << "\nversion: " << desres::msys::msys_version() << "\nlocation: " << MSYS_LOC; \
+    throw desres::msys::Failure(_msys_fail_tmp_ss_.str()); \
+} while(0)
+
 namespace desres { namespace msys {
 
     typedef uint32_t Id;
@@ -29,15 +35,6 @@ namespace desres { namespace msys {
     static const Id BadId = -1;
     inline bool bad(const Id& id) { return id==BadId; }
 
-    static inline void trim(std::string& s) {
-        size_t b=0, e=s.size();
-        if (b==e) return;
-        while (b<e && isspace(s[b])) ++b;
-        --e;
-        while (e>b && isspace(s[e])) --e;
-        s=s.substr(b,e-b+1);
-    }
-
     struct Failure : public std::exception {
         explicit Failure(std::string const& msg) throw() : _msg(msg) {}
         virtual ~Failure() throw() {}
@@ -46,6 +43,31 @@ namespace desres { namespace msys {
     private:
         std::string _msg;
     };
+    const char* msys_version();
+
+    inline int stringToInt(std::string const& str) {
+        char* stop;
+        int res = strtol( str.c_str(), &stop, 10 );
+        if ( *stop != 0 ) MSYS_FAIL("Bad int Specification: '" << str << "'");
+        return res;
+    }
+    
+    inline double stringToDouble(std::string const& str) {
+        char* stop;
+        double res = strtod( str.c_str(), &stop );
+        if ( *stop != 0 ) MSYS_FAIL("Bad double Specification:\n" << str);
+        return res;
+    }
+
+
+    static inline void trim(std::string& s) {
+        size_t b=0, e=s.size();
+        if (b==e) return;
+        while (b<e && isspace(s[b])) ++b;
+        --e;
+        while (e>b && isspace(s[e])) --e;
+        s=s.substr(b,e-b+1);
+    }
 
     /* make the given container hold only unique elements in sorted order.
      * Return the number of non-unique elements (i.e. difference in size
@@ -70,16 +92,9 @@ namespace desres { namespace msys {
     /* gettimeofday() */
     double now();
 
-    const char* msys_version();
     int msys_major_version();
     int msys_minor_version();
     int msys_micro_version();
 }}
-
-#define MSYS_FAIL(args) do { \
-    std::stringstream _msys_fail_tmp_ss_; \
-    _msys_fail_tmp_ss_ << args << "\nversion: " << desres::msys::msys_version() << "\nlocation: " << MSYS_LOC; \
-    throw desres::msys::Failure(_msys_fail_tmp_ss_.str()); \
-} while(0)
 
 #endif
