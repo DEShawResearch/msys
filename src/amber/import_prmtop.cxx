@@ -17,7 +17,7 @@ namespace {
     
     std::string parse_flag(std::string const& line) {
         std::string flag = line.substr(5);
-        boost::trim(flag);
+        trim(flag);
         return flag;
     }
 
@@ -78,7 +78,7 @@ namespace {
         Section const& sec = it->second;
         for (unsigned i=0; i<v.size(); i++) {
             v[i] = sec.data.substr(i*sec.fmt.width, sec.fmt.width);
-            boost::trim(v[i]);
+            trim(v[i]);
         }
     }
 

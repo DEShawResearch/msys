@@ -166,7 +166,7 @@ namespace {
             if (!!frz)  h->atomPropValue(id,gfrz)=frz.elem(j).as_int(0);
             if (!!grow) {
                 std::string g(grow.elem(j).as_string(""));
-                boost::trim(g);
+                trim(g);
                 if (!g.empty()) {
                     if (bad(growcol)) {
                         growcol=h->addAtomProp("m_grow_name", StringType);

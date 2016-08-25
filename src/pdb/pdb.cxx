@@ -8,7 +8,6 @@
 #include "readpdb.h"
 
 #include <vector>
-#include <boost/algorithm/string/trim.hpp>
 #include <string>
 #include <math.h>
 #include <errno.h>
@@ -132,7 +131,7 @@ SystemPtr iterator::next() {
                                        space, &zvalue);
             space[11]='\0';
             std::string s(space);
-            boost::trim(s);
+            trim(s);
             if (!s.empty()) {
                 Id id = mol->ct(0).add(PDB_SPACE_GROUP, StringType);
                 mol->ct(0).value(id) = s;

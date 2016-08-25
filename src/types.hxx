@@ -29,6 +29,15 @@ namespace desres { namespace msys {
     static const Id BadId = -1;
     inline bool bad(const Id& id) { return id==BadId; }
 
+    static inline void trim(std::string& s) {
+        size_t b=0, e=s.size();
+        if (b==e) return;
+        while (b<e && isspace(s[b])) ++b;
+        --e;
+        while (e>b && isspace(s[e])) --e;
+        s=s.substr(b,e-b+1);
+    }
+
     struct Failure : public std::exception {
         explicit Failure(std::string const& msg) throw() : _msg(msg) {}
         virtual ~Failure() throw() {}

@@ -4,7 +4,6 @@
 #include "../analyze.hxx"
 #include "elements.hxx"
 #include "append.hxx"
-#include <boost/algorithm/string.hpp> /* for boost::trim */
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -87,7 +86,7 @@ SystemPtr iterator::next() {
     /* read mol_name */
     fgets(buf, sizeof(buf), fd); 
     mol->name = buf;
-    boost::trim(mol->name);
+    trim(mol->name);
     mol->ct(0).setName(mol->name);
     /* read natoms, nbonds, nsub */
     natoms = nbonds = 0;

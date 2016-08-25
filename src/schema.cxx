@@ -7,8 +7,6 @@
 #include <string.h>
 #include <stdexcept>
 
-#include <boost/algorithm/string.hpp> /* for boost::trim */
-
 using namespace desres::msys;
 
 static void configure_table(const schema_t* schema, 

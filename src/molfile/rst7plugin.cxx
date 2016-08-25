@@ -2,7 +2,6 @@
 #include "molfile_homebox.h"
 #include <fstream>
 #include <boost/lexical_cast.hpp>
-#include <boost/algorithm/string.hpp>
 
 #include "molfile_plugin.h"
 
@@ -36,7 +35,7 @@ static void read_frame(std::istream& in, int natoms,
             try { 
                 for (int k=0; k<3; k++) {
                     std::string s = line.substr(width*(3*j+k),width);
-                    boost::trim(s);
+                    trim(s);
                     if (pos) *pos++ = boost::lexical_cast<Float>(s);
                 }
                 if (++i == natoms) break;
@@ -58,7 +57,7 @@ static void read_frame(std::istream& in, int natoms,
             try { 
                 for (int k=0; k<3; k++) {
                     std::string s = line.substr(width*(3*j+k),width);
-                    boost::trim(s);
+                    trim(s);
                     if (vel) *vel++ = SCALE * boost::lexical_cast<Float>(s);
                 }
                 if (++i == natoms) break;
@@ -75,7 +74,7 @@ static void read_frame(std::istream& in, int natoms,
         Float pdbbox[6];
         for (int k=0; k<6; k++) {
             std::string s = line.substr(width*k,width);
-            boost::trim(s);
+            trim(s);
             try {
                 pdbbox[k] = boost::lexical_cast<Float>(s);
             }

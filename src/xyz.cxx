@@ -4,7 +4,6 @@
 #include <errno.h>
 #include <stdio.h>
 #include <fastjson/print.hxx>
-#include <boost/algorithm/string.hpp>
 #include <string.h>
 
 namespace desres { namespace msys {
@@ -55,7 +54,7 @@ namespace desres { namespace msys {
             MSYS_FAIL("Failed reading molecule name in xyz file " << path);
         }
         mol->name = buf;
-        boost::trim(mol->name);
+        trim(mol->name);
 
         /* read atoms */
         for (int i=0; i<natoms; i++) {

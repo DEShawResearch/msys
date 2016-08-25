@@ -1,5 +1,4 @@
 #include "import.hxx"
-#include <boost/algorithm/string.hpp> /* for boost::trim */
 
 using namespace desres::msys;
 
@@ -30,8 +29,8 @@ void SystemImporter::initialize(IdList const& atoms) {
 
 bool SystemImporter::terminateChain(std::string chain, std::string segid, 
                                     Id ct ) {
-    boost::trim(chain);
-    boost::trim(segid);
+    trim(chain);
+    trim(segid);
     ChnMap::iterator it=chnmap.find(ChnKey(ct, chain, segid));
     if (it==chnmap.end()) return false;
     chnmap.erase(it);
@@ -44,11 +43,11 @@ Id SystemImporter::addAtom(std::string chain, std::string segid,
                            std::string insertion,
                            Id ct) {
 
-    boost::trim(chain);
-    boost::trim(segid);
-    boost::trim(resname);
-    boost::trim(insertion);
-    boost::trim(aname);
+    trim(chain);
+    trim(segid);
+    trim(resname);
+    trim(insertion);
+    trim(aname);
 
     if (bad(ct)) MSYS_FAIL("Got ct=BadId");
 
