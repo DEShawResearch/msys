@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "../sdf.hxx"
 #include "elements.hxx"
 #include "../append.hxx"
@@ -5,7 +7,6 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string>
-#include <math.h>
 
 #include <fstream>
 #include <sstream>
@@ -24,7 +25,7 @@ namespace {
         }
         try {
             double v = stringToDouble(val);
-            if (isfinite(v)) {
+            if (std::isfinite(v)) {
                 ct.add(key,FloatType);
                 ct.value(key)=v;
                 return;
