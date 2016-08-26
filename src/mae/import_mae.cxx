@@ -1,4 +1,3 @@
-#include <boost/algorithm/string.hpp>
 #include "mae.hxx"
 #include "sitemap.hxx"
 #include "vdwmap.hxx"
@@ -15,6 +14,21 @@
 
 using desres::msys::fastjson::Json;
 using namespace desres::msys;
+
+template <typename Container>
+void split(Container& c, std::string const& str, char delim) {
+    // while letters remain, skip delimiter(s), add word
+    size_t pos = 0;
+    for (;;) {
+        while (str[pos]==delim) ++pos;
+        size_t end = pos;
+        while (str[end]!='\0' && str[end] != delim) ++end;
+        if (end==pos) break;
+        c.emplace_back(str.substr(pos,end-pos));
+        pos = end;
+    }
+}
+
 
 namespace {
 
@@ -272,7 +286,7 @@ namespace {
         std::string workdir = ff.get("viparr_workdir").as_string(".");
         workdir += "/";
         std::vector<std::string> tokens;
-        boost::split(tokens, cmd, boost::is_any_of(" "));
+        split(tokens, cmd, ' ');
         if (tokens.size()>2) {
             for (unsigned i=1; i<tokens.size()-1; i++) {
                 if (tokens[i]=="-f") {

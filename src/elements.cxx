@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <string.h>
 #include <string>
-#include <boost/algorithm/string.hpp>
 
 using namespace desres::msys;
 
