@@ -33,6 +33,27 @@ def vsize():
     s=os.popen(cmd).read()
     return int(s)
 
+class TestSmiles(unittest.TestCase):
+    def testCharge(self):
+        for sym, q in (
+                ('', 0),
+                ('+', 1),
+                ('++', 2),
+                ('-', -1),
+                ('--', -2),
+                ('+0', 0),
+                ('+1', 1),
+                ('+2', 2),
+                ('-0', 0),
+                ('-1', -1),
+                ('-2', -2),
+                ):
+            smiles = '[P%s]' % sym
+            mol = msys.FromSmilesString(smiles)
+            self.assertEqual(mol.natoms, 1)
+            fc = mol.atom(0).formal_charge
+            self.assertEqual(q, fc, '%s: want %d got %d' % (smiles, q, fc))
+
 class TestHbond(unittest.TestCase):
     def test1(self):
         mol = msys.Load('tests/files/1vcc.mae')

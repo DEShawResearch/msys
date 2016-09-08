@@ -41,10 +41,9 @@ symbol  ({element}|{aromatic}|"*")
 
 chiral  (@|@@)
 hcount  H{digit}?
-ncharge [\-+]{digit}?{digit}?
+ncharge [\-+]{digit}?
 plus2   [+][+]
 minus2  [\-][\-]
-charge  ({plus2}|{minus2}|{ncharge})
 class   :{number}
 
 lbracket "["
@@ -66,8 +65,13 @@ rbracket "]"
 <symbol>{chiral}    { yylval->num = strlen(yytext); return CHIRAL;}
 <symbol>{hcount}    { yylval->num = yytext[1] ? atoi(yytext+1) : 1; return HCOUNT;}
 <symbol>{class}     { yylval->num = atoi(yytext+1); return CLASS; }
-<symbol>{charge}    { yylval->num = (yytext[1]=='-' ? -1 : 1) * (yytext[0]=='+' ? 1 : -1); return CHARGE; }
-
+<symbol>{plus2}     { yylval->num = 2;  return CHARGE; }
+<symbol>{minus2}    { yylval->num = -2; return CHARGE; }
+<symbol>{ncharge}   { int digit = yytext[1] ? yytext[1]-'0' : 1;
+                      if (yytext[0]=='-') digit = -digit;
+                      yylval->num = digit;
+                      return CHARGE;
+                    }
 <symbol>{rbracket}  { BEGIN(INITIAL); return RBRACKET; }
 
 {bond}{digit}  { 
