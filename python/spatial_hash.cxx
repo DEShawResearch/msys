@@ -75,6 +75,14 @@ static PyObject* hash_find(SpatialHash& hash,
     const float* pos = (const float*)PyArray_DATA(posarr);
     const Id* ids = (const Id*)PyArray_DATA(idsarr);
     Id n = PyArray_DIM(idsarr,0);
+    for (Id i=0; i<n; i++) {
+        if (ids[i]>=PyArray_DIM(posarr,0)) {
+            PyErr_Format(PyExc_ValueError, "index out of bounds: %d", ids[i]);
+            Py_DECREF(idsarr);
+            Py_DECREF(posarr);
+            throw_error_already_set();
+        }
+    }
 
     IdList result = (hash.*func)(r, pos, n, ids);
 
@@ -132,6 +140,13 @@ static PyObject* hash_find_contacts(SpatialHash& hash,
             throw_error_already_set();
         }
         ids = (const Id*)PyArray_DATA(idsarr);
+        for (Py_ssize_t i=0, m=PyArray_DIM(idsarr, 0); i<m; i++) {
+            if (ids[i]>=n) {
+                Py_DECREF(posarr);
+                PyErr_Format(PyExc_ValueError, "id out of bounds: %d", ids[i]);
+                throw_error_already_set();
+            }
+        }
         n = PyArray_DIM(idsarr, 0);
     }
 

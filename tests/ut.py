@@ -105,6 +105,15 @@ class TestContacts(unittest.TestCase):
         p2.sort()
         self.compare(p1,p2)
 
+    def testBadInputs(self):
+        mol = msys.Load('tests/files/jandor.sdf')
+        pos = mol.positions.astype('f')
+        h = msys.SpatialHash(pos)
+        with self.assertRaises(ValueError):
+            h.findContacts(3, pos, [len(pos)+40002])
+        with self.assertRaises(ValueError):
+            h.findWithin(3, pos, [len(pos)+40002])
+
     def testPeriodicWater(self):
         mol = msys.Load('tests/files/2f4k.dms')
         pos = mol.positions.astype('f')
