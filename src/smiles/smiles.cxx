@@ -74,6 +74,7 @@ namespace desres { namespace msys { namespace smiles {
 
         hcount.clear();
         mol = System::create();
+        mol->name = s;
         mol->addChain();
         mol->addResidue(0);
         mol->ct(0).setName(s);
