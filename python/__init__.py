@@ -2248,23 +2248,42 @@ HydrogenBond.donor = property(lambda x: x.donor_id, doc="Donor atom id")
 HydrogenBond.acceptor = property(lambda x: x.acceptor_id, doc="Acceptor atom id")
 
 class HydrogenBondFinder(object):
-    ''' Find hydrogen bonds in a system given a selection of donors and
-    acceptors, along with a cutoff distance.  More hbonds will be found
-    than are "realistic"; further filtering may be performed using the
-    energy attribute of the returned hbonds.  A reasonable filter seems
-    to be around -1.0 (more negative is stronger); i.e. energies greater
-    than that are more likely than not to be spurious.
+    ''' Find candidate hydrogen bonds.
+
+    More hbonds will be found than are "realistic"; further filtering
+    may be performed using the energy attribute of the returned hbonds.
+    A reasonable filter seems to be around -1.0 (more negative is
+    stronger); i.e. energies greater than that are more likely than not
+    to be spurious.
 
     The HydrogenBond class can also be used directly to compute hydrogen
     bond geometry and energies by supplying donor, acceptor and
     hydrogen positions.
     '''
     def __init__(self, system, donors, acceptors, cutoff=3.5):
+        '''
+        Args:
+            system (System): msys system
+            donors: selection string, list of ids, or list of Atoms
+            acceptors: selection string, list of ids, or list of Atoms
+            cutoff (float): distance cutoff for donor and acceptor
+
+        Note:
+            If Atoms are provided, they must be members of system.
+        '''
+        if not donors: raise ValueError("Empty donors argument")
+        if not acceptors: raise ValueError("Empty acceptors argument")
+        if cutoff<0.1: raise ValueError("Unreasonably small cutoff %s" % cutoff)
+
         self.system = system
         if isinstance(donors, str):
             donors = system.selectIds(donors)
+        elif isinstance(donors[0], Atom):
+            donors = [a.id for a in donors]
         if isinstance(acceptors, str):
             acceptors = system.selectIds(acceptors)
+        elif isinstance(acceptors[0], Atom):
+            acceptors = [a.id for a in acceptors]
         self.cutoff = cutoff
 
         # find hydrogens for each donor

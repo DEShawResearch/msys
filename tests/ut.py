@@ -56,11 +56,17 @@ class TestSmiles(unittest.TestCase):
 
 class TestHbond(unittest.TestCase):
     def test1(self):
-        mol = msys.Load('tests/files/1vcc.mae')
+        mol = msys.Load('tests/files/1vcc.mae', structure_only=True)
         finder = msys.HydrogenBondFinder(mol, 
                                          'protein and name N',
                                          'protein and name O')
         hbonds = finder.find(mol.positions)
+        self.assertEqual(len(hbonds), 168)
+
+        finder = msys.HydrogenBondFinder(mol, 
+                                         mol.select('protein and name N'),
+                                         mol.select('protein and name O'))
+        hbonds2 = finder.find(mol.positions)
         self.assertEqual(len(hbonds), 168)
         
 class TestContacts(unittest.TestCase):
