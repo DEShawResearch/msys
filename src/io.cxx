@@ -8,6 +8,8 @@
 #include "xyz.hxx"
 #include "sdf.hxx"
 
+#include <sys/stat.h>
+
 using namespace desres::msys;
 
 namespace {
@@ -230,5 +232,45 @@ namespace desres { namespace msys {
         SaveWithFormat(mol, path, prov, fmt, flags);
     }
 
+    static std::string default_idx_path(std::string const& path) {
+        return path + ".idx";
+    }
+
+    std::shared_ptr<IndexedFileLoader> 
+    IndexedFileLoader::open(std::string const& path,
+                            std::string const& idx_path) {
+        auto idx = idx_path.empty() ? default_idx_path(path) : idx_path;
+        switch (GuessFileFormat(path)) {
+            case SdfFileFormat:
+                return OpenIndexedSdf(path, idx);
+            default:;
+        };
+        return std::shared_ptr<IndexedFileLoader>(nullptr);
+    }
+
+    void IndexedFileLoader::index(std::string const& path,
+                                  std::string const& idx_path) {
+
+        auto idx = idx_path.empty() ? default_idx_path(path) : idx_path;
+        switch (GuessFileFormat(path)) {
+            default:
+                MSYS_FAIL("Unable to determine format of " << path);
+            case SdfFileFormat:
+                printf("create index at %s\n", idx.data());
+                CreateIndexedSdf(path, idx);
+                break;
+        };
+    }
+
+    std::shared_ptr<IndexedFileLoader>
+    IndexedFileLoader::create(std::string const& path) {
+        auto idx = default_idx_path(path);
+        struct stat stbuf;
+        if (stat(idx.data(), &stbuf)<0) {
+            printf("stat failed; indexing.\n");
+            index(path, idx);
+        }
+        return open(path, idx);
+    }
 
 }}

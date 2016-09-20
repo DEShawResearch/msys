@@ -25,6 +25,12 @@ namespace desres { namespace msys {
     void ExportSdf(SystemPtr mol, std::string const& path, unsigned flags=0);
     std::string FormatSdf(SystemPtr mol);
 
+    std::shared_ptr<IndexedFileLoader> OpenIndexedSdf(
+            std::string const& path, std::string const& idx_path);
+
+    void CreateIndexedSdf(
+            std::string const& path, std::string const& idx_path);
+
 }}
 
 #endif

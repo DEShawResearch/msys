@@ -87,6 +87,35 @@ namespace desres { namespace msys {
         virtual SystemPtr next() = 0;
     };
 
+    // IndexedFileLoader provides random access to multi-structure files.
+    class IndexedFileLoader {
+    public:
+        virtual ~IndexedFileLoader() {}
+        virtual std::string const& path() const = 0;
+        virtual size_t size() const = 0;
+        virtual SystemPtr at(size_t zero_based_entry) const = 0;
+
+        // open an indexed file loader, inferring the type based on
+        // file name.  The index file must already exist and is expected
+        // to be placed at $path.idx; you may optionally specify your own 
+        // index file path.
+        static std::shared_ptr<IndexedFileLoader> open(
+                std::string const& path,
+                std::string const& idx_path = "");
+
+        // create an index for the given file, inferring type based on
+        // file name.  Place index file at idx_path, defaulting to 
+        // $path.idx.
+        static void index(std::string const& path,
+                          std::string const& idx_path = "");
+
+        // convenience: open an indexed file loader, creating the 
+        // index file if necessary at $path.idx
+        static std::shared_ptr<IndexedFileLoader> create(
+                std::string const& path);
+
+    };
+
     /* Flags for Save. */
     struct SaveOptions {
         enum Flags {
