@@ -1,18 +1,18 @@
 #!/bin/sh
-eval "$(/usr/bin/garden-exec)"
 
-set -e
+trap 'echo 1>&2 $0: Exiting on ERR trap at line $LINENO; exit 1' ERR
+eval "$(garden-exec)"
 
 NAME=msys
-VERSION=`src/version.py`
+VERSION=$(src/version.py)
 DESCRIPTION="Biomolecular Structure Library"
 
 # module versions that scripts in ./tools need to know
 . ./MODULES
 
 # shared library dependencies
-GCC=gcc/4.9.2-30B
-BOOST=boost/1.59.0-03
+GCC=gcc/5.2.0-31x
+BOOST=boost/1.61.0-05
 LPSOLVE=lp_solve/5.5.2.0-05A
 INCHI=inchi/1.04-05
 TEXLIVE=texlive/20120701-03
@@ -24,7 +24,7 @@ SCONS=scons/2.3.4-10A
 SCONSUTILS=sconsutils/1.40
 
 loadmodules() {
-    garden add \
+    garden load \
         $GCC/bin \
         $PYTHON/bin \
         $PYTHON/lib \
@@ -36,8 +36,10 @@ loadmodules() {
         $SQLITE/lib \
 	$THREEROE/lib \
 	$TEXLIVE/bin
-    
-   export MSYS_VERSION=$VERSION
+
+    garden strip-colons
+
+    export MSYS_VERSION=$VERSION
 }
 
 genmodules() {
@@ -51,18 +53,19 @@ EOF
     # library
     cat << EOF > $GARDENDIR/lib
 prepend-path DESRES_MODULE_CPPFLAGS -I$PREFIX/include
-prepend-path DESRES_MODULE_LDFLAGS  -L$PREFIX/lib -Wl,-rpath,$PREFIX/lib
+prepend-path DESRES_MODULE_LDFLAGS  -L$PREFIX/lib:-Wl,-rpath,$PREFIX/lib
+prepend-path DESRES_MODULE_LDLIBS -l$NAME
 prereq $PYTHON/lib
 prereq $BOOST/lib
 prereq $SQLITE/lib
-setenv MSYS_PREFIX "$PREFIX"
+setenv MSYS_PREFIX $PREFIX
 EOF
 
     # executables
     cat << EOF > $GARDENDIR/bin
 prepend-path PATH $PREFIX/bin
 prepend-path MANPATH $PREFIX/doc/man
-setenv MSYS_PREFIX "$PREFIX"
+setenv MSYS_PREFIX $PREFIX
 EOF
 }
 
@@ -78,7 +81,7 @@ EOF
 }
 
 gendocs() {
-    (cd doc && VERSION=$VERSION BINDIR=${PREFIX}/bin make clean genhelp html )
+    (cd doc && VERSION=$VERSION BINDIR=$PREFIX/bin make clean genhelp html )
     cp -r doc/build/html $PREFIX/doc/
 }
 
@@ -97,7 +100,7 @@ case $1 in
     --install)
 	loadmodules
 
-        $0 --exec scons install -j 12 PREFIX=${PREFIX} OBJDIR=${TMPDIR}
+        $0 --exec scons install -j 12 PREFIX=$PREFIX OBJDIR=$TMPDIR
 
         ./tests/ut.py
 
@@ -109,7 +112,7 @@ case $1 in
     --help)
         desres_install_helper_usage
         ;;
-    # It's not an error if nothing matches.  desres-install may invent
+    # It's not an error if nothing matches.  garden-install may invent
     # other arguments in the future.
 esac
 
