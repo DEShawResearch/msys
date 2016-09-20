@@ -76,6 +76,15 @@ namespace {
         return Load(path, NULL, structure_only, without_tables);
     }
 
+    std::string indexed_file_path(IndexedFileLoader const& L) {
+        return L.path();
+    }
+    size_t indexed_file_size(IndexedFileLoader const& L) {
+        return L.size();
+    }
+    SystemPtr indexed_file_at(IndexedFileLoader const& L, size_t i) {
+        return L.at(i);
+    }
 }
 
 namespace desres { namespace msys { 
@@ -109,6 +118,15 @@ namespace desres { namespace msys {
         class_<LoadIterator, LoadIteratorPtr, boost::noncopyable>("LoadIterator", no_init)
             .def("create", load_iterator_create).staticmethod("create")
             .def("next", load_iterator_next)
+            ;
+
+        class_<IndexedFileLoader, std::shared_ptr<IndexedFileLoader>,
+            boost::noncopyable>("IndexedFileLoader", no_init)
+            .def("create", IndexedFileLoader::create)
+            .staticmethod("create")
+            .def("path", indexed_file_path)
+            .def("size", indexed_file_size)
+            .def("at",   indexed_file_at)
             ;
 
         def("ImportDMS", import_dms);

@@ -1794,6 +1794,45 @@ def Load(path, structure_only=False, without_tables=None):
         raise ValueError, "Could not guess file type of '%s'" % path
     return System(ptr)
 
+class IndexedFileLoader(object):
+    ''' Supports random access to multi-structure files
+    '''
+
+    def __init__(self, path, idx_path = None):
+        ''' Open an indexed file loader, creating an index file if needed.
+        Args:
+            path (str): file path.  File type is inferred from the extension.
+            idx_path (str): index file path.  Defaults to $path.idx.
+
+        Note:
+            You need write permission to the location of the index file.
+        '''
+        if idx_path is None:
+            idx_path = ""
+        else:
+            idx_path = str(idx_path)
+        self._ptr = _msys.IndexedFileLoader.create(path, idx_path)
+
+    @property
+    def path(self):
+        ''' path to source file '''
+        return self._ptr.path()
+
+    def __len__(self):
+        ''' number of entries '''
+        return self._ptr.size()
+
+    def __getitem__(self, index):
+        ''' Get structure at given index
+
+        Args:
+            index (int): 0-based index
+
+        Returns:
+            mol (System): msys System
+        '''
+        return System(self._ptr.at(index))
+
 def LoadMany(path, structure_only=False, error_writer=sys.stderr):
     ''' Iterate over structures in a file, if the file type supports
     iteration.  

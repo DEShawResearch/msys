@@ -13,7 +13,8 @@ import platform
 # DON'T CHANGE THIS! RUN ut.py out of the base directory.  -- JRG
 desres_os  = os.getenv("DESRES_OS",  platform.system())
 desres_isa = os.getenv("DESRES_ISA", platform.machine())
-TMPDIR=os.getenv('TMPDIR', 'objs/%s/%s' % (desres_os, desres_isa))
+TMPDIR = os.getenv('TMPDIR') if platform.system() != 'Darwin' else None
+TMPDIR = TMPDIR or 'objs/%s/%s' % (desres_os, desres_isa)
 sys.path.insert(0,os.path.join(TMPDIR, 'lib', 'python'))
 import msys
 from msys import knot, reorder, pfx, molfile
@@ -21,6 +22,7 @@ from time import time
 import numpy as NP
 import json
 import gzip
+import shutil
 import tempfile
 import sqlite3
 from itertools import izip
@@ -53,6 +55,17 @@ class TestSmiles(unittest.TestCase):
             self.assertEqual(mol.natoms, 1)
             fc = mol.atom(0).formal_charge
             self.assertEqual(q, fc, '%s: want %d got %d' % (smiles, q, fc))
+
+class TestIndexedFile(unittest.TestCase):
+    def testSdf(self):
+        with tempfile.NamedTemporaryFile(suffix='.sdf') as tmp:
+            shutil.copy('tests/files/cofactors.sdf', tmp.name)
+            L = msys.IndexedFileLoader(tmp.name)
+            self.assertEqual(L.path, tmp.name)
+            self.assertEqual(len(L), 15)
+            self.assertEqual(L[5].ct(0)['Name'], 'NADP+')
+            self.assertEqual(L[0].ct(0)['Name'], 'dUMP anion')
+
 
 class TestHbond(unittest.TestCase):
     def test1(self):

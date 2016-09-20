@@ -112,7 +112,8 @@ namespace desres { namespace msys {
         // convenience: open an indexed file loader, creating the 
         // index file if necessary at $path.idx
         static std::shared_ptr<IndexedFileLoader> create(
-                std::string const& path);
+                std::string const& path,
+                std::string const& idx_path = "");
 
     };
 

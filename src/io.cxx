@@ -256,18 +256,17 @@ namespace desres { namespace msys {
             default:
                 MSYS_FAIL("Unable to determine format of " << path);
             case SdfFileFormat:
-                printf("create index at %s\n", idx.data());
                 CreateIndexedSdf(path, idx);
                 break;
         };
     }
 
     std::shared_ptr<IndexedFileLoader>
-    IndexedFileLoader::create(std::string const& path) {
-        auto idx = default_idx_path(path);
+    IndexedFileLoader::create(std::string const& path,
+                              std::string const& idx_path) {
+        auto idx = idx_path.empty() ? default_idx_path(path) : idx_path;
         struct stat stbuf;
         if (stat(idx.data(), &stbuf)<0) {
-            printf("stat failed; indexing.\n");
             index(path, idx);
         }
         return open(path, idx);
