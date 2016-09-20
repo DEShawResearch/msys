@@ -1,6 +1,4 @@
 #!/bin/sh
-
-trap 'echo 1>&2 $0: Exiting on ERR trap at line $LINENO; exit 1' ERR
 eval "$(garden-exec)"
 
 NAME=msys
@@ -11,8 +9,8 @@ DESCRIPTION="Biomolecular Structure Library"
 . ./MODULES
 
 # shared library dependencies
-GCC=gcc/5.2.0-31x
-BOOST=boost/1.61.0-05
+GCC=gcc/4.9.2-30B
+BOOST=boost/1.59.0-03
 LPSOLVE=lp_solve/5.5.2.0-05A
 INCHI=inchi/1.04-05
 TEXLIVE=texlive/20120701-03
@@ -37,8 +35,6 @@ loadmodules() {
 	$THREEROE/lib \
 	$TEXLIVE/bin
 
-    garden strip-colons
-
     export MSYS_VERSION=$VERSION
 }
 
@@ -54,7 +50,6 @@ EOF
     cat << EOF > $GARDENDIR/lib
 prepend-path DESRES_MODULE_CPPFLAGS -I$PREFIX/include
 prepend-path DESRES_MODULE_LDFLAGS  -L$PREFIX/lib:-Wl,-rpath,$PREFIX/lib
-prepend-path DESRES_MODULE_LDLIBS -l$NAME
 prereq $PYTHON/lib
 prereq $BOOST/lib
 prereq $SQLITE/lib
