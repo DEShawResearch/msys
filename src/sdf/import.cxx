@@ -464,7 +464,7 @@ namespace {
                 MSYS_FAIL(idx_path << ": " << strerror(errno));
             }
             size_t num_entries = statbuf.st_size / sizeof(Id);
-            if (num_entries * sizeof(Id) != statbuf.st_size) {
+            if (num_entries * sizeof(Id) != (size_t)statbuf.st_size) {
                 close(fd);
                 MSYS_FAIL("Index file has wrong number of bytes: " << idx_path);
             }
@@ -501,7 +501,7 @@ namespace {
             size_t start = i==0 ? 0 : offsets.at(i-1);
             std::vector<char> buf(stop-start);
             ssize_t rc = pread(sdf_fd, buf.data(), buf.size(), start);
-            if (rc!=stop-start) {
+            if (rc!=(ssize_t)(stop-start)) {
                 MSYS_FAIL("Reading entry " << i << " from sdf " << _path << ": " << strerror(errno));
             }
             return buffer_iterator(buf.data(), buf.size()).next();
