@@ -64,6 +64,7 @@ class TestIndexedFile(unittest.TestCase):
             self.assertEqual(L.path, tmp.name)
             self.assertEqual(len(L), 15)
             self.assertEqual(L[5].ct(0)['Name'], 'NADP+')
+            self.assertEqual(L[10].ct(0)['Name'], 'FAD-CH2+')
             self.assertEqual(L[0].ct(0)['Name'], 'dUMP anion')
 
 

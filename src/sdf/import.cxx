@@ -13,7 +13,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <sys/mman.h>
 #include <sys/types.h>
 #include <string.h>
 
@@ -427,81 +426,87 @@ SystemPtr desres::msys::ImportSdf(std::string const& path) {
     return mol;
 }
 
-// return size in bytes of each sdf entry
-static IdList sdf_entry_sizes(std::string const& path) {
+// return offset in bytes of each sdf entry
+static std::vector<size_t> sdf_offsets(std::string const& path) {
     file_iterator iter(path);
     SystemPtr ct;
-    IdList sizes;
-    size_t cur = 0;
-    Id entry=1;
+    std::vector<size_t> offsets;
     while ((ct = iter.next())) {
-        size_t next = iter.offset();
-        size_t size = next-cur;
-        if (size >= size_t(1) << (8*sizeof(sizes[0]))) {
-            MSYS_FAIL("Entry " << entry << " too large: " << size << " bytes.");
-        }
-        sizes.push_back(size);
-        cur = next;
+        offsets.push_back(iter.offset());
+        if (!(offsets.size() % 100000)) printf("%lu\n", offsets.size());
     }
-    return sizes;
+    return offsets;
 }
 
 namespace {
+    // index file format: 
+    // byte 0: version = 0x01
+    // byte 1-7: unused
+    // byte 8-15: num_entries
+    // remainder: 8-byte offsets
+
     class IndexedSdfLoader : public IndexedFileLoader {
         int sdf_fd = 0;
-        std::vector<size_t> offsets;
+        int idx_fd = 0;
+        size_t _size = 0;
         std::string _path;
+
+        void parse_header()
+        {
+            unsigned char buf[16];
+            if (::read(idx_fd, buf, sizeof(buf)) != sizeof(buf)) {
+                MSYS_FAIL("Parsing idx file header: " << strerror(errno));
+            }
+            if (buf[0] != 0x01) {
+                MSYS_FAIL("Bad version in header: got " << buf[0] << " want " << 0x01);
+            }
+            _size = ((size_t *)buf)[1];
+        }
+
     public:
-        IndexedSdfLoader(std::string const& sdf_path, std::string const& idx_path)
-        : _path(sdf_path) {
-            int fd = ::open( idx_path.data(), O_RDONLY);
-            if (fd<=0) {
+        IndexedSdfLoader(std::string const& sdf_path, 
+                         std::string const& idx_path)
+        : _path(sdf_path)
+        {
+            idx_fd = ::open( idx_path.data(), O_RDONLY);
+            if (idx_fd<=0) {
                 MSYS_FAIL(idx_path << ": " << strerror(errno));
             }
-            struct stat statbuf;
-            if (fstat(fd,&statbuf)!=0) {
-                close(fd);
-                MSYS_FAIL(idx_path << ": " << strerror(errno));
-            }
-            size_t num_entries = statbuf.st_size / sizeof(Id);
-            if (num_entries * sizeof(Id) != (size_t)statbuf.st_size) {
-                close(fd);
-                MSYS_FAIL("Index file has wrong number of bytes: " << idx_path);
-            }
-            offsets.resize(num_entries);
-            const void* ptr = (const Id*)mmap(0, statbuf.st_size, 
-                    PROT_READ, MAP_SHARED, fd, 0);
-            if (ptr == MAP_FAILED) {
-                close(fd);
-                MSYS_FAIL("Reading index file: " << strerror(errno));
-            }
-            size_t offset = 0;
-            for (size_t i=0; i<num_entries; i++) {
-                offset += ((const Id *)ptr)[i];
-                offsets[i] = offset;
-            }
-            close(fd);
             sdf_fd = ::open(sdf_path.data(), O_RDONLY);
             if (sdf_fd <= 0) {
                 MSYS_FAIL("Opening sdf file: " << strerror(errno));
             }
+            parse_header();
         }
 
-        std::string const& path() const { return _path; }
         ~IndexedSdfLoader() {
             if (sdf_fd > 0) close(sdf_fd);
+            if (idx_fd > 0) close(idx_fd);
         }
 
-        size_t size() const {
-            return offsets.size();
-        }
 
+        std::string const& path() const { return _path; }
+        size_t size() const { return _size; }
         SystemPtr at(size_t i) const {
-            size_t stop = offsets.at(i);
-            size_t start = i==0 ? 0 : offsets.at(i-1);
-            std::vector<char> buf(stop-start);
-            ssize_t rc = pread(sdf_fd, buf.data(), buf.size(), start);
-            if (rc!=(ssize_t)(stop-start)) {
+            if (i>=_size) MSYS_FAIL("Invalid index " << i << " >= " << _size);
+
+            // get range of needed data
+            size_t range[2];
+            if (i==0) {
+                range[0] = 0;
+                if (pread(idx_fd, &range[1], 8, 16)!=8) {
+                    MSYS_FAIL("Reading index entry 0: " << strerror(errno));
+                }
+            } else {
+                if (pread(idx_fd, &range[0], 16, 8+8*i)!=16) {
+                    MSYS_FAIL("Reading index entry " << i << ": " << strerror(errno));
+                }
+            }
+
+            size_t size = range[1] - range[0];
+            std::vector<char> buf(size);
+            ssize_t rc = pread(sdf_fd, buf.data(), size, range[0]);
+            if (rc!=(ssize_t)(size)) {
                 MSYS_FAIL("Reading entry " << i << " from sdf " << _path << ": " << strerror(errno));
             }
             return buffer_iterator(buf.data(), buf.size()).next();
@@ -511,15 +516,19 @@ namespace {
 
 void desres::msys::CreateIndexedSdf(std::string const& sdf_path, 
                                     std::string const& idx_path) {
-    auto sizes = sdf_entry_sizes(sdf_path);
+    auto offsets = sdf_offsets(sdf_path);
     FILE* fp = fopen(idx_path.data(), "wb");
     if (!fp) MSYS_FAIL(idx_path << ": " << strerror(errno));
-    if (sizes.empty()) {
+    if (offsets.empty()) {
         fclose(fp);
         return;
     }
-    auto n = sizes.size();
-    if (fwrite(&sizes[0], sizeof(sizes[0]), n, fp) != n) {
+    auto n = offsets.size();
+    char header[16];
+    header[0] = 0x01;
+    ((size_t*)header)[1] = n;
+    fwrite(header, 1, sizeof(header), fp);
+    if (fwrite(&offsets[0], sizeof(offsets[0]), n, fp) != n) {
         std::string err = strerror(errno);
         fclose(fp);
         unlink(idx_path.data());
