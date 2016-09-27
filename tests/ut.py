@@ -83,7 +83,7 @@ class TestHbond(unittest.TestCase):
         hbonds2 = finder.find(mol.positions)
         self.assertEqual(len(hbonds), 168)
         
-class TestContacts(unittest.TestCase):
+class Contacts(unittest.TestCase):
     def compare(self, p1, p2):
         assert len(p1)>0
         self.assertEqual(len(p1), len(p2))
@@ -124,6 +124,62 @@ class TestContacts(unittest.TestCase):
         p2 = [(i,j,d) for i,j,d in p2 if i<j and not mol.atom(i).findBond(mol.atom(j))]
         p2.sort()
         self.compare(p1,p2)
+
+    def testBorisov(self):
+        mol = msys.Load('tests/files/spatial_hash_test.dms')
+        id1 = 836
+        id2 = 2264
+        sel1 = 'alpha and chain N'
+        sel2 = 'alpha and chain S'
+
+        # check pbwithin selections
+        pbsel = mol.selectIds('index %d and pbwithin 5 of index %d' % (id1,id2))
+        self.assertEqual(pbsel, [id1])
+        pbsel = mol.selectIds('index %d and pbwithin 5 of index %d' % (id2,id1))
+        self.assertEqual(pbsel, [id2])
+
+        pos = mol.positions.astype('f')
+        box = mol.cell
+
+        # check using spatial hash and no ids
+        h = msys.SpatialHash([pos[id1]], box=box)
+        found = h.findWithin(5, [pos[id2]])
+        self.assertEqual(found, [0])
+
+        h = msys.SpatialHash([pos[id2]], box=box)
+        found = h.findWithin(5, [pos[id1]])
+        self.assertEqual(found, [0])
+
+        # check using spatial hash with single id
+        h = msys.SpatialHash(pos, ids=[id1], box=box)
+        found = h.findWithin(5, pos, ids=[id2])
+        self.assertEqual(found, [id2])
+
+        h = msys.SpatialHash(pos, ids=[id2], box=box)
+        found = h.findWithin(5, pos, ids=[id1])
+        self.assertEqual(found, [id1])
+
+        # check using spatial hash with lots of ids
+        idsel1 = mol.selectIds(sel1)
+        idsel2 = mol.selectIds(sel2)
+        self.assertTrue(id1 in idsel1)
+        self.assertTrue(id2 in idsel2)
+
+        h = msys.SpatialHash(pos, ids=idsel1, box=box)
+        found = h.findWithin(5, pos, ids=idsel2)
+        self.assertEqual(found, [id2])
+
+        h = msys.SpatialHash(pos, ids=idsel2, box=box)
+        found = h.findWithin(5, pos, ids=idsel1)
+        self.assertEqual(found, [id1])
+
+        # check findContacts
+        h = msys.SpatialHash(pos, ids=idsel2, box=box)
+        i1, i2, d = h.findContacts(5, pos, ids=idsel1)
+        self.assertEqual(i1, [id1])
+        self.assertEqual(i2, [id2])
+
+
 
     def testBadInputs(self):
         mol = msys.Load('tests/files/jandor.sdf')
