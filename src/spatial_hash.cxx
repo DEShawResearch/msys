@@ -174,6 +174,14 @@ SpatialHash& SpatialHash::voxelize(float r) {
     nx = (xmax-xmin)*ir + 3;
     ny = (ymax-ymin)*ir + 3;
     nz = (zmax-zmin)*ir + 3;
+    static const int maxdim = 500;
+    if (nx > maxdim || ny > maxdim || nz > maxdim) {
+        float dbig = std::max(std::max(xmax-xmin, ymax-ymin), zmax-zmin);
+        ir = float(maxdim) / dbig;
+        nx = (xmax-xmin)*ir + 3;
+        ny = (ymax-ymin)*ir + 3;
+        nz = (zmax-zmin)*ir + 3;
+    }
     int nvoxels = nx*ny*nz;
 
     /* allocate space for extra voxels so we don't have to worry

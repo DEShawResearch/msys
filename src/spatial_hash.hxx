@@ -10,7 +10,7 @@ namespace desres { namespace msys {
         /* Support distance queries of at most _radius */
         float rad;
         
-        /* inverse radius */
+        /* inverse voxel size */
         float ir;
 
         /* bounding box of target coordinates */

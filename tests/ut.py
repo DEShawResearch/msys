@@ -134,6 +134,16 @@ class TestContacts(unittest.TestCase):
         with self.assertRaises(ValueError):
             h.findWithin(3, pos, [len(pos)+40002])
 
+    def testSmallVoxels(self):
+        pos = NP.zeros((5,3), 'f')
+        pos[1] = [1000,1000,1000]
+        pos[2] = [.1,0,0]
+        pos[3] = [1000,1000,1000.1]
+        pos[4] = [100,-300,100]
+        h = msys.SpatialHash(pos[:2])
+        r = h.findWithin(.2, pos[2:]).tolist()
+        self.assertEqual(r, [0,1])
+
     def testPeriodicWater(self):
         mol = msys.Load('tests/files/2f4k.dms')
         pos = mol.positions.astype('f')
@@ -491,8 +501,7 @@ class TestAtomselCoverage(unittest.TestCase):
         self.check('vx 0', [0,1,2])
         self.check('vy 0', [0,2])
         self.check('vz 0', [0,1,2])
-        import numpy
-        pos=numpy.ones((3,3), dtype='f')
+        pos=NP.ones((3,3), dtype='f')
         pos[2,2]=42
         pos[1,1]=-3
         self.assertEqual(self.mol.selectIds('x 0', pos), [])
