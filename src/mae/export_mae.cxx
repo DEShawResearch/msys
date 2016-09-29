@@ -53,6 +53,12 @@ static void build_ct_fields( SystemPtr mol, Destro& M ) {
 
     /* other fields */
     for (String key : mol->ct(0).keys()) {
+        for (auto c : key) {
+            if (isspace(c)) {
+                MSYS_FAIL("data field '" << key << "' whose name contains whitespace cannot be written to mae format.");
+            }
+        }
+
         ValueRef val = mol->ct(0).value(key);
         char type = "irs"[val.type()];
         if (!strncmp(key.c_str(), "m_depend/", 9)) {
