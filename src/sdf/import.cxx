@@ -225,7 +225,6 @@ namespace {
                 }
                 if (bnd.order == 4) {
                     bnd.order = 1;
-                    bnd.resonant_order = 1.5;       
                     bnd.aromatic = 1;
                 } else if (bnd.order<1 || bnd.order>4) {
                     MSYS_FAIL("Unsupported bond type in bond record: " << skip_to_end());

@@ -1108,11 +1108,7 @@ class TestMain(unittest.TestCase):
         # Smoke test only
         sys = msys.LoadDMS('tests/files/ww.dms')
         msys.AssignBondOrderAndFormalCharge(sys)
-        self.assertFalse('resonant_charge' in sys.atom_props)
-        self.assertFalse('resonant_order' in sys.bond_props)
         msys.AssignBondOrderAndFormalCharge(sys.select('water'))
-        self.assertFalse('resonant_charge' in sys.atom_props)
-        self.assertFalse('resonant_order' in sys.bond_props)
 
     def testMemoryLeakPosVel(self):
         mol=msys.CreateSystem()
@@ -1313,9 +1309,7 @@ class TestMain(unittest.TestCase):
         self.assertEqual(b.other(b.first), b.second)
         self.assertEqual(b.other(b.second), b.first)
         b.order=32
-        b.resonant_order=32.5
         self.assertEqual(b.order, 32)
-        self.assertEqual(b.resonant_order, 32.5)
         self.assertEqual(len(m.bonds),1)
 
         first, second = b.atoms

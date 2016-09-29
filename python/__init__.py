@@ -93,9 +93,13 @@ class Bond(Handle):
         ''' does custom Bond property exist? '''
         return not _msys.bad(self._ptr.bondPropIndex(key))
 
-
-__add_properties(Bond, 'order')
-__add_properties(Bond, 'resonant_order')
+    @property
+    def order(self):
+        ''' bond order (int) '''
+        return self.data().order
+    @order.setter
+    def order(self, val):
+        self.data().order = val
 
 class Atom(Handle):
     ''' Represents an atom (or pseudoparticle) in a chemical system '''
@@ -2003,26 +2007,15 @@ def GetRingSystems(atoms):
     ptr, _ids = _convert_ids(atoms)
     return _msys.RingSystems(ptr, _ids)
 
-def AssignSybylTypes(system):
-    ''' Assign Sybyl atom and bond types to the given system.  
-    Types will be stored in the "sybyl_type" property of each atom and bond.
-    Invoke AssignBondOrderAndFormalCharge first if bond orders need to
-    be recalculated. '''
-    _msys.AssignSybylTypes(system._ptr)
-
 def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge = None):
     """Assign bond orders and formal charges to a molecular system.
 
     Determines bond orders and formal charges by preferring neutral
     charges and placing negative charges with more electronegative
     atoms, under octet constraints and the total system charge
-    constraint. Assigns the bond orders and formal charges to the
-    system. Also determines resonance forms and creates and populates a
-    'resonant_order' bond property and 'resonant_charge' atom property
-    in the system, where resonant order/charge is the average of the
-    bond order/formal charge over all resonant forms. Can assign to a
-    subset of atoms of the system, provided these atoms form complete
-    connected fragments.
+    constraint. Assigns the bond orders and formal charges to the system.
+    Can assign to a subset of atoms of the system, provided these atoms
+    form complete connected fragments.
 
     WARNING: calling this function on a chemically incomplete system,
     i.e. just protein backbone, may cause msys to hang indefinitely.

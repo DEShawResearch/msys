@@ -114,7 +114,7 @@ static int read_bonds(void *v, int *nbonds, int **from, int **to,
             bond_t const& bnd = mol->bondFAST(i);
             sys->bonds[i]   = bnd.i+1;
             sys->bonds[i+n] = bnd.j+1;
-            sys->bondorders[i] = bnd.resonant_order;
+            sys->bondorders[i] = bnd.order;
         }
     }
     *nbonds = mol->bondCount();

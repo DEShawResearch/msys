@@ -48,7 +48,6 @@ namespace desres { namespace msys {
         def("AssignBondOrderAndFormalCharge", assign_1);
         def("AssignBondOrderAndFormalCharge", assign_2);
         def("AssignBondOrderAndFormalCharge", assign_3);
-        def("AssignSybylTypes", AssignSybylTypes);
         /* Yes, we have two interfaces for SSSR, this one and the one in
          * AnnotatedSystem.  This one lets you specify which atoms you
          * want the rings for, and doesn't force you to do any annotation, 

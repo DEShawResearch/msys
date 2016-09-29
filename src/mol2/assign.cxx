@@ -48,11 +48,11 @@ double calc_angle( const double* A, const double* B, const double* C ) {
 /* reference: 
  * http://www.sdsc.edu/CCMS/Packages/cambridge/pluto/atom_types.html
  */
-static String guess_atom_type(SystemPtr mol, IdList const& cyclic, Id id) {
+const char* desres::msys::GuessSybylAtomType(SystemPtr mol, Id id, bool cyclic) {
     atom_t const& atm = mol->atom(id);
     residue_t const& res = mol->residue(atm.residue);
     Id nbnd=mol->bondCountForAtom(id);
-    Id nres=0; /* number of bonds with resonant_order 1.5 */
+    Id nres=0; /* number of aromatic bonds */
     Id nsng=0;  /* number of single bonds */
     Id ndbl=0;  /* number of double bonds */
     Id ntrp=0;  /* number of triple bonds */
@@ -62,7 +62,7 @@ static String guess_atom_type(SystemPtr mol, IdList const& cyclic, Id id) {
     Id nhyd=0;  /* number of bonds to hydrogen */
     for (Id bid : mol->bondsForAtom(id)) {
         bond_t const& bond = mol->bond(bid);
-        if (bond.resonant_order==1.5) ++nres;
+        if (bond.aromatic) ++nres;
         if (bond.order==1) ++nsng;
         if (bond.order==2) ++ndbl;
         if (bond.order==3) ++ntrp;
@@ -89,8 +89,7 @@ static String guess_atom_type(SystemPtr mol, IdList const& cyclic, Id id) {
             return "Ru.oh";
         case 6:             /* 1.6 */
             if (nbnd>=4 && nsng==nbnd) return "C.3";    /* 1.6.1 */
-            if (nbnd==3 && nres==0 && nnit==3 &&        /* 1.6.2 */
-                !std::binary_search(cyclic.begin(), cyclic.end(), id)) {
+            if (nbnd==3 && nres==0 && nnit==3 && !cyclic) { /* 1.6.2 */ 
                 /* check that each nitrogen forms bonds to two other atoms,
                  * neither of which is oxygen */
                 bool ok=true;
@@ -156,7 +155,7 @@ static String guess_atom_type(SystemPtr mol, IdList const& cyclic, Id id) {
                     for (Id nbr : mol->bondedAtoms(id)) {
                         if (mol->atom(nbr).atomic_number==1) ++nh;
                         else for (Id bnd : mol->bondsForAtom(nbr)) {
-                            if (mol->bond(bnd).resonant_order>1) {
+                            if (mol->bond(bnd).order>1) {
                                 ++nd;
                                 break;
                             }
@@ -197,9 +196,9 @@ static String guess_atom_type(SystemPtr mol, IdList const& cyclic, Id id) {
     return AbbreviationForElement(atm.atomic_number);
 }
 
-static String guess_bond_type( SystemPtr mol, Id bnd,
-                                    std::string const& itype, 
-                                    std::string const& jtype) {
+const char* desres::msys::GuessSybylBondType( SystemPtr mol, Id bnd,
+                                              std::string const& itype, 
+                                              std::string const& jtype) {
 
     if (itype=="N.am" || jtype=="N.am") {
         Id n = mol->bond(bnd).i;
@@ -217,42 +216,11 @@ static String guess_bond_type( SystemPtr mol, Id bnd,
         }
     }
     if (itype=="C.ar" && jtype=="C.ar") return "ar";
-    if (mol->bondFAST(bnd).resonant_order==1.5) return "ar";
+    if (mol->bondFAST(bnd).aromatic) return "ar";
     int order = mol->bondFAST(bnd).order;
     if (order==1) return "1";
     if (order==2) return "2";
     if (order==3) return "3";
     return "un";
-}
-
-/* return atoms which are part of a ring */
-static IdList find_cyclic(MultiIdList const& rings) {
-    IdList cyclic;
-    for (Id i=0, n=rings.size(); i<n; i++) {
-        cyclic.insert(cyclic.end(), rings[i].begin(), rings[i].end());
-    }
-    sort_unique(cyclic);
-    return cyclic;
-}
-
-void desres::msys::AssignSybylTypes(SystemPtr mol) {
-
-    Id atype = mol->addAtomProp("sybyl_type", StringType);
-    Id btype = mol->addBondProp("sybyl_type", StringType);
-    MultiIdList rings = GetSSSR(mol, mol->atoms());
-    IdList cyclic = find_cyclic(rings);
-
-    for (Id i=0; i<mol->maxAtomId(); i++) {
-        if (!mol->hasAtom(i)) continue;
-        mol->atomPropValue(i,atype) = guess_atom_type(mol, cyclic, i);
-    }
-
-    for (Id i=0; i<mol->maxBondId(); i++) {
-        if (!mol->hasBond(i)) continue;
-        bond_t const& bnd = mol->bond(i);
-        std::string itype = mol->atomPropValue(bnd.i,atype);
-        std::string jtype = mol->atomPropValue(bnd.j,atype);
-        mol->bondPropValue(i,btype) = guess_bond_type(mol, i, itype, jtype);
-    }
 }
 

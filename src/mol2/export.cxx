@@ -1,16 +1,13 @@
 #include "../mol2.hxx"
 #include "elements.hxx"
-#include "../clone.hxx"
+#include "../annotated_system.hxx"
 #include <stdio.h>
 #include <math.h>
 
 using namespace desres::msys;
 
-static void export_ct(SystemPtr mol, Id ct, FILE* fd, 
+static void export_ct(SystemPtr mol, AnnotatedSystem& asys, Id ct, FILE* fd, 
                       Provenance const& provenance, unsigned flags) {
-
-    Id atype = mol->atomPropIndex("sybyl_type");
-    Id btype = mol->bondPropIndex("sybyl_type");
 
     component_t const& cmp = mol->ct(ct);
     IdList atoms = mol->atomsForCt(ct);
@@ -30,6 +27,8 @@ static void export_ct(SystemPtr mol, Id ct, FILE* fd,
     fprintf(fd, "%s: %s\n", 
             provenance.version.c_str(),
             provenance.cmdline.c_str());
+
+    std::vector<const char*> atypes(mol->maxAtomId());
 
     fprintf(fd, "@<TRIPOS>ATOM\n");
     for (Id i=0; i<atoms.size(); i++) {
@@ -57,9 +56,9 @@ static void export_ct(SystemPtr mol, Id ct, FILE* fd,
         }
 
         /* guess an atom type */
-        const char* type =
-            bad(atype) ? AbbreviationForElement(atm.atomic_number)
-                       : mol->atomPropValue(id,atype).c_str();
+        bool cyclic = asys.atomRingCount(id);
+        const char* type = GuessSybylAtomType(mol, id, cyclic);
+        atypes[id] = type;
 
         /* write the atom line */
         const char* bb = atm.type==AtomProBack ? "BACKBONE" : "";
@@ -81,15 +80,8 @@ static void export_ct(SystemPtr mol, Id ct, FILE* fd,
         if (si==atoms.size() || sj==atoms.size()) {
             MSYS_FAIL("Ct " << ct << " has bonds which cross ct boundaries.  Cannot export to MOL2.");
         }
-        std::string type;
-        if (bad(btype)) {
-            std::stringstream ss;
-            ss << bnd.order;
-            type = ss.str();
-        } else {
-            type = mol->bondPropValue(id,btype).asString();
-        }
-        fprintf(fd, "%5u %5u %5u %s\n", i+1, si+1, sj+1, type.c_str());
+        const char* type = GuessSybylBondType(mol, id, atypes[ai], atypes[aj]);
+        fprintf(fd, "%5u %5u %5u %s\n", i+1, si+1, sj+1, type);
     }
 
     /* substructure */
@@ -109,39 +101,17 @@ static void export_ct(SystemPtr mol, Id ct, FILE* fd,
     }
 }
 
-static bool missing_sybyl_types(SystemPtr mol) {
-    Id aprop = mol->atomPropIndex("sybyl_type");
-    Id bprop = mol->bondPropIndex("sybyl_type");
-    if (bad(aprop) || bad(bprop)) return true;
-    for (auto id : mol->atoms()) {
-        if (*mol->atomPropValue(id, aprop).c_str()=='\0') {
-            return true;
-        }
-    }
-    for (auto id : mol->bonds()) {
-        if (*mol->bondPropValue(id, bprop).c_str()=='\0') {
-            return true;
-        }
-    }
-    return false;
-}
-
 void desres::msys::ExportMol2( SystemPtr mol, std::string const& path,
                                Provenance const& provenance,
                                unsigned flags) {
 
-    /* make sure we have sybyl atom types for everything */
-    if (missing_sybyl_types(mol)) {
-        mol = Clone(mol, mol->atoms());
-        AssignSybylTypes(mol);
-    }
-
+    AnnotatedSystem asys(mol, AnnotatedSystem::AllowBadCharges);
     const char* mode = flags & Mol2Export::Append ? "ab" : "wb";
     FILE* fd = fopen(path.c_str(), mode);
     if (!fd) MSYS_FAIL("Could not open '" << "' for writing.");
     std::shared_ptr<FILE> dtor(fd, fclose);
     for (Id ct=0; ct<mol->ctCount(); ct++) {
-        export_ct(mol,ct,fd,provenance,flags);
+        export_ct(mol,asys,ct,fd,provenance,flags);
     }
 }
 

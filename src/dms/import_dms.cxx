@@ -572,7 +572,6 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only,
     int GID = r.column("id");
     int CHARGE = r.column("charge");
     int FORMAL = r.column("formal_charge");
-    int RESCHG = r.column("resonant_charge");
     int INSERT = r.column("insertion");
     int CT = r.column("msys_ct");
     
@@ -595,7 +594,6 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only,
     handled.insert(GID);
     handled.insert(CHARGE);
     handled.insert(FORMAL);
-    handled.insert(RESCHG);
     handled.insert(INSERT);
     handled.insert(CT);
 
@@ -633,7 +631,6 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only,
         atm.atomic_number = anum;
         atm.charge = r.get_flt( CHARGE);
         atm.formal_charge = FORMAL<0 ? 0 : r.get_int(FORMAL);
-        atm.resonant_charge = RESCHG<0 ? 0 : r.get_flt(RESCHG);
 
         /* extra atom properties */
         Id propcol=0;
@@ -657,14 +654,12 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only,
         int p0=r.column("p0");
         int p1=r.column("p1");
         int o = r.column("order");
-        int ro = r.column("resonant_order");
 
         /* read the bond table */
         for (; r; r.next()) {
             int ai = r.get_int( p0);
             int aj = r.get_int( p1);
             int order = o<0 ? 1 : r.get_int(o);
-            Float resonant_order = ro<0 ? 1 : r.get_flt(ro);
             Id id;
             try {
                 id = sys.addBond(ai, aj);
@@ -674,7 +669,6 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only,
                         << e.what());
             }
             sys.bondFAST(id).order = order;
-            sys.bondFAST(id).resonant_order = resonant_order;
         }
     }
 
