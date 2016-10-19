@@ -29,7 +29,7 @@ namespace desres { namespace msys {
 
 
     struct ChemData {
-        float eneg;    // Electronegativities (Allen Scale)
+        double eneg;    // Electronegativities (Allen Scale)
         int nValence;  // Number of valence electrons present in atom
         unsigned maxOct;    // max electrons for 'satisfied' octet (hypervalent>8)
         unsigned maxFree;   // max free (non-bonding) electron pairs allowed...

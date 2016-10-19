@@ -1100,9 +1100,11 @@ class Main(unittest.TestCase):
             self.assertEqual(msys.GuessAtomicNumber(m), max(i,0))
 
     def testElement(self):
-        for i,a,n in (1,'H','H'), (2,'He','He'), (19,'K','K'),(6,'C1','C'), (17,'Cl2','Cl'), (20,'Ca3','Ca'):
+        for i,a,n,e in (1,'H','H', 2.3), (2,'He','He',4.16), (19,'K','K',0.734),(6,'C1','C',2.544), (17,'Cl2','Cl', 2.869), (20,'Ca3','Ca', 1.034):
             self.assertEqual(msys.ElementForAbbreviation(a), i)
             self.assertEqual(msys.AbbreviationForElement(i), n)
+            self.assertTrue(abs(msys.ElectronegativityForElement(i)- e)<1e-6, msys.ElectronegativityForElement(i))
+
 
     def testAssignBondOrdersAndFormalCharges(self):
         # Smoke test only

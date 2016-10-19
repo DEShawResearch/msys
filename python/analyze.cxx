@@ -39,6 +39,9 @@ namespace {
     list ring_systems(SystemPtr mol, list atoms) {
         return to_python(RingSystems(mol, GetSSSR(mol, ids_from_python(atoms), true)));
     }
+    double elec_for_element(int n) {
+        return DataForElement(n).eneg;
+    }
 
 }
 
@@ -67,6 +70,7 @@ namespace desres { namespace msys {
         def("AbbreviationForElement", AbbreviationForElement);
         def("Analyze", Analyze);
         def("GuessAtomicNumber", GuessAtomicNumber);
+        def("ElectronegativityForElement", elec_for_element, "Allen-scale electronegativity");
 
         class_<SmartsPattern>("SmartsPattern", init<std::string const&>())
             .def("atomCount", &SmartsPattern::atomCount)
