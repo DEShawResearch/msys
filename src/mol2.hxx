@@ -18,9 +18,12 @@ namespace desres { namespace msys {
     LoadIteratorPtr Mol2Iterator(std::string const& path);
 
     /* Assign sybyl atom and bond types to the given system.  Be sure
-     * bond order and resonant bond order are valid; use 
-     * AssignBondOrderAndFormalCharge to do this analysis.  */
-    void AssignSybylTypes(SystemPtr mol);
+     * bond order is valid; see AssignBondOrderAndFormalCharge.
+     */
+    const char* GuessSybylAtomType(SystemPtr mol, Id id, bool cyclic);
+    const char* GuessSybylBondType(SystemPtr mol, Id bond_id, 
+                                   std::string const& itype,
+                                   std::string const& jtype);
 
     struct Mol2Export {
         enum Flags {

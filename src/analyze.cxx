@@ -84,7 +84,6 @@ namespace desres { namespace msys {
                             const Id ai = p.first;
                             const Id bi = p.second;
                             mol->atom(bi).formal_charge = mol->atom(ai).formal_charge;
-                            mol->atom(bi).resonant_charge = mol->atom(ai).resonant_charge;
                             pmap.at(ai) = bi;
                         }
                         /* map bond properties */
@@ -99,7 +98,6 @@ namespace desres { namespace msys {
                                 if (bad(bj)) continue;
                                 bond_t& dst = mol->bond(mol->findBond(bi,bj));
                                 dst.order = src.order;
-                                dst.resonant_order = src.resonant_order;
                             }
                         }
                     }

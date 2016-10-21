@@ -143,16 +143,15 @@ namespace desres { namespace msys {
         for (Id aid : fragment){
             assert(boa->_mol->hasAtom(aid));
             boa->_mol->atom(aid).formal_charge=0; 
-            boa->_mol->atom(aid).resonant_charge=0.0;
             for (Id bid : boa->_mol->bondsForAtom(aid)){
                 msys::bond_t &bond=boa->_mol->bond(bid);
                 /* Initially, set kept bond orders=1.0, removed=0.0 */
                 if((*boa->_filter)(bond)){
                     bond.order=1;
-                    bond.resonant_order=1.0;
+                    //bond.resonant_order=1.0;
                 }else{
                     bond.order=0;
-                    bond.resonant_order=0.0;                    
+                    //bond.resonant_order=0.0;                    
                 }
             }
             if(boa->_mol->atom(aid).atomic_number<1)
@@ -1584,38 +1583,35 @@ namespace desres { namespace msys {
         */
         for (Id aid1 : _fragatoms){
             _mol->atom(aid1).formal_charge=0;
-            _mol->atom(aid1).resonant_charge=0.0;
         }
 
         /* Assign bond orders and bond electron charge part here "- 0.5*Sum_j ( BondElectrons[ij] )" */
+        std::vector<double> resonant_charge(_mol->maxAtomId());
         for (solutionMap::value_type const& bpair : bondinfo){
             Id bid=bpair.first;
             solutionValues const& bdata=bpair.second;
     
             bond_t & bond=_mol->bond(bid);
             Id aid1=bond.i;
-            atom_t& atm1=_mol->atom(aid1);
+            atom_t& atm1=_mol->atomFAST(aid1);
             Id aid2=bond.j;
-            atom_t& atm2=_mol->atom(aid2);
+            atom_t& atm2=_mol->atomFAST(aid2);
 
             /* Bond Orders */
             int order=bdata.nonresonant;
             bond.order=order;
             double resorder=bdata.resonant;
-            bond.resonant_order=resorder;
-
-#if DEBUGPRINT
-            printf("Bond Order for bond %u ( %u %u ): %d %f\n",bid, aid1, aid2, order, resorder );
-#endif
+            //bond.resonant_order=resorder;
 
             /* Charges */
             atm1.formal_charge-=order;
             atm2.formal_charge-=order;
-            atm1.resonant_charge -= resorder;
-            atm2.resonant_charge -= resorder;
+            resonant_charge[bond.i] -= resorder;
+            resonant_charge[bond.j] -= resorder;
         }
 
         /* Take care of the "ValenceElectrons[i] - freeElectrons[i]" part of charge here */
+
         for (solutionMap::value_type const& apair : atominfo){
             Id aid=apair.first;
             solutionValues const& adata=apair.second;
@@ -1625,13 +1621,14 @@ namespace desres { namespace msys {
 
             atm.formal_charge+= nValence - 2*adata.nonresonant;
 
-            double resq=atm.resonant_charge;
+            //double resq=atm.resonant_charge;
+            double resq = resonant_charge[aid];
             resq += nValence - 2*adata.resonant;
-            if(fabs(resq)<1E-5){
-                atm.resonant_charge=0.0;
-            }else{
-                atm.resonant_charge=resq;
-            }
+            //if(fabs(resq)<1E-5){
+                //atm.resonant_charge=0.0;
+            //}else{
+                //atm.resonant_charge=resq;
+            //}
 
             /* Assert that the model calculated charges agree with the above.
                FIXME: just replace the above calculation of charges with whats tabulated in chargeinfo
@@ -1644,9 +1641,6 @@ namespace desres { namespace msys {
                 iqtarget=qdata.nonresonant;
                 dqtarget=qdata.resonant;
             }
-#if DEBUGPRINT
-            printf("Charge for atom %u: %d %d  ( %f %f )\n",aid, atm.formal_charge, iqtarget, resq, dqtarget );
-#endif
             if((atm.formal_charge != iqtarget) || fabs(resq - dqtarget)>1E-8 ){
                 throw std::runtime_error("SolutionToAtoms failed. atm.formal_charge != iqtarget or fabs(resq - dqtarget)>1E-8");
             }

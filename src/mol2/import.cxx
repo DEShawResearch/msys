@@ -76,8 +76,6 @@ SystemPtr iterator::next() {
     int natoms, nbonds, nsub;
 
     SystemPtr mol = System::create();
-    Id atype=mol->addAtomProp("sybyl_type", StringType);
-    Id btype=mol->addBondProp("sybyl_type", StringType);
     SystemImporter imp(mol);
     mol->addCt();
     mol->ct(0).add("msys_file_offset", IntType);
@@ -147,7 +145,6 @@ SystemPtr iterator::next() {
                         }
                     }
                     Id atm = imp.addAtom( "", "", resid, resname, name);
-                    mol->atomPropValue(atm,atype)=type;
                     atom_t& atom = mol->atom(atm);
                     atom.x = x;
                     atom.y = y;
@@ -174,19 +171,18 @@ SystemPtr iterator::next() {
                         MSYS_FAIL("Invalid atoms in Bond record:\n" << buf);
                     }
                     Id bnd = mol->addBond(ai-1, aj-1);
-                    mol->bondPropValue(bnd,btype)=type;
                     bond_t& bond = mol->bond(bnd);
                     if (!strcmp(type, "1")) {
-                        bond.order = bond.resonant_order = 1;
+                        bond.order = 1;
                     } else if (!strcmp(type, "2")) {
-                        bond.order = bond.resonant_order = 2;
+                        bond.order = 2;
                     } else if (!strcmp(type, "3")) {
-                        bond.order = bond.resonant_order = 3;
+                        bond.order = 3;
                     } else if (!strcmp(type, "am")) {
-                        bond.order = bond.resonant_order = 1;
+                        bond.order = 1;
                     } else if (!strcmp(type, "ar")) {
                         bond.order = 1;
-                        bond.resonant_order = 1.5;
+                        bond.aromatic = true;
                     }
                 }
                 state = Skip;

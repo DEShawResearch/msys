@@ -39,6 +39,9 @@ namespace {
     list ring_systems(SystemPtr mol, list atoms) {
         return to_python(RingSystems(mol, GetSSSR(mol, ids_from_python(atoms), true)));
     }
+    double elec_for_element(int n) {
+        return DataForElement(n).eneg;
+    }
 
 }
 
@@ -48,7 +51,6 @@ namespace desres { namespace msys {
         def("AssignBondOrderAndFormalCharge", assign_1);
         def("AssignBondOrderAndFormalCharge", assign_2);
         def("AssignBondOrderAndFormalCharge", assign_3);
-        def("AssignSybylTypes", AssignSybylTypes);
         /* Yes, we have two interfaces for SSSR, this one and the one in
          * AnnotatedSystem.  This one lets you specify which atoms you
          * want the rings for, and doesn't force you to do any annotation, 
@@ -68,6 +70,7 @@ namespace desres { namespace msys {
         def("AbbreviationForElement", AbbreviationForElement);
         def("Analyze", Analyze);
         def("GuessAtomicNumber", GuessAtomicNumber);
+        def("ElectronegativityForElement", elec_for_element, "Allen-scale electronegativity");
 
         class_<SmartsPattern>("SmartsPattern", init<std::string const&>())
             .def("atomCount", &SmartsPattern::atomCount)

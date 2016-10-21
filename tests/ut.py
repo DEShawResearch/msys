@@ -803,7 +803,7 @@ class TestValidate(unittest.TestCase):
         self.assertEqual(len(results_after_untying),0)
         self.assertTrue(success)
 
-class TestMain(unittest.TestCase):
+class Main(unittest.TestCase):
 
     def testPickle(self):
         import cPickle as pkl
@@ -1100,19 +1100,17 @@ class TestMain(unittest.TestCase):
             self.assertEqual(msys.GuessAtomicNumber(m), max(i,0))
 
     def testElement(self):
-        for i,a,n in (1,'H','H'), (2,'He','He'), (19,'K','K'),(6,'C1','C'), (17,'Cl2','Cl'), (20,'Ca3','Ca'):
+        for i,a,n,e in (1,'H','H', 2.3), (2,'He','He',4.16), (19,'K','K',0.734),(6,'C1','C',2.544), (17,'Cl2','Cl', 2.869), (20,'Ca3','Ca', 1.034):
             self.assertEqual(msys.ElementForAbbreviation(a), i)
             self.assertEqual(msys.AbbreviationForElement(i), n)
+            self.assertTrue(abs(msys.ElectronegativityForElement(i)- e)<1e-6, msys.ElectronegativityForElement(i))
+
 
     def testAssignBondOrdersAndFormalCharges(self):
         # Smoke test only
         sys = msys.LoadDMS('tests/files/ww.dms')
         msys.AssignBondOrderAndFormalCharge(sys)
-        self.assertFalse('resonant_charge' in sys.atom_props)
-        self.assertFalse('resonant_order' in sys.bond_props)
         msys.AssignBondOrderAndFormalCharge(sys.select('water'))
-        self.assertFalse('resonant_charge' in sys.atom_props)
-        self.assertFalse('resonant_order' in sys.bond_props)
 
     def testMemoryLeakPosVel(self):
         mol=msys.CreateSystem()
@@ -1313,9 +1311,7 @@ class TestMain(unittest.TestCase):
         self.assertEqual(b.other(b.first), b.second)
         self.assertEqual(b.other(b.second), b.first)
         b.order=32
-        b.resonant_order=32.5
         self.assertEqual(b.order, 32)
-        self.assertEqual(b.resonant_order, 32.5)
         self.assertEqual(len(m.bonds),1)
 
         first, second = b.atoms
@@ -1391,6 +1387,13 @@ class TestMain(unittest.TestCase):
         m2=msys.Load(path)
         self.assertEqual(m2.ncts, 2)
         self.assertEqual(m2.natoms, 2*m.natoms)
+
+    def testMaeFields(self):
+        m=msys.CreateSystem()
+        m.addAtom().atomic_number=8
+        m.ct(0)['foo bar'] = 32
+        with self.assertRaises(RuntimeError):
+            msys.SerializeMAE(m)
 
     def testRemove(self):
         m=msys.CreateSystem()

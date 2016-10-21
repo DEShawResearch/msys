@@ -227,7 +227,6 @@ namespace {
                 Id bnd = h->addBond(a1,a2);
                 h->bond(bnd).order = m_order.elem(j).as_int(1);
                 if (h->bond(bnd).order==0) h->bond(bnd).order = 1;
-                h->bond(bnd).resonant_order = h->bond(bnd).order;
             }
         }
 
