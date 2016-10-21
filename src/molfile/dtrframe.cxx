@@ -156,7 +156,6 @@ namespace {
         uint32_t count_lo;
         uint32_t count_hi;
     };
-
 }
 
 uint32_t compute_threeroe_hash(const char *datap, uint32_t data_size) {
@@ -421,7 +420,7 @@ void Key::set(const double* buf, uint64_t n) {
     type = TYPE_FLOAT64;
 }
 
-uint32_t Key::get_element_size() {
+uint32_t Key::get_element_size() const {
     return(elemsizes[type]);
 }
 
@@ -467,7 +466,7 @@ static uint64_t field_size(KeyMap const& map) {
     return sz;
 }
 
-size_t desres::molfile::dtr::ConstructFrame(KeyMap const& map, void ** bufptr) {
+size_t desres::molfile::dtr::ConstructFrame(KeyMap const& map, void ** bufptr, bool use_padding) {
     if (!bufptr) return 0;
     uint64_t offset_header_block = 0;
     uint64_t size_header_block =
@@ -493,8 +492,19 @@ size_t desres::molfile::dtr::ConstructFrame(KeyMap const& map, void ** bufptr) {
     uint64_t size_crc_block = sizeof(uint32_t);
 
     uint64_t offset_padding_block = offset_crc_block + size_crc_block;
-    uint64_t size_padding_block =
-        alignInteger(offset_padding_block,block_size) - offset_padding_block;
+    uint64_t size_padding_block;
+
+    if (use_padding) {
+	//
+	// In ETRs, there is no per-frame padding.  This might be
+	// extended to DTRs and ATRs since no code in practice
+	// relies on the ability to mmap() frames, which is where
+	// the original 4096 byte (i.e. 1 page) padding came from.
+	//
+        size_padding_block = alignInteger(offset_padding_block,block_size) - offset_padding_block;
+    } else {
+        size_padding_block = 0;
+    }
 
     uint64_t framesize = offset_padding_block + size_padding_block;
 
@@ -595,6 +605,3 @@ size_t desres::molfile::dtr::ConstructFrame(KeyMap const& map, void ** bufptr) {
     *crc = fletcher(reinterpret_cast<uint16_t*>(base),offset_crc_block/2);
     return framesize;
 }
-
-
-

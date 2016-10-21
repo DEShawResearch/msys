@@ -1707,6 +1707,7 @@ static void handle_anton_sfxp_v3(
     }
     blob.get(&positionScale);
   }
+
   // momentum scale
   if (ts->velocities || ts->dvelocities) {
     if (!rmass) {
@@ -1767,6 +1768,7 @@ static void handle_anton_sfxp_v3(
     }
     posblob.get(&pos[0]);
   }
+
   // convert and read into supplied storage
   if (ts->coords) for (unsigned i=0; i<natoms; i++) {
     ts->coords[3*i  ] = sfxp_ulp32flt(pos[3*i+0])*positionScale;
@@ -1779,11 +1781,13 @@ static void handle_anton_sfxp_v3(
       ts->velocities[3*i+2] = (float)(rm * sfxp_ulp32flt(vel[3*i+2]));
     }
   }
+
   if (ts->dcoords) for (unsigned i=0; i<natoms; i++) {
     ts->dcoords[3*i  ] = sfxp_ulp32flt(pos[3*i+0])*positionScale;
     ts->dcoords[3*i+1] = sfxp_ulp32flt(pos[3*i+1])*positionScale;
     ts->dcoords[3*i+2] = sfxp_ulp32flt(pos[3*i+2])*positionScale;
   }
+
   if (ts->dvelocities) for (unsigned i=0; i<natoms; i++) {
     const double rm = rmass[i] * momentumScale; // includes PEAKmassInAmu
     ts->dvelocities[3*i  ] = (rm * sfxp_ulp32flt(vel[3*i  ]));
@@ -1883,15 +1887,7 @@ KeyMap DtrReader::frame_from_bytes(const void *buf, uint64_t len,
 
     if (ts) {
 
-        const float * rmass = NULL;
-
-        std::string key = "INVMASS";
-        if (metap->get_frame_map()->find("INVMASS") != metap->get_frame_map()->end()) {
-            Key blob = metap->get_frame_map()->at("INVMASS");
-            rmass = (float *) blob.data;
-        }
-
-        // Now, dispatch to routines based on format, which can be
+        // We will dispatch to routines based on format, which can be
         // defined in either the meta frame or the frame.
         std::string format;
         auto p = metap->get_frame_map()->find("FORMAT");
@@ -1901,6 +1897,14 @@ KeyMap DtrReader::frame_from_bytes(const void *buf, uint64_t len,
         
         if (format == "") {
             format = blobs["FORMAT"].toString();
+        }
+
+        const float * rmass = NULL;
+
+        std::string key = "INVMASS";
+        if (metap->get_frame_map()->find("INVMASS") != metap->get_frame_map()->end()) {
+            Key blob = metap->get_frame_map()->at("INVMASS");
+            rmass = (float *) blob.data;
         }
 
         if (format=="WRAPPED_V_2" || format == "DBL_WRAPPED_V_2") {
@@ -1941,8 +1945,18 @@ void write_all( int fd, const char * buf, ssize_t count ) {
     }
 }
 
-void DtrWriter::init(const std::string &path, DtrWriter::Mode mode) {
+void DtrWriter::init(const std::string &path, DtrWriter::Mode mode, DtrWriter::Type type, KeyMap const *metap) {
 
+    if (traj_type != UNITIALIZED) {
+        DTR_FAILURE("path '" << m_directory << "' has already been initialized");
+    }
+
+    if ((traj_type == ETR) && (metap != NULL)) {
+        DTR_FAILURE("path '" << m_directory << "' initialized as type ETR with a meta frame");
+    }
+
+    traj_type = type;
+    
     dtr=path;
     m_directory=path;
     this->mode = mode;
@@ -1985,23 +1999,70 @@ void DtrWriter::init(const std::string &path, DtrWriter::Mode mode) {
             DTR_FAILURE("Opening timekeys failed: " << strerror(errno));
         }
 
+	if (traj_type == ETR) {
+	    //
+	    // Read existing meta frame and setup meta_map and meta_written
+	    //
+	    std::string metadata_file = m_directory + s_sep + "metadata";
+	    std::vector<char> buffer;
+	    read_file(metadata_file, buffer);
+	    if (buffer.size() > 0) {
+		bool swap;
+
+		meta_map = dtr::ParseFrame(buffer.size(), buffer.data(), &swap);
+
+		//
+		// We need to keep the memory backing the meta map keys around
+		// so make a copy.
+		//
+		etr_key_buffer = (uint32_t *) calloc(meta_map.size(), (sizeof(uint32_t) * 3));
+		if (!etr_key_buffer) {
+		    DTR_FAILURE("Failed to allocate ETR keys");
+		}
+
+		const unsigned elemsizes[] = {0, 4, 4, 8, 8, 4, 8, 1, 1 };
+		for (auto it = meta_map.begin(); it != meta_map.end(); ++it) {
+		    if (it->first == "FORMAT") {
+			continue;
+		    }
+
+		    uint32_t *etr_key = &etr_key_buffer[(etr_keys * 3)];
+		    memcpy(etr_key, it->second.data,  (sizeof(uint32_t) * 3));
+		    meta_map[it->first] = Key(etr_key, 3, desres::molfile::dtr::Key::TYPE_UINT32, false);
+		    etr_keys++;
+
+		    uint32_t *p = (uint32_t *) it->second.data;
+		    uint32_t type = *p;
+		    uint32_t count = *(p+2);
+		    etr_frame_size += count * elemsizes[type];
+		}
+		// Create the scratch space in whic ETR frames are serialized
+		etr_frame_buffer = malloc(etr_frame_size);
+		meta_written = true;
+	    }
+	} else {
+	    meta_written = true;
+	}
+
     } else {
         /* start afresh */
         recursivelyRemove(m_directory);
         ::DDmkdir(m_directory,0777,0, 0);
 
-        // craft an empty metadata frame
+        // craft metadata frame
         {
           std::string metadata_file = m_directory + s_sep + "metadata";
-          FILE *fd = fopen(metadata_file.c_str(), "wb");
-          if (!fd) DTR_FAILURE("Failed opening metadata frame file: " << 
-                  strerror(errno));
-          KeyMap map;
-          void * buf = NULL;
-          size_t framesize = ConstructFrame(map, &buf);
-          fwrite( buf, framesize, 1, fd );
-          fclose(fd);
-          free(buf);
+	  meta_file = fopen(metadata_file.c_str(), "wb");
+          if (!meta_file) DTR_FAILURE("Failed opening metadata frame file: " << 
+				      strerror(errno));
+
+	  if (metap) {
+	    uint32_t framesize = ConstructFrame(*metap, &framebuffer);
+	    fwrite(framebuffer, framesize, 1, meta_file);
+	    fclose(meta_file);
+	    meta_file = NULL;
+	    meta_written = true;
+	  }
         }
 
         // start writing timekeys file */
@@ -2018,6 +2079,8 @@ void DtrWriter::init(const std::string &path, DtrWriter::Mode mode) {
         }
     }
 }
+
+
 
 void DtrWriter::truncate(double t) {
     rewind(timekeys_file);
@@ -2064,7 +2127,7 @@ int DtrWriter::sync() {
 
 void DtrWriter::next(const molfile_timestep_t *ts) {
 
-    static const char *title = "written by molfile/VMD";
+    static const char *title = "written by molfile";
     const double time = ts->physical_time;
     /* require increasing times (DESRESCode#1053) */
     if (last_time != HUGE_VAL && time <= last_time) {
@@ -2106,26 +2169,152 @@ void DtrWriter::next(const molfile_timestep_t *ts) {
         if      (ts->velocities)  map["VELOCITY"].set(ts->velocities, 3*natoms);
         else if (ts->dvelocities) map["VELOCITY"].set(ts->dvelocities,3*natoms);
     }
-    map["FORMAT"].set(format, strlen(format));
-    if (ts->gids) map["GID"].set(ts->gids, natoms);
+
+    if (traj_type == DTR) {
+	map["FORMAT"].set(format, strlen(format));
+	if (ts->gids) map["GID"].set(ts->gids, natoms);
 
 #if defined(DESRES_READ_TIMESTEP2)
-    map["ENERGY"].set(&ts->total_energy, 1);
-    map["POT_ENERGY"].set(&ts->potential_energy, 1);
-    map["KIN_ENERGY"].set(&ts->kinetic_energy, 1);
-    map["EX_ENERGY"].set(&ts->extended_energy, 1);
-    map["TEMPERATURE"].set(&ts->temperature, 1);
-    map["PRESSURE"].set(&ts->pressure, 1);
-    map["PRESSURETENSOR"].set(ts->pressure_tensor, 9);
-    map["VIRIALTENSOR"].set(ts->virial_tensor, 9);
+	map["ENERGY"].set(&ts->total_energy, 1);
+	map["POT_ENERGY"].set(&ts->potential_energy, 1);
+	map["KIN_ENERGY"].set(&ts->kinetic_energy, 1);
+	map["EX_ENERGY"].set(&ts->extended_energy, 1);
+	map["TEMPERATURE"].set(&ts->temperature, 1);
+	map["PRESSURE"].set(&ts->pressure, 1);
+	map["PRESSURETENSOR"].set(ts->pressure_tensor, 9);
+	map["VIRIALTENSOR"].set(ts->virial_tensor, 9);
 #endif
+    }
 
     append(time, map);
 }
 
 void DtrWriter::append(double time, KeyMap const& map) {
 
-    uint64_t framesize = ConstructFrame(map, &framebuffer);
+    uint64_t framesize = 0;
+
+    if (!meta_written) {
+
+	//
+	// If the meta frame hasn't been written yet, go ahead
+	// and do that now.  For an ATR or DTR that was initialized
+	// without a meta frame, just create an empty one.  For an
+	// ETR, go over all of the keys and turn them into tuples
+	// of (type, offset and count) and stuff them into the meta
+	// frame with the same key name.
+	//
+	if (traj_type == ETR) {
+
+	    if (etr_keys != 0) {
+		DTR_FAILURE("etr_keys was not zero");
+	    }
+
+	    if (map.size() == 0) {
+		DTR_FAILURE("ETR had no keys to insert into meta frame");
+	    }
+
+	    //
+	    // This needs to persist in core until the DtrWriter is destructed
+	    //
+	    etr_key_buffer = (uint32_t *) calloc(map.size(), (sizeof(uint32_t) * 3));
+	    if (!etr_key_buffer) {
+		DTR_FAILURE("Failed to allocate ETR keys");
+	    }
+
+	    uint32_t offset = 0;
+
+	    meta_map["FORMAT"].set("ETR_V1", 6);
+
+	    for (auto it = map.begin(); it != map.end(); ++it) {
+		if (it->first == "FORMAT") {
+		    DTR_FAILURE("ETRs may not contain a FORMAT key");
+		}
+
+		if (it->first == "_D") {
+		    DTR_FAILURE("ETRs may not contain a _D key");
+		}
+		
+		uint32_t *etr_key = &etr_key_buffer[(etr_keys * 3)];
+		etr_key[0] = it->second.type;
+		etr_key[1] = offset;
+		etr_key[2] = it->second.count;
+		meta_map[it->first] = Key(etr_key, 3, desres::molfile::dtr::Key::TYPE_UINT32, false);
+		offset += (it->second.get_element_size() * it->second.count);
+		etr_keys++;
+	    }
+
+	    if (offset == 0) {
+		DTR_FAILURE("ETR had no keys added to meta frame");
+	    }
+
+	    //
+	    // Create a buffer that is going to be used to take all of the keys
+	    // from a map being appended (a new frame) and serializes the memory
+	    // into a contiguous block in the right order for writing to the
+	    // ETR frame.  Since this buffer needs to always be the same size,
+	    // allocate it once here and then free it in the destructor.
+	    //
+	    etr_frame_buffer = malloc(offset);
+	    etr_frame_size = offset;
+	    if (!etr_frame_buffer) {
+		DTR_FAILURE("malloc of etr_frame_buffer failed");
+	    }
+	}
+
+	framesize = ConstructFrame(meta_map, &framebuffer);
+	fwrite(framebuffer, framesize, 1, meta_file);
+	fclose(meta_file);
+	meta_file = NULL;
+	meta_written = true;
+    }
+
+    if (traj_type == ETR) {
+	//
+	// Iterate through all of the keys in the map making sure
+	// that they match exactly the set in meta_map other than
+	// "FORMAT", and store the values contiguously into 1 key
+	// called "_D"
+	//
+	uint32_t matched_keys = 0;
+	for (auto it = map.begin(); it != map.end(); ++it) {
+	    if (it->first == "FORMAT") {
+		DTR_FAILURE("ETRs may not contain a FORMAT key");
+	    }
+
+	    auto key = meta_map.find(it->first);
+	    if (key == meta_map.end()) {
+		DTR_FAILURE("Unable to find key " << it->first << " in ETR meta map");
+	    }
+
+	    matched_keys++;
+
+	    uint32_t *blobp = (uint32_t *) key->second.data;
+	    uint32_t type = blobp[0];
+	    uint32_t offset = blobp[1];
+	    uint32_t count = blobp[2];
+	    uint32_t size = count * it->second.get_element_size();
+	    
+	    if (type != (uint32_t) it->second.type) {
+		DTR_FAILURE("ETR frame had type " << type << " for key " << it->first << " but frame had type " << it->second.type);
+	    }
+
+	    memcpy((char *) etr_frame_buffer + offset, it->second.data, size);
+	}
+
+	if (matched_keys != etr_keys) {
+	    DTR_FAILURE("ETR frame had " << matched_keys << " keys but expected " << etr_keys);
+	}
+
+	//
+	// Create the "_D" key in the frame from data in etr_frame_buffer
+	//
+	KeyMap etr_map;
+	etr_map["_D"] = dtr::Key(etr_frame_buffer, etr_frame_size, desres::molfile::dtr::Key::TYPE_CHAR, false);
+	framesize = ConstructFrame(etr_map, &framebuffer, false);
+    } else {
+	framesize = ConstructFrame(map, &framebuffer);
+    }
+
     uint64_t keys_in_file = nwritten % frames_per_file;
 
     if (!keys_in_file) {
@@ -2163,7 +2352,10 @@ DtrWriter::~DtrWriter() {
   sync();
   if (frame_fd>0) ::close(frame_fd);
   if (timekeys_file) fclose(timekeys_file);
+  if (meta_file) fclose(meta_file);
   if (framebuffer) free(framebuffer);
+  if (etr_key_buffer) free(etr_key_buffer);
+  if (etr_frame_buffer) free(etr_frame_buffer);
 }
 
 /* Write out the size and then the bytes */

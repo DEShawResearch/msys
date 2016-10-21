@@ -370,11 +370,21 @@ namespace desres { namespace molfile {
     FILE * timekeys_file;
     int mode;
     void* framebuffer;
+    dtr::KeyMap meta_map;
+    bool meta_written;
+    FILE *meta_file;
+    int traj_type;
+    uint32_t etr_keys;
+    uint32_t etr_frame_size;
+    void *etr_frame_buffer;
+    uint32_t *etr_key_buffer;
 
     explicit DtrWriter(uint32_t natoms_, uint32_t fpf = 0) 
     : natoms(natoms_), frame_fd(0), framefile_offset(0),
       nwritten(0), last_time(HUGE_VAL), timekeys_file(NULL),
-      framebuffer()
+      framebuffer(), meta_map(), meta_written(false), 
+      meta_file(NULL), traj_type(UNITIALIZED), etr_keys(0),
+      etr_frame_size(0), etr_frame_buffer(NULL), etr_key_buffer(NULL)
     {
         if (fpf > 0) {
             frames_per_file = fpf;
@@ -403,8 +413,15 @@ namespace desres { namespace molfile {
         FORCE
     };
 
+    enum Type {
+	UNITIALIZED,
+	DTR,
+	ATR,
+	ETR
+    };
+
     // initialize for writing at path
-    void init(const std::string &path, Mode mode=CLOBBER);
+    void init(const std::string &path, Mode mode=CLOBBER, Type type=DTR, dtr::KeyMap const *metap = NULL);
 
     // write another frame.  
     void next(const molfile_timestep_t *ts);

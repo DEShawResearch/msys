@@ -49,7 +49,7 @@ namespace desres { namespace molfile { namespace dtr {
         void set(const float* buf, uint64_t n);
         void set(const double* buf, uint64_t n);
 
-        uint32_t get_element_size();
+        uint32_t get_element_size() const;
 
         static const char* type_name(int type);
     };
@@ -57,7 +57,7 @@ namespace desres { namespace molfile { namespace dtr {
     typedef std::map<std::string, Key> KeyMap;
     KeyMap ParseFrame(size_t sz, const void* data, bool *swap_endian);
 
-    size_t ConstructFrame(KeyMap const& map, void ** bufptr);
+    size_t ConstructFrame(KeyMap const& map, void ** bufptr, bool use_padding = true);
 
     uint32_t fletcher( const uint16_t *data, unsigned len );
 
