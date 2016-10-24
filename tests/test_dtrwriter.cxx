@@ -23,13 +23,13 @@ int main(int argc, char *argv[]) {
 	desres::molfile::dtr::KeyMap meta_map;
 	meta_map["PROVENANCE"] = desres::molfile::dtr::Key("test_etr", 9, desres::molfile::dtr::Key::TYPE_CHAR, false);
 	desres::molfile::DtrWriter dtr_with_meta(0, 100);
-	dtr_with_meta.init("/tmp/test_with_meta.dtr", desres::molfile::DtrWriter::CLOBBER, desres::molfile::DtrWriter::DTR, &meta_map);
+	dtr_with_meta.init("/tmp/test_with_meta.dtr", desres::molfile::DtrWriter::CLOBBER, &meta_map);
 
 	//
 	// This is an ETR
 	//
-	desres::molfile::DtrWriter etr(0, 100);
-	etr.init("/tmp/test_etr.etr", desres::molfile::DtrWriter::CLOBBER, desres::molfile::DtrWriter::ETR);
+	desres::molfile::DtrWriter etr(0, 100, desres::molfile::DtrWriter::Type::ETR);
+	etr.init("/tmp/test_etr.etr", desres::molfile::DtrWriter::CLOBBER);
 	
 	//
 	// Create some frames to add to each DTR/ETR
@@ -70,13 +70,13 @@ int main(int argc, char *argv[]) {
 	desres::molfile::dtr::KeyMap meta_map;
 	meta_map["PROVENANCE"] = desres::molfile::dtr::Key("test_etr", 9, desres::molfile::dtr::Key::TYPE_CHAR, false);
 	desres::molfile::DtrWriter dtr_with_meta(0, 100);
-	dtr_with_meta.init("/tmp/test_with_meta.dtr", desres::molfile::DtrWriter::APPEND, desres::molfile::DtrWriter::DTR, &meta_map);
+	dtr_with_meta.init("/tmp/test_with_meta.dtr", desres::molfile::DtrWriter::APPEND, &meta_map);
 
 	//
 	// This is an ETR
 	//
-	desres::molfile::DtrWriter etr(0, 100);
-	etr.init("/tmp/test_etr.etr", desres::molfile::DtrWriter::APPEND, desres::molfile::DtrWriter::ETR);
+	desres::molfile::DtrWriter etr(0, 100, desres::molfile::DtrWriter::Type::ETR);
+	etr.init("/tmp/test_etr.etr", desres::molfile::DtrWriter::APPEND);
 	
 	//
 	// Create some frames to add to each DTR/ETR

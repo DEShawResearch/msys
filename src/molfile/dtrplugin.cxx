@@ -1945,18 +1945,12 @@ void write_all( int fd, const char * buf, ssize_t count ) {
     }
 }
 
-void DtrWriter::init(const std::string &path, DtrWriter::Mode mode, DtrWriter::Type type, KeyMap const *metap) {
+void DtrWriter::init(const std::string &path, DtrWriter::Mode mode, KeyMap const *metap) {
 
-    if (traj_type != UNITIALIZED) {
-        DTR_FAILURE("path '" << m_directory << "' has already been initialized");
-    }
-
-    if ((traj_type == ETR) && (metap != NULL)) {
+    if ((traj_type == Type::ETR) && (metap != NULL)) {
         DTR_FAILURE("path '" << m_directory << "' initialized as type ETR with a meta frame");
     }
 
-    traj_type = type;
-    
     dtr=path;
     m_directory=path;
     this->mode = mode;
@@ -1999,7 +1993,7 @@ void DtrWriter::init(const std::string &path, DtrWriter::Mode mode, DtrWriter::T
             DTR_FAILURE("Opening timekeys failed: " << strerror(errno));
         }
 
-	if (traj_type == ETR) {
+	if (traj_type == Type::ETR) {
 	    //
 	    // Read existing meta frame and setup meta_map and meta_written
 	    //
@@ -2170,7 +2164,7 @@ void DtrWriter::next(const molfile_timestep_t *ts) {
         else if (ts->dvelocities) map["VELOCITY"].set(ts->dvelocities,3*natoms);
     }
 
-    if (traj_type == DTR) {
+    if (traj_type == Type::DTR) {
 	map["FORMAT"].set(format, strlen(format));
 	if (ts->gids) map["GID"].set(ts->gids, natoms);
 
@@ -2203,7 +2197,7 @@ void DtrWriter::append(double time, KeyMap const& map) {
 	// of (type, offset and count) and stuff them into the meta
 	// frame with the same key name.
 	//
-	if (traj_type == ETR) {
+	if (traj_type == Type::ETR) {
 
 	    if (etr_keys != 0) {
 		DTR_FAILURE("etr_keys was not zero");
@@ -2268,7 +2262,7 @@ void DtrWriter::append(double time, KeyMap const& map) {
 	meta_written = true;
     }
 
-    if (traj_type == ETR) {
+    if (traj_type == Type::ETR) {
 	//
 	// Iterate through all of the keys in the map making sure
 	// that they match exactly the set in meta_map other than
