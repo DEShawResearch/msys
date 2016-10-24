@@ -1838,6 +1838,33 @@ class IndexedFileLoader(object):
         '''
         return System(self._ptr.at(index))
 
+def ConvertToRdkit(mol):
+    ''' Construct an RDKit ROMol from the given System
+
+    Args:
+        mol (System): System
+
+    Returns:
+        rdkit.ROMol
+    '''
+    from rdkit import Chem
+    rdmol = Chem.Mol()
+    emol = Chem.EditableMol(rdmol)
+    for atm in mol.atoms:
+        ratm = Chem.Atom(atm.atomic_number)
+        ratm.SetFormalCharge(atm.formal_charge)
+        emol.AddAtom(ratm)
+    for bnd in mol.bonds:
+        emol.AddBond(bnd.first.id, bnd.second.id, Chem.BondType(bnd.order))
+    rdmol = emol.GetMol()
+    conf = Chem.Conformer(mol.natoms)
+    for i, pos in enumerate(mol.getPositions()):
+        conf.SetAtomPosition(i, pos)
+    rdmol.AddConformer(conf)
+    Chem.SanitizeMol(rdmol)
+    Chem.AssignAtomChiralTagsFromStructure(rdmol)
+    return rdmol
+
 def LoadMany(path, structure_only=False, error_writer=sys.stderr):
     ''' Iterate over structures in a file, if the file type supports
     iteration.  
