@@ -13,6 +13,7 @@ import msys
 
 import unittest
 from rdkit import Chem
+from time import time
 
 class Main(unittest.TestCase):
     def testSmall(self):
@@ -26,6 +27,14 @@ class Main(unittest.TestCase):
             self.assertEqual(matm.atomic_number, ratm.GetAtomicNum())
             self.assertEqual(matm.formal_charge, ratm.GetFormalCharge())
             self.assertEqual(amol.valence(matm), ratm.GetExplicitValence())
+
+    def testBig(self):
+        mol = msys.Load('tests/files/2f4k.dms')
+        msys.AssignBondOrderAndFormalCharge(mol)
+        t=-time()
+        rdmol = msys.ConvertToRdkit(mol)
+        t+=time()
+        print "%s: %d atoms, %d bonds in %.3fs" % (mol.name, mol.natoms, mol.nbonds, t)
 
 
 
