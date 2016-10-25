@@ -2,9 +2,10 @@
 #{
 # source `dirname $0`/../MODULES
 # exec garden with -c -e TMPDIR -m $PYTHON/bin \
-# -m RDKit/2016_03_1-04/lib-python \
+# -m RDKit/2016_09_1.dev1-02/lib-python \
 # -- python $0 "$@"
 #}
+#### RDKit/2016_03_1-04/lib-python \
 
 import os, sys
 TMPDIR=os.getenv('TMPDIR', 'objs/%s/x86_64' % os.getenv('DESRES_OS'))
@@ -49,12 +50,15 @@ class Main(unittest.TestCase):
     def testBondStereo(self):
         sdf = 'tests/files/34106.sdf'
         mol = msys.Load(sdf)
-        #msys.AssignBondOrderAndFormalCharge(mol)
+        msys.AssignBondOrderAndFormalCharge(mol)
         rdmol = msys.ConvertToRdkit(mol)
-        #rdmol = Chem.MolFromMolFile(sdf)
         for i, r in enumerate(rdmol.GetBonds()):
-            if i==18:
+            ai = r.GetBeginAtomIdx()
+            aj = r.GetEndAtomIdx()
+            if ai==16 and aj==17:
                 self.assertEqual(r.GetStereo(), Chem.BondStereo.STEREOZ)
+            else:
+                self.assertEqual(r.GetStereo(), Chem.BondStereo.STEREONONE)
 
 if __name__=="__main__":
   unittest.main(verbosity=2)
