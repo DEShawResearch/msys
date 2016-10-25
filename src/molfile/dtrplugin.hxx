@@ -359,7 +359,6 @@ namespace desres { namespace molfile {
   };
 
   struct DtrWriter {
-    std::string dtr;
     std::string m_directory;
     const uint32_t natoms;
     int frame_fd;        // for writing

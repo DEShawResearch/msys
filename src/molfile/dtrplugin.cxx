@@ -1951,7 +1951,6 @@ void DtrWriter::init(const std::string &path, DtrWriter::Mode mode, KeyMap const
         DTR_FAILURE("path '" << m_directory << "' initialized as type ETR with a meta frame");
     }
 
-    dtr=path;
     m_directory=path;
     this->mode = mode;
     char cwd[4096];
@@ -1967,14 +1966,14 @@ void DtrWriter::init(const std::string &path, DtrWriter::Mode mode, KeyMap const
       m_directory = std::string(cwd) + s_sep + m_directory;
     }
 
-    std::string timekeys_path = dtr + s_sep + "timekeys";
+    std::string timekeys_path = m_directory + s_sep + "timekeys";
 
     if (mode==NOCLOBBER && exists(m_directory)) {
         DTR_FAILURE("path '" << m_directory << "' already exists and mode is NOCLOBBER");
     } else if (mode==APPEND && exists(m_directory)) {
         /* read existing timekeys */
         Timekeys tk;
-        tk.init(dtr);
+        tk.init(m_directory);
         frames_per_file = tk.framesperfile();
         nwritten = tk.size();
         if (nwritten==0) {
@@ -1985,7 +1984,7 @@ void DtrWriter::init(const std::string &path, DtrWriter::Mode mode, KeyMap const
             key_record_t last = tk[nwritten-1];
             last_time = last.time();
             framefile_offset = last.offset() + last.size();
-            std::string filepath=framefile(dtr, nwritten, frames_per_file,0,0);
+            std::string filepath=framefile(m_directory, nwritten, frames_per_file,0,0);
             frame_fd = open(filepath.c_str(),O_WRONLY|O_APPEND|O_BINARY,0666);
         }
         timekeys_file = fopen(timekeys_path.c_str(), "a+b");
@@ -2317,7 +2316,7 @@ void DtrWriter::append(double time, KeyMap const& map) {
           ::close(frame_fd);
       }
       framefile_offset = 0;
-      std::string filepath=framefile(dtr, nwritten, frames_per_file, 0, 0);
+      std::string filepath=framefile(m_directory, nwritten, frames_per_file, 0, 0);
       frame_fd = open(filepath.c_str(),O_WRONLY|O_CREAT|O_BINARY,0666);
       if (frame_fd<0) throw std::runtime_error(strerror(errno));
     }
