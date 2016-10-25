@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
 	//
 	desres::molfile::dtr::KeyMap meta_map;
 	meta_map["PROVENANCE"] = desres::molfile::dtr::Key("test_etr", 9, desres::molfile::dtr::Key::TYPE_CHAR, false);
-	DtrWriter dtr_with_meta("/tmp/test_no_meta.dtr", DtrWriter::Type::DTR, natoms, DtrWriter::CLOBBER, fpf, &meta_map);
+	DtrWriter dtr_with_meta("/tmp/test_with_meta.dtr", DtrWriter::Type::DTR, natoms, DtrWriter::CLOBBER, fpf, &meta_map);
 
 	//
 	// This is an ETR
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
 	//
 	desres::molfile::dtr::KeyMap meta_map;
 	meta_map["PROVENANCE"] = desres::molfile::dtr::Key("test_etr", 9, desres::molfile::dtr::Key::TYPE_CHAR, false);
-	DtrWriter dtr_with_meta("/tmp/test_no_meta.dtr", DtrWriter::Type::DTR, natoms, DtrWriter::APPEND, fpf, &meta_map);
+	DtrWriter dtr_with_meta("/tmp/test_with_meta.dtr", DtrWriter::Type::DTR, natoms, DtrWriter::APPEND, fpf, &meta_map);
 
 	//
 	// This is an ETR
