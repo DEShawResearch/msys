@@ -1945,7 +1945,30 @@ void write_all( int fd, const char * buf, ssize_t count ) {
     }
 }
 
-void DtrWriter::init(const std::string &path, DtrWriter::Mode mode, KeyMap const *metap) {
+DtrWriter::DtrWriter(std::string const& path, Type type, uint32_t natoms_, 
+              Mode mode, uint32_t fpf, const dtr::KeyMap* metap)
+: traj_type(type), natoms(natoms_), frame_fd(0), framefile_offset(0),
+  nwritten(0), last_time(HUGE_VAL), timekeys_file(NULL),
+  framebuffer(), meta_map(), meta_written(false), 
+  meta_file(NULL), etr_keys(0),
+  etr_frame_size(0), etr_frame_buffer(NULL), etr_key_buffer(NULL)
+{
+    if (fpf > 0) {
+        frames_per_file = fpf;
+    } else if (natoms==0) {
+        frames_per_file = 1024; /* arbitrary */
+    } else {
+        /* try to achieve 100MB frame files.  Unfortunately for those 
+         * trying to write just a few atoms per frame, the frameset 
+         * format requires a frame size of no less than 4k. */
+        static const uint32_t maxsize = 100 * 1024 * 1024;
+        static const uint32_t maxcount = maxsize / 4096;
+        /* we assume single precision and no velocities.  If we end
+         * up with 200MB frames, that's ok. */
+        frames_per_file = maxsize / (12 * natoms);
+        if (frames_per_file < 1) frames_per_file = 1;
+        if (frames_per_file > maxcount) frames_per_file = maxcount;
+    }
 
     if ((traj_type == Type::ETR) && (metap != NULL)) {
         DTR_FAILURE("path '" << m_directory << "' initialized as type ETR with a meta frame");
@@ -2736,18 +2759,14 @@ static void *open_file_write(const char *path, const char *type, int natoms) {
       return NULL;
   }
 
-  DtrWriter *h = new DtrWriter(natoms);
-
   try {
-      h->init(path, mode);
+    return new DtrWriter(path, DtrWriter::Type::DTR, natoms, mode);
   }
   catch (std::exception &e) {
-      delete h;
-      h = NULL;
       fprintf(stderr, "Failed to open file of type %s at %s for writing: %s\n",
               type, path, e.what());
   }
-  return h;
+  return NULL;
 }
 
 static int write_timestep(void *v, const molfile_timestep_t *ts) {

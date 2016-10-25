@@ -5,8 +5,12 @@
 
 #define FRAMES 10
 
+using namespace desres::molfile;
+
 int main(int argc, char *argv[]) {
 
+    int natoms=0;
+    int fpf=100;
     //
     // Write some frames to DTRs and ETRs
     //
@@ -14,22 +18,19 @@ int main(int argc, char *argv[]) {
 	//
 	// This is a traditional DTR without a meta frame.
 	//
-	desres::molfile::DtrWriter dtr_no_meta(0, 100);
-	dtr_no_meta.init("/tmp/test_no_meta.dtr", desres::molfile::DtrWriter::CLOBBER);
+	DtrWriter dtr_no_meta("/tmp/test_no_meta.dtr", DtrWriter::Type::DTR, natoms, DtrWriter::CLOBBER, fpf);
 	
 	//
 	// This is a traditional DTR with a meta frame
 	//
 	desres::molfile::dtr::KeyMap meta_map;
 	meta_map["PROVENANCE"] = desres::molfile::dtr::Key("test_etr", 9, desres::molfile::dtr::Key::TYPE_CHAR, false);
-	desres::molfile::DtrWriter dtr_with_meta(0, 100);
-	dtr_with_meta.init("/tmp/test_with_meta.dtr", desres::molfile::DtrWriter::CLOBBER, &meta_map);
+	DtrWriter dtr_with_meta("/tmp/test_no_meta.dtr", DtrWriter::Type::DTR, natoms, DtrWriter::CLOBBER, fpf, &meta_map);
 
 	//
 	// This is an ETR
 	//
-	desres::molfile::DtrWriter etr(0, 100, desres::molfile::DtrWriter::Type::ETR);
-	etr.init("/tmp/test_etr.etr", desres::molfile::DtrWriter::CLOBBER);
+	DtrWriter etr("/tmp/test_etr.etr", DtrWriter::Type::ETR, natoms, desres::molfile::DtrWriter::CLOBBER, fpf);
 	
 	//
 	// Create some frames to add to each DTR/ETR
@@ -61,22 +62,19 @@ int main(int argc, char *argv[]) {
 	//
 	// This is a traditional DTR without a meta frame.
 	//
-	desres::molfile::DtrWriter dtr_no_meta(0, 100);
-	dtr_no_meta.init("/tmp/test_no_meta.dtr", desres::molfile::DtrWriter::APPEND);
+	DtrWriter dtr_no_meta("/tmp/test_no_meta.dtr", DtrWriter::Type::DTR, natoms, DtrWriter::APPEND, fpf);
 	
 	//
 	// This is a traditional DTR with a meta frame
 	//
 	desres::molfile::dtr::KeyMap meta_map;
 	meta_map["PROVENANCE"] = desres::molfile::dtr::Key("test_etr", 9, desres::molfile::dtr::Key::TYPE_CHAR, false);
-	desres::molfile::DtrWriter dtr_with_meta(0, 100);
-	dtr_with_meta.init("/tmp/test_with_meta.dtr", desres::molfile::DtrWriter::APPEND, &meta_map);
+	DtrWriter dtr_with_meta("/tmp/test_no_meta.dtr", DtrWriter::Type::DTR, natoms, DtrWriter::APPEND, fpf, &meta_map);
 
 	//
 	// This is an ETR
 	//
-	desres::molfile::DtrWriter etr(0, 100, desres::molfile::DtrWriter::Type::ETR);
-	etr.init("/tmp/test_etr.etr", desres::molfile::DtrWriter::APPEND);
+	DtrWriter etr("/tmp/test_etr.etr", DtrWriter::Type::ETR, natoms, desres::molfile::DtrWriter::APPEND, fpf);
 	
 	//
 	// Create some frames to add to each DTR/ETR

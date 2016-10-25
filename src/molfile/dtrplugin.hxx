@@ -359,7 +359,20 @@ namespace desres { namespace molfile {
   };
 
   struct DtrWriter {
+    enum class Type {
+	DTR,
+	ETR
+    };
+
+    enum Mode {
+        CLOBBER, 
+        NOCLOBBER, 
+        APPEND,
+        FORCE   // FIXME - doesn't belong here.
+    };
+
     std::string m_directory;
+    const Type traj_type;
     const uint32_t natoms;
     int frame_fd;        // for writing
     uint32_t frames_per_file;
@@ -377,50 +390,12 @@ namespace desres { namespace molfile {
     void *etr_frame_buffer;
     uint32_t *etr_key_buffer;
 
-    enum class Type {
-	DTR,
-	ATR,
-	ETR
-    };
-    const Type traj_type;
-
     // initialize for writing at path
-    DtrWriter(uint32_t natoms_, uint32_t fpf = 0, Type type = Type::DTR) 
-    : natoms(natoms_), frame_fd(0), framefile_offset(0),
-      nwritten(0), last_time(HUGE_VAL), timekeys_file(NULL),
-      framebuffer(), meta_map(), meta_written(false), 
-      meta_file(NULL), etr_keys(0),
-      etr_frame_size(0), etr_frame_buffer(NULL), etr_key_buffer(NULL),
-      traj_type(type)
-    {
-        if (fpf > 0) {
-            frames_per_file = fpf;
-        } else if (natoms==0) {
-            frames_per_file = 1024; /* arbitrary */
-        } else {
-            /* try to achieve 100MB frame files.  Unfortunately for those 
-             * trying to write just a few atoms per frame, the frameset 
-             * format requires a frame size of no less than 4k. */
-            static const uint32_t maxsize = 100 * 1024 * 1024;
-            static const uint32_t maxcount = maxsize / 4096;
-            /* we assume single precision and no velocities.  If we end
-             * up with 200MB frames, that's ok. */
-            frames_per_file = maxsize / (12 * natoms);
-            if (frames_per_file < 1) frames_per_file = 1;
-            if (frames_per_file > maxcount) frames_per_file = maxcount;
-        }
-    }
+    DtrWriter(std::string const& path, Type type, uint32_t natoms_, 
+              Mode mode=CLOBBER, uint32_t fpf = 0,
+              const dtr::KeyMap* metap = nullptr);
 
     ~DtrWriter();
-
-    enum Mode {
-        CLOBBER, 
-        NOCLOBBER, 
-        APPEND,
-        FORCE
-    };
-
-    void init(const std::string &path, Mode mode=CLOBBER, dtr::KeyMap const *metap = NULL);
 
     // write another frame.  
     void next(const molfile_timestep_t *ts);

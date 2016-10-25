@@ -207,16 +207,7 @@ namespace {
                         uint32_t natoms,
                         int mode,
                         uint32_t fpf) {
-        DtrWriter* w = new DtrWriter(natoms, fpf);
-        try {
-            w->init(path, (DtrWriter::Mode)mode);
-        }
-        catch (std::exception& e) {
-            PyErr_Format(PyExc_IOError, "Unable to initialize DtrWriter at %s: %s", path.c_str(), e.what());
-            delete w;
-            throw error_already_set();
-        }
-        return w;
+        return new DtrWriter(path, DtrWriter::Type::DTR, natoms, DtrWriter::Mode(mode), fpf);
     }
 
     void dtr_append(DtrWriter& w, double time, dict keyvals) {
