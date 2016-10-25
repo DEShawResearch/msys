@@ -1863,6 +1863,7 @@ def ConvertToRdkit(mol):
     rdmol.AddConformer(conf)
     Chem.SanitizeMol(rdmol)
     Chem.AssignAtomChiralTagsFromStructure(rdmol)
+    Chem.AssignStereochemistry(rdmol, True, True)
     return rdmol
 
 def LoadMany(path, structure_only=False, error_writer=sys.stderr):

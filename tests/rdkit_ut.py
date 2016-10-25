@@ -36,7 +36,25 @@ class Main(unittest.TestCase):
         t+=time()
         print "%s: %d atoms, %d bonds in %.3fs" % (mol.name, mol.natoms, mol.nbonds, t)
 
+    def testChiralAtoms(self):
+        mol = msys.Load('tests/files/jandor.sdf')
+        msys.AssignBondOrderAndFormalCharge(mol)
+        rdmol = msys.ConvertToRdkit(mol)
+        for r in rdmol.GetAtoms():
+            if r.GetIdx() in (0,4,7):
+                self.assertEqual(r.GetChiralTag(), Chem.ChiralType.CHI_TETRAHEDRAL_CW)
+            elif r.GetIdx() in (5,):
+                self.assertEqual(r.GetChiralTag(), Chem.ChiralType.CHI_TETRAHEDRAL_CCW)
 
+    def testBondStereo(self):
+        sdf = 'tests/files/34106.sdf'
+        mol = msys.Load(sdf)
+        #msys.AssignBondOrderAndFormalCharge(mol)
+        rdmol = msys.ConvertToRdkit(mol)
+        #rdmol = Chem.MolFromMolFile(sdf)
+        for i, r in enumerate(rdmol.GetBonds()):
+            if i==18:
+                self.assertEqual(r.GetStereo(), Chem.BondStereo.STEREOZ)
 
 if __name__=="__main__":
   unittest.main(verbosity=2)
