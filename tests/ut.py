@@ -845,6 +845,22 @@ class Main(unittest.TestCase):
         self.assertEqual(mol.bond(0).second.id, 1)
         self.assertEqual(mol.atom(2).atomic_number, 0)
 
+    def testTableProps(self):
+        m=msys.CreateSystem()
+        a=m.addAtom()
+        t=m.addTable('foo', 1)
+        t.category = 'nonbonded'
+        p=t.params.addParam()
+        t.addTerm([a], p)
+        t.props['foo'] = 1.0
+        t.props['bar'] = 1.0
+
+        with tempfile.NamedTemporaryFile(suffix='.dms') as fp:
+            dst = fp.name
+            msys.Save(m, dst)
+            m2=msys.Load(dst)
+            msys.Save(m2,dst)
+
     def testSave(self):
         import operator as op
         old=msys.Load('tests/files/jandor.sdf')

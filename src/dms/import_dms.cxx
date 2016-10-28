@@ -234,6 +234,7 @@ static void read_metatables(Sqlite dms, System& sys, KnownSet& known) {
     }
 
     std::string proptable = "msys_table_properties";
+    known.insert(proptable);
     if (dms.has(proptable)) {
         Reader r = dms.fetch(proptable, false);
         for (; r; r.next()) {
