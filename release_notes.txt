@@ -1,3 +1,16 @@
+1.7.153 Fixed reading of dms files with table properties.
+        Experimental new msys to rdkit converter.
+        Experimental new IndexedFileLoader.
+        Support for ETR writing.
+        Added ElectronegativityForElement.
+        Don't write mae files with bad key names.
+        Rip out resonant_charge and resonant_order.
+        Removed msys2mol2 - use dms-select instead.
+        Don't grow the SpatialHash grid too large.
+        SpatialHash input checks.
+        Fixes for smiles charge parsing.
+        Fix LoadDMS(buffer).
+
 1.7.149 Pass --reorder to dms-dump in dms-diff.
         Handle coordinate-only Amber crd files. (DESRESCode#3183).
         Fix dms-frame (DESRESCode#3205).

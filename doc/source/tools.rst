@@ -18,10 +18,6 @@ dms2mae
 -------
 .. include:: ../build/genhelp/dms2mae
 
-msys2mol2
----------
-.. include:: ../build/genhelp/msys2mol2
-
 -----------
 Information
 -----------
