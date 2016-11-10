@@ -18,7 +18,7 @@ from time import time
 
 class Main(unittest.TestCase):
     def testSmall(self):
-        mol = msys.Load('tests/files/jandor.sdf')
+        mol = msys.Load('tests/files/jandor-bad.sdf')
         with self.assertRaises(ValueError):
             rdmol = msys.ConvertToRdkit(mol)
         msys.AssignBondOrderAndFormalCharge(mol)
@@ -39,7 +39,6 @@ class Main(unittest.TestCase):
 
     def testChiralAtoms(self):
         mol = msys.Load('tests/files/jandor.sdf')
-        msys.AssignBondOrderAndFormalCharge(mol)
         rdmol = msys.ConvertToRdkit(mol)
         for r in rdmol.GetAtoms():
             if r.GetIdx() in (0,4,7):
@@ -50,7 +49,6 @@ class Main(unittest.TestCase):
     def testBondStereo(self):
         sdf = 'tests/files/34106.sdf'
         mol = msys.Load(sdf)
-        msys.AssignBondOrderAndFormalCharge(mol)
         rdmol = msys.ConvertToRdkit(mol)
         for i, r in enumerate(rdmol.GetBonds()):
             ai = r.GetBeginAtomIdx()
