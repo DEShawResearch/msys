@@ -9,8 +9,8 @@ DESCRIPTION="Biomolecular Structure Library"
 . ./MODULES
 
 # shared library dependencies
-GCC=gcc/4.9.2-30B
-BOOST=boost/1.59.0-03
+GCC=gcc/5.2.0-33x
+BOOST=boost/1.59.0-06
 LPSOLVE=lp_solve/5.5.2.0-05A
 INCHI=inchi/1.04-05
 TEXLIVE=texlive/20120701-03

@@ -21,7 +21,10 @@ env.Append(
         # SSE2 for src/within.hxx.  It's optional, but way way slower without.
         CCFLAGS='-O2 -g -msse4.1',
         CFLAGS='-Wall',
-        CXXFLAGS='-std=c++11 -Wall -Wno-unused-local-typedefs -Werror',
+        CXXFLAGS='-std=c++14 -Wall -Werror',
+        CPPDEFINES=[
+            'BOOST_SYSTEM_NO_DEPRECATED',
+            ],
         LINKFLAGS='-g'
         )
 
