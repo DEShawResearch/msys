@@ -60,7 +60,6 @@ EOF
     # executables
     cat << EOF > $GARDENDIR/bin
 prepend-path PATH $PREFIX/bin
-prepend-path MANPATH $PREFIX/doc/man
 setenv MSYS_PREFIX $PREFIX
 EOF
 }
