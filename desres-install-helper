@@ -9,24 +9,17 @@ DESCRIPTION="Biomolecular Structure Library"
 . ./MODULES
 
 # shared library dependencies
-GCC=gcc/5.2.0-33x
-BOOST=boost/1.59.0-06
+BOOST=boost/1.59.0-07
 LPSOLVE=lp_solve/5.5.2.0-05A
 INCHI=inchi/1.04-05
 TEXLIVE=texlive/20120701-03
 THREEROE=ThreeRoe/0.04
 SQLITE=sqlite/3.10.2-06A
-
-# build and documentation
-SCONS=scons/2.3.4-10A
 SCONSUTILS=sconsutils/1.40
 
 loadmodules() {
     garden load \
-        $GCC/bin \
-        $PYTHON/bin \
         $PYTHON/lib \
-        $SCONS/bin \
         $SCONSUTILS/lib-python \
         $BOOST/lib \
         $LPSOLVE/lib \
@@ -50,8 +43,6 @@ EOF
     cat << EOF > $GARDENDIR/lib
 prepend-path DESRES_MODULE_CPPFLAGS -I$PREFIX/include
 prepend-path DESRES_MODULE_LDFLAGS  -L$PREFIX/lib:-Wl,-rpath,$PREFIX/lib
-prereq $GCC/bin
-prereq $PYTHON/lib
 prereq $BOOST/lib
 prereq $SQLITE/lib
 setenv MSYS_PREFIX $PREFIX
