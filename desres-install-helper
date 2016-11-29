@@ -76,7 +76,7 @@ case $1 in
         echo $NAME
         ;;
     --version)
-	echo $VERSION-test1
+	echo $VERSION
         ;;
     --exec)
         shift
