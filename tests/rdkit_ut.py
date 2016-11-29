@@ -2,7 +2,7 @@
 #{
 # source `dirname $0`/../MODULES
 # exec garden with -c -e TMPDIR -m $PYTHON/bin \
-# -m RDKit/2016_09_1.dev1-02/lib-python \
+# -m RDKit/2016_09_1-01/lib-python \
 # -- python $0 "$@"
 #}
 #### RDKit/2016_03_1-04/lib-python \
