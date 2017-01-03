@@ -699,6 +699,12 @@ class TestSdf(unittest.TestCase):
             self.assertEqual(mol.ct(0).name, ('XYZ', 'ABC')[i])
             self.assertEqual(mol.name, ('XYZ', 'ABC')[i])
 
+    def testNoDelim(self):
+        msys.Load('tests/files/no-delim.sdf')
+
+    def testNoDelim2(self):
+        mol=msys.Load('tests/files/no-delim2.sdf')
+        self.assertEqual(mol.ct(0)['Name'], 'dUMP anion\nanother line')
 
 class TestMolfile(unittest.TestCase):
     @classmethod

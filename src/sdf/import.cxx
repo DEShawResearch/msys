@@ -19,8 +19,12 @@
 using namespace desres::msys;
 
 namespace {
-    void add_typed_keyval(String const& key, String const& val, 
+    void add_typed_keyval(String const& key, String& val, 
                           component_t& ct) {
+        if (key.empty()) return;
+        auto sz = val.size();
+        if (sz==1) val.clear(); /* just a newline */
+        else if (sz>1) val.resize(sz-2);
         try {
             int v = stringToInt(val);
             ct.add(key,IntType);
@@ -269,11 +273,13 @@ namespace {
             }
 
             // data fields.  
-            bool needline = true;
+            if (!getline()) return ptr;
+            bool needline = false;
             for (;;) {
                 if (needline && !getline()) {
                     MSYS_FAIL("Unexpected end of file");
                 }
+                if (eof()) break;
                 needline = true;
                 if (!strncmp(buf, "$$$$", 4)) {
                     break;
@@ -288,16 +294,13 @@ namespace {
                     // support multiline values containing newlines
                     for (;;) {
                         if (!getline()) {
-                            MSYS_FAIL("Unexpected end of file");
+                            add_typed_keyval(key,val,mol.ct(0));
+                            needline = false;
+                            break;
                         }
                         if (!strncmp(buf, "$$$$", 4) ||
                             !strncmp(buf, "> ", 2)) {
-                            if (*key.c_str()) {
-                                auto sz = val.size();
-                                if (sz==1) val.clear(); /* just a newline */
-                                else if (sz>1) val.resize(sz-2);
-                                add_typed_keyval(key,val,mol.ct(0));
-                            }
+                            add_typed_keyval(key,val,mol.ct(0));
                             needline = false;
                             break;
                         }
@@ -373,7 +376,8 @@ namespace {
     protected:
         bool getline() {
             ++line;
-            return fgets(buf, sizeof(buf), fp)!=NULL;
+            bool rc = fgets(buf, sizeof(buf), fp)!=NULL;
+            return rc;
         }
         bool eof() {
             return feof(fp);
@@ -432,7 +436,7 @@ static std::vector<size_t> sdf_offsets(std::string const& path) {
     std::vector<size_t> offsets;
     while ((ct = iter.next())) {
         offsets.push_back(iter.offset());
-        if (!(offsets.size() % 100000)) printf("%lu\n", offsets.size());
+        //if (!(offsets.size() % 100000)) printf("%lu\n", offsets.size());
     }
     return offsets;
 }
