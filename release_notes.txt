@@ -1,3 +1,5 @@
+1.7.157 DESRESCode#3438 - fix reading sdf files without trailing delim.
+
 1.7.156 Fix build of docs.
 
 1.7.155 Python/2.7.12-03st.
