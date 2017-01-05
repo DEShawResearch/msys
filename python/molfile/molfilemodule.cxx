@@ -431,7 +431,8 @@ namespace {
                     break;
                 case dtr::Key::TYPE_CHAR:
                 case dtr::Key::TYPE_UCHAR:
-                    arr = PyString_FromString(val.toString().c_str());
+                    arr = PyString_FromStringAndSize(
+                        reinterpret_cast<const char*>(val.data), val.count);
                     break;
                 default:;
             }
