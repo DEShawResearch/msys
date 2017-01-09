@@ -483,7 +483,7 @@ namespace {
         dtr::KeyMap keymap;
         void* keybuf = NULL;
         void** keybufptr = keyvals.ptr() == Py_None ? NULL : &keybuf;
-        std::shared_ptr<void> keybuf_dtor(keybuf, free);
+        std::shared_ptr<void*> keybuf_dtor(keybufptr, [](void **v) { if (v) free(*v); });
         if (bytes.is_none()) {
             PyThreadState *_save;
             _save = PyEval_SaveThread();
