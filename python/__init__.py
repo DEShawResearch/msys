@@ -1980,7 +1980,7 @@ def SavePDB(system, path, append=False):
         flags |= _msys.PDBExportFlags.Append
     _msys.ExportPDB(system._ptr, str(path), flags)
 
-def SaveMol2(system, path, append=False):
+def SaveMol2(system, path, selection='none', append=False):
     ''' Export the System to a mol2 file at the given path.  You should
     probably call AssignBondOrderAndFormalCharge() before exporting
     the system.  '''
@@ -1990,7 +1990,7 @@ def SaveMol2(system, path, append=False):
     flags = _msys.Mol2ExportFlags.Default
     if append:
         flags |= _msys.Mol2ExportFlags.Append
-    _msys.ExportMOL2(ptr,path,prov,flags)
+    _msys.ExportMOL2(ptr,path,prov,system.selectIds(selection),flags)
 
 def FromSmilesString(smiles, forbid_stereo=True):
     ''' Construct a System from a smiles string.

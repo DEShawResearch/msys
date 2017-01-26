@@ -85,6 +85,16 @@ namespace {
     SystemPtr indexed_file_at(IndexedFileLoader const& L, size_t i) {
         return L.at(i);
     }
+
+    void export_mol2(SystemPtr mol, std::string const& path,
+                     Provenance const& prov, object _ids,
+                     unsigned flags) {
+        IdList ids;
+        for (unsigned i=0, n=len(_ids); i<n; i++) {
+            ids.push_back(extract<Id>(_ids[i]));
+        }
+        ExportMol2(mol, path, prov, ids, flags);
+    }
 }
 
 namespace desres { namespace msys { 
@@ -144,7 +154,7 @@ namespace desres { namespace msys {
         def("ImportPDBCoordinates", ImportPDBCoordinates);
         def("ImportMOL2", ImportMol2);
         def("ImportMOL2Many", import_mol2_many);
-        def("ExportMOL2", ExportMol2);
+        def("ExportMOL2", export_mol2);
         def("ImportXYZ", ImportXYZ);
         def("Load", load);
         def("FromSmilesString", FromSmilesString);

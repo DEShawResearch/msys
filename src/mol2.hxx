@@ -42,6 +42,7 @@ namespace desres { namespace msys {
      * the bond type will be "1", "2", etc. according to the bond order. */
     void ExportMol2( SystemPtr mol, std::string const& path,
                      Provenance const& provenance,
+                     IdList const& ids,
                      unsigned flags=0);
 
 }}

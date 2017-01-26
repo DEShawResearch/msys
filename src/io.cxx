@@ -200,7 +200,7 @@ namespace desres { namespace msys {
                 MSYS_FAIL("PRM/TOP export not supported");
                 break;
             case Mol2FileFormat: 
-                ExportMol2(mol, path, prov,
+                ExportMol2(mol, path, prov, IdList(),
                       (flags & SaveOptions::Append ? Mol2Export::Append : 0)
                     );
                 break;
