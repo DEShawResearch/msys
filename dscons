@@ -1,4 +1,4 @@
 #!/bin/sh
 cd "$(dirname "$0")" &&
-exec ./desres-install-helper --exec scons "$@"
+exec garden with -c ./desres-install-helper --exec scons "$@"
 
