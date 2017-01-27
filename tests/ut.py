@@ -1128,6 +1128,11 @@ class Main(unittest.TestCase):
             self.assertTrue(abs(msys.ElectronegativityForElement(i)- e)<1e-6, msys.ElectronegativityForElement(i))
 
 
+    def testTopoIds(self):
+        mol = msys.LoadDMS('tests/files/ww.dms')
+        ids = msys.ComputeTopologicalIds(mol)
+        self.assertEqual(len(ids), mol.natoms)
+
     def testAssignBondOrdersAndFormalCharges(self):
         # Smoke test only
         sys = msys.LoadDMS('tests/files/ww.dms')

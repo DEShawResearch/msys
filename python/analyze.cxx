@@ -43,6 +43,10 @@ namespace {
         return DataForElement(n).eneg;
     }
 
+    list compute_topids(SystemPtr mol) {
+        return to_python(ComputeTopologicalIds(mol));
+    }
+
 }
 
 namespace desres { namespace msys { 
@@ -59,7 +63,7 @@ namespace desres { namespace msys {
          */
         def("GetSSSR", wrap_sssr);
         def("RingSystems", ring_systems);
-        def("ComputeTopologicalIds", ComputeTopologicalIds);
+        def("ComputeTopologicalIds", compute_topids);
         def("GuessBondConnectivity", GuessBondConnectivity);
         def("FindDistinctFragments", find_distinct_fragments);
         def("RadiusForElement", RadiusForElement);
