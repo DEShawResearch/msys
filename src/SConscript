@@ -74,7 +74,6 @@ else:
     lpobjs=env.AddObject(Split('''
 analyze.cxx
 analyze/bond_orders.cxx
-analyze/topological_ids.cxx
 '''))
 
 if env.get("MSYS_WITHOUT_INCHI"):
@@ -88,6 +87,7 @@ libmsys=env.AddLibrary('msys', lexobjs + lpobjs + [inchi] + Split('''
 
 analyze/eigensystem.cxx
 analyze/get_fragments.cxx
+analyze/topological_ids.cxx
 
 amber/import_prmtop.cxx
 
