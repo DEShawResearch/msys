@@ -653,3 +653,9 @@ String desres::msys::HashDMS(String const& path) {
     return "";
 }
 
+
+std::string desres::msys::FormatDMS(SystemPtr sys, Provenance const& prov) {
+    Sqlite dms = Sqlite::write("");
+    export_dms(sys, dms, prov, 0);
+    return dms.contents();
+}

@@ -30,6 +30,8 @@ namespace desres { namespace msys {
         static Sqlite read_bytes(const char* bytes, int64_t len);
         static Sqlite write(std::string const& path, bool unbuffered = false);
 
+        std::string contents() const;
+
         // finish must be called on an Sqlite returned from write().
         void finish();
 

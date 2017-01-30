@@ -913,16 +913,6 @@ class TermTable(object):
         if _msys.bad(id): return None
         return self.override_params.param(id)
 
-def deserialize_system(data, suffix='.dms'):
-    ''' helper function for System pickle support '''
-    import msys
-    import tempfile
-    with tempfile.NamedTemporaryFile(suffix=suffix) as fp:
-        fp.write(data)
-        fp.flush()
-        return msys.Load(fp.name)
-deserialize_system.__safe_for_unpickling__ = True
-
 class System(object):
     '''
 
@@ -958,6 +948,10 @@ class System(object):
 
     __slots__ = ('_ptr', '_atoms')
 
+    def __getinitargs__(self):
+        ''' Pickle support (requires cPickle.HIGHEST_PROTOCOL) '''
+        return self._ptr
+
     def __init__(self, _ptr):
         ''' Construct from SystemPtr.
         Do not invoke directly; use CreateSystem() instead.
@@ -974,17 +968,6 @@ class System(object):
     def __hash__(self): return self._ptr.__hash__()
 
     def __repr__(self): return "<System '%s'>" % self.name
-
-    def __reduce__(self):
-        ''' Pickle support for System.
-
-        Saves a copy of self in dms format to a temporary file, then
-        reads the contents.
-        '''
-        with tempfile.NamedTemporaryFile(suffix='.dms') as fp:
-            Save(self, fp.name)
-            contents = open(fp.name).read()
-        return deserialize_system, (contents,)
 
     @property
     def name(self): 

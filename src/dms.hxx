@@ -61,6 +61,8 @@ namespace desres { namespace msys {
                    Provenance const& provenance,
                    unsigned flags = 0);
 
+    std::string FormatDMS(SystemPtr sys, Provenance const& prov);
+
     namespace sqlite {
         SystemPtr ImportDMS(sqlite3* db, bool structure_only, bool with_tables);
 

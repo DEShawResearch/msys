@@ -142,6 +142,7 @@ namespace desres { namespace msys {
         def("ImportDMS", import_dms);
         def("ImportDMSFromBuffer", import_dms_from_buffer);
         def("ExportDMS", ExportDMS);
+        def("FormatDMS", FormatDMS);
         def("ImportMAE", import_mae);
         def("ImportMAEFromBuffer", import_mae_from_buffer);
         def("ExportMAE", ExportMAE);

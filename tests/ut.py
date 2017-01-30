@@ -814,11 +814,19 @@ class Main(unittest.TestCase):
     def testPickle(self):
         import cPickle as pkl
         old = msys.Load('tests/files/2f4k.dms')
-        s = pkl.dumps(old)
+        s = pkl.dumps(old, pkl.HIGHEST_PROTOCOL)
         new = pkl.loads(s)
         self.assertEqual(old.natoms, new.natoms)
         self.assertEqual(old.nbonds, new.nbonds)
         self.assertEqual(old.table_names, new.table_names)
+
+        # can pickle residues
+        oldres = old.residues[:10]
+        s = pkl.dumps(oldres, pkl.HIGHEST_PROTOCOL)
+        newres = pkl.loads(s)
+        self.assertEqual([a.resid for a in oldres],
+                         [a.resid for a in newres])
+
 
     def testGeometry(self):
         p=NP.array(((1,0,0),

@@ -228,6 +228,12 @@ const char* Sqlite::errmsg() const {
     return sqlite3_errmsg(_db.get());
 }
 
+std::string Sqlite::contents() const {
+    dms_file* dms;
+    sqlite3_file_control(_db.get(), "main", SQLITE_FCNTL_FILE_POINTER, &dms);
+    return std::string(dms->contents, dms->contents+dms->size);
+}
+
 void Sqlite::finish() {
     dms_file* dms;
     sqlite3_file_control(_db.get(), "main", SQLITE_FCNTL_FILE_POINTER, &dms);

@@ -5,6 +5,7 @@
 #include "append.hxx"
 #include "clone.hxx"
 #include "geom.hxx"
+#include "dms.hxx"
 #include "hbond.hxx"
 #include "contacts.hxx"
 
@@ -694,6 +695,24 @@ namespace {
         return to_python(AppendSystem(dst, src, ct));
     }
 
+    struct system_pickle_suite : pickle_suite {
+        static tuple getinitargs(SystemPtr mol) {
+            return boost::python::make_tuple(
+                    "dmscontents", FormatDMS(mol, Provenance()));
+        }
+        static tuple getstate(SystemPtr mol) {
+            return tuple();
+        }
+        static void setstate(SystemPtr mol, tuple s) {
+        }
+    };
+
+    SystemPtr init_from_pickle(std::string const& format, std::string const& contents) {
+        if (format=="dmscontents") {
+            return ImportDMSFromBytes(contents.data(), contents.size());
+        }
+        throw std::runtime_error("Unsupported pickle format " + format);
+    }
 }
 
 namespace desres { namespace msys { 
@@ -752,6 +771,10 @@ namespace desres { namespace msys {
             .def_readwrite("name", &System::name)
             .add_property("global_cell", global_cell)
             .def_readwrite("nonbonded_info", &System::nonbonded_info)
+
+            /* pickle support */
+            .def_pickle(system_pickle_suite())
+            .def("__init__", make_constructor(init_from_pickle))
 
             /* accessor */
             .def("atom",        system_atom, return_ptr())
