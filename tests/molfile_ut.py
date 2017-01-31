@@ -696,7 +696,8 @@ class TestFrame(unittest.TestCase):
   '''
   def setUp(self):
     dcd=molfile.dcd.read('tests/files/alanin.dcd')
-    dtr=molfile.dtr.write('foo.dtr', natoms=dcd.natoms)
+    self.dtrpath = tempfile.mkdtemp(suffix='.dtr')
+    dtr=molfile.dtr.write(self.dtrpath, natoms=dcd.natoms)
     self.x=[]
     for i, frame in enumerate(dcd.frames()):
       frame.time=i
@@ -706,10 +707,10 @@ class TestFrame(unittest.TestCase):
 
   def tearDown(self):
     import shutil
-    shutil.rmtree('foo.dtr')
+    shutil.rmtree(self.dtrpath)
 
   def testScalars(self):
-      dtr=molfile.dtr.read('foo.dtr')
+      dtr=molfile.dtr.read(self.dtrpath)
       attrs=( 'total_energy', 
               'potential_energy', 
               'kinetic_energy', 
@@ -721,20 +722,20 @@ class TestFrame(unittest.TestCase):
       for i, a in enumerate(attrs):
           self.assertEquals(getattr(f, a), None)
           setattr(f, a, i+1)
-      molfile.dtr.write('foo.dtr', natoms=dtr.natoms).frame(f).close()
-      dtr=molfile.dtr.read('foo.dtr')
+      molfile.dtr.write(self.dtrpath, natoms=dtr.natoms).frame(f).close()
+      dtr=molfile.dtr.read(self.dtrpath)
       f=dtr.frame(0)
       for i, a in enumerate(attrs):
           self.assertEquals(getattr(f, a), i+1)
 
   def testFrame(self):
-    dtr=molfile.dtr.read('foo.dtr')
+    dtr=molfile.dtr.read(self.dtrpath)
     self.assert_( dtr.nframes == len(self.x) )
     for i in range(dtr.nframes):
       self.assert_( (dtr.frame(i).pos==self.x[i]).all() )
 
   def testFindFrame(self):
-    dtr=molfile.dtr.read('foo.dtr')
+    dtr=molfile.dtr.read(self.dtrpath)
     times=dtr.times
     self.assert_((times==numpy.arange(dtr.nframes)).all())
 
@@ -753,7 +754,7 @@ class TestFrame(unittest.TestCase):
         self.assertEqual(findframe.at_time_le(times, t), le)
 
   def testReaderAtTime(self):
-    dtr=molfile.dtr.read('foo.dtr')
+    dtr=molfile.dtr.read(self.dtrpath)
 
     def checkFrame(frame, time):
         if time is None:
