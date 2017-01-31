@@ -1434,10 +1434,9 @@ class System(object):
         In that case, you MUST call updateFragids() manually before making
         any use of the fragment assignment (fragids will be out of date).
         '''
-        ptr=self._ptr
         if replace:
-            ptr.delBonds(ptr.bonds())
-        _msys.GuessBondConnectivity(ptr)
+            self.delBonds(self.bonds)
+        _msys.GuessBondConnectivity(self._ptr)
         if reanalyze:
             self.analyze()
 

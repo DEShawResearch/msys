@@ -828,6 +828,10 @@ class Main(unittest.TestCase):
                          [a.resid for a in newres])
 
 
+    def testGuessBonds(self):
+        mol = msys.Load('tests/files/2f4k.dms')
+        mol.guessBonds()
+
     def testGeometry(self):
         p=NP.array(((1,0,0),
                     (2,3,1),
