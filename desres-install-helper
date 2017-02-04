@@ -9,7 +9,7 @@ DESCRIPTION="Biomolecular Structure Library"
 . ./MODULES
 
 # shared library dependencies
-BOOST=boost/1.59.0-07
+BOOST=boost/1.59.0-13
 LPSOLVE=lp_solve/5.5.2.0-05A
 INCHI=inchi/1.04-05
 TEXLIVE=texlive/20120701-03
@@ -47,6 +47,7 @@ EOF
     cat << EOF > $GARDENDIR/lib
 prepend-path DESRES_MODULE_CPPFLAGS -I$PREFIX/include
 prepend-path DESRES_MODULE_LDFLAGS  -L$PREFIX/lib:-Wl,-rpath,$PREFIX/lib
+prereq $PYTHON/lib
 prereq $BOOST/lib
 prereq $SQLITE/lib
 setenv MSYS_PREFIX $PREFIX

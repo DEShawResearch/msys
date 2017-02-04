@@ -1,4 +1,9 @@
 1.7.157 DESRESCode#3438 - fix reading sdf files without trailing delim.
+        DESRESCode#3472 - fix msys.System.guessBonds.
+        DESRESCode#3450 - pickle support for residues and chains.
+        DESRESCode#3461 - fix ComputeTopologicalIds bindings.
+        DESRESCode#3452 - use garden flex and bison for CentOS7 support.
+        use desres-python/2.7.13-02.
 
 1.7.156 Fix build of docs.
 
