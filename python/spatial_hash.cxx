@@ -119,7 +119,8 @@ static PyObject* hash_find_nearest(SpatialHash& hash,
 static PyObject* hash_find_contacts(SpatialHash& hash,
                                     float r,
                                     PyObject* posobj,
-                                    PyObject* idsobj) {
+                                    PyObject* idsobj,
+                                    bool reuse_voxels) {
 
     PyObject* posarr = PyArray_FromAny(posobj,
                 PyArray_DescrFromType(NPY_FLOAT32),
@@ -152,7 +153,13 @@ static PyObject* hash_find_contacts(SpatialHash& hash,
 
     const float* pos = (const float*)PyArray_DATA(posarr);
     SpatialHash::contact_array_t contacts;
-    hash.findContacts(r, pos, n, ids, &contacts);
+
+    if (reuse_voxels) {
+        // drop the GIL here?
+        hash.findContactsReuseVoxels(r, pos, n, ids, &contacts);
+    } else {
+        hash.findContacts(r, pos, n, ids, &contacts);
+    }
     Py_XDECREF(idsarr);
     Py_DECREF(posarr);
 
@@ -193,7 +200,8 @@ namespace desres { namespace msys {
             .def("findContacts", hash_find_contacts,
                     (arg("r"),
                      arg("pos"),
-                     arg("ids")=object()))
+                     arg("ids")=object(),
+                     arg("reuse_voxels")=false))
             ;
     }
 }}

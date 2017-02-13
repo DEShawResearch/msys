@@ -105,10 +105,29 @@ class Contacts(unittest.TestCase):
         p1 = mol.findContactIds(3.2, pro, wat, pos)
         p1.sort()
 
-        i,j,d = msys.SpatialHash(pos, wat).findContacts(3.2, pos, pro)
+        sh = msys.SpatialHash(pos, wat)
+        i,j,d = sh.findContacts(3.2, pos, pro)
         p2 = zip(i,j,d)
         p2.sort()
         self.compare(p1,p2)
+
+        i,j,d = sh.findContacts(3.2, pos, pro, reuse_voxels=True)
+        p3 = zip(i,j,d)
+        p3.sort()
+        self.compare(p1,p3)
+
+        sh.voxelize(8.0)
+        i,j,d = sh.findContacts(3.2, pos, pro, reuse_voxels=True)
+        p4 = zip(i,j,d)
+        p4.sort()
+        self.compare(p1,p4)
+
+        sh.voxelize(1.0)
+        i,j,d = sh.findContacts(3.2, pos, pro, reuse_voxels=True)
+        p4 = zip(i,j,d)
+        p4.sort()
+        with self.assertRaises(AssertionError):
+            self.compare(p1,p4)
 
     def testSelf(self):
         ''' self-contacts

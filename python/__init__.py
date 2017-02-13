@@ -2263,13 +2263,14 @@ class SpatialHash(object):
         if ids is None: ids = numpy.arange(len(pos), dtype='uint32')
         return self._hash.findNearest(k, pos, ids)
 
-    def findContacts(self, radius, pos, ids=None):
+    def findContacts(self, radius, pos, ids=None, reuse_voxels=False):
         ''' Find pairs of particles within radius of each other.
 
         Args:
             radius (float): search radius
             pos (array[float]): positions
             ids (array[uint]): particle indices
+            reuse_voxels (bool): assume voxelize(R>=radius) has already been called
 
         Returns:
            i, j, dists (tuple): Mx1 arrays of ids and distances.
@@ -2284,7 +2285,7 @@ class SpatialHash(object):
         same atom indices as the positions passed to the SpatialHash
         constructor.
         '''
-        return self._hash.findContacts(radius, pos, ids)
+        return self._hash.findContacts(radius, pos, ids, reuse_voxels)
 
 
 HydrogenBond.__repr__ = lambda self: "<Hbond %s %s %s>" % (self.donor_id, self.acceptor_id, self.hydrogen_id)
