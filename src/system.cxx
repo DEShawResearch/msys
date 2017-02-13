@@ -1,7 +1,5 @@
 #include "system.hxx"
-#include "sssr.hxx"
 #include "append.hxx"
-#include "graph.hxx"
 #include <sstream>
 #include <stack>
 #include <stdexcept>
@@ -20,11 +18,9 @@ IdList System::_empty;
 
 System::System() 
 : _atomprops(ParamTable::create()), _bondprops(ParamTable::create()) {
-    //printf("hello structure %p\n", (void *)this);
 }
 
 System::~System() {
-    //printf("goodbye structure %p\n", (void *)this);
 }
 
 Id System::addAtom(Id residue) { 
