@@ -129,6 +129,11 @@ class Contacts(unittest.TestCase):
         with self.assertRaises(AssertionError):
             self.compare(p1,p4)
 
+        with self.assertRaises(RuntimeError):
+            sh.voxelize(0)
+        with self.assertRaises(RuntimeError):
+            sh.voxelize(-1)
+
     def testSelf(self):
         ''' self-contacts
         '''

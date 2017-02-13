@@ -164,6 +164,7 @@ SpatialHash::SpatialHash( const float *pos, int n, const Id* ids,
 
 
 SpatialHash& SpatialHash::voxelize(float r) {
+    if (r<=0) MSYS_FAIL("radius " << r << " must be positive");
     rad = r;
     ir = float(1)/rad;
     ox = xmin - rad;
