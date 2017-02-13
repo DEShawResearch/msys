@@ -555,6 +555,13 @@ void SpatialHash::findContacts(float r, const float* pos,
                                int n, const Id* ids,
                                contact_array_t* result) {
     voxelize(r);
+    findContactsReuseVoxels(r, pos, n, ids, result);
+}
+
+void SpatialHash::findContactsReuseVoxels(float r, const float* pos,
+                                          int n, const Id* ids,
+                                          contact_array_t* result) const {
+
     bool periodic = cx!=0 || cy!=0 || cz!=0;
     float tmp[3];
 

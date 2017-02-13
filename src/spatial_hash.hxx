@@ -129,9 +129,18 @@ namespace desres { namespace msys {
             }
         };
 
+        /* find contacts, performing a voxelization step before
+         * the search (making this a non-const method)
+         */
         void findContacts(float r, const float* pos,
                           int n, const Id* ids,
                           contact_array_t* result);
+
+        /* find contacts assuming voxelize(R) for for R>=r has already been
+         * called.  const and reentrant.  */
+        void findContactsReuseVoxels(float r, const float* pos,
+                                     int n, const Id* ids,
+                                     contact_array_t* result) const;
 
         /* For expert users only.  Finds points within r of the
          * hashed points assuming the hashed points have already
