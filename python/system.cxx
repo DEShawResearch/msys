@@ -937,11 +937,6 @@ namespace desres { namespace msys {
             .def("addNonbondedFromSchema", AddNonbonded)
 
             /* atom selection */
-            .def("select", wrap_atomselect,
-                    (arg("mol"),
-                     arg("sel"),
-                     arg("pos")=object(),
-                     arg("box")=object()))
             .def("selectAsList", list_Atomselect,
                     (arg("mol"),
                      arg("sel"),
