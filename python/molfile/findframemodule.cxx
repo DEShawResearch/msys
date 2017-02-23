@@ -10,13 +10,13 @@ namespace {
     struct Oracle {
         const double * times;
         Oracle(const double *_times) : times(_times) {}
-        double operator[](ssize_t i) const { return times[i]; }
+        double operator[](boost::python::ssize_t i) const { return times[i]; }
     };
 
-    typedef ssize_t (*findfunc)(ssize_t N, const Oracle& times, double T);
+    typedef boost::python::ssize_t (*findfunc)(boost::python::ssize_t N, const Oracle& times, double T);
 
     template <findfunc f> 
-    ssize_t wrap(bp::object& obj, double T) {
+    boost::python::ssize_t wrap(bp::object& obj, double T) {
         PyObject * arr = PyArray_FROMANY(
                 obj.ptr(),      /* PyObject */
                 NPY_DOUBLE,     /* type */
@@ -26,8 +26,8 @@ namespace {
         if (!arr) return -1;
 
         const double * times = (double *)PyArray_DATA(arr);
-        ssize_t N = PyArray_DIM(arr,0);
-        ssize_t result = f(N, Oracle(times), T);
+        boost::python::ssize_t N = PyArray_DIM(arr,0);
+        boost::python::ssize_t result = f(N, Oracle(times), T);
         Py_DECREF(arr);
         return result;
     }

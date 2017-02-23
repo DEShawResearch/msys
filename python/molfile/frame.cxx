@@ -11,7 +11,7 @@ namespace {
         if (!self.pos()) return object();
         Py_ssize_t dims[2] = { (Py_ssize_t)self.natoms(), 3 };
         return object(handle<>(
-                    backed_vector(2, dims, FLOAT, self.pos(), obj.ptr())));
+                    backed_vector(2, dims, desres::molfile::FLOAT, self.pos(), obj.ptr())));
     }
 
     object frame_vel(object& obj) {
@@ -19,7 +19,7 @@ namespace {
         if (!self.vel()) return object();
         Py_ssize_t dims[2] = { (Py_ssize_t)self.natoms(), 3 };
         return object(handle<>( 
-                    backed_vector(2, dims, FLOAT, self.vel(), obj.ptr())));
+                    backed_vector(2, dims, desres::molfile::FLOAT, self.vel(), obj.ptr())));
     }
 
     object frame_dpos(object& obj) {
@@ -27,7 +27,7 @@ namespace {
         if (!self.dpos()) return object();
         Py_ssize_t dims[2] = { (Py_ssize_t)self.natoms(), 3 };
         return object(handle<>(
-                    backed_vector(2, dims, DOUBLE, self.dpos(), obj.ptr())));
+                    backed_vector(1, dims, desres::molfile::INT, self.gid(), obj.ptr())));
     }
 
     object frame_dvel(object& obj) {
@@ -35,14 +35,14 @@ namespace {
         if (!self.dvel()) return object();
         Py_ssize_t dims[2] = { (Py_ssize_t)self.natoms(), 3 };
         return object(handle<>( 
-                    backed_vector(2, dims, DOUBLE, self.dvel(), obj.ptr())));
+                    backed_vector(2, dims, desres::molfile::DOUBLE, self.dvel(), obj.ptr())));
     }
 
     object frame_box(object& obj) {
         Frame& self = extract<Frame&>(obj);
         Py_ssize_t dims[2] = {3,3};
         return object(handle<>( 
-                    backed_vector(2, dims, DOUBLE, self.box(), obj.ptr())));
+                    backed_vector(2, dims, desres::molfile::DOUBLE, self.box(), obj.ptr())));
     }
 
     object frame_gid(object& obj) {
@@ -50,14 +50,14 @@ namespace {
         if (!self.gid()) return object();
         Py_ssize_t dims[1] = {(Py_ssize_t)self.natoms() };
         return object(handle<>( 
-                    backed_vector(1, dims, INT, self.gid(), obj.ptr())));
+                    backed_vector(1, dims, desres::molfile::INT, self.gid(), obj.ptr())));
     }
 
     object frame_ptensor(object& obj) {
         Frame& self = extract<Frame&>(obj);
         Py_ssize_t dims[2] = {3,3};
         return object(handle<>( 
-                    backed_vector(2, dims, DOUBLE, self.pressure_tensor(), 
+                    backed_vector(2, dims, desres::molfile::DOUBLE, self.pressure_tensor(), 
                       obj.ptr())));
     }
 
@@ -65,7 +65,7 @@ namespace {
         Frame& self = extract<Frame&>(obj);
         Py_ssize_t dims[2] = {3,3};
         return object(handle<>( 
-                    backed_vector(2, dims, DOUBLE, self.virial_tensor(), 
+                    backed_vector(2, dims, desres::molfile::DOUBLE, self.virial_tensor(), 
                       obj.ptr())));
     }
 

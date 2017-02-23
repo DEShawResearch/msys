@@ -6,7 +6,9 @@
 #include "amber.hxx"
 #include "mol2.hxx"
 #include "xyz.hxx"
+#ifndef _MSC_VER
 #include "sdf.hxx"
+#endif
 
 #include <sys/stat.h>
 
@@ -40,7 +42,9 @@ namespace {
         "PARM7",
         "MOL2",
         "XYZ",
+#ifndef _MSC_VER
         "SDF",
+#endif
         "WEBPDB",
         "PSF"
     };
@@ -73,7 +77,9 @@ namespace desres { namespace msys {
         const char* PRM[] = {"prmtop","prm7", 0};
         const char* MOL2[]= {"mol2", 0};
         const char* XYZ[] = {"xyz", 0};
+#ifndef _MSC_VER
         const char* SDF[] = {"sdf","sdf.gz","sdfgz", 0};
+#endif
         const char* PSF[] = {"psf", 0};
 
         if (match(path, DMS)) return DmsFileFormat;
@@ -82,7 +88,9 @@ namespace desres { namespace msys {
         if (match(path, PRM)) return ParmTopFileFormat;
         if (match(path,MOL2)) return Mol2FileFormat;
         if (match(path, XYZ)) return XyzFileFormat;
+#ifndef _MSC_VER
         if (match(path, SDF)) return SdfFileFormat;
+#endif
         if (match(path, PSF)) return PsfFileFormat;
         if (match_web(path))  return WebPdbFileFormat;
         return UnrecognizedFileFormat;
@@ -124,9 +132,11 @@ namespace desres { namespace msys {
             case XyzFileFormat: 
                 m=ImportXYZ(path); 
                 break;
+#ifndef _MSC_VER
             case SdfFileFormat:
                 m=ImportSdf(path);
                 break;
+#endif
             case PsfFileFormat:
                 m=ImportPSF(path);
                 break;
@@ -163,8 +173,10 @@ namespace desres { namespace msys {
                     return Mol2Iterator(path);
             case MaeFileFormat:
                     return MaeIterator(path, structure_only);
+#ifndef _MSC_VER
             case SdfFileFormat:
                     return SdfFileIterator(path);
+#endif
             case PdbFileFormat:
                     return PDBIterator(path);
             case UnrecognizedFileFormat:
@@ -210,11 +222,13 @@ namespace desres { namespace msys {
                 }
                 ExportXYZ(mol, path);
                 break;
+#ifndef _MSC_VER
             case SdfFileFormat:
                 ExportSdf(mol, path,
                       (flags & SaveOptions::Append ? SdfExport::Append : 0)
                     );
                 break;
+#endif
             default:
                 MSYS_FAIL("No support for saving file '" << path << "' of type "
                         << FileFormatAsString(format));
@@ -240,11 +254,13 @@ namespace desres { namespace msys {
     IndexedFileLoader::open(std::string const& path,
                             std::string const& idx_path) {
         auto idx = idx_path.empty() ? default_idx_path(path) : idx_path;
+#ifndef _MSC_VER
         switch (GuessFileFormat(path)) {
             case SdfFileFormat:
                 return OpenIndexedSdf(path, idx);
             default:;
         };
+#endif
         return std::shared_ptr<IndexedFileLoader>(nullptr);
     }
 
@@ -255,8 +271,10 @@ namespace desres { namespace msys {
         switch (GuessFileFormat(path)) {
             default:
                 MSYS_FAIL("Unable to determine format of " << path);
+#ifndef _MSC_VER
             case SdfFileFormat:
                 CreateIndexedSdf(path, idx);
+#endif
                 break;
         };
     }

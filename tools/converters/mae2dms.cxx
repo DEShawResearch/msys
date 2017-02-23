@@ -56,6 +56,8 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
+    std::runtime_error("goodbye");
+
     SystemPtr h;
     try {
         h = ImportMAE(argv[1], ignore_unrecognized);

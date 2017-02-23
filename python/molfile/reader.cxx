@@ -170,9 +170,11 @@ void desres::molfile::export_reader() {
         .def("next", reader_next, "Return the next frame",
                 return_value_policy<manage_new_object>())
         .def("skip", &Reader::skip, "Skip the next frame")
+#ifndef WIN32 //Doesn't link under windows
         .def("at_time_near", &wrap<&Reader::at_time_near>,
                 arg("time"),
                 return_value_policy<manage_new_object>())
+#endif
         .def("at_time_gt", &wrap<&Reader::at_time_gt>,
                 arg("time"),
                 return_value_policy<manage_new_object>())

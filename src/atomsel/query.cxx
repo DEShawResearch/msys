@@ -7,6 +7,11 @@ extern void atomselParseFree(void*, void (freeProc)(void*));
 extern void atomselParse(void*, int, desres::msys::atomsel::Token, desres::msys::atomsel::Query*);
 extern void atomselParseTrace(FILE*, char*);
 
+void* atomselParseAlloc(void* (mallocProc)(size_t));
+void atomselParseFree(void*, void (freeProc)(void*));
+void atomselParse(void*, int, desres::msys::atomsel::Token, desres::msys::atomsel::Query*);
+void atomselParseTrace(FILE*, char*);
+
 static void fail_with_error(std::string const& sel, int start, int stop) {
     std::stringstream ss;
     ss << "Parse failed:\n" << sel << "\n";

@@ -11,6 +11,7 @@ namespace bfs = boost::filesystem;
 
 #ifndef _MSC_VER
 #include <unistd.h>
+#include <pwd.h>
 #else
 #endif
 
@@ -45,6 +46,7 @@ Provenance Provenance::fromArgs(int argc, char *argv[]) {
         }
     }
 
+#ifndef _MSC_VER
     /* user */
     {
         int id = getuid();
@@ -56,6 +58,7 @@ Provenance Provenance::fromArgs(int argc, char *argv[]) {
             prov.user = ss.str();
         }
     }
+#endif
 
     /* workdir */
     prov.workdir = bfs::system_complete(".").string();

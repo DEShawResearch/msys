@@ -1,6 +1,7 @@
 /* @COPYRIGHT@ */
 
 #include "print.hxx"
+#include <algorithm>
 #include <stdexcept>
 #include <fstream>
 #include <cstdio>
@@ -13,7 +14,7 @@ using desres::msys::fastjson::Json;
 using desres::msys::fastjson::floatify;
 
 static void indent(std::ostream& out, int depth, std::string const& str) {
-    for (; depth; --depth) out << str;
+    for (; depth; --depth) out << str.c_str();
 }
 
 static void quotify(std::ostream& out, const std::string& raw) {
@@ -119,12 +120,12 @@ static void rprint_json( const Json &js, std::ostream& out, int depth,
                 out << "]";
                 
             } else {
-                out << "[" << nstr;
+                out << "[" << nstr.c_str();
                 for (int i=0; i<js.size(); i++) {
                     indent(out, depth+1, istr);
                     rprint_json(js.elem(i), out, depth+1, istr, nstr);
                     if (i!=js.size()-1) out << ",";
-                    out << nstr;
+                    out << nstr.c_str();
                 }
                 indent(out, depth, istr);
                 out << "]";
@@ -132,14 +133,14 @@ static void rprint_json( const Json &js, std::ostream& out, int depth,
             break;
 
         case Json::Object:
-            out << "{" << nstr;
+            out << "{" << nstr.c_str();
             for (int i=0; i<js.size(); i++) {
                 indent(out, depth+1, istr);
                 quotify(out,js.key(i));
                 out << " : ";
                 rprint_json(js.elem(i), out, depth+1, istr, nstr);
                 if (i!=js.size()-1) out << ", ";
-                out << nstr;
+                out << nstr.c_str();
             }
             indent(out, depth, istr);
             out << "}";

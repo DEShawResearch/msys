@@ -7,6 +7,16 @@
 
 #include <iostream> // Debug
 
+#ifdef WIN32
+#ifdef _WIN64
+ typedef __int64 ssize_t;
+#else
+ typedef int ssize_t;
+#endif
+
+#endif
+
+
 /* Frequency of letters in English text...
    http://www.askoxford.com/asktheexperts/faq/aboutwords/frequency
 

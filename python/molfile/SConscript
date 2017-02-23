@@ -1,15 +1,19 @@
 Import('msysenv')
 Import('libmsys')
+import sys
 env=msysenv.Clone()
 env.Append( 
         CPPPATH=['../../src', '../'],
-        CCFLAGS='-Wno-unused-function'.split(),
         CXXFLAGS='-Wno-unused-local-typedefs',
         LIBS=['msys', 'boost_python$MSYS_BOOST_SUFFIX', 'boost_thread$MSYS_BOOST_SUFFIX'])
 
+if sys.platform != "win32":
+    env.Append(CCFLAGS='-Wno-unused-function'.split())
+else:
+    env.Append(LIBS=['python27.lib'])
 if env['PLATFORM']=='darwin':
     env.Append(CCFLAGS='-Wno-error')
-else:
+elif sys.platform.startswith("linux"):
     env.Append(CCFLAGS='-Wno-cpp')
 
 env.Append(CPPPATH='..')

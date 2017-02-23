@@ -1,4 +1,7 @@
 Import('env')
+import os
+import sys
+
 env=env.Clone()
 
 opts=Variables()
@@ -7,19 +10,36 @@ opts.Add("MSYS_WITHOUT_INCHI", "without compiled-in inchi support?")
 opts.Add("MSYS_BOOST_SUFFIX", "suffix for boost libraries (e.g. -mt)")
 opts.Update(env)
 
+if "SCHRODINGER_SRC" in os.environ:
+    schrod_win_libs = ['libreassign_ff', 'libdesres']
+    schrod_osx_libs = ['reassignff', 'desres']
+    schrod_only_objs = ['mae/modify_pair.cxx']
+else:
+    schrod_win_libs = []
+    schrod_osx_libs = []
+    schrod_only_objs = []
+
+if sys.platform.startswith("win32"):
+    env.AppendUnique(LIBS=['libsqlite3', 'zlib', 'snappy'] + schrod_win_libs)
+    if not env.get('MSYS_WITHOUT_LPSOLVE'):
+        env.AppendUnique(LIBS=['lpsolve'])
+else:
+    env.AppendUnique(LIBS=['sqlite3', 'z'])
+if env['PLATFORM'] == 'darwin':
+    env.AppendUnique(LIBS=schrod_osx_libs)
+    if not env.get('MSYS_WITHOUT_LPSOLVE'):
+        env.AppendUnique(LIBS=['lpsolve55'])
+
 bsx=env.get('MSYS_BOOST_SUFFIX', '')
 boost_libs=[(x+bsx) for x in ( 
     'boost_iostreams', 'boost_filesystem', 'boost_system')]
+
 env.Append(LIBS=boost_libs)
-env.AppendUnique(LIBS=['sqlite3', 'z' ])
-if env['PLATFORM'] == 'darwin' and not env.get('MSYS_WITHOUT_LPSOLVE'):
-    env.AppendUnique(LIBS=['lpsolve55'])
 
 env.Append(CPPPATH='.')
 
 msysenv=env
 Export('msysenv')
-
 
 def get_version(path):
     ''' return version string from file '''
@@ -55,16 +75,29 @@ def build_version_hxx( target, source, env ):
 
     fd.close()
 
-env.Command('version.hxx', 'version.py', build_version_hxx )
-env.Command('smiles/lexer.cxx', 'smiles/smiles.l', 'flex -o $TARGET $SOURCE')
-env.Command(['smiles/parser.cxx', 'smiles/parser.hxx'], 'smiles/smiles.y', 'bison --report=state -t -o $TARGET $SOURCE')
-
 lexenv = env.Clone()
 lexenv.Append(CPPDEFINES='YY_NO_INPUT')
-lexenv.Append(CXXFLAGS='-Wno-deprecated-register')
-lexobjs = lexenv.AddObject(Split('''
+env.Command('version.hxx', 'version.py', build_version_hxx )
+if sys.platform.startswith("win32"):
+    smiles_objs = []
+    lexobjs = []
+    sdfobjs = [] # too many posix dependencies in sdf for windows to handle
+else:
+    env.Command('smiles/lexer.cxx', 'smiles/smiles.l', 'flex -o $TARGET $SOURCE')
+    env.Command(['smiles/parser.cxx', 'smiles/parser.hxx'], 'smiles/smiles.y', 'bison --report=state -t -o $TARGET $SOURCE')
+    smiles_objs = Split('''
+smiles/smiles.cxx
+smiles/parser.cxx
+''')
+    lexenv.Append(CXXFLAGS='-Wno-deprecated-register')
+    lexenv.Append(CXXFLAGS='-Wno-sign-compare') # needed for docker/desres build
+    lexobjs = lexenv.AddObject(Split('''
 smiles/lexer.cxx
 '''))
+    sdfobjs = Split('''
+sdf/export.cxx
+sdf/import.cxx
+''')
 
 if env.get('MSYS_WITHOUT_LPSOLVE'):
     lpenv=env.Clone()
@@ -83,7 +116,11 @@ if env.get("MSYS_WITHOUT_INCHI"):
 else:
     inchi = env.AddObject('inchi.cxx')
 
-libmsys=env.AddLibrary('msys', lexobjs + lpobjs + [inchi] + Split('''
+libmsys_env = env.Clone()
+if sys.platform.startswith("darwin"):
+    desmond_release = os.environ["DESMOND"]
+    libmsys_env.Append(LINKFLAGS=['-dynamiclib', '-install_name', '@rpath/../../../{}/lib/Darwin-x86_64/libmsys.dylib'.format(desmond_release)])
+libmsys=libmsys_env.AddLibrary('msys', lexobjs + lpobjs + sdfobjs + schrod_only_objs + [inchi] + smiles_objs + Split('''
 
 analyze/eigensystem.cxx
 analyze/get_fragments.cxx
@@ -174,9 +211,6 @@ mol2/assign.cxx
 mol2/export.cxx
 mol2/import.cxx
 
-sdf/export.cxx
-sdf/import.cxx
-
 pdb/pdb.cxx
 pdb/webpdb.c
 
@@ -186,9 +220,6 @@ psf/import.cxx
 schema.cxx
 schema/schema.cxx
 spatial_hash.cxx
-
-smiles/smiles.cxx
-smiles/parser.cxx
 
 annotated_system.cxx
 append.cxx

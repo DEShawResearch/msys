@@ -1,6 +1,8 @@
 // @COPYRIGHT@
-
 #include "prep_alchemical_mae.hxx"
+#ifndef DESMOND_USE_SCHRODINGER_MMSHARE
+// this file has diverged from the DESRES code, hence this crazy ifdef
+
 #include "../../types.hxx"
 
 #include <sstream>
@@ -679,3 +681,8 @@ namespace desres { namespace msys { namespace mae {
       return out.str();
     }
 }}}
+
+#else 
+// below is Schrodinger's version
+#include "prep_alchemical_mae_schrodinger.hxx"
+#endif

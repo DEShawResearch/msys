@@ -41,6 +41,10 @@
 #include <string.h>
 #include <ctype.h>
 
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+#include <limits.h>
+#endif
+
 #if defined(_AIX)
 #include <strings.h>
 #endif
@@ -230,7 +234,9 @@ static void xtc_receiveints(int *, int, int, const unsigned *, int *);
 */
 static int xtc_timestep(md_file *, md_ts *);
 static int xtc_3dfcoord(md_file *, float *, int *, float *);
-
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+static int xtc_3dfcoord_write(md_file *, float *, int *, float *);
+#endif
 
 // Error reporting functions
 static int mdio_errno(void);
@@ -1470,6 +1476,19 @@ static int put_trx_string(md_file *mf, const char *s) {
 	return mdio_seterror(MDIO_SUCCESS);
 }
 
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+// writes an xdr encoded bytes. Returns GMX_SUCCESS
+// on success or a negative number on error.
+static int put_trx_opaque(md_file *mf, unsigned char *s, int size) {
+    if (!mf || !s) return mdio_seterror(MDIO_BADPARAMS);
+
+    // Write data
+    if (fwrite(s, size, 1, mf->f) != 1)
+      return mdio_seterror(MDIO_IOERROR);
+
+    return mdio_seterror(MDIO_SUCCESS);
+}
+#endif
 
 // xtc_int() - reads an integer from an xtc file
 static int xtc_int(md_file *mf, int *i) {
@@ -1733,6 +1752,409 @@ static void xtc_receiveints(int *buf, const int nints, int nbits,
 	}
 	nums[0] = bytes[0] | (bytes[1] << 8) | (bytes[2] << 16) | (bytes[3] << 24);
 }
+
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+// Code within this ifdef block is derived from xdrfile
+/* -*- mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*-
+ *
+ * $Id: xdrfile.c,v 1.2 2009/03/30 11:05:57 spoel Exp $
+ *
+ * Copyright (c) Erik Lindahl, David van der Spoel 2003-2007.
+ * Coordinate compression (c) by Frans van Hoesel.
+ *
+ * IN contrast to the rest of Gromacs, XDRFILE is distributed under the
+ * BSD license, so you can use it any way you wish, including closed source:
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"), 
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
+
+/*
+ * xtc_sendbits - encode num into buf using the specified number of bits
+ *
+ * This routines appends the value of num to the bits already present in
+ * the array buf. You need to give it the number of bits to use and you had
+ * better make sure that this number of bits is enough to hold the value.
+ * Num must also be positive.
+ */
+static void xtc_sendbits(int *buf, int num_of_bits, int num) {
+    unsigned int cnt, lastbyte;
+    int lastbits;
+    unsigned char * cbuf;
+
+    cbuf = ((unsigned char *)buf) + 3 * sizeof(*buf);
+    cnt = (unsigned int) buf[0];
+    lastbits = buf[1];
+    lastbyte =(unsigned int) buf[2];
+    while (num_of_bits >= 8) {
+        lastbyte = (lastbyte << 8) | ((num >> (num_of_bits -8)) /* & 0xff*/);
+        cbuf[cnt++] = lastbyte >> lastbits;
+        num_of_bits -= 8;
+    }
+    if (num_of_bits > 0) {
+        lastbyte = (lastbyte << num_of_bits) | num;
+        lastbits += num_of_bits;
+        if (lastbits >= 8) {
+            lastbits -= 8;
+            cbuf[cnt++] = lastbyte >> lastbits;
+        }
+    }
+    buf[0] = cnt;
+    buf[1] = lastbits;
+    buf[2] = lastbyte;
+    if (lastbits > 0) {
+        cbuf[cnt] = lastbyte << (8 - lastbits);
+    }
+}
+
+/*
+ * xtc_sendints - encode a small set of small integers in compressed format
+ *
+ * this routine is used internally by xdr3dfcoord, to encode a set of
+ * small integers to the buffer for writing to a file.
+ * Multiplication with fixed (specified maximum) sizes is used to get
+ * to one big, multibyte integer. Allthough the routine could be
+ * modified to handle sizes bigger than 16777216, or more than just
+ * a few integers, this is not done because the gain in compression
+ * isn't worth the effort. Note that overflowing the multiplication
+ * or the byte buffer (32 bytes) is unchecked and whould cause bad results.
+ * THese things are checked in the calling routines, so make sure not
+ * to remove those checks...
+ */
+
+static void xtc_sendints(int *buf, unsigned int num_of_ints, unsigned int num_of_bits,
+    unsigned int *sizes, unsigned int *nums) {
+
+    unsigned int i;
+    unsigned int bytes[32], num_of_bytes, bytecnt, tmp;
+
+    tmp = nums[0];
+    num_of_bytes = 0;
+    do {
+        bytes[num_of_bytes++] = tmp & 0xff;
+        tmp >>= 8;
+    } while (tmp != 0);
+
+    for (i = 1; i < num_of_ints; i++) {
+        if (nums[i] >= sizes[i]) {
+            fprintf(stderr,"major breakdown in encodeints - num %u doesn't "
+                    "match size %u\n", nums[i], sizes[i]);
+            return;
+        }
+        /* use one step multiply */
+        tmp = nums[i];
+        for (bytecnt = 0; bytecnt < num_of_bytes; bytecnt++) {
+            tmp = bytes[bytecnt] * sizes[i] + tmp;
+            bytes[bytecnt] = tmp & 0xff;
+            tmp >>= 8;
+        }
+        while (tmp != 0) {
+            bytes[bytecnt++] = tmp & 0xff;
+            tmp >>= 8;
+        }
+        num_of_bytes = bytecnt;
+    }
+    if (num_of_bits >= num_of_bytes * 8) {
+        for (i = 0; i < num_of_bytes; i++) {
+            xtc_sendbits(buf, 8, bytes[i]);
+        }
+        xtc_sendbits(buf, num_of_bits - num_of_bytes * 8, 0);
+    } else {
+        for (i = 0; i < num_of_bytes-1; i++) {
+            xtc_sendbits(buf, 8, bytes[i]);
+        }
+        xtc_sendbits(buf, num_of_bits - (num_of_bytes - 1) * 8, bytes[i]);
+    }
+}
+
+static int xtc_3dfcoord_write(md_file *mf, float *fp, int *size, float *precision) {
+    static int *ip = NULL;
+    static int oldsize;
+    static int *buf;
+
+    int minint[3], maxint[3], mindiff, *lip, diff;
+    int lint1, lint2, lint3, oldlint1, oldlint2, oldlint3, smallidx;
+    int minidx, maxidx;
+    unsigned sizeint[3], sizesmall[3], bitsizeint[3], size3, *luip;
+    int k;
+    int small, smaller, larger, i, is_small, is_smaller, run, prevrun;
+    float *lfp, lf;
+    int tmp, *thiscoord,  prevcoord[3];
+    unsigned int tmpcoord[30];
+
+    int bufsize;
+    unsigned int bitsize;
+
+    memset(bitsizeint, 0, sizeof(bitsizeint));
+    memset(prevcoord, 0, sizeof(prevcoord));
+
+    if (put_trx_int(mf, *size)) return -1;
+    size3 = *size * 3;
+
+    /* Dont bother with compression for three atoms or less */
+    if (*size <= 9) {
+       for (i = 0; i < *size; i++) {
+           if (put_trx_real(mf, *(fp + (3 * i))) < 0) return -1;
+           if (put_trx_real(mf, *(fp + (3 * i) + 1)) < 0) return -1;
+           if (put_trx_real(mf, *(fp + (3 * i) + 2)) < 0) return -1;
+       }
+       return *size;
+    }
+
+    put_trx_real(mf, *precision);
+
+    // xdrfile uses an xdr file for the buffer.
+    // Instead, allocate a buffer here, following the read code.
+    // xfp->buf1 == ip
+    // xfp->buf1size == size3
+    // xfp->buf2 == buf
+    // xfp->buf2size == bufsize
+    if (ip == NULL) {
+       ip = (int *)malloc(size3 * sizeof(*ip));
+       if (ip == NULL) return mdio_seterror(MDIO_BADMALLOC);
+       bufsize = (int) (size3 * 1.2);
+       buf = (int *)malloc(bufsize * sizeof(*buf));
+       if (buf == NULL) return mdio_seterror(MDIO_BADMALLOC);
+       oldsize = *size;
+    } else if (*size > oldsize) {
+       ip = (int *)realloc(ip, size3 * sizeof(*ip));
+       if (ip == NULL) return mdio_seterror(MDIO_BADMALLOC);
+       bufsize = (int) (size3 * 1.2);
+       buf = (int *)realloc(buf, bufsize * sizeof(*buf));
+       if (buf == NULL) return mdio_seterror(MDIO_BADMALLOC);
+       oldsize = *size;
+    }
+
+    /* buf[0-2] are special and do not contain actual data */
+    buf[0] = buf[1] = buf[2] = 0;
+    minint[0] = minint[1] = minint[2] = INT_MAX;
+    maxint[0] = maxint[1] = maxint[2] = INT_MIN;
+    prevrun = -1;
+    lfp = fp;
+    lip = ip;
+    mindiff = INT_MAX;
+    oldlint1 = oldlint2 = oldlint3 = 0;
+    while(lfp < fp + size3) {
+        /* find nearest integer */
+        if (*lfp >= 0.0)
+            lf = *lfp * *precision + 0.5;
+        else
+            lf = *lfp * *precision - 0.5;
+        if (fabs(lf) > INT_MAX-2) {
+            /* scaling would cause overflow */
+           fprintf(stderr, "gromacsplugin) scaling would cause overflow\n");
+           return -1;
+        }
+        lint1 = lf;
+        if (lint1 < minint[0]) minint[0] = lint1;
+        if (lint1 > maxint[0]) maxint[0] = lint1;
+        *lip++ = lint1;
+        lfp++;
+        if (*lfp >= 0.0)
+            lf = *lfp * *precision + 0.5;
+        else
+            lf = *lfp * *precision - 0.5;
+        if (fabs(lf) > INT_MAX-2) {
+            /* scaling would cause overflow */
+           fprintf(stderr, "gromacsplugin) scaling would cause overflow\n");
+           return -1;
+        }
+        lint2 = lf;
+        if (lint2 < minint[1]) minint[1] = lint2;
+        if (lint2 > maxint[1]) maxint[1] = lint2;
+        *lip++ = lint2;
+        lfp++;
+        if (*lfp >= 0.0)
+            lf = *lfp * *precision + 0.5;
+        else
+            lf = *lfp * *precision - 0.5;
+        if (fabs(lf) > INT_MAX-2) {
+            /* scaling would cause overflow */
+           fprintf(stderr, "gromacsplugin) scaling would cause overflow\n");
+           return -1;
+        }
+        lint3 = lf;
+        if (lint3 < minint[2]) minint[2] = lint3;
+        if (lint3 > maxint[2]) maxint[2] = lint3;
+        *lip++ = lint3;
+        lfp++;
+        diff = abs(oldlint1-lint1)+abs(oldlint2-lint2)+abs(oldlint3-lint3);
+        if (diff < mindiff && lfp > fp + 3)
+            mindiff = diff;
+        oldlint1 = lint1;
+        oldlint2 = lint2;
+        oldlint3 = lint3;
+    }
+    put_trx_int(mf, minint[0]);
+    put_trx_int(mf, minint[1]);
+    put_trx_int(mf, minint[2]);
+
+    put_trx_int(mf, maxint[0]);
+    put_trx_int(mf, maxint[1]);
+    put_trx_int(mf, maxint[2]);
+
+    if ((float)maxint[0] - (float)minint[0] >= INT_MAX-2 ||
+        (float)maxint[1] - (float)minint[1] >= INT_MAX-2 ||
+        (float)maxint[2] - (float)minint[2] >= INT_MAX-2) {
+        /* turning value in unsigned by subtracting minint
+         * would cause overflow
+         */
+        fprintf(stderr, "gromacsplugin) making value unsigned would cause overflow\n");
+        return -1;
+    }
+    sizeint[0] = maxint[0] - minint[0]+1;
+    sizeint[1] = maxint[1] - minint[1]+1;
+    sizeint[2] = maxint[2] - minint[2]+1;
+
+    /* check if one of the sizes is to big to be multiplied */
+    if ((sizeint[0] | sizeint[1] | sizeint[2] ) > 0xffffff) {
+        bitsizeint[0] = xtc_sizeofint(sizeint[0]);
+        bitsizeint[1] = xtc_sizeofint(sizeint[1]);
+        bitsizeint[2] = xtc_sizeofint(sizeint[2]);
+        bitsize = 0; /* flag the use of large sizes */
+    } else {
+        bitsize = xtc_sizeofints(3, sizeint);
+    }
+    lip = ip;
+    luip = (unsigned int *) ip;
+    smallidx = FIRSTIDX;
+    while (smallidx < (int)LASTIDX && xtc_magicints[smallidx] < mindiff) {
+        smallidx++;
+    }
+    put_trx_int(mf, smallidx);
+    tmp=smallidx+8;
+    maxidx = ((int)LASTIDX<tmp) ? (int)LASTIDX : tmp;
+    minidx = maxidx - 8; /* often this equal smallidx */
+    tmp=smallidx-1;
+    tmp= (FIRSTIDX>tmp) ? FIRSTIDX : tmp;
+    smaller = xtc_magicints[tmp] / 2;
+    small = xtc_magicints[smallidx] / 2;
+    sizesmall[0] = sizesmall[1] = sizesmall[2] = xtc_magicints[smallidx];
+    larger = xtc_magicints[maxidx] / 2;
+    i = 0;
+    while (i < *size) {
+        is_small = 0;
+        thiscoord = (int *)(luip) + i * 3;
+        if (smallidx < maxidx && i >= 1 &&
+            abs(thiscoord[0] - prevcoord[0]) < larger &&
+            abs(thiscoord[1] - prevcoord[1]) < larger &&
+            abs(thiscoord[2] - prevcoord[2]) < larger) {
+            is_smaller = 1;
+        } else if (smallidx > minidx) {
+            is_smaller = -1;
+        } else {
+            is_smaller = 0;
+        }
+        if (i + 1 < *size) {
+            if (abs(thiscoord[0] - thiscoord[3]) < small &&
+                abs(thiscoord[1] - thiscoord[4]) < small &&
+                abs(thiscoord[2] - thiscoord[5]) < small) {
+                /* interchange first with second atom for better
+                 * compression of water molecules
+                 */
+                tmp = thiscoord[0]; thiscoord[0] = thiscoord[3];
+                thiscoord[3] = tmp;
+                tmp = thiscoord[1]; thiscoord[1] = thiscoord[4];
+                thiscoord[4] = tmp;
+                tmp = thiscoord[2]; thiscoord[2] = thiscoord[5];
+                thiscoord[5] = tmp;
+                is_small = 1;
+            }
+        }
+        tmpcoord[0] = thiscoord[0] - minint[0];
+        tmpcoord[1] = thiscoord[1] - minint[1];
+        tmpcoord[2] = thiscoord[2] - minint[2];
+        if (bitsize == 0) {
+            xtc_sendbits(buf, bitsizeint[0], tmpcoord[0]);
+            xtc_sendbits(buf, bitsizeint[1], tmpcoord[1]);
+            xtc_sendbits(buf, bitsizeint[2], tmpcoord[2]);
+        } else {
+            xtc_sendints(buf, 3, bitsize, sizeint, tmpcoord);
+        }
+        prevcoord[0] = thiscoord[0];
+        prevcoord[1] = thiscoord[1];
+        prevcoord[2] = thiscoord[2];
+        thiscoord = thiscoord + 3;
+        i++;
+
+        run = 0;
+        if (is_small == 0 && is_smaller == -1)
+            is_smaller = 0;
+        while (is_small && run < 8*3) {
+            if (is_smaller == -1 && (
+                pow((double)(thiscoord[0] - prevcoord[0]), 2) +
+                pow((double)(thiscoord[1] - prevcoord[1]), 2) +
+                pow((double)(thiscoord[2] - prevcoord[2]), 2)) >= smaller * smaller) {
+                is_smaller = 0;
+            }
+
+            tmpcoord[run++] = thiscoord[0] - prevcoord[0] + small;
+            tmpcoord[run++] = thiscoord[1] - prevcoord[1] + small;
+            tmpcoord[run++] = thiscoord[2] - prevcoord[2] + small;
+
+            prevcoord[0] = thiscoord[0];
+            prevcoord[1] = thiscoord[1];
+            prevcoord[2] = thiscoord[2];
+
+            i++;
+            thiscoord = thiscoord + 3;
+            is_small = 0;
+            if (i < *size &&
+                abs(thiscoord[0] - prevcoord[0]) < small &&
+                abs(thiscoord[1] - prevcoord[1]) < small &&
+                abs(thiscoord[2] - prevcoord[2]) < small) {
+                is_small = 1;
+            }
+        }
+        if (run != prevrun || is_smaller != 0) {
+            prevrun = run;
+            xtc_sendbits(buf, 1, 1); /* flag the change in run-length */
+            xtc_sendbits(buf, 5, run+is_smaller+1);
+        } else {
+            xtc_sendbits(buf, 1, 0); /* flag the fact that runlength did not change */
+        }
+        for (k=0; k < run; k+=3) {
+            xtc_sendints(buf, 3, smallidx, sizesmall, &tmpcoord[k]);
+        }
+        if (is_smaller != 0) {
+            smallidx += is_smaller;
+            if (is_smaller < 0) {
+                small = smaller;
+                smaller = xtc_magicints[smallidx-1] / 2;
+            } else {
+                smaller = small;
+                small = xtc_magicints[smallidx] / 2;
+            }
+            sizesmall[0] = sizesmall[1] = sizesmall[2] = xtc_magicints[smallidx];
+        }
+    }
+    if (buf[1] != 0) buf[0]++;
+    int buf_size = (int)buf[0]; /* buf[0] holds the length in bytes */
+    put_trx_int(mf, buf_size);
+    // Pad to 4 bytes, needed for reader
+    int padding = 0;
+    if (buf_size % 4) {
+        padding = 4 - (buf_size % 4);
+    }
+    return put_trx_opaque(mf, (unsigned char*)&(buf[3]), buf_size + padding);
+}
+ // end xdrfile code
+#endif
 
 // function that actually reads and writes compressed coordinates    
 static int xtc_3dfcoord(md_file *mf, float *fp, int *size, float *precision) {

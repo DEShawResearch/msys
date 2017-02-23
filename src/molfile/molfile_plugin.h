@@ -37,6 +37,16 @@
 #define MOLFILE_DIRECTIO_MIN_BLOCK_SIZE 4096
 #define MOLFILE_DIRECTIO_MAX_BLOCK_SIZE 4096
 
+#ifdef WIN32
+#ifdef _WIN64
+ typedef __int64 ssize_t;
+#else
+ typedef int ssize_t;
+#endif
+
+#endif
+
+
 #if defined(DESRES_READ_TIMESTEP2)
 /* includes needed for large integer types used for frame counts */
 #include <sys/types.h>

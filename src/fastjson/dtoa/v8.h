@@ -74,7 +74,11 @@ static inline void CheckEqualsHelper(double expected, double value) {
 //      write V8_2PART_UINT64_C(0x12345678,90123456);
 #define V8_2PART_UINT64_C(a, b) (((static_cast<uint64_t>(a) << 32) + 0x##b##u))
 
+#ifdef WIN32
+#define INLINE(header) __inline header
+#else
 #define INLINE(header) inline header  __attribute__((always_inline))
+#endif
 
 // This is inspired by the static assertion facility in boost.  This
 // is pretty magical.  If it causes you trouble on a platform you may

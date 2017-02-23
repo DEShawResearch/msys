@@ -1142,6 +1142,14 @@ class Main(unittest.TestCase):
         ref.alignCoordinates(sel2)
         self.assertAlmostEqual(ref.currentRMSD(sel2), newrms)
 
+    def testAtomselAsList(self):
+        ww='tests/files/ww.dms'
+        mol=msys.Load(ww)
+        self.assertEqual(mol.atomsel('index 27 25').ids.tolist(), [25,27])
+        self.assertEqual(mol.atomsel((25,27)).ids.tolist(), [25,27])
+        self.assertEqual(mol.atomsel([]).ids.tolist(), [])
+        self.assertEqual(mol.atomsel(None).ids.tolist(), [])
+
     def testEmptyAtomsel(self):
         A=msys.Load('tests/files/alanin.pdb')
         B=A.clone()

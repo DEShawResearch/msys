@@ -31,10 +31,16 @@ namespace {
             const Json& aj = blk.get("ffio_aj");
             const Json& ak = blk.get("ffio_ak");
             const Json& fn = blk.get("ffio_funct");
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+            const Json& sc = blk.get("ffio_schedule");
+#endif
 
             int i,n = blk.get("__size__").as_int();
             for (i=0; i<n; i++) {
                 std::string f = fn.elem(i).as_string();
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+                const char* s = sc.valid() ? sc.elem(i).as_string() : 0;
+#endif
                 to_lower(f);
                 bool constrained=false;
                 TermTablePtr table;
@@ -59,7 +65,11 @@ namespace {
                 } else {
                     FFIO_ERROR("Unsupported ffio_funct in ffio_angles: " << f);
                 }
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+                sitemap.addUnrolledTerms( table, A, ids, constrained, s );
+#else
                 sitemap.addUnrolledTerms( table, A, ids, constrained );
+#endif
             }
         }
     };

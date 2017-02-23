@@ -10,7 +10,9 @@
 #define _DARWIN_C_SOURCE
 #endif
 #endif
+#ifndef _MSC_VER
 #include <sys/time.h>
+#endif
 
 using namespace desres::msys;
 
@@ -612,7 +614,11 @@ Id System::addAtomProp(String const& name, ValueType type) {
         "resname", "resid", "chain", "segid", "mass", "charge"
     };
     for (unsigned i=0; i<sizeof(badprops)/sizeof(badprops[0]); i++) {
+#ifdef _MSC_VER
+        if (!stricmp(name.c_str(), badprops[i])) {
+#else
         if (!strcasecmp(name.c_str(), badprops[i])) {
+#endif
             MSYS_FAIL("Could not add atom property '" << name << "'\n"
             << "because it would conflict with an existing atom, residue, or chain property");
         }
@@ -667,11 +673,16 @@ ValueRef System::bondPropValue(Id term, String const& name) {
 }
 
 double desres::msys::now() {
+//FIXME: windows msys, use boost::chrono
+#ifndef _MSC_VER
   struct timeval tm;
   struct timezone tz;
 
   gettimeofday(&tm, &tz);
   return((double)(tm.tv_sec) + (double)(tm.tv_usec)/1000000.0);
+#else
+  return 0.0;
+#endif
 }
 
 #define MERGE_NONBONDED_INFO(field) do { \

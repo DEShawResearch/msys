@@ -110,7 +110,11 @@ SpatialHash::SpatialHash( const float *pos, int n, const Id* ids,
         if (cx==0 || cy==0 || cz==0) {
             MSYS_FAIL("cell has zero-length dimensions");
         }
+#ifdef WIN32
+        rot = (float*)_aligned_malloc(9*sizeof(*rot), 16);
+#else
         posix_memalign((void **)&rot, 16, 9*sizeof(*rot));
+#endif
         double d1=0, d2=0, d3=0; /* row dot-products */
         for (int i=0; i<3; i++) {
             rot[0+i] = cell[0+i]/cx;
@@ -131,6 +135,14 @@ SpatialHash::SpatialHash( const float *pos, int n, const Id* ids,
     }
 
     /* copy to transposed arrays */
+#ifdef WIN32
+    _x = (float*)_aligned_malloc(ntarget*sizeof(*_x), 16);
+    _y = (float*)_aligned_malloc(ntarget*sizeof(*_y), 16);
+    _z = (float*)_aligned_malloc(ntarget*sizeof(*_z), 16);
+    _tmpx = (float*)_aligned_malloc(ntarget*sizeof(*_tmpx), 16);
+    _tmpy = (float*)_aligned_malloc(ntarget*sizeof(*_tmpy), 16);
+    _tmpz = (float*)_aligned_malloc(ntarget*sizeof(*_tmpz), 16);
+#else
     posix_memalign((void **)&_x, 16, ntarget*sizeof(*_x));
     posix_memalign((void **)&_y, 16, ntarget*sizeof(*_y));
     posix_memalign((void **)&_z, 16, ntarget*sizeof(*_z));
@@ -139,6 +151,7 @@ SpatialHash::SpatialHash( const float *pos, int n, const Id* ids,
     posix_memalign((void **)&_tmpz, 16, ntarget*sizeof(*_tmpz));
     posix_memalign((void **)&_ids, 16, ntarget*sizeof(*_ids));
     posix_memalign((void **)&_tmpids, 16, ntarget*sizeof(*_tmpids));
+#endif
     for (int i=0; i<ntarget; i++) {
         Id id = ids ? ids[i] : i;
         const float *xyz = pos+3*id;

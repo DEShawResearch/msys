@@ -48,6 +48,9 @@ VdwMap::VdwMap( const Json& ffio_ff ) {
     const Json& types = sites.get("ffio_vdwtype");
     const Json& typesB = sites.get("ffio_vdwtypeB");
     const Json& chargeB = sites.get("ffio_chargeB");
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+    const Json& chargeC = sites.get("ffio_chargeC");
+#endif
     if (types.valid()) {
         int i,n = types.size();
         for (i=0; i<n; i++) {
@@ -62,6 +65,13 @@ VdwMap::VdwMap( const Json& ffio_ff ) {
             } else {
                 _chargeB.push_back(HUGE_VAL);
             }
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+            if (chargeC.valid() && chargeC.elem(i).kind()==Json::Float) {
+                _chargeC.push_back(chargeC.elem(i).as_float());
+            } else {
+                _chargeC.push_back(HUGE_VAL);
+            }
+#endif
         }
     }
     to_lower(_funct);
@@ -139,3 +149,15 @@ double VdwMap::chargeB( int id ) const {
     }
     return _chargeB[id-1];
 }
+
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+double VdwMap::chargeC( int id ) const {
+    int n = _chargeC.size();
+    if (id<1 || id>n) {
+        std::stringstream ss;
+        ss << "illegal site id " << id;
+        throw std::runtime_error(ss.str());
+    }
+    return _chargeC[id-1];
+}
+#endif

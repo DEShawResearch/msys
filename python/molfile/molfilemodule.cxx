@@ -1,14 +1,27 @@
+#if _MSC_VER
+#define BOOST_NO_CXX11_TEMPLATE_ALIASES
+#endif
+
 #include "molfilemodule.hxx"
 #include "numpy/arrayobject.h"
 #include <map>
 #include <string>
 #include <sstream>
+#ifndef WIN32
 #include <dlfcn.h>
+#endif
+#include <boost/python.hpp>
+
+#ifdef WIN32
+#define ssize_t boost::python::ssize_t
+#endif
 
 #include "molfile/findframe.hxx"
 #include "molfile/dtrplugin.hxx"
 
-#include <boost/python.hpp>
+#ifdef WIN32
+#undef ssize_t
+#endif
 #include <boost/thread.hpp>
 #include <boost/python/docstring_options.hpp>
 
@@ -72,6 +85,7 @@ namespace {
 
     // scan the .so file at the given path and load 
     void register_shared_library(const std::string& path, object& callback) {
+#ifndef WIN32
         void * handle = dlopen(path.c_str(), RTLD_NOW | RTLD_LOCAL);
         if (!handle) throw std::runtime_error(dlerror());
         void * ifunc = dlsym(handle, "vmdplugin_init");
@@ -85,6 +99,11 @@ namespace {
             throw std::runtime_error("No vmdplugin_register() found");
         }
         ((regfunc)rfunc)(&callback, register_cb);
+#else
+        std::stringstream err;
+        err << __FUNCTION__ << " is not supported on windows.";
+        throw std::runtime_error(err.str());
+#endif
     }
 
     /* return a list of all the plugins */
@@ -150,11 +169,11 @@ namespace {
                                      NULL), destructor);
         if (!gidarr) throw_error_already_set();
         const unsigned* gids = (const unsigned*)PyArray_DATA(gidarr.get());
-        ssize_t nfids = PyArray_DIM(fidarr.get(), 0);
+        boost::python::ssize_t nfids = PyArray_DIM(fidarr.get(), 0);
         unsigned ngids = PyArray_DIM(gidarr.get(), 0);
         std::vector<float*> posptrs(nfids);
         std::vector<double*> boxptrs(nfids);
-        for (ssize_t i=0; i<nfids; i++) {
+        for (boost::python::ssize_t i=0; i<nfids; i++) {
             objptr buf(PySequence_GetItem(posbuffers, i), destructor);
             if (!buf) throw_error_already_set();
             if (!PyArray_Check(buf.get()) ||
@@ -168,7 +187,7 @@ namespace {
             }
             posptrs[i] = (float *)PyArray_DATA(buf.get());
         }
-        for (ssize_t i=0; i<nfids; i++) {
+        for (boost::python::ssize_t i=0; i<nfids; i++) {
             objptr buf(PySequence_GetItem(boxbuffers, i), destructor);
             if (!buf) throw_error_already_set();
             if (!PyArray_Check(buf.get()) ||
@@ -556,29 +575,29 @@ namespace {
     struct Oracle {
         const FrameSetReader& self;
         Oracle( const FrameSetReader& f ) : self(f) {}
-        double operator[](ssize_t i) const {
+        double operator[](boost::python::ssize_t i) const {
             double x;
             self.times(i,1,&x);
             return x;
         }
     };
 
-    ssize_t index_near( const FrameSetReader& self, double T ) {
+    boost::python::ssize_t index_near( const FrameSetReader& self, double T ) {
         return ff::at_time_near(self.size(), Oracle(self), T);
     }
-    ssize_t index_le( const FrameSetReader& self, double T ) {
+    boost::python::ssize_t index_le( const FrameSetReader& self, double T ) {
         return ff::at_time_le(self.size(), Oracle(self), T);
     }
-    ssize_t index_lt( const FrameSetReader& self, double T ) {
+    boost::python::ssize_t index_lt( const FrameSetReader& self, double T ) {
         return ff::at_time_lt(self.size(), Oracle(self), T);
     }
-    ssize_t index_ge( const FrameSetReader& self, double T ) {
+    boost::python::ssize_t index_ge( const FrameSetReader& self, double T ) {
         return ff::at_time_ge(self.size(), Oracle(self), T);
     }
-    ssize_t index_gt( const FrameSetReader& self, double T ) {
+    boost::python::ssize_t index_gt( const FrameSetReader& self, double T ) {
         return ff::at_time_gt(self.size(), Oracle(self), T);
     }
-    ssize_t total_bytes( const FrameSetReader& self ) {
+    boost::python::ssize_t total_bytes( const FrameSetReader& self ) {
         return (self.total_bytes());
     }
 

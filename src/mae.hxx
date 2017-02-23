@@ -46,6 +46,12 @@ namespace desres { namespace msys {
     void ExportMAE( SystemPtr h, std::string const& path,
                            Provenance const& provenance,
                            unsigned flags=0);
+
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+    void ModifyQCPair( SystemPtr h);
+    void CreateAlchemicalSoftTables(SystemPtr h);
+#endif
+
     
 }}
 

@@ -66,22 +66,28 @@ namespace desres { namespace msys {
         }
         return calc_vec_angle( r1, r2 );
     }
-    
-    double calc_dihedral( const double* A, const double* B, 
-                          const double* C, const double* D ) {
-        int i;
-        double r1[3],r2[3],r3[3],n1[3], n2[3];
+
+    double calc_vec_dihedral( const double* r1, const double* r2,
+                              const double* r3 ) {
+        double n1[3], n2[3];
         double psin, pcos;
-        for (i=0; i<3; i++) {
-            r1[i]=B[i]-A[i];
-            r2[i]=C[i]-B[i];
-            r3[i]=D[i]-C[i];
-        }
         calc_cross_prod(n1, r1, r2 );
         calc_cross_prod(n2, r2, r3 );
         psin = calc_dot_prod( n1, r3 ) * sqrt(calc_dot_prod( r2, r2 ));
         pcos = calc_dot_prod( n1, n2 );
         return atan2(psin,pcos);
+    }
+        
+    double calc_dihedral( const double* A, const double* B, 
+                          const double* C, const double* D ) {
+        int i;
+        double r1[3],r2[3],r3[3];
+        for (i=0; i<3; i++) {
+            r1[i]=B[i]-A[i];
+            r2[i]=C[i]-B[i];
+            r3[i]=D[i]-C[i];
+        }
+        return calc_vec_dihedral(r1, r2, r3);
     }
     
     void apply_dihedral_geometry( double* D, const double* tmpA,

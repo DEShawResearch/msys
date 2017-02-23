@@ -28,6 +28,10 @@
 #ifndef ENDIAN_SWAP_H
 #define ENDIAN_SWAP_H
 
+#ifdef WIN32
+#define inline __inline
+#endif
+
 /* works on unaligned 2-byte quantities */
 static inline void swap2_unaligned(void *v, long ndata) {
   long i;

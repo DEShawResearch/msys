@@ -1,15 +1,16 @@
 #ifndef desres_msys_dtr_util_hxx
 #define desres_msys_dtr_util_hxx
 
-#include <netinet/in.h>     // for ntohl
 #include <stdint.h>
 #include <string.h>
 #include <sstream>
 #include <stdexcept>
 
 #ifdef _MSC_VER
+#include <Winsock2.h>
 #define DTR_LOC __FILE__ << ":" << __LINE__ << "\n" << __FUNCSIG__
 #else
+#include <netinet/in.h>     // for ntohl
 #define DTR_LOC __FILE__ << ":" << __LINE__ << "\n" << __PRETTY_FUNCTION__
 #endif
 

@@ -11,6 +11,10 @@ namespace desres { namespace msys {
     /* Calculate angle between positions in radians */
     double calc_angle( const double* A, const double* B, const double* C );
     
+    /* Calculate dihedral between vectors in radians */
+    double calc_vec_dihedral( const double* A, const double* B,
+                              const double* C );
+        
     /* Calculate dihedral between postions in radians */
     double calc_dihedral( const double* A, const double* B, 
                           const double* C, const double* D );

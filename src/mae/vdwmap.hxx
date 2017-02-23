@@ -35,6 +35,9 @@ namespace desres { namespace msys { namespace mae {
         VdwNameList _vdwnames;
         VdwNameList _vdwnamesB;
         std::vector<double> _chargeB;
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+        std::vector<double> _chargeC;
+#endif
 
         /* combined params */
         CombinedMap _combined;
@@ -71,6 +74,11 @@ namespace desres { namespace msys { namespace mae {
 
         /* alchemical charge, or HUGE_VAL if not present */
         double chargeB( int id ) const;
+
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+        /* alchemical charge, or HUGE_VAL if not present */
+        double chargeC( int id ) const;
+#endif
     };
 
 }}}

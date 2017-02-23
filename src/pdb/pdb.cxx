@@ -160,6 +160,11 @@ SystemPtr iterator::next() {
 }
 
 std::string desres::msys::FetchPDB(std::string const& code) {
+#ifdef WIN32
+    std::stringstream err;
+    err << __FUNCTION__ << "is not supported on windows.";
+    std::runtime_error(err.str());
+#else
     char* buf = desres_msys_import_webpdb(code.c_str());
     if (!buf) {
         MSYS_FAIL("Could not read pdb code " << code);
@@ -167,9 +172,15 @@ std::string desres::msys::FetchPDB(std::string const& code) {
     std::string s(buf);
     free(buf);
     return s;
+#endif
 }
 
 SystemPtr desres::msys::ImportWebPDB(std::string const& code) {
+#ifdef WIN32
+    std::stringstream err;
+    err << __FUNCTION__ << "is not supported on windows.";
+    std::runtime_error(err.str());
+#else
     char* buf = desres_msys_import_webpdb(code.c_str());
     if (!buf) {
         MSYS_FAIL("Could not read pdb code " << code);
@@ -200,6 +211,7 @@ SystemPtr desres::msys::ImportWebPDB(std::string const& code) {
     close(fd);
     mol->name = code;
     return mol;
+#endif
 }
 
 SystemPtr desres::msys::ImportPDB( std::string const& path ) {

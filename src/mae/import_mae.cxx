@@ -11,6 +11,9 @@
 
 #include <cstdio>
 #include <fstream>
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+#include <reassign_ff.hxx>
+#endif
 
 using desres::msys::fastjson::Json;
 using namespace desres::msys;
@@ -53,6 +56,7 @@ namespace {
     const char * INSERTION =  "m_insertion_code";
     const char * GROW_NAME =  "m_grow_name";
     const char * MMOD_TYPE =  "m_mmod_type";
+    const char * FEP_MAPPING =  "fep_mapping";
 
     const std::string empty;
 
@@ -139,16 +143,19 @@ namespace {
         const Json& inserts = m_atom.get(INSERTION);
         const Json& grow = m_atom.get(GROW_NAME);
         const Json& mmod_type = m_atom.get(MMOD_TYPE);
+        const Json& fep_atom_mapping = m_atom.get(FEP_MAPPING);
 
         Id gtmp=BadId, gene=BadId, glig=BadId, gbias=BadId, gfrz=BadId;
         Id growcol=BadId;
         Id mmodcol=BadId;
+        Id mapping_pid=BadId;
 
         if (!!temp) gtmp=h->addAtomProp("grp_temperature", IntType);
         if (!!nrg)  gene=h->addAtomProp("grp_energy", IntType);
         if (!!lig)  glig=h->addAtomProp("grp_ligand", IntType);
         if (!!bias) gbias=h->addAtomProp("grp_bias", IntType);
         if (!!frz)  gfrz=h->addAtomProp("grp_frozen", IntType);
+        if (!!fep_atom_mapping)  mapping_pid=h->addAtomProp("fep_mapping", IntType);
 
         SystemImporter imp(h);
 
@@ -178,6 +185,7 @@ namespace {
             if (!!lig)  h->atomPropValue(id,glig)=lig.elem(j).as_int(0);
             if (!!bias) h->atomPropValue(id,gbias)=bias.elem(j).as_int(0);
             if (!!frz)  h->atomPropValue(id,gfrz)=frz.elem(j).as_int(0);
+            if (!!fep_atom_mapping)  h->atomPropValue(id,mapping_pid)=fep_atom_mapping.elem(j).as_int(0);
             if (!!grow) {
                 std::string g(grow.elem(j).as_string(""));
                 trim(g);
@@ -243,6 +251,7 @@ namespace {
             const Json& vx = pseudo.get(VXCOL);
             const Json& vy = pseudo.get(VYCOL);
             const Json& vz = pseudo.get(VZCOL);
+            const Json& fep_pseudo_mapping = pseudo.get(FEP_MAPPING);
 
             int j,n = pseudo.get("__size__").as_int();
             for (j=0; j<n; j++) {
@@ -260,6 +269,7 @@ namespace {
                 atom.vx = vx.elem(j).as_float(0);
                 atom.vy = vy.elem(j).as_float(0);
                 atom.vz = vz.elem(j).as_float(0);
+                if (!!fep_pseudo_mapping)  h->atomPropValue(id,mapping_pid)=fep_pseudo_mapping.elem(j).as_int(0);
                 atoms.push_back(id);
                 *npseudos += 1;
             }
@@ -349,6 +359,7 @@ namespace {
             || s=="viparr_info"
             || s=="msys_forcefield"
             || s=="ffio_pseudo"
+            || (s.compare(0, 9,"ffio_cmap") == 0)
             ;
     }
 
@@ -492,6 +503,16 @@ namespace {
         std::stringstream buf;
         buf << file.rdbuf();
 
+#ifndef DESMOND_USE_ACADEMIC
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+        std::string bytes = buf.str();
+        std::string new_bytes;
+        reassign_ff(bytes.c_str(), new_bytes);
+        buf.str("");
+        buf << new_bytes;
+#endif
+#endif
+
         Json M;
         mae::import_mae(buf, M);
 
@@ -517,6 +538,10 @@ namespace {
             if (is_full_system(ct)) continue;
             append_system(h, ct, ignore_unrecognized, without_tables);
         }
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+        CreateAlchemicalSoftTables(h);
+        ModifyQCPair(h);
+#endif
         if (structure_only) h = clone_structure_only(h);
         Analyze(h);
         return h;

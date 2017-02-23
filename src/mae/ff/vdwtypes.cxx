@@ -24,6 +24,9 @@ namespace {
             } else if (vdwmap.funct()=="polynomial_cij") {
                 funct="polynomial_cij";
             } else {
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+                return;
+#endif
                 std::stringstream ss;
                 ss << "Unrecognized mae vdw_funct '" << vdwmap.funct()
                     << "'";
@@ -70,11 +73,18 @@ namespace {
                         atable->category = NONBONDED;
                         atable->addTermProp("chargeB", FloatType);
                         atable->addTermProp("moiety", IntType);
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+                        atable->addTermProp("chargeC", FloatType);
+#endif
                     }
                     IdList realids(1,sitemap.site(site));
                     Id term = atable->addTerm(realids, p[1]);
                     atable->termPropValue(term,"chargeB") = 
                         vdwmap.chargeB(site);
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+                    atable->termPropValue(term,"chargeC") = 
+                        vdwmap.chargeC(site);
+#endif
 
                 }
             }

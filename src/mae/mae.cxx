@@ -13,6 +13,16 @@
 #include <sstream>
 #include <stdexcept>
 
+#ifdef WIN32
+#ifdef _WIN64
+ typedef __int64 ssize_t;
+#else
+ typedef int ssize_t;
+#endif
+
+#endif
+
+
 
 using desres::msys::fastjson::Json;
 

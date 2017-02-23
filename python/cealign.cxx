@@ -31,8 +31,8 @@ static list compute(Engine const& engine, list Aatoms, object Aobj,
     }
 
     IdList A(len(Aatoms)), B(len(Batoms));
-    for (ssize_t i=0, n=len(Aatoms); i<n; i++) A[i] = extract<Id>(Aatoms[i]);
-    for (ssize_t i=0, n=len(Batoms); i<n; i++) B[i] = extract<Id>(Batoms[i]);
+    for (boost::python::ssize_t i=0, n=len(Aatoms); i<n; i++) A[i] = extract<Id>(Aatoms[i]);
+    for (boost::python::ssize_t i=0, n=len(Batoms); i<n; i++) B[i] = extract<Id>(Batoms[i]);
     if (*std::max_element(A.begin(), A.end()) >= PyArray_DIM(Aarr.get(), 0)) {
         PyErr_Format(PyExc_ValueError, "Out of range index in A");
         throw_error_already_set();

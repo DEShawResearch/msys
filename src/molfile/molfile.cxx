@@ -12,6 +12,16 @@
 #include <stdexcept>
 #include <string>
 
+#ifdef WIN32
+#ifdef _WIN64
+ typedef __int64 ssize_t;
+#else
+ typedef int ssize_t;
+#endif
+
+#endif
+
+
 namespace ff = desres::molfile::findframe;
 
 namespace {
@@ -215,9 +225,11 @@ namespace desres { namespace molfile {
         };
     }
 
+#ifndef WIN32
     ssize_t Reader::Reader::at_time_near(double T) const {
         return ff::at_time_near<Oracle>(nframes(), *this, T);
     }
+#endif
     ssize_t Reader::at_time_gt(double T) const {
         return ff::at_time_gt<Oracle>(nframes(), *this, T);
     }

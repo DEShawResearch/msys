@@ -3,12 +3,14 @@
 #include "mae.hxx"
 #include "dms.hxx"
 #include "pdb.hxx"
+#ifndef _MSC_VER
 #include "sdf.hxx"
+#include "smiles.hxx"
+#endif
 #include "mol2.hxx"
 #include "xyz.hxx"
 #include "io.hxx"
 #include "amber.hxx"
-#include "smiles.hxx"
 
 namespace {
 
@@ -158,10 +160,11 @@ namespace desres { namespace msys {
         def("ExportMOL2", export_mol2);
         def("ImportXYZ", ImportXYZ);
         def("Load", load);
-        def("FromSmilesString", FromSmilesString);
         def("Save", save);
+#ifndef _MSC_VER
+        def("FromSmilesString", FromSmilesString);
         def("ParseSDF", SdfTextIterator);
         def("FormatSDF", FormatSdf);
-
+#endif
     }
 }}

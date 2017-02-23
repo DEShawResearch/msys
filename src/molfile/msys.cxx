@@ -323,7 +323,9 @@ static molfile_plugin_t pdbplugin[1];
 static molfile_plugin_t webpdbplugin[1];
 static molfile_plugin_t prm7plugin[1];
 static molfile_plugin_t mol2plugin[1];
+#ifndef _MSC_VER
 static molfile_plugin_t sdfplugin[1];
+#endif
 
 extern "C"
 int msys_plugin_init() {
@@ -333,7 +335,9 @@ int msys_plugin_init() {
     init(webpdbplugin,"webpdb","Web PDB Download", "");
     init(prm7plugin,"parm7","AMBER7 Parm",      "prmtop,prm7,parm7");
     init(mol2plugin,"mol2", "MDL mol2",         "mol2");
+#ifndef _MSC_VER
     init(sdfplugin, "sdf",  "SDF",              "sdf,sdf.gz,sdfgz");
+#endif
     return VMDPLUGIN_SUCCESS;
 }
 
@@ -345,7 +349,9 @@ int msys_plugin_register(void* v, vmdplugin_register_cb cb) {
       cb( v, (vmdplugin_t *)webpdbplugin);
       cb( v, (vmdplugin_t *)prm7plugin);
       cb( v, (vmdplugin_t *)mol2plugin);
+#ifndef _MSC_VER
       cb( v, (vmdplugin_t *)sdfplugin);
+#endif
       return VMDPLUGIN_SUCCESS;
 }
 

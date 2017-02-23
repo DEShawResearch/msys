@@ -29,6 +29,7 @@
 /* Compiling on windows */
 #if defined(_MSC_VER) || defined(__MINGW32__)
 
+#define inline __inline
 #if 1 
 /* use native Windows I/O calls */
 #define FASTIO_NATIVEWIN32 1

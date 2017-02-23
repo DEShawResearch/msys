@@ -1,4 +1,6 @@
 Import('env')
+import os
+import sys
 
 # Avoid doing dependency checks on garden files.
 if True:
@@ -12,21 +14,17 @@ if True:
     env.Replace(CPPPATH=cpp)
     env.Append(CFLAGS=flg, CXXFLAGS=flg)
 
-# The install helper brings in libraries we don't want
-for lib in 'molfile', 'python2.7':
-    try: env.get('LIBS', []).remove(lib)
-    except ValueError: pass
-
-env.Append(
-        # SSE2 for src/within.hxx.  It's optional, but way way slower without.
-        CCFLAGS='-O2 -g -msse4.1',
-        CFLAGS='-Wall',
-        CXXFLAGS='-std=c++14 -Wall -Werror',
-        CPPDEFINES=[
-            'BOOST_SYSTEM_NO_DEPRECATED',
-            ],
-        LINKFLAGS='-g'
-        )
+if "SCHRODINGER_SRC" not in os.environ:
+    env.Append(
+            # SSE2 for src/within.hxx.  It's optional, but way way slower without.
+            CCFLAGS='-O2 -g -msse4.1',
+            CFLAGS='-Wall',
+            CXXFLAGS='-std=c++14 -Wall -Werror',
+            CPPDEFINES=[
+                'BOOST_SYSTEM_NO_DEPRECATED',
+                ],
+            LINKFLAGS='-g'
+            )
 
 if env['PLATFORM']=='darwin':
     env.Append(CXXFLAGS='-ftemplate-depth=500')
@@ -34,7 +32,8 @@ if env['PLATFORM']=='darwin':
 env.SConsignFile('%s/.sconsign' % (env['OBJDIR'].strip('#')))
 
 env.SConscript('src/SConscript')
-env.SConscript('tests/SConscript')
+if "SCHRODINGER_SRC" not in os.environ:
+    env.SConscript('tests/SConscript')
 
 env.AddShare('MODULES')
 

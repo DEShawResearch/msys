@@ -51,6 +51,9 @@ namespace {
             const Json& ak = blk.get("ffio_ak");
             const Json& al = blk.get("ffio_al");
             const Json& fn = blk.get("ffio_funct");
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+            const Json& sc = blk.get("ffio_schedule");
+#endif
             IdList ids(4);
 
             std::string prefix;
@@ -62,6 +65,9 @@ namespace {
             int i,n = blk.get("__size__").as_int();
             for (i=0; i<n; i++) {
                 std::string f = fn.elem(i).as_string();
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+                const char* s = sc.valid() ? sc.elem(i).as_string() : 0;
+#endif
                 to_lower(f);
                 Id A=BadId;
 
@@ -125,7 +131,11 @@ namespace {
                 ids[1]=aj.elem(i).as_int();
                 ids[2]=ak.elem(i).as_int();
                 ids[3]=al.elem(i).as_int();
-                sitemap.addUnrolledTerms( table, A, ids );
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+                sitemap.addUnrolledTerms( table, A, ids, false, s );
+#else
+                sitemap.addUnrolledTerms( table, A, ids, false );
+#endif
             }
         }
     };

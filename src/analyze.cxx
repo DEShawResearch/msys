@@ -7,6 +7,14 @@
 #include <stdio.h>
 #include <queue>
 
+
+#if defined(WIN32) && !defined(drand48)
+#define drand48() ((double)rand()/(double)RAND_MAX)
+#endif
+#if defined(WIN32) && !defined(srand48)
+#define srand48 srand
+#endif
+
 namespace {
     using namespace desres::msys;
     struct BondFinder {

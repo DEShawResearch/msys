@@ -56,6 +56,30 @@ namespace desres { namespace msys { namespace pfx {
         pos[2]=z;
     }
 
+
+    template <typename scalar>
+    void wrap_vector_array(const scalar* cell, const scalar* proj,
+                           scalar* pos, unsigned nvec) {
+        for (unsigned i = 0; i < nvec; i++, pos += 3) {
+           scalar nx, ny, nz;
+           scalar x = pos[0];
+           scalar y = pos[1];
+           scalar z = pos[2];
+
+           nx = -ROUND(proj[0]*x + proj[1]*y + proj[2]*z);
+           ny = -ROUND(proj[3]*x + proj[4]*y + proj[5]*z);
+           nz = -ROUND(proj[6]*x + proj[7]*y + proj[8]*z);
+
+           x = nx*cell[0] + ny*cell[3] + nz*cell[6];
+           y = nx*cell[1] + ny*cell[4] + nz*cell[7];
+           z = nx*cell[2] + ny*cell[5] + nz*cell[8];
+
+           pos[0]=x;
+           pos[1]=y;
+           pos[2]=z;
+        }
+    }
+
     template <typename scalar, typename center_scalar, typename wscalar>
     void compute_center( unsigned nelems,
                          const unsigned* elems,

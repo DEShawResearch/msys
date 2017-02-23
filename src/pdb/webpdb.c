@@ -1,4 +1,4 @@
-
+#ifndef WIN32
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -109,4 +109,4 @@ char* desres_msys_import_webpdb(const char* code) {
     }
     return NULL;
 }
-
+#endif

@@ -1332,8 +1332,20 @@ class System(object):
             atms.append(A(p,i))
         return atms
 
-    def atomsel(self, seltext):
-        ''' Create and return an atom selection object (Atomsel). '''
+    def atomsel(self, sel):
+        ''' Create and return an atom selection object (Atomsel).
+        Args:
+            sel (object): str atom selection, or list of ids (possibly empty).
+
+        Note:
+            Even if ids are provided, the ids of the selection are in sorted order.
+        '''
+        if isinstance(sel, basestring):
+            seltext = str(sel)
+        elif not sel:
+            seltext = 'none'
+        else:
+            seltext = 'index ' + ' '.join(map(str,sel))
         return Atomsel(self._ptr, seltext)
 
     def select(self, seltext):

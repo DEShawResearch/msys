@@ -136,7 +136,7 @@ bool Graph::match(const GraphPtr other, std::vector<IdPair>& perm) const {
     return false;
 }
 
-bool Graph::match(const GraphPtr other, msys::Id this_root, msys::Id other_root,
+bool Graph::match(const GraphPtr other, desres::msys::Id this_root, desres::msys::Id other_root,
         std::vector<IdPair>& perm) const {
     perm.clear();
     if (size() != other->size())

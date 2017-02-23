@@ -1212,7 +1212,7 @@ void atomselParse(
     yypParser->yystack[0].major = 0;
   }
   yyminorunion.yy0 = yyminor;
-  yyendofinput = (yymajor==0);
+  yyendofinput = (yymajor==0) ? true : false;
   atomselParseARG_STORE;
 
 #ifndef NDEBUG

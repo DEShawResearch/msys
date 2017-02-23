@@ -11,6 +11,7 @@
 
 #include <numpy/ndarrayobject.h>
 #include <pfx/graph.hxx>
+#include <pfx/cell.hxx>
 
 using namespace desres::msys;
 
@@ -131,11 +132,42 @@ namespace {
         return arr;
     }
 
+    PyObject* make_projection(object cell) {
+        npy_intp dims[2] = {3,3};
+        PyObject* proj = PyArray_SimpleNew(2, dims, NPY_FLOAT64);
+        pfx::make_projection((double*)PyArray_DATA(cell.ptr()),
+                             (double*)PyArray_DATA(proj));
+        return proj;
+    }
+
+    object wrap_vector(object cell, object proj, object pos) {
+        pfx::wrap_vector<double>((double*)PyArray_DATA(cell.ptr()),
+                                 (double*)PyArray_DATA(proj.ptr()),
+                                 (double*)PyArray_DATA(pos.ptr()));
+        return pos;
+    }
+
+    object wrap_vector_array(object cell, object proj, object pos) {
+        pfx::wrap_vector_array<double>((double*)PyArray_DATA(cell.ptr()),
+                                       (double*)PyArray_DATA(proj.ptr()),
+                                       (double*)PyArray_DATA(pos.ptr()),
+                                       extract<unsigned>(pos.attr("size")) / 3
+                                       );
+        return pos;
+    }
+
+
     double py_calc_distance(object A, object B) {
         double *a, *b;
         objptr pa(getpos3(A, &a), destructor);
         objptr pb(getpos3(B, &b), destructor);
         return calc_distance(a,b);
+    }
+    double py_calc_vec_angle(object A, object B) {
+        double *a, *b;
+        objptr pa(getpos3(A, &a), destructor);
+        objptr pb(getpos3(B, &b), destructor);
+        return calc_vec_angle(a,b);
     }
     double py_calc_angle(object A, object B, object C) {
         double *a, *b, *c;
@@ -143,6 +175,13 @@ namespace {
         objptr pb(getpos3(B, &b), destructor);
         objptr pc(getpos3(C, &c), destructor);
         return calc_angle(a,b,c);
+    }
+    double py_calc_vec_dihedral(object A, object B, object C) {
+        double *a, *b, *c;
+        objptr pa(getpos3(A, &a), destructor);
+        objptr pb(getpos3(B, &b), destructor);
+        objptr pc(getpos3(C, &c), destructor);
+        return calc_vec_dihedral(a,b,c);
     }
     double py_calc_dihedral(object A, object B, object C, object D) {
         double *a, *b, *c, *d;
@@ -724,8 +763,13 @@ namespace desres { namespace msys {
         def("bad", bad);
         scope().attr("BadId") = (Id)BadId;
 
+        def("make_projection", make_projection);
+        def("wrap_vector", wrap_vector);
+        def("wrap_vector_array", wrap_vector_array);
         def("calc_distance", py_calc_distance);
+        def("calc_vec_angle", py_calc_vec_angle);
         def("calc_angle", py_calc_angle);
+        def("calc_vec_dihedral", py_calc_vec_dihedral);
         def("calc_dihedral", py_calc_dihedral);
         def("calc_planarity", py_calc_planarity);
         def("line_intersects_tri", py_line_intersects_tri);
@@ -893,6 +937,11 @@ namespace desres { namespace msys {
             .def("addNonbondedFromSchema", AddNonbonded)
 
             /* atom selection */
+            .def("select", wrap_atomselect,
+                    (arg("mol"),
+                     arg("sel"),
+                     arg("pos")=object(),
+                     arg("box")=object()))
             .def("selectAsList", list_Atomselect,
                     (arg("mol"),
                      arg("sel"),

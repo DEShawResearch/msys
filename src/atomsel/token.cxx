@@ -69,7 +69,7 @@ static std::unordered_map<std::string,std::string> macros = {
 
 static const char syntax[] = " '\"()<=>+-%*/^\t\n";
 
-int Tokenizer::next(Token* t, System* mol) {
+int Tokenizer::next(desres::msys::atomsel::Token* t, desres::msys::System* mol) {
     // check for eof
     if (!s[loc]) return 0;
 

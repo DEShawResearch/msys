@@ -26,12 +26,17 @@ namespace desres { namespace msys { namespace mae {
         Id addTerm(TermTablePtr table, 
                      Id p,
                      const IdList& ids) const;
-
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+    void addUnrolledTerms( TermTablePtr nb, 
+                           Id param, 
+                           const IdList& ids,
+                           bool constrained = false, const char* schedule = 0 ) const;
+#else
         void addUnrolledTerms( TermTablePtr nb, 
                                Id param, 
                                const IdList& ids,
                                bool constrained = false ) const;
-
+#endif
         void addUnrolledPseudoBonds(SystemPtr h, Id parent, Id pseudo) const;
     };
 

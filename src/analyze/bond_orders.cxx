@@ -21,6 +21,8 @@ namespace lpsolve {
        namespace since it doesn't already use one */
 #ifdef __APPLE__
 #include <lp_lib.h>
+#elif defined DESMOND_USE_SCHRODINGER_MMSHARE
+#include "lp_lib.h"
 #else
 #include "lp_solve/lp_lib.h"
 #endif

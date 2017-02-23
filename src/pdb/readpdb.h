@@ -454,7 +454,11 @@ static int desres_msys_write_raw_pdb_record(FILE *fd, const char *recordname,
       case 3:
           sprintf(namebuf, " %s", atomname); break;
       default:
+#ifdef WIN32
+          _snprintf_s(namebuf, 4, "%s", atomname);
+#else
           snprintf(namebuf, 4, "%s", atomname);
+#endif
           namebuf[4]=0;
           break;
   };

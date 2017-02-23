@@ -60,6 +60,14 @@ namespace {
        p[2] = sf * sqrt(Ci*Cj);
     }   
 
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+    struct PairData
+    {
+      std::string         schedule;
+      std::vector<double> cs;
+    };
+#endif
+
     typedef void (*combine_func)( const Param& vi, const Param& vj, double sf,
                                              Param& p );
 
@@ -107,6 +115,9 @@ namespace {
             const Json& ai = blk.get("ffio_ai");
             const Json& aj = blk.get("ffio_aj");
             const Json& fn = blk.get("ffio_funct");
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+            const Json& sc = blk.get("ffio_schedule");
+#endif
             const Json& c1 = blk.get("ffio_c1");
             const Json& c2 = blk.get("ffio_c2");
             const Json& c1B = blk.get("ffio_c1B");
@@ -125,7 +136,11 @@ namespace {
 
             do {
               IdList ids(2);
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+              typedef std::map<IdList, PairData> PairHash;
+#else
               typedef std::map<IdList, std::vector<double> > PairHash;
+#endif
               PairHash pairhash;
               PairHash pairhashB;
   
@@ -139,8 +154,14 @@ namespace {
                 ids[0]=ai.elem(i).as_int();
                 ids[1]=aj.elem(i).as_int();
                 std::pair<PairHash::iterator,bool> r, rB;
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+                r=pairhash.insert(std::make_pair( ids, PairData() ));
+                std::string&         sched  = r.first->second.schedule;
+                std::vector<double>& params = r.first->second.cs;
+#else
                 r=pairhash.insert(std::make_pair( ids, std::vector<double>()));
                 std::vector<double>& params = r.first->second;
+#endif
                 std::vector<double>* paramsB = NULL;
                 if (r.second) {
                     /* first time seeing this pair */
@@ -148,8 +169,13 @@ namespace {
                     params.insert(params.begin(), nprops, HUGE_VAL);
                 }
                 if (alchemical) {
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+                    rB=pairhashB.insert(std::make_pair( ids, PairData() ));
+                    paramsB = &rB.first->second.cs;
+#else
                     rB=pairhashB.insert(std::make_pair( ids, std::vector<double>()));
                     paramsB = &rB.first->second;
+#endif
                     if (rB.second) {
                         ///* first time seeing this alchemical pair */
                         paramsB->clear();
@@ -157,6 +183,10 @@ namespace {
                     }
                 }
                 std::string f = fn.elem(i).as_string();
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+                const char* s = sc.valid() ? sc.elem(i).as_string() : "NULL";
+                sched = s;
+#endif
                 to_lower(f);
                 if (f=="coulomb" || f=="coulomb_scale") {
                     if (params.back()!=HUGE_VAL) continue;
@@ -245,22 +275,39 @@ namespace {
               for (iter=pairhash.begin(); iter!=pairhash.end(); ++iter) {
                   if (alchemical) {
                       /* extend with B state */
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+                      iter->second.cs.insert(iter->second.cs.end(),
+                                            iterB->second.cs.begin(), 
+                                            iterB->second.cs.end());
+#else
                       iter->second.insert(iter->second.end(),
                                           iterB->second.begin(), 
                                           iterB->second.end());
+#endif
                       ++iterB;
                   }
                   /* we may have had an mae file with and LJ pair and no
                    * corresponding ES pair, or vice versa, in which case
                    * we would still have the HUGE_VAL sentinel values in
                    * the params.  Convert those back to 0.0. */
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+                  for (unsigned i=0; i<iter->second.cs.size(); i++) {
+                      if (iter->second.cs[i]==HUGE_VAL) {
+                          iter->second.cs[i]=0;
+#else
                   for (unsigned i=0; i<iter->second.size(); i++) {
                       if (iter->second[i]==HUGE_VAL) {
                           iter->second[i]=0;
+#endif
                       }
                   }
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+                  Id A = map.add(iter->second.cs);
+                  sitemap.addUnrolledTerms( table, A, iter->first, 0, iter->second.schedule == "NULL" ? 0 : iter->second.schedule.c_str() );
+#else
                   Id A = map.add(iter->second);
                   sitemap.addUnrolledTerms( table, A, iter->first );
+#endif
               }
             } while (skipped.size());
         }

@@ -1,5 +1,6 @@
 #include <boost/python.hpp>
 #include "version.hxx"
+#include "system.hxx"
 
 namespace desres { namespace msys {
     void export_analyze();
@@ -37,5 +38,8 @@ BOOST_PYTHON_MODULE(_msys) {
     desres::msys::export_graph();
     desres::msys::export_inchi();
     desres::msys::export_spatial_hash();
+    boost::python::register_ptr_to_python<boost::shared_ptr<desres::msys::System> >();
+    boost::python::register_ptr_to_python<boost::shared_ptr<desres::msys::TermTable> >();
+    boost::python::register_ptr_to_python<boost::shared_ptr<desres::msys::ParamTable> >();
 }
 
