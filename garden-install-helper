@@ -2,7 +2,7 @@
 eval "$(garden-exec)"
 
 NAME=msys
-VERSION=$(src/version.py)
+VERSION=1.7.200
 DESCRIPTION="Biomolecular Structure Library"
 
 # module versions that scripts in ./tools need to know
@@ -30,7 +30,6 @@ loadmodules() {
         $BISON/bin \
         $SQLITE/lib \
 	$THREEROE/lib \
-	$TEXLIVE/bin
 
     export MSYS_VERSION=$VERSION
 }

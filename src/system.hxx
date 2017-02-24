@@ -517,6 +517,8 @@ namespace desres { namespace msys {
 
     typedef std::shared_ptr<System> SystemPtr;
 
+    int abi_version();
+
 }}
 
 #endif

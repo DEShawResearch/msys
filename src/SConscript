@@ -34,19 +34,24 @@ bsx=env.get('MSYS_BOOST_SUFFIX', '')
 boost_libs=[(x+bsx) for x in ( 
     'boost_iostreams', 'boost_filesystem', 'boost_system')]
 
+
+coreenv = env.Clone()
+libcore = coreenv.AddLibrary('msys-core', Split('''
+append.cxx
+clone.cxx
+override.cxx
+param_table.cxx
+system.cxx
+term_table.cxx
+value.cxx
+'''))
+
 env.Append(LIBS=boost_libs)
 
 env.Append(CPPPATH='.')
 
 msysenv=env
 Export('msysenv')
-
-def get_version(path):
-    ''' return version string from file '''
-    g=dict()
-    import os
-    execfile(path, g)
-    return g['msys_version']
 
 def split_version(verstr):
     dash = verstr.find('-')
@@ -61,7 +66,7 @@ def hexversion(triplet):
     return '%d.0.0' % ((major << 16) | (minor << 8) | (micro << 0))
 
 def build_version_hxx( target, source, env ):
-    verstr = get_version(source[0].path)
+    verstr = env['ENV'].get('MSYS_VERSION', '0.0.0')
     major, minor, micro = split_version(verstr)
     fd=file(target[0].path, 'w')
     print >> fd, "#define MSYS_VERSION \"%s\"" % verstr
@@ -72,12 +77,13 @@ def build_version_hxx( target, source, env ):
     print >> fd, "#define MSYS_VERSION_HEX ((MSYS_MAJOR_VERSION << 16) | \\"
     print >> fd, "                          (MSYS_MINOR_VERSION <<  8) | \\"
     print >> fd, "                          (MSYS_MICRO_VERSION <<  0))"
+    print >> fd, "#define MSYS_ABI_VERSION 1"
 
     fd.close()
 
 lexenv = env.Clone()
 lexenv.Append(CPPDEFINES='YY_NO_INPUT')
-env.Command('version.hxx', 'version.py', build_version_hxx )
+env.Command('version.hxx', '../garden-install-helper', build_version_hxx )
 if sys.platform.startswith("win32"):
     smiles_objs = []
     lexobjs = []
@@ -116,7 +122,15 @@ if env.get("MSYS_WITHOUT_INCHI"):
 else:
     inchi = env.AddObject('inchi.cxx')
 
+def get_shlib_version():
+    import subprocess
+    ver = env['ENV'].get('MSYS_VERSION')
+    if ver is not None:
+        return subprocess.check_output('git rev-parse HEAD'.split())[:8]
+    return None
+
 libmsys_env = env.Clone()
+libmsys_env.Append(LIBS=[libcore])
 if sys.platform.startswith("darwin"):
     desmond_release = os.environ["DESMOND"]
     libmsys_env.Append(LINKFLAGS=['-dynamiclib', '-install_name', '@rpath/../../../{}/lib/Darwin-x86_64/libmsys.dylib'.format(desmond_release)])
@@ -222,21 +236,14 @@ schema/schema.cxx
 spatial_hash.cxx
 
 annotated_system.cxx
-append.cxx
-clone.cxx
 graph.cxx
 import.cxx
-override.cxx
-param_table.cxx
 provenance.cxx
 smarts.cxx
 analyze/sssr.cxx
-system.cxx
-term_table.cxx
-value.cxx
 xyz.cxx
 
-'''))
+'''), SHLIBVERSION=get_shlib_version())
 
 env.AddStagedHeaders(Glob("*.hxx"), prefix='msys')
 env.AddStagedHeaders(Glob('atomsel/*.h*'), prefix='msys/atomsel')
@@ -245,7 +252,7 @@ env.AddStagedHeaders(Glob('pfx/*.hxx'), prefix='msys/pfx')
 env.AddStagedHeaders(Glob('molfile/*.h*'), prefix='msys/molfile')
 
 prgenv=env.Clone()
-prgenv.Append(LIBS=['msys'])
+prgenv.Append(LIBS=['msys', 'msys-core'])
 prgenv.AddProgram('fstime', 'molfile/fstime.cxx')
 prgenv.AddProgram('fsdump', 'molfile/fsdump.cxx')
 

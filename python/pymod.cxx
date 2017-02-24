@@ -21,6 +21,12 @@ namespace desres { namespace msys {
 }}
 
 BOOST_PYTHON_MODULE(_msys) {
+    if (MSYS_ABI_VERSION != desres::msys::abi_version()) {
+        PyErr_Format(PyExc_RuntimeError,
+                "This module was compiled with msys ABI version %d, but a package using msys version %d was loaded first.",
+                MSYS_ABI_VERSION, desres::msys::abi_version());
+        boost::python::throw_error_already_set();
+    }
     boost::python::scope().attr("version")=std::string(MSYS_VERSION);
     boost::python::scope().attr("hexversion")=MSYS_VERSION_HEX;
     desres::msys::export_analyze();

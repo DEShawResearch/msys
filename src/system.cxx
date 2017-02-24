@@ -1,5 +1,6 @@
 #include "system.hxx"
 #include "append.hxx"
+#include <msys/version.hxx>
 #include <sstream>
 #include <stack>
 #include <stdexcept>
@@ -705,5 +706,9 @@ void GlobalCell::merge(GlobalCell const& gc) {
     double* oldvec = (*this)[0];
     const double* newvec = gc[0];
     if (!memcmp(oldvec,zero,sz)) memcpy(oldvec, newvec,sz);
+}
+
+int desres::msys::abi_version() {
+    return MSYS_ABI_VERSION;
 }
 

@@ -2,7 +2,7 @@ Import('msysenv')
 Import('libmsys')
 
 env=msysenv.Clone()
-env.Prepend(LIBS=[libmsys])
+env.Prepend(LIBS=[libmsys, 'msys-core'])
 env.Append(CPPPATH='../src')
 
 for p in Glob('test_*.cxx'):
