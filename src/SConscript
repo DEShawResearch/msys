@@ -36,7 +36,7 @@ boost_libs=[(x+bsx) for x in (
 
 
 coreenv = env.Clone()
-libcore = coreenv.AddLibrary('msys-core', Split('''
+coreenv.AddLibrary('msys-core', Split('''
 append.cxx
 clone.cxx
 override.cxx
@@ -130,7 +130,7 @@ def get_shlib_version():
     return None
 
 libmsys_env = env.Clone()
-libmsys_env.Append(LIBS=[libcore])
+libmsys_env.Append(LIBS=['msys-core'])
 if sys.platform.startswith("darwin"):
     desmond_release = os.environ["DESMOND"]
     libmsys_env.Append(LINKFLAGS=['-dynamiclib', '-install_name', '@rpath/../../../{}/lib/Darwin-x86_64/libmsys.dylib'.format(desmond_release)])
