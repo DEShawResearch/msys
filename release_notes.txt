@@ -1,3 +1,9 @@
+1.7.200 DESRESCode#3486 - changes from schrodinger.
+        Added SpatialHash::findContactsReuseVoxels.
+        New libmsys-core and versioned libmsys.
+        gcc/6.3 portability.
+        Remove cealign.
+
 1.7.157 DESRESCode#3438 - fix reading sdf files without trailing delim.
         DESRESCode#3472 - fix msys.System.guessBonds.
         DESRESCode#3450 - pickle support for residues and chains.
