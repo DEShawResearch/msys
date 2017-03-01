@@ -73,7 +73,7 @@ def main():
     if len(args)!=1:
         parser.error("incorrect number of arguments")
 
-    mol=msys.LoadDMS(args[0])
+    mol=msys.Load(args[0])
     result=validate.Validate(mol, **opts.__dict__)
     return not result.wasSuccessful()
 

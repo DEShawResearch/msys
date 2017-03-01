@@ -111,8 +111,12 @@ class TestStrict(TestCase):
 class TestBasic(TestCase):
     def testKnots(self):
         ''' the system must not contain knots for rings of size <= 10 '''
-        knots = knot.FindKnots(self.mol, max_cycle_size=10)
-        self.assertTrue(len(knots)==0, "The system has %d bonds passing through small rings: %s" % (len(knots), knots))
+        alchemical = self.mol.getTable('alchemical_nonbonded') is not None
+        if alchemical:
+            print "Skipping knot check on alchemical system"
+        else:
+            knots = knot.FindKnots(self.mol, max_cycle_size=10)
+            self.assertTrue(len(knots)==0, "The system has %d bonds passing through small rings: %s" % (len(knots), knots))
 
     def testHasNonbonded(self):
         ''' Every particle must have a nonbonded param assignment '''

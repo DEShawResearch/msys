@@ -1,5 +1,6 @@
 1.7.200 DESRESCode#3486 - changes from schrodinger.
         Added SpatialHash::findContactsReuseVoxels.
+        dms-validate skips knot check when system is alchemical.
         New libmsys-core and versioned libmsys.
         gcc/6.3 portability.
         Remove cealign.
