@@ -39,6 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#include <ThreeRoe/ThreeRoe.hpp>
 #include "dtrplugin.hxx"
 #include "dtrframe.hxx"
 #include "dtrutil.hxx"
@@ -67,7 +68,6 @@ using namespace desres::molfile::dtr;
 
 #include "vmddir.h"
 
-#include <ThreeRoe/ThreeRoe.hpp>
 
 #define BOOST_FILESYSTEM_VERSION 3
 #include <boost/filesystem.hpp>

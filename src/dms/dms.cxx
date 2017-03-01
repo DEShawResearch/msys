@@ -36,8 +36,7 @@ namespace {
         char * path;
 
         std::string hash() const {
-            ThreeRoe::result_type h = ThreeRoe::Hash128(
-                    contents, size);
+            auto h = ThreeRoe(contents, size).Final();
             std::stringstream ss;
             ss << std::hex << std::setw(16) << std::setfill('0');
             ss << h.first << h.second;

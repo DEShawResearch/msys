@@ -1,5 +1,6 @@
 #include "token.hxx"
 #include <unordered_map>
+#include <cmath>
 
 using namespace desres::msys;
 using namespace desres::msys::atomsel;
@@ -10,18 +11,22 @@ void CmpPredicate::eval(Selection& s) {
     rhs->eval(s,R);
     switch (cmp) {
     case Token::EQ:
-        for (Id i=0, n=s.size(); i<n; i++) if (s[i]) s[i]=L[i]==R[i]; break;
+        for (Id i=0, n=s.size(); i<n; i++) if (s[i]) s[i]=L[i]==R[i];
+        break;
     case Token::LT:
         for (Id i=0, n=s.size(); i<n; i++) {
             if (s[i]) s[i]=L[i]<R[i];
         }
         break;
     case Token::GT:
-        for (Id i=0, n=s.size(); i<n; i++) if (s[i]) s[i]=L[i]>R[i]; break;
+        for (Id i=0, n=s.size(); i<n; i++) if (s[i]) s[i]=L[i]>R[i];
+        break;
     case Token::LE:
-        for (Id i=0, n=s.size(); i<n; i++) if (s[i]) s[i]=L[i]<=R[i]; break;
+        for (Id i=0, n=s.size(); i<n; i++) if (s[i]) s[i]=L[i]<=R[i];
+        break;
     case Token::GE:
-        for (Id i=0, n=s.size(); i<n; i++) if (s[i]) s[i]=L[i]>=R[i]; break;
+        for (Id i=0, n=s.size(); i<n; i++) if (s[i]) s[i]=L[i]>=R[i];
+        break;
     default:;
     }
 }
@@ -51,7 +56,7 @@ void BinExpr::eval(Selection const& s, std::vector<double>& v) {
                   if (s[i]) v[i]=int(L[i]) % int(R[i]);
               }
               break;
-    case EXP: for (Id i=0,n=s.size(); i<n; i++) if (s[i]) v[i]=pow(L[i],R[i]); break;
+    case EXP: for (Id i=0,n=s.size(); i<n; i++) if (s[i]) v[i]=std::pow(L[i],R[i]); break;
     }
 }
 

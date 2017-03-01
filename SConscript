@@ -19,7 +19,8 @@ if "SCHRODINGER_SRC" not in os.environ:
             # SSE2 for src/within.hxx.  It's optional, but way way slower without.
             CCFLAGS='-O2 -g -msse4.1',
             CFLAGS='-Wall',
-            CXXFLAGS='-std=c++14 -Wall -Werror',
+            # sadly, need -Wno-deprecated-declarations because of boost.
+            CXXFLAGS='-std=c++14 -Wall -Werror -Wno-deprecated-declarations',
             CPPDEFINES=[
                 'BOOST_SYSTEM_NO_DEPRECATED',
                 ],

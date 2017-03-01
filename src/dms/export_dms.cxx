@@ -655,7 +655,11 @@ String desres::msys::HashDMS(String const& path) {
 
 
 std::string desres::msys::FormatDMS(SystemPtr sys, Provenance const& prov) {
-    Sqlite dms = Sqlite::write("");
+    char tmpl[] = "/tmp/msys.pickle.XXXXXX";
+    char* file = mktemp(tmpl);
+    if (!file) MSYS_FAIL(strerror(errno));
+    Sqlite dms = Sqlite::write(file);
     export_dms(sys, dms, prov, 0);
+    unlink(file);
     return dms.contents();
 }

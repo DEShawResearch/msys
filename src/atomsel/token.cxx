@@ -1,5 +1,6 @@
 #include "token.hxx"
 #include <unordered_map>
+#include <cmath>
 
 using namespace desres::msys::atomsel;
 
@@ -24,8 +25,8 @@ static double sqr(double x) { return x*x; }
 typedef double (*func_t)(double);
 static const std::unordered_map<std::string,func_t> funcs = {
     {"sqr", sqr},
-    {"sqrt", sqrt},
-    {"abs", fabs},
+    {"sqrt", std::sqrt},
+    {"abs", std::fabs},
 };
 
 static std::unordered_map<std::string,std::string> macros = {
