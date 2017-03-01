@@ -126,7 +126,7 @@ def get_shlib_version():
     import subprocess
     ver = env['ENV'].get('MSYS_VERSION')
     if ver is not None:
-        return subprocess.check_output('git rev-parse HEAD'.split())[:8]
+        return ver.replace('.', '_')
     return None
 
 libmsys_env = env.Clone()
