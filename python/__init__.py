@@ -17,6 +17,7 @@ from _msys import PeriodForElement, GroupForElement
 from _msys import HydrogenBond, FetchPDB
 from _msys import BadId
 from atomsel import Atomsel
+import molfile
 
 class Handle(object):
     __slots__ = ('_ptr', '_id')
