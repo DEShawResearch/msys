@@ -17,7 +17,7 @@
 
 #define MSYS_FAIL(args) do { \
     std::stringstream _msys_fail_tmp_ss_; \
-    _msys_fail_tmp_ss_ << args << "\nversion: " << desres::msys::msys_version() << "\nlocation: " << MSYS_LOC; \
+    _msys_fail_tmp_ss_ << args << "\nlocation: " << MSYS_LOC; \
     throw desres::msys::Failure(_msys_fail_tmp_ss_.str()); \
 } while(0)
 
