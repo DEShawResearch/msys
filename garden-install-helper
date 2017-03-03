@@ -92,6 +92,7 @@ case $1 in
         $0 --exec scons install -j 12 PREFIX=$PREFIX OBJDIR=$TMPDIR
 
         ./tests/ut.py
+        ./tests/molfile_ut.py
 
 	genhelp
 	genmodules

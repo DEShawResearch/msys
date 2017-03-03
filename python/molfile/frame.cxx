@@ -27,7 +27,7 @@ namespace {
         if (!self.dpos()) return object();
         Py_ssize_t dims[2] = { (Py_ssize_t)self.natoms(), 3 };
         return object(handle<>(
-                    backed_vector(1, dims, desres::molfile::INT, self.gid(), obj.ptr())));
+                    backed_vector(2, dims, desres::molfile::DOUBLE, self.dpos(), obj.ptr())));
     }
 
     object frame_dvel(object& obj) {
