@@ -581,14 +581,6 @@ static IdList map_gids(System const& sys) {
     return ids;
 }
 
-static void export_hash(Sqlite dms, std::string const& system_hash) {
-    std::string hash = dms.hash();
-    dms.exec("create table msys_hash(system text)");
-    Writer w = dms.insert("msys_hash");
-    w.bind_str(0, system_hash.data());
-    w.next();
-}
-
 static void export_dms(SystemPtr h, Sqlite dms, Provenance const& provenance,
                        unsigned flags) {
     System& sys = *h;
@@ -603,9 +595,6 @@ static void export_dms(SystemPtr h, Sqlite dms, Provenance const& provenance,
         export_aux(      sys,            dms);
         export_nbinfo(   sys,            dms);
     }
-
-    std::string system_hash = dms.hash();
-    export_hash(dms, system_hash);
 
     export_provenance(sys,provenance,dms);
     export_version(                  dms);
@@ -639,20 +628,6 @@ void desres::msys::sqlite::ExportDMS(SystemPtr h, sqlite3* db,
                                      Provenance const& provenance) {
     export_dms(h, std::shared_ptr<sqlite3>(db,no_close), provenance, 0);
 }
-
-String desres::msys::HashDMS(String const& path) {
-    Sqlite dms;
-    try {
-        dms = Sqlite::read(path, true);
-        Reader r = dms.fetch("msys_hash");
-        int col = r.column("system");
-        return r.get_str(col);
-    }
-    catch (...) {
-    }
-    return "";
-}
-
 
 std::string desres::msys::FormatDMS(SystemPtr sys, Provenance const& prov) {
     char tmpl[] = "/tmp/msys.pickle.XXXXXX";

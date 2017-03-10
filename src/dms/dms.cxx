@@ -15,8 +15,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <ThreeRoe/ThreeRoe.hpp>
-
 #ifdef WIN32
 #include <io.h>
 #ifdef _WIN64
@@ -34,14 +32,6 @@ namespace {
         char * contents;
         sqlite3_int64 size;
         char * path;
-
-        std::string hash() const {
-            auto h = ThreeRoe(contents, size).Final();
-            std::stringstream ss;
-            ss << std::hex << std::setw(16) << std::setfill('0');
-            ss << h.first << h.second;
-            return ss.str();
-        }
 
         void write() const {
             if (!path) return;
@@ -247,12 +237,6 @@ void Sqlite::finish() {
     dms_file* dms;
     sqlite3_file_control(_db.get(), "main", SQLITE_FCNTL_FILE_POINTER, &dms);
     dms->write();
-}
-
-String Sqlite::hash() const {
-    dms_file* dms;
-    sqlite3_file_control(_db.get(), "main", SQLITE_FCNTL_FILE_POINTER, &dms);
-    return dms->hash();
 }
 
 Sqlite Sqlite::read(std::string const& path, bool unbuffered)  {

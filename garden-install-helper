@@ -12,7 +12,6 @@ DESCRIPTION="Biomolecular Structure Library"
 BOOST=boost/1.59.0-13
 LPSOLVE=lp_solve/5.5.2.0-05A
 INCHI=inchi/1.04-05
-THREEROE=ThreeRoe/0.09
 SQLITE=sqlite/3.10.2-06A
 SCONSUTILS=sconsutils/1.40
 FLEX=flex/2.5.35-2
@@ -28,7 +27,6 @@ loadmodules() {
         $FLEX/bin \
         $BISON/bin \
         $SQLITE/lib \
-	$THREEROE/lib \
 
     export MSYS_VERSION=$VERSION
 }
