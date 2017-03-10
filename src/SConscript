@@ -132,8 +132,9 @@ def get_shlib_version():
 libmsys_env = env.Clone()
 libmsys_env.Append(LIBS=['msys-core'])
 if sys.platform.startswith("darwin"):
-    desmond_release = os.environ["DESMOND"]
-    libmsys_env.Append(LINKFLAGS=['-dynamiclib', '-install_name', '@rpath/../../../{}/lib/Darwin-x86_64/libmsys.dylib'.format(desmond_release)])
+    desmond_release = os.getenv("DESMOND")
+    if desmond_release is not None:
+        libmsys_env.Append(LINKFLAGS=['-dynamiclib', '-install_name', '@rpath/../../../{}/lib/Darwin-x86_64/libmsys.dylib'.format(desmond_release)])
 libmsys=libmsys_env.AddLibrary('msys', lexobjs + lpobjs + sdfobjs + schrod_only_objs + [inchi] + smiles_objs + Split('''
 
 analyze/eigensystem.cxx
