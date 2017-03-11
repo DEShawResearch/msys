@@ -1,5 +1,4 @@
 #include "provenance.hxx"
-#include <boost/filesystem.hpp>
 #include <sstream>
 #include <time.h>
 #include <pwd.h>
@@ -7,12 +6,18 @@
 #include <msys/version.hxx>
 
 using namespace desres::msys;
-namespace bfs = boost::filesystem;
 
 #ifndef _MSC_VER
 #include <unistd.h>
-#include <pwd.h>
+#include <sys/param.h>
+static char* get_current_dir_name() {
+    static char buf[MAXPATHLEN];
+    return getwd(buf);
+}
 #else
+static char* get_current_dir_name() {
+    return ".";
+}
 #endif
 
 static std::string executable_path(const char* argv0) {
@@ -61,7 +66,7 @@ Provenance Provenance::fromArgs(int argc, char *argv[]) {
 #endif
 
     /* workdir */
-    prov.workdir = bfs::system_complete(".").string();
+    prov.workdir = get_current_dir_name();
 
     /* cmdline */
     for (int i=0; i<argc; i++) {
