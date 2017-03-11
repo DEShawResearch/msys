@@ -826,9 +826,12 @@ class TestValidate(unittest.TestCase):
         self.assertEqual(len(with_ignoring), 0)
     def testUntieKnot(self):
         mol=msys.Load('tests/files/knot.mae')
+        print "find knot"
         results=knot.FindKnots(mol,verbose=False)
         self.assertEqual(len(results), 2)
+        print "untie knot"
         success = knot.UntieKnots(mol,verbose=False)
+        print "refind knot"
         results_after_untying = knot.FindKnots(mol,verbose=False)
         self.assertEqual(len(results_after_untying),0)
         self.assertTrue(success)

@@ -235,6 +235,7 @@ psf/import.cxx
 schema.cxx
 schema/schema.cxx
 spatial_hash.cxx
+spatial_hash_double.cxx
 
 annotated_system.cxx
 graph.cxx

@@ -2,31 +2,34 @@
 #define desres_msys_spatial_hash_hxx
 
 #include "types.hxx"
+#include <math.h>
+#include "pfx/rms.hxx"
 
 namespace desres { namespace msys {
 
-    class SpatialHash {
+    template <typename Float>
+    class SpatialHashT {
 
         /* Support distance queries of at most _radius */
-        float rad;
+        Float rad;
         
         /* inverse voxel size */
-        float ir;
+        Float ir;
 
         /* bounding box of target coordinates */
-        float xmin, ymin, zmin;
-        float xmax, ymax, zmax;
+        Float xmin, ymin, zmin;
+        Float xmax, ymax, zmax;
 
         /* location of grid origin */
-        float ox, oy, oz;
+        Float ox, oy, oz;
 
         /* voxel grid dimension */
         int nx, ny, nz;
 
         /* rotation */
-        float* rot;
+        Float* rot;
         /* cell dims */
-        float cx, cy, cz;
+        Float cx, cy, cz;
 
         /* neighbor full shell offsets */
         int full_shell[10];
@@ -34,8 +37,8 @@ namespace desres { namespace msys {
 
         /* target coordinates */
         const int ntarget;
-        float *_x, *_y, *_z;
-        float *_tmpx, *_tmpy, *_tmpz;
+        Float *_x, *_y, *_z;
+        Float *_tmpx, *_tmpy, *_tmpz;
 
         /* cumulative number of particles hashed to the i'th voxel */
         std::vector<uint32_t> _countspace;
@@ -47,18 +50,30 @@ namespace desres { namespace msys {
         Id *_tmpids;
 
         void compute_full_shell();
-        bool test2(float r2, int voxid, float x, float y, float z) const;
+        bool test2(Float r2, int voxid, Float x, Float y, Float z) const;
+
+        static
+        void find_bbox(int n, const Float* x, Float *_min, Float *_max) {
+            Float min = x[0], max=x[0];
+            for (int i=0; i<n; i++) {
+                Float p = x[i];
+                min = min < p ? min : p;
+                max = max > p ? max : p;
+            }
+            *_min = min;
+            *_max = max;
+        }
 
     public:
-        ~SpatialHash();
+        ~SpatialHashT();
 
         /* Constructor: supply n ids of points to be hashed. */
-        SpatialHash(const float *pos, int n, const Id* ids, const double* cell);
+        SpatialHashT(const Float *pos, int n, const Id* ids, const double* cell);
 
-        SpatialHash& voxelize(float r);
+        SpatialHashT& voxelize(Float r);
 
         /* Is the given point within r of any point in the region? */
-        bool test(float r, float x, float y, float z) const {
+        bool test(Float r, Float x, Float y, Float z) const {
             int xi = (x-ox) * ir;
             int yi = (y-oy) * ir;
             int zi = (z-oz) * ir;
@@ -71,15 +86,15 @@ namespace desres { namespace msys {
 
         /* minimum square distance to the the given point from a 
          * hashed point. */
-        float mindist2(float x, float y, float z) const;
+        Float mindist2(Float x, Float y, Float z) const;
 
         /* find the ids of the k nearest points.  */
-        IdList findNearest(unsigned k, const float* pos, 
+        IdList findNearest(unsigned k, const Float* pos, 
                            unsigned num, const Id* ids);
 
         /* Find the points within r of the hashed points.  If cell
          * is not NULL, use minimum image distances.  */
-        IdList findWithin(float r, const float* pos,
+        IdList findWithin(Float r, const Float* pos,
                           int n, const Id* ids) {
             voxelize(r);
             return find_within(r,pos,n,ids);
@@ -88,8 +103,8 @@ namespace desres { namespace msys {
         struct contact_t {
             Id i;
             Id j;
-            float d2;
-            contact_t(Id i, Id j, float d2) : i(i), j(j), d2(d2) {}
+            Float d2;
+            contact_t(Id i, Id j, Float d2) : i(i), j(j), d2(d2) {}
             bool operator==(contact_t const& c) const {
                 return i==c.i && j==c.j && d2==c.d2;
             }
@@ -99,13 +114,13 @@ namespace desres { namespace msys {
             }
         };
         typedef std::vector<contact_t> ContactList;
-        ContactList findContacts(float r, const float* pos,
+        ContactList findContacts(Float r, const Float* pos,
                                  int n, const Id* ids);
 
         struct contact_array_t {
             Id* i = nullptr;
             Id* j = nullptr;
-            float* d2 = nullptr;
+            Float* d2 = nullptr;
             uint64_t count = 0;
             uint64_t max_size = 0;
             
@@ -124,7 +139,7 @@ namespace desres { namespace msys {
                     max_size = std::max(max_size + max_size/2, size);
                     i = (Id*)realloc(i, max_size*sizeof(*i));
                     j = (Id*)realloc(j, max_size*sizeof(*j));
-                    d2= (float*)realloc(d2,max_size*sizeof(*d2));
+                    d2= (Float*)realloc(d2,max_size*sizeof(*d2));
                 }
             }
         };
@@ -132,52 +147,62 @@ namespace desres { namespace msys {
         /* find contacts, performing a voxelization step before
          * the search (making this a non-const method)
          */
-        void findContacts(float r, const float* pos,
+        void findContacts(Float r, const Float* pos,
                           int n, const Id* ids,
                           contact_array_t* result);
 
         /* find contacts assuming voxelize(R) for for R>=r has already been
          * called.  const and reentrant.  */
-        void findContactsReuseVoxels(float r, const float* pos,
+        void findContactsReuseVoxels(Float r, const Float* pos,
                                      int n, const Id* ids,
                                      contact_array_t* result) const;
 
         /* For expert users only.  Finds points within r of the
          * hashed points assuming the hashed points have already
          * been voxelized with a grid spacing of at least r. */
-        IdList find_within(float r, const float* pos, 
+        IdList find_within(Float r, const Float* pos, 
                           int n, const Id* ids) const;
 
-        IdList find_within_small(float r, const float* pos, 
+        IdList find_within_small(Float r, const Float* pos, 
                                  int n, const Id* ids) const;
  
-        void find_contacts(float r2, int voxid, float x, float y, float z,
+        void find_contacts(Float r2, int voxid, Float x, Float y, Float z,
                            Id id, contact_array_t* result) const;
 
-        void minimage_contacts(float r, float ga, float gb, float gc,
-                               float px, float py, float pz,
+        void minimage_contacts(Float r, Float ga, Float gb, Float gc,
+                               Float px, Float py, Float pz,
                                Id id, contact_array_t* result) const;
 
         /* Return true if point px,py,pz is within r of some hashed
          * point assuming an orthorhombic periodic cell with lengths
          * ga,gb,gc. */
-        bool minimage(float r, float ga, float gb, float gc,
-		      float px, float py, float pz) const;
+        bool minimage(Float r, Float ga, Float gb, Float gc,
+		      Float px, Float py, Float pz) const;
 
         /* last voxelization radius */
-        float radius() const { return rad; }
+        Float radius() const { return rad; }
     };
 
+    typedef SpatialHashT<float> SpatialHash;
+
     /* convenience routines */
-    IdList FindWithin(IdList const& wsel, const float* wat,
+    inline IdList FindWithin(IdList const& wsel, const float* wat,
                       IdList const& psel, const float* pro,
                       float radius,
-                      const double* cell);
+                      const double* cell) {
+        return SpatialHash(pro, psel.size(), &psel[0], cell)
+            .findWithin(radius, wat, wsel.size(), &wsel[0]);
+    }
  
-    IdList FindNearest(IdList const& wsel, const float* wat,
+    inline IdList FindNearest(IdList const& wsel, const float* wat,
                        IdList const& psel, const float* pro,
-                       Id k,               const double* cell);
+                       Id k,               const double* cell) {
+        return SpatialHash(pro, psel.size(), &psel[0], cell)
+            .findNearest(k, wat, wsel.size(), &wsel[0]);
+    }
  
+#include "spatial_hash_detail.hxx"
+
 }}
 
 #endif
