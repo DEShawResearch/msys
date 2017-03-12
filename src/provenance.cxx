@@ -2,19 +2,20 @@
 #include <sstream>
 #include <time.h>
 #include <pwd.h>
+#include <unistd.h>
 
 #include <msys/version.hxx>
 
 using namespace desres::msys;
 
-#ifndef _MSC_VER
+#ifdef __APPLE__
 #include <unistd.h>
 #include <sys/param.h>
 static char* get_current_dir_name() {
     static char buf[MAXPATHLEN];
     return getwd(buf);
 }
-#else
+#elif defined(_MSC_VER)
 static char* get_current_dir_name() {
     return ".";
 }

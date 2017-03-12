@@ -4,7 +4,7 @@
 
 #define EXCLUDE_SELF_CONTACTS
 
-using namespace desres::msys;
+namespace desres { namespace msys {
 
 // do only bounding box checks on query atoms, no spatial hashing.
 template<>
@@ -137,4 +137,5 @@ void SpatialHashT<double>::find_contacts(double r2, int voxid, double x, double 
     result->count = count;
 }
 
+}}
 

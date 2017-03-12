@@ -1,7 +1,5 @@
 #include "spatial_hash.hxx"
 #include <limits>
-#include <math.h>
-#include "pfx/rms.hxx"
 #include <stdio.h>
 
 #define EXCLUDE_SELF_CONTACTS
@@ -24,7 +22,7 @@ static inline __m128i quad_int_multiply(const __m128i &a, const __m128i &b) {
 #endif
 }
 
-using namespace desres::msys;
+namespace desres { namespace msys {
 
 // do only bounding box checks on query atoms, no spatial hashing.
 template<>
@@ -439,4 +437,5 @@ void SpatialHash::find_contacts(float r2, int voxid, float x, float y, float z,
     result->count = count;
 }
 
+}}
 
