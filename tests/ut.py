@@ -460,7 +460,7 @@ class TestAlchemicalMorse(unittest.TestCase):
         self.assertEqual(p['dB'],  0)
         self.assertEqual(p['aB'],  0)
 
-class TestAtomselCoverage(unittest.TestCase):
+class AtomselCoverage(unittest.TestCase):
     def setUp(self):
         '''Check that all keywords are implemented'''
         m=msys.CreateSystem()
@@ -498,6 +498,12 @@ class TestAtomselCoverage(unittest.TestCase):
     def testEmpty(self):
         with self.assertRaises(RuntimeError):
             self.mol.select('')
+
+    def testIonCl(self):
+        m=msys.CreateSystem()
+        a=m.addAtom()
+        a.residue.name='Cl-'
+        self.assertEqual(len(m.select('ion')), 1)
 
     def testAnum(self):
         self.check('atomicnumber 6', [0])

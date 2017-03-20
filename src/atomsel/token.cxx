@@ -58,7 +58,8 @@ static std::unordered_map<std::string,std::string> macros = {
     {"surface","protein and not buried"},
     {"lipid","resname DLPE DMPC DPPC GPC LPPC PALM PC PGCL POPC POPE POPS"},
     {"lipids","lipid"},
-    {"ion","resname AL BA CA Ca CAL CD CES CLA CL Cl CO CS CU Cu CU1 CUA HG IN IOD K MG MN3 MO3 MO4 MO5 MO6 NA Na NAW OC7 PB POT PT RB SOD TB TL WO4 YB ZN ZN1 ZN2"},
+    // FIXME: use atomic number and zero bond condition.
+    {"ion","resname AL BA CA Ca CAL CD CES CLA CL Cl 'Cl-' CO CS CU Cu CU1 CUA HG IN IOD K MG MN3 MO3 MO4 MO5 MO6 NA Na NAW OC7 PB POT PT RB SOD TB TL WO4 YB ZN ZN1 ZN2"},
     {"ions","ion"},
     {"sugar","resname AGLC"},
     {"solvent","not (protein or sugar or nucleic or lipid)"},
