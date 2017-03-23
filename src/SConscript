@@ -133,6 +133,7 @@ if sys.platform.startswith("darwin"):
     if desmond_release is not None:
         libmsys_env.Append(LINKFLAGS=['-dynamiclib', '-install_name', '@rpath/../../../{}/lib/Darwin-x86_64/libmsys.dylib'.format(desmond_release)])
 libmsys=libmsys_env.AddLibrary('msys', lexobjs + lpobjs + sdfobjs + schrod_only_objs + [inchi] + smiles_objs + Split('''
+smarts.cxx
 
 analyze/eigensystem.cxx
 analyze/get_fragments.cxx
@@ -238,7 +239,6 @@ annotated_system.cxx
 graph.cxx
 import.cxx
 provenance.cxx
-smarts.cxx
 analyze/sssr.cxx
 xyz.cxx
 
