@@ -297,7 +297,7 @@ class TestPropmap(unittest.TestCase):
 
         self.addprops(p)
         self.checkprops(p)
-        with tempfile.NamedTemporaryFile(dir='/tmp', suffix='.dms') as tmp:
+        with tempfile.NamedTemporaryFile(suffix='.dms') as tmp:
             msys.Save(mol, tmp.name)
             mol2=msys.Load(tmp.name)
             table = mol2.table(self.TABLE_NAME)

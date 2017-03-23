@@ -3,7 +3,7 @@ eval "$(garden-exec)"
 set -e
 
 NAME=msys
-VERSION=1.7.203c7
+VERSION=1.7.204c7
 DESCRIPTION="Biomolecular Structure Library"
 
 # module versions that scripts in ./tools need to know

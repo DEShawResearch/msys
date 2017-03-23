@@ -128,7 +128,9 @@ class GuessFiletypeTestCase(unittest.TestCase):
         self.assertEqual(p.prettyname, "DESRES Trajectory, clobber")
 
 class DtrGidTestCase(unittest.TestCase):
-    PATH='/tmp/gids.dtr'
+    @classmethod
+    def setUpClass(cls):
+        cls.PATH = os.path.join(tempfile.mkdtemp(), 'gids.dtr')
 
     def testSimple(self):
         natoms=32
@@ -168,7 +170,9 @@ class DtrGidTestCase(unittest.TestCase):
         self.assertTrue((f.gid==[2**31-1]*natoms).all())
 
 class DtrTestCase(unittest.TestCase):
-    PATH='/tmp/bad.dtr'
+    @classmethod
+    def setUpClass(cls):
+        cls.PATH = os.path.join(tempfile.mkdtemp(), 'bad.dtr')
 
     def setUp(self):
         ''' creates a dtr with metadata, a timekeys file with just a header,
@@ -529,8 +533,9 @@ class TestFrameIterator(unittest.TestCase):
         a[4].chain = 'z'
         a[0].segid = 'J'
         a[3].segid = 'G'
-        molfile.dms.write('/tmp/_test.dms',a).frame(r.frame(0)).close()
-        r=molfile.dms.read('/tmp/_test.dms')
+        dst = tempfile.NamedTemporaryFile(suffix='.dms')
+        molfile.dms.write(dst.name, a).frame(r.frame(0)).close()
+        r=molfile.dms.read(dst.name)
         a=r.atoms
         self.assertEqual(a[0].chain, 'x')
         self.assertEqual(a[3].chain, 'y')
@@ -545,8 +550,11 @@ class TestFrameIterator(unittest.TestCase):
 
 class TestDoublePrecision(unittest.TestCase):
 
-    FDTR = '/tmp/mfdbl_f.dtr'
-    DDTR = '/tmp/mfdbl_d.dtr'
+    @classmethod
+    def setUpClass(cls):
+        tmpdir = tempfile.mkdtemp()
+        cls.FDTR = os.path.join(tmpdir, 'mfdbl_f.dtr')
+        cls.DDTR = os.path.join(tmpdir, 'mfdbl_d.dtr')
 
     def tearDown(self):
         #SH.rmtree(self.FDTR, ignore_errors=True)
@@ -892,7 +900,11 @@ class TestFrame2(unittest.TestCase):
     # FIXME: check something!
 
 class TestDtrWriter(unittest.TestCase):
-    PATH='/tmp/molfile_test_writer.dtr'
+
+    @classmethod
+    def setUpClass(cls):
+        cls.PATH = os.path.join(tempfile.mkdtemp(), 'molfile_test_writer.dtr')
+
     def tearDown(self):
         SH.rmtree(self.PATH, ignore_errors=True)
 
