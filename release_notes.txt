@@ -1,3 +1,6 @@
+1.7.204c7 Added Cl- to 'ion' atom selection.
+          Using cent7 garden modules.
+
 1.7.203 Fix for dms-frame broken by DESRESCode#3486 in previous release.
         Double precision support for SpatialHash in C++.
         Eliminate dms-hash.
