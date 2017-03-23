@@ -1,34 +1,31 @@
 #!/bin/sh
 eval "$(garden-exec)"
+set -e
 
 NAME=msys
-VERSION=1.7.203
+VERSION=1.7.203c7
 DESCRIPTION="Biomolecular Structure Library"
 
 # module versions that scripts in ./tools need to know
 . ./MODULES
 
 # shared library dependencies
-BOOST=boost/1.59.0-13
-LPSOLVE=lp_solve/5.5.2.0-05A
-INCHI=inchi/1.04-05
-SQLITE=sqlite/3.10.2-06A
-SCONSUTILS=sconsutils/1.40
-FLEX=flex/2.5.35-2
-BISON=bison/2.4.1-11A
-THREEROE=ThreeRoe/0.09
+BOOST=boost/1.63.0-01c7
+LPSOLVE=lp-solve/5.5.2.0-01c7
+INCHI=inchi/1.04-01c7
+SQLITE=sqlite/3.16.2-01c7
+SCONSUTILS=sconsutils/1.40-01c7
+THREEROE=threeroe/0.10.1c7
 
 loadmodules() {
     garden load \
         $PYTHON/lib \
-        $SCONSUTILS/lib-python \
         $BOOST/lib \
         $LPSOLVE/lib \
         $INCHI/lib \
-        $FLEX/bin \
-        $BISON/bin \
         $SQLITE/lib \
         $THREEROE/lib \
+        $SCONSUTILS/lib-python \
 
     export MSYS_VERSION=$VERSION
 }
@@ -38,7 +35,6 @@ genmodules() {
     cat << EOF > $GARDENDIR/lib-python
 prereq $PYTHON/bin
 prepend-path PYTHONPATH $PREFIX/lib/python
-setenv MSYS_PREFIX "$PREFIX"
 EOF
 
     # library
@@ -48,13 +44,11 @@ prepend-path DESRES_MODULE_LDFLAGS  -L$PREFIX/lib:-Wl,-rpath,$PREFIX/lib
 prereq $PYTHON/lib
 prereq $BOOST/lib
 prereq $SQLITE/lib
-setenv MSYS_PREFIX $PREFIX
 EOF
 
     # executables
     cat << EOF > $GARDENDIR/bin
 prepend-path PATH $PREFIX/bin
-setenv MSYS_PREFIX $PREFIX
 EOF
 }
 
@@ -89,7 +83,8 @@ case $1 in
     --install)
 	loadmodules
 
-        $0 --exec scons install -j 12 PREFIX=$PREFIX OBJDIR=$TMPDIR
+        nprocs=`getconf _NPROCESSORS_ONLN`
+        $0 --exec scons install -j $nprocs PREFIX=$PREFIX OBJDIR=$TMPDIR
 
         ./tests/ut.py
         ./tests/molfile_ut.py

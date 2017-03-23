@@ -54,11 +54,8 @@ msysenv=env
 Export('msysenv')
 
 def split_version(verstr):
-    dash = verstr.find('-')
-    if dash != -1:
-        nice_verstr = verstr[:dash]
-    else:
-        nice_verstr = verstr
+    import re
+    nice_verstr = re.match('([0-9\.]*)', verstr).group(0)
     return nice_verstr.split('.')
 
 def hexversion(triplet):
