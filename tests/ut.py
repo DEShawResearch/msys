@@ -844,6 +844,14 @@ class TestValidate(unittest.TestCase):
 
 class Main(unittest.TestCase):
 
+    def testCapsule(self):
+        mol = msys.Load('tests/files/2f4k.dms')
+        ptr = mol._ptr
+        cap = msys._msys.SystemPtr.asCapsule(ptr)
+        ptr2 = msys._msys.SystemPtr.fromCapsule(cap)
+        self.assertFalse(ptr is ptr2)
+        self.assertEqual(ptr, ptr2)
+
     def testPickle(self):
         import cPickle as pkl
         old = msys.Load('tests/files/2f4k.dms')
