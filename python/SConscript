@@ -46,6 +46,7 @@ pfxenv.Append(CXXFLAGS='-fno-strict-aliasing')
 pfxext = pfxenv.AddPythonExtension('pfx', 'pfx.cxx', prefix='msys')
 pfxenv.Requires(pfxext, libmsys)
 
+env.AddHeaders(['capsule.hxx'], prefix='msys/python')
 env.SConscript('molfile/SConscript')
 
 

@@ -852,6 +852,13 @@ class Main(unittest.TestCase):
         self.assertFalse(ptr is ptr2)
         self.assertEqual(ptr, ptr2)
 
+    def testCapsule2(self):
+        mol = msys.Load('tests/files/2f4k.dms')
+        cap = mol.asCapsule()
+        mol2 = msys.System.fromCapsule(cap)
+        self.assertFalse(mol is mol2)
+        self.assertEqual(mol, mol2)
+
     def testPickle(self):
         import cPickle as pkl
         old = msys.Load('tests/files/2f4k.dms')

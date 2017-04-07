@@ -970,6 +970,19 @@ class System(object):
 
     def __repr__(self): return "<System '%s'>" % self.name
 
+    def asCapsule(self):
+        ''' Return a capsule wrapper of the internal SystemPtr.
+
+        The capsule holds a bare pointer and therefore must not outlive self.
+        '''
+        return self._ptr.asCapsule(self._ptr)
+
+    @classmethod
+    def fromCapsule(cls, cap):
+        ''' Construct from a capsule wrapper of a SystemPtr.
+        '''
+        return cls(_msys.SystemPtr.fromCapsule(cap))
+
     @property
     def name(self): 
         ''' The name of the System, taken from the input file name '''

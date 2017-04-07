@@ -1,5 +1,7 @@
 #include "unique_symbol.hxx"
 #include "wrap_obj.hxx"
+#include "capsule.hxx"
+
 #include "schema.hxx"
 #include "atomsel.hxx"
 #include "append.hxx"
@@ -752,16 +754,6 @@ namespace {
         }
         throw std::runtime_error("Unsupported pickle format " + format);
     }
-
-    static const char* capsule_name = "_msys.SystemPtr";
-    PyObject* system_as_capsule(SystemPtr mol) {
-        return PyCapsule_New(mol.get(), capsule_name, nullptr);
-    }
-    SystemPtr system_from_capsule(PyObject* obj) {
-        void* ptr = PyCapsule_GetPointer(obj, capsule_name);
-        if (ptr == nullptr) throw_error_already_set();
-        return reinterpret_cast<System*>(ptr)->shared_from_this();
-    }
 }
 
 namespace desres { namespace msys { 
@@ -984,8 +976,10 @@ namespace desres { namespace msys {
                      arg("ids")=object()))
 
             /* PyCapsule conversion */
-            .def("asCapsule", system_as_capsule).staticmethod("asCapsule")
-            .def("fromCapsule", system_from_capsule).staticmethod("fromCapsule")
+            .def("asCapsule", python::system_as_capsule)
+            .staticmethod("asCapsule")
+            .def("fromCapsule", python::system_from_capsule)
+            .staticmethod("fromCapsule")
             ;
 
     class_<HydrogenBond>("HydrogenBond", no_init)
