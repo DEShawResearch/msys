@@ -11,6 +11,8 @@
 #include "hbond.hxx"
 #include "contacts.hxx"
 
+#include <msys/hash.hxx>
+
 #include <numpy/ndarrayobject.h>
 #include <pfx/graph.hxx>
 #include <pfx/cell.hxx>
@@ -981,6 +983,7 @@ namespace desres { namespace msys {
             .def("fromCapsule", python::system_from_capsule)
             .staticmethod("fromCapsule")
             ;
+    def("HashSystem", HashSystem);
 
     class_<HydrogenBond>("HydrogenBond", no_init)
         .def("__init__", make_constructor(

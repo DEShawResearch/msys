@@ -224,6 +224,8 @@ namespace desres { namespace msys {
          * same as the old one.  The override table will also be
          * replaced with a new one pointing to the new ParamTable. */
         void resetParams(ParamTablePtr params);
+
+        inline ParamTablePtr termProps() { return _props; }
     };
 
     typedef std::shared_ptr<TermTable> TermTablePtr;

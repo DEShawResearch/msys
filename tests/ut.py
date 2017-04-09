@@ -68,6 +68,63 @@ class TestIndexedFile(unittest.TestCase):
             self.assertEqual(L[0].ct(0)['Name'], 'dUMP anion')
 
 
+class TestHash(unittest.TestCase):
+    def testAtom(self):
+        mol = msys.CreateSystem()
+        h0 = mol.hash()
+        mol.addAtom()
+        h1 = mol.hash()
+        mol.atom(0).charge = 0.1
+        h2 = mol.hash()
+        self.assertNotEqual(h0, h1)
+        self.assertNotEqual(h0, h2)
+        self.assertNotEqual(h1, h2)
+
+        # add an atom, then remove it does not affect the hash
+        # once we clone the system to remove dead residues, etc.
+        mol.addAtom().remove()
+        h3 = mol.clone().hash()
+        self.assertEqual(h2, h3)
+
+        m1 = mol.clone()
+        m2 = mol.clone()
+        m1.addAtomProp('foo', int)
+        m2.addAtomProp('foo', float)
+        self.assertNotEqual(m1.hash(), m2.hash())
+
+    def testBond(self):
+        mol = msys.CreateSystem()
+        a1=mol.addAtom()
+        a2=mol.addAtom()
+        h0=mol.hash()
+        b12=a1.addBond(a2)
+        h1=mol.hash()
+        b12.order = 2
+        h2=mol.hash()
+        mol.addBondProp('foo', str)
+        h3=mol.hash()
+        self.assertEqual(len(set((h0,h1,h2,h3))), 4)
+
+    def testTerm(self):
+        mol = msys.Load('tests/files/small.mae')
+        h = set()
+        h.add(mol.hash())
+        table = mol.table('stretch_harm')
+        t = table.addTerm([mol.atom(0), mol.atom(2)], table.params.param(5))
+        h.add(mol.hash())
+        t['constrained'] = 42
+        h.add(mol.hash())
+        table.addTermProp('foo', int)
+        h.add(mol.hash())
+        table.params.addProp('bar', str)
+        h.add(mol.hash())
+        t['bar'] = 'justinrocks'
+        h.add(mol.hash())
+        t['foo'] = 129
+        h.add(mol.hash())
+        self.assertEqual(len(h), 7)
+
+
 class TestHbond(unittest.TestCase):
     def test1(self):
         mol = msys.Load('tests/files/1vcc.mae', structure_only=True)

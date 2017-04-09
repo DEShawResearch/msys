@@ -133,6 +133,8 @@ namespace desres { namespace msys {
         bool has(String const& key) const;
         ValueRef value(String const& key);
         ValueRef value(Id key);
+
+        inline ParamTablePtr kv() { return _kv; }
     };
 
     class System : public std::enable_shared_from_this<System> {
@@ -513,6 +515,9 @@ namespace desres { namespace msys {
         /* Return ids of atoms based on their order of appearance in
          * a depth-first traversal of the structure hierarchy. */
         IdList orderedIds() const;
+
+        inline ParamTablePtr atomProps() { return _atomprops; }
+        inline ParamTablePtr bondProps() { return _bondprops; }
     };
 
     typedef std::shared_ptr<System> SystemPtr;

@@ -970,6 +970,15 @@ class System(object):
 
     def __repr__(self): return "<System '%s'>" % self.name
 
+    def hash(self):
+        ''' hash of contents of this system.
+
+        The hash is insenstive to provenance.
+        However, adding atoms, bonds, terms, etc., then removing them may not
+        leave the hash unchanged.
+        '''
+        return _msys.HashSystem(self._ptr)
+
     def asCapsule(self):
         ''' Return a capsule wrapper of the internal SystemPtr.
 

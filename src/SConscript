@@ -181,6 +181,7 @@ fastjson/dtoa/fast-dtoa.cc
 
 elements.cxx
 geom.cxx
+hash.cxx
 
 io.cxx
 istream.cxx
