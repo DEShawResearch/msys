@@ -40,6 +40,7 @@ namespace desres { namespace msys {
 
     static void hash_atoms(ThreeRoe& tr, SystemPtr mol) {
         for (auto i=mol->atomBegin(), e=mol->atomEnd(); i!=e; ++i) {
+            // atoms memset 0 themselves, so this is ok.
             tr.Update(&mol->atomFAST(*i), sizeof(atom_t));
         }
         hash_params(tr, mol->atomProps());
@@ -47,14 +48,27 @@ namespace desres { namespace msys {
 
     static void hash_bonds(ThreeRoe& tr, SystemPtr mol) {
         for (auto i=mol->bondBegin(), e=mol->bondEnd(); i!=e; ++i) {
-            tr.Update(&mol->bondFAST(*i), sizeof(bond_t));
+            // bonds don't memset zero themselves, so we must be careful.
+            auto& b = mol->bondFAST(*i);
+            tr.Update(&b.i, sizeof(b.i));
+            tr.Update(&b.j, sizeof(b.j));
+            tr.Update(&b.order, sizeof(b.order));
+            tr.Update(&b.stereo, sizeof(b.stereo));
+            tr.Update(&b.aromatic, sizeof(b.aromatic));
         }
         hash_params(tr, mol->bondProps());
     }
 
     static void hash_residues(ThreeRoe& tr, SystemPtr mol) {
         for (auto i=mol->residueBegin(), e=mol->residueEnd(); i!=e; ++i) {
-            tr.Update(&mol->residueFAST(*i), sizeof(residue_t));
+            // even though this struct is POD, smallstrings don't bzero
+            auto& r = mol->residueFAST(*i);
+            tr.Update(&r.chain,sizeof(r.chain));
+            tr.Update(&r.resid,sizeof(r.resid));
+            tr.Update(r.name.c_str(),r.name.size());
+            tr.Update(r.insertion.c_str(),r.insertion.size());
+            tr.Update(&r.resid,sizeof(r.resid));
+            tr.Update(&r.type,sizeof(r.type));
         }
     }
 
@@ -113,7 +127,8 @@ namespace desres { namespace msys {
     }
 
     static void hash_other(ThreeRoe& tr, SystemPtr mol) {
-        tr.Update(mol->name.data(), mol->name.size());
+        // don't include system name
+        //tr.Update(mol->name.data(), mol->name.size());
         tr.Update(mol->global_cell[0], 9*sizeof(double));
         tr.Update(mol->nonbonded_info.vdw_funct.data(),
                   mol->nonbonded_info.vdw_funct.size());
@@ -129,14 +144,23 @@ namespace desres { namespace msys {
 
     uint64_t HashSystem(SystemPtr mol) {
         ThreeRoe tr;
+        static const bool debug=false;
 
+        debug && std::cout << tr.Final().first << '\n';
         hash_atoms(tr, mol);
+        debug && std::cout << tr.Final().first << '\n';
         hash_bonds(tr, mol);
+        debug && std::cout << tr.Final().first << '\n';
         hash_residues(tr, mol);
+        debug && std::cout << tr.Final().first << '\n';
         hash_chains(tr, mol);
+        debug && std::cout << tr.Final().first << '\n';
         hash_cts(tr, mol);
+        debug && std::cout << tr.Final().first << '\n';
         hash_tables(tr, mol);
+        debug && std::cout << tr.Final().first << '\n';
         hash_other(tr, mol);
+        debug && std::cout << tr.Final().first << '\n';
 
         return tr.Final().first;
     }
