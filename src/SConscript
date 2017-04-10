@@ -126,13 +126,26 @@ def get_shlib_version():
         return ver.replace('.', '_')
     return None
 
+dtoaenv = env.Clone()
+# new gcc on OS X emits for-loop-analysis warning.
+dtoaenv.Append(CCFLAGS=['-Wno-error'])
+dtoaobjs = dtoaenv.AddObject(Split('''
+fastjson/dtoa/bignum.cc
+fastjson/dtoa/diy-fp.cc
+fastjson/dtoa/fixed-dtoa.cc
+fastjson/dtoa/bignum-dtoa.cc
+fastjson/dtoa/dtoa.cc
+fastjson/dtoa/cached-powers.cc
+fastjson/dtoa/fast-dtoa.cc
+'''))
+
 libmsys_env = env.Clone()
 libmsys_env.Append(LIBS=['msys-core'])
 if sys.platform.startswith("darwin"):
     desmond_release = os.getenv("DESMOND")
     if desmond_release is not None:
         libmsys_env.Append(LINKFLAGS=['-dynamiclib', '-install_name', '@rpath/../../../{}/lib/Darwin-x86_64/libmsys.dylib'.format(desmond_release)])
-libmsys=libmsys_env.AddLibrary('msys', lexobjs + lpobjs + sdfobjs + schrod_only_objs + [inchi] + smiles_objs + Split('''
+libmsys=libmsys_env.AddLibrary('msys', lexobjs + lpobjs + sdfobjs + schrod_only_objs + [inchi] + smiles_objs + dtoaobjs + Split('''
 smarts.cxx
 
 analyze/eigensystem.cxx
@@ -170,14 +183,6 @@ fastjson/json.cxx
 fastjson/JSON_parser.c
 fastjson/parse.cxx
 fastjson/print.cxx
-
-fastjson/dtoa/bignum.cc         
-fastjson/dtoa/diy-fp.cc     
-fastjson/dtoa/fixed-dtoa.cc
-fastjson/dtoa/bignum-dtoa.cc    
-fastjson/dtoa/dtoa.cc
-fastjson/dtoa/cached-powers.cc  
-fastjson/dtoa/fast-dtoa.cc
 
 elements.cxx
 geom.cxx
