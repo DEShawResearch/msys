@@ -973,7 +973,7 @@ class System(object):
     def hash(self):
         ''' hash of contents of this system.
 
-        The hash is insenstive to provenance.
+        The hash is insensitive to provenance and System.name.
         However, adding atoms, bonds, terms, etc., then removing them may not
         leave the hash unchanged.
         '''

@@ -1,3 +1,6 @@
+1.7.205c7 Added PyCapsule interface for easier pybind11 integration.
+          Added msys.System.hash() function to replace dms-hash.
+
 1.7.204c7 Added Cl- to 'ion' atom selection.
           Using cent7 garden modules.
 
@@ -843,68 +846,4 @@
        Added dms-posre.
 
 1.0.0  First stable release.
-
-----------------------------
-
-0.9.8  No more atom gid property.
-
-0.9.7  dms-validate --strict rejects sparsified files.
-       TermTables can be coalesced so as to use a minimal set of params.
-       dms-alchemical creates svelter dms files.
-       dms-alchemical - various bug fixes, added test suite.
-
-0.9.6  getitem and setitem on Terms now operates on just that Term.
-       dms-alchemical: handle missing dihedral and pair tables.
-
-0.9.5  Support vdw_exp_6s.
-       C++: TermTable.category is now an enum.
-       SaveDMS is now 10-30x faster.
-       Rewrite of dms-solvate - can now provide your own water box.
-       AppendSystem checks for compatible vdw_funct.
-
-0.9.4  mae2dms: support vdw_exp_6
-       Removed some extraneous Python interface methods
-       Renamed *prop_names to props, and eliminated *prop_types.
-       Added support for modulo (%) operator in atom selections.
-       Renamed Residue.num to Residue.resid.
-       Renamed System.extra to System.auxtable, etc.
-       Added System.clone().
-       Documentation updates.
-
-0.9.2  Support reading MAE from stream.
-       Support reading DMS from buffer.
-       Interface improvement for dms-grease.
-
-0.9.1  Fix regex parsing in the atom selection grammar.
-       Read and write provenance, including msys version.
-       ImportMAE: handle gzipped files.
-       ImportDMS: read from internal buffer, avoiding file locking issues.
-       Documentation.
-
-0.9.0  ImportMAE no longer overrides chain with segid.
-       Much stricter dms exporter.
-       ImportDMS merges chains with the same name.
-       Rename destroy() to remove() in the python interface.
-       Add dms-fep.
-       Fix busted --reorder option in dms-diff.
-       Allow atom selections on any custom atom property.
-       Bugfix for append - copy custom atom and bond properties.
-       
-0.8.3  Bugfix: SaveDMS was incorrectly mapping custom term properties (e.g.
-               "constrained") into the view statements.
-
-0.8.2  Bugfix for LoadDMS(structure_only=True) for files with bonds to pseudos.
-
-0.8.0  LoadDMS(..., structure_only=True) now skips reading pseudos.
-       dms-dump (and dms-diff) no longer reorder terms by default.
-       dms-info got faster.
-
-0.7.3  Simple dms-grease
-       pbwithin selection
-       Better error checking on dms import.
-       Support for the pseudopol_fermi term.
-
-0.7.2  Added dms-info
-0.7.0  Many new tools.
-0.6.2  Documentation
 

@@ -33,6 +33,7 @@ Contents:
    tools
    recipes
    formats
+   release_notes
 
 * :ref:`genindex`
 

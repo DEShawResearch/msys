@@ -53,12 +53,9 @@ EOF
 }
 
 genhelp() {
-    cat release_notes.txt >> $PREFIX/ModulesHelp
     cat <<EOF >> $PREFIX/ModulesHelp
-
-See documentation in 
+See documentation and release notes in 
 http://gardendoc.nyc.desres.deshaw.com/$PREFIX/doc/html/index.html
-
 EOF
 
 }
