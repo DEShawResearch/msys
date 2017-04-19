@@ -1115,10 +1115,19 @@ void StkReader::append(std::vector<std::string> fnames,
             }
 
             if (first < cur[0].time()) {
-                DTR_FAILURE(
-                "Frameset " << framesets[i+1]->path() <<
+                // allow old trajectories to proceed, since cases like this didn't
+                // used to generate a fatal error.
+                std::stringstream ss;
+                ss << "Frameset " << framesets[i+1]->path() <<
                 " in stk " << path() << 
-                " has initial time " << first << " which is earlier than any time in the preceding frameset, thus superseding it entirely.  This is probably an erroneously generated stk file.");
+                " has initial time " << first << " which is earlier than any time in the preceding frameset, thus superseding it entirely.  This is probably an erroneously generated stk file.";
+                auto msg = ss.str();
+                bool is_old_frameset = framesets[i+1]->path().substr(0,12)=="/d/en/locker";
+                if (is_old_frameset) {
+                    fprintf(stderr, "%s\n", msg.data());
+                } else {
+                    DTR_FAILURE(msg);
+                }
             }
 
             while (n && cur[n-1].time() >= first) {
