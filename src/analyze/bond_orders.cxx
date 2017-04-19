@@ -613,8 +613,8 @@ namespace desres { namespace msys {
         }
         int nrows=lpsolve::get_Norig_rows(_component_lp);
         int qTotal=
-            - lpsolve::get_var_primalresult(_component_lp, nrows + _component_charge_col)
-            + lpsolve::get_var_primalresult(_component_lp, nrows + _component_charge_col+1);
+            - double_to_int(lpsolve::get_var_primalresult(_component_lp, nrows + _component_charge_col))
+            + double_to_int(lpsolve::get_var_primalresult(_component_lp, nrows + _component_charge_col+1));
         return qTotal;
     }
 
