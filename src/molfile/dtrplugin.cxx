@@ -817,7 +817,7 @@ void StkReader::init(int* changed) {
     }
     bool stale_ddparams = false;
     const bool verbose = getenv("DTRPLUGIN_VERBOSE");
-    const bool use_cache = getenv("DESRES_ROOT") && 
+    const bool use_cache = getenv("DESRES_LOCATION") && 
                           !getenv("MOLFILE_STKCACHE_DISABLE");
 
     //
