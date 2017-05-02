@@ -19,6 +19,10 @@ The set of basic checks comprise the following:
 
  * knot: there must not be bonds passing through rings of size 10 or fewer.
 
+ * nonzerobox: the volume of the global cell must be positive.
+ 
+ * masslessatoms: there should be no massless atoms with atomic number > 0.
+
 The set of strict checks comprise the following items.  Note that it
 is certainly possible for a valid simulation to be performed using a
 system that passes none of its strict checks!  However, it may be worth
