@@ -52,7 +52,11 @@ env.AddScript('scripts/dms-select')
 env.AddScript('scripts/dms-set')
 env.AddScript('scripts/dms-tile')
 env.AddScript('scripts/dms-replicate')
+env.AddScript('scripts/dms-solvate')
 env.AddPythonModule('scripts/update.py', prefix='msys')
 env.AddPythonModule('scripts/wrap.py', prefix='msys')
 env.AddPythonModule('scripts/reorder.py', prefix='msys')
+env.AddPythonModule('scripts/solvate.py', prefix='msys')
+
+env.AddShare('h2o.dms', src='scripts/h2o.dms')
 
