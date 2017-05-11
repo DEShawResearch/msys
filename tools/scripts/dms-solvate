@@ -5,7 +5,7 @@
 # source "$root/../share/MODULES"
 # garden load $PYTHON/bin
 # garden prepend-path PYTHONPATH "$root/../lib/python"
-# exec gdb --args python $0 "$@" 
+# exec python $0 "$@" 
 #}
 
 '''
@@ -18,7 +18,7 @@ from msys import solvate
 def parse_args():
     import argparse
     import os
-    default_solvent = os.path.join(os.path.dirname(__file__), '../share/h2o.dms')
+    default_solvent = solvate.WATBOX
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('solute',

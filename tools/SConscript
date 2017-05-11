@@ -58,5 +58,5 @@ env.AddPythonModule('scripts/wrap.py', prefix='msys')
 env.AddPythonModule('scripts/reorder.py', prefix='msys')
 env.AddPythonModule('scripts/solvate.py', prefix='msys')
 
-env.AddShare('h2o.dms', src='scripts/h2o.dms')
+env.AddShare('tip3p.dms', src='scripts/tip3p.dms')
 
