@@ -34,6 +34,7 @@ def solvate(solute, solvent, dims,
             min_solvent_dist=WATCON,
             min_solute_dist=WATRAD,
             solvent_selection=WATSEL,
+            center_selection='all',
             verbose=False):
     ''' 
     Tile solvent box around solute, removing overlaps.
@@ -55,6 +56,14 @@ def solvate(solute, solvent, dims,
     mol = solute.clone()
     wat = solvent.clone()
     npro = mol.natoms
+
+    if center_selection != 'none': 
+        ids = mol.selectIds(center_selection)
+        if not ids:
+            raise ValueError("Center selection '%s' selected no atoms" % center_selection)
+        pos = mol.positions
+        pos -= pos[ids].mean(0)
+        mol.positions = pos
 
     # put all the water in one ct
     ct=mol.addCt()
@@ -126,3 +135,47 @@ def solvate(solute, solvent, dims,
             r.resid = j+1
 
     return mol
+
+def parse_dims(args, mol):
+    if args.box is not None:
+        dims = [float(x) for x in args.box.split(',')]
+    else:
+        pos = mol.positions
+        extent = (pos.max(0)-pos.min(0)).max()
+        dims = [extent + 2*args.thickness]*3
+    return dims
+
+
+def parser():
+    import argparse
+    import os
+    default_solvent = WATBOX
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    parser.add_argument('solute',
+            help="Path to chemical system to be solvated")
+    parser.add_argument('-s', '--solvent', default=os.path.realpath(default_solvent),
+            help="Path to chemical system containing solvent molecules")
+    parser.add_argument('-o', '--output', default='solvate.dms',
+            help="Path to output file")
+    parser.add_argument('-c', '--center-selection', default='all',
+            help="Center solute using given selection; 'none' to skip")
+    parser.add_argument('--structure-only', action='store_true',
+            help="Load solute and solvent without any forcefield information")
+
+    grp = parser.add_mutually_exclusive_group()
+    grp.add_argument('-b', '--box',
+            help='water box dimensions: 1 or 3 comma-separated values')
+    grp.add_argument('-t', '--thickness', type=float, default=5.0,
+            help='Minimum distance between solute and edge of water box')
+
+    parser.add_argument('--solute-dist', type=float, default=WATRAD,
+            help='Minimum distance between solute and solvent atoms')
+    parser.add_argument('--solvent-selection', default=WATSEL,
+            help='Selection of solvent atoms used in solvent-solute distance check')
+    parser.add_argument('--solvent-dist', type=float, default=WATCON,
+            help='Minimum distance between periodic contacts of solvent atoms')
+    parser.add_argument('-v', '--verbose', default=False, action='store_true',
+            help='Add chatter to stdout')
+    return parser
+

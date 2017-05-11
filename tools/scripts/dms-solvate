@@ -15,67 +15,21 @@ Tile solvent box around system
 import msys
 from msys import solvate
 
-def parse_args():
-    import argparse
-    import os
-    default_solvent = solvate.WATBOX
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-
-    parser.add_argument('solute',
-            help="Path to chemical system to be solvated")
-    parser.add_argument('-s', '--solvent', default=os.path.realpath(default_solvent),
-            help="Path to chemical system containing solvent molecules")
-    parser.add_argument('-o', '--output', default='solvate.dms',
-            help="Path to output file")
-    parser.add_argument('-c', '--center', default='all',
-            help="Center solute using given selection; 'none' to skip")
-    parser.add_argument('--structure-only', action='store_true',
-            help="Load solute and solvent without any forcefield information")
-
-    grp = parser.add_mutually_exclusive_group()
-    grp.add_argument('-d', '--dims',
-            help='water box dimensions: 1 or 3 comma-separated values')
-    grp.add_argument('-t', '--thickness', type=float, default=5.0,
-            help='Minimum distance between solute and edge of water box')
-
-    parser.add_argument('--solute-dist', type=float, default=solvate.WATRAD,
-            help='Minimum distance between solute and solvent atoms')
-    parser.add_argument('--solvent-selection', default=solvate.WATSEL,
-            help='Selection of solvent atoms used in solvent-solute distance check')
-    parser.add_argument('--solvent-dist', type=float, default=solvate.WATCON,
-            help='Minimum distance between periodic contacts of solvent atoms')
-    parser.add_argument('-v', '--verbose', default=False, action='store_true',
-            help='Add chatter to stdout')
-    return parser.parse_args()
-
 def main():
-    args = parse_args()
+    args = solvate.parser().parse_args()
 
     mol = msys.Load(args.solute, args.structure_only)
     wat = msys.Load(args.solvent, args.structure_only)
-
-    if args.dims is not None:
-        dims = [float(x) for x in args.dims.split(',')]
-    else:
-        pos = mol.positions
-        extent = (pos.max(0)-pos.min(0)).max()
-        dims = [extent + 2*args.thickness]*3
-
-    if args.center != 'none': 
-        ids = mol.selectIds(args.center)
-        if not ids:
-            raise ValueError("Center selection '%s' selected no atoms" % args.center)
-        pos = mol.positions
-        pos -= pos[ids].mean(0)
-        mol.positions = pos
+    dims = solvate.parse_dims(args, mol)
 
     mol = solvate.solvate(mol, wat, dims,
             min_solvent_dist=args.solvent_dist,
             min_solute_dist=args.solute_dist,
             solvent_selection=args.solvent_selection,
+            center_selection=args.center_selection,
             verbose=args.verbose)
 
-    msys.SaveDMS(mol, args.output, unbuffered=False)
+    msys.Save(mol, args.output)
 
 if __name__=="__main__": main()
 
