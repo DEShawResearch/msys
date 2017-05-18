@@ -1,3 +1,11 @@
+1.7.206c7 Bring back GuessHydrogenPositions
+          New dms-solvate for those who can't use viparr. 
+          dms-tile checks for reasonable box size.
+          DESRESCode#3571 : Added dms-validate case for massless atoms
+          DESRES_ROOT is deprecated, have the cache query DESRES_LOCATION
+          Bugfix in bond order assigner
+          Make old, non-monotonic stks only generate warning.
+            
 1.7.205c7 Added PyCapsule interface for easier pybind11 integration.
           Added msys.System.hash() function to replace dms-hash.
 
