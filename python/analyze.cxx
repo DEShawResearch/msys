@@ -47,6 +47,10 @@ namespace {
         return to_python(ComputeTopologicalIds(mol));
     }
 
+    void guess_hydrogen(SystemPtr mol, list ids) {
+        GuessHydrogenPositions(mol, ids_from_python(ids));
+    }
+
 }
 
 namespace desres { namespace msys { 
@@ -71,6 +75,7 @@ namespace desres { namespace msys {
         def("PeriodForElement", PeriodForElement);
         def("GroupForElement", GroupForElement);
         def("ElementForAbbreviation", ElementForAbbreviation);
+        def("GuessHydrogenPositions", guess_hydrogen);
         def("AbbreviationForElement", AbbreviationForElement);
         def("Analyze", Analyze);
         def("GuessAtomicNumber", GuessAtomicNumber);

@@ -1258,6 +1258,18 @@ class Main(unittest.TestCase):
         ids = msys.ComputeTopologicalIds(mol)
         self.assertEqual(len(ids), mol.natoms)
 
+    def testGuessHydrogenPositions(self):
+        mol = msys.LoadDMS('tests/files/ww.dms')
+        hs = mol.select('hydrogen and not water')
+        assert len(hs)>10
+        msys.GuessHydrogenPositions(hs)
+        parents = [h.bonded_atoms[0] for h in hs]
+        for h,p in zip(hs, parents):
+            delta = h.pos-p.pos
+            dist = (delta*delta).sum()**0.5
+            self.assertTrue(dist>0.8)
+            self.assertTrue(dist<1.2)
+
     def testAssignBondOrdersAndFormalCharges(self):
         # Smoke test only
         sys = msys.LoadDMS('tests/files/ww.dms')

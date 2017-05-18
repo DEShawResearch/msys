@@ -2143,6 +2143,11 @@ class Graph(object):
         return [dict((Atom(self._sys, i), Atom(graph._sys, j)) for i,j in item)
                 for item in t]
 
+def GuessHydrogenPositions(atoms):
+    ''' Experimental '''
+    ptr, ids = _convert_ids(atoms)
+    _msys.GuessHydrogenPositions(ptr, ids)
+
 def FindDistinctFragments(system):
     ''' Return fragids of representative fragments.  '''
     return _msys.FindDistinctFragments(system._ptr)

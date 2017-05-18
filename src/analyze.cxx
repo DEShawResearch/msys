@@ -430,3 +430,169 @@ void desres::msys::Analyze(SystemPtr self) {
     }
 }
 
+
+static const double def_bond = 1.0;
+static const double def_angle = 109.5 * M_PI/180;
+static const double def_dihedral = -120.0 * M_PI/180;
+
+void desres::msys::GuessHydrogenPositions(SystemPtr mol, IdList const& hatoms) {
+
+    /* Randomize orientation of water molecules, deterministically. */
+    srand48(1999);
+
+    /* partition by root atom */
+    typedef std::map<Id,IdList> RootMap;
+    RootMap map;
+    for (Id h : hatoms) {
+        if (mol->bondCountForAtom(h)!=1) continue;
+        map[mol->bondedAtoms(h).at(0)].push_back(h);
+    }
+
+    /* process each root atom */
+    for (RootMap::iterator it=map.begin(); it!=map.end(); ++it) {
+        const Id r = it->first;
+        const atom_t& root = mol->atom(r);
+        IdList& hlist = it->second;
+        std::sort(hlist.begin(), hlist.end());
+
+        /* get other atoms bonded to root. */
+        IdList c;
+        for (Id b : mol->bondedAtoms(r)) {
+            if (!std::binary_search(hlist.begin(), hlist.end(), b)) {
+                c.push_back(b);
+            }
+        }
+
+        if (hlist.size()==2) {
+            atom_t& hyd1 = mol->atom(hlist[0]);
+            atom_t& hyd2 = mol->atom(hlist[1]);
+            if (c.empty()) {
+                /* water */
+
+                /* sample a point on the unit sphere */
+                double u1 = drand48();
+                double u2 = drand48();
+                double z = 2*u1 - 1.0;
+                double phi = 2*M_PI*u2;
+                double R = sqrt(1-z*z);
+
+                /* orient and place the first hydrogen */
+                hyd1.x = root.x + def_bond * R * cos(phi);
+                hyd1.y = root.y + def_bond * R * sin(phi);
+                hyd1.z = root.z + def_bond * z;
+
+                /* arbitrary reference position for the second hydrogen */
+                Float A[3] = {hyd1.x, hyd1.y + def_bond, hyd1.z};
+                /* position with random rotation about O-H1 */
+                apply_dihedral_geometry(hyd2.pos(),
+                        A,
+                        mol->atom(hlist[0]).pos(),
+                        mol->atom(r).pos(),
+                        def_bond, def_angle, 2*M_PI*drand48());
+
+            } else if (c.size()==1) {
+                Id C = c[0];
+                Id A = C;
+                if (mol->bondCountForAtom(C)>1) {
+                    for (auto id : mol->bondedAtoms(C)) {
+                        A=id;
+                        if (A!=r) break;
+                    }
+                }
+                apply_dihedral_geometry(hyd1.pos(),
+                        mol->atom(A).pos(),
+                        mol->atom(C).pos(),
+                        mol->atom(r).pos(),
+                        def_bond, def_angle, -M_PI/2+def_dihedral);
+
+                apply_dihedral_geometry(hyd2.pos(),
+                        mol->atom(A).pos(),
+                        mol->atom(C).pos(),
+                        mol->atom(r).pos(),
+                        def_bond, def_angle, -M_PI/2-def_dihedral);
+            } else if (c.size()==2) {
+                apply_dihedral_geometry(hyd1.pos(),
+                        mol->atom(c[0]).pos(),
+                        mol->atom(c[1]).pos(),
+                        mol->atom(r).pos(),
+                        def_bond, def_angle, def_dihedral);
+                apply_dihedral_geometry(hyd2.pos(),
+                        mol->atom(c[1]).pos(),
+                        mol->atom(c[0]).pos(),
+                        mol->atom(r).pos(),
+                        def_bond, def_angle, def_dihedral);
+            }
+
+        } else if (hlist.size()==3) {
+            if (c.size()>0) {
+                Id C = c[0];
+                Id A = C;
+                if (mol->bondCountForAtom(C)>1) {
+                    for (auto id : mol->bondedAtoms(C)) {
+                        A=id;
+                        if (A!=r) break;
+                    }
+                }
+                apply_dihedral_geometry(mol->atom(hlist[0]).pos(),
+                        mol->atom(A).pos(),
+                        mol->atom(C).pos(),
+                        mol->atom(r).pos(),
+                        def_bond, def_angle, def_dihedral/2);
+                apply_dihedral_geometry(mol->atom(hlist[1]).pos(),
+                        mol->atom(hlist[0]).pos(),
+                        mol->atom(C).pos(),
+                        mol->atom(r).pos(),
+                        def_bond, def_angle, def_dihedral);
+                apply_dihedral_geometry(mol->atom(hlist[2]).pos(),
+                        mol->atom(C).pos(),
+                        mol->atom(hlist[0]).pos(),
+                        mol->atom(r).pos(),
+                        def_bond, def_angle, def_dihedral);
+
+            }
+
+        } else if (hlist.size()==1) {
+            atom_t& hyd1 = mol->atom(hlist[0]);
+
+            if (c.empty()) {
+                hyd1.x = root.x;
+                hyd1.y = root.y;
+                hyd1.z = root.z + def_bond;
+
+            } else if (c.size()==1) {
+                /* find another atom bonded to c to define the plane */
+                Id C = c[0];
+                Id A = C;
+                if (mol->bondCountForAtom(C)>1) {
+                    for (auto id : mol->bondedAtoms(C)) {
+                        A=id;
+                        if (A!=r) break;
+                    }
+                }
+                apply_dihedral_geometry(hyd1.pos(),
+                        mol->atom(A).pos(),
+                        mol->atom(C).pos(),
+                        mol->atom(r).pos(),
+                        def_bond, def_angle, 0);
+
+            } else {
+                Float ux=0, uy=0, uz=0;
+                for (Id b : c) {
+                    ux += mol->atom(r).x - mol->atom(b).x;
+                    uy += mol->atom(r).y - mol->atom(b).y;
+                    uz += mol->atom(r).z - mol->atom(b).z;
+                }
+                Float len = sqrt(ux*ux + uy*uy + uz*uz);
+                if (len) {
+                    ux /= len;
+                    uy /= len;
+                    uz /= len;
+                }
+                hyd1.x = root.x + def_bond*ux;
+                hyd1.y = root.y + def_bond*uy;
+                hyd1.z = root.z + def_bond*uz;
+            }
+        }
+    }
+}
+

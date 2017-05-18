@@ -38,6 +38,8 @@ namespace desres { namespace msys {
      * also calls updateFragids() for you. */
     void Analyze(SystemPtr mol);
 
+    void GuessHydrogenPositions(SystemPtr mol, IdList const& hatoms);
+
 }}
 
 #endif
