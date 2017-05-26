@@ -1,17 +1,24 @@
 Import('msysenv')
 Import('libmsys')
-
+import sys, os
 env=msysenv.Clone()
+
+is_linux = sys.platform.startswith("linux")
+is_windows = sys.platform.startswith("win32")
+is_schrodinger_build = "SCHRODINGER_SRC" in os.environ
+
 env.Append( 
         CPPPATH=['../src'],
-        CXXFLAGS='-Wno-unused-local-typedefs',
-        LIBS=['msys', 'boost_python$BOOST_SUFFIX'] )
+        CXXFLAGS='' if is_windows else '-Wno-unused-local-typedefs',
+        LIBS=['msys', 'msys-core', 'boost_python' + ('$MSYS_BOOST_SUFFIX' if is_schrodinger_build else '$BOOST_SUFFIX')] )
 
-if env['PLATFORM']=='darwin':
-    env.Append(CCFLAGS='-Wno-error')
-else:
+if is_linux:
     env.Append(CCFLAGS='-Wno-cpp')
-
+elif is_windows:
+    env.Append(LIBS=["python27"])
+else:
+    # MacOS
+    env.Append(CCFLAGS='-Wno-error')
 if env.get("MSYS_WITHOUT_INCHI"):
     env.Append(CPPDEFINES='MSYS_WITHOUT_INCHI')
 

@@ -8,12 +8,17 @@
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
+#include <iostream>
 
 #ifdef _MSC_VER
 #define MSYS_LOC __FILE__ << ":" << __LINE__ << "\n" << __FUNCSIG__
 #else
 #define MSYS_LOC __FILE__ << ":" << __LINE__ << "\n" << __PRETTY_FUNCTION__
 #endif
+
+#define MSYS_WARN(args) do { \
+    std::cerr << args << "\nlocation: " << MSYS_LOC; \
+} while(0)
 
 #define MSYS_FAIL(args) do { \
     std::stringstream _msys_fail_tmp_ss_; \

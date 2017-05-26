@@ -11,6 +11,12 @@
 #include <string.h>
 #include <stdexcept>
 
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+#include <cstdio>
+#include <string>
+#include <sstream>
+#endif
+
 using namespace desres::msys;
 
 typedef std::set<String> KnownSet;
@@ -526,9 +532,15 @@ static void check_dms_version(Sqlite dms, KnownSet& known) {
         int minor = r.get_int(MINOR);
         if (major > msys_major_version() ||
             minor > msys_minor_version() ) {
-            MSYS_FAIL("Application compiled with msys " << msys_version()
-                    << " is too old to read dms file with version " 
-                    << major << "." << minor);
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+        MSYS_WARN("Application compiled with msys " << msys_version()
+                << " is too old to read dms file with version "
+                << major << "." << minor);
+#else
+        MSYS_FAIL("Application compiled with msys " << msys_version()
+                << " is too old to read dms file with version "
+                << major << "." << minor);
+#endif
         }
     }
 }

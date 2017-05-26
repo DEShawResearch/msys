@@ -9,6 +9,9 @@
 #include <string.h>
 #include <stdexcept>
 #include <sys/stat.h>
+#if defined(_WIN32)
+#include <io.h>
+#endif
 
 using namespace desres::msys;
 
@@ -630,11 +633,20 @@ void desres::msys::sqlite::ExportDMS(SystemPtr h, sqlite3* db,
 }
 
 std::string desres::msys::FormatDMS(SystemPtr sys, Provenance const& prov) {
+#if defined(_WIN64) || defined(_WIN32)
+    char tmpl[] = "msys.pickle.XXXXXX";
+    char* file = _mktemp(tmpl);
+#else
     char tmpl[] = "/tmp/msys.pickle.XXXXXX";
     char* file = mktemp(tmpl);
+#endif
     if (!file) MSYS_FAIL(strerror(errno));
     Sqlite dms = Sqlite::write(file);
     export_dms(sys, dms, prov, 0);
+#if defined(_WIN64) || defined(_WIN32)
+    _unlink(file);
+#else
     unlink(file);
+#endif
     return dms.contents();
 }

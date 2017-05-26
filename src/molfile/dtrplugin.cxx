@@ -73,7 +73,9 @@ using namespace desres::molfile::dtr;
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
+#ifndef WIN32 //gzip does not currently work on windows
 #include <boost/iostreams/filter/gzip.hpp>
+#endif
 
 namespace bfs = boost::filesystem;
 namespace bio = boost::iostreams;
@@ -309,13 +311,23 @@ static void read_file( std::string const& path,
         buffer.resize(statbuf.st_size-offset);
     }
 
+#ifdef WIN32
+    if (lseek(fd, offset, SEEK_SET)!=offset) {
+        DTR_FAILURE("reading " << path << ": " << strerror(errno));
+    }
+
+    ssize_t rc = read(fd, &buffer[0], buffer.size());
+#else
     ssize_t rc = pread(fd, &buffer[0], buffer.size(), offset);
+#endif
     if (rc<0) {
         DTR_FAILURE("reading " << path << ": " << strerror(errno));
     }
+#ifndef WIN32
     if (size_t(rc) != buffer.size()) {
         DTR_FAILURE("unexpected short read of file " << path);
     }
+#endif
 }
 
 void Timekeys::init(const std::string& path ) {
@@ -776,7 +788,9 @@ bool StkReader::read_stk_cache_file(const std::string &cachepath, bool verbose, 
     if (file) {
         if (verbose) printf("StkReader: cache file %s found\n", cachepath.c_str());
         bio::filtering_istream in;
+#ifndef WIN32 //gzip does not currently work on windows
         in.push(bio::gzip_decompressor());
+#endif
         in.push(file);
 
         try {
@@ -943,8 +957,12 @@ void StkReader::init(int* changed) {
         if (fname.size()) {
             if (bfs::path(fname).is_absolute()) {
                 fnames.push_back(fname);
-            } else {               
+            } else {
+#ifdef WIN32
+                fnames.push_back((dirname/bfs::path(fname)).string().c_str());
+#else
                 fnames.push_back((dirname/bfs::path(fname)).c_str());
+#endif
             }
         }
     }
@@ -1021,7 +1039,9 @@ void StkReader::init(int* changed) {
         } else {
           bio::filtering_ostream out;
           bio::file_descriptor_sink file(fd, bio::close_handle);
+#ifndef WIN32 //gzip does not currently work on windows
           out.push(bio::gzip_compressor());
+#endif
           out.push(file);
           dump(out);
         }
@@ -1872,7 +1892,19 @@ dtr::KeyMap DtrReader::frame(ssize_t iframe, molfile_timestep_t *ts, void ** buf
      * unless it's being cached as _last_fd. */
     FdCloser _(fd==_last_fd ? -1 : fd);
 
+#ifdef WIN32
+    if (lseek(fd, offset, SEEK_SET)!=offset) {
+        std::string err = strerror(errno);
+        close(fd);
+        _last_fd=0;
+        DTR_FAILURE("Error seeking " << fname << " with offset " << offset << " size " << framesize << ": " << strerror(errno));
+    }
+
+    ssize_t rc = read(fd, buffer, framesize);
+    if (rc<0) {
+#else
     if (pread(fd, buffer, framesize, offset) != framesize) {
+#endif
         std::string err = strerror(errno);
         close(fd);
         _last_fd=0;
@@ -2127,7 +2159,11 @@ void DtrWriter::truncate(double t) {
             DTR_FAILURE("Seeking to position for truncation: " 
                     << strerror(errno));
         }
+#ifndef WIN32
         if (ftruncate(fileno(timekeys_file), ftell(timekeys_file))) {
+#else
+        if (_chsize(fileno(timekeys_file), ftell(timekeys_file))) {
+#endif
             DTR_FAILURE("Truncating timekeys file: "
                     << strerror(errno));
         }

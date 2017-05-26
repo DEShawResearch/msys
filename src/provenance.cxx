@@ -1,21 +1,22 @@
 #include "provenance.hxx"
 #include <sstream>
 #include <time.h>
-#include <pwd.h>
-#include <unistd.h>
 
 #include <msys/version.hxx>
 
 using namespace desres::msys;
 
-#ifdef __APPLE__
+#ifndef _MSC_VER
+#include <pwd.h>
 #include <unistd.h>
 #include <sys/param.h>
+#ifdef __APPLE__
 static char* get_current_dir_name() {
     static char buf[MAXPATHLEN];
     return getwd(buf);
 }
-#elif defined(_MSC_VER)
+#endif
+#else
 static char* get_current_dir_name() {
     return ".";
 }

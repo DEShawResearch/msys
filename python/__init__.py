@@ -1358,7 +1358,7 @@ class System(object):
     def atomsel(self, sel):
         ''' Create and return an atom selection object (Atomsel).
         Args:
-            sel (object): str atom selection, or list of ids (possibly empty).
+            sel (object): str atom selection, or list of GIDs (possibly empty).
 
         Note:
             Even if ids are provided, the ids of the selection are in sorted order.
@@ -1368,7 +1368,7 @@ class System(object):
         elif not sel:
             seltext = 'none'
         else:
-            seltext = 'index ' + ' '.join(map(str,sel))
+            seltext = 'index ' + ' '.join(map(str, sel))
         return Atomsel(self._ptr, seltext)
 
     def select(self, seltext):

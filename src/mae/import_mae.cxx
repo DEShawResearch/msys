@@ -506,6 +506,9 @@ namespace {
 #ifndef DESMOND_USE_ACADEMIC
 #ifdef DESMOND_USE_SCHRODINGER_MMSHARE
         std::string bytes = buf.str();
+        if (bytes.size() == 0){
+          MSYS_FAIL("Input file empty.");
+        }
         std::string new_bytes;
         reassign_ff(bytes.c_str(), new_bytes);
         buf.str("");
@@ -569,8 +572,14 @@ namespace desres { namespace msys {
     SystemPtr ImportMAEFromBytes( const char* bytes, int64_t len,
                          bool ignore_unrecognized, bool structure_only ) {
 
+#if defined(__APPLE__) || defined(_WIN32) || defined(_WIN64)
+        // pubsetbuf fails on windows and mac
+        std::string buf(bytes, len);
+        std::istringstream file(buf);
+#else
         std::istringstream file;
         file.rdbuf()->pubsetbuf(const_cast<char *>(bytes), len);
+#endif
         return read_all(file, ignore_unrecognized, structure_only,
                                                    structure_only);
     }

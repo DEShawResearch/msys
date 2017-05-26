@@ -2,9 +2,12 @@ Import('msysenv')
 Import('libmsys')
 import sys
 env=msysenv.Clone()
+
+cxx_flags = '' if sys.platform.startswith("win32") else '-Wno-unused-local-typedefs'
+
 env.Append( 
         CPPPATH=['../../src', '../'],
-        CXXFLAGS='-Wno-unused-local-typedefs',
+        CXXFLAGS=cxx_flags,
         LIBS=['msys', 'boost_python$MSYS_BOOST_SUFFIX', 'boost_thread$MSYS_BOOST_SUFFIX'])
 
 if sys.platform != "win32":
