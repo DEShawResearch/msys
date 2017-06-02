@@ -3,7 +3,7 @@ eval "$(garden-exec)"
 set -e
 
 NAME=msys
-VERSION=1.7.206c7
+VERSION=1.7.207c7
 DESCRIPTION="Biomolecular Structure Library"
 
 # module versions that scripts in ./tools need to know
@@ -53,7 +53,7 @@ EOF
 
 genhelp() {
     cat <<EOF >> $PREFIX/ModulesHelp
-See documentation and release notes in 
+See documentation and release notes in
 http://gardendoc.nyc.desres.deshaw.com/$PREFIX/doc/html/index.html
 EOF
 
