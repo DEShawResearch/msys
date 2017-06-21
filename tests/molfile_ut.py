@@ -218,6 +218,27 @@ class DtrTestCase(unittest.TestCase):
         self.assertEqual(dtr.at_time_gt(32), None)
         self.assertEqual(dtr.at_time_ge(32), None)
 
+    def testListFields(self):
+        k1 = molfile.list_fields('tests/files/force_groups.dtr')
+        self.assertEqual(k1[0], 'dim__alchemical_angle_harm')
+        self.assertEqual(len(k1), 45)
+
+        k2 = molfile.list_fields('tests/files/ch4.dtr')
+        self.assertEqual(k2, ['CHEMICAL_TIME', 'ENERGY', 'EX_ENERGY', 'FORMAT', 'KIN_ENERGY', 'POSITION', 'POT_ENERGY', 'PRESSURE', 'PRESSURETENSOR', 'TEMPERATURE', 'TITLE', 'UNITCELL', 'VIRIALTENSOR'])
+        self.assertEqual(len(k2), 13)
+
+        k3 = molfile.list_fields('tests/files/relative.stk')
+        self.assertEqual(k3, k2)
+
+        etr = '/d/vault/dhmvault-12/anton2/125/9576573/0000/energy.etr'
+        if os.path.exists(etr):
+            k4 = molfile.list_fields(etr)
+            self.assertTrue('TSS_UH' in k4)
+            self.assertEqual(len(k4), 21)
+        else:
+            print "Warning, no energy.etr"
+
+
     def testBadFrame(self):
         self.addFrame(1.0)
         self.addFrame(3.0)
@@ -436,28 +457,6 @@ class TestStk(unittest.TestCase):
           self.assertTrue(v2 is not None)
           self.assertTrue((v1==v2).all())
         
-        
-        ## test dump/load functionality
-        bytes=dtr.dump()
-        oldtimes=dtr.times()
-        self.assertTrue(len(bytes) < 5*1024)
-        newdtr=molfile.DtrReader(bytes=bytes)
-        newtimes=newdtr.times()
-        self.assertEqual(newdtr.natoms, dtr.natoms)
-
-        if (oldtimes!=newtimes).any():
-          print "times differ on reload!"
-          numtoshow=10
-          for i, (old, new) in enumerate(zip(oldtimes, newtimes)):
-              if old!=new:
-                  print i, old, new
-                  numtoshow -= 1
-                  if not numtoshow: break
-          assert False
-
-        for i in frames:
-            self.assertEqual(dtr.fileinfo(i), newdtr.fileinfo(i))
-  
 class TestBonds(unittest.TestCase):
   def testAddDelete(self):
     a0=molfile.Atom(name="N", resid=32)

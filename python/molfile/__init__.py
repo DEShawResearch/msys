@@ -94,6 +94,15 @@ def guess_filetype(filename, default=None):
     return default
 
 
+def list_fields(stk_or_tr):
+    ''' list available fields in an stk or frameset (etr or dtr)
+    '''
+    trj = DtrReader(stk_or_tr)
+    kv = dict()
+    trj.frame(0, keyvals=kv)
+    return sorted(kv.keys())
+
+
 class FrameIter(object):
     def __init__(self, reader): 
         if reader.nframes >= 0:

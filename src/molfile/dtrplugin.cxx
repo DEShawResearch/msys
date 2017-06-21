@@ -1966,7 +1966,7 @@ KeyMap DtrReader::frame_from_bytes(const void *buf, uint64_t len,
         } else if (format=="ETR_V1") {
             handle_etr_v1(len, buf, ts, *metap->get_frame_map(), &blobs, swap);
 
-        } else {
+        } else if (!format.empty()) {
             DTR_FAILURE("can't handle format " << format);
         }
     }
