@@ -87,96 +87,6 @@ namespace {
     void destructor(PyObject* obj) { Py_XDECREF(obj); }
     typedef std::shared_ptr<PyObject> objptr;
 
-#define DIVVY_BEGIN_END(ntasks,rank,nprocs,begin,end) do {\
-  unsigned int __quo__, __rem__;                                          \
-  unsigned int __nt__=(ntasks),__rk__=(rank),__np__=(nprocs);             \
-  __quo__=__nt__/__np__, __rem__=__nt__%__np__;                           \
-  (begin)= __quo__*__rk__ + (__rk__<__rem__?__rk__:__rem__);              \
-  (end)  = __quo__*(__rk__+1) + (__rk__<__rem__?(__rk__+1):__rem__);      \
-} while(0)
-
-    // read a single frame from the given reader and store in provided buffers
-    static void read_frame(Reader& r, int64_t fid, 
-            unsigned ngids, const unsigned* gids, float* pos, double* box) {
-        std::shared_ptr<Frame> frame(r.frame(fid));
-        memcpy(box, frame->box(), 9*sizeof(double));
-        const float* src = frame->pos();
-        for (unsigned i=0; i<ngids; i++) {
-            unsigned gid = gids[i];
-            if (gid>=frame->natoms()) throw std::runtime_error("invalid gid");
-            memcpy(pos, src+3*gid, 3*sizeof(float));
-            pos += 3;
-        }
-    }
-    
-    // Worker myrank reads a contiguous range of frames within array fids
-    // and stores in corresponding elements of posptrs and boxptrs
-    void worker(unsigned nworkers, unsigned myrank, size_t nfids, Reader* r, 
-                const int64_t* fids, unsigned ngids, const unsigned* gids,
-                const std::vector<float*>*  posptrs,
-                const std::vector<double*>* boxptrs) {
-        unsigned begin, end;
-        DIVVY_BEGIN_END(nfids, myrank, nworkers, begin, end);
-        for (; begin!=end; ++begin) {
-            read_frame(*r, fids[begin], ngids, gids, 
-                    (*posptrs)[begin], (*boxptrs)[begin]);
-        }
-    }
-
-    // Read frames from reader, storing in provided buffers.
-    // fidobj: list of frame ids, nfids long
-    // gidobj: list of atom ids, ngids long
-    // posbuffers: list of nfids float buffers of size ngidsx3
-    // boxbuffers: list of nfids double buffers of size 3x3
-    void read_frames(Reader& r, PyObject* fidobj, PyObject* gidobj,
-                     PyObject* posbuffers,
-                     PyObject* boxbuffers) {
-
-        objptr fidarr, gidarr;
-        fidarr.reset(PyArray_FromAny(fidobj, PyArray_DescrFromType(NPY_INT64),
-                                     1, 1, NPY_C_CONTIGUOUS, NULL), destructor);
-        if (!fidarr) throw_error_already_set();
-        const int64_t* fids = (const int64_t*)PyArray_DATA(fidarr.get());
-        gidarr.reset(PyArray_FromAny(gidobj, PyArray_DescrFromType(NPY_UINT32),
-                                     1, 1, NPY_C_CONTIGUOUS | NPY_FORCECAST, 
-                                     NULL), destructor);
-        if (!gidarr) throw_error_already_set();
-        const unsigned* gids = (const unsigned*)PyArray_DATA(gidarr.get());
-        boost::python::ssize_t nfids = PyArray_DIM(fidarr.get(), 0);
-        unsigned ngids = PyArray_DIM(gidarr.get(), 0);
-        std::vector<float*> posptrs(nfids);
-        std::vector<double*> boxptrs(nfids);
-        for (boost::python::ssize_t i=0; i<nfids; i++) {
-            objptr buf(PySequence_GetItem(posbuffers, i), destructor);
-            if (!buf) throw_error_already_set();
-            if (!PyArray_Check(buf.get()) ||
-                 PyArray_TYPE(buf.get())!=NPY_FLOAT ||
-                 PyArray_NDIM(buf.get())!=2 ||
-                 PyArray_DIM(buf.get(),0)!=ngids ||
-                 PyArray_DIM(buf.get(),1)!=3
-                 ) {
-                PyErr_Format(PyExc_ValueError, "Expected %ux3 numpy float array for position index %ld", ngids, i);
-                throw_error_already_set();
-            }
-            posptrs[i] = (float *)PyArray_DATA(buf.get());
-        }
-        for (boost::python::ssize_t i=0; i<nfids; i++) {
-            objptr buf(PySequence_GetItem(boxbuffers, i), destructor);
-            if (!buf) throw_error_already_set();
-            if (!PyArray_Check(buf.get()) ||
-                 PyArray_TYPE(buf.get())!=NPY_DOUBLE ||
-                 PyArray_NDIM(buf.get())!=2 ||
-                 PyArray_DIM(buf.get(),0)!=3 ||
-                 PyArray_DIM(buf.get(),1)!=3
-                 ) {
-                PyErr_Format(PyExc_ValueError, "Expected 3x3 numpy double array for box index %ld", i);
-                throw_error_already_set();
-            }
-            boxptrs[i] = (double *)PyArray_DATA(buf.get());
-        }
-        worker(1, 0, nfids, &r, fids, ngids, gids, &posptrs, &boxptrs);
-    }
-
     DtrWriter* dtr_init(std::string const& path,
                         uint32_t natoms,
                         int mode,
@@ -285,7 +195,6 @@ BOOST_PYTHON_MODULE(_molfile) {
 
     MOLFILE_INIT_ALL;
     def("register_all", register_all);
-    def("read_frames", read_frames);
 }
 
 namespace {
