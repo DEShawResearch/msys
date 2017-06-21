@@ -7,9 +7,6 @@
 #include <map>
 #include <string>
 #include <sstream>
-#ifndef WIN32
-#include <dlfcn.h>
-#endif
 #include <boost/python.hpp>
 
 #ifdef WIN32
