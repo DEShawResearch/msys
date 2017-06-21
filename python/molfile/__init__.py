@@ -80,9 +80,6 @@ def register_plugin(plugin):
 
 _molfile.register_all(register_plugin)
 
-def load_shared_library(path):
-    register_shared_library(path, register_plugin)
-
 def guess_filetype(filename, default=None):
     ''' return plugin name based on filename, or default if none found. '''
     dot=filename.rfind('.')

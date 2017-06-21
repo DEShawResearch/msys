@@ -79,33 +79,6 @@ namespace {
         return MOLFILE_SUCCESS;
     }
 
-    typedef int (*initfunc)(void);
-    typedef int (*regfunc)(void *, vmdplugin_register_cb);
-    typedef int (*finifunc)(void);
-
-    // scan the .so file at the given path and load 
-    void register_shared_library(const std::string& path, object& callback) {
-#ifndef WIN32
-        void * handle = dlopen(path.c_str(), RTLD_NOW | RTLD_LOCAL);
-        if (!handle) throw std::runtime_error(dlerror());
-        void * ifunc = dlsym(handle, "vmdplugin_init");
-        if (ifunc && ((initfunc)(ifunc))()) {
-            dlclose(handle);
-            throw std::runtime_error("vmdplugin_init() failed");
-        }
-        void * rfunc = dlsym(handle, "vmdplugin_register");
-        if (!rfunc) {
-            dlclose(handle);
-            throw std::runtime_error("No vmdplugin_register() found");
-        }
-        ((regfunc)rfunc)(&callback, register_cb);
-#else
-        std::stringstream err;
-        err << __FUNCTION__ << " is not supported on windows.";
-        throw std::runtime_error(err.str());
-#endif
-    }
-
     /* return a list of all the plugins */
     void register_all(object& func) {
         MOLFILE_REGISTER_ALL(&func, register_cb); 
@@ -312,7 +285,6 @@ BOOST_PYTHON_MODULE(_molfile) {
 
     MOLFILE_INIT_ALL;
     def("register_all", register_all);
-    def("register_shared_library", register_shared_library);
     def("read_frames", read_frames);
 }
 
