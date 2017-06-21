@@ -85,8 +85,7 @@ namespace desres { namespace molfile {
         return plugin;
     }
 
-    Frame::Frame(size_t natoms, bool with_velocities, bool double_precision,
-                                bool with_gids) 
+    Frame::Frame(size_t natoms, bool with_velocities, bool double_precision)
     : m_natoms(natoms) {
         memset(&ts, 0, sizeof(ts));
         if (double_precision) {
@@ -104,10 +103,6 @@ namespace desres { namespace molfile {
                 memset(ts.velocities, 0, 3*natoms*sizeof(float));
             }
         }
-        if (with_gids) {
-            ts.gids = new int[natoms];
-            for (size_t i=0; i<natoms; i++) ts.gids[i]=INT_MAX;
-        }
 
         ts.total_energy = HUGE_VAL;
         ts.kinetic_energy = HUGE_VAL;
@@ -121,7 +116,6 @@ namespace desres { namespace molfile {
         delete [] ts.velocities;
         delete [] ts.dcoords;
         delete [] ts.dvelocities;
-        delete [] ts.gids;
     }
 
     Reader::~Reader() {
@@ -129,12 +123,11 @@ namespace desres { namespace molfile {
     }
 
     Reader::Reader(const molfile_plugin_t *p, const char * _path,
-                   bool double_precision, bool with_gids) 
+                   bool double_precision) 
     : plugin(p), path(_path), handle(NULL), m_nframes(-1), m_natoms(0), 
       m_optflags(0), m_has_velocities(false), 
-      m_double_precision(double_precision),
-      m_with_gids(with_gids) {
-
+      m_double_precision(double_precision)
+    {
             int natoms=0;
             handle = plugin->open_file_read(_path, plugin->name, &natoms);
             if (!handle) throw std::runtime_error("open_file_read failed");
@@ -252,8 +245,7 @@ namespace desres { namespace molfile {
             index += m_nframes;
         }
         Frame *result = new Frame(natoms(), has_velocities(), 
-                                  double_precision(),
-                                  with_gids());
+                                  double_precision());
         if (read_frame(index, *result) != MOLFILE_SUCCESS) {
             delete result;
             throw std::runtime_error("Reading frame failed");

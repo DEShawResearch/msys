@@ -45,14 +45,6 @@ namespace {
                     backed_vector(2, dims, desres::molfile::DOUBLE, self.box(), obj.ptr())));
     }
 
-    object frame_gid(object& obj) {
-        Frame& self = extract<Frame&>(obj);
-        if (!self.gid()) return object();
-        Py_ssize_t dims[1] = {(Py_ssize_t)self.natoms() };
-        return object(handle<>( 
-                    backed_vector(1, dims, desres::molfile::INT, self.gid(), obj.ptr())));
-    }
-
     object frame_ptensor(object& obj) {
         Frame& self = extract<Frame&>(obj);
         Py_ssize_t dims[2] = {3,3};
@@ -117,8 +109,8 @@ namespace {
     WRAP_SCALAR_GET(pressure)
 }
 
-static Frame* new_frame(size_t n, bool vel, bool dbl, bool with_gid) {
-    return new Frame(n,vel,dbl,with_gid);
+static Frame* new_frame(size_t n, bool vel, bool dbl) {
+    return new Frame(n,vel,dbl);
 }
 
 void desres::molfile::export_frame() {
@@ -132,7 +124,6 @@ void desres::molfile::export_frame() {
                     (arg("natoms")
                     ,arg("with_velocities")=false
                     ,arg("double_precision")=false
-                    ,arg("with_gids")=false
                     )))
         .add_property("time", &Frame::time, &Frame::setTime)
         .add_property("position",   frame_pos)
@@ -144,7 +135,6 @@ void desres::molfile::export_frame() {
         .add_property("fvel",       frame_vel)
         .add_property("dvel",       frame_dvel)
         .add_property("box", frame_box)
-        .add_property("gid", frame_gid)
         .add_property("pressure_tensor", frame_ptensor)
         .add_property("virial_tensor", frame_virial)
         SCALARPROP(total_energy)

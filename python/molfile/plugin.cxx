@@ -119,9 +119,8 @@ namespace {
 
     Reader * plugin_read(const molfile_plugin_t& p, 
                          const std::string& path,
-                         bool double_precision,
-                         bool with_gids) {
-        return new Reader(&p, path.c_str(), double_precision, with_gids);
+                         bool double_precision) {
+        return new Reader(&p, path.c_str(), double_precision);
     }
 }
 
@@ -137,8 +136,7 @@ void desres::molfile::export_plugin() {
         .def("__repr__", plugin_repr)
         .def("read", plugin_read, 
                 (arg("path")
-                ,arg("double_precision")=false
-                ,arg("with_gids")=false),
+                ,arg("double_precision")=false),
                 "Open a file for reading",
                 return_value_policy<manage_new_object,
                 return_internal_reference<1> >())

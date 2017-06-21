@@ -20,8 +20,7 @@ namespace desres { namespace molfile {
 
     public:
         Frame(size_t natoms, bool with_velocities=true,
-                             bool double_precision=false,
-                             bool with_gids=false);
+                             bool double_precision=false);
         ~Frame();
 
         // act like a molfile_timestep_t so that we can pass it directly to
@@ -49,13 +48,6 @@ namespace desres { namespace molfile {
         double* dvel() { return ts.dvelocities; }
         const double* dpos() const { return ts.dcoords; }
         const double* dvel() const { return ts.dvelocities; }
-
-        /* dynamically varying gids of size natoms().  Initialized
-         * to INT_MAX to indicate not set.  Plugins may overwrite
-         * with dynamically varying gids, using -1 to indicate a 
-         * missing atom. */
-        const int *gid() const { return ts.gids; }
-        int       *gid()       { return ts.gids; }
 
         double time() const { return ts.physical_time; }
         void setTime(double t) { ts.physical_time=t; }
@@ -109,11 +101,10 @@ namespace desres { namespace molfile {
         int m_optflags;
         bool m_has_velocities;
         bool m_double_precision;
-        bool m_with_gids;
 
     public:
         Reader(const molfile_plugin_t *p, const char * path,
-               bool double_precision = false, bool with_gids = false);
+               bool double_precision = false);
         ~Reader();
 
         /* create a new reader for the original file */
@@ -143,7 +134,6 @@ namespace desres { namespace molfile {
         int optflags() const { return m_optflags; }
         bool has_velocities() const { return m_has_velocities; }
         bool double_precision() const { return m_double_precision; }
-        bool with_gids() const { return m_with_gids; }
         Frame *frame(ssize_t index) const;
 
         int read_frame(ssize_t index, molfile_timestep_t* ts) const;

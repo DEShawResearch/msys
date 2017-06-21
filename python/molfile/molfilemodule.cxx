@@ -201,25 +201,7 @@ namespace {
             }
             boxptrs[i] = (double *)PyArray_DATA(buf.get());
         }
-
-#if 0
-        // not safe to use multiple threads since DtrReader is 
-        // not thread safe by default anymore.
-        ssize_t nthreads = std::min(nfids, maxthreads);
-        if (nthreads>0) {
-            typedef std::shared_ptr<boost::thread> ThreadPtr;
-            std::vector<ThreadPtr> threads(nthreads);
-            for (unsigned i=0; i<nthreads; i++) {
-                threads[i].reset(new boost::thread(worker,
-                            nthreads, i, nfids, 
-                            &r, fids, ngids, gids, &posptrs, &boxptrs));
-            }
-            for (unsigned i=0; i<nthreads; i++) {
-                threads[i]->join();
-            }
-        } else
-#endif
-            worker(1, 0, nfids, &r, fids, ngids, gids, &posptrs, &boxptrs);
+        worker(1, 0, nfids, &r, fids, ngids, gids, &posptrs, &boxptrs);
     }
 
     DtrWriter* dtr_init(std::string const& path,
@@ -482,13 +464,13 @@ namespace {
     }
 
     const char * frame_doc = 
-        "frame(index, bytes=None, with_gids=False, keyvals=None) -> Frame\n"
+        "frame(index, bytes=None, keyvals=None) -> Frame\n"
         "Read bytes from disk if bytes are not provided\n"
         "If keyvals is not None, it should be a dict, and raw data from\n"
         "the frame will be provided.\n";
 
     object frame(FrameSetReader& self, Py_ssize_t index, object& bytes,
-            bool with_gids, object keyvals) {
+            object keyvals) {
         /* The component method modifies index.  What a dumb API. */
         Py_ssize_t global_index = index;
         const DtrReader *comp = self.component(index);
@@ -496,9 +478,7 @@ namespace {
             PyErr_SetString(PyExc_IndexError, "index out of bounds");
             throw error_already_set();
         }
-        Frame *frame = new Frame(comp->natoms(), self.has_velocities(),
-                                 false, /* double precision */
-                                 with_gids);
+        Frame *frame = new Frame(comp->natoms(), self.has_velocities(), false);
         dtr::KeyMap keymap;
         void* keybuf = NULL;
         void** keybufptr = keyvals.ptr() == Py_None ? NULL : &keybuf;
@@ -672,7 +652,6 @@ void desres::molfile::export_dtrreader() {
         .def("frame", frame, frame_doc,
                 (arg("index") 
                 ,arg("bytes")=object()
-                ,arg("with_gids")=false
                 ,arg("keyvals")=object()))
         .def("keyvals", wrap_keyvals, keyvals_doc)
         .def("reload", reload, reload_doc)

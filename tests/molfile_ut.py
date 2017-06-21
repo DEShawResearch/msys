@@ -127,48 +127,6 @@ class GuessFiletypeTestCase(unittest.TestCase):
         p=molfile.guess_filetype("foo.dtr")
         self.assertEqual(p.prettyname, "DESRES Trajectory, clobber")
 
-class DtrGidTestCase(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.PATH = os.path.join(tempfile.mkdtemp(), 'gids.dtr')
-
-    def testSimple(self):
-        natoms=32
-        w=molfile.dtr.write(self.PATH, natoms=natoms)
-        f=molfile.Frame(natoms, with_gids=True)
-        gids=numpy.arange(natoms, dtype='int32')
-        f.gid[:] = gids
-        f.time=0
-        w.frame(f)
-        f.gid[-1::-1]=gids
-        f.time=1
-        w.frame(f)
-
-        f=molfile.Frame(natoms, with_gids=False)
-        f.time=2
-        w.frame(f)
-
-        w.close()
-        r=molfile.dtr.read(self.PATH, with_gids=True)
-        self.assertEqual(r.natoms, natoms)
-        self.assertEqual(r.nframes, 3)
-        f=r.frame(0)
-        self.assertTrue((f.gid==gids).all())
-        f=r.frame(1)
-        self.assertTrue((f.gid==gids[-1::-1]).all())
-        f=r.frame(2)
-        self.assertTrue((f.gid==[2**31-1]*natoms).all())
-
-        r=molfile.DtrReader(self.PATH)
-        self.assertEqual(r.natoms, natoms)
-        self.assertEqual(r.nframes, 3)
-        f=r.frame(0, with_gids=True)
-        self.assertTrue((f.gid==gids).all())
-        f=r.frame(1, with_gids=True)
-        self.assertTrue((f.gid==gids[-1::-1]).all())
-        f=r.frame(2, with_gids=True)
-        self.assertTrue((f.gid==[2**31-1]*natoms).all())
-
 class DtrTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
