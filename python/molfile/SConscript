@@ -8,7 +8,7 @@ cxx_flags = '' if sys.platform.startswith("win32") else '-Wno-unused-local-typed
 env.Append( 
         CPPPATH=['../../src', '../'],
         CXXFLAGS=cxx_flags,
-        LIBS=['msys', 'boost_python$MSYS_BOOST_SUFFIX', 'boost_thread$MSYS_BOOST_SUFFIX'])
+        LIBS=['msys', 'boost_python$MSYS_BOOST_SUFFIX'])
 
 if sys.platform != "win32":
     env.Append(CCFLAGS='-Wno-unused-function'.split())
