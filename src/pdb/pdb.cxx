@@ -151,7 +151,7 @@ SystemPtr iterator::next() {
 
     } while (indx != PDB_EOF);
 
-    if (indx==PDB_EOF && mol->maxAtomId()==0) return SystemPtr();
+    if ((indx==PDB_EOF || indx==PDB_END) && mol->maxAtomId()==0) return SystemPtr();
 
     GuessBondConnectivity(mol);
     Analyze(mol);
