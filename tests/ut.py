@@ -1175,6 +1175,14 @@ class Main(unittest.TestCase):
         self.assertEqual(cts[0].natoms, 1)
         self.assertEqual(cts[1].natoms, 2)
 
+    def testPdbMany(self):
+        l_sys=list(msys.LoadMany("tests/files/1DUF.pdb"))
+        self.assertTrue(len(l_sys)==5)
+        sz=l_sys[0].positions.shape[0]
+        self.assertTrue(sz>0)
+        for s in l_sys:
+            self.assertTrue(s.positions.shape[0]==sz)
+
     def testMultilineCtProp(self):
         m=msys.CreateSystem()
         m.addAtom().atomic_number=1
