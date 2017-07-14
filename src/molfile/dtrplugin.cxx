@@ -74,7 +74,9 @@ using namespace desres::molfile::dtr;
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
 #ifndef WIN32 //gzip does not currently work on windows
+#ifndef __APPLE__ // .. or darwin
 #include <boost/iostreams/filter/gzip.hpp>
+#endif
 #endif
 
 namespace bfs = boost::filesystem;
@@ -789,7 +791,9 @@ bool StkReader::read_stk_cache_file(const std::string &cachepath, bool verbose, 
         if (verbose) printf("StkReader: cache file %s found\n", cachepath.c_str());
         bio::filtering_istream in;
 #ifndef WIN32 //gzip does not currently work on windows
+#ifndef __APPLE__
         in.push(bio::gzip_decompressor());
+#endif
 #endif
         in.push(file);
 
@@ -1040,7 +1044,9 @@ void StkReader::init(int* changed) {
           bio::filtering_ostream out;
           bio::file_descriptor_sink file(fd, bio::close_handle);
 #ifndef WIN32 //gzip does not currently work on windows
+#ifndef __APPLE__
           out.push(bio::gzip_compressor());
+#endif
 #endif
           out.push(file);
           dump(out);

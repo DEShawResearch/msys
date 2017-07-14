@@ -144,10 +144,13 @@ libmsys_env.Append(LIBS=['msys-core'])
 if sys.platform.startswith("darwin"):
     if "SCHRODINGER_SRC" in os.environ:
         msys_dylib = '@rpath/../lib/libmsys.dylib'
-    else:
+    elif "DESMOND" in os.environ:
         desmond_release = os.environ["DESMOND"]
         msys_dylib = '@rpath/../../../{}/lib/Darwin-x86_64/libmsys.dylib'.format(desmond_release)
-    libmsys_env.Append(LINKFLAGS=['-dynamiclib', '-install_name', msys_dylib])
+    else:
+        msys_dylib = None
+    if msys_dylib:
+        libmsys_env.Append(LINKFLAGS=['-dynamiclib', '-install_name', msys_dylib])
 libmsys=libmsys_env.AddLibrary('msys', lexobjs + lpobjs + sdfobjs + schrod_only_objs + [inchi] + smiles_objs + dtoaobjs + Split('''
 
 smarts.cxx
