@@ -342,6 +342,30 @@ class TestPropmap(unittest.TestCase):
         p['foo']=32
         self.assertEqual(p['foo'], 32)
 
+    def testClone(self):
+        p=self.table.props
+        self.addprops(p)
+        m2 = self.m.clone()
+        p = m2.table(self.TABLE_NAME).props
+        self.checkprops(p)
+
+    def testAppend(self):
+        self.addprops(self.table.props)
+        m = msys.CreateSystem()
+        m.append(self.m)
+        self.checkprops(m.table(self.TABLE_NAME).props)
+
+    def testNonbonded(self):
+        t = self.m.addTable('nonbonded', 1)
+        t.category = 'nonbonded'
+        self.m.addAtom().atomic_number=6
+        t.addTerm([self.m.atom(0)], t.params.addParam())
+        self.addprops(t.props)
+        with tempfile.NamedTemporaryFile(suffix='.dms') as tmp:
+            msys.Save(self.m, tmp.name)
+            m2 = msys.Load(tmp.name)
+        self.checkprops(m2.table('nonbonded').props)
+
     def testDms(self):
         p=self.table.props
         mol=self.table.system

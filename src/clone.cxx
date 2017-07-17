@@ -131,6 +131,7 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms,
                                      srctable->atomCount(),
                                      srctable->params());
             dsttable->category = srctable->category;
+            dsttable->tableProps() = srctable->tableProps();
             IdList terms = srctable->terms();
             IdList::iterator iter = std::remove_if(
                     terms.begin(), terms.end(), BadTerm(srctable, atmmap));
@@ -160,6 +161,7 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms,
             TermTablePtr srctable = src->table(name);
             TermTablePtr dsttable = dst->addTable(name, srctable->atomCount());
             dsttable->category = srctable->category;
+            dsttable->tableProps() = srctable->tableProps();
             IdList terms = srctable->terms();
             IdList::iterator iter = std::remove_if( 
                     terms.begin(), terms.end(), BadTerm(srctable, atmmap));
@@ -181,6 +183,7 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms,
                                                       srctable->atomCount(),
                                                       dstparams);
                 dsttable->category = srctable->category;
+                dsttable->tableProps() = srctable->tableProps();
 
                 /* get the terms included in the selection */
                 IdList terms = srctable->terms();

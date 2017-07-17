@@ -238,7 +238,9 @@ static void read_metatables(Sqlite dms, System& sys, KnownSet& known) {
             read_table( dms, sys, category, table, known );
         }
     }
+}
 
+static void read_table_properties(Sqlite dms, System& sys, KnownSet& known) {
     std::string proptable = "msys_table_properties";
     known.insert(proptable);
     if (dms.has(proptable)) {
@@ -695,6 +697,7 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only,
         read_exclusions(dms, sys, known);
         read_nbinfo(dms, sys, known);
         read_extra(dms, sys, known);
+        read_table_properties(dms, sys, known);
     }
 
     if (structure_only) {

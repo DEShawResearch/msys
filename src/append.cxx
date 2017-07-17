@@ -207,6 +207,7 @@ IdList desres::msys::AppendSystem( SystemPtr dstptr, SystemPtr srcptr, Id ctid) 
         if (!dsttable) {
             dsttable = dst.addTable(name, srctable->atomCount());
             dsttable->category = srctable->category;
+            dsttable->tableProps() = srctable->tableProps();
         } else {
             if (dsttable->category != srctable->category) {
                 std::stringstream ss;
