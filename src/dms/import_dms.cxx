@@ -696,8 +696,8 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only,
         read_combined(dms, sys, known);
         read_exclusions(dms, sys, known);
         read_nbinfo(dms, sys, known);
-        read_extra(dms, sys, known);
         read_table_properties(dms, sys, known);
+        read_extra(dms, sys, known);
     }
 
     if (structure_only) {
