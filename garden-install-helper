@@ -16,6 +16,7 @@ INCHI=inchi/1.04-01c7
 SQLITE=sqlite/3.16.2-02c7
 SCONSUTILS=sconsutils/1.40-01c7
 THREEROE=threeroe/0.10.1c7
+RTD=sphinx-rtd-theme/0.2.4-01c7
 
 loadmodules() {
     garden load \
@@ -26,6 +27,7 @@ loadmodules() {
         $SQLITE/lib-static \
         $THREEROE/lib \
         $SCONSUTILS/lib-python \
+        $RTD/lib-python \
 
     export MSYS_VERSION=$VERSION
 }
