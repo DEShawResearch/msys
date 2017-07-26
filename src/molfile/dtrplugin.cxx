@@ -1487,10 +1487,6 @@ static void handle_wrapped_v2(
     read_homebox( box, ts );
   }
 
-  if (ts->gids && (iter=blobs.find("GID"))!=blobs.end()) {
-    iter->second.get(ts->gids);
-  }
-
   read_scalars(blobs, ts);
 }
 
@@ -1638,6 +1634,7 @@ static void handle_posn_momentum_v1(
   
   std::vector<uint32_t> gid, npp;
   std::vector<float> pos, mtm;
+  // Apparently GID is a required field in this legacy (Anton v1?) format
   Key gidblob=blobs["GID"];
   Key nppblob=blobs["NPP"];
   Key posblob=blobs["POSN"];
@@ -2233,7 +2230,6 @@ void DtrWriter::next(const molfile_timestep_t *ts) {
 
     if (traj_type == Type::DTR) {
 	map["FORMAT"].set(format, strlen(format));
-	if (ts->gids) map["GID"].set(ts->gids, natoms);
 
 #if defined(DESRES_READ_TIMESTEP2)
 	map["ENERGY"].set(&ts->total_energy, 1);

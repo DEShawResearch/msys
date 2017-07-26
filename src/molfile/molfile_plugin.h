@@ -221,8 +221,6 @@ typedef struct {
   /* optional double-precision position and velocity */
   double *dcoords;
   double *dvelocities;
-
-  int    *gids;
 #endif
 
 } molfile_timestep_t;
