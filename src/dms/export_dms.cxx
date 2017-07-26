@@ -102,6 +102,13 @@ static void export_particles(const System& sys, const IdList& map, Sqlite dms,
         bool structure_only) {
 
     IdList nbtypes = structure_only ? IdList() : fetch_nbtypes(sys);
+    // check for bad ids here, rather than inside a sqlite transaction.
+    auto nb_bad = std::find(nbtypes.begin(), nbtypes.end(), BadId);
+    if (nb_bad != nbtypes.end()) {
+        auto id = std::distance(nbtypes.begin(), nb_bad);
+        MSYS_FAIL("Missing nonbonded param for particle " << id);
+    }
+
     IdList ids = sys.atoms();
 
     std::string sql = 
@@ -179,9 +186,6 @@ static void export_particles(const System& sys, const IdList& map, Sqlite dms,
         }
         if (nbtypes.size()) {
             Id param = nbtypes.at(atm);
-            if (bad(param)) {
-                MSYS_FAIL("Missing nonbonded param for particle " << atm);
-            }
             w.bind_int(18+nprops,param);
         }
         try {
