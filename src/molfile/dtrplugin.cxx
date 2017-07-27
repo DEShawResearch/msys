@@ -1239,14 +1239,16 @@ void DtrReader::init_common() {
               printf("DtrReader: reading first frame to get atom count\n");
           }
           std::string fname=::framefile(dtr, 0, keys.framesperfile(), ndir1(), ndir2());
+
           std::vector<char> buffer;
-
-
-          // If we know the framesize, there is no need to read the entire file, just the
-          // first frame's worth.  So, resize buffer such that read_file will only read
-          // the first frame.
+          // size buffer to read only the first frame, not the whole file
           if (keys.framesize() > 0) {
+              // one consistent frame size
               buffer.resize(keys.framesize());
+          } else {
+              // specific value for frame 0
+              // validity of index checked above by keys.size()>0
+              buffer.resize(keys[0].size());
           }
 
           read_file(fname, buffer);
