@@ -54,11 +54,14 @@ EOF
 }
 
 genhelp() {
-    cat <<EOF >> $PREFIX/ModulesHelp
-See documentation and release notes in
+    cat <<EOF
+See documentation in
 http://gardendoc.nyc.desres.deshaw.com/$PREFIX/doc/html/index.html
-EOF
 
+Release notes:
+
+EOF
+cat doc/source/release_notes.txt
 }
 
 gendocs() {
@@ -77,6 +80,9 @@ case $1 in
         shift
 	loadmodules
         "$@"
+        ;;
+    --garden-help)
+        genhelp
         ;;
     --install)
 	loadmodules
