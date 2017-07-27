@@ -1,10 +1,11 @@
-1.7.207c7 DESRESCode#3590 - changes from schrodinger.
-          Added molfile.list_fields()
+1.7.208c7 Added molfile.list_fields()
           Make DtrReader.frame(...) not panic if the FORMAT is empty.
           Fixed reading of dms files with table properties.
           Use new sphinx-rtd-theme for fixed doc search.
           Avoid a deadly exception when writing a dms with missing nbtypes.
           Handle variable-sized frames in etr files.
+
+1.7.207c7 DESRESCode#3590 - changes from schrodinger.
 
 1.7.206c7 Bring back GuessHydrogenPositions
           New dms-solvate for those who can't use viparr.
