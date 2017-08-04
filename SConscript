@@ -2,6 +2,45 @@ Import('env')
 import os
 import sys
 
+def _AddPython3Module( env, *args, **kwds ):
+    ''' Install python files $args into lib/python3.
+    Optional prefix keyword argument puts files into lib/python/$prefix/.
+    '''
+    prefix=kwds.get('prefix', '')
+    progs=[]
+    for s in args:
+        py='$OBJDIR/lib/python3/%s/%s' % (prefix, os.path.basename(s))
+        progs.extend( env.Command(py, s, [
+            Copy("$TARGET", "$SOURCE"),
+            'python3 -m compileall $TARGET']))
+    _Install(env,_Join('lib/python3',prefix),progs)
+    return progs
+
+def _Install(env,subdir,stuff,**kwds):
+  if env['PREFIX'] is not None:
+    tgt=_Join('$PREFIX',subdir)
+    if kwds.get('SHLIBVERSION'):
+        EnsureSConsVersion(2,3)
+        out=env.InstallVersionedLib(tgt,stuff,**kwds)
+    else:
+        out=env.Install(tgt,stuff,**kwds)
+    env.Alias('install', tgt)
+    return out
+  return None
+
+def _Join(path,sub=''):
+  if sub: return path + '/' + sub
+  else:   return path
+
+def Customize(env):
+    for name, func in globals().items():
+        if name.startswith('_Add') and callable(func):
+            name=name[1:]
+            env.AddMethod( func, name )
+
+
+Customize(env)
+
 # Avoid doing dependency checks on garden files.
 if True:
     cpp=[]

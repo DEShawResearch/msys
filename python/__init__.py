@@ -4,6 +4,8 @@ This is the high-level Python interface for msys, intended for use
 by chemists.
 '''
 
+from __future__ import print_function
+
 import _msys
 import numpy
 import sys
@@ -16,8 +18,8 @@ from _msys import ElectronegativityForElement
 from _msys import PeriodForElement, GroupForElement
 from _msys import HydrogenBond, FetchPDB
 from _msys import BadId
-from atomsel import Atomsel
-import molfile
+from .atomsel import Atomsel
+from . import molfile
 
 class Handle(object):
     __slots__ = ('_ptr', '_id')
@@ -267,7 +269,7 @@ class Residue(Handle):
         atoms = [a for a in self.atoms if (name is None or a.name==name)]
         if not atoms: return None
         if len(atoms) is 1: return atoms[0]
-        raise ValueError, "Found %d atoms with given name" % (len(atoms))
+        raise ValueError("Found %d atoms with given name" % (len(atoms)))
 
 class Chain(Handle):
     ''' Represents a chain (of Residues) in a System '''
@@ -306,7 +308,7 @@ class Chain(Handle):
                     (insertion is None or r.insertion==insertion)]
         if not residues: return None
         if len(residues) is 1: return residues[0]
-        raise ValueError, "Found %d residues with given resid, name or insertion" % (len(residues))
+        raise ValueError("Found %d residues with given resid, name or insertion" % (len(residues)))
 
     @property
     def ct(self):
@@ -387,7 +389,7 @@ class Ct(Handle):
 
     def keys(self):
         ''' available Ct properties '''
-        return self.data().keys()
+        return list(self.data().keys())
 
     def __setitem__(self, key, val):
         ''' set ct property key to val '''
@@ -417,7 +419,7 @@ class PropertyMap(object):
         self._ptr = ptr
 
     def keys(self):
-        return self._ptr.keys()
+        return list(self._ptr.keys())
 
     def __getitem__(self, key):
         return self._ptr.get(str(key))
@@ -464,7 +466,7 @@ class Param(Handle):
         p=self._ptr
         col=p.propIndex(prop)
         if col==BadId:
-            raise KeyError, "No such property '%s'" % prop
+            raise KeyError("No such property '%s'" % prop)
         p.setProp(self._id, col, val)
 
     def __getitem__(self, prop):
@@ -472,7 +474,7 @@ class Param(Handle):
         p=self._ptr
         col=p.propIndex(prop)
         if col==BadId:
-            raise KeyError, "No such property '%s'" % prop
+            raise KeyError("No such property '%s'" % prop)
         return p.getProp(self._id, col)
 
     def duplicate(self):
@@ -509,7 +511,7 @@ class ParamTable(object):
         If keyword arguments are supplied, they will be assigned to the
         newly created Param before returning it.'''
         p=Param(self._ptr, self._ptr.addParam())
-        for k,v in kwds.items():
+        for k,v in list(kwds.items()):
             p[k]=v
         return p
 
@@ -625,7 +627,7 @@ class Term(Handle):
             id = None
         else: 
             if val.table != self.table.params:
-                raise RuntimeError, "param comes from a different ParamTable"
+                raise RuntimeError("param comes from a different ParamTable")
             id = val.id
         self.paramid = id
 
@@ -654,12 +656,12 @@ class Term(Handle):
         p = ptr.params()
         col = p.propIndex(prop)
         if col==BadId:
-            raise KeyError, "No such property '%s'" % prop
+            raise KeyError("No such property '%s'" % prop)
         id=self.paramid
         if id==BadId:
             # The user asked for a valid property, but the term doesn't
             # have an assigned param.  
-            raise RuntimeError, "No assigned param for '%s'" % repr(self)
+            raise RuntimeError("No assigned param for '%s'" % repr(self))
         return p.getProp(id, col)
 
     def __setitem__(self, prop, val):
@@ -673,10 +675,10 @@ class Term(Handle):
         p = ptr.params()
         col=p.propIndex(prop)
         if col==BadId:
-            raise KeyError, "No such property '%s'" % prop
+            raise KeyError("No such property '%s'" % prop)
         id=self.paramid
         if id==BadId:
-            raise RuntimeError, "No assigned param for '%s'" % repr(self)
+            raise RuntimeError("No assigned param for '%s'" % repr(self))
         if p.refcount(id) > 1:
             id=p.duplicate(id)
             self.paramid=id
@@ -786,7 +788,7 @@ class TermTable(object):
         if not atoms: return []
         ptr, ids = _convert_ids(atoms)
         if ptr!=self.system._ptr:
-            raise ValueError, "atoms are from a different System"
+            raise ValueError("atoms are from a different System")
         return [self.term(x) for x in self._ptr.findWithAll(ids)]
 
     def findWithAny(self, atoms):
@@ -794,7 +796,7 @@ class TermTable(object):
         if not atoms: return []
         ptr, ids = _convert_ids(atoms)
         if ptr!=self.system._ptr:
-            raise ValueError, "atoms are from a different System"
+            raise ValueError("atoms are from a different System")
         return [self.term(x) for x in self._ptr.findWithAny(ids)]
 
     def findWithOnly(self, atoms):
@@ -802,7 +804,7 @@ class TermTable(object):
         if not atoms: return []
         ptr, ids = _convert_ids(atoms)
         if ptr!=self.system._ptr:
-            raise ValueError, "atoms are from a different System"
+            raise ValueError("atoms are from a different System")
         return [self.term(x) for x in self._ptr.findWithOnly(ids)]
 
     def findExact(self, atoms):
@@ -811,7 +813,7 @@ class TermTable(object):
         if not atoms: return []
         ptr, ids = _convert_ids(atoms)
         if ptr!=self.system._ptr:
-            raise ValueError, "atoms are from a different System"
+            raise ValueError("atoms are from a different System")
         return [self.term(x) for x in self._ptr.findExact(ids)]
 
     @property
@@ -848,7 +850,7 @@ class TermTable(object):
         '''
         if param is not None:
             if param.table != self.params:
-                raise RuntimeError, "param comes from a different ParamTable"
+                raise RuntimeError("param comes from a different ParamTable")
             param = param.id
         n=len(atoms)
         ids=[None]*n
@@ -856,7 +858,7 @@ class TermTable(object):
             a=atoms[i]
             ids[i]=a.id
             if a.system != self.system:
-                raise RuntimeError, "Cannot add atoms from different system"
+                raise RuntimeError("Cannot add atoms from different system")
         return Term(self._ptr, self._ptr.addTerm(ids, param))
 
     @property
@@ -888,28 +890,28 @@ class TermTable(object):
         op must be a param from self.override_params, or None to remove
         the override.
         '''
-        if pi.__class__ is not Param: raise TypeError, "pi must be Param"
-        if pj.__class__ is not Param: raise TypeError, "pj must be Param"
+        if pi.__class__ is not Param: raise TypeError("pi must be Param")
+        if pj.__class__ is not Param: raise TypeError("pj must be Param")
         if pi.table != self.params: 
-            raise ValueError, "pi must be from self.params"
+            raise ValueError("pi must be from self.params")
         if pj.table != self.params: 
-            raise ValueError, "pj must be from self.params"
+            raise ValueError("pj must be from self.params")
         if op is None:
             return self._ptr.overrides().del_(pi.id, pj.id)
         if op.__class__ is not Param: 
-            raise TypeError, "op must be Param or None"
+            raise TypeError("op must be Param or None")
         if op.table != self.override_params: 
-            raise ValueError, "op must be from self.override_params"
+            raise ValueError("op must be from self.override_params")
         self._ptr.overrides().set(pi.id, pj.id, op.id)
 
     def getOverride(self, pi, pj):
         ''' get override for given pair of params, or None if not present. '''
-        if pi.__class__ is not Param: raise TypeError, "pi must be Param"
-        if pj.__class__ is not Param: raise TypeError, "pj must be Param"
+        if pi.__class__ is not Param: raise TypeError("pi must be Param")
+        if pj.__class__ is not Param: raise TypeError("pj must be Param")
         if pi.table != self.params: 
-            raise ValueError, "pi must be from self.params"
+            raise ValueError("pi must be from self.params")
         if pj.table != self.params: 
-            raise ValueError, "pj must be from self.params"
+            raise ValueError("pj must be from self.params")
         id = self._ptr.overrides().get(pi.id, pj.id)
         if _msys.bad(id): return None
         return self.override_params.param(id)
@@ -1217,7 +1219,7 @@ class System(object):
 
     def translate(self, xyz):
         ''' shift coordinates by given amount '''
-        self._ptr.translate(*map(float, xyz))
+        self._ptr.translate(*list(map(float, xyz)))
 
     ###
     ### bond properties
@@ -1270,7 +1272,7 @@ class System(object):
         '''
         ptr=self._ptr.table(name)
         if ptr is None:
-            raise ValueError, "No such table '%s'" % name
+            raise ValueError("No such table '%s'" % name)
         return TermTable(ptr)
 
     def getTable(self, name):
@@ -1322,7 +1324,7 @@ class System(object):
         ''' auxiliary table with the given name '''
         ptr=self._ptr.auxTable(name)
         if ptr is None:
-            raise ValueError, "No such extra table '%s'" % name
+            raise ValueError("No such extra table '%s'" % name)
         return ParamTable(ptr)
 
     def addAuxTable(self, name, table):
@@ -1351,7 +1353,7 @@ class System(object):
         atms=self._atoms
         n=len(atms)
         A=Atom
-        for i in xrange(n,p.maxAtomId()):
+        for i in range(n,p.maxAtomId()):
             atms.append(A(p,i))
         return atms
 
@@ -1363,7 +1365,7 @@ class System(object):
         Note:
             Even if ids are provided, the ids of the selection are in sorted order.
         '''
-        if isinstance(sel, basestring):
+        if isinstance(sel, str):
             seltext = str(sel)
         elif not sel:
             seltext = 'none'
@@ -1404,7 +1406,7 @@ class System(object):
                     (segid is None or c.segid==segid)]
         if not chains: return None
         if len(chains) is 1: return chains[0]
-        raise ValueError, "Found %d chains with given name and segid" % (len(chains))
+        raise ValueError("Found %d chains with given name and segid" % (len(chains)))
 
     def selectCt(self, name=None):
         ''' Return a single Ct with the matching name, or raises an
@@ -1412,7 +1414,7 @@ class System(object):
         cts = [c for c in self.cts if (name is None or c.name==name)]
         if not cts: return None
         if len(cts) is 1: return cts[0]
-        raise ValueError, "Found %d cts with given name" % (len(cts))
+        raise ValueError("Found %d cts with given name" % (len(cts)))
 
     def append(self, system):
         ''' Appends atoms and forcefield from system to self.  Returns
@@ -1445,7 +1447,7 @@ class System(object):
             if isinstance(ids[0], Atom):
                 ptr, ids = _convert_ids(sel)
                 if ptr != self._ptr:
-                    raise ValueError, "Atoms in sel are not from this System"
+                    raise ValueError("Atoms in sel are not from this System")
         flags = _msys.CloneOption.Default
         if share_params:
             flags = _msys.CloneOption.ShareParams
@@ -1575,36 +1577,35 @@ class AnnotatedSystem(object):
         elif type(atom_or_bond) == Bond:
             return self._ptr.bondAromatic(atom_or_bond.id)
         else:
-            raise TypeError, \
-                    "atom_or_bond must be of type msys.Atom or msys.Bond"
+            raise TypeError("atom_or_bond must be of type msys.Atom or msys.Bond")
 
     def hcount(self, atom):
         ''' Number of bonded hydrogens '''
         if type(atom) == Atom:
             return self._ptr.atomHcount(atom.id)
         else:
-            raise TypeError, "atom must be of type msys.Atom"
+            raise TypeError("atom must be of type msys.Atom")
 
     def degree(self, atom):
         ''' Number of (non-pseudo) bonds '''
         if type(atom) == Atom:
             return self._ptr.atomDegree(atom.id)
         else:
-            raise TypeError, "atom must be of type msys.Atom"
+            raise TypeError("atom must be of type msys.Atom")
 
     def valence(self, atom):
         ''' Sum of bond orders of all (non-pseudo) bonds '''
         if type(atom) == Atom:
             return self._ptr.atomValence(atom.id)
         else:
-            raise TypeError, "atom must be of type msys.Atom"
+            raise TypeError("atom must be of type msys.Atom")
 
     def loneelectrons(self, atom):
         ''' Number of lone electrons '''
         if type(atom) == Atom:
             return self._ptr.atomLoneElectrons(atom.id)
         else:
-            raise TypeError, "atom must be of type msys.Atom"
+            raise TypeError("atom must be of type msys.Atom")
 
     def hybridization(self, atom):
         ''' Atom hybridization -- 1=sp, 2=sp2, 3=sp3, 4=sp3d, etc.
@@ -1615,14 +1616,14 @@ class AnnotatedSystem(object):
         if type(atom) == Atom:
             return self._ptr.atomHybridization(atom.id)
         else:
-            raise TypeError, "atom must be of type msys.Atom"
+            raise TypeError("atom must be of type msys.Atom")
 
     def ringbondcount(self, atom):
         ''' Number of ring bonds '''
         if type(atom) == Atom:
             return self._ptr.atomRingBonds(atom.id)
         else:
-            raise TypeError, "atom must be of type msys.Atom"
+            raise TypeError("atom must be of type msys.Atom")
 
 class SmartsPattern(object):
     ''' A class representing a compiled SMARTS pattern 
@@ -1727,9 +1728,9 @@ def LoadDMS(path=None, structure_only=False, buffer=None ):
     of a DMS file, and the path argument will be ignored.
     '''
     if buffer is None and path is None:
-        raise ValueError, "Must provide either path or buffer"
+        raise ValueError("Must provide either path or buffer")
     if buffer is not None and path is not None:
-        raise ValueError, "Must provide either path or buffer"
+        raise ValueError("Must provide either path or buffer")
 
     if path is not None:
        ptr = _msys.ImportDMS(path, structure_only )
@@ -1756,9 +1757,9 @@ def LoadMAE(path=None, ignore_unrecognized = False, buffer=None,
     If structure_only is True, no forcefield components will be loaded.  '''
 
     if buffer is None and path is None:
-        raise ValueError, "Must provide either path or buffer"
+        raise ValueError("Must provide either path or buffer")
     if buffer is not None and path is not None:
-        raise ValueError, "Must provide either path or buffer"
+        raise ValueError("Must provide either path or buffer")
     ignore_unrecognized = bool(ignore_unrecognized)
     structure_only = bool(structure_only)
 
@@ -1813,7 +1814,7 @@ def Load(path, structure_only=False, without_tables=None):
         without_tables = structure_only
     ptr = _msys.Load(path, structure_only, without_tables)
     if not ptr:
-        raise ValueError, "Could not guess file type of '%s'" % path
+        raise ValueError("Could not guess file type of '%s'" % path)
     return System(ptr)
 
 class IndexedFileLoader(object):
@@ -1900,7 +1901,7 @@ def LoadMany(path, structure_only=False, error_writer=sys.stderr):
     while True:
         i += 1
         try:
-            mol = it.next()
+            mol = next(it)
         except Exception as e:
             if error_writer:
                 error_writer.write("Error reading structure %d: %s\n" % (i,e.message))
@@ -1928,7 +1929,7 @@ def ParseSDF(text):
     '''
     it = _msys.ParseSDF(text)
     while True:
-        mol = it.next()
+        mol = next(it)
         if mol is None:
             break
         yield System(mol)
@@ -1938,7 +1939,7 @@ def ReadPDBCoordinates(mol, path):
     System. 
     '''
     path=str(path)
-    if not isinstance(mol, System): raise TypeError, "mol must be a System"
+    if not isinstance(mol, System): raise TypeError("mol must be a System")
     _msys.ImportPDBCoordinates(mol._ptr, path)
 
 def ReadCrdCoordinates(mol, path):
@@ -1946,7 +1947,7 @@ def ReadCrdCoordinates(mol, path):
     System. 
     '''
     path=str(path)
-    if not isinstance(mol, System): raise TypeError, "mol must be a System"
+    if not isinstance(mol, System): raise TypeError("mol must be a System")
     _msys.ImportCrdCoordinates(mol._ptr, path)
 
 def SaveDMS(system, path, structure_only=False, unbuffered=False):
@@ -2124,7 +2125,7 @@ class Graph(object):
         mapping from atoms in this graph to atoms in that graph.
         '''
         if not isinstance(graph, Graph):
-            raise TypeError, "graph argument must be an instance of msys.Graph"
+            raise TypeError("graph argument must be an instance of msys.Graph")
         t = self._ptr.match(graph._ptr)
         if t is not None:
             t=dict((Atom(self._sys, i), Atom(graph._sys,j)) for i,j in t)
@@ -2138,7 +2139,7 @@ class Graph(object):
         of the given Graph.
         '''
         if not isinstance(graph, Graph):
-            raise TypeError, "graph argument must be an instance of msys.Graph"
+            raise TypeError("graph argument must be an instance of msys.Graph")
         t = self._ptr.matchAll(graph._ptr, substructure)
         return [dict((Atom(self._sys, i), Atom(graph._sys, j)) for i,j in item)
                 for item in t]
@@ -2218,7 +2219,7 @@ class InChI(object):
     def __str__(self):
         return self.string
 
-    def __nonzero__(self):
+    def __bool__(self):
         return self.ok
 
     @property
@@ -2378,7 +2379,7 @@ class HydrogenBondFinder(object):
             hyd = [h.id for h in atm.bonded_atoms if h.atomic_number==1]
             if hyd:
                 dh[don] = hyd
-        self.donors = numpy.array(dh.keys(), dtype=numpy.uint32)
+        self.donors = numpy.array(list(dh.keys()), dtype=numpy.uint32)
         self.acceptors = numpy.array(acceptors, dtype=numpy.uint32)
         self.hydrogens_for_donor = dh
 

@@ -56,4 +56,8 @@ pfxenv.Requires(pfxext, libmsys)
 env.AddHeaders(['capsule.hxx'], prefix='msys/python')
 env.SConscript('molfile/SConscript')
 
+# python3 build
+py3env = msysenv.Clone()
+py3env.AddPython3Module('__init__.py', prefix='msys')
+py3env.AddPython3Module('atomsel.py', prefix='msys')
 
