@@ -1,6 +1,7 @@
 Import('env')
 import os
 import sys
+import subprocess
 
 def _AddPython3Module( env, *args, **kwds ):
     ''' Install python files $args into lib/python3.
@@ -15,6 +16,39 @@ def _AddPython3Module( env, *args, **kwds ):
             'python3 -m compileall $TARGET']))
     _Install(env,_Join('lib/python3',prefix),progs)
     return progs
+
+
+def _AddPythonExtension(env, name, *args, **kwds):
+    env=env.Clone()
+    incs=subprocess.check_output('python-config --includes'.split()).strip()
+    incs += ' -I' + subprocess.check_output(['python', '-c', 'import numpy; print(numpy.get_include())']).strip()
+    env.Prepend(CPPFLAGS=incs)
+    kwds = kwds.copy()
+    kwds.update(LIBPREFIX='', SHLIBSUFFIX='.so', SHOBJSUFFIX='.os')
+    if env['PLATFORM']=='darwin':
+      env.AppendUnique( LINKFLAGS=['-undefined','dynamic_lookup'] )
+    prefix=kwds.get('prefix', '')
+    py='$OBJDIR'+'/'+_Join('lib/python',prefix)+'/'+name
+    lib=env.SharedLibrary(py, *args, **kwds)
+    _Install(env,_Join('lib/python',prefix),lib)
+    return lib
+
+
+def _AddPython3Extension(env, name, *args, **kwds):
+    env=env.Clone()
+    incs=subprocess.check_output('python3-config --includes'.split()).strip()
+    incs += ' -I' + subprocess.check_output(['python3', '-c', 'import numpy; print(numpy.get_include())']).strip()
+    env.Prepend(CPPFLAGS=incs)
+    kwds = kwds.copy()
+    kwds.update(LIBPREFIX='', SHLIBSUFFIX='.so', SHOBJSUFFIX='.os3')
+    if env['PLATFORM']=='darwin':
+      env.AppendUnique( LINKFLAGS=['-undefined','dynamic_lookup'] )
+    prefix=kwds.get('prefix', '')
+    py='$OBJDIR'+'/'+_Join('lib/python3',prefix)+'/'+name
+    lib=env.SharedLibrary(py, *args, **kwds)
+    _Install(env,_Join('lib/python3',prefix),lib)
+    return lib
+
 
 def _Install(env,subdir,stuff,**kwds):
   if env['PREFIX'] is not None:

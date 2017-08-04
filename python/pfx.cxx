@@ -13,6 +13,16 @@ typedef struct {
     pfx_t *pfx;
 } PfxObject;
 
+namespace {
+#if PY_MAJOR_VERSION >= 3
+    auto py_as_long = PyLong_AsLong;
+    auto py_from_long = PyLong_FromLong;
+#else
+    auto py_as_long = PyInt_AsLong;
+    auto py_from_long = PyInt_FromLong;
+#endif
+}
+
 static PyTypeObject ptype;
 
 static PyObject* pfx_new(PyTypeObject* type, PyObject* args, PyObject* kwds) {
@@ -58,7 +68,7 @@ static PyObject* pfx_new(PyTypeObject* type, PyObject* args, PyObject* kwds) {
                 int gid=0;
                 PyErr_Clear();
                 if (item) {
-                    gid = (int)PyInt_AsLong(item);
+                    gid = (int)py_as_long(item);
                     Py_DECREF(item);
                 }
                 if (PyErr_Occurred()) {
@@ -369,7 +379,7 @@ static PyMethodDef pfx_methods[] = {
 };
 
 static PyObject* py_natoms(PfxObject* obj, void *closure) {
-    return PyInt_FromLong(obj->pfx->size());
+    return py_from_long(obj->pfx->size());
 }
 
 static PyGetSetDef pfx_getset[] = {
@@ -517,12 +527,52 @@ static PyMethodDef module_methods[] = {
     { NULL, NULL }
 };
 
+#if PY_MAJOR_VERSION >= 3
+
+static struct PyModuleDef pfxmodule = {
+   PyModuleDef_HEAD_INIT,
+   "pfx",   /* name of module */
+   module_doc, /* module documentation, may be NULL */
+   -1,       /* size of per-interpreter state of the module,
+                or -1 if the module keeps state in global variables. */
+   module_methods
+};
+
+PyMODINIT_FUNC
+PyInit_pfx(void) {
+    PyObject *m;
+
+    _import_array();
+    if (PyErr_Occurred()) return NULL;
+
+    m = PyModule_Create(&pfxmodule);
+    if (!m) return NULL;
+
+    Py_TYPE(&ptype) = &PyType_Type;
+    ptype.tp_name = "pfx.Pfx";
+    ptype.tp_doc = pfx_doc;
+    ptype.tp_basicsize = sizeof(PfxObject);
+    ptype.tp_alloc = PyType_GenericAlloc;
+    ptype.tp_new = pfx_new;
+    ptype.tp_dealloc = pfx_dealloc;
+    ptype.tp_flags = Py_TPFLAGS_DEFAULT;
+    ptype.tp_getset = pfx_getset;
+    ptype.tp_methods = pfx_methods;
+    if (PyType_Ready(&ptype)) return NULL;
+
+    Py_INCREF((PyObject *)&ptype);
+    PyModule_AddObject(m, "Pfx", (PyObject *)&ptype);
+
+    return m;
+}
+
+#else
 
 extern "C"
 void initpfx(void) {
     PyObject *m;
 
-    import_array();
+    _import_array();
     if (PyErr_Occurred()) return;
 
     m = Py_InitModule3("pfx", module_methods, module_doc);
@@ -544,3 +594,4 @@ void initpfx(void) {
     PyModule_AddObject(m, "Pfx", (PyObject *)&ptype);
 }
 
+#endif

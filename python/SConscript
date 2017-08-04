@@ -61,3 +61,14 @@ py3env = msysenv.Clone()
 py3env.AddPython3Module('__init__.py', prefix='msys')
 py3env.AddPython3Module('atomsel.py', prefix='msys')
 
+py3env.Append(
+        CXXFLAGS = '-Wno-cpp -Wno-unused-local-typedefs',
+        CPPPATH=['../src'],
+        LIBS=['msys', 'msys-core', 'boost_python3'],
+        )
+
+pfxenv=py3env.Clone()
+pfxenv.Append(CXXFLAGS='-fno-strict-aliasing')
+pfxext = pfxenv.AddPython3Extension('pfx', 'pfx.cxx', prefix='msys')
+pfxenv.Requires(pfxext, libmsys)
+
