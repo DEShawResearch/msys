@@ -19,19 +19,18 @@ SCONSUTILS=sconsutils/1.40-01c7
 THREEROE=threeroe/0.10.1c7
 RTD=sphinx-rtd-theme/0.2.4-01c7
 PYTHON3=desres-python/3.6.1-01c7
-#BOOST_PYTHON3=boost-python36/1.63.0-01c7
+BOOST_PYTHON3=boost-python36/1.63.0-01c7
 
 loadmodules() {
     # desres-python/3.6.1/bin sets PYTHONPATH!  That was a mistake.
     garden load $PYTHON3/bin
     unset PYTHONPATH
 
-        #$BOOST_PYTHON3/lib \
-
     garden load \
         $GCC/bin \
         $PYTHON/bin \
         $BOOST/lib \
+        $BOOST_PYTHON3/lib \
         $LPSOLVE/lib \
         $INCHI/lib \
         $SQLITE/lib-static \

@@ -2,6 +2,16 @@
 
 using namespace boost::python;
 
+namespace {
+#if PY_MAJOR_VERSION >= 3
+    auto py_int_type = &PyLong_Type;
+    auto py_str_type = &PyUnicode_Type;
+#else
+    auto py_int_type = &PyInt_Type;
+    auto py_str_type = &PyString_Type;
+#endif
+}
+
 namespace desres { namespace msys {
 
     /* TODO: make a to-python converter instead */
@@ -23,9 +33,9 @@ namespace desres { namespace msys {
         ValueType type = IntType;   /* silence compiler warning */
         if ((char *)typeobj.ptr()==(char *)&PyFloat_Type) {
             type=FloatType;
-        } else if ((char *)typeobj.ptr()==(char *)&PyInt_Type) {
+        } else if ((char *)typeobj.ptr()==(char *)py_int_type) {
             type=IntType;
-        } else if ((char *)typeobj.ptr()==(char *)&PyString_Type) {
+        } else if ((char *)typeobj.ptr()==(char *)py_str_type) {
             type=StringType;
         } else {
             PyErr_Format(PyExc_ValueError,
@@ -38,9 +48,9 @@ namespace desres { namespace msys {
     PyObject* from_value_type(ValueType type) {
         PyTypeObject* typeobj=NULL;
         switch (type) {
-            case IntType: typeobj=&PyInt_Type; break;
+            case IntType: typeobj=py_int_type; break;
             case FloatType: typeobj=&PyFloat_Type; break;
-            case StringType: typeobj=&PyString_Type; break;
+            case StringType: typeobj=py_str_type; break;
             default: throw std::runtime_error("unrecognized type");
         }
         PyObject* obj = (PyObject*)typeobj;

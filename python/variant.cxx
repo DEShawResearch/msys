@@ -4,6 +4,16 @@
 using namespace boost::python;
 using namespace desres::msys;
 
+namespace {
+#if PY_MAJOR_VERSION >= 3
+    auto py_from_long = PyLong_FromLong;
+    auto py_from_string = PyUnicode_FromString;
+#else
+    auto py_from_long = PyInt_FromLong;
+    auto py_from_string = PyString_FromString;
+#endif
+}
+
 
 namespace {
 
@@ -19,9 +29,9 @@ namespace {
         PyObject **o;
     public:
         explicit get_visitor(PyObject** o) : o(o) {}
-        void operator()(Int& i) const { *o = PyInt_FromLong(i); }
+        void operator()(Int& i) const { *o = py_from_long(i); }
         void operator()(Float& i) const { *o = PyFloat_FromDouble(i); }
-        void operator()(String& i) const { *o = PyString_FromString(i.data()); }
+        void operator()(String& i) const { *o = py_from_string(i.data()); }
     };
 
     PyObject* propmap_get(VariantMap& p, std::string const& key) {

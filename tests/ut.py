@@ -1,10 +1,17 @@
 #!/usr/bin/garden-exec
 #{
+# garden env-keep-only TMPDIR
 # source `dirname $0`/../MODULES
-# exec garden with -c \
-# -e TMPDIR \
-# -m $PYTHON/bin \
-# -- python $0 "$@"
+# garden load $PYTHON/bin
+# if [ "$1" == "-3" ]
+# then
+#    shift
+#    garden load desres-python/3.6.1-01c7/bin
+#    PY=python3
+# else
+#    PY=python
+# fi
+# exec $PY $0 "$@"
 #}
 
 import os, sys, unittest
@@ -15,7 +22,9 @@ desres_os  = os.getenv("DESRES_OS",  platform.system())
 desres_isa = os.getenv("DESRES_ISA", platform.machine())
 TMPDIR = os.getenv('TMPDIR') if platform.system() != 'Darwin' else None
 TMPDIR = TMPDIR or 'objs/%s/%s' % (desres_os, desres_isa)
-sys.path.insert(0,os.path.join(TMPDIR, 'lib', 'python'))
+suffix = '3' if sys.version_info.major==3 else ''
+sys.path.insert(0,os.path.join(TMPDIR, 'lib', 'python%s' % suffix))
+
 import msys
 from msys import knot, reorder, pfx, molfile
 from time import time
@@ -25,7 +34,7 @@ import gzip
 import shutil
 import tempfile
 import sqlite3
-from itertools import izip
+
 
 def tmpfile(**kwds):
     return tempfile.NamedTemporaryFile(**kwds)
@@ -145,7 +154,7 @@ class Contacts(unittest.TestCase):
         assert len(p1)>0
         self.assertEqual(len(p1), len(p2))
 
-        for e1, e2 in izip(p1,p2):
+        for e1, e2 in zip(p1,p2):
             self.assertEqual(e1[:2], e2[:2])
             d1 = e1[2]
             d2 = e2[2]
@@ -164,24 +173,24 @@ class Contacts(unittest.TestCase):
 
         sh = msys.SpatialHash(pos, wat)
         i,j,d = sh.findContacts(3.2, pos, pro)
-        p2 = zip(i,j,d)
+        p2 = list(zip(i,j,d))
         p2.sort()
         self.compare(p1,p2)
 
         i,j,d = sh.findContacts(3.2, pos, pro, reuse_voxels=True)
-        p3 = zip(i,j,d)
+        p3 = list(zip(i,j,d))
         p3.sort()
         self.compare(p1,p3)
 
         sh.voxelize(8.0)
         i,j,d = sh.findContacts(3.2, pos, pro, reuse_voxels=True)
-        p4 = zip(i,j,d)
+        p4 = list(zip(i,j,d))
         p4.sort()
         self.compare(p1,p4)
 
         sh.voxelize(1.0)
         i,j,d = sh.findContacts(3.2, pos, pro, reuse_voxels=True)
-        p4 = zip(i,j,d)
+        p4 = list(zip(i,j,d))
         p4.sort()
         with self.assertRaises(AssertionError):
             self.compare(p1,p4)
@@ -201,7 +210,7 @@ class Contacts(unittest.TestCase):
 
         h = msys.SpatialHash(pos)
         i,j,d = h.findContacts(2.9, pos)
-        p2 = izip(i,j,d)
+        p2 = zip(i,j,d)
         p2 = [(i,j,d) for i,j,d in p2 if i<j and not mol.atom(i).findBond(mol.atom(j))]
         p2.sort()
         self.compare(p1,p2)
@@ -293,10 +302,10 @@ class Contacts(unittest.TestCase):
         id3 = NP.stack((j2,i2),1)
         assert len(id1)==106
         self.assertEqual(id1.shape, id2.shape)
-        m1 = dict(zip(map(tuple, id1), d1))
-        m2 = dict(zip(map(tuple, id3), d2))
+        m1 = dict(list(zip(list(map(tuple, id1)), d1)))
+        m2 = dict(list(zip(list(map(tuple, id3)), d2)))
         self.assertEqual(sorted(m1.keys()), sorted(m2.keys()))
-        for k,v1 in m1.items():
+        for k,v1 in list(m1.items()):
             v2 = m2[k]
             self.assertTrue(abs(v1-v2)<1e-6)
 
@@ -320,11 +329,11 @@ class TestPropmap(unittest.TestCase):
 
     def testKeys(self):
         p=self.table.props
-        self.assertEqual(p.keys(), [])
+        self.assertEqual(list(p.keys()), [])
         p['foo']=1
-        self.assertEqual(p.keys(), ['foo'])
+        self.assertEqual(list(p.keys()), ['foo'])
         del p['foo']
-        self.assertEqual(p.keys(), [])
+        self.assertEqual(list(p.keys()), [])
 
     def testTypes(self):
         p=self.table.props
@@ -471,7 +480,7 @@ class TestInChI(unittest.TestCase):
 
     def testBuiltin(self):
         from msys import InChI
-        for k,v in self.gold.items():
+        for k,v in list(self.gold.items()):
             m = msys.Load('tests/files/%s' % k)
             self.assertEqual(InChI(m).string, v)
 
@@ -514,7 +523,7 @@ class TestFunkyStretch(unittest.TestCase):
         self.assertEqual(set(fbhw.params.props), 
                          set(('lower', 'upper', 'sigma', 'beta', 'fc')))
         self.assertEqual(fbhw.term_props, ['group'])
-        self.assertEqual([t.atoms[0].id for t in fbhw.terms], range(6))
+        self.assertEqual([t.atoms[0].id for t in fbhw.terms], list(range(6)))
         self.assertEqual([t['group'] for t in fbhw.terms], [0]*3+[1]*3)
 
     def testMorse(self):
@@ -691,7 +700,7 @@ class TestAtomsel(unittest.TestCase):
                 'not resname ALA and hydrogen':8697,
                 'nearest 5 to name CA or name CB':5,
                 }
-        for sel,cnt in sels.iteritems():
+        for sel,cnt in sels.items():
             self.assertEqual(len(mol.selectIds(sel)), cnt)
 
     #def testParamtype(self):
@@ -717,7 +726,7 @@ class TestAtomsel(unittest.TestCase):
     def testBaselines(self):
         with open('tests/atomsel_tests.json') as f:
             d=json.load(f)
-        for p, base in d.items():
+        for p, base in list(d.items()):
             mol = msys.Load(str(p))
             for sel, old in base:
                 sel = str(sel)
@@ -913,12 +922,12 @@ class TestValidate(unittest.TestCase):
         self.assertEqual(len(with_ignoring), 0)
     def testUntieKnot(self):
         mol=msys.Load('tests/files/knot.mae')
-        print "find knot"
+        print("find knot")
         results=knot.FindKnots(mol,verbose=False)
         self.assertEqual(len(results), 2)
-        print "untie knot"
+        print("untie knot")
         success = knot.UntieKnots(mol,verbose=False)
-        print "refind knot"
+        print("refind knot")
         results_after_untying = knot.FindKnots(mol,verbose=False)
         self.assertEqual(len(results_after_untying),0)
         self.assertTrue(success)
@@ -941,7 +950,7 @@ class Main(unittest.TestCase):
         self.assertEqual(mol, mol2)
 
     def testPickle(self):
-        import cPickle as pkl
+        import pickle as pkl
         old = msys.Load('tests/files/2f4k.dms')
         s = pkl.dumps(old, pkl.HIGHEST_PROTOCOL)
         new = pkl.loads(s)
@@ -1018,8 +1027,8 @@ class Main(unittest.TestCase):
             dst=tmp.name
             msys.Save(old, dst)
             new = msys.Load(dst)
-            self.assertEqual(map(aget, old.atoms), map(aget, new.atoms))
-            self.assertEqual(map(bget, old.bonds), map(bget, new.bonds))
+            self.assertEqual(list(map(aget, old.atoms)), list(map(aget, new.atoms)))
+            self.assertEqual(list(map(bget, old.bonds)), list(map(bget, new.bonds)))
 
     def testSaveAppend(self):
         import operator as op
@@ -1035,8 +1044,8 @@ class Main(unittest.TestCase):
             self.assertEqual(new.ncts, 2)
             for ct in new.cts:
                 ct = new.clone(a.id for a in ct.atoms)
-                self.assertEqual(map(aget, old.atoms), map(aget, ct.atoms))
-                self.assertEqual(map(bget, old.bonds), map(bget, ct.bonds))
+                self.assertEqual(list(map(aget, old.atoms)), list(map(aget, ct.atoms)))
+                self.assertEqual(list(map(bget, old.bonds)), list(map(bget, ct.bonds)))
 
     def testBadId(self):
         m=msys.CreateSystem()
@@ -1310,15 +1319,15 @@ class Main(unittest.TestCase):
 
     def testMemoryLeakPosVel(self):
         mol=msys.CreateSystem()
-        for i in xrange(1000):
+        for i in range(1000):
             mol.addAtom()
 
         pos=NP.zeros((mol.natoms, 3), 'f')
-        for i in xrange(100):
+        for i in range(100):
             mol.setPositions(pos)
             mol.setVelocities(pos)
         oldsize = vsize()
-        for i in xrange(1000):
+        for i in range(1000):
             mol.setPositions(pos)
             mol.setVelocities(pos)
         newsize = vsize()
@@ -1335,7 +1344,7 @@ class Main(unittest.TestCase):
             msys.SavePDB(m,'/root/nono.pdb')
 
     def xxtestFailedWrite(self):
-        print "building big system..."
+        print("building big system...")
         m=msys.CreateSystem()
         c=m.addChain()
         r=c.addResidue()
@@ -1343,9 +1352,9 @@ class Main(unittest.TestCase):
         f=r._ptr.addAtom
         for i in range(1000000):
             f(id)
-        print "saving..."
+        print("saving...")
         msys.SaveMAE(m,'/usr/tmp/big.dms')
-        print "done"
+        print("done")
 
     def testAtom(self):
 
@@ -2420,8 +2429,8 @@ class Main(unittest.TestCase):
         a0=m.addAtom()
         p=T.params.addParam()
         t=T.addTerm([a0],p)
-        self.assertEqual(t.keys(), ['x', 'y'])
-        self.assertEqual(p.keys(), ['x'])
+        self.assertEqual(list(t.keys()), ['x', 'y'])
+        self.assertEqual(list(p.keys()), ['x'])
 
 
     def testAppend(self):
@@ -3081,7 +3090,7 @@ class TestSvd(unittest.TestCase):
         t1=time()
         U,W,V = pfx.svd_3x3(A)
         t2=time()
-        print "\nNP %8.3fms PFX %8.3fms" % ((t1-t0)*1000, (t2-t1)*1000)
+        print("\nNP %8.3fms PFX %8.3fms" % ((t1-t0)*1000, (t2-t1)*1000))
         u[:,0] *= -1
         u[:,2] *= -1
         v = vt.transpose()

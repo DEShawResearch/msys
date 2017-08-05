@@ -72,3 +72,6 @@ pfxenv.Append(CXXFLAGS='-fno-strict-aliasing')
 pfxext = pfxenv.AddPython3Extension('pfx', 'pfx.cxx', prefix='msys')
 pfxenv.Requires(pfxext, libmsys)
 
+pyext3=py3env.AddPython3Extension('_msys', pymodfiles, prefix='msys')
+env.Requires(pyext3, libmsys)
+

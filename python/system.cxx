@@ -20,6 +20,14 @@
 using namespace desres::msys;
 
 namespace {
+#if PY_MAJOR_VERSION >= 3
+    auto py_from_long = PyLong_FromLong;
+#else
+    auto py_from_long = PyInt_FromLong;
+#endif
+}
+
+namespace {
 
     atom_t& system_atom(System& m, Id id) { return m.atom(id); }
     bond_t& system_bond(System& m, Id id) { return m.bond(id); }
@@ -635,7 +643,7 @@ namespace {
         PyObject *L = PyList_New(ids.size());
         if (!L) throw_error_already_set();
         for (unsigned i=0; i<ids.size(); i++) {
-            PyList_SET_ITEM(L,i,PyInt_FromLong(ids[i]));
+            PyList_SET_ITEM(L,i,py_from_long(ids[i]));
         }
         return L;
     }
@@ -657,10 +665,10 @@ namespace {
         PyObject *L = PyList_New(n);
         if (!L) throw_error_already_set();
         if (n==m) for (i=0; i<m; i++) {
-            PyList_SET_ITEM(L,i,PyInt_FromLong(i));
+            PyList_SET_ITEM(L,i,py_from_long(i));
         } else    for (i=0, n=0; i<m; i++) {
             if (!mol->hasAtom(i)) continue;
-            PyList_SET_ITEM(L,n++, PyInt_FromLong(i));
+            PyList_SET_ITEM(L,n++, py_from_long(i));
         }
         return L;
     }
@@ -761,7 +769,7 @@ namespace {
 namespace desres { namespace msys { 
 
     void export_system() {
-        import_array();
+        _import_array();
         if (PyErr_Occurred()) return;
         
         def("bad", bad);
