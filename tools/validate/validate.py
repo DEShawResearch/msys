@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import sys, msys
 import unittest as UT
 from msys import knot, groups
@@ -77,7 +79,7 @@ class TestStrict(TestCase):
             heavy = [a for a in res.atoms if a.atomic_number > 0]
             self.assertEqual(len(heavy), 3,
                              help_string)
-            fragids = set(map(lambda x: x.fragid, res.atoms))
+            fragids = set([x.fragid for x in res.atoms])
             self.assertEqual(len(fragids), 1,
                              help_string)
 
@@ -113,7 +115,7 @@ class TestBasic(TestCase):
         ''' the system must not contain knots for rings of size <= 10 '''
         alchemical = self.mol.getTable('alchemical_nonbonded') is not None
         if alchemical:
-            print "Skipping knot check on alchemical system"
+            print("Skipping knot check on alchemical system")
         else:
             knots = knot.FindKnots(self.mol, max_cycle_size=10)
             self.assertTrue(len(knots)==0, "The system has %d bonds passing through small rings: %s" % (len(knots), knots))
