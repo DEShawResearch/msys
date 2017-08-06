@@ -41,7 +41,8 @@ def tmpfile(**kwds):
 
 def vsize():
     cmd='ps -p %d h -o vsz' % os.getpid()
-    s=os.popen(cmd).read()
+    with os.popen(cmd) as p:
+        s = p.read()
     return int(s)
 
 class TestSmiles(unittest.TestCase):
@@ -1577,7 +1578,8 @@ class Main(unittest.TestCase):
         tmp=tempfile.NamedTemporaryFile(suffix='.mae')
         path=tmp.name
         msys.Save(m, path)
-        b1=open(path).read()
+        with open(path, 'rb') as fp:
+            b1 = fp.read()
         b2=msys.SerializeMAE(m)
         self.assertEqual(b1,b2)
 
@@ -2882,7 +2884,8 @@ class Main(unittest.TestCase):
             msys.AssignBondOrderAndFormalCharge(mol)
             annot_mol = msys.AnnotatedSystem(mol)
             atoms = mol.select('not water')
-            tests = ast.literal_eval(open('tests/smarts_tests/%s_matches' % name).read())
+            with open('tests/smarts_tests/%s_matches' % name) as fp:
+                tests = ast.literal_eval(fp.read())
             for k, v in tests.items():
                 sp = msys.SmartsPattern(k)
                 match = sp.findMatches(annot_mol, atoms)

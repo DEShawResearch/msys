@@ -1901,10 +1901,10 @@ def LoadMany(path, structure_only=False, error_writer=sys.stderr):
     while True:
         i += 1
         try:
-            mol = next(it)
+            mol = it.next()
         except Exception as e:
             if error_writer:
-                error_writer.write("Error reading structure %d: %s\n" % (i,e.message))
+                error_writer.write("Error reading structure %d: %s\n" % (i,e))
             yield None
             continue
         if mol is None:
@@ -1965,13 +1965,13 @@ def SaveDMS(system, path, structure_only=False, unbuffered=False):
         _msys.ExportDMSMany([x._ptr for x in system], path, prov)
 
 def SerializeMAE(system, with_forcefield=True):
-    ''' Return the MAE form of the System as a string. '''
+    ''' Return the MAE form of the System as bytes. '''
     prov = _msys.Provenance.fromArgs(sys.argv)
     ff = bool(with_forcefield)
     flags = _msys.MaeExportFlags.Default
     if not with_forcefield:
         flags |= _msys.MaeExportFlags.StructureOnly
-    return _msys.ExportMAEContents(system._ptr, prov, flags)
+    return _msys.ExportMAEContents(system._ptr, prov, flags).encode()
 
 def SaveMAE(system, path, with_forcefield = True, append = False):
     ''' Export the System (or list of systems) to an MAE file at the 
