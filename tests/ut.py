@@ -2087,7 +2087,8 @@ class Main(unittest.TestCase):
         self.assertEqual(m.atom(0).formal_charge, -10)
 
     def testLoadDmsBuffer(self):
-        s=open('tests/files/2f4k.dms').read()
+        with open('tests/files/2f4k.dms', 'rb') as fp:
+            s = fp.read()
         msys.LoadDMS(buffer=s)
                 
     def testRefcount(self):
