@@ -28,6 +28,20 @@ namespace ff=findframe;
 
 using boost::python::ssize_t;
 
+namespace {
+#if PY_MAJOR_VERSION >= 3
+    auto py_string_check = [](PyObject* o) { return PyUnicode_Check(o); };
+    auto py_from_string_size = PyUnicode_FromStringAndSize;
+    auto py_as_string = PyUnicode_AsUTF8;
+    auto py_as_string_size = PyBytes_AsStringAndSize;
+#else
+    auto py_string_check = [](PyObject* o) { return PyString_Check(o); };
+    auto py_from_string_size = PyString_FromStringAndSize;
+    auto py_as_string = PyString_AsString;
+    auto py_as_string_size = PyString_AsStringAndSize;
+#endif
+}
+
 // all the numpy stuff has to live in this file!
 
 PyObject **desres::molfile::object_array(int size, PyObject **returned_result) {
@@ -100,9 +114,9 @@ namespace {
             object val = item[1];
             PyObject* ptr = val.ptr();
             dtr::Key keyval;
-            if (PyString_Check(ptr)) {
-                const char* s = PyString_AsString(ptr);
-                keyval.set(PyString_AsString(ptr), strlen(s));
+            if (py_string_check(ptr)) {
+                const char* s = py_as_string(ptr);
+                keyval.set(py_as_string(ptr), strlen(s));
             } else if (PyArray_Check(ptr)) {
                 if (PyArray_NDIM(ptr)!=1) {
                     PyErr_Format(PyExc_ValueError, "array for key %s must be 1d", key.c_str());
@@ -166,7 +180,7 @@ namespace {
 
 BOOST_PYTHON_MODULE(_molfile) {
 
-    import_array();
+    _import_array();
     if (PyErr_Occurred()) return;
 
     docstring_options doc_options;
@@ -310,7 +324,7 @@ namespace {
                     break;
                 case dtr::Key::TYPE_CHAR:
                 case dtr::Key::TYPE_UCHAR:
-                    arr = PyString_FromStringAndSize(
+                    arr = py_from_string_size(
                         reinterpret_cast<const char*>(val.data), val.count);
                     break;
                 default:;
@@ -381,7 +395,7 @@ namespace {
         } else {
             Py_ssize_t size;
             char * data;
-            if (PyString_AsStringAndSize(bytes.ptr(), &data, &size)) {
+            if (py_as_string_size(bytes.ptr(), &data, &size)) {
                 delete frame;
                 throw error_already_set();
             }

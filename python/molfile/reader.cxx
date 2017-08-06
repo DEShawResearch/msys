@@ -12,6 +12,14 @@ typedef ssize_t (Reader::*findfunc)(double T) const;
 using namespace boost::python;
 
 namespace {
+#if PY_MAJOR_VERSION >= 3
+    auto py_from_long = PyLong_FromLong;
+#else
+    auto py_from_long = PyInt_FromLong;
+#endif
+}
+
+namespace {
 
     object reader_atoms(const Reader& self) {
         // build the atom list
@@ -64,7 +72,7 @@ namespace {
                 int to   = bonds[i].to;
                 int oldsize = PyTuple_GET_SIZE(data[from]);
                 _PyTuple_Resize(&data[from], oldsize+1);
-                PyTuple_SET_ITEM(data[from], oldsize, PyInt_FromLong(to));
+                PyTuple_SET_ITEM(data[from], oldsize, py_from_long(to));
             }
         }
         return object(handle<>(result));

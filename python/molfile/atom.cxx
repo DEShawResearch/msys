@@ -2,15 +2,31 @@
 
 using namespace desres::molfile;
 
+namespace {
+#if PY_MAJOR_VERSION >= 3
+    auto py_as_long = PyLong_AsLong;
+    auto py_from_long = PyLong_FromLong;
+    auto py_as_string = PyUnicode_AsUTF8;
+    auto py_from_string = PyUnicode_FromString;
+    auto py_from_format = PyUnicode_FromFormat;
+#else
+    auto py_as_long = PyInt_AsLong;
+    auto py_from_long = PyInt_FromLong;
+    auto py_as_string = PyString_AsString;
+    auto py_from_string = PyString_FromString;
+    auto py_from_format = PyString_FromFormat;
+#endif
+}
+
 #define GETSET_INT(ATTR, FLAG) \
     PyObject *get_##ATTR( PyObject *pySelf, void *closure) { \
         Atom_t *self = reinterpret_cast<Atom_t*>(pySelf); \
-        return PyInt_FromLong(self->atom.ATTR); \
+        return py_from_long(self->atom.ATTR); \
     } \
 \
 int set_##ATTR( PyObject *pySelf, PyObject *rval, void *closure) { \
     Atom_t *self = reinterpret_cast<Atom_t*>(pySelf); \
-    int val=PyInt_AsLong(rval); \
+    int val=py_as_long(rval); \
     if (PyErr_Occurred()) return -1; \
     self->atom.ATTR = val; \
     self->optflags |= FLAG; \
@@ -35,12 +51,12 @@ int set_##ATTR( PyObject *pySelf, PyObject *rval, void *closure) { \
 #define GETSET_STR(ATTR, FLAG) \
     PyObject *get_##ATTR( PyObject *pySelf, void *closure) { \
         Atom_t *self = reinterpret_cast<Atom_t*>(pySelf); \
-        return PyString_FromString(self->atom.ATTR); \
+        return py_from_string(self->atom.ATTR); \
     } \
 \
 int set_##ATTR( PyObject *pySelf, PyObject *rval, void *closure) { \
     Atom_t *self = reinterpret_cast<Atom_t*>(pySelf); \
-    const char *val=PyString_AsString(rval); \
+    const char *val=py_as_string(rval); \
     if (PyErr_Occurred()) return -1; \
     strncpy(self->atom.ATTR, val, sizeof(self->atom.ATTR)); \
     self->atom.ATTR[sizeof(self->atom.ATTR)-1]='\0'; \
@@ -103,7 +119,7 @@ namespace {
 
     PyObject *atom_repr(PyObject *pySelf) {
         Atom_t *self = reinterpret_cast<Atom_t*>(pySelf);
-        return PyString_FromFormat("<Atom '%s'>", self->atom.name);
+        return py_from_format("<Atom '%s'>", self->atom.name);
     }
 
     PyObject *get_bonds(PyObject *pySelf) {

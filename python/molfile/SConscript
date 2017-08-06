@@ -19,15 +19,16 @@ if env['PLATFORM']=='darwin':
 elif sys.platform.startswith("linux"):
     env.Append(CCFLAGS='-Wno-cpp')
 
-env.Append(CPPPATH='..')
-ext=env.AddPythonExtension('_molfile', env.Split('''
+srcs = Split('''
 plugin.cxx
 reader.cxx
 atom.cxx
 frame.cxx
 writer.cxx
 molfilemodule.cxx
-'''), prefix='msys/molfile')
+''')
+
+ext=env.AddPythonExtension('_molfile', srcs, prefix='msys/molfile')
 env.Requires(ext, libmsys)
 
 ext=env.AddPythonExtension('findframe','findframemodule.cxx',
@@ -35,4 +36,23 @@ ext=env.AddPythonExtension('findframe','findframemodule.cxx',
 env.Requires(ext, libmsys)
 
 env.AddPythonModule('__init__.py',prefix='msys/molfile')
+
+# python3
+env3 = msysenv.Clone()
+env3.Append( 
+        CPPPATH=['../../src', '../'],
+        CXXFLAGS=cxx_flags,
+        LIBS=['msys', 'boost_python3'])
+
+if sys.platform != "win32":
+    env3.Append(CCFLAGS='-Wno-unused-function'.split())
+else:
+    env3.Append(LIBS=['python27.lib'])
+if env3['PLATFORM']=='darwin':
+    env3.Append(CCFLAGS='-Wno-error')
+elif sys.platform.startswith("linux"):
+    env3.Append(CCFLAGS='-Wno-cpp')
+
+ext=env3.AddPython3Extension('_molfile', srcs, prefix='msys/molfile')
+env3.Requires(ext, libmsys)
 
