@@ -1,12 +1,24 @@
-#!/usr/bin/env desres-exec
+#!/usr/bin/garden-exec
 #{
+# garden env-keep-only TMPDIR
 # source `dirname $0`/../MODULES
-# exec desres-cleanenv -e TMPDIR -m $PYTHON/bin -- python $0 "$@"
+# garden load $PYTHON/bin
+# if [ "$1" == "-3" ]
+# then
+#    shift
+#    garden load desres-python/3.6.1-01c7/bin
+#    PY=python3
+# else
+#    PY=python
+# fi
+# exec $PY $0 "$@"
 #}
 
+from __future__ import print_function
 import os, sys
 TMPDIR=os.getenv('TMPDIR', 'objs/%s/x86_64' % os.getenv('DESRES_OS'))
-sys.path.insert(0,os.path.join(TMPDIR, 'lib', 'python'))
+suffix = '3' if sys.version_info.major==3 else ''
+sys.path.insert(0,os.path.join(TMPDIR, 'lib', 'python%s' % suffix))
 #os.environ['DTRPLUGIN_VERBOSE']='1'
 
 import sqlite3
@@ -57,7 +69,7 @@ class TestDcd(unittest.TestCase):
     def testRandomAccess(self):
         import random
         random.seed(1492)
-        fids=range(100)
+        fids=list(range(100))
         random.shuffle(fids)
         frames=[f for f in self.r.frames()]
         for fid in fids:
@@ -75,7 +87,7 @@ class ZeromqTestCase(unittest.TestCase):
             self.assertEqual(r.nframes, -1)
             i=0
             while True:
-                f = r.next()
+                f = next(r)
                 if not f: break
                 self.assertEqual(f.time, float(i))
                 self.assertEqual(f.pos[37][1], float(i+1))
@@ -194,7 +206,7 @@ class DtrTestCase(unittest.TestCase):
             self.assertTrue('TSS_UH' in k4)
             self.assertEqual(len(k4), 21)
         else:
-            print "Warning, no energy.etr"
+            print("Warning, no energy.etr")
 
 
     def testBadFrame(self):
@@ -216,11 +228,11 @@ class DtrTestCase(unittest.TestCase):
         with self.assertRaises(RuntimeError): molfile.DtrReader(self.PATH)
 
     def testShortTimekeys(self):
-        file('%s/timekeys' % self.PATH, 'w').close()
+        open('%s/timekeys' % self.PATH, 'w').close()
         with self.assertRaises(RuntimeError): molfile.DtrReader(self.PATH)
 
     def testBadTimekeys(self):
-        with file('%s/timekeys' % self.PATH, 'w') as fd: fd.write('hello')
+        with open('%s/timekeys' % self.PATH, 'w') as fd: fd.write('hello')
         with self.assertRaises(RuntimeError): molfile.DtrReader(self.PATH)
 
     def testNoMeta(self):
@@ -243,7 +255,7 @@ class DtrTestCase(unittest.TestCase):
         self.addFrame(1.0)
         self.addFrame(2.0)
         r=molfile.DtrReader(self.PATH)
-        file(r.fileinfo(1)[0], 'w').close()
+        open(r.fileinfo(1)[0], 'w').close()
         r.frame(0)
         with self.assertRaises(IOError): r.frame(1)
         r.frame(2)
@@ -257,7 +269,7 @@ class DtrTestCase(unittest.TestCase):
         info = r.fileinfo(1)
         path = info[0]
         sz=info[3]
-        with file(path, 'w') as fd: print >> fd, '\0' * sz
+        with open(path, 'w') as fd: print('\0' * sz, file=fd)
         r.frame(0)
         with self.assertRaises(IOError): r.frame(1)
         r.frame(2)
@@ -305,8 +317,8 @@ class TestStk(unittest.TestCase):
         m=molfile.dtr.write('1.dtr', natoms=10)
         m.frame(molfile.Frame(10, False))
         m.close()
-        with file('junk.stk', 'w') as f:
-            print >> f, '1.dtr'
+        with open('junk.stk', 'w') as f:
+            print('1.dtr', file=f)
 
         #print "----- first read of junk.stk ------"
         r=molfile.dtr.read('junk.stk')
@@ -331,8 +343,8 @@ class TestStk(unittest.TestCase):
         f.time=1
         m.frame(f)
         m.close()
-        with file('junk.stk', 'w') as f:
-            print >> f, '2.dtr'
+        with open('junk.stk', 'w') as f:
+            print('2.dtr', file=f)
 
         #print "----- read modified junk.stk ------"
         r=molfile.dtr.read('junk.stk')
@@ -349,8 +361,8 @@ class TestStk(unittest.TestCase):
         f.time=1
         m.frame(f)
         m.close()
-        with file('junk.stk', 'w') as f:
-            print >> f, '3.dtr'
+        with open('junk.stk', 'w') as f:
+            print('3.dtr', file=f)
         r=molfile.dtr.read('junk.stk')
         self.assertEqual(r.nframes, 2)
         self.assertEqual(r.natoms, 20)
@@ -382,7 +394,7 @@ class TestStk(unittest.TestCase):
             self.assertEqual( dtr.frameset_is_compact(i), True)
 
         countmap=dict()
-        for i in xrange(dtr.nframes):
+        for i in range(dtr.nframes):
             dtrpath=dtr.fileinfo(i)[7]
             countmap.setdefault(dtrpath,0)
             countmap[dtrpath] += 1
@@ -424,12 +436,12 @@ class TestBonds(unittest.TestCase):
     #a1.bonds.add(a0)
     a0.addbond(a1)  # also adds a0 to a1
     
-    self.assert_( a1 in a0.bonds )
-    self.assert_( a0 in a1.bonds )
+    self.assertTrue( a1 in a0.bonds )
+    self.assertTrue( a0 in a1.bonds )
     
     a1.delbond(a0)
-    self.assert_( a1 not in a0.bonds )
-    self.assert_( a0 not in a1.bonds )
+    self.assertTrue( a1 not in a0.bonds )
+    self.assertTrue( a0 not in a1.bonds )
     
     del a0
     del a1
@@ -441,12 +453,12 @@ class TestBonds(unittest.TestCase):
     a0=molfile.Atom(name="N", resid=32, anum=7)
     a1=molfile.Atom(name="C", resname="ALA", bfactor=2.5, anum=6)
     a0.addbond(a1, order=3)
-    self.assert_( a0.getbondorder(a1)==3)
-    self.assert_( a1.getbondorder(a0)==3)
+    self.assertTrue( a0.getbondorder(a1)==3)
+    self.assertTrue( a1.getbondorder(a0)==3)
 
     a1.setbondorder(a0,4)
-    self.assert_( a0.getbondorder(a1)==4)
-    self.assert_( a1.getbondorder(a0)==4)
+    self.assertTrue( a0.getbondorder(a1)==4)
+    self.assertTrue( a1.getbondorder(a0)==4)
 
     atoms=[a0,a1]
 
@@ -455,10 +467,10 @@ class TestBonds(unittest.TestCase):
     r=molfile.mae.read('test.mae')
     newatoms=r.atoms
     a0, a1 = newatoms
-    self.assert_( a0 in a1.bonds )
-    self.assert_( a1 in a0.bonds )
+    self.assertTrue( a0 in a1.bonds )
+    self.assertTrue( a1 in a0.bonds )
     orders=[(4,), ()]
-    self.assert_( (r.bondorders==orders).all() )
+    self.assertTrue( (r.bondorders==orders).all() )
 
   def tearDown(self):
     try: os.unlink('test.mae')
@@ -529,7 +541,7 @@ class TestDoublePrecision(unittest.TestCase):
             r=molfile.dcd.read('tests/files/alanin.dcd', double_precision=True) 
 
         r=molfile.dcd.read('tests/files/alanin.dcd', double_precision=False) 
-        f=r.frames().next()
+        f=next(r.frames())
         self.assertNotEqual(f.pos, None)
         self.assertEqual(f.vel, None)
         self.assertEqual(f.dpos, None)
@@ -590,7 +602,7 @@ class TestMae(unittest.TestCase):
  
   def testNoBonds(self):
     R=molfile.pdb.read('tests/files/h2o.pdb')
-    molfile.mae.write('bonds.mae', atoms=R.atoms).frame(R.frames().next()).close()
+    molfile.mae.write('bonds.mae', atoms=R.atoms).frame(next(R.frames())).close()
     molfile.mae.read('bonds.mae')
 
   def testSinglePrecision(self):
@@ -621,17 +633,17 @@ class TestMae(unittest.TestCase):
     t=time()
     #print "bondorder: %f seconds" % (t-s)
     #print order
-    molfile.mae.write('out.mae', atoms=R.atoms).frame(R.frames().next()).close()
+    molfile.mae.write('out.mae', atoms=R.atoms).frame(next(R.frames())).close()
     molfile.mae.read('out.mae')
 
   def testVirtuals(self):
     R=molfile.mae.read('tests/files/tip5p.mae')
-    molfile.mae.write('out.mae', atoms=R.atoms).frame(R.frames().next()).close()
+    molfile.mae.write('out.mae', atoms=R.atoms).frame(next(R.frames())).close()
     molfile.mae.read('out.mae')
     
   def testMultipleCt(self):
     R=molfile.mae.read('tests/files/small.mae')
-    molfile.mae.write('out.mae', atoms=R.atoms).frame(R.frames().next()).close()
+    molfile.mae.write('out.mae', atoms=R.atoms).frame(next(R.frames())).close()
     molfile.mae.read('out.mae')
 
   def testPseudos(self):
@@ -654,7 +666,7 @@ class TestMae(unittest.TestCase):
     
     old=dict([(a.resid, a.anum) for a in atoms])
     new=dict([(a.resid, a.anum) for a in newatoms])
-    self.assert_( old==new )
+    self.assertTrue( old==new )
 
 class TestFrame(unittest.TestCase):
   ''' read a dcd, write out a dtr, read the dtr back in and check that
@@ -686,24 +698,24 @@ class TestFrame(unittest.TestCase):
               )
       f=dtr.frame(0)
       for i, a in enumerate(attrs):
-          self.assertEquals(getattr(f, a), None)
+          self.assertEqual(getattr(f, a), None)
           setattr(f, a, i+1)
       molfile.dtr.write(self.dtrpath, natoms=dtr.natoms).frame(f).close()
       dtr=molfile.dtr.read(self.dtrpath)
       f=dtr.frame(0)
       for i, a in enumerate(attrs):
-          self.assertEquals(getattr(f, a), i+1)
+          self.assertEqual(getattr(f, a), i+1)
 
   def testFrame(self):
     dtr=molfile.dtr.read(self.dtrpath)
-    self.assert_( dtr.nframes == len(self.x) )
+    self.assertTrue( dtr.nframes == len(self.x) )
     for i in range(dtr.nframes):
-      self.assert_( (dtr.frame(i).pos==self.x[i]).all() )
+      self.assertTrue( (dtr.frame(i).pos==self.x[i]).all() )
 
   def testFindFrame(self):
     dtr=molfile.dtr.read(self.dtrpath)
     times=dtr.times
-    self.assert_((times==numpy.arange(dtr.nframes)).all())
+    self.assertTrue((times==numpy.arange(dtr.nframes)).all())
 
     for t,near,gt,ge,lt,le in zip(
             (32, 32.5, 0, 99, 100, -10), # time
@@ -765,7 +777,7 @@ class TestFrameCornerCases(unittest.TestCase):
         dtr=molfile.DtrReader('tests/files/force_groups.dtr')
         for i in range(dtr.nframes):
             kv = dtr.keyvals(i)
-            self.assertEqual(len(kv.keys()), 45)
+            self.assertEqual(len(list(kv.keys())), 45)
             want=[170, 169, 2678, 170, 169, 2687, 173, 169, 2678, 173, 169, 2687, 168, 169, 2687, 169, 2687, 2688, 169, 2687, 2689, 1110, 1111, 2679, 2688, 2687, 2689, 168, 169, 2678, 1110, 1111, 1112]
             self.assertEqual(
                     kv['gid__alchemical_angle_harm'].tolist(),
@@ -777,7 +789,7 @@ class TestFrameCornerCases(unittest.TestCase):
             k1 = dtr.keyvals(i)
             k2 = dict()
             dtr.frame(i, keyvals=k2)
-            self.assertEqual(k1.keys(),k2.keys())
+            self.assertEqual(list(k1.keys()),list(k2.keys()))
             for k in k1:
                 v1 = k1[k]
                 v2 = k2[k]
@@ -790,19 +802,19 @@ class TestFrameCornerCases(unittest.TestCase):
 class TestFrame2(unittest.TestCase):
   def testFrames(self):
     h=molfile.pdb.read('tests/files/h2o.pdb')
-    self.assert_( h.natoms == 2304 )
+    self.assertTrue( h.natoms == 2304 )
     atoms=h.atoms
     
     for index, ts in enumerate(h.frames()):
       # FIXME: try this with non-machine representable values
       ts.pos[1] = [1,2,3]
-      self.assert_( (ts.pos[1] == [1,2,3]).all() )
+      self.assertTrue( (ts.pos[1] == [1,2,3]).all() )
     
     for index, ts in enumerate(molfile.dcd.read('tests/files/alanin.dcd').frames()):
       pos=ts.pos
       t=index * 0.5
       ts.time = t
-      self.assert_( ts.time == t )
+      self.assertTrue( ts.time == t )
     
     # test lifetime issues
     del ts
@@ -822,7 +834,7 @@ class TestFrame2(unittest.TestCase):
     
     atoms=vcc.atoms
     
-    f=vcc.frames().next()
+    f=next(vcc.frames())
     f.box[:]=numpy.eye(3)*57
     # FIXME: need some assertions here!
     molfile.pdb.write('out.pdb', atoms[:1]).frame(f.select([3])).close()
@@ -833,7 +845,7 @@ class TestFrame2(unittest.TestCase):
     
     inds=[1,2,3,10,20,30,40,50]
     f5=f.select(inds)
-    self.assert_( (f.pos[inds] == f5.pos).all() )
+    self.assertTrue( (f.pos[inds] == f5.pos).all() )
     
     # create an atom and some frames directly
     natoms=10
@@ -851,7 +863,7 @@ class TestFrame2(unittest.TestCase):
     
     my=molfile.mae.read('my1vcc.mae')
     os.unlink('my1vcc.mae')
-    f=my.frames().next()
+    f=next(my.frames())
     molfile.mae.write('out.mae', atoms=my.atoms).frame(f).close()
 
     # FIXME: check something!

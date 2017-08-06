@@ -119,7 +119,7 @@ class FrameIter(object):
     def __next__(self):
         if self.curframe < 0:
             # iterate the reader itself
-            f=next(self.reader)
+            f=self.reader.next()
             if not f:
                 raise StopIteration
             return f
