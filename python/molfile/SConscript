@@ -55,4 +55,8 @@ elif sys.platform.startswith("linux"):
 
 ext=env3.AddPython3Extension('_molfile', srcs, prefix='msys/molfile')
 env3.Requires(ext, libmsys)
+env3.AddPython3Module('__init__.py',prefix='msys/molfile')
 
+ext=env3.AddPython3Extension('findframe','findframemodule.cxx',
+        prefix='msys/molfile')
+env.Requires(ext, libmsys)

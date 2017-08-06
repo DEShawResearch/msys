@@ -59,12 +59,12 @@ Write raw fields to a frameset (dtr)::
 
 '''
 
-from _molfile import *
+from ._molfile import *
+from . import findframe
 import os, sys
 import bisect
 import time
 import numpy
-import findframe
 import os
 
 extensiondict=dict()
@@ -116,10 +116,10 @@ class FrameIter(object):
 
     def __iter__(self): return self
 
-    def next(self):
+    def __next__(self):
         if self.curframe < 0:
             # iterate the reader itself
-            f=self.reader.next()
+            f=next(self.reader)
             if not f:
                 raise StopIteration
             return f
@@ -131,9 +131,12 @@ class FrameIter(object):
         self.curframe += 1
         return f
 
+    def next(self):
+        return self.__next__()
+
     def skip(self, count=1):
         r=self.reader
-        if count<0: raise ValueError, "skip count must be nonnegative"
+        if count<0: raise ValueError("skip count must be nonnegative")
         while count:
             r.skip()
             count -= 1
@@ -283,7 +286,7 @@ class StkFile(object):
             return 0 if not self.readers else self.seqmap[-1]
 
         def frames(self):
-            return (self.frame(i) for i in xrange(self.nframes))
+            return (self.frame(i) for i in range(self.nframes))
 
         def frame(self, n):
             index = bisect.bisect_right(self.seqmap, n)
@@ -394,7 +397,7 @@ class SeqFile(object):
             return f
 
         def frames(self):
-            return (self.frame(i) for i in xrange(self.nframes))
+            return (self.frame(i) for i in range(self.nframes))
 
         def at_time_near(self, time):
             return self.frame(findframe.at_time_near(self.times, time))

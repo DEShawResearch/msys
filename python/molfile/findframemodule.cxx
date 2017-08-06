@@ -34,7 +34,7 @@ namespace {
 }
 
 BOOST_PYTHON_MODULE(findframe) {
-    import_array();
+    _import_array();
 
     bp::def("at_time_near", wrap<ff::at_time_near<Oracle> >);
     bp::def("at_time_lt", wrap<ff::at_time_lt<Oracle> >);
