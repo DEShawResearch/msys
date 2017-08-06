@@ -22,8 +22,10 @@ using namespace desres::msys;
 namespace {
 #if PY_MAJOR_VERSION >= 3
     auto py_from_long = PyLong_FromLong;
+    auto py_as_bytes = PyBytes_FromStringAndSize;
 #else
     auto py_from_long = PyInt_FromLong;
+    auto py_as_bytes = PyString_FromStringAndSize;
 #endif
 }
 
@@ -748,8 +750,10 @@ namespace {
 
     struct system_pickle_suite : pickle_suite {
         static tuple getinitargs(SystemPtr mol) {
+            std::string contents = FormatDMS(mol, Provenance());
+            auto bytes = py_as_bytes(contents.data(), contents.size());
             return boost::python::make_tuple(
-                    "dmscontents", FormatDMS(mol, Provenance()));
+                    "dmscontents", handle<>(bytes));
         }
         static tuple getstate(SystemPtr mol) {
             return tuple();
