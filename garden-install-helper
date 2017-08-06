@@ -42,10 +42,13 @@ loadmodules() {
 }
 
 genmodules() {
-    mkdir -p $GARDENDIR
     cat << EOF > $GARDENDIR/lib-python
 prereq $PYTHON/bin
 prepend-path PYTHONPATH $PREFIX/lib/python
+EOF
+    cat << EOF > $GARDENDIR/lib-python3
+prereq $PYTHON3/bin
+prepend-path PYTHONPATH $PREFIX/lib/python3
 EOF
 
     # library
