@@ -62,6 +62,10 @@ env.AddPythonModule('scripts/update.py', prefix='msys')
 env.AddPythonModule('scripts/wrap.py', prefix='msys')
 env.AddPythonModule('scripts/reorder.py', prefix='msys')
 env.AddPythonModule('scripts/solvate.py', prefix='msys')
+env.AddPython3Module('scripts/update.py', prefix='msys')
+env.AddPython3Module('scripts/wrap.py', prefix='msys')
+env.AddPython3Module('scripts/reorder.py', prefix='msys')
+env.AddPython3Module('scripts/solvate.py', prefix='msys')
 
 env.AddShare('tip3p.dms', src='scripts/tip3p.dms')
 

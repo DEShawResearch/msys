@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os, msys
 import numpy
 
@@ -101,8 +102,8 @@ def solvate(solute, solvent, dims,
     mol=mol.clone(
         'not same fragid as (index >= %d and (%s) and (%s))' % (
             npro, solvent_selection, toonear))
-    if verbose: print "After removing overlap, %d solvent atoms" % (
-            mol.natoms - npro)
+    if verbose: print("After removing overlap, %d solvent atoms" % (
+            mol.natoms - npro))
 
     # remove molecules whose center is outside the desired box
     xmin, ymin, zmin = dmin
@@ -117,16 +118,16 @@ def solvate(solute, solvent, dims,
         pos = mol.getPositions()
         pmin = numpy.array((xmin,ymin,zmin))
         pmax = numpy.array((xmax,ymax,zmax))
-        for fragid, ids in fragmap.iteritems():
+        for fragid, ids in fragmap.items():
             c = pos[ids].mean(0)
             if (c<pmin).any() or (c>pmax).any(): outside.append(fragid)
         if outside:
             mol = mol.clone('not fragid ' + ' '.join(map(str,outside)))
-            if verbose: print "After removing outside solvent molecules, %d solvent atoms" % (mol.natoms - npro)
+            if verbose: print("After removing outside solvent molecules, %d solvent atoms" % (mol.natoms - npro))
 
     # remove overlap with periodic images
     mol = remove_periodic_contacts(mol, npro, min_solvent_dist)
-    if verbose: print "after removing periodic clashes, %d solvent atoms" % (mol.natoms-npro)
+    if verbose: print("after removing periodic clashes, %d solvent atoms" % (mol.natoms-npro))
 
     # assign the water chain name and water resids
     for i, c in enumerate(mol.ct(ct.id).chains):

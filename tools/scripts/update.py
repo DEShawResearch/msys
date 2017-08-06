@@ -53,7 +53,7 @@ def dms_set_box(mol, attr, val):
         try:
             i={'x':0, 'y':1, 'z':2}[attr]
         except KeyError:
-            raise ValueError, "Box attribute must be x, y, z or d, got '%s'" % attr
+            raise ValueError("Box attribute must be x, y, z or d, got '%s'" % attr)
         box[i][i]=val
 
 def dms_set_term( atoms, table, attr, val ):
@@ -62,7 +62,7 @@ def dms_set_term( atoms, table, attr, val ):
     elif attr in table.params.props:
         val = table.params.propType(attr)(val)
     else:
-        raise ValueError, "No property '%s' in table '%s'" % (attr, table.name)
+        raise ValueError("No property '%s' in table '%s'" % (attr, table.name))
 
     atoms=set(atoms)
     for t in table.terms:
@@ -84,7 +84,7 @@ def Update(mol, atoms, key, val):
     if ndots==0: 
         key='.'.join(('atom', key))
     elif ndots>1:
-        raise ValueError, "key '%s' can have no more than one '.'" % key
+        raise ValueError("key '%s' can have no more than one '.'" % key)
     target, prop = key.split('.')
     if target=='atom':
         dms_set_atoms(atoms, prop, val)
@@ -97,6 +97,6 @@ def Update(mol, atoms, key, val):
     elif target in mol.table_names:
         dms_set_term(atoms, mol.table(target), prop, val)
     else:
-        raise ValueError, "no table named '%s'" % target
+        raise ValueError("no table named '%s'" % target)
 
 

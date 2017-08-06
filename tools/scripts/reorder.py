@@ -1,4 +1,6 @@
 
+from __future__ import print_function
+
 import msys, sys
 import numpy as NP
 from msys import pfx
@@ -52,14 +54,14 @@ def Reorder(ref, tgt, refsel, targetsel):
                 perms.append((dist, patoms))
 
             if not perms:
-                print "ref atoms:"
+                print("ref atoms:")
                 for a in sorted(ratoms, key=lambda x: x.name):
-                    print a.name, a.atomic_number, a.nbonds
-                print "tgt atoms:"
+                    print(a.name, a.atomic_number, a.nbonds)
+                print("tgt atoms:")
                 for a in sorted(tatoms, key=lambda x: x.name):
-                    print a.name, a.atomic_number, a.nbonds
-                raise RuntimeError, "No isomorphism for residue %s in ref and residue %s in target" % (
-                        r_res, t_res)
+                    print(a.name, a.atomic_number, a.nbonds)
+                raise RuntimeError("No isomorphism for residue %s in ref and residue %s in target" % (
+                        r_res, t_res))
 
             perms.sort()
             atoms.extend(perms[0][1])
