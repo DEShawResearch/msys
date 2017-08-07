@@ -80,7 +80,7 @@ if True:
     cpp=[]
     flg=[]
     for p in env['CPPPATH']:
-        if p.startswith('/proj'):
+        if p.startswith('/proj') or p.startswith('/gdn'):
             flg.append('-I%s' % p)
         else:
             cpp.append(p)
