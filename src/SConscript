@@ -58,10 +58,6 @@ def split_version(verstr):
     nice_verstr = re.match('([0-9\.]*)', verstr).group(0)
     return nice_verstr.split('.')
 
-def hexversion(triplet):
-    major, minor, micro = map(int,triplet)
-    return '%d.0.0' % ((major << 16) | (minor << 8) | (micro << 0))
-
 def build_version_hxx( target, source, env ):
     verstr = env['ENV'].get('MSYS_VERSION', '0.0.0')
     major, minor, micro = split_version(verstr)
@@ -77,26 +73,24 @@ def build_version_hxx( target, source, env ):
     print >> fd, "#define MSYS_ABI_VERSION 1"
 
     fd.close()
-
-lexenv = env.Clone()
-lexenv.Append(CPPDEFINES='YY_NO_INPUT')
 env.Command('version.hxx', '../garden-install-helper', build_version_hxx )
+
+# flex/bison-generated smiles parser
 if sys.platform.startswith("win32"):
-    smiles_objs = []
     lexobjs = []
-    sdfobjs = [] # too many posix dependencies in sdf for windows to handle
+    smiles_objs = []
 else:
-    env.Command('smiles/lexer.cxx', 'smiles/smiles.l', 'flex -o $TARGET $SOURCE')
-    env.Command(['smiles/parser.cxx', 'smiles/parser.hxx'], 'smiles/smiles.y', 'bison --report=state -t -o $TARGET $SOURCE')
-    smiles_objs = Split('''
-smiles/smiles.cxx
-smiles/parser.cxx
-''')
+    lexenv = env.Clone()
+    lexenv.Append(CPPDEFINES='YY_NO_INPUT')
     lexenv.Append(CXXFLAGS='-Wno-deprecated-register')
     lexenv.Append(CXXFLAGS='-Wno-sign-compare') # needed for docker/desres build
-    lexobjs = lexenv.AddObject(Split('''
-smiles/lexer.cxx
-'''))
+    lexobjs = lexenv.AddObject('smiles/lexer.cxx')
+    smiles_objs = 'smiles/smiles.cxx smiles/parser.cxx'.split()
+
+# sdf parser
+if sys.platform.startswith("win32"):
+    sdfobjs = [] # too many posix dependencies in sdf for windows to handle
+else:
     sdfobjs = Split('''
 sdf/export.cxx
 sdf/import.cxx

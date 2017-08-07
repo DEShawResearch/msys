@@ -104,6 +104,7 @@ case $1 in
         python3 -m compileall $PREFIX/lib/python3
 
         ./tests/ut.py
+        ./tests/ut.py -3
         ./tests/molfile_ut.py
 
 	genhelp
