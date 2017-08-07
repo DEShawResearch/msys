@@ -1,7 +1,7 @@
 #include <cmath>
 
 #include "../sdf.hxx"
-#include "elements.hxx"
+#include "../elements.hxx"
 #include "../append.hxx"
 
 #include <stdio.h>

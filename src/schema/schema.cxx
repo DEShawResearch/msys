@@ -1,6 +1,6 @@
 #include "schema.hxx"
-#include <fastjson/parse.hxx>
-#include <fastjson/print.hxx>
+#include "../fastjson/parse.hxx"
+#include "../fastjson/print.hxx"
 
 using namespace desres::msys;
 using desres::msys::fastjson::Json;

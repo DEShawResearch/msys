@@ -48,8 +48,6 @@ value.cxx
 
 env.Append(LIBS=boost_libs)
 
-env.Append(CPPPATH='.')
-
 msysenv=env
 Export('msysenv')
 

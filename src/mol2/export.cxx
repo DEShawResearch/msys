@@ -1,5 +1,5 @@
 #include "../mol2.hxx"
-#include "elements.hxx"
+#include "../elements.hxx"
 #include "../clone.hxx"
 #include "../annotated_system.hxx"
 #include <stdio.h>

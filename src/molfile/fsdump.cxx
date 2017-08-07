@@ -1,4 +1,4 @@
-#include "molfile/dtrplugin.hxx"
+#include "dtrplugin.hxx"
 #include <algorithm>
 
 static void usage(FILE* fp) {

@@ -528,8 +528,8 @@ static yyconst flex_int16_t yy_chk[348] =
 #line 1 "smiles.l"
 #line 9 "smiles.l"
 
-#include "smiles/smiles.hxx"
-#include "elements.hxx"
+#include "smiles.hxx"
+#include "../elements.hxx"
 using namespace desres::msys::smiles;
 using desres::msys::ElementForAbbreviation;
 

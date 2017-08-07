@@ -73,8 +73,8 @@
 /* Line 371 of yacc.c  */
 #line 9 "smiles.y"
 
-#include "smiles/smiles.hxx"
-#include "elements.hxx"
+#include "smiles.hxx"
+#include "../elements.hxx"
 using namespace desres::msys::smiles;
 using desres::msys::ElementForAbbreviation;
 

@@ -2,8 +2,8 @@
 #include "../sssr.hxx"
 #include "../import.hxx"
 #include "../analyze.hxx"
-#include "elements.hxx"
-#include "append.hxx"
+#include "../elements.hxx"
+#include "../append.hxx"
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>

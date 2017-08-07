@@ -1,7 +1,7 @@
-#include "sdf.hxx"
-#include "elements.hxx"
-#include "clone.hxx"
-#include <fastjson/print.hxx>
+#include "../sdf.hxx"
+#include "../elements.hxx"
+#include "../clone.hxx"
+#include "../fastjson/print.hxx"
 #include <errno.h>
 #include <math.h>
 

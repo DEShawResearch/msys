@@ -1,6 +1,6 @@
 /* @COPYRIGHT@ */
 
-#include <fastjson/fastjson.hxx>
+#include "../fastjson/fastjson.hxx"
 #include "../istream.hxx"
 
 /* Import an mae file into a json.  Both blocks and array blocks are 

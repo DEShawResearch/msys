@@ -3,7 +3,7 @@
 
 #include "../system.hxx"
 #include "../term_table.hxx"
-#include <fastjson/fastjson.hxx>
+#include "../fastjson/fastjson.hxx"
 
 namespace desres { namespace msys { namespace mae {
 

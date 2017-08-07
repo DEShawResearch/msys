@@ -1,7 +1,7 @@
 #ifndef desres_msys_mae_vdwmap_hxx
 #define desres_msys_mae_vdwmap_hxx
 
-#include <fastjson/fastjson.hxx>
+#include "../fastjson/fastjson.hxx"
 #include <map>
 #include <string>
 #include <vector>

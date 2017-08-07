@@ -1,6 +1,6 @@
 #include "../mol2.hxx"
 #include "../sssr.hxx"
-#include "elements.hxx"
+#include "../elements.hxx"
 #include <stdio.h>
 #include <math.h>
 
