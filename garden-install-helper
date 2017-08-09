@@ -55,7 +55,6 @@ EOF
     cat << EOF > $GARDENDIR/lib
 prepend-path DESRES_MODULE_CPPFLAGS -I$PREFIX/include
 prepend-path DESRES_MODULE_LDFLAGS  -L$PREFIX/lib:-Wl,-rpath,$PREFIX/lib
-prereq $PYTHON/lib
 prereq $BOOST/lib
 EOF
 
