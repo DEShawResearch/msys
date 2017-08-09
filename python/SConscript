@@ -43,14 +43,14 @@ variant.cxx
 '''.split()
 #variant.cxx
 
-pyext=env.AddPythonExtension('_msys', pymodfiles, prefix='msys')
+pyext=env.AddPython2Extension('_msys', pymodfiles, prefix='msys')
 env.Requires(pyext, libmsys)
 env.AddPythonModule('__init__.py', prefix='msys')
 env.AddPythonModule('atomsel.py', prefix='msys')
 
 pfxenv=env.Clone()
 pfxenv.Append(CXXFLAGS='-fno-strict-aliasing')
-pfxext = pfxenv.AddPythonExtension('pfx', 'pfx.cxx', prefix='msys')
+pfxext = pfxenv.AddPython2Extension('pfx', 'pfx.cxx', prefix='msys')
 pfxenv.Requires(pfxext, libmsys)
 
 env.AddHeaders(['capsule.hxx'], prefix='msys/python')

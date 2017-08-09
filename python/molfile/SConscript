@@ -28,10 +28,10 @@ writer.cxx
 molfilemodule.cxx
 ''')
 
-ext=env.AddPythonExtension('_molfile', srcs, prefix='msys/molfile')
+ext=env.AddPython2Extension('_molfile', srcs, prefix='msys/molfile')
 env.Requires(ext, libmsys)
 
-ext=env.AddPythonExtension('findframe','findframemodule.cxx',
+ext=env.AddPython2Extension('findframe','findframemodule.cxx',
         prefix='msys/molfile')
 env.Requires(ext, libmsys)
 

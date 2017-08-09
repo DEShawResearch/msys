@@ -52,7 +52,7 @@ def Sequences(system_or_chain, distinct=True):
         chains = system_or_chain.chains
     else:
         t=type(system_or_chain)
-        raise TypeError, "Expected System or Chain, got %s" % t
+        raise TypeError("Expected System or Chain, got %s" % t)
     seqs = []
     for c in chains:
         seq = ''.join(code.get(r.name,'X') for r in c.residues)

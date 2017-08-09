@@ -41,9 +41,11 @@ env.AddScript('info/dms-dump')
 env.AddScript('info/dms-info')
 env.AddScript('info/dms-sequence')
 env.AddPythonModule('info/sequence.py', prefix='msys')
+env.AddPython3Module('info/sequence.py', prefix='msys')
 
 # vdw
 env.AddPythonModule('vdw/vdw.py', prefix='msys')
+env.AddPython3Module('vdw/vdw.py', prefix='msys')
 env.AddScript('vdw/dms-override-vdw')
 env.AddScript('vdw/dms-scale-vdw')
 

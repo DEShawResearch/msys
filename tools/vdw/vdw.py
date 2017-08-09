@@ -78,7 +78,7 @@ def Scale(mol, sel1, sel2, scale_sigma, scale_epsilon):
     elif rule=='geometric': 
         combine = combine_geometric
     else:
-        raise ValueError, "Don't understand vdw_rule '%s'" % rule
+        raise ValueError("Don't understand vdw_rule '%s'" % rule)
 
     # partition selections by type, and call Override for each pair
     nb = mol.table('nonbonded')
