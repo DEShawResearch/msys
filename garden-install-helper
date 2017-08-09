@@ -111,11 +111,6 @@ case $1 in
         gendocs
 
         ;;
-    --help)
-        desres_install_helper_usage
-        ;;
-    # It's not an error if nothing matches.  garden-install may invent
-    # other arguments in the future.
 esac
 
 exit 0
