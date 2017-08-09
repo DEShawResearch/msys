@@ -3,7 +3,7 @@
 #include "analyze.hxx"
 #include <errno.h>
 #include <stdio.h>
-#include <fastjson/print.hxx>
+#include "fastjson/print.hxx"
 #include <string.h>
 
 namespace desres { namespace msys {
