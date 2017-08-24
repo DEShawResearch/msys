@@ -48,7 +48,7 @@ namespace {
 
 namespace desres { namespace msys {
 
-    void AssignBondOrderAndFormalCharge(SystemPtr mol) {
+    void AssignBondOrderAndFormalCharge(SystemPtr mol, unsigned flags) {
         MultiIdList fragments;
         mol->updateFragids(&fragments);
         IdList pmap(mol->maxAtomId(), BadId);
@@ -67,7 +67,7 @@ namespace desres { namespace msys {
             IdList& frags = it->second;
             /* unique formula -> unique fragment */
             if (frags.size()==1) {
-                AssignBondOrderAndFormalCharge(mol, fragments[frags[0]]);
+                AssignBondOrderAndFormalCharge(mol, fragments[frags[0]], INT_MAX, flags);
                 continue;
             }
 
@@ -77,7 +77,7 @@ namespace desres { namespace msys {
             }
             std::vector<IdPair> perm;
             while (!frags.empty()) {
-                AssignBondOrderAndFormalCharge(mol, fragments[frags[0]]);
+                AssignBondOrderAndFormalCharge(mol, fragments[frags[0]], INT_MAX, flags);
                 IdList unmatched;
                 GraphPtr ref = graphs[frags[0]];
                 for (Id i=1; i<frags.size(); i++) {
@@ -117,12 +117,14 @@ namespace desres { namespace msys {
 
     void AssignBondOrderAndFormalCharge(SystemPtr mol, 
                                         IdList const& atoms,
-                                        int total_charge) {
+                                        int total_charge,
+                                        unsigned flags) {
 #ifdef MSYS_WITHOUT_LPSOLVE
         MSYS_FAIL("LPSOLVE functionality was not included.");
 #else
         if (atoms.empty()) return;
-        BondOrderAssigner boa(mol, atoms);
+        bool compute_resonant_charge = flags & AssignBondOrder::ComputeResonantCharges;
+        BondOrderAssigner boa(mol, atoms, compute_resonant_charge);
         if (total_charge != INT_MAX) {
             boa.setTotalCharge(total_charge);
         }

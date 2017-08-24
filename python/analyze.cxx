@@ -11,14 +11,20 @@ using namespace desres::msys;
 using namespace boost::python;
 
 namespace {
-    void assign_1(SystemPtr mol) {
-        AssignBondOrderAndFormalCharge(mol);
+    void assign_1(SystemPtr mol, bool compute_resonant_charges) {
+        unsigned flags = 0;
+        if (compute_resonant_charges) flags |= AssignBondOrder::ComputeResonantCharges;
+        AssignBondOrderAndFormalCharge(mol, flags);
     }
-    void assign_2(SystemPtr mol, list ids) {
-        AssignBondOrderAndFormalCharge(mol, ids_from_python(ids));
+    void assign_2(SystemPtr mol, list ids, bool compute_resonant_charges) {
+        unsigned flags = 0;
+        if (compute_resonant_charges) flags |= AssignBondOrder::ComputeResonantCharges;
+        AssignBondOrderAndFormalCharge(mol, ids_from_python(ids), INT_MAX, flags);
     }
-    void assign_3(SystemPtr mol, list ids, int total_charge) {
-        AssignBondOrderAndFormalCharge(mol, ids_from_python(ids), total_charge);
+    void assign_3(SystemPtr mol, list ids, int total_charge, bool compute_resonant_charges) {
+        unsigned flags = 0;
+        if (compute_resonant_charges) flags |= AssignBondOrder::ComputeResonantCharges;
+        AssignBondOrderAndFormalCharge(mol, ids_from_python(ids), total_charge, flags);
     }
 
     list find_distinct_fragments(SystemPtr mol) {

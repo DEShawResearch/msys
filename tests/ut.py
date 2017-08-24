@@ -1318,6 +1318,28 @@ class Main(unittest.TestCase):
         msys.AssignBondOrderAndFormalCharge(sys)
         msys.AssignBondOrderAndFormalCharge(sys.select('water'))
 
+    def testResonantCharges(self):
+        mol = msys.Load('tests/files/jandor.sdf')
+        msys.AssignBondOrderAndFormalCharge(mol)
+        self.assertFalse('resonant_charge' in mol.atom_props)
+
+        msys.AssignBondOrderAndFormalCharge(mol, compute_resonant_charges=True)
+        topids = msys.ComputeTopologicalIds(mol)
+        self.assertTrue('resonant_charge' in mol.atom_props)
+        atms = [a for a in mol.atoms if a['resonant_charge'] != 0]
+        aids = [topids[atm.id] for atm in atms]
+        #print([a['resonant_charge'] for a in atms])
+        #print([a.formal_charge for a in atms])
+        #print(aids)
+        # make sure we got a non-trivial resonant charge assignment
+        assert aids[1] == aids[2]
+        assert atms[1]['resonant_charge'] == atms[2]['resonant_charge']
+        assert atms[1].formal_charge != atms[2].formal_charge
+
+        # exercise the other code paths
+        msys.AssignBondOrderAndFormalCharge(mol.atoms, compute_resonant_charges=True)
+        msys.AssignBondOrderAndFormalCharge(mol.atoms, 0, compute_resonant_charges=True)
+
     def testMemoryLeakPosVel(self):
         mol=msys.CreateSystem()
         for i in range(1000):

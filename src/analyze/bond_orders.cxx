@@ -118,7 +118,10 @@ namespace {
 
 namespace desres { namespace msys {
     BondOrderAssigner::BondOrderAssigner(SystemPtr sys,
-                                         IdList const& fragment) {
+                                         IdList const& fragment,
+                                         bool compute_resonant_charge)
+    : _compute_resonant_charge(compute_resonant_charge)
+    {
         _needRebuild=true; 
         _valid=false;
         atom_lone_pair_scale=0.95;
@@ -757,15 +760,14 @@ namespace desres { namespace msys {
         assert(_component_solution_valid);
 
         get_ilp_solution(_component_lp,_component_solution);
-#if GENRESFORMS
-        generate_resonance_forms();
-#else   
-        _component_resonant_solution.resize(_component_solution.size());
-        for(Id i=0; i<_component_solution.size();++i){
-            _component_resonant_solution[i]=_component_solution[i];
+        if (_parent->compute_resonant_charge()) {
+            generate_resonance_forms();
+        } else {
+            _component_resonant_solution.resize(_component_solution.size());
+            for (Id i=0; i<_component_solution.size(); ++i){
+                _component_resonant_solution[i]=_component_solution[i];
+            }
         }
-#endif
-
 
 #if DEBUGPRINT1
         for(Id i=0; i<_component_solution.size();++i){
@@ -1588,6 +1590,11 @@ namespace desres { namespace msys {
         }
 
         /* Assign bond orders and bond electron charge part here "- 0.5*Sum_j ( BondElectrons[ij] )" */
+        auto qprop = BadId, oprop = BadId;
+        if (compute_resonant_charge()) {
+            qprop = _mol->addAtomProp("resonant_charge", FloatType);
+            oprop = _mol->addBondProp("resonant_order", FloatType);
+        }
         std::vector<double> resonant_charge(_mol->maxAtomId());
         for (solutionMap::value_type const& bpair : bondinfo){
             Id bid=bpair.first;
@@ -1603,7 +1610,9 @@ namespace desres { namespace msys {
             int order=bdata.nonresonant;
             bond.order=order;
             double resorder=bdata.resonant;
-            //bond.resonant_order=resorder;
+            if (compute_resonant_charge()) {
+                _mol->bondPropValue(bid, oprop) = resorder;
+            }
 
             /* Charges */
             atm1.formal_charge-=order;
@@ -1623,14 +1632,11 @@ namespace desres { namespace msys {
 
             atm.formal_charge+= nValence - 2*adata.nonresonant;
 
-            //double resq=atm.resonant_charge;
             double resq = resonant_charge[aid];
             resq += nValence - 2*adata.resonant;
-            //if(fabs(resq)<1E-5){
-                //atm.resonant_charge=0.0;
-            //}else{
-                //atm.resonant_charge=resq;
-            //}
+            if (compute_resonant_charge()) {
+                _mol->atomPropValue(aid, qprop) = fabs(resq) < 1e-5 ? 0 : resq;
+            }
 
             /* Assert that the model calculated charges agree with the above.
                FIXME: just replace the above calculation of charges with whats tabulated in chargeinfo

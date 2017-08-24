@@ -6,8 +6,15 @@
 
 namespace desres { namespace msys {
 
+    struct AssignBondOrder {
+        enum Flags {
+            Default = 0,
+            ComputeResonantCharges = 1
+        };
+    };
+
     /* Assign bond order and formal charges to all fragments */
-    void AssignBondOrderAndFormalCharge(SystemPtr mol);
+    void AssignBondOrderAndFormalCharge(SystemPtr mol, unsigned flags=0);
 
     /* Assign bond order and formal charges to the given atoms, all
      * of which should belong to the same fragment (i.e. they should
@@ -15,7 +22,8 @@ namespace desres { namespace msys {
      * it will be guessed. */
     void AssignBondOrderAndFormalCharge(SystemPtr mol,
                                         IdList const& atoms,
-                                        int total_charge = INT_MAX);
+                                        int total_charge = INT_MAX,
+                                        unsigned flags = 0);
 
     /* Assign bond orders to aromatic bonds, leaving formal charges
      * and bonds between nonaromatic atoms alone.

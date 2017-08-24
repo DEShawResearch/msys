@@ -77,8 +77,13 @@ namespace desres { namespace msys {
 
 #undef GETSETREBUILDVAR
     public:
-        BondOrderAssigner(SystemPtr sys, IdList const& fragment);
+        BondOrderAssigner(SystemPtr sys, IdList const& fragment,
+                bool compute_resonant_charge);
         ~BondOrderAssigner();
+
+        bool compute_resonant_charge() const {
+            return _compute_resonant_charge;
+        }
 
         bool allow_hextet_for_atom(Id aid1);
         void reset();
@@ -111,6 +116,7 @@ namespace desres { namespace msys {
         int _total_charge;      // total charge of fragment
         int _presolved_charge;  // charge of presolved components
         bool _total_charge_set; // did we set the total charge?
+        const bool _compute_resonant_charge;
         SystemPtr _mol; 
         bondFilter *_filter;
 

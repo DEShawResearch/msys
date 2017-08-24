@@ -2055,7 +2055,8 @@ def GetRingSystems(atoms):
     ptr, _ids = _convert_ids(atoms)
     return _msys.RingSystems(ptr, _ids)
 
-def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge = None):
+def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge=None,
+                                   compute_resonant_charges=False):
     """Assign bond orders and formal charges to a molecular system.
 
     Determines bond orders and formal charges by preferring neutral
@@ -2075,15 +2076,15 @@ def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge = None):
     if isinstance(system_or_atoms, System):
         ptr = system_or_atoms._ptr
         if total_charge is None:
-            return _msys.AssignBondOrderAndFormalCharge(ptr)
+            return _msys.AssignBondOrderAndFormalCharge(ptr, compute_resonant_charges)
         ids = ptr.atomsAsList()
     else:
         ptr, ids = _convert_ids(system_or_atoms)
 
     if total_charge is None:
-        _msys.AssignBondOrderAndFormalCharge(ptr, ids)
+        _msys.AssignBondOrderAndFormalCharge(ptr, ids, compute_resonant_charges)
     else:
-        _msys.AssignBondOrderAndFormalCharge(ptr, ids, int(total_charge))
+        _msys.AssignBondOrderAndFormalCharge(ptr, ids, int(total_charge), compute_resonant_charges)
 
 class Graph(object):
     ''' Represents the chemical topology of a System
