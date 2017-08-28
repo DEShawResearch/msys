@@ -2072,6 +2072,9 @@ def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge=None,
     Arguments:
     system_or_atoms: either a System or a list of Atoms
     total_charge: if not None, integral total charge
+    compute_resonant_charges (bool): compute and store resonant charge
+        in atom property 'resonant_charge' and resonant bond order in
+        bond property 'resonant_order'.
     """
     if isinstance(system_or_atoms, System):
         ptr = system_or_atoms._ptr

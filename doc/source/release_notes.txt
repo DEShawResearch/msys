@@ -1,3 +1,5 @@
+1.7.211c7 Optionally compute and store resonant charge and bond order.
+
 1.7.210c7 python3 support.
 
 1.7.208c7 Added molfile.list_fields()
