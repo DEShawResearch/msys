@@ -1856,6 +1856,50 @@ class IndexedFileLoader(object):
         '''
         return System(self._ptr.at(index))
 
+def ConvertToOEChem(mol):
+    ''' Construct an OEChem OEMol from the given System
+
+    Args:
+        mol (System): System
+
+    Returns:
+        oechem.OEMol
+    '''
+    from openeye import oechem
+    expdate = oechem.OEUIntArray(3)
+    if not oechem.OEChemIsLicensed(None, expdate):
+        raise RuntimeError("ConvertToOEChem requires a valid OEChem license, expired %u %u %u, contact Brian.Cole@DEShawResearch.com" % tuple(reversed(expdate)))
+
+    oe_mol = oechem.OEMol()
+    oe_atoms = []
+    for idx, atm in enumerate(mol.atoms):
+        oe_atom = oe_mol.NewAtom(atm.atomic_number)
+        oe_atom.SetFormalCharge(atm.formal_charge)
+
+        # paranoia check because this isn't gauranteed by OEChem, but
+        # so far it always has been true: https://docs.eyesopen.com/toolkits/python/oechemtk/atombondindices.html#indices-for-molecule-lookup-considered-harmful
+        # so protect ourselves from a future version breaking this assertion
+        assert idx == oe_atom.GetIdx()
+        assert len(oe_atoms) == idx
+        oe_atoms.append(oe_atom)
+
+    for bnd in mol.bonds:
+        bgn = oe_atoms[bnd.first.id]
+        end = oe_atoms[bnd.second.id]
+        oe_mol.NewBond(bgn, end, bnd.order)
+
+    from itertools import chain
+    coords = list(chain(*mol.getPositions()))
+    oe_mol.SetCoords(coords)
+
+    oechem.OESetDimensionFromCoords(oe_mol)
+    oechem.OEPerceiveChiral(oe_mol)
+    if oe_mol.GetDimension() == 3:
+        oechem.OE3DToBondStereo(oe_mol)
+        oechem.OE3DToAtomStereo(oe_mol)
+
+    return oe_mol
+
 def ConvertToRdkit(mol):
     ''' Construct an RDKit ROMol from the given System
 
