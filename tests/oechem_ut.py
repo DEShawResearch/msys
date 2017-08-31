@@ -1,15 +1,27 @@
 #!/usr/bin/garden-exec
 #{
+# garden env-keep-only TMPDIR
 # source `dirname $0`/../MODULES
-# exec garden with -c -e TMPDIR -m $PYTHON/bin \
-# -m openeye-toolkits/2017.2.1-05c7/lib-python \
-# -- python $0 "$@"
+# garden load $PYTHON/bin
+# if [ "$1" == "-3" ]
+# then
+#    shift
+#    garden load desres-python/3.6.1-01c7/bin
+#    PY=python3
+# else
+#    PY=python
+# fi
+# this will fail for python3
+# garden load openeye-toolkits/2017.2.1-05c7/lib-python
+# exec $PY $0 "$@"
 #}
-#### openeye-toolkits/2017.2.1-05c7/lib-python \
+
+from __future__ import print_function
 
 import os, sys
 TMPDIR = os.getenv('TMPDIR', 'objs/%s/x86_64' % os.getenv('DESRES_OS'))
-sys.path.insert(0, os.path.join(TMPDIR, 'lib', 'python'))
+suffix = '3' if sys.version_info.major==3 else ''
+sys.path.insert(0, os.path.join(TMPDIR, 'lib', 'python%s' % suffix))
 import msys
 
 import unittest
@@ -46,7 +58,7 @@ class Main(unittest.TestCase):
         t = -time()
         oemol = msys.ConvertToOEChem(mol)
         t += time()
-        print "%s: %d atoms, %d bonds in %.3fs" % (mol.name, mol.natoms, mol.nbonds, t)
+        print("%s: %d atoms, %d bonds in %.3fs" % (mol.name, mol.natoms, mol.nbonds, t))
 
     def checkStereo(self, atom, expected):
         self.assertTrue(atom.IsChiral())
