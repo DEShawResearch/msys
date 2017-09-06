@@ -107,6 +107,7 @@ def dmsdump(ipath, out, without_provenance = False,
                         without_groups = False,
                         without_forcefield = False,
                         without_paraminfo = False,
+                        without_pos = False,
                         reorder = False ):
 
     cmd='sqlite3 -header'.split()
@@ -124,6 +125,8 @@ def dmsdump(ipath, out, without_provenance = False,
     params=[p for p in params if p not in skipped]
     if without_groups:
         params = [p for p in params if not p.startswith('grp_')]
+    if without_pos:
+        params = [p for p in params if p not in ['x','y','z','vx','vy','vz']]
     if 'segid' not in params:
         params.append('segid')
         fake_segid=True
@@ -256,6 +259,8 @@ if __name__=="__main__":
     parser.add_option('--without-forcefield', help="don't write forcefield info",
             action="store_true", default=False)
     parser.add_option('--without-paraminfo', help="don't write memo, type, ff, comment, or typekey in terms",
+            action="store_true", default=False)
+    parser.add_option('--without-pos', help="don't write pos and vel",
             action="store_true", default=False)
     parser.add_option('--reorder', default=False, action="store_true", 
             help='order ouput of terms by particle id')
