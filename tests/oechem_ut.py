@@ -11,8 +11,7 @@
 # else
 #    PY=python
 # fi
-# this will fail for python3
-# garden load openeye-toolkits/2017.2.1-05c7/lib-python
+# garden load openeye-toolkits/2017.6.1-01c7/lib-$PY
 # exec $PY $0 "$@"
 #}
 
@@ -23,6 +22,7 @@ TMPDIR = os.getenv('TMPDIR', 'objs/%s/x86_64' % os.getenv('DESRES_OS'))
 suffix = '3' if sys.version_info.major==3 else ''
 sys.path.insert(0, os.path.join(TMPDIR, 'lib', 'python%s' % suffix))
 import msys
+import numpy as np
 
 import unittest
 from openeye import oechem
@@ -105,6 +105,48 @@ class Main(unittest.TestCase):
             else:
                 self.assertFalse(bond.HasStereoSpecified(oechem.OEBondStereo_CisTrans))
                 self.checkBondStereo(bond, oechem.OEBondStereo_Undefined)
+
+    def testOmega(self):
+        sdf = 'tests/files/methotrexate.sdf'
+        mol = msys.Load(sdf)
+        dms = 'methotrexate.dms'
+        msys.Save(mol, dms)
+        mol = msys.Load(dms)
+
+        oemol = msys.ConvertToOEChem(mol)
+
+        from openeye import oeomega
+        opts = oeomega.OEOmegaOptions()
+        opts.SetMaxConfs(1)
+        opts.SetStrictStereo(False)
+        omega = oeomega.OEOmega(opts)
+
+        # OEOmegaOptions.SetCanonOrder canonicalizes the order of the
+        # atoms in the molecule in order to make conformer generation
+        # invariant of input atom order.
+        for orig_idx, atom in enumerate(oemol.GetAtoms()):
+            atom.SetData("orig_idx", orig_idx)
+        assert omega(oemol)
+        orig_idx_to_new_idx = {}
+        for atom in oemol.GetAtoms():
+            orig_idx_to_new_idx[atom.GetData("orig_idx")] = atom.GetIdx()
+
+        for conf in oemol.GetConfs():
+            coords = conf.GetCoords()
+            npcrds = np.array([coords[orig_idx_to_new_idx[orig_idx]] for orig_idx in sorted(orig_idx_to_new_idx)])
+            break
+
+        cmol = mol.clone()
+        cmol.positions = npcrds
+
+        avg_length = 0.0
+        for bond in cmol.bonds:
+            vec = bond.first.pos - bond.second.pos
+            avg_length += np.sqrt(vec.dot(vec))
+        avg_length /= cmol.nbonds
+        assert avg_length < 2.5, "average bond length is %.2f, atom order is likely screwed up!" % avg_length
+
+        msys.Save(cmol, 'meth_confs.sdf')
 
 if __name__=="__main__":
   unittest.main(verbosity=2)
