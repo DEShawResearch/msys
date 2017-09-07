@@ -146,7 +146,7 @@ class Main(unittest.TestCase):
         avg_length /= cmol.nbonds
         assert avg_length < 2.5, "average bond length is %.2f, atom order is likely screwed up!" % avg_length
 
-        msys.Save(cmol, 'meth_confs.sdf')
+        #msys.Save(cmol, 'meth_confs.sdf')
 
 if __name__=="__main__":
   unittest.main(verbosity=2)
