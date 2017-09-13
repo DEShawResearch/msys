@@ -1,6 +1,7 @@
 #include "unique_symbol.hxx"
 #include "wrap_obj.hxx"
 #include "capsule.hxx"
+#include "import.hxx"
 
 #include "schema.hxx"
 #include "atomsel.hxx"
@@ -768,6 +769,10 @@ namespace {
         }
         throw std::runtime_error("Unsupported pickle format " + format);
     }
+
+    void importer_initialize(SystemImporter& imp, list ids) {
+        imp.initialize(ids_from_python(ids));
+    }
 }
 
 namespace desres { namespace msys { 
@@ -996,6 +1001,13 @@ namespace desres { namespace msys {
             .staticmethod("fromCapsule")
             ;
     def("HashSystem", HashSystem);
+
+    class_<SystemImporter>("SystemImporter", init<SystemPtr>())
+        .def("initialize", importer_initialize)
+        .def("terminateChain", &SystemImporter::terminateChain)
+        .def("addAtom", &SystemImporter::addAtom)
+        ;
+
 
     class_<HydrogenBond>("HydrogenBond", no_init)
         .def("__init__", make_constructor(

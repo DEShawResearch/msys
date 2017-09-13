@@ -2460,3 +2460,49 @@ class HydrogenBondFinder(object):
 
         return results
 
+class SystemImporter:
+    '''Maps atoms to residues, chains and cts'''
+
+    def __init__(self, system):
+        '''construct from system to be constructed
+
+        Args:
+            system (System): msys System
+        '''
+        self._ptr = _msys.SystemImporter(system._ptr)
+        self._sys = System(self._ptr.system())
+
+    @property
+    def system(self):
+        '''input system'''
+        return self._sys
+
+    def initialize(self, atoms):
+        '''Process existing atoms in the system
+
+        Args:
+            atoms (list[Atom]) atoms in system
+
+        Note:
+            can be called multiple times; each time clears the internal
+            tables so that subsequent atoms do not share residues, chains,
+            or cts with previously added atoms.
+        '''
+        ptr, ids = _convert_ids(atoms)
+        if ptr != self._sys._ptr:
+            raise ValueError("atoms argument from different system")
+
+    def terminateChain(self, chain, segid, ct=0):
+        return self._ptr.terminateChain(str(chain), str(segid), int(ct))
+
+    def addAtom(self, chain, segid, resnum, resname, aname,
+            insertion="", ct=0):
+        '''Add atom to system
+        
+        Returns:
+            newly added Atom
+        '''
+        atomid = self._ptr.addAtom(str(chain), str(segid), int(resnum),
+                str(resname), str(aname), str(insertion), int(ct))
+        return self._sys.atom(atomid)
+
