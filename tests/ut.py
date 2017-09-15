@@ -885,6 +885,18 @@ class TestPdb(unittest.TestCase):
                 [161,165,167,169,171,489,493,495,497,499,501,
                  503,1448,1452,1454,1456,1458,1460,1698,1702,1704])
 
+    def testSave(self):
+        with tmpfile(suffix='.pdb') as tmp:
+            msys.Save(self.mol, tmp.name)
+            oldmol = self.mol
+            self.mol = msys.Load(tmp.name)
+            try:
+                self.testAltloc()
+                self.testBfactor()
+                self.testOccupancy()
+            finally:
+                self.mol = oldmol
+
     def testTer(self):
         mol=msys.CreateSystem()
         c1=mol.addChain()

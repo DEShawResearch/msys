@@ -361,6 +361,7 @@ void desres::msys::ExportPDB(SystemPtr mol, std::string const& path,
     int resid = 0;
     Id bfactor_index = mol->atomPropIndex("bfactor");
     Id occupancy_index = mol->atomPropIndex("occupancy");
+    Id altloc_index = mol->atomPropIndex("altloc");
     for (Id chn=0; chn<mol->maxChainId(); chn++) {
         if (!mol->hasChain(chn)) continue;
         const char* segid = mol->chain(chn).segid.c_str();
@@ -377,7 +378,6 @@ void desres::msys::ExportPDB(SystemPtr mol, std::string const& path,
                 int anum = mol->atom(atm).atomic_number;
                 const char* name = mol->atom(atm).name.c_str();
                 const char* elementsym = AbbreviationForElement(anum);
-                const char* altloc = " ";
                 double x = mol->atom(atm).x;
                 double y = mol->atom(atm).y;
                 double z = mol->atom(atm).z;
@@ -385,6 +385,8 @@ void desres::msys::ExportPDB(SystemPtr mol, std::string const& path,
                                 mol->atomPropValue(atm, occupancy_index);
                 double beta = bad(bfactor_index) ? 0.0 :
                                 mol->atomPropValue(atm, bfactor_index);
+                const char* altloc = bad(altloc_index) ? " " :
+                                mol->atomPropValue(atm, altloc_index).c_str();
                 int formal_charge = mol->atom(atm).formal_charge;
 
                 ++index;
