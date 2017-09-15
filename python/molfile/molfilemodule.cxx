@@ -167,7 +167,7 @@ namespace {
                     (arg("path"),
                      arg("natoms"),
                      arg("mode")=0,
-                     arg("frames_per_file")=object())))
+                     arg("frames_per_file")=0)))
             .def("append", dtr_append,
                     (arg("time"),
                      arg("keyvals")))
