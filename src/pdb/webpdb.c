@@ -21,7 +21,7 @@ static char* getpdb(const char* pdbcode) {
     char filename[256];
     char buf[4096];
 
-    static const char hostname[] = "www.rcsb.org";
+    static const char hostname[] = "files.rcsb.org";
     static const char user_agent[] = "msys/1.0";
 
     /* get host by name */
@@ -54,9 +54,7 @@ static char* getpdb(const char* pdbcode) {
     }
 
     /* send the header */
-    sprintf(filename, 
-            "pdb/downloadFile.do?fileFormat=pdb&compression=NO&structureId=%s",
-            pdbcode);
+    sprintf(filename, "download/%s.pdb", pdbcode);
     sprintf(header, 
             "%s /%.256s HTTP/1.0\015\012User-Agent: %s\015\012%s\015\012", 
             "GET", filename, user_agent, "");
