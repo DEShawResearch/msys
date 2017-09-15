@@ -1502,7 +1502,7 @@ class System(object):
         return self._ptr.provenance()
 
     def findContactIds(self, cutoff,
-            ids=None, other=None, pos=None):
+            ids=None, other=None, pos=None, ignore_excluded=False):
         '''
         Find atoms not bonded to each other which are within cutoff of
         each other.  
@@ -1517,7 +1517,17 @@ class System(object):
         found.
         '''
         cutoff = float(cutoff)
-        return self._ptr.findContactIds(cutoff, ids, other, pos)
+        results = self._ptr.findContactIds(cutoff, ids, other, pos)
+        if ignore_excluded:
+            excl = self.getTable('exclusion')
+            if excl is None:
+                raise ValueError("ignore_excluded set to True, but no exclusion table in system")
+            pairs = set()
+            for t in excl.terms:
+                ai, aj = [a.id for a in t.atoms]
+                pairs.add(tuple(sorted((ai, aj))))
+            results = [r for r in results if tuple(sorted((r[0],r[1]))) not in pairs]
+        return results
 
 class AnnotatedSystem(object):
     ''' System that has been annotated with additional chemical information
@@ -2360,6 +2370,7 @@ class SpatialHash(object):
             pos (array[float]): positions
             ids (array[uint]): particle indices
             reuse_voxels (bool): assume voxelize(R>=radius) has already been called
+            ignore_excluded (bool): exclude atom pairs in the exclusion table.
 
         Returns:
            i, j, dists (tuple): Mx1 arrays of ids and distances.

@@ -39,7 +39,7 @@ class TestAnton(TestCase):
     def testContacts(self):
         ''' No nonbonded atoms within 1A of each other '''
         ids = self.mol.selectIds('atomicnumber > 0')
-        contacts = self.mol.findContactIds(1.0, ids)
+        contacts = self.mol.findContactIds(1.0, ids, ignore_excluded=True)
         formatted_results = '\n'.join('%6d %6d %f' % x for x in contacts[:10])
         num = len(contacts)
         self.assertEqual(len(contacts), 0,
@@ -113,12 +113,8 @@ class TestStrict(TestCase):
 class TestBasic(TestCase):
     def testKnots(self):
         ''' the system must not contain knots for rings of size <= 10 '''
-        alchemical = self.mol.getTable('alchemical_nonbonded') is not None
-        if alchemical:
-            print("Skipping knot check on alchemical system")
-        else:
-            knots = knot.FindKnots(self.mol, max_cycle_size=10)
-            self.assertTrue(len(knots)==0, "The system has %d bonds passing through small rings: %s" % (len(knots), knots))
+        knots = knot.FindKnots(self.mol, max_cycle_size=10, ignore_excluded_knots=True)
+        self.assertTrue(len(knots)==0, "The system has %d bonds passing through small rings: %s" % (len(knots), knots))
 
     def testHasNonbonded(self):
         ''' Every particle must have a nonbonded param assignment '''
