@@ -143,7 +143,7 @@ namespace desres { namespace msys {
         boa->_total_charge_set=false;
         boa->_total_charge=0;
         boa->_mol=sys;
-        boa->_filter=new bondedVirtualsAndMetalsFilter(sys);
+        boa->_filter=new bondedVirtualsFilter(sys);
         
         for (Id aid : fragment){
             assert(boa->_mol->hasAtom(aid));
