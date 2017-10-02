@@ -1,1 +1,2 @@
-PYTHON=desres-python/2.7.13-01c7
+PYTHON=desres-python/2.7.14-02c7
+PYTHON3=desres-python/3.6.2-02c7

@@ -2,16 +2,15 @@
 #{
 # garden env-keep-only TMPDIR
 # source `dirname $0`/../MODULES
-# garden load $PYTHON/bin
 # if [ "$1" == "-3" ]
 # then
 #    shift
-#    garden load desres-python/3.6.1-01c7/bin
-#    PY=python3
+#    garden load $PYTHON3/bin
 # else
-#    PY=python
+#    garden load $PYTHON/bin
 # fi
-# exec $PY $0 "$@"
+# which python
+# exec python $0 "$@"
 #}
 
 import os, sys, unittest

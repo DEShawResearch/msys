@@ -2,16 +2,14 @@
 #{
 # garden env-keep-only TMPDIR
 # source `dirname $0`/../MODULES
-# garden load $PYTHON/bin
 # if [ "$1" == "-3" ]
 # then
 #    shift
-#    garden load desres-python/3.6.1-01c7/bin
-#    PY=python3
+#    garden load $PYTHON3/bin
 # else
-#    PY=python
+#    garden load $PYTHON/bin
 # fi
-# exec $PY $0 "$@"
+# exec python $0 "$@"
 #}
 
 from __future__ import print_function
@@ -542,10 +540,10 @@ class TestDoublePrecision(unittest.TestCase):
 
         r=molfile.dcd.read('tests/files/alanin.dcd', double_precision=False) 
         f=next(r.frames())
-        self.assertNotEqual(f.pos, None)
-        self.assertEqual(f.vel, None)
-        self.assertEqual(f.dpos, None)
-        self.assertEqual(f.dvel, None)
+        self.assertFalse(f.pos is None)
+        self.assertTrue(f.vel is None)
+        self.assertTrue(f.dpos is None)
+        self.assertTrue(f.dvel is None)
 
     def testMaeDms(self):
         for dbl in True, False:
