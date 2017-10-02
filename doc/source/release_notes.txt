@@ -1,3 +1,11 @@
+1.7.213c7 Bump megamodule versions.
+          Don't filter metals in bond order assigner (DESRESCode#3713).
+          Ignore excluded knots in dms-validate (DESRESCode#3566).
+          Added an ignore_excluded option to findContactIds()
+          Fix altloc writing (DESRESCode#3626).
+          Fix pdb download.
+          Expose SystemImporter from python.
+
 1.7.212c7 Added msys.ConvertToOEChem.
           Added --without-pos option to dms-dump.
 
