@@ -482,7 +482,7 @@ class TestInChI(unittest.TestCase):
         from msys import InChI
         for k,v in list(self.gold.items()):
             m = msys.Load('tests/files/%s' % k)
-            self.assertEqual(InChI(m).string, v)
+            self.assertEqual(InChI(m, SNon=True).string, v)
 
 
 class TestAmber(unittest.TestCase):

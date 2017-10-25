@@ -2263,7 +2263,7 @@ def LineIntersectsTriangle(r, s, a, b, c):
 class InChI(object):
     ''' InChI holds an the result of an inchi invocation for a structure '''
 
-    def __init__(self, system, DoNotAddH = True, SNon = True, FixedH = True):
+    def __init__(self, system, DoNotAddH = True, SNon = False, FixedH = True):
         opts = 0
         if DoNotAddH:
             opts |= _msys.InChI.Flags.DoNotAddH
