@@ -2763,6 +2763,11 @@ class Main(unittest.TestCase):
             self.assertEqual(m.name, ('XYZ', 'ABC')[i])
         self.assertEqual(i,1)
 
+    def testMol2Residues(self):
+        m1 = msys.Load('tests/files/test_UID_not_reordered.mol2')
+        m2 = msys.Load('tests/files/test_UID_corrected.mol2')
+        self.assertEqual(m1.nresidues, m2.nresidues)
+
     def testAppendSDF(self):
         m=msys.CreateSystem()
         m.addAtom().atomic_number=1

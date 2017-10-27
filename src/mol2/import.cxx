@@ -118,20 +118,25 @@ SystemPtr iterator::next() {
             case Skip: 
                 break;
             case Atom:
+                {
+                int last_resid = 0;
+                int last_residue = 0;
+                char chain[] = "A";
                 for (int i=0; i<natoms; i++) {
-                    int id, resid=0;
+                    int id, residue, resid=0;
                     Float x,y,z,q=0;
                     char name[32], type[32], resname[32];
                     if (!fgets(buf, sizeof(buf), fd)) {
                         MSYS_FAIL("Missing expected Atom record " << i+1);
                     }
                     int rc = sscanf(buf, "%d %s %lf %lf %lf %s %d %s %lf",
-                            &id, name, &x, &y, &z, type, &resid, resname, &q);
+                            &id, name, &x, &y, &z, type, &residue, resname, &q);
                     if (rc<6) {
                         MSYS_FAIL("Could not parse Atom record:\n" << buf);
                     }
                     // maybe the resid is encoded as digits at the end
                     // of the resname.
+                    resid = residue;
                     {
                         char* p=resname;
                         while (*p && isalpha(*p)) ++p;
@@ -144,7 +149,13 @@ SystemPtr iterator::next() {
                             }
                         }
                     }
-                    Id atm = imp.addAtom( "", "", resid, resname, name);
+                    // if the resid resets to less than the previous value, start a
+                    // new chain.
+                    if (resid < last_resid || (resid==last_resid && residue != last_residue)) {
+                        chain[0]++;
+                    }
+
+                    Id atm = imp.addAtom(chain, "", resid, resname, name);
                     atom_t& atom = mol->atom(atm);
                     atom.x = x;
                     atom.y = y;
@@ -153,8 +164,11 @@ SystemPtr iterator::next() {
                     char* dot = strchr(type, '.');
                     if (dot) *dot='\0';
                     atom.atomic_number = ElementForAbbreviation(type);
+                    last_resid = resid;
+                    last_residue = residue;
                 }
                 state = Skip;
+                }
                 break;
 
             case Bond:
