@@ -1,4 +1,5 @@
 1.7.214c7 Make msys.InChI include stereo by default (SNon=True).
+          Fix mol2 handling of resids (DESRESCode#3747).
 
 1.7.213c7 Bump megamodule versions.
           Don't filter metals in bond order assigner (DESRESCode#3713).
