@@ -278,6 +278,10 @@ namespace desres { namespace molfile {
     void set_meta(std::shared_ptr < metadata > p) {
         metap = p;
     }
+    
+    void set_path(std::string path) {
+        dtr = path;
+    }
 
     void set_jobstep_id(std::string id) {
         jobstep_id = id;
@@ -447,9 +451,15 @@ namespace desres { namespace molfile {
         return framesets.at(n);
     }
 
+    DtrReader* frameset(ssize_t n) {
+        return framesets.at(n);
+    }
+
     static bool recognizes(const std::string &path);
 
     bool read_stk_cache_file(const std::string &cachepath, bool verbose, bool v8);
+
+    void write_cachefile(std::string fname) const;
 
     std::ostream& dump(std::ostream &out) const;
     std::istream& load_v7(std::istream &in);

@@ -1031,57 +1031,65 @@ void StkReader::init(int* changed) {
         /* update the cache */
         if (verbose) printf("StkReader: updating cache\n");
 
-        /* create temporary file.  We don't care about errors writing
-         * the file because we'll detect any error on rename */
         std::string cachepath = filename_to_cache_location_v8(dtr);
-        std::string tmpfile(bfs::unique_path(cachepath+"-%%%%-%%%%").string());
-        int fd = open(tmpfile.c_str(), O_WRONLY|O_CREAT|O_BINARY, 0666);
-        if (fd<0) {
-          if (verbose)
-            printf("StkReader: warning, creation of cache tmpfile at %s failed: %s\n",
-            tmpfile.c_str(), strerror(errno));
-        } else {
-          bio::filtering_ostream out;
-          bio::file_descriptor_sink file(fd, bio::close_handle);
+        write_cachefile(cachepath);
+
+    }
+}
+
+void StkReader::write_cachefile(std::string cachepath) const {
+    const bool verbose = getenv("DTRPLUGIN_VERBOSE");
+
+    /* create temporary file.  We don't care about errors writing
+    * the file because we'll detect any error on rename */
+    std::string tmpfile(bfs::unique_path(cachepath+"-%%%%-%%%%").string());
+    int fd = open(tmpfile.c_str(), O_WRONLY|O_CREAT|O_BINARY, 0666);
+    if (fd<0) {
+      if (verbose)
+        printf("StkReader: warning, creation of cache tmpfile at %s failed: %s\n",
+        tmpfile.c_str(), strerror(errno));
+    } else {
+      bio::filtering_ostream out;
+      bio::file_descriptor_sink file(fd, bio::close_handle);
 #ifndef WIN32 //gzip does not currently work on windows
 #ifndef __APPLE__
           out.push(bio::gzip_compressor());
 #endif
 #endif
-          out.push(file);
-          dump(out);
-        }
+      out.push(file);
+      dump(out);
+    }
 
-        if (fd >= 0) {
-            /* do the rename, check for failure */
-            boost::system::error_code ec;
-            bfs::rename(bfs::path(tmpfile), bfs::path(cachepath), ec);
-            if (ec) {
-                if (verbose)
-                    /* FIXME: this should probably be more noticeable... */
-                    printf("StkReader: rename of tmpfile to %s failed: %s\n",
-                           cachepath.c_str(), strerror(errno));
-            } else {
-                if (verbose)
-                    printf("StkReader: cache update succeeded.\n");
+    if (fd >= 0) {
+        /* do the rename, check for failure */
+        boost::system::error_code ec;
+        bfs::rename(bfs::path(tmpfile), bfs::path(cachepath), ec);
+        if (ec) {
+            if (verbose)
+                /* FIXME: this should probably be more noticeable... */
+                printf("StkReader: rename of tmpfile to %s failed: %s\n",
+                       cachepath.c_str(), strerror(errno));
+        } else {
+            if (verbose)
+                printf("StkReader: cache update succeeded.\n");
 
-                //
-                // This chmod is needed to deal with umasks that
-                // might create the file with more restrictive
-                // permissions than 0666 in the open O_CREAT.
-                //
-                int rc = chmod(cachepath.c_str(), 0666);
-                if (verbose) {
-                    if (rc == 0) {
-                        printf("StkReader: cache file %s successfully chmod to 0666.", cachepath.c_str());
-                    } else {
-                        printf("StkReader: unable to chmod cache file %s to 0666.", cachepath.c_str());
-                    }
+            //
+            // This chmod is needed to deal with umasks that
+            // might create the file with more restrictive
+            // permissions than 0666 in the open O_CREAT.
+            //
+            int rc = chmod(cachepath.c_str(), 0666);
+            if (verbose) {
+                if (rc == 0) {
+                    printf("StkReader: cache file %s successfully chmod to 0666.", cachepath.c_str());
+                } else {
+                    printf("StkReader: unable to chmod cache file %s to 0666.", cachepath.c_str());
                 }
             }
         }
     }
 }
+
 
 void StkReader::append(std::vector<std::string> fnames,
                        std::vector<Timekeys> const& timekeys ) {
@@ -2593,7 +2601,9 @@ std::istream& StkReader::load_v8(std::istream &in) {
       meta_data_map[mp->get_hash()] = mp;
   }
 
-  size_t size; in >> size; framesets.resize(size);
+  size_t size; in >> size;
+  std::cout << "got size " << size << "\n";
+  framesets.resize(size);
   in.get(c);
   for (size_t i=0; i<framesets.size(); i++) {
     delete framesets[i];
