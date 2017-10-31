@@ -1,3 +1,6 @@
+1.7.215c7 Removed v7 stk cache code and added utility to rename
+          a dtr in an stk cache file.
+
 1.7.214c7 Make msys.InChI include stereo by default (SNon=True).
           Fix mol2 handling of resids (DESRESCode#3747).
 

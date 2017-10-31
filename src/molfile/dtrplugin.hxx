@@ -357,7 +357,6 @@ namespace desres { namespace molfile {
                              molfile_timestep_t *ts ) const;
 
     std::ostream& dump(std::ostream &out) const;
-    std::istream& load_v7(std::istream &in);
     std::istream& load_v8(std::istream &in);
     const std::string get_path() {
         return dtr;
@@ -457,12 +456,11 @@ namespace desres { namespace molfile {
 
     static bool recognizes(const std::string &path);
 
-    bool read_stk_cache_file(const std::string &cachepath, bool verbose, bool v8);
+    bool read_stk_cache_file(const std::string &cachepath, bool verbose);
 
     void write_cachefile(std::string fname) const;
 
     std::ostream& dump(std::ostream &out) const;
-    std::istream& load_v7(std::istream &in);
     std::istream& load_v8(std::istream &in);
     void process_meta_frames();
   };

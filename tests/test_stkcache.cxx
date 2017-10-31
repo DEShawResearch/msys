@@ -21,8 +21,7 @@ int main() {
 
      StkReader stk2(stk_path);
      const bool verbose = true;
-     const bool v8 = true;
-     stk2.read_stk_cache_file(cache_path, verbose, v8);
+     stk2.read_stk_cache_file(cache_path, verbose);
 
     for (Id i=0, n=stk2.nframesets(); i<n; i++) {
         auto dtr = stk2.frameset(i);

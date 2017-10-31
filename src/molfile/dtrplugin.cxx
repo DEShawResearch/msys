@@ -743,31 +743,7 @@ static std::string filename_to_cache_location_v8(std::string const& stk) {
   return ss.str();
 }
 
-static std::string filename_to_cache_location_v7(std::string const& stk) {
-  std::stringstream ss;
-  bfs::path fullpath = bfs::system_complete(stk);
-  ss << fullpath.parent_path().string() << "/." << fullpath.filename().string() << ".cache.0007";
-  return ss.str();
-}
  
-static std::string filename_to_old_cache_location(std::string const& stk) {
-  const char*        cache_prefix = getenv("MOLFILE_STKCACHE_LOCATION");
-  if (!cache_prefix) cache_prefix = "/d/en/cache-0/molfile_stk/";
-
-  std::stringstream ss;
-  ss << cache_prefix;
-  ss << "0007"; // V7 cache file
-
-  bfs::path fullpath = bfs::system_complete(stk);
-  for (bfs::path::iterator it=fullpath.begin(); it!=fullpath.end(); ++it) {
-    std::string s = it->string();
-    if (s=="/") continue; /* for first component */
-    ss << "#" << s;
-  }
-  ss << ".dump";
-  return ss.str();
-}
-
 bool StkReader::has_velocities() const {
     if (!framesets.size()) return false;
     return framesets[0]->has_velocities();
@@ -778,7 +754,7 @@ uint32_t StkReader::natoms() const {
     return framesets[0]->natoms();
 }
 
-bool StkReader::read_stk_cache_file(const std::string &cachepath, bool verbose, bool v8) {
+bool StkReader::read_stk_cache_file(const std::string &cachepath, bool verbose) {
     if (verbose) {
         printf("StkReader: cachepath %s\n", cachepath.c_str());
     }
@@ -798,11 +774,7 @@ bool StkReader::read_stk_cache_file(const std::string &cachepath, bool verbose, 
         in.push(file);
 
         try {
-            if (v8) {
-                load_v8(in);
-            } else {
-                load_v7(in);
-            }
+	    load_v8(in);
         }
         catch (std::exception& e) {
             if (verbose) {
@@ -882,62 +854,28 @@ void StkReader::init(int* changed) {
     // to be created, that contained the entirety of the meta
     // frame.  And so it was.
     //
-    // To not pay a huge penalty on startup with the conversion
-    // to v8, find any possible v7 cache file and get the time
-    // indices from it, so that only processing of a single meta
-    // frame is needed.
+    // We used to have code to look for a v7 version of the cache
+    // file if no v8 version was found, but now that a few years
+    // of v8 have passed, that's been turned off.
     //
     // And as a crude hack, look at the first and last meta frames
     // in the stk, and only read all meta frames if those two are
     // not identical.
     //
     
-    bool found_v7_cache = false;
     bool found_v8_cache = false;
 
     /* use an stk cache if running in DESRES */
     if (use_cache) {
 
         std::string cachepath = filename_to_cache_location_v8(dtr);
-        found_v8_cache = read_stk_cache_file(cachepath, verbose, true);
+        found_v8_cache = read_stk_cache_file(cachepath, verbose);
 
         if (verbose) {
             if (found_v8_cache) {
                 printf("StkReader: found v8 stk cache.\n");
             } else {
                 printf("StkReader: no v8 stk cache found.\n");
-            }
-        }
-
-        if (found_v8_cache == false) {
-            //
-            // If no v8 file is found, look for a v7 file in 2 locations.
-            //
-            cachepath = filename_to_cache_location_v7(dtr);
-            found_v7_cache = read_stk_cache_file(cachepath, verbose, false);
-
-            if (verbose) {
-                if (found_v7_cache) {
-                    printf("StkReader: found v7 stk cache at %s\n", cachepath.c_str());
-                } else {
-                    printf("StkReader: no v7 stk cache found at %s\n", cachepath.c_str());
-                }
-            }
-        }
-
-        if ((found_v8_cache == false) && (found_v7_cache == false)) {
-            //
-            // One more place to look for an old v7 cache entry.
-            //
-            cachepath = filename_to_old_cache_location(dtr);
-            found_v7_cache = read_stk_cache_file(cachepath, verbose, false);
-
-            if (verbose) {
-                if (found_v7_cache) {
-                    printf("StkReader: found v7 stk cache at %s\n", cachepath.c_str());
-                } else {
-                    printf("StkReader: no v7 stk cache found at %s\n", cachepath.c_str());
-                }
             }
         }
     }
@@ -2489,45 +2427,6 @@ std::ostream& DtrReader::dump(std::ostream &out) const {
     return out;
 }
 
-std::istream& DtrReader::load_v7(std::istream &in) {
-  char c;
-  std::string version;
-  bool has_meta;
-  bool owns_meta;
-
-  in >> version;
-
-  if (version != "0007") {
-      DTR_FAILURE("Bad version string: " << version);
-  }
-
-  in >> dtr
-     >> _natoms
-     >> with_velocity
-     >> owns_meta
-     >> has_meta;
-
-  if (owns_meta && has_meta) {
-      //
-      // V7 format had a serialized INVMASS vector of floats.
-      // This is now superceded by V8 holding the entire meta
-      // frame, but we still need to parse out correctly the
-      // INVMASS right now.
-      //
-      std::vector<float> inv_mass;
-      in.get(c);
-      in >> inv_mass;
-  }
-
-  in >> m_ndir1
-     >> m_ndir2;
-
-  in.get(c);
-  keys.load(in);
-
-  return in;
-}
-
 std::istream& DtrReader::load_v8(std::istream &in) {
   char c;
   uint64_t meta_hash;
@@ -2695,26 +2594,6 @@ void StkReader::process_meta_frames() {
             }
         }
     }
-}
-
-std::istream& StkReader::load_v7(std::istream &in) {
-
-  std::string old_path;
-  in >> old_path;
-  size_t size; in >> size; framesets.resize(size);
-  char c; in.get(c);
-  for (size_t i=0; i<framesets.size(); i++) {
-    delete framesets[i];
-    framesets[i] = new DtrReader("<no file>", _access);
-    framesets[i]->load_v7(in);
-    if (framesets[0]->natoms()==0 && framesets[i]->natoms()>0) {
-        framesets[0]->set_natoms(framesets[i]->natoms());
-    }
-  }
-
-  process_meta_frames();
-
-  return in;
 }
 
 ///////////////////////////////////////////////////////////////////
