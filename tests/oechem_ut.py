@@ -1,26 +1,13 @@
 #!/usr/bin/garden-exec
 #{
-# garden env-keep-only TMPDIR
-# source `dirname $0`/../MODULES
-# garden load $PYTHON/bin
-# if [ "$1" == "-3" ]
-# then
-#    shift
-#    garden load desres-python/3.6.1-01c7/bin
-#    PY=python3
-# else
-#    PY=python
-# fi
-# garden load openeye-toolkits/2017.6.1-01c7/lib-$PY
-# exec $PY $0 "$@"
+# source `dirname $0`/pyenv.sh
+# garden load openeye-toolkits/2017.10.1-01c7/lib-python${PYSUFFIX}
+# exec python $0 "$@"
 #}
 
 from __future__ import print_function
+from util import *
 
-import os, sys
-TMPDIR = os.getenv('TMPDIR', 'objs/%s/x86_64' % os.getenv('DESRES_OS'))
-suffix = '3' if sys.version_info.major==3 else ''
-sys.path.insert(0, os.path.join(TMPDIR, 'lib', 'python%s' % suffix))
 import msys
 import numpy as np
 

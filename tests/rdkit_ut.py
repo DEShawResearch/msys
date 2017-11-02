@@ -1,15 +1,12 @@
 #!/usr/bin/garden-exec
 #{
-# source `dirname $0`/../MODULES
-# exec garden with -c -e TMPDIR -m $PYTHON/bin \
-# -m RDKit/2016_09_1-01/lib-python \
-# -- python $0 "$@"
+# source `dirname $0`/pyenv.sh
+# garden load rdkit/2017.03.3-01c7/lib-python${PYSUFFIX}
+# exec python $0 "$@"
 #}
-#### RDKit/2016_03_1-04/lib-python \
+import os, sys, unittest
+from util import *
 
-import os, sys
-TMPDIR=os.getenv('TMPDIR', 'objs/%s/x86_64' % os.getenv('DESRES_OS'))
-sys.path.insert(0,os.path.join(TMPDIR, 'lib', 'python'))
 import msys
 
 import unittest

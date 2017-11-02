@@ -1,3 +1,6 @@
+1.7.216c7 Refactored test cases and making sure to run RDKit and
+          OEChem conversion test cases.
+
 1.7.215c7 Removed v7 stk cache code and added utility to rename
           a dtr in an stk cache file.
 

@@ -3,4 +3,5 @@ objs
 /doc/build/
 desres.py
 build.sh
+*.pyc
 *~

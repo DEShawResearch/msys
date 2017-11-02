@@ -3,7 +3,7 @@ eval "$(garden-exec)"
 set -e
 
 NAME=msys
-VERSION=1.7.215c7
+VERSION=1.7.216c7
 DESCRIPTION="Biomolecular Structure Library"
 
 # module versions that scripts in ./tools need to know
@@ -103,6 +103,12 @@ case $1 in
         ./tests/ut.py
         ./tests/ut.py -3
         ./tests/molfile_ut.py
+
+        ./tests/oechem_ut.py
+        ./tests/oechem_ut.py -3
+
+        ./tests/rdkit_ut.py
+        #./tests/rdkit_ut.py -3 # doesn't work yet with 2017.09
 
 	genhelp
 	genmodules
