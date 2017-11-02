@@ -1932,7 +1932,8 @@ def ConvertToRdkit(mol):
     conf = Chem.Conformer(mol.natoms)
     for i, pos in enumerate(mol.getPositions()):
         conf.SetAtomPosition(i, pos)
-    rdmol.AddConformer(conf)
+    confId = rdmol.AddConformer(conf) # the RDKit Python API makes a copy of this conformer
+    conf = rdmol.GetConformer(confId) # so re-acquire the conformer for DetectBondStereoChemistry
     Chem.SanitizeMol(rdmol)
     Chem.AssignAtomChiralTagsFromStructure(rdmol)
     Chem.DetectBondStereoChemistry(rdmol, conf)

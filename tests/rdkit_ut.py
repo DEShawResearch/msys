@@ -1,9 +1,10 @@
 #!/usr/bin/garden-exec
 #{
 # source `dirname $0`/pyenv.sh
-# garden load rdkit/2017.03.3-01c7/lib-python${PYSUFFIX}
+# garden load rdkit/2017.09.1-04c7/lib-python${PYSUFFIX}
 # exec python $0 "$@"
 #}
+from __future__ import print_function
 import os, sys, unittest
 from util import *
 
@@ -32,7 +33,7 @@ class Main(unittest.TestCase):
         t=-time()
         rdmol = msys.ConvertToRdkit(mol)
         t+=time()
-        print "%s: %d atoms, %d bonds in %.3fs" % (mol.name, mol.natoms, mol.nbonds, t)
+        print("%s: %d atoms, %d bonds in %.3fs" % (mol.name, mol.natoms, mol.nbonds, t))
 
     def testChiralAtoms(self):
         mol = msys.Load('tests/files/jandor.sdf')

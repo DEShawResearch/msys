@@ -108,7 +108,7 @@ case $1 in
         ./tests/oechem_ut.py -3
 
         ./tests/rdkit_ut.py
-        #./tests/rdkit_ut.py -3 # doesn't work yet with 2017.09
+        ./tests/rdkit_ut.py -3
 
 	genhelp
 	genmodules
