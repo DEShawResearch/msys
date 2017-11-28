@@ -12,6 +12,7 @@ int main(int argc, char *argv[]) {
             continue;
         }
         mf::Reader r(plugin, path);
+        printf("last frame time: %.17g\n", r.frame(r.nframes()-1)->time());
         printf("Got Reader for %s: natoms %ld nframes %ld\n", 
                 path, r.natoms(), r.nframes());
         for (;;) {

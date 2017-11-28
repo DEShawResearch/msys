@@ -5,8 +5,8 @@
 using namespace desres::msys;
 using namespace desres::molfile;
 
-int main() {
-    auto stk_path = "tests/files/run.stk";
+int main(int argc, char *argv[]) {
+    auto stk_path = argv[1];
     StkReader stk(stk_path);
     stk.init();
 

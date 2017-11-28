@@ -124,10 +124,10 @@ namespace desres { namespace molfile {
       : m_first(0), m_interval(0), m_framesize(0), 
         m_size(0), m_fullsize(0), m_fpf(0) {}
 
-      void init( const std::string& path );
+      void init( const std::string& path, double reference_interval=0 );
 
       /* initialize from timekeys bytes.  Writable but owned by caller */
-      void initWithBytes( size_t nbytes, void* tkbytes );
+      void initWithBytes( size_t nbytes, void* tkbytes, double reference_interval=0 );
 
       uint32_t framesperfile() const { return m_fpf; }
 

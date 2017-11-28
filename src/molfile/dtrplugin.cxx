@@ -332,20 +332,20 @@ static void read_file( std::string const& path,
 #endif
 }
 
-void Timekeys::init(const std::string& path ) {
+void Timekeys::init(const std::string& path, double reference_interval ) {
     std::string timekeys_path = path;
     timekeys_path += s_sep;
     timekeys_path += "timekeys";
     std::vector<char> buffer;
     try {
         read_file(timekeys_path, buffer);
-        initWithBytes(buffer.size(), &buffer[0]);
+        initWithBytes(buffer.size(), &buffer[0], reference_interval);
     } catch (std::exception& e) {
         DTR_FAILURE("failed reading timekeys at " << timekeys_path << ": " << e.what());
     }
 }
 
-void Timekeys::initWithBytes(size_t tksize, void* bytes) {
+void Timekeys::initWithBytes(size_t tksize, void* bytes, double reference_interval) {
   
     const bool verbose = getenv("DTRPLUGIN_VERBOSE");
     key_prologue_t* prologue = static_cast<key_prologue_t*>(bytes);
@@ -408,9 +408,12 @@ void Timekeys::initWithBytes(size_t tksize, void* bytes) {
     } else if (keys.size()>1) {
         m_interval=keys[1].time()-keys[0].time();
     }
+    if (reference_interval != 0) {
+        m_interval = reference_interval;
+    }
 
-    int time_interval_warnings = 0;
     for (i=1; i<keys.size(); i++) {
+        double time = keys[i].time();
 
         /* constant frame size */
         if (keys[i].size() != m_framesize) {
@@ -432,18 +435,15 @@ void Timekeys::initWithBytes(size_t tksize, void* bytes) {
         }
         /* constant time interval */
         if (m_interval>0) {
-          if (((keys[i].time()-keys[i-1].time())-m_interval) > 1e-3) {
-            if (++time_interval_warnings<=10 && verbose)
-                printf("non-constant time interval at frame %ld\n", i);
-          }
           /* make sure that m_interval precisely equals the given time */
           double computed_time = m_first + i * m_interval;
-          if (keys[i].time() != computed_time) {
+
+          if (fabs(time - computed_time) > 1e-5) {
             /* keep checking for constant framesize, but record that
             * the interval is not constant */
             if (verbose)
-              printf("frame %lu time %g != computed %g\n",
-                i, keys[i].time(), computed_time);
+              printf("frame %lu time %.17g != computed %.17g = %.17g + %lu * %.17g\n",
+                i, time, computed_time, m_first, i, m_interval);
             m_interval=0;
           }
         }
@@ -452,7 +452,7 @@ void Timekeys::initWithBytes(size_t tksize, void* bytes) {
      * the explicit key records anymore. */
     if (m_interval>0 && m_framesize>0) {
       if (verbose) {
-        printf("all times computable from interval %g\n", m_interval);
+        printf("all times computable from m_first %.17g interval %.17g\n", m_first, m_interval);
       }
       keys.clear();
     }
@@ -951,11 +951,32 @@ void StkReader::init(int* changed) {
 
     /* read the unread timekeys files */
     std::vector<Timekeys> timekeys(fnames.size());
+
+    /* Get the reference interval from the first set of timekeys, where it will
+     * be computed most precisely.  Later framesets would compute the interval
+     * as the difference between two large numbers, introducing error that throws
+     * off our calculated frame time.  */
+    double reference_interval=0;
+    if (framesets.size()>0) {
+        reference_interval = framesets[0]->keys.interval();
+        if (verbose) {
+            printf("Got reference interval %.17g from first frameset at %s\n",
+                    reference_interval, framesets[0]->path().data());
+        }
+    }
     for (unsigned i=0; i<timekeys.size(); i++) {
         if (verbose) {
             printf("StkReader: Loading timekeys from dtr at %s\n", fnames[i].c_str());
         }
-        timekeys[i].init(fnames[i]);
+        timekeys[i].init(fnames[i], reference_interval);
+        if (reference_interval==0) {
+            reference_interval = timekeys[i].interval();
+            if (verbose) {
+                printf("Got reference interval %.17g from first processed timekeys at %s\n",
+                        reference_interval, fnames[i].data());
+            }
+        }
+
     }
 
     if (changed) {
@@ -1019,9 +1040,9 @@ void StkReader::write_cachefile(std::string cachepath) const {
             int rc = chmod(cachepath.c_str(), 0666);
             if (verbose) {
                 if (rc == 0) {
-                    printf("StkReader: cache file %s successfully chmod to 0666.", cachepath.c_str());
+                    printf("StkReader: cache file %s successfully chmod to 0666.\n", cachepath.c_str());
                 } else {
-                    printf("StkReader: unable to chmod cache file %s to 0666.", cachepath.c_str());
+                    printf("StkReader: unable to chmod cache file %s to 0666.\n", cachepath.c_str());
                 }
             }
         }
@@ -2501,7 +2522,6 @@ std::istream& StkReader::load_v8(std::istream &in) {
   }
 
   size_t size; in >> size;
-  std::cout << "got size " << size << "\n";
   framesets.resize(size);
   in.get(c);
   for (size_t i=0; i<framesets.size(); i++) {
