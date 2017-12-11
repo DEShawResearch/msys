@@ -80,6 +80,13 @@ class Bond(Handle):
         ''' atom in bond not the same as given atom '''
         return Atom(self._ptr, self.data().other(atom.id))
 
+    def __cmp__(self, that):
+        if not isinstance(that, Bond):
+            raise TypeError("comparison not supported between instances of '%s' and '%s'" % (
+                Bond, type(that)))
+        return cmp((self._ptr, self.data().i, self.data().j),
+                   (that._ptr, that.data().i, that.data().j))
+
     @property
     def atoms(self): 
         ''' Atoms in this Bond '''
@@ -134,6 +141,12 @@ class Atom(Handle):
     def __contains__(self, key):
         ''' does atom property key exist? '''
         return not _msys.bad(self._ptr.atomPropIndex(key))
+
+    def __cmp__(self, that):
+        if not isinstance(that, Atom):
+            raise TypeError("comparison not supported between instances of '%s' and '%s'" % (
+                Atom, type(that)))
+        return cmp((self._ptr, self._id), (that._ptr, that._id))
 
     def addBond(self, other):
         ''' create and return a Bond from self to other '''

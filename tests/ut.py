@@ -15,6 +15,7 @@ import gzip
 import shutil
 import tempfile
 import sqlite3
+import random
 
 
 def tmpfile(**kwds):
@@ -927,6 +928,38 @@ class TestValidate(unittest.TestCase):
         self.assertTrue(success)
 
 class Main(unittest.TestCase):
+
+    def testSortAtoms(self):
+        mol = msys.Load('tests/files/2f4k.dms')
+        atoms = mol.atoms
+        random.shuffle(atoms)
+        ids = [a.id for a in atoms]
+        ref = sorted(ids)
+        self.assertNotEqual(ids, ref)
+        atoms.sort()
+        ids = [a.id for a in atoms]
+        self.assertEqual(ids, ref)
+
+    def testSortBonds(self):
+        mol = msys.Load('tests/files/2f4k.dms')
+        bonds = mol.bonds
+        random.shuffle(bonds)
+        ids = [(b.first.id, b.second.id) for b in bonds]
+        ref = sorted(ids)
+        self.assertNotEqual(ids, ref)
+        bonds.sort()
+        ids = [(b.first.id, b.second.id) for b in bonds]
+        self.assertEqual(ids, ref)
+
+    def testSortMismatch(self):
+        import itertools
+        mol = msys.Load('tests/files/ch4.dms')
+        atm = mol.atom(0)
+        bnd = mol.bond(0)
+        for i, j in itertools.permutations((mol,atm,bnd), 2):
+            with self.assertRaises(TypeError):
+                [i,j].sort()
+                [j,i].sort()
 
     def testCapsule(self):
         mol = msys.Load('tests/files/2f4k.dms')
