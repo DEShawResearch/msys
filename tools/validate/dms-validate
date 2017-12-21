@@ -77,7 +77,23 @@ def main():
     if len(args)!=1:
         parser.error("incorrect number of arguments")
 
-    mol=msys.Load(args[0])
+    try:
+        path = args[0]
+        mol=msys.Load(path)
+    except ValueError as initial_exception:
+        try:  # Test if it's a job_id, i.e. an integer
+            job_id = int(path)
+        except ValueError:
+            raise ValueError(initial_exception)
+        # If it's a job_id, try to load the dms with yas
+        import garden
+        garden.load('yas/0.70-beta-c7/lib-python')  # So far, this module is python2
+        import yas
+        import json
+        input_ark = json.loads(yas.GetJobs(job_id).input_ark)
+        path = str(input_ark['boot']['file'])  # str because msys complains with unicode
+        mol=msys.Load(path)
+    
     result=validate.Validate(mol, **opts.__dict__)
     return not result.wasSuccessful()
 
