@@ -1631,6 +1631,14 @@ class Main(unittest.TestCase):
         b2=msys.SerializeMAE(m)
         self.assertEqual(b1,b2)
 
+    def testExportDmsGz(self):
+        old=msys.Load('tests/files/noFused1.mae')
+        with tempfile.NamedTemporaryFile(suffix='.dms.gz') as tmp:
+            msys.Save(old, tmp.name)
+            new = msys.Load(tmp.name)
+        self.assertEqual([a.name for a in old.atoms],
+                         [a.name for a in new.atoms])
+
     def testExportMaeGz(self):
         m=msys.Load('tests/files/noFused1.mae')
         tmp=tempfile.NamedTemporaryFile(suffix='.maegz')

@@ -609,6 +609,40 @@ static void export_dms(SystemPtr h, Sqlite dms, Provenance const& provenance,
     dms.finish();
 }
 
+class Tmpfile {
+    char* _path = nullptr;
+    char tmpl[32];
+
+    char* mktemp() {
+        unlink();
+#if defined(_WIN64) || defined(_WIN32)
+        strcpy(tmpl, "msys.pickle.XXXXXX");
+        return ::_mktemp(tmpl);
+#else
+        strcpy(tmpl, "/tmp/msys.pickle.XXXXXX");
+        _path = ::mktemp(tmpl);
+        return _path;
+    }
+#endif
+
+    void unlink() {
+        if (!_path) return;
+#if defined(_WIN64) || defined(_WIN32)
+        ::_unlink(_path);
+#else
+        ::unlink(_path);
+#endif
+    }
+
+    Tmpfile(Tmpfile const&) = delete;
+    Tmpfile& operator=(Tmpfile const&) = delete;
+
+public:
+    Tmpfile() = default;
+    const char* create() { return mktemp(); }
+    ~Tmpfile() { unlink(); }
+};
+
 void desres::msys::ExportDMS(SystemPtr h, const std::string& path,
                              Provenance const& provenance,
                              unsigned flags ) {
@@ -621,12 +655,49 @@ void desres::msys::ExportDMS(SystemPtr h, const std::string& path,
     }
     unlink(path.c_str());
     Sqlite dms;
+    Tmpfile tmp;
+
+    std::string _path;
+    const bool is_gz = path.rfind(".gz") == path.size()-3;
+    if (is_gz) {
+        _path = tmp.create();
+    } else {
+        _path = path;
+    }
+
     try {
-        dms = Sqlite::write(path, flags & DMSExport::Unbuffered);
+        dms = Sqlite::write(_path, flags & DMSExport::Unbuffered);
     } catch (std::exception& e) {
         MSYS_FAIL("Could not create dms file at " << path << ": " << e.what());
     }
     export_dms(h, dms, provenance, flags);
+
+    if (is_gz) {
+#if defined(_WIN64) || defined(_WIN32)
+        MSYS_FAIL("gzipped dms output not supported on Windows.");
+#endif
+        std::string cmd("gzip -c ");
+        cmd += _path;
+        FILE* fp = popen(cmd.data(), "r");
+        if (!fp) MSYS_FAIL(strerror(errno));
+        FILE* ofile = fopen(path.data(), "w");
+        if (!ofile) {
+            fclose(fp);
+            MSYS_FAIL(strerror(errno));
+        }
+        char buf[4096];
+        size_t rc;
+        while ((rc = fread(buf, 1, sizeof(buf), fp)) > 0) {
+            if (fwrite(buf, 1, rc, ofile) < 0) {
+                std::string _err = strerror(errno);
+                fclose(fp);
+                fclose(ofile);
+                MSYS_FAIL(_err);
+            }
+        }
+        fclose(ofile);
+        fclose(fp);
+    }
 }
 
 static void no_close(sqlite3* db) {}
@@ -637,20 +708,8 @@ void desres::msys::sqlite::ExportDMS(SystemPtr h, sqlite3* db,
 }
 
 std::string desres::msys::FormatDMS(SystemPtr sys, Provenance const& prov) {
-#if defined(_WIN64) || defined(_WIN32)
-    char tmpl[] = "msys.pickle.XXXXXX";
-    char* file = _mktemp(tmpl);
-#else
-    char tmpl[] = "/tmp/msys.pickle.XXXXXX";
-    char* file = mktemp(tmpl);
-#endif
-    if (!file) MSYS_FAIL(strerror(errno));
-    Sqlite dms = Sqlite::write(file);
+    Tmpfile tmp;
+    Sqlite dms = Sqlite::write(tmp.create());
     export_dms(sys, dms, prov, 0);
-#if defined(_WIN64) || defined(_WIN32)
-    _unlink(file);
-#else
-    unlink(file);
-#endif
     return dms.contents();
 }
