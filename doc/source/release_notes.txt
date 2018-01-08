@@ -1,5 +1,8 @@
 1.7.217c7 Write .dms.gz files using gzip.  DESRESCode#3771.
           Added rigid_explicitN schema.
+          All dms-tools and msys.Load support jobids as arguments.
+          Sort atoms and bonds by atom ids.
+          More precise handling of timekeys in large stks.
 
 1.7.216c7 Fixing msys.ConvertToRdkit to work with RDKit 2017.09.
           Sanity check added to Chem.DetectBondStereoChemistry was
