@@ -1,8 +1,8 @@
 #!/usr/bin/garden-exec
 #{
-# source `dirname $0`/../share/MODULES && \
-# exec garden with -c -m $PYTHON/bin \
-# -- python $0 "$@"
+# garden env-keep-only
+# . `dirname $0`/../share/env.sh
+# exec python $0 "$@"
 #}
 
 '''
@@ -13,7 +13,6 @@ position and box data.
 '''
 
 import sys, os, fnmatch
-sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
 from msys import molfile
 import numpy
 

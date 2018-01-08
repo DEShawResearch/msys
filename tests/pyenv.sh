@@ -1,5 +1,5 @@
 garden env-keep-only TMPDIR
-source `dirname $0`/../MODULES
+source `dirname $0`/../env.sh
 if [ "$1" == "-3" ]
 then
    shift

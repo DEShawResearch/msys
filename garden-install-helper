@@ -7,7 +7,7 @@ VERSION=1.7.217c7
 DESCRIPTION="Biomolecular Structure Library"
 
 # module versions that scripts in ./tools need to know
-. ./MODULES
+. ./env.sh
 
 # shared library dependencies
 SCONS=scons/2.5.1-03c7

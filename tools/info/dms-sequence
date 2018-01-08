@@ -1,9 +1,8 @@
-#!/usr/bin/env desres-exec
-# -*- python -*-
+#!/usr/bin/garden-exec
 #{
-# source `dirname $0`/../share/MODULES && \
-# exec garden with -c -m $PYTHON/bin \
-# -- python $0 "$@" 
+# garden env-keep-only
+# . $(dirname $0)/../share/env.sh
+# exec python $0 "$@"
 #}
 
 '''

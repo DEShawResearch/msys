@@ -37,7 +37,7 @@ env.SConscript('src/SConscript')
 if "SCHRODINGER_SRC" not in os.environ:
     env.SConscript('tests/SConscript')
 
-env.AddShare('MODULES')
+env.AddShare('env.sh')
 
 opts=Variables()
 opts.Add("MSYS_WITHOUT_PYTHON", "without python?")

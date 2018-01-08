@@ -1,10 +1,7 @@
 #!/usr/bin/garden-exec
-# -*- python -*-
 #{
 # garden env-keep-only
-# source `dirname $0`/../share/MODULES
-# garden load $PYTHON/bin
-# garden load $YAS/lib-python
+# . $(dirname $0)/../share/env.sh
 # exec python $0 "$@"
 #}
 

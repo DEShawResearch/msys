@@ -1,11 +1,8 @@
-#!/usr/bin/env garden-exec
+#!/usr/bin/garden-exec
 #{
 # garden env-keep-only
-# root=$(dirname $0)
-# source "$root/../share/MODULES"
-# garden load $PYTHON/bin
-# garden prepend-path PYTHONPATH "$root/../lib/python"
-# exec python $0 "$@" 
+# . `dirname $0`/../share/env.sh
+# exec python $0 "$@"
 #}
 
 '''

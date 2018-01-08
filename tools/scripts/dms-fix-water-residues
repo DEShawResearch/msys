@@ -1,18 +1,15 @@
-#!/usr/bin/env desres-exec
-# -*- python -*-
+#!/usr/bin/garden-exec
 #{
-# source `dirname $0`/../share/MODULES && \
-# exec garden with -c -m $PYTHON/bin \
-# -- python $0 "$@" 
+# garden env-keep-only
+# . `dirname $0`/../share/env.sh
+# exec python $0 "$@"
 #}
+
 '''
 dms-fix-water-residues system.dms out.dms 
 
 Give each water fragment its own residue id.
 '''
-
-import sys, os
-sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
 
 import msys
 import numpy
@@ -51,3 +48,4 @@ if __name__=="__main__":
     print "Saving", ofile
     msys.SaveDMS(mol, ofile)
 
+# vim: filetype=python

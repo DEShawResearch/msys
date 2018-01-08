@@ -1,9 +1,8 @@
-#!/usr/bin/env desres-exec
-# -*- python -*-
+#!/usr/bin/garden-exec
 #{
-# source `dirname $0`/../share/MODULES && \
-# exec garden with -c -m $PYTHON/bin \
-# -- python $0 "$@" 
+# garden env-keep-only
+# . `dirname $0`/../share/env.sh
+# exec python $0 "$@"
 #}
 
 '''
@@ -11,7 +10,6 @@ Write or append a selection from input_file to an output file.
 '''
 
 import sys, os
-sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
 import msys
 
 def main():
