@@ -1,23 +1,12 @@
 #!/usr/bin/garden-exec
 #{
-# garden env-keep-only TMPDIR
-# source `dirname $0`/../MODULES
-# if [ "$1" == "-3" ]
-# then
-#    shift
-#    garden load $PYTHON3/bin
-# else
-#    garden load $PYTHON/bin
-# fi
+# source `dirname $0`/pyenv.sh
 # exec python $0 "$@"
 #}
-
 from __future__ import print_function
-import os, sys
-TMPDIR=os.getenv('TMPDIR', 'objs/%s/x86_64' % os.getenv('DESRES_OS'))
-suffix = '3' if sys.version_info.major==3 else ''
-sys.path.insert(0,os.path.join(TMPDIR, 'lib', 'python%s' % suffix))
-#os.environ['DTRPLUGIN_VERBOSE']='1'
+
+import os, sys, unittest
+from util import *
 
 import sqlite3
 
@@ -204,7 +193,7 @@ class DtrTestCase(unittest.TestCase):
             self.assertTrue('TSS_UH' in k4)
             self.assertEqual(len(k4), 21)
         else:
-            print("Warning, no energy.etr")
+            assert False, "No energy.etr"
 
 
     def testBadFrame(self):
