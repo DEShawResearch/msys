@@ -1,4 +1,4 @@
-1.7.217c7 Write .dms.gz files using gzip.  DESRESCode#3771.
+1.7.218c7 Write .dms.gz files using gzip.  DESRESCode#3771.
           Added rigid_explicitN schema.
           All dms-tools and msys.Load support jobids as arguments.
           Sort atoms and bonds by atom ids.

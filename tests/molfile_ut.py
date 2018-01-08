@@ -1,6 +1,5 @@
 #!/usr/bin/garden-exec
 #{
-# garden env-keep-only
 # source `dirname $0`/pyenv.sh
 # exec python $0 "$@"
 #}
