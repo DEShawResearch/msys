@@ -4,7 +4,7 @@
 #include "../value.hxx"
 
 #define DMS_MAX_TERM_PROPS  6
-#define DMS_MAX_PARAM_PROPS 20
+#define DMS_MAX_PARAM_PROPS 30
 
 namespace desres { namespace msys { 
 

@@ -1090,6 +1090,15 @@ class Main(unittest.TestCase):
         s.addTerm((m.atom(0), m.atom(0)))
         self.assertEqual(m, s.term(0).system)
 
+    def testRigidExplicit(self):
+        m=msys.CreateSystem()
+        nmax=9
+        for i in range(nmax): m.addAtom()
+        for i in range(2,nmax+1):
+            s=m.addTableFromSchema('rigid_explicit%d' % i)
+            self.assertEqual(s.natoms, i)
+            self.assertEqual(s.params.nprops, 3*i)
+
     def testParamSystem(self):
         m = msys.CreateSystem()
         m.addAtom()

@@ -58,6 +58,15 @@ static char schemas_as_json[] = R"SCHEMA(
      [ "constraint_ah7", "constraint", 8, ["r1","r2","r3","r4","r5","r6","r7"]],
      [ "constraint_ah8", "constraint", 9, ["r1","r2","r3","r4","r5","r6","r7","r8"]],
 
+     [ "rigid_explicit2", "constraint", 2, ["x0", "y0", "z0", "x1", "y1", "z1"]],
+     [ "rigid_explicit3", "constraint", 3, ["x0", "y0", "z0", "x1", "y1", "z1", "x2", "y2", "z2"]],
+     [ "rigid_explicit4", "constraint", 4, ["x0", "y0", "z0", "x1", "y1", "z1", "x2", "y2", "z2", "x3", "y3", "z3"]],
+     [ "rigid_explicit5", "constraint", 5, ["x0", "y0", "z0", "x1", "y1", "z1", "x2", "y2", "z2", "x3", "y3", "z3", "x4", "y4", "z4"]],
+     [ "rigid_explicit6", "constraint", 6, ["x0", "y0", "z0", "x1", "y1", "z1", "x2", "y2", "z2", "x3", "y3", "z3", "x4", "y4", "z4", "x5", "y5", "z5"]],
+     [ "rigid_explicit7", "constraint", 7, ["x0", "y0", "z0", "x1", "y1", "z1", "x2", "y2", "z2", "x3", "y3", "z3", "x4", "y4", "z4", "x5", "y5", "z5", "x6", "y6", "z6"]],
+     [ "rigid_explicit8", "constraint", 8, ["x0", "y0", "z0", "x1", "y1", "z1", "x2", "y2", "z2", "x3", "y3", "z3", "x4", "y4", "z4", "x5", "y5", "z5", "x6", "y6", "z6", "x7", "y7", "z7"]],
+     [ "rigid_explicit9", "constraint", 9, ["x0", "y0", "z0", "x1", "y1", "z1", "x2", "y2", "z2", "x3", "y3", "z3", "x4", "y4", "z4", "x5", "y5", "z5", "x6", "y6", "z6", "x7", "y7", "z7", "x8", "y8", "z8"]],
+
      [ "virtual_fdat3",   "virtual", 4, [["c1",1,"distance"],
                                       ["c2",1,"angle"],
                                       ["c3",1,"torsion"]]],
