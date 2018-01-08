@@ -1826,18 +1826,42 @@ def LoadXYZ(path):
 
 def Load(path, structure_only=False, without_tables=None):
     ''' Infer the file type of path and load the file.
-    If without_tables is True or False, it specifies whether TermTables
-    should be loaded along with the structure; by default it takes the
-    value of structure_only.
 
-    Returns a new System.
+    Args:
+        path: if str, a file path or PDB accession code.  if int,
+              an Anton jobid (require 'yas' garden module)
+        structure_only (bool): Omit force tables and pseudo atoms
+        without_tables (bool): Omit force tables.
+
+    Returns:
+        new System
     '''
     structure_only = bool(structure_only)
     if without_tables is None:
         without_tables = structure_only
+    jobid = None
+    # if it looks like an int, treat it as a jobid.
+    try:
+        jobid = int(path)
+    except ValueError:
+        pass
+    else:
+        try:
+            import yas
+        except ImportError:
+            raise ValueError("An integer path was specified, but 'import yas' failed")
+        import json
+        job = yas.GetJobs(jobid)
+        if not job:
+            raise ValueError("No such job '%s'" % jobid)
+        input_ark = json.loads(job.input_ark)
+        path = str(input_ark['boot']['file'])
+
     ptr = _msys.Load(path, structure_only, without_tables)
     if not ptr:
         raise ValueError("Could not guess file type of '%s'" % path)
+    if jobid is not None:
+        ptr.name = str(jobid)
     return System(ptr)
 
 class IndexedFileLoader(object):

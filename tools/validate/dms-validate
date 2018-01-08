@@ -1,9 +1,11 @@
-#!/usr/bin/env desres-exec
+#!/usr/bin/garden-exec
 # -*- python -*-
 #{
-# source `dirname $0`/../share/MODULES && \
-# exec garden with -c -m $PYTHON/bin \
-# -- python $0 "$@"
+# garden env-keep-only
+# source `dirname $0`/../share/MODULES
+# garden load $PYTHON/bin
+# garden load $YAS/lib-python
+# exec python $0 "$@"
 #}
 
 '''dms-validate system.dms [ options ]
@@ -59,44 +61,32 @@ sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
 import msys
 from msys import validate
 
-def main():
-    import optparse
-    parser = optparse.OptionParser(__doc__)
-    parser.add_option('--strict', action='store_true', default=False,
+def parse_args():
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('ifile',
+            help="Input file or jobid")
+    parser.add_argument('--strict', action='store_true',
             help="Run strict tests")
-    parser.add_option('--desmond', action='store_true', default=False,
+    parser.add_argument('--desmond', action='store_true',
             help="Run Desmond-specific tests")
-    parser.add_option('--verbose', action='store_true', default=False,
+    parser.add_argument('--verbose', action='store_true',
             help="Be chatty")
-    parser.add_option('--all', action='store_true', default=False,
+    parser.add_argument('--all', action='store_true',
             help="Run all tests")
-    parser.add_option('--anton', action='store_true', default=False,
+    parser.add_argument('--anton', action='store_true',
             help="Run Anton-specific tests")
+    return parser.parse_args()
 
-    opts, args = parser.parse_args()
-    if len(args)!=1:
-        parser.error("incorrect number of arguments")
-
-    try:
-        path = args[0]
-        mol=msys.Load(path)
-    except ValueError as initial_exception:
-        try:  # Test if it's a job_id, i.e. an integer
-            job_id = int(path)
-        except ValueError:
-            raise ValueError(initial_exception)
-        # If it's a job_id, try to load the dms with yas
-        import garden
-        garden.load('yas/0.70-beta-c7/lib-python')  # So far, this module is python2
-        import yas
-        import json
-        input_ark = json.loads(yas.GetJobs(job_id).input_ark)
-        path = str(input_ark['boot']['file'])  # str because msys complains with unicode
-        mol=msys.Load(path)
-    
-    result=validate.Validate(mol, **opts.__dict__)
+def main():
+    args = parse_args()
+    mol = msys.Load(args.ifile)
+    opts = args.__dict__
+    opts.pop('ifile')
+    result=validate.Validate(mol, **opts)
     return not result.wasSuccessful()
 
-if __name__=="__main__": exit(main())
+if __name__=="__main__":
+    exit(main())
 
 # vim: filetype=python

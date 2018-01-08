@@ -1099,6 +1099,10 @@ class Main(unittest.TestCase):
             self.assertEqual(s.natoms, i)
             self.assertEqual(s.params.nprops, 3*i)
 
+    def testLoadByJobid(self):
+        x = msys.Load(6181535)
+        self.assertEqual(x.natoms, 12960)
+
     def testParamSystem(self):
         m = msys.CreateSystem()
         m.addAtom()

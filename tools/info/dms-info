@@ -1,9 +1,11 @@
-#!/usr/bin/env desres-exec
+#!/usr/bin/garden-exec
 # -*- python -*-
 #{
-# source `dirname $0`/../share/MODULES && \
-# exec garden with -c -m $PYTHON/bin \
-# -- python $0 "$@" 
+# garden env-keep-only
+# source `dirname $0`/../share/MODULES
+# garden load $PYTHON/bin
+# garden load $YAS/lib-python
+# exec python $0 "$@"
 #}
 
 '''
@@ -120,21 +122,7 @@ def main():
         if opts.multi_ct:
             it = msys.LoadMany(path, error_writer = errors)
         else:
-            try:
-                it = [msys.Load(path)]
-            except ValueError as initial_exception:
-                try:  # Test if it's a job_id, i.e. an integer
-                    job_id = int(path)
-                except ValueError:
-                    raise ValueError(initial_exception)
-                # If it's a job_id, try to load the dms with yas
-                import garden
-                garden.load('yas/0.70-beta-c7/lib-python')  # So far, this module is python2
-                import yas
-                import json
-                input_ark = json.loads(yas.GetJobs(job_id).input_ark)
-                path = str(input_ark['boot']['file'])  # str because msys complains with unicode
-                it = [msys.Load(path)]
+            it = [msys.Load(path)]
         print "-" * 75
         print path
         print
