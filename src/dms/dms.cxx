@@ -252,33 +252,25 @@ Sqlite Sqlite::read(std::string const& path, bool unbuffered)  {
 
     int fd=open(path.c_str(), O_RDONLY);
     if (fd<0) {
-        std::stringstream ss;
-        ss << "Failed opening DMS file at '" << path << "'";
-        throw std::runtime_error(ss.str());
+        MSYS_FAIL("Reading DMS file at '" << path << "': " << strerror(errno));
     }
     struct stat statbuf[1];
     if (fstat(fd, statbuf)!=0) {
-        close(fd);
-        std::stringstream ss;
-        ss << "Failed getting size of DMS file at '" << path 
-           << "' :" << strerror(errno);
-        throw std::runtime_error(ss.str());
+        int _errno = errno;
+        ::close(fd);
+        MSYS_FAIL("Getting size of DMS file at '" << path << "': " << strerror(_errno));
     }
 
     ssize_t tmpsize = statbuf->st_size;
     if (tmpsize==0) {
         close(fd);
-        std::stringstream ss;
-        ss << "DMS file at '" << path << "' has zero size";
-        throw std::runtime_error(ss.str());
+        MSYS_FAIL("DMS file at '" << path << "' has zero size");
     }
     char* tmpbuf = (char *)malloc(tmpsize);
     if (!tmpbuf) {
         close(fd);
-        std::stringstream ss;
-        ss << "Failed to allocate read buffer for DMS file at '" << path 
-           << "' of size " << tmpsize;
-        throw std::runtime_error(ss.str());
+        MSYS_FAIL("Failed to allocate read buffer for DMS file at '" << path
+           << "' of size " << tmpsize);
     }
     ssize_t sz = tmpsize;
     char* ptr = tmpbuf;
