@@ -1971,7 +1971,6 @@ def ConvertFromOEChem(oe_mol, force=False):
     msys_system = CreateSystem()
     res = msys_system.addResidue()
 
-    seen_bonds = set()
     oe_idx_to_msys_id = {}
     for oe_atom in oe_mol.GetAtoms():
         msys_atom = res.addAtom()
@@ -1993,6 +1992,7 @@ def ConvertFromOEChem(oe_mol, force=False):
     assert msys_system.natoms == oe_mol.NumAtoms()
     assert msys_system.nbonds == oe_mol.NumBonds()
 
+    msys_system.updateFragids()
     return msys_system
 
 def ConvertToRdkit(mol):
