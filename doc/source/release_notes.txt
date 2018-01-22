@@ -1,3 +1,5 @@
+1.7.219c7 Report strerror(errno) when reading dms files (DESRESInfra#39849)
+
 1.7.218c7 Write .dms.gz files using gzip.  DESRESCode#3771.
           Added rigid_explicitN schema.
           All dms-tools and msys.Load support jobids as arguments.
