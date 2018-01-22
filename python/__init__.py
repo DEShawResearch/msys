@@ -1947,6 +1947,54 @@ def ConvertToOEChem(mol):
 
     return oe_mol
 
+def ConvertFromOEChem(oe_mol, force=False):
+    ''' Construct a System from the given OEChem OEMol
+
+    Args:
+        oe_mol (oechem.OEMol) : the OEChem molecule to convert
+        force (bool)          : whether sanity checks should be performed before conversion
+
+    Returns:
+        mol (System): System
+    '''
+    from openeye import oechem
+    expdate = oechem.OEUIntArray(3)
+    if not oechem.OEChemIsLicensed(None, expdate):
+        raise RuntimeError("ConvertFromOEChem requires a valid OEChem license, expired %u %u %u, contact Brian.Cole@DEShawResearch.com" % tuple(reversed(expdate)))
+
+    if not force:
+        if oe_mol.GetDimension() != 3:
+            raise ValueError("ConvertFromOEChem expects 3D coordinates to not loose stereochemistry, i.e., oe_mol.GetDimension() == 3")
+        if not oechem.OEHasExplicitHydrogens(oe_mol):
+            raise ValueError("ConvertFromOEChem expects explicit hydrogens to be set on the molecule first, i.e., call OEAddExplicitHydrogens first")
+
+    msys_system = CreateSystem()
+    res = msys_system.addResidue()
+
+    seen_bonds = set()
+    oe_idx_to_msys_id = {}
+    for oe_atom in oe_mol.GetAtoms():
+        msys_atom = res.addAtom()
+
+        oe_idx = oe_atom.GetIdx()
+        oe_idx_to_msys_id[oe_idx] = msys_atom.id
+
+        msys_atom.atomic_number = oe_atom.GetAtomicNum()
+        msys_atom.formal_charge = oe_atom.GetFormalCharge()
+        msys_atom.pos = oe_mol.GetCoords(oe_atom)
+
+    msys_atoms = res.atoms
+    for oe_bond in oe_mol.GetBonds():
+        bgnIdx = oe_idx_to_msys_id[oe_bond.GetBgnIdx()]
+        endIdx = oe_idx_to_msys_id[oe_bond.GetEndIdx()]
+        msys_bond = msys_atoms[bgnIdx].addBond(msys_atoms[endIdx])
+        msys_bond.order = oe_bond.GetOrder()
+
+    assert msys_system.natoms == oe_mol.NumAtoms()
+    assert msys_system.nbonds == oe_mol.NumBonds()
+
+    return msys_system
+
 def ConvertToRdkit(mol):
     ''' Construct an RDKit ROMol from the given System
 

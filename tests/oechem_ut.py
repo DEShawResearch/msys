@@ -14,6 +14,21 @@ import numpy as np
 import unittest
 from openeye import oechem
 from time import time
+from contextlib import contextmanager
+
+class Timer(object):
+    def __init__(self):
+        self.start()
+    def start(self):
+        self.bgn = time()
+    def elapsed(self):
+        return time() - self.bgn
+
+@contextmanager
+def TimedLogMessage(*args):
+    t = Timer()
+    yield
+    #print("%.2f seconds to run:" % t.elapsed(), *args)
 
 class Main(unittest.TestCase):
     def testSmall(self):
@@ -134,6 +149,53 @@ class Main(unittest.TestCase):
         assert avg_length < 2.5, "average bond length is %.2f, atom order is likely screwed up!" % avg_length
 
         #msys.Save(cmol, 'meth_confs.sdf')
+
+    def testConvertFromOEChem(self):
+        testfiles = [
+            'tests/files/jandor.sdf',
+            'tests/files/test_UID_corrected.mol2',
+            'tests/files/fused.sdf',
+            'tests/files/3RYZ.pdb',
+            ]
+
+        for testfile in testfiles:
+            with oechem.oemolistream()(testfile) as ifs:
+                mol = oechem.OEMol()
+                with TimedLogMessage("OEReadMolecule"):
+                    assert oechem.OEReadMolecule(ifs, mol)
+
+                if 'pdb' in testfile:
+                    oechem.OEAddExplicitHydrogens(mol)
+
+                with TimedLogMessage("ConvertFromOEChem"):
+                    system = msys.ConvertFromOEChem(mol)
+
+                with TimedLogMessage("ConvertToOEChem"):
+                    new_oemol = msys.ConvertToOEChem(system)
+
+                with TimedLogMessage("OEMolToSmiles"):
+                    oechem.OEMolToSmiles(new_oemol)
+
+                assert oechem.OEMolToSmiles(new_oemol) == oechem.OEMolToSmiles(mol)
+
+    def testConvertFromOEChemFailures(self):
+        mol = oechem.OEMol()
+
+        # SMILES has no coordinates or hydrogens
+        assert oechem.OESmilesToMol(mol, 'C1NCC[NH2+]C1')
+        self.assertRaises(ValueError, msys.ConvertFromOEChem, mol)
+
+        # This is a 2D SDF file
+        with oechem.oemolistream()('tests/files/methotrexate.sdf') as ifs:
+            assert oechem.OEReadMolecule(ifs, mol)
+        self.assertRaises(ValueError, msys.ConvertFromOEChem, mol)
+
+        # Suppressing hydrogens should cause ConvertFromOEChem to fail
+        with oechem.oemolistream()('tests/files/fused.sdf') as ifs:
+            assert oechem.OEReadMolecule(ifs, mol)
+        assert oechem.OESuppressHydrogens(mol)
+        self.assertRaises(ValueError, msys.ConvertFromOEChem, mol)
+
 
 if __name__=="__main__":
   unittest.main(verbosity=2)
