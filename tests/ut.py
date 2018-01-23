@@ -116,6 +116,9 @@ class TestHash(unittest.TestCase):
         h.add(mol.hash())
         self.assertEqual(len(h), 7)
 
+    def testSystem(self):
+        mol = msys.Load('tests/files/stable-hash-6896670165215326854.dms')
+        self.assertEqual(mol.hash(), 6896670165215326854)
 
 class TestHbond(unittest.TestCase):
     def test1(self):
