@@ -1995,14 +1995,18 @@ def ConvertFromOEChem(oe_mol, force=False):
     msys_system.updateFragids()
     return msys_system
 
-def ConvertToRdkit(mol):
+def ConvertToRdkit(mol, sanitize=True):
     ''' Construct an RDKit ROMol from the given System
 
     Args:
         mol (System): System
+        sanitize (bool): whether to sanitize the molecule
 
     Returns:
         rdkit.ROMol
+
+    Notes: alchemical systems may require sanitize=False
+
     '''
     from rdkit import Chem
     rdmol = Chem.Mol()
@@ -2019,7 +2023,7 @@ def ConvertToRdkit(mol):
         conf.SetAtomPosition(i, pos)
     confId = rdmol.AddConformer(conf) # the RDKit Python API makes a copy of this conformer
     conf = rdmol.GetConformer(confId) # so re-acquire the conformer for DetectBondStereoChemistry
-    Chem.SanitizeMol(rdmol)
+    if sanitize: Chem.SanitizeMol(rdmol)
     Chem.AssignAtomChiralTagsFromStructure(rdmol)
     Chem.DetectBondStereoChemistry(rdmol, conf)
     Chem.AssignStereochemistry(rdmol)

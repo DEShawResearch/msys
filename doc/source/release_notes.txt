@@ -1,3 +1,5 @@
+1.7.221c7 Added (..., sanitize=True) option to msys.ConvertToRdkit.
+
 1.7.220c7 Added msys.ConvertFromOEChem (DESRESCode#3785).
 
 1.7.219c7 Report strerror(errno) when reading dms files (DESRESInfra#39849)
