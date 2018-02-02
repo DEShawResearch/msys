@@ -1,3 +1,5 @@
+1.7.222c7 msys.Convert(To/From)OEChem will preserve the molecule title
+
 1.7.221c7 Added (..., sanitize=True) option to msys.ConvertToRdkit.
 
 1.7.220c7 Added msys.ConvertFromOEChem (DESRESCode#3785).

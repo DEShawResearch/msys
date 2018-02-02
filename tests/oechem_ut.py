@@ -37,6 +37,7 @@ class Main(unittest.TestCase):
         # by default ConvertToOEChem doesn't assign the formal charges, should it?!
         contains_radicals = "C[C@H]([C@@H]1[C@H]2[C@H](C(=C(N2C1=O)C(=O)OCc3ccc(cc3)[N](=O)[O])Sc4ncccn4)OC)O"
         oemol = msys.ConvertToOEChem(mol)
+        assert oemol.GetTitle() == '/u/nyc/gullingj/pub/examples/MMFF94_hypervalent/JANDOR.mae'
         self.assertEqual(oechem.OEMolToSmiles(oemol), contains_radicals)
 
         # Using OEChem to assign the formal charges
@@ -175,6 +176,8 @@ class Main(unittest.TestCase):
 
                 with TimedLogMessage("OEMolToSmiles"):
                     oechem.OEMolToSmiles(new_oemol)
+
+                assert new_oemol.GetTitle() == mol.GetTitle()
 
                 assert oechem.OEMolToSmiles(new_oemol) == oechem.OEMolToSmiles(mol)
 

@@ -1945,6 +1945,8 @@ def ConvertToOEChem(mol):
         oechem.OE3DToBondStereo(oe_mol)
         oechem.OE3DToAtomStereo(oe_mol)
 
+    oe_mol.SetTitle(mol.cts[0].name)
+
     return oe_mol
 
 def ConvertFromOEChem(oe_mol, force=False):
@@ -1991,6 +1993,8 @@ def ConvertFromOEChem(oe_mol, force=False):
 
     assert msys_system.natoms == oe_mol.NumAtoms()
     assert msys_system.nbonds == oe_mol.NumBonds()
+
+    msys_system.cts[0].name = oe_mol.GetTitle()
 
     msys_system.updateFragids()
     return msys_system
