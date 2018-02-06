@@ -15,6 +15,7 @@ namespace desres { namespace msys {
 
     class Sqlite {
         std::shared_ptr<sqlite3>  _db;
+        bool _unbuffered = false;
 
         const char* errmsg() const;
 
@@ -22,8 +23,8 @@ namespace desres { namespace msys {
         Sqlite() 
         {}
 
-        Sqlite(std::shared_ptr<sqlite3> db)
-        : _db(db) 
+        Sqlite(std::shared_ptr<sqlite3> db, bool unbuffered=false)
+        : _db(db), _unbuffered(unbuffered)
         {}
 
         static Sqlite read(std::string const& path, bool unbuffered = false);

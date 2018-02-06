@@ -234,18 +234,18 @@ std::string Sqlite::contents() const {
 }
 
 void Sqlite::finish() {
+    if (_unbuffered) return;
     dms_file* dms;
     sqlite3_file_control(_db.get(), "main", SQLITE_FCNTL_FILE_POINTER, &dms);
     dms->write();
 }
 
-Sqlite Sqlite::read(std::string const& path, bool unbuffered)  {
-
+Sqlite Sqlite::read(std::string const& path, bool unbuffered) {
     sqlite3* db;
     if (unbuffered) {
         int rc = sqlite3_open_v2( path.data(), &db, SQLITE_OPEN_READONLY, NULL);
         if (rc!=SQLITE_OK) MSYS_FAIL(sqlite3_errmsg(db));
-        return std::shared_ptr<sqlite3>(db, sqlite3_close);
+        return Sqlite(std::shared_ptr<sqlite3>(db, sqlite3_close), unbuffered);
     }
 
     sqlite3_vfs_register(vfs, 0);
@@ -331,8 +331,7 @@ Sqlite Sqlite::write(std::string const& path, bool unbuffered) {
             unbuffered ? NULL : vfs->zName);
     if (rc!=SQLITE_OK) MSYS_FAIL(sqlite3_errmsg(db));
 
-    Sqlite result(std::shared_ptr<sqlite3>(db, sqlite3_close));
-    return result;
+    return Sqlite(std::shared_ptr<sqlite3>(db, sqlite3_close), unbuffered);
 }
 
 void Sqlite::exec(std::string const& sql) {
