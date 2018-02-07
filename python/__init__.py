@@ -1903,23 +1903,44 @@ class IndexedFileLoader(object):
         '''
         return System(self._ptr.at(index))
 
-def ConvertToOEChem(mol):
+def ConvertToOEChem(mol_or_atoms):
     ''' Construct an OEChem OEMol from the given System
 
     Args:
-        mol (System): System
+        mol: System or [Atoms]
 
     Returns:
         oechem.OEMol
+
+    Notes:
+        If [Atoms] are give, only bonds involving the specified atoms
+        will be passed to to the OEMol; this is the same behavior
+        as System.clone(atoms).
     '''
+    if not mol_or_atoms:
+        raise ValueError("No atoms supplied in mol_or_atoms")
+
     from openeye import oechem
     expdate = oechem.OEUIntArray(3)
     if not oechem.OEChemIsLicensed(None, expdate):
         raise RuntimeError("ConvertToOEChem requires a valid OEChem license, expired %u %u %u, contact Brian.Cole@DEShawResearch.com" % tuple(reversed(expdate)))
 
     oe_mol = oechem.OEMol()
-    oe_atoms = []
-    for idx, atm in enumerate(mol.atoms):
+    oe_atoms = dict()
+
+    if isinstance(mol_or_atoms, System):
+        atoms = mol_or_atoms.atoms
+        bonds = mol_or_atoms.bonds
+        coords = mol_or_atoms.positions
+    else:
+        atoms = mol_or_atoms
+        bonds = list()
+        for a in atoms:
+            bonds += a.bonds
+        bonds = set(bonds)
+        coords = numpy.array([a.pos for a in atoms])
+
+    for idx, atm in enumerate(atoms):
         oe_atom = oe_mol.NewAtom(atm.atomic_number)
         oe_atom.SetFormalCharge(atm.formal_charge)
 
@@ -1927,17 +1948,15 @@ def ConvertToOEChem(mol):
         # so far it always has been true: https://docs.eyesopen.com/toolkits/python/oechemtk/atombondindices.html#indices-for-molecule-lookup-considered-harmful
         # so protect ourselves from a future version breaking this assertion
         assert idx == oe_atom.GetIdx()
-        assert len(oe_atoms) == idx
-        oe_atoms.append(oe_atom)
+        oe_atoms[atm.id] = oe_atom
 
-    for bnd in mol.bonds:
-        bgn = oe_atoms[bnd.first.id]
-        end = oe_atoms[bnd.second.id]
-        oe_mol.NewBond(bgn, end, bnd.order)
+    for bnd in bonds:
+        bgn = oe_atoms.get(bnd.first.id)
+        end = oe_atoms.get(bnd.second.id)
+        if bgn is not None and end is not None:
+            oe_mol.NewBond(bgn, end, bnd.order)
 
-    from itertools import chain
-    coords = list(chain(*mol.getPositions()))
-    oe_mol.SetCoords(coords)
+    oe_mol.SetCoords(coords.flatten().tolist())
 
     oechem.OESetDimensionFromCoords(oe_mol)
     oechem.OEPerceiveChiral(oe_mol)
@@ -1945,7 +1964,8 @@ def ConvertToOEChem(mol):
         oechem.OE3DToBondStereo(oe_mol)
         oechem.OE3DToAtomStereo(oe_mol)
 
-    oe_mol.SetTitle(mol.cts[0].name)
+    name = atoms[0].residue.chain.ct.name
+    oe_mol.SetTitle(name)
 
     return oe_mol
 

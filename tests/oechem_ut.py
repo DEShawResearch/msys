@@ -181,6 +181,20 @@ class Main(unittest.TestCase):
 
                 assert oechem.OEMolToSmiles(new_oemol) == oechem.OEMolToSmiles(mol)
 
+    def testConvertAtoms(self):
+        mol = msys.Load('tests/files/jandor.sdf')
+        omol = msys.ConvertToOEChem(mol.atoms)
+        new = msys.ConvertFromOEChem(omol)
+        assert mol.positions.tolist() == new.positions.tolist()
+        assert [a.atomic_number for a in mol.atoms] == [a.atomic_number for a in new.atoms]
+
+        # testing disconnected components
+        atoms = mol.select('withinbonds 1 of hydrogen')
+        omol = msys.ConvertToOEChem(atoms)
+        new = msys.ConvertFromOEChem(omol)
+        assert [a.pos.tolist() for a in atoms] == new.positions.tolist()
+        assert [a.atomic_number for a in atoms] == [a.atomic_number for a in new.atoms]
+
     def testConvertFromOEChemFailures(self):
         mol = oechem.OEMol()
 
