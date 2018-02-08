@@ -188,6 +188,12 @@ class Main(unittest.TestCase):
         assert mol.positions.tolist() == new.positions.tolist()
         assert [a.atomic_number for a in mol.atoms] == [a.atomic_number for a in new.atoms]
 
+        ifs = oechem.oemolistream()
+        assert ifs.open('tests/files/jandor.sdf')
+        oechem_mol = oechem.OEGraphMol()
+        assert oechem.OEReadMolecule(ifs, oechem_mol)
+        assert oechem.OEMolToSmiles(omol) == oechem.OEMolToSmiles(oechem_mol)
+
         # testing disconnected components
         atoms = mol.select('withinbonds 1 of hydrogen')
         omol = msys.ConvertToOEChem(atoms)
