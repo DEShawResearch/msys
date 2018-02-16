@@ -779,7 +779,10 @@ namespace desres { namespace msys {
 
     void export_system() {
         _import_array();
-        if (PyErr_Occurred()) return;
+        if (PyErr_Occurred()) {
+            PyErr_Print();
+            MSYS_FAIL("incompatible numpy version detected");
+        }
         
         def("bad", bad);
         scope().attr("BadId") = (Id)BadId;
