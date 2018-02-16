@@ -25,7 +25,13 @@ namespace desres { namespace msys {
 
         Sqlite(std::shared_ptr<sqlite3> db, bool unbuffered=false)
         : _db(db), _unbuffered(unbuffered)
-        {}
+        {
+            if (unbuffered) {
+                // avoid taking individual file locks on each disk access
+                exec("pragma locking_mode=EXCLUSIVE");
+                exec("pragma journal_mode=MEMORY");
+            }
+        }
 
         static Sqlite read(std::string const& path, bool unbuffered = false);
         static Sqlite read_bytes(const char* bytes, int64_t len);
