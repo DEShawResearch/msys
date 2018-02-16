@@ -1,3 +1,6 @@
+1.7.223c7 Yet another fix for double precision in timekeys files.
+          Expose error message from numpy version clashes
+
 1.7.222c7 msys.ConvertToOEChem can take a list of atoms to convert to convert a subset much faster.
 
 1.7.221c7 msys.Convert(To/From)OEChem will preserve the molecule title
