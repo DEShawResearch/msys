@@ -1123,7 +1123,9 @@ void StkReader::append(std::vector<std::string> fnames,
                 }
             }
 
-            while (n && cur[n-1].time() >= first) {
+            // add some slop here due to some dtrs being written at inconsistent intervals
+            static const double slop = 1e-4; // no one writes framesets at less than 0.1fs intervals, right?
+            while (n && cur[n-1].time() + slop >= first) {
                 --n;
             }
 
