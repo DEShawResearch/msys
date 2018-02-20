@@ -1,3 +1,9 @@
+1.7.224c7 msys.ConvertFromOEChem will no longer complain about
+          molecules not having hydrogens that don't actually have
+          hydrogens, e.g., O=S=O.
+          msys.ConvertToOEChem will always set the dimension of the
+          molecule to 3D as msys really only traffics in 3D molecules.
+
 1.7.223c7 Yet another fix for double precision in timekeys files.
           Expose error message from numpy version clashes
 

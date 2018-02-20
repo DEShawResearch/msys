@@ -60,6 +60,7 @@ class Main(unittest.TestCase):
         msys.AssignBondOrderAndFormalCharge(mol)
         t = -time()
         oemol = msys.ConvertToOEChem(mol)
+        assert oemol.GetDimension() == 3
         t += time()
         print("%s: %d atoms, %d bonds in %.3fs" % (mol.name, mol.natoms, mol.nbonds, t))
 
@@ -184,6 +185,7 @@ class Main(unittest.TestCase):
     def testConvertAtoms(self):
         mol = msys.Load('tests/files/jandor.sdf')
         omol = msys.ConvertToOEChem(mol.atoms)
+        assert omol.GetDimension() == 3
         new = msys.ConvertFromOEChem(omol)
         assert mol.positions.tolist() == new.positions.tolist()
         assert [a.atomic_number for a in mol.atoms] == [a.atomic_number for a in new.atoms]
@@ -218,6 +220,23 @@ class Main(unittest.TestCase):
             assert oechem.OEReadMolecule(ifs, mol)
         assert oechem.OESuppressHydrogens(mol)
         self.assertRaises(ValueError, msys.ConvertFromOEChem, mol)
+
+    def testLinearMoleculesWithNoHydrogens(self):
+        from openeye import oeomega
+        opts = oeomega.OEOmegaOptions()
+        opts.SetMaxConfs(1)
+        omega = oeomega.OEOmega(opts)
+
+        for smi in ['O=S=O', 'c12c(onn1)onn2', 'C#N']:
+            oemol = oechem.OEMol()
+            assert oechem.OESmilesToMol(oemol, smi)
+            assert omega(oemol)
+
+            msys_sys = msys.ConvertFromOEChem(oemol)
+            new_oemol = msys.ConvertToOEChem(msys_sys)
+
+            self.assertEqual(new_oemol.GetDimension(), 3)
+            self.assertEqual(oechem.OEMolToSmiles(new_oemol), smi)
 
 
 if __name__=="__main__":

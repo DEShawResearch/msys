@@ -1963,6 +1963,7 @@ def ConvertToOEChem(mol_or_atoms):
     if oe_mol.GetDimension() == 3:
         oechem.OE3DToBondStereo(oe_mol)
         oechem.OE3DToAtomStereo(oe_mol)
+    oe_mol.SetDimension(3) # msys really only traffics in 3D molecules
 
     name = atoms[0].residue.chain.ct.name
     oe_mol.SetTitle(name)
@@ -1987,7 +1988,7 @@ def ConvertFromOEChem(oe_mol, force=False):
     if not force:
         if oe_mol.GetDimension() != 3:
             raise ValueError("ConvertFromOEChem expects 3D coordinates to not loose stereochemistry, i.e., oe_mol.GetDimension() == 3")
-        if not oechem.OEHasExplicitHydrogens(oe_mol):
+        if oechem.OEHasImplicitHydrogens(oe_mol):
             raise ValueError("ConvertFromOEChem expects explicit hydrogens to be set on the molecule first, i.e., call OEAddExplicitHydrogens first")
 
     msys_system = CreateSystem()
