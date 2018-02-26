@@ -332,7 +332,7 @@ static void read_file( std::string const& path,
 #endif
 }
 
-void Timekeys::init(const std::string& path, double reference_interval ) {
+void Timekeys::init(const std::string& path, uint64_t reference_interval ) {
     std::string timekeys_path = path;
     timekeys_path += s_sep;
     timekeys_path += "timekeys";
@@ -345,7 +345,7 @@ void Timekeys::init(const std::string& path, double reference_interval ) {
     }
 }
 
-void Timekeys::initWithBytes(size_t tksize, void* bytes, double reference_interval) {
+void Timekeys::initWithBytes(size_t tksize, void* bytes, uint64_t reference_interval) {
   
     const bool verbose = getenv("DTRPLUGIN_VERBOSE");
     key_prologue_t* prologue = static_cast<key_prologue_t*>(bytes);
@@ -386,34 +386,34 @@ void Timekeys::initWithBytes(size_t tksize, void* bytes, double reference_interv
 
     /* Check that we didn't get zero-length frames; this would be a strong
      * indicator of file corruption! */
-    size_t i;
+    uint64_t i;
     for (i=0; i<nframes; i++) {
         if (keys[i].size()==0) {
             DTR_FAILURE("timekeys frame " << i << " had 0 size");
         }
 
-        if ((i > 0) && (keys[i].time() <= keys[(i-1)].time())) {
-            DTR_FAILURE("timekeys frame " << i << " had time " << keys[i].time() << " but frame " << (i-1) << " had time " << keys[(i-1)].time());
+        if ((i > 0) && (keys[i].jiffies() <= keys[(i-1)].jiffies())) {
+            DTR_FAILURE("timekeys frame " << i << " had time " << keys[i].jiffies() << " but frame " << (i-1) << " had time " << keys[(i-1)].jiffies());
         }
     }
 
     m_size = m_fullsize = keys.size();
     if (!keys.size()) return;
 
-    m_first = keys[0].time();
+    m_first_jiffies = keys[0].jiffies();
     m_framesize = keys[0].size();
     if (keys.size()==1) {
-        m_interval=0;
+        m_interval_jiffies=0;
         keys.clear();
     } else if (keys.size()>1) {
-        m_interval=keys[1].time()-keys[0].time();
+        m_interval_jiffies=keys[1].jiffies()-keys[0].jiffies();
     }
     if (reference_interval != 0) {
-        m_interval = reference_interval;
+        m_interval_jiffies = reference_interval;
     }
 
     for (i=1; i<keys.size(); i++) {
-        double time = keys[i].time();
+        uint64_t time = keys[i].jiffies();
 
         /* constant frame size */
         if (keys[i].size() != m_framesize) {
@@ -434,25 +434,25 @@ void Timekeys::initWithBytes(size_t tksize, void* bytes, double reference_interv
             return;
         }
         /* constant time interval */
-        if (m_interval>0) {
+        if (m_interval_jiffies>0) {
           /* make sure that m_interval precisely equals the given time */
-          double computed_time = m_first + i * m_interval;
-
-          if (fabs(time - computed_time) > 1e-5) {
+          uint64_t computed_time = m_first_jiffies + i * m_interval_jiffies;
+          if (time != computed_time) {
             /* keep checking for constant framesize, but record that
             * the interval is not constant */
             if (verbose)
-              printf("frame %lu time %.17g != computed %.17g = %.17g + %lu * %.17g\n",
-                i, time, computed_time, m_first, i, m_interval);
-            m_interval=0;
+              printf("frame %lu jiffies %lu != computed %lu = %lu + %lu * %lu\n",
+                i, time, computed_time, m_first_jiffies, i, m_interval_jiffies);
+            m_interval_jiffies=0;
           }
         }
     }
+
     /* If we still have good m_interval and m_framesize, we don't need
      * the explicit key records anymore. */
-    if (m_interval>0 && m_framesize>0) {
+    if (m_interval_jiffies>0 && m_framesize>0) {
       if (verbose) {
-        printf("all times computable from m_first %.17g interval %.17g\n", m_first, m_interval);
+        printf("all times computable from m_first %lu interval %lu\n", m_first_jiffies, m_interval_jiffies);
       }
       keys.clear();
     }
@@ -465,11 +465,7 @@ key_record_t Timekeys::operator[](uint64_t i) const {
     if (keys.size()) return keys.at(i);
 
     key_record_t timekey;
-#if defined(_MSC_VER)
-    double time = m_first + ((__int64) i)*m_interval;
-#else
-    double time = m_first + i*m_interval;
-#endif
+    double time = jiffies_to_ps(m_first_jiffies + i * m_interval_jiffies);
     uint64_t offset = (i % m_fpf) * m_framesize;
 
     timekey.time_lo = htonl(lobytes(time));
@@ -494,8 +490,8 @@ namespace {
 }
 
 void Timekeys::dump(std::ostream& out) const {
-    rawdump(out, m_first);
-    rawdump(out, m_interval);
+    rawdump(out, jiffies_to_ps(m_first_jiffies));
+    rawdump(out, jiffies_to_ps(m_interval_jiffies));
     rawdump(out, m_framesize);
     rawdump(out, m_size);
     rawdump(out, m_fullsize);
@@ -508,8 +504,12 @@ void Timekeys::dump(std::ostream& out) const {
 
 void Timekeys::load(std::istream& in) {
     size_t sz;
-    rawload(in, m_first);
-    rawload(in, m_interval);
+    double first, interval;
+    rawload(in, first);
+    rawload(in, interval);
+    m_first_jiffies = jiffies_from_ps(first);
+    m_interval_jiffies = jiffies_from_ps(interval);
+
     rawload(in, m_framesize);
     rawload(in, m_size);
     rawload(in, m_fullsize);
@@ -655,8 +655,9 @@ uint64_t key_record_t::size() const {
 uint64_t key_record_t::offset() const {
   return assemble64(ntohl(offset_lo), ntohl(offset_hi));
 }
-double key_record_t::time() const {
-  return assembleDouble(ntohl(time_lo), ntohl(time_hi));
+uint64_t key_record_t::jiffies() const {
+  double ps = assembleDouble(ntohl(time_lo), ntohl(time_hi));
+  return jiffies_from_ps(ps);
 }
 
 metadata::metadata(const void *bufptr, ssize_t n, std::string *jobstep_id) {
@@ -956,11 +957,11 @@ void StkReader::init(int* changed) {
      * be computed most precisely.  Later framesets would compute the interval
      * as the difference between two large numbers, introducing error that throws
      * off our calculated frame time.  */
-    double reference_interval=0;
+    uint64_t reference_interval=0;
     if (framesets.size()>0) {
-        reference_interval = framesets[0]->keys.interval();
+        reference_interval = framesets[0]->keys.interval_jiffies();
         if (verbose) {
-            printf("Got reference interval %.17g from first frameset at %s\n",
+            printf("Got reference interval %lu from first frameset at %s\n",
                     reference_interval, framesets[0]->path().data());
         }
     }
@@ -970,9 +971,9 @@ void StkReader::init(int* changed) {
         }
         timekeys[i].init(fnames[i], reference_interval);
         if (reference_interval==0) {
-            reference_interval = timekeys[i].interval();
+            reference_interval = timekeys[i].interval_jiffies();
             if (verbose) {
-                printf("Got reference interval %.17g from first processed timekeys at %s\n",
+                printf("Got reference interval %lu from first processed timekeys at %s\n",
                         reference_interval, fnames[i].data());
             }
         }
@@ -1097,7 +1098,7 @@ void StkReader::append(std::vector<std::string> fnames,
     }
 
     if (framesets.size()) {
-        double first=framesets.back()->keys[0].time();
+        uint64_t first=framesets.back()->keys[0].jiffies();
         size_t i=framesets.size()-1;
         while (i--) {
             /* find out how many frames to keep in frameset[i] */
@@ -1107,13 +1108,13 @@ void StkReader::append(std::vector<std::string> fnames,
                 continue;
             }
 
-            if (first < cur[0].time()) {
+            if (first < cur[0].jiffies()) {
                 // allow old trajectories to proceed, since cases like this didn't
                 // used to generate a fatal error.
                 std::stringstream ss;
                 ss << "Frameset " << framesets[i+1]->path() <<
                 " in stk " << path() << 
-                " has initial time " << first << " which is earlier than any time in the preceding frameset, thus superseding it entirely.  This is probably an erroneously generated stk file.";
+                " has initial time " << jiffies_to_ps(first) << " which is earlier than any time in the preceding frameset, thus superseding it entirely.  This is probably an erroneously generated stk file.";
                 auto msg = ss.str();
                 bool is_old_frameset = framesets[i+1]->path().substr(0,12)=="/d/en/locker";
                 if (is_old_frameset) {
@@ -1123,15 +1124,13 @@ void StkReader::append(std::vector<std::string> fnames,
                 }
             }
 
-            // add some slop here due to some dtrs being written at inconsistent intervals
-            static const double slop = 1e-4; // no one writes framesets at less than 0.1fs intervals, right?
-            while (n && cur[n-1].time() + slop >= first) {
+            while (n && cur[n-1].jiffies() + 1 >= first) {
                 --n;
             }
 
             cur.truncate( n );
             if (cur.size()) {
-                double c0t = cur[0].time();
+                auto c0t = cur[0].jiffies();
                 first = (first < c0t) ? first : c0t;
             }
         }
@@ -1277,7 +1276,7 @@ ssize_t DtrReader::times(ssize_t start, ssize_t count, double *t) const {
     ssize_t remaining = keys.size()-start;
     count = (count < remaining) ? count : remaining;
     for (ssize_t j=0; j<count; j++) {
-        t[j]=keys[start++].time();
+        t[j]=jiffies_to_ps(keys[start++].jiffies());
     }
     return count;
 }
@@ -1830,7 +1829,7 @@ dtr::KeyMap DtrReader::frame(ssize_t iframe, molfile_timestep_t *ts, void ** buf
                                ntohl(key.offset_hi) );
     ssize_t framesize = assemble64( ntohl(key.framesize_lo), 
                                     ntohl(key.framesize_hi) );
-    if (ts) ts->physical_time = key.time();
+    if (ts) ts->physical_time = jiffies_to_ps(key.jiffies());
 
     /* use realloc'ed buffer if bufptr is given, otherwise use temporary 
      * space. */
@@ -2020,7 +2019,7 @@ DtrWriter::DtrWriter(std::string const& path, Type type, uint32_t natoms_,
             frame_fd = 0;
         } else {
             key_record_t last = tk[nwritten-1];
-            last_time = last.time();
+            last_time = jiffies_to_ps(last.jiffies());
             framefile_offset = last.offset() + last.size();
             std::string filepath=framefile(m_directory, nwritten, frames_per_file,0,0);
             frame_fd = open(filepath.c_str(),O_WRONLY|O_APPEND|O_BINARY,0666);
@@ -2126,7 +2125,7 @@ void DtrWriter::truncate(double t) {
             if (feof(timekeys_file)) break;
             DTR_FAILURE("Reading a timekeys record: " << strerror(errno));
         }
-        if (record->time() <= t) continue;
+        if (record->jiffies() <= jiffies_from_ps(t)) continue;
         /* found a record past the specified time.  rewind to just before
          * this record, and truncate the rest */
         if (fseek(timekeys_file, -sizeof(record), SEEK_CUR)) {
@@ -2464,6 +2463,7 @@ std::istream& DtrReader::load_v8(std::istream &in) {
 
   in.get(c);
   keys.load(in);
+
   return in;
 }
 

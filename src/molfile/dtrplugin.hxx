@@ -101,16 +101,27 @@ namespace desres { namespace molfile {
     uint32_t framesize_lo;  /* Number of bytes in frame (low bytes) */
     uint32_t framesize_hi;  /* Number of bytes in frame (high bytes) */
 
-    double time() const;
+    uint64_t jiffies() const;  /* time to the nearest jiffy */
     uint64_t offset() const;
     uint64_t size() const;
 
   };
 
+  // our time quantum
+  namespace detail {
+    static const uint64_t jiffies_per_ps = 1000 * 1024;
+  }
+  static inline double jiffies_to_ps(uint64_t jiffies) {
+      return double(jiffies) / detail::jiffies_per_ps;
+  }
+  static inline uint64_t jiffies_from_ps(double ps) {
+      return std::round(ps * detail::jiffies_per_ps);
+  }
+
   class Timekeys {
 
-      double    m_first;        /* last time in the key list */
-      double    m_interval;     /* representative time interval between keys */
+      uint64_t  m_first_jiffies;    /* first time in jiffies */
+      uint64_t  m_interval_jiffies; /* frame interval in jiffies */
       uint64_t  m_framesize;    /* size of a frames */
       size_t    m_size;         /* number of non-overlapping frames */
       size_t    m_fullsize;     /* total number of frames */
@@ -121,13 +132,13 @@ namespace desres { namespace molfile {
 
     public:
       Timekeys() 
-      : m_first(0), m_interval(0), m_framesize(0), 
+      : m_first_jiffies(0), m_interval_jiffies(0), m_framesize(0), 
         m_size(0), m_fullsize(0), m_fpf(0) {}
 
-      void init( const std::string& path, double reference_interval=0 );
+      void init( const std::string& path, uint64_t reference_interval=0 );
 
       /* initialize from timekeys bytes.  Writable but owned by caller */
-      void initWithBytes( size_t nbytes, void* tkbytes, double reference_interval=0 );
+      void initWithBytes( size_t nbytes, void* tkbytes, uint64_t reference_interval=0 );
 
       uint32_t framesperfile() const { return m_fpf; }
 
@@ -135,9 +146,10 @@ namespace desres { namespace molfile {
        * if there are no frames in the dtr */
       uint64_t framesize() const { return m_framesize; }
 
+      uint64_t first_jiffies() const { return m_first_jiffies; }
       /* interval between frames, 0 if the interval varies between frames
        * or if there are fewer than 2 frames in the dtr */
-      double interval() const { return m_interval; }
+      uint64_t interval_jiffies() const { return m_interval_jiffies; }
 
       bool is_compact() const { return keys.size()==0; }
 

@@ -903,6 +903,23 @@ class TestDtrWriter(unittest.TestCase):
             molfile.dtr_noclobber.write(self.PATH, natoms=10).frame(frame)
 
 
+class TestQuantizedTime(unittest.TestCase):
+    def test_6659382(self):
+        # they had a golden opportunity to call it ene.stk... :P
+        ene = molfile.DtrReader('/f/a/job/6659382/0/energy.stk').times()
+        run = molfile.DtrReader('/f/a/job/6659382/0/run.stk').times()
+        self.assertEqual(ene[0], 6.48)
+        self.assertEqual(run[0], 324)
+        self.assertTrue(set(ene).issuperset(run))
+
+    @unittest.skipIf(os.getenv('DESRES_LOCATION')!='EN', 'Runs only from EN location')
+    def test_uneven_intervals(self):
+        stk = molfile.DtrReader('tests/files/uneven_intervals.stk')
+        times = stk.times()
+        deltas = numpy.diff(times)
+        small = deltas[deltas < 0.1]
+        self.assertTrue(len(small) == 404)
+        self.assertTrue(deltas.min() > 0.007499)
 
 if __name__=="__main__":
   unittest.main(verbosity=2)

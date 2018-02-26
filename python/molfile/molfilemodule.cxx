@@ -288,7 +288,7 @@ namespace {
         const std::string &dtrpath = comp->path();
 
         return make_tuple(
-                path.c_str(), key.time(), key.offset(), key.size(),
+                path.c_str(), jiffies_to_ps(key.jiffies()), key.offset(), key.size(),
                 first, last+1, filesize, dtrpath.c_str(), dtrsize );
     }
 
@@ -401,7 +401,7 @@ namespace {
             }
             try {
                 comp->frame_from_bytes(data, size, *frame);
-                frame->setTime(comp->keys[index].time());
+                frame->setTime(jiffies_to_ps(comp->keys[index].jiffies()));
             }
             catch (std::exception &e) {
                 delete frame;
@@ -502,6 +502,10 @@ namespace {
         tk.init(path);
     }
 
+    double tk_interval(Timekeys const& tk) {
+        return jiffies_to_ps(tk.interval_jiffies());
+    }
+
 }
 
 void desres::molfile::export_dtrreader() {
@@ -511,7 +515,7 @@ void desres::molfile::export_dtrreader() {
         .def("size",                    &Timekeys::size)
         .add_property("framesperfile",  &Timekeys::framesperfile)
         .add_property("framesize",      &Timekeys::framesize)
-        .add_property("interval",       &Timekeys::interval)
+        .add_property("interval",       tk_interval)
         ;
 
     class_<FrameSetReader, boost::noncopyable>("DtrReader", no_init)
