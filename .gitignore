@@ -5,3 +5,4 @@ desres.py
 build.sh
 *.pyc
 *~
+*.stk.cache.*

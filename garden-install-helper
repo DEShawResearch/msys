@@ -3,8 +3,7 @@ eval "$(garden-exec)"
 set -e
 
 NAME=msys
-VERSION=1.7.224c7
-DESCRIPTION="Biomolecular Structure Library"
+VERSION=1.7.225c7
 
 # module versions that scripts in ./tools need to know
 . ./env.sh
@@ -64,8 +63,7 @@ EOF
 
 genhelp() {
     cat <<EOF
-See documentation in
-http://gardendoc.nyc.desres.deshaw.com/$PREFIX/doc/html/index.html
+Molecular structure and forcefield tools.
 
 Release notes:
 
