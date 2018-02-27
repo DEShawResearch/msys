@@ -2128,10 +2128,7 @@ def SaveDMS(system, path, structure_only=False, unbuffered=False):
         flags |= _msys.DMSExportFlags.StructureOnly
     if unbuffered:
         flags |= _msys.DMSExportFlags.Unbuffered
-    if isinstance(system, System):
-        _msys.ExportDMS(system._ptr, path, prov, flags)
-    else:
-        _msys.ExportDMSMany([x._ptr for x in system], path, prov)
+    _msys.ExportDMS(system._ptr, path, prov, flags)
 
 def SerializeMAE(system, with_forcefield=True):
     ''' Return the MAE form of the System as bytes. '''
