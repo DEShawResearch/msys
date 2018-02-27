@@ -3151,6 +3151,19 @@ class TestWrap(unittest.TestCase):
             [0.09289324283599854, -0.7071067690849304, -0.5], 
             [0.19289320707321167, -0.7071067690849304, -0.9000000953674316]])
 
+class TestImporter(unittest.TestCase):
+    def test_1vcc(self):
+        mol = msys.Load('tests/files/1vcc.mae')
+        pro = mol.clone('protein')
+        new = mol.clone('protein and noh')
+        imp = msys.SystemImporter(new)
+        imp.initialize(new.atoms)
+        for a in mol.select('protein and hydrogen'):
+            imp.addAtom(a.residue.chain.name, a.residue.chain.segid,
+                        a.residue.resid, a.residue.name, a.name)
+        self.assertEqual(new.natoms, pro.natoms)
+        self.assertEqual(new.nresidues, pro.nresidues)
+
 
 class TestSvd(unittest.TestCase):
     def testNice(self):

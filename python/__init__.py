@@ -2593,7 +2593,7 @@ class SystemImporter:
             system (System): msys System
         '''
         self._ptr = _msys.SystemImporter(system._ptr)
-        self._sys = System(self._ptr.system())
+        self._sys = system
 
     @property
     def system(self):
@@ -2614,6 +2614,7 @@ class SystemImporter:
         ptr, ids = _convert_ids(atoms)
         if ptr != self._sys._ptr:
             raise ValueError("atoms argument from different system")
+        self._ptr.initialize(ids)
 
     def terminateChain(self, chain, segid, ct=0):
         return self._ptr.terminateChain(str(chain), str(segid), int(ct))
