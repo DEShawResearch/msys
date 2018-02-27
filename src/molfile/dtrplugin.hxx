@@ -101,6 +101,7 @@ namespace desres { namespace molfile {
     uint32_t framesize_lo;  /* Number of bytes in frame (low bytes) */
     uint32_t framesize_hi;  /* Number of bytes in frame (high bytes) */
 
+    double time() const;
     uint64_t jiffies() const;  /* time to the nearest jiffy */
     uint64_t offset() const;
     uint64_t size() const;

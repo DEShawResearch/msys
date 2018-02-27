@@ -655,9 +655,11 @@ uint64_t key_record_t::size() const {
 uint64_t key_record_t::offset() const {
   return assemble64(ntohl(offset_lo), ntohl(offset_hi));
 }
+double key_record_t::time() const {
+  return assembleDouble(ntohl(time_lo), ntohl(time_hi));
+}
 uint64_t key_record_t::jiffies() const {
-  double ps = assembleDouble(ntohl(time_lo), ntohl(time_hi));
-  return jiffies_from_ps(ps);
+  return jiffies_from_ps(time());
 }
 
 metadata::metadata(const void *bufptr, ssize_t n, std::string *jobstep_id) {
@@ -1276,7 +1278,7 @@ ssize_t DtrReader::times(ssize_t start, ssize_t count, double *t) const {
     ssize_t remaining = keys.size()-start;
     count = (count < remaining) ? count : remaining;
     for (ssize_t j=0; j<count; j++) {
-        t[j]=jiffies_to_ps(keys[start++].jiffies());
+        t[j]=keys[start++].time();
     }
     return count;
 }
@@ -1829,7 +1831,7 @@ dtr::KeyMap DtrReader::frame(ssize_t iframe, molfile_timestep_t *ts, void ** buf
                                ntohl(key.offset_hi) );
     ssize_t framesize = assemble64( ntohl(key.framesize_lo), 
                                     ntohl(key.framesize_hi) );
-    if (ts) ts->physical_time = jiffies_to_ps(key.jiffies());
+    if (ts) ts->physical_time = key.time();
 
     /* use realloc'ed buffer if bufptr is given, otherwise use temporary 
      * space. */
@@ -2019,7 +2021,7 @@ DtrWriter::DtrWriter(std::string const& path, Type type, uint32_t natoms_,
             frame_fd = 0;
         } else {
             key_record_t last = tk[nwritten-1];
-            last_time = jiffies_to_ps(last.jiffies());
+            last_time = last.time();
             framefile_offset = last.offset() + last.size();
             std::string filepath=framefile(m_directory, nwritten, frames_per_file,0,0);
             frame_fd = open(filepath.c_str(),O_WRONLY|O_APPEND|O_BINARY,0666);
