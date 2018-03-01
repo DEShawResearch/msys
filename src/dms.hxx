@@ -2,11 +2,16 @@
 #define msys_dms_hxx
 
 #include "system.hxx"
+#include "io.hxx"
 #include <iostream>
 
 struct sqlite3;
 
 namespace desres { namespace msys {
+
+    LoadIteratorPtr DMSIterator(std::string const& path,
+                                bool structure_only,
+                                bool without_tables);
 
     // Changed in 1.7.101: structure_only includes pseudos, making it
     // consistent with export which also includes pseudos when

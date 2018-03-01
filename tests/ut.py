@@ -2163,6 +2163,11 @@ class Main(unittest.TestCase):
             s = fp.read()
         msys.LoadDMS(buffer=s)
                 
+    def testLoadDmsMany(self):
+        mols = [m for m in msys.LoadMany('tests/files/3.dms')]
+        self.assertEqual(len(mols), 3)
+        self.assertEqual([m.natoms for m in mols], [26228, 562, 7614])
+
     def testRefcount(self):
         m=msys.CreateSystem()
         a=m.addAtom()

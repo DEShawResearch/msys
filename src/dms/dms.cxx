@@ -301,7 +301,7 @@ Sqlite Sqlite::read(std::string const& path, bool unbuffered) {
     return std::shared_ptr<sqlite3>(db, sqlite3_close);
 }
 
-Sqlite Sqlite::read_bytes(const char * bytes, int64_t len ) {
+Sqlite Sqlite::read_bytes(const void* bytes, int64_t len ) {
     sqlite3* db;
     sqlite3_vfs_register(vfs, 0);
 

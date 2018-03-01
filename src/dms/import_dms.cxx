@@ -17,6 +17,18 @@
 #include <sstream>
 #endif
 
+#if defined(WIN32) || defined(WIN64)
+#else
+#define MSYS_HAS_MMAP
+#endif
+
+#if defined(MSYS_HAS_MMAP)
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <fcntl.h>
+#endif
+
 using namespace desres::msys;
 
 typedef std::set<String> KnownSet;
@@ -720,6 +732,114 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only,
     return h;
 }
 
+namespace {
+
+    class iterator : public LoadIterator {
+        // iteration over concatenated dms files
+
+        int fd = 0;
+        size_t offset = 0;
+        const bool structure_only;
+        const bool without_tables;
+
+    public:
+        iterator(std::string const& path, bool structure_only,
+                                          bool without_tables)
+        : structure_only(structure_only),
+          without_tables(without_tables)
+        {
+            fd = ::open(path.data(), O_RDONLY);
+            if (fd < 0) {
+                MSYS_FAIL("Opening DMS file '" << path << "' for reading: "
+                        << strerror(errno));
+            }
+
+        }
+
+        void close() {
+            if (fd > 0) {
+                ::close(fd);
+                fd = 0;
+            }
+        }
+
+        ~iterator() {
+            close();
+        }
+
+        SystemPtr next();
+    };
+}
+
+SystemPtr iterator::next() {
+#if defined(MSYS_HAS_MMAP)
+    if (fd <= 0) return nullptr;
+    // The first 100 bytes of an sqlite file correspond to the database header.
+    char header[100];
+    if (pread(fd, header, sizeof(header), offset) != sizeof(header)) {
+        // calling this end of file
+        close();
+        return nullptr;
+    }
+    // validate the header string
+    if (strcmp(header, "SQLite format 3")) {
+        MSYS_FAIL("File has incorrect magic header string");
+    }
+
+    // get the page size: 2 bytes, big endian.
+    // "The database page size in bytes. Must be a power of two between 512
+    // and 32768 inclusive, or the value 1 representing a page size of 65536."
+    uint32_t page_size =
+        ((uint16_t)header[16] << 8) +
+        ((uint16_t)header[17]     );
+    if (page_size == 1) page_size = 65536;
+
+    // get the number of pages.  DMS files written with older versions of
+    // msys/sqlite will have zero here.  If so, we can't determine where the
+    // db ends, so just bail rather than hope that this is the last entry.
+    uint32_t page_count = 
+        ((uint32_t)header[28] << 24) +
+        ((uint32_t)header[29] << 16) +
+        ((uint32_t)header[30] <<  8) +
+        ((uint32_t)header[31]      );
+
+    if (page_count == 0) {
+        close();
+        MSYS_FAIL("Entry at offset " << offset << " has zero page_count, possibly because it was written with an older version of msys");
+    }
+    uint64_t dbsize = page_size * page_count;
+
+    // mmap the file
+    void* ptr = mmap(0, dbsize, PROT_READ, MAP_PRIVATE, fd, offset);
+    if (ptr == MAP_FAILED) {
+        close();
+        MSYS_FAIL("Mapping DMS entry at " << offset << " size " << dbsize
+                << ": " << strerror(errno));
+    }
+
+    // read the db and import the system
+    SystemPtr mol;
+    try {
+        Sqlite dms = Sqlite::read_bytes(ptr, dbsize);
+        mol = import_dms(dms, structure_only, without_tables);
+    }
+    catch (std::exception& e) {
+        munmap(ptr, dbsize);
+        throw;
+    }
+
+    munmap(ptr, dbsize);
+    offset += dbsize;
+
+    if (mol->ctCount()) {
+        mol->name = mol->ct(0).name();
+    }
+    return mol;
+#else
+    MSYS_FAIL("DMS iteration without mmap support not available");
+#endif
+}
+
 SystemPtr desres::msys::ImportDMS(const std::string& path, 
                                   bool structure_only,
                                   bool without_tables) {
@@ -760,5 +880,11 @@ SystemPtr desres::msys::sqlite::ImportDMS(sqlite3* db,
                                   bool without_tables) {
     Sqlite dms(std::shared_ptr<sqlite3>(db,no_close));
     return import_dms(dms, structure_only, without_tables);
+}
+
+LoadIteratorPtr desres::msys::DMSIterator(std::string const& path,
+                                          bool structure_only,
+                                          bool without_tables) {
+    return std::make_shared<iterator>(path, structure_only, without_tables);
 }
 

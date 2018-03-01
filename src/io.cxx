@@ -169,6 +169,8 @@ namespace desres { namespace msys {
                 return LoadIteratorPtr(
                         new DefaultIterator(path, format, structure_only,
                                                           without_tables));
+            case DmsFileFormat:
+                    return DMSIterator(path, structure_only, without_tables);
             case Mol2FileFormat:
                     return Mol2Iterator(path);
             case MaeFileFormat:
