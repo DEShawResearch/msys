@@ -18,6 +18,21 @@ class TestAnton(TestCase):
         constraints=[t for t in self.mol.tables if t.category=='constraint']
         self.assertTrue(len(constraints)>0)
 
+    def testHasConstrainedHydrogens(self):
+        ''' The hydrogens in the system have to be constrained '''
+        constrained_hydrogens = []
+        hydrogens = self.mol.select('hydrogen')
+        hydrogenIds = [atom.id for atom in hydrogens]
+        for table in self.mol.tables:
+            if table.category=='constraint':
+                constrained_hydrogens += [atom.id for term in table.findWithAny(hydrogens) for atom in term.atoms if atom.atomic_number == 1]
+        unconstrained_hydrogens = list(set(hydrogenIds) - set(constrained_hydrogens))
+
+        num = len(unconstrained_hydrogens)
+        formatted_results = " ".join([str(aid) for aid in unconstrained_hydrogens[:10]]) + " ..." if len(unconstrained_hydrogens) > 10 else ""
+        self.assertTrue(len(unconstrained_hydrogens) == 0, "Found %d hydrogens that are unconstrained: \n\t[%s]" % (num,
+                formatted_results))
+
     def testConsistentMasses(self):
         ''' Particles with equal atomic number must have equal mass. 
         Pseudos excluded.  '''
