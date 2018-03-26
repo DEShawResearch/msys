@@ -19,6 +19,10 @@ import shutil as SH
 import subprocess
 import tempfile
 
+# we import pands here because it maybe imported later during a
+# test, which results in a weird, spurious error involving importlib.
+import pandas
+
 '''
 FIXME: This is sort of a mess.  There are tests for commonly used plugins,
 the generic python interface, and the caching infrastructure all jumbled
@@ -297,6 +301,10 @@ class TestStk(unittest.TestCase):
             s1 = molfile.DtrReader('tests/files/mixed_atom_count1.stk')
         with self.assertRaises(RuntimeError):
             s1 = molfile.DtrReader('tests/files/mixed_atom_count2.stk')
+
+    def testLsFile(self):
+        s = molfile.StkFile.read('tests/files/ene.ls')
+        self.assertEqual(s.nframes, 4167)
 
     def testRelativePath(self):
         molfile.dtr.read('tests/files/relative.stk').frame(0)

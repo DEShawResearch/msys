@@ -348,11 +348,12 @@ class SeqFile(object):
             Otherwise, use numpy.loadtxt
             '''
             props=None
-            for line in file(path):
-                cols = line.strip().split()
-                if len(cols)>1 and cols[0]=='#' and cols[1].endswith('time'):
-                    props=self._parse_header(line)
-                    break
+            with open(path) as fp:
+                for line in fp:
+                    cols = line.strip().split()
+                    if len(cols)>1 and cols[0]=='#' and cols[1].endswith('time'):
+                        props=self._parse_header(line)
+                        break
 
 
             self.rows = None
