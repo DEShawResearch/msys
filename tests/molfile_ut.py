@@ -292,6 +292,12 @@ class DtrTestCase(unittest.TestCase):
 class TestStk(unittest.TestCase):
     STK='tests/files/run.stk'
 
+    def testMixedAtomCount(self):
+        with self.assertRaises(RuntimeError):
+            s1 = molfile.DtrReader('tests/files/mixed_atom_count1.stk')
+        with self.assertRaises(RuntimeError):
+            s1 = molfile.DtrReader('tests/files/mixed_atom_count2.stk')
+
     def testRelativePath(self):
         molfile.dtr.read('tests/files/relative.stk').frame(0)
 
@@ -863,6 +869,22 @@ class TestDtrWriter(unittest.TestCase):
 
     def tearDown(self):
         SH.rmtree(self.PATH, ignore_errors=True)
+
+    def testMixedAtomCount(self):
+        d = molfile.dtr.write(self.PATH, natoms=10)
+        f = molfile.Frame(20)
+        f.time = 0
+        with self.assertRaises(RuntimeError):
+            d.frame(f)
+
+        f = molfile.Frame(10)
+        f.time = 0
+        d.frame(f)
+
+        f = molfile.Frame(20)
+        f.time = 1
+        with self.assertRaises(RuntimeError):
+            d.frame(f)
 
     def testClobber(self):
         frame=molfile.Frame(10)

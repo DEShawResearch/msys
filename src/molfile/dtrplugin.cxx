@@ -67,6 +67,7 @@ using namespace desres::molfile::dtr;
 #include <sys/types.h>
 
 #include "vmddir.h"
+#include "../types.hxx"
 
 
 #define BOOST_FILESYSTEM_VERSION 3
@@ -1076,10 +1077,13 @@ void StkReader::append(std::vector<std::string> fnames,
     }
     for (unsigned i=0; i<fnames.size(); i++) {
         auto reader = framesets[i + starting_framesets];
-        if (first) {
-            reader->set_natoms(first->natoms());
-            reader->set_has_velocities(first->has_velocities());
-        }
+        // 26 March 2018 - we don't do this anymore since it
+        // masks hand-edited stk files with mixed numbers of
+        // atoms.
+        //if (first) {
+            //reader->set_natoms(first->natoms());
+            //reader->set_has_velocities(first->has_velocities());
+        //}
 
         try {
             reader->initWithTimekeys(timekeys[i]);
@@ -1089,8 +1093,13 @@ void StkReader::append(std::vector<std::string> fnames,
         }
         if (first==NULL && reader->natoms()>0) {
             first = reader;
-            framesets[0]->set_natoms(first->natoms());
+            //framesets[0]->set_natoms(first->natoms());
         }
+        if (first && reader->natoms() != first->natoms()) {
+            MSYS_FAIL("Frameset " << reader->path() << " has different number of atoms (" << reader->natoms()
+                    << ") than initial frameset " << first->path() << " (" << first->natoms() << ")");
+        }
+
     }
 
     // now remove overlaps
