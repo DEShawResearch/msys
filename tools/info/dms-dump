@@ -173,6 +173,7 @@ def dmsdump(ipath, out, without_provenance = False,
     dump_terms(cmd, ipath, out, 'constraint_term', without_paraminfo, reorder )
     dump_terms(cmd, ipath, out, 'virtual_term', without_paraminfo, reorder )
     dump_terms(cmd, ipath, out, 'polar_term', without_paraminfo, reorder )
+    dump_terms(cmd, ipath, out, 'nonbonded_table', without_paraminfo, reorder )
 
     # cmap, if present
     for c in range(1,100):
