@@ -217,6 +217,11 @@ def dmsdump(ipath, out, without_provenance = False,
         sql='select %s from nonbonded_combined_param' % s
         subprocess.check_call(cmd+[sql], stdout=out, stderr=subprocess.PIPE)
 
+    # modified_interaction
+    if has_table(ipath, "modified_interaction"):
+        sql = 'select "modified_interaction", * from modified_interaction order by g0, g1'
+        subprocess.check_call(cmd+[sql])
+
     # exclusions
     if(has_table(ipath, 'exclusion')):
         sql='select "exclusion", * from exclusion'
