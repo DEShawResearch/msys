@@ -575,11 +575,12 @@ class AtomselCoverage(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             self.mol.select('')
 
-    def testIonCl(self):
+    def testIons(self):
         m=msys.CreateSystem()
         a=m.addAtom()
-        a.residue.name='Cl-'
-        self.assertEqual(len(m.select('ion')), 1)
+        for resname in 'Cl-', 'K+':
+            a.residue.name=resname
+            self.assertEqual(len(m.select('ion')), 1, 'failed for %s' % resname)
 
     def testAnum(self):
         self.check('atomicnumber 6', [0])
