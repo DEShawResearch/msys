@@ -57,6 +57,10 @@ static char schemas_as_json[] = R"SCHEMA(
      [ "constraint_ah6", "constraint", 7, ["r1","r2","r3","r4","r5","r6"]],
      [ "constraint_ah7", "constraint", 8, ["r1","r2","r3","r4","r5","r6","r7"]],
      [ "constraint_ah8", "constraint", 9, ["r1","r2","r3","r4","r5","r6","r7","r8"]],
+     [ "constraint_ah1R", "constraint", 2, ["r1"]],
+     [ "constraint_ah2R", "constraint", 3, ["r1","r2","r3"]],
+     [ "constraint_ah3R", "constraint", 4, ["r1","r2","r3","r4","r5","r6"]],
+     [ "constraint_ah4R", "constraint", 5, ["r1","r2","r3","r4","r5","r6","r7","r8","r9","r10"]],
 
      [ "rigid_explicit2", "constraint", 2, ["x0", "y0", "z0", "x1", "y1", "z1"]],
      [ "rigid_explicit3", "constraint", 3, ["x0", "y0", "z0", "x1", "y1", "z1", "x2", "y2", "z2"]],
