@@ -1,3 +1,7 @@
+1.7.227c7 Support K+ as an ion residue name.
+          Include tempered_nonbonded and modified_interaction in dms-dump
+          Add table schemas for constraint_ahNR
+
 1.7.226c7 Fix molfile.StkFile for python3
           Use new megamodules (-03c7).
           Check for atom count consistency in stks.
