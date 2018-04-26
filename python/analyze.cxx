@@ -27,10 +27,14 @@ namespace {
         AssignBondOrderAndFormalCharge(mol, ids_from_python(ids), total_charge, flags);
     }
 
-    list find_distinct_fragments(SystemPtr mol) {
+    dict find_distinct_fragments(SystemPtr mol) {
         MultiIdList fragments;
         mol->updateFragids(&fragments);
-        return to_python(FindDistinctFragments(mol, fragments));
+        dict result;
+        for (auto& iter : FindDistinctFragments(mol, fragments)) {
+            result[iter.first] = to_python(iter.second);
+        }
+        return result;
     }
 
     list find_matches(SmartsPattern const& s, AnnotatedSystem const& sys, 

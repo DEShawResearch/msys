@@ -38,9 +38,10 @@ std::vector<InChI> InChI::analyze(SystemPtr mol, unsigned options) {
     MultiIdList fragments;
     mol = without_pseudos(mol);
     mol->updateFragids(&fragments);
-    IdList distinct = FindDistinctFragments(mol, fragments);
+    auto distinct = FindDistinctFragments(mol, fragments);
     std::vector<InChI> result;
-    for (Id id : distinct) {
+    for (auto& iter : distinct) {
+        auto id = iter.first;
         if (fragments[id].size()<1024) {
             result.emplace_back(create(Clone(mol, fragments[id]), options));
         }

@@ -2325,7 +2325,12 @@ def GuessHydrogenPositions(atoms):
     _msys.GuessHydrogenPositions(ptr, ids)
 
 def FindDistinctFragments(system):
-    ''' Return fragids of representative fragments.  '''
+    ''' Find connected sets of atoms with identical topology.
+    
+    Returns:
+        dict[int -> [int]]: mapping from representative fragment id to ids of fragments
+                            having identical topology.
+    '''
     return _msys.FindDistinctFragments(system._ptr)
 
 def ComputeTopologicalIds(system):

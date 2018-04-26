@@ -753,16 +753,6 @@ static void write_ct(Maeff& M, SystemPtr mol,
     Destro& ffio_ff = ct.new_block("ffio_ff");
 
     IdList compress;
-#if 0
-    if (flags & MaeExport::CompressForcefield) {
-        MultiIdList fragments;
-        mol->updateFragids(&fragments);
-        IdList frags = FindDistinctFragments(mol,fragments);
-        if (frags.size()==1) {
-            compress = fragments[0];
-        }
-    }
-#endif
 
     build_sites( mol, compress, ffio_ff );
     build_pseudos( mol, ffio_ff );

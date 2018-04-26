@@ -38,8 +38,12 @@ namespace desres { namespace msys {
     void GuessBondConnectivity(SystemPtr mol);
 
     /* Find representative fragments representing the complete set of
-     * topologically distinct fragments, as determined by atomic number. */
-    IdList FindDistinctFragments(SystemPtr mol, MultiIdList const& fragments);
+     * topologically distinct fragments, as determined by atomic number.
+     *
+     * Return mapping from representative fragment id to fragments having
+     * identical topology.
+     */
+    std::map<Id,IdList> FindDistinctFragments(SystemPtr mol, MultiIdList const& fragments);
 
     /* Assign atom and residue types; do this after loading a new
      * system from a file or creating it from scratch.  This method

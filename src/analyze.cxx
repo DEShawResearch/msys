@@ -202,8 +202,8 @@ namespace desres { namespace msys {
         }
     }
 
-    IdList FindDistinctFragments(SystemPtr mol, MultiIdList const& fragments) {
-        IdList result;
+    std::map<Id,IdList> FindDistinctFragments(SystemPtr mol, MultiIdList const& fragments) {
+        std::map<Id, IdList> result;
         /* will compute graphs lazily */
         std::vector<GraphPtr> graphs(fragments.size());
         typedef std::map<std::string, IdList> FragmentHash;
@@ -216,7 +216,7 @@ namespace desres { namespace msys {
             /* unique formula -> unique fragment */
             IdList& frags = it->second;
             if (frags.size()==1) {
-                result.push_back(frags[0]);
+                result[frags[0]] = frags;
                 continue;
             }
             /* must do isomorphism checks. */
@@ -225,19 +225,22 @@ namespace desres { namespace msys {
             }
             std::vector<IdPair> perm;
             while (!frags.empty()) {
-                result.push_back(frags[0]);
+                Id fragid = frags[0];
+                IdList& matched = result[fragid];
+                matched.push_back(fragid);
                 IdList unmatched;
-                GraphPtr ref = graphs[frags[0]];
+                GraphPtr ref = graphs[fragid];
                 for (Id i=1; i<frags.size(); i++) {
                     GraphPtr sel = graphs[frags[i]];
                     if (!ref->match(sel, perm)) {
                         unmatched.push_back(frags[i]);
+                    } else {
+                        matched.push_back(frags[i]);
                     }
                 }
                 frags.swap(unmatched);
             }
         }
-        std::sort(result.begin(), result.end());
         return result;
     }
 

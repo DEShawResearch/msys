@@ -933,6 +933,29 @@ class TestValidate(unittest.TestCase):
 
 class Main(unittest.TestCase):
 
+    def testFindDistinctFragments(self):
+        import random
+        random.seed(99)
+        frag1 = msys.FromSmilesString('CCCC')
+        frag2 = msys.FromSmilesString('CC(C)C')
+        atoms = frag1.atoms
+        random.shuffle(atoms)
+        frag1b = frag1.clone(atoms)
+
+        assert msys.InChI(frag1).string != msys.InChI(frag2).string
+        assert msys.Graph(frag1).hash() == msys.Graph(frag2).hash()
+        assert [a.atomic_number for a in frag1.atoms] != [a.atomic_number for a in frag1b.atoms]
+
+        mol = msys.CreateSystem()
+        mol.append(frag2)
+        mol.append(frag1)
+        mol.append(frag1b)
+        mol.append(frag2)
+        mol.append(frag1)
+
+        result = msys.FindDistinctFragments(mol)
+        self.assertEqual(result, { 0 : [0,3], 1 : [1,2,4] })
+
     def testSortAtoms(self):
         mol = msys.Load('tests/files/2f4k.dms')
         atoms = mol.atoms
