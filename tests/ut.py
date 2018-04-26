@@ -996,6 +996,11 @@ class Main(unittest.TestCase):
         self.assertEqual([a.resid for a in oldres],
                          [a.resid for a in newres])
 
+    def testFormatDMS(self):
+        old = msys.Load('tests/files/2f4k.dms')
+        dms = msys.FormatDMS(old)
+        new = msys.LoadDMS(buffer=dms)
+        self.assertEqual(old.hash(), new.hash())
 
     def testGuessBonds(self):
         mol = msys.Load('tests/files/2f4k.dms')

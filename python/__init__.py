@@ -2130,6 +2130,11 @@ def SaveDMS(system, path, structure_only=False, unbuffered=False):
         flags |= _msys.DMSExportFlags.Unbuffered
     _msys.ExportDMS(system._ptr, path, prov, flags)
 
+def FormatDMS(system):
+    ''' Return the DMS form of the system as bytes '''
+    return _msys.FormatDMS(system._ptr)
+
+
 def SerializeMAE(system, with_forcefield=True):
     ''' Return the MAE form of the System as bytes. '''
     prov = _msys.Provenance.fromArgs(sys.argv)

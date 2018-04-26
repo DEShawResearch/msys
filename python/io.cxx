@@ -14,6 +14,17 @@
 
 namespace {
 
+#if PY_MAJOR_VERSION >= 3
+    auto py_as_bytes = PyBytes_FromStringAndSize;
+#else
+    auto py_as_bytes = PyString_FromStringAndSize;
+#endif
+
+    PyObject* format_dms(SystemPtr mol) {
+        std::string contents = FormatDMS(mol, Provenance());
+        return py_as_bytes(contents.data(), contents.size());
+    }
+
     SystemPtr import_mae_from_buffer(PyObject* obj, bool ignore_unrecognized,
                                                     bool structure_only) {
         Py_buffer view[1];
@@ -144,7 +155,7 @@ namespace desres { namespace msys {
         def("ImportDMS", import_dms);
         def("ImportDMSFromBuffer", import_dms_from_buffer);
         def("ExportDMS", ExportDMS);
-        def("FormatDMS", FormatDMS);
+        def("FormatDMS", format_dms);
         def("ImportMAE", import_mae);
         def("ImportMAEFromBuffer", import_mae_from_buffer);
         def("ExportMAE", ExportMAE);
