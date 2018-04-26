@@ -1,3 +1,7 @@
+1.7.228c7 Added msys.FormatDMS.
+          Pickled systems use zlib; 3-20x smaller pickles.
+          FindDistinctFragment returns full map of equivalent fragments.
+          
 1.7.227c7 Support K+ as an ion residue name.
           Include tempered_nonbonded and modified_interaction in dms-dump
           Add table schemas for constraint_ahNR
