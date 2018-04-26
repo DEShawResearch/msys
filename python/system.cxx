@@ -18,6 +18,8 @@
 #include <pfx/graph.hxx>
 #include <pfx/cell.hxx>
 
+#include <boost/python/import.hpp>
+
 using namespace desres::msys;
 
 namespace {
@@ -752,9 +754,18 @@ namespace {
     struct system_pickle_suite : pickle_suite {
         static tuple getinitargs(SystemPtr mol) {
             std::string contents = FormatDMS(mol, Provenance());
-            auto bytes = py_as_bytes(contents.data(), contents.size());
-            return boost::python::make_tuple(
-                    "dmscontents", handle<>(bytes));
+            PyObject* bytes = py_as_bytes(contents.data(), contents.size());
+            object bobj = object(handle<>(bytes));
+            object compress = import("zlib").attr("compress");
+            // in my experiments across a range of file sizes,
+            // compression level 1 achieved compression levels
+            // within 10% of levels 6-9, while running as much
+            // as twice as fast as level 6.  Speed of compression
+            // is not an insignificant consideration here, so
+            // we'll go with level 1 for now.  
+            object zobj = compress(bobj, 1);
+
+            return boost::python::make_tuple("dmscontents", zobj);
         }
         static tuple getstate(SystemPtr mol) {
             return tuple();
@@ -765,6 +776,29 @@ namespace {
 
     SystemPtr init_from_pickle(std::string const& format, std::string const& contents) {
         if (format=="dmscontents") {
+            if (contents.size() < 100) {
+                throw std::runtime_error("pickle contents are too short: len = " + std::to_string(contents.size()));
+            }
+            // check for zlib-compressed data.  
+            if ((unsigned char)contents[0] == 0x78 && (
+                        // alternatives based on possible zlib compression levels
+                        (unsigned char)contents[1] == 0x01 ||
+                        (unsigned char)contents[1] == 0x5e ||
+                        (unsigned char)contents[1] == 0x9c ||
+                        (unsigned char)contents[1] == 0xda)) {
+
+                PyObject* bytes = py_as_bytes(contents.data(), contents.size());
+                object bobj = object(handle<>(bytes));
+                object decompress = import("zlib").attr("decompress");
+                object zobj = decompress(bobj);
+
+                Py_buffer view[1];
+                if (PyObject_GetBuffer(zobj.ptr(), view, PyBUF_ND)) {
+                    throw error_already_set();
+                }
+                std::shared_ptr<Py_buffer> ptr(view, PyBuffer_Release); // ensure destruction
+                return ImportDMSFromBytes((const char *)view->buf, view->len);
+            }
             return ImportDMSFromBytes(contents.data(), contents.size());
         }
         throw std::runtime_error("Unsupported pickle format " + format);
