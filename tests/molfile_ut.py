@@ -66,65 +66,6 @@ class TestDcd(unittest.TestCase):
         for fid in fids:
             self.assertTrue((self.r.frame(fid).pos == frames[fid].pos).all())
 
-class ZeromqTestCase(unittest.TestCase):
-    @unittest.skipIf(True, 'Disabled as we we removed the zeromq plugin')
-    def testIPC(self):
-        path = 'ipc:///tmp/molfile_zeromq_test'
-        natoms = 99
-        
-        def reader():
-            r = molfile.zeromq.read(path)
-            self.assertEqual(r.natoms, natoms)
-            self.assertEqual(r.nframes, -1)
-            i=0
-            while True:
-                f = next(r)
-                if not f: break
-                self.assertEqual(f.time, float(i))
-                self.assertEqual(f.pos[37][1], float(i+1))
-                self.assertEqual(f.box[1][2], float(i+2))
-                if i==2:
-                    self.assertEqual(f.vel[5][0], float(i+3))
-                else:
-                    self.assertEqual(f.vel[5][0], float(0))
-                self.assertEqual(f.total_energy, i+4)
-                self.assertEqual(f.potential_energy, i+5)
-                self.assertEqual(f.kinetic_energy, i+6)
-                self.assertEqual(f.extended_energy, i+7)
-                self.assertEqual(f.pressure, i+8)
-                self.assertEqual(f.temperature, i+9)
-                self.assertEqual(f.pressure_tensor[2][1], i+10)
-                self.assertEqual(f.virial_tensor[1][0], i+11)
-                i += 1
-
-        def writer():
-            w = molfile.zeromq.write(path, natoms=natoms)
-            for i in range(4):
-                f = molfile.Frame(natoms, i==2)
-                f.pos[37][1] = i+1
-                f.time = i
-                f.box[1][2] = i+2
-                if i==2:
-                    f.vel[5][0] = i+3
-                f.total_energy = i+4
-                f.potential_energy = i+5
-                f.kinetic_energy = i+6
-                f.extended_energy = i+7
-                f.pressure = i+8
-                f.temperature = i+9
-                f.pressure_tensor[2][1] = i+10
-                f.virial_tensor[1][0] = i+11
-                w.frame(f)
-            w.close()
-
-        import multiprocessing as mp
-        w=mp.Process(target=writer)
-        w.start()
-        r=mp.Process(target=reader)
-        r.start()
-        r.join()
-        w.join()
-
 class GuessFiletypeTestCase(unittest.TestCase):
     def testDtr(self):
         p=molfile.guess_filetype("foo.dtr")
@@ -950,6 +891,16 @@ class TestQuantizedTime(unittest.TestCase):
         small = deltas[deltas < 0.1]
         self.assertTrue(len(small) == 404)
         self.assertTrue(deltas.min() > 0.007499)
+
+class TestDtrFrame(unittest.TestCase):
+    def test_parse_frame(self):
+        with open('tests/files/ch4.dtr/frame000000000', 'rb') as fp:
+            data = fp.read()
+        d = molfile.parse_frame(data)
+        pos = [ 0.326,  0.704,  0.726, -0.431,  1.245,  1.295, -0.13,
+               -0.146, 0.217,  0.798,  1.373,  0.007,  1.09, 0.338,  1.411]
+        self.assertTrue((d['POSITION'] == numpy.array(pos).astype('f')).all())
+
 
 if __name__=="__main__":
   unittest.main(verbosity=2)

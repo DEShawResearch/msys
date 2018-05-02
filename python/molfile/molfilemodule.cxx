@@ -15,6 +15,7 @@
 
 #include "molfile/findframe.hxx"
 #include "molfile/dtrplugin.hxx"
+#include "molfile/dtrframe.hxx"
 
 #ifdef WIN32
 #undef ssize_t
@@ -337,6 +338,23 @@ namespace {
         }
     }
 
+    const char* parse_frame_doc = 
+        "parse_frame(framebytes) -> dict\n"
+        "Parse frameset frame bytes\n";
+
+    dict py_parse_frame(PyObject* bufferobj) {
+        Py_buffer view[1];
+        if (PyObject_GetBuffer(bufferobj, view, PyBUF_ND)) {
+            throw error_already_set();
+        }
+        std::shared_ptr<Py_buffer> ptr(view, PyBuffer_Release);
+        bool swap_endian = false;   // FIXME ignored
+        auto keymap = dtr::ParseFrame(view->len, view->buf, &swap_endian);
+        dict d;
+        py_keyvals(keymap, d.ptr());
+        return d;
+    }
+
     const char* keyvals_doc =
         "keyvals(index) -> dict()\n"
         "Read raw fields from frame.\n";
@@ -554,6 +572,7 @@ void desres::molfile::export_dtrreader() {
         .def("times", get_times)
         ;
 
+    def("parse_frame", py_parse_frame, parse_frame_doc);
                 
     scope().attr("dtr_serialized_version")=dtr_serialized_version();
 }
