@@ -893,13 +893,24 @@ class TestQuantizedTime(unittest.TestCase):
         self.assertTrue(deltas.min() > 0.007499)
 
 class TestDtrFrame(unittest.TestCase):
-    def test_parse_frame(self):
-        with open('tests/files/ch4.dtr/frame000000000', 'rb') as fp:
+    def test_frame_bytes_round_trip(self):
+        dtr = 'tests/files/ch4.dtr'
+        with open('%s/frame000000000' % dtr, 'rb') as fp:
             data = fp.read()
-        d = molfile.parse_frame(data)
-        pos = [ 0.326,  0.704,  0.726, -0.431,  1.245,  1.295, -0.13,
-               -0.146, 0.217,  0.798,  1.373,  0.007,  1.09, 0.338,  1.411]
-        self.assertTrue((d['POSITION'] == numpy.array(pos).astype('f')).all())
+        d = molfile.dtr_frame_from_bytes(data)
+        pos = molfile.DtrReader(dtr).frame(0).pos.flatten()
+        self.assertEqual(d['POSITION'].tolist(), pos.tolist())
+
+        for use_padding in True, False:
+            data2 = molfile.dtr_frame_as_bytes(d, use_padding=use_padding)
+            d2 = molfile.dtr_frame_from_bytes(data2)
+            self.assertEqual(d.keys(), d2.keys())
+            for k,v in d.items():
+                v2 = d2[k]
+                if isinstance(v, numpy.ndarray):
+                    self.assertTrue((v==v2).all(), k)
+                else:
+                    self.assertTrue(v==v2, k)
 
 
 if __name__=="__main__":

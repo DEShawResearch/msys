@@ -35,11 +35,13 @@ namespace {
     auto py_from_string_size = PyUnicode_FromStringAndSize;
     auto py_as_string = PyUnicode_AsUTF8;
     auto py_as_string_size = PyBytes_AsStringAndSize;
+    auto py_as_bytes = PyBytes_FromStringAndSize;
 #else
     auto py_string_check = [](PyObject* o) { return PyString_Check(o); };
     auto py_from_string_size = PyString_FromStringAndSize;
     auto py_as_string = PyString_AsString;
     auto py_as_string_size = PyString_AsStringAndSize;
+    auto py_as_bytes = PyString_FromStringAndSize;
 #endif
 }
 
@@ -106,8 +108,7 @@ namespace {
         return new DtrWriter(path, DtrWriter::Type::DTR, natoms, DtrWriter::Mode(mode), fpf);
     }
 
-    void dtr_append(DtrWriter& w, double time, dict keyvals) {
-        dtr::KeyMap map;
+    void convert_keyvals_to_keymap(dict keyvals, dtr::KeyMap& map) {
         list items = keyvals.items();
         for (unsigned i=0, n=len(items); i<n; i++) {
             object item = items[i];
@@ -155,7 +156,23 @@ namespace {
             }
             map[key] = keyval;
         }
-        w.append(time, map);
+    }
+
+    void dtr_append(DtrWriter& w, double time, dict keyvals) {
+        dtr::KeyMap keymap;
+        convert_keyvals_to_keymap(keyvals, keymap);
+        w.append(time, keymap);
+    }
+
+    PyObject* py_frame_as_bytes(dict keyvals, bool use_padding) {
+        dtr::KeyMap keymap;
+        convert_keyvals_to_keymap(keyvals, keymap);
+        void* buf = nullptr;
+        size_t len = dtr::ConstructFrame(keymap, &buf, use_padding);
+        char* ptr = static_cast<char *>(buf);
+        PyObject* bytes = py_as_bytes(ptr, len);
+        free(buf);
+        return bytes;
     }
 
     void export_dtrwriter() {
@@ -338,11 +355,7 @@ namespace {
         }
     }
 
-    const char* parse_frame_doc = 
-        "parse_frame(framebytes) -> dict\n"
-        "Parse frameset frame bytes\n";
-
-    dict py_parse_frame(PyObject* bufferobj) {
+    dict py_frame_from_bytes(PyObject* bufferobj) {
         Py_buffer view[1];
         if (PyObject_GetBuffer(bufferobj, view, PyBUF_ND)) {
             throw error_already_set();
@@ -572,7 +585,9 @@ void desres::molfile::export_dtrreader() {
         .def("times", get_times)
         ;
 
-    def("parse_frame", py_parse_frame, parse_frame_doc);
+    def("dtr_frame_from_bytes", py_frame_from_bytes);
+    def("dtr_frame_as_bytes", py_frame_as_bytes,
+            (arg("keyvals"), arg("use_padding")=false));
                 
     scope().attr("dtr_serialized_version")=dtr_serialized_version();
 }
