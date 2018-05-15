@@ -75,6 +75,7 @@ static char schemas_as_json[] = R"SCHEMA(
                                       ["c2",1,"angle"],
                                       ["c3",1,"torsion"]]],
 
+     [ "virtual_lc1",     "virtual", 2, []],
      [ "virtual_lc2",     "virtual", 3, ["c1"]],
      [ "virtual_lc2n",    "virtual", 3, ["c1"]],
      [ "virtual_lc3",     "virtual", 4, ["c1","c2"]],
