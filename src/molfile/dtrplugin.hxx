@@ -348,7 +348,7 @@ namespace desres { namespace molfile {
 
     virtual bool next(molfile_timestep_t *ts);
 
-    virtual const DtrReader * component(ssize_t &n) const {
+      virtual const DtrReader * component(ssize_t &/*n*/) const {
       return this;
     }
 
