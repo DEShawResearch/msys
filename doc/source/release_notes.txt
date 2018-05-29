@@ -1,3 +1,7 @@
+1.7.230c7 Added virtual_lc1 schema
+          Fix for dms-dump with .sqliterc files
+          Unused param fix for v2 compatibility
+
 1.7.229c7 Added dtr_frame_{from,as}_bytes.
 
 1.7.228c7 Added msys.FormatDMS.
