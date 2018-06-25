@@ -933,6 +933,20 @@ class TestValidate(unittest.TestCase):
 
 class Main(unittest.TestCase):
 
+    def testAddProvenance(self):
+        mol = msys.CreateSystem()
+        prov = msys._msys.Provenance()
+        attrs = 'version','timestamp', 'user', 'workdir', 'cmdline', 'executable'
+        for attr in attrs:
+            setattr(prov, attr, 'the %s' % attr)
+        mol._ptr.addProvenance(prov)
+        with tempfile.NamedTemporaryFile(suffix='.dms') as tmp:
+            msys.Save(mol, tmp.name)
+            new = msys.Load(tmp.name)
+        self.assertEqual(len(new.provenance), 2)
+        for attr in attrs:
+            self.assertEqual(getattr(prov, attr), getattr(new.provenance[0], attr))
+
     def testFindDistinctFragments(self):
         import random
         random.seed(99)

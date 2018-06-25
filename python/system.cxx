@@ -1036,6 +1036,8 @@ namespace desres { namespace msys {
             .staticmethod("asCapsule")
             .def("fromCapsule", python::system_from_capsule)
             .staticmethod("fromCapsule")
+
+            .def("addProvenance", &System::addProvenance)
             ;
     def("HashSystem", HashSystem);
 
