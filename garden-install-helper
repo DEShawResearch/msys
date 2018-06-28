@@ -3,7 +3,7 @@ eval "$(garden-exec)"
 set -e
 
 NAME=msys
-VERSION=1.7.230c7
+VERSION=1.7.231c7
 
 # module versions that scripts in ./tools need to know
 . ./env.sh
@@ -40,11 +40,11 @@ loadmodules() {
 
 genmodules() {
     cat << EOF > $GARDENDIR/lib-python
-prereq $PYTHON/bin
+load $PYTHON/bin
 prepend-path PYTHONPATH $PREFIX/lib/python
 EOF
     cat << EOF > $GARDENDIR/lib-python3
-prereq $PYTHON3/bin
+load $PYTHON3/bin
 prepend-path PYTHONPATH $PREFIX/lib/python3
 EOF
 

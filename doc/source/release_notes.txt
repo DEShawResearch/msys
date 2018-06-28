@@ -1,3 +1,7 @@
+1.7.231c7 Use python/2.7.15 and 3.6.6 megamodules.
+          Update boost from 1.63 to 1.67.
+          Add bindings for System.addProvenance.
+
 1.7.230c7 Added virtual_lc1 schema
           Fix for dms-dump with .sqliterc files
           Unused param fix for v2 compatibility
