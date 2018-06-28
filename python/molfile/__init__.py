@@ -363,7 +363,7 @@ class SeqFile(object):
                     self.rows = pandas.read_csv(path,
                             delim_whitespace=True,
                             header=None,
-                            comment='#').as_matrix()
+                            comment='#').values
                 except ValueError:
                     pass
             if self.rows is None:

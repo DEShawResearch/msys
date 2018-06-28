@@ -8,7 +8,7 @@ cxx_flags = '' if sys.platform.startswith("win32") else '-Wno-unused-local-typed
 env.Append( 
         CPPPATH=['../../src', '../'],
         CXXFLAGS=cxx_flags,
-        LIBS=['msys', 'boost_python$MSYS_BOOST_SUFFIX'])
+        LIBS=['msys', 'boost_python27$MSYS_BOOST_SUFFIX'])
 
 if sys.platform != "win32":
     env.Append(CCFLAGS='-Wno-unused-function'.split())
@@ -42,7 +42,7 @@ env3 = msysenv.Clone()
 env3.Append( 
         CPPPATH=['../../src', '../'],
         CXXFLAGS=cxx_flags,
-        LIBS=['msys', 'boost_python3'])
+        LIBS=['msys', 'boost_python36'])
 
 if sys.platform != "win32":
     env3.Append(CCFLAGS='-Wno-unused-function'.split())

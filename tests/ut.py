@@ -421,7 +421,7 @@ class TestSpatialHash(unittest.TestCase):
         old2 = mol.selectArr('water and pbwithin 23.0 of fragid 0')
         self.assertTrue((old2==new2).all())
         # why does this return a bool in this case instead of an array???
-        self.assertTrue(old1!=old2)
+        self.assertFalse(old1==old2)
 
     def testEmptyWithin(self):
         mol=msys.CreateSystem()
