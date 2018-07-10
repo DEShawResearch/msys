@@ -180,8 +180,54 @@ static PyObject* hash_find_contacts(SpatialHash& hash,
     return result;
 }
 
+namespace {
+    struct Exclusions : SpatialHashExclusions {
+        void add(Id i, Id j) {
+            uint64_t key1(i), key2(j);
+            key1 <<= 32;
+            key2 <<= 32;
+            key1 |= j;
+            key2 |= i;
+            insert(key1);
+            insert(key2);
+        }
+    };
+}
+
+static PyObject* hash_find_pairlist(SpatialHash& hash,
+                                    float r,
+                                    Exclusions const& excl,
+                                    bool reuse_voxels) {
+
+    SpatialHash::contact_array_t contacts;
+    if (!reuse_voxels) {
+        hash.voxelize(r);
+    }
+    hash.findPairlistReuseVoxels(r, excl, &contacts);
+
+    npy_intp dim = contacts.count;
+    std::for_each(contacts.d2, contacts.d2+dim, [](float& x) {x=std::sqrt(x);});
+
+    PyObject* iarr = PyArray_SimpleNew(1,&dim,NPY_UINT32);
+    PyObject* jarr = PyArray_SimpleNew(1,&dim,NPY_UINT32);
+    PyObject* darr = PyArray_SimpleNew(1,&dim,NPY_FLOAT);
+    memcpy(PyArray_DATA(iarr), contacts.i, dim*sizeof(*contacts.i));
+    memcpy(PyArray_DATA(jarr), contacts.j, dim*sizeof(*contacts.j));
+    memcpy(PyArray_DATA(darr), contacts.d2,dim*sizeof(*contacts.d2));
+
+    PyObject* result = PyTuple_New(3);
+    PyTuple_SET_ITEM(result, 0, iarr);
+    PyTuple_SET_ITEM(result, 1, jarr);
+    PyTuple_SET_ITEM(result, 2, darr);
+    return result;
+}
+
 namespace desres { namespace msys {
     void export_spatial_hash() {
+
+        class_<Exclusions>("SpatialHashExclusions", init<>())
+            .def("add", &Exclusions::add)
+            ;
 
         class_<SpatialHash>("SpatialHash", no_init)
             .def("__init__", make_constructor(
@@ -201,6 +247,10 @@ namespace desres { namespace msys {
                     (arg("r"),
                      arg("pos"),
                      arg("ids")=object(),
+                     arg("reuse_voxels")=false))
+            .def("findPairlist", hash_find_pairlist,
+                    (arg("r"),
+                     arg("excl"),
                      arg("reuse_voxels")=false))
             ;
     }

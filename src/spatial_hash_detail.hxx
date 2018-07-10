@@ -357,6 +357,77 @@ void SpatialHashT<Float>::findContactsReuseVoxels(Float r, const Float* pos,
         }
     }
 }
+template <typename Float>
+void SpatialHashT<Float>::findPairlistReuseVoxels(Float r, SpatialHashExclusions const& excl, contact_array_t *result) const {
+    bool periodic = cx!=0 || cy!=0 || cz!=0;
+    Float tmp[3];
+
+    for (int j=0; j<ntarget; j++) {
+        unsigned id = _ids[j];
+        Float x = _x[j];
+        Float y = _y[j];
+        Float z = _z[j];
+        if (rot) {
+            tmp[0] = x;
+            tmp[1] = y;
+            tmp[2] = z;
+            pfx::apply_rotation(1,tmp,rot);
+            x = tmp[0];
+            y = tmp[1];
+            z = tmp[2];
+        }
+        int xi = (x-ox) * ir;
+        int yi = (y-oy) * ir;
+        int zi = (z-oz) * ir;
+        if (!(xi<0 || xi>=nx ||
+              yi<0 || yi>=ny ||
+              zi<0 || zi>=nz)) {
+            int voxid = zi + nz*(yi + ny*xi);
+            find_pairlist(r*r, voxid, x,y,z, id, excl, result);
+        }
+        if (periodic) {
+            minimage_pairlist(r, cx,cy,cz, x,y,z, id, excl, result);
+        }
+    }
+}
+
+template<typename Float>
+void SpatialHashT<Float>::find_pairlist(Float r2, int voxid, Float x, Float y, Float z,
+                           Id id, SpatialHashExclusions const& excl, contact_array_t* result) const {
+
+    result->reserve_additional(27*maxcount);
+    Id* ri = result->i;
+    Id* rj = result->j;
+    Float* rd = result->d2;
+    uint64_t count = result->count;
+    uint64_t key_hi(id);
+    key_hi <<= 32;
+
+    for (int i=0; i<10; i++) {
+        int vox = voxid + full_shell[i];
+        uint32_t b = _counts[vox], e = _counts[vox+strip_lens[i]];
+        const Float * xi = _x+b;
+        const Float * yi = _y+b;
+        const Float * zi = _z+b;
+        const Id    * ii = _ids+b;
+
+        /* stragglers */
+        for (; b<e; ++b, ++xi, ++yi, ++zi, ++ii) {
+            if (id >= *ii || excl.count(key_hi | *ii)) continue;
+            Float dx = x - *xi;
+            Float dy = y - *yi;
+            Float dz = z - *zi;
+            Float d2 = dx*dx + dy*dy + dz*dz;
+            if (d2<=r2) {
+                ri[count] = id;
+                rj[count] = *ii;
+                rd[count] = d2;
+                ++count;
+            }
+        }
+    }
+    result->count = count;
+}
 
 template <typename Float>
 void SpatialHashT<Float>::minimage_contacts(Float r, Float ga, Float gb, Float gc,
@@ -386,6 +457,40 @@ void SpatialHashT<Float>::minimage_contacts(Float r, Float ga, Float gb, Float g
                     zi<0 || zi>=nz) continue;
                 int voxid = zi + nz*(yi + ny*xi);
                 find_contacts(r*r, voxid, x,y,z, id, result);
+            }
+        }
+    }
+}
+
+template <typename Float>
+void SpatialHashT<Float>::minimage_pairlist(Float r, Float ga, Float gb, Float gc,
+                                            Float px, Float py, Float pz,
+                                            Id id, SpatialHashExclusions const& excl,
+                                            contact_array_t* result) const {
+    Float xlo = xmin - r;
+    Float ylo = ymin - r;
+    Float zlo = zmin - r;
+    Float xhi = xmax + r;
+    Float yhi = ymax + r;
+    Float zhi = zmax + r;
+    for (int i=-1; i<=1; i++) {
+        Float x = px + ga*i;
+        if (x<xlo || x>xhi) continue;
+        for (int j=-1; j<=1; j++) {
+            Float y = py + gb*j;
+            if (y<ylo || y>yhi) continue;
+            for (int k=-1; k<=1; k++) {
+                Float z = pz + gc*k;
+                if (z<zlo || z>zhi) continue;
+                if (i==0 && j==0 && k==0) continue;
+                int xi = (x-ox) * ir;
+                int yi = (y-oy) * ir;
+                int zi = (z-oz) * ir;
+                if (xi<0 || xi>=nx ||
+                    yi<0 || yi>=ny ||
+                    zi<0 || zi>=nz) continue;
+                int voxid = zi + nz*(yi + ny*xi);
+                find_pairlist(r*r, voxid, x,y,z, id, excl, result);
             }
         }
     }

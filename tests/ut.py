@@ -3,6 +3,8 @@
 # source `dirname $0`/pyenv.sh
 # exec python $0 "$@"
 #}
+
+from __future__ import print_function
 import os, sys, unittest
 from util import *
 
@@ -145,6 +147,32 @@ class Contacts(unittest.TestCase):
             d1 = e1[2]
             d2 = e2[2]
             self.assertTrue(abs(d1-d2)<1e-6)
+
+    def testPairlist(self):
+        mol = msys.Load('tests/files/1vcc.mae').clone('backbone and residue 0 to 5')
+        pos = mol.positions.astype('f')
+        pro = list(range(mol.natoms))
+        atoms = [mol.atom(id) for id in pro]
+        excl = msys.SpatialHash.Exclusions()
+        eset = set()
+        for tname in 'stretch_harm', 'angle_harm', 'dihedral_trig':
+            table = mol.table(tname)
+            for t in table.findWithOnly(atoms):
+                ids = [a.id for a in t.atoms]
+                a, b = ids[0], ids[-1]
+                excl.add( a,b)
+                eset.add((a,b))
+                eset.add((b,a))
+
+        sh = msys.SpatialHash(pos, pro)
+        i, j, d = sh.findContacts(3.0, pos, pro)
+        old = sorted(p for p in zip(i, j, d) if p[0] < p[1] and tuple(p[:2]) not in eset)
+
+        i, j, d = sh.findPairlist(3.0, excl)
+        new = sorted(p for p in zip(i, j, d))
+        self.assertEqual(old, new)
+
+
 
     def testNonbonded(self):
         ''' atom sets with no bonds in common

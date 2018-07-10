@@ -2439,6 +2439,8 @@ class SpatialHash(object):
     ''' SpatialHash provides an interface for efficient spatial queries
     on particle positions. '''
     
+    Exclusions = _msys.SpatialHashExclusions
+
     def __init__(self, pos, ids=None, box=None):
         ''' Construct from particle positions.  If ids are provided,
         they should be a numpy array of type uint32 and specify which
@@ -2508,6 +2510,10 @@ class SpatialHash(object):
         constructor.
         '''
         return self._hash.findContacts(radius, pos, ids, reuse_voxels)
+
+    def findPairlist(self, radius, excl, reuse_voxels=False):
+        return self._hash.findPairlist(radius, excl, reuse_voxels)
+
 
 
 HydrogenBond.__repr__ = lambda self: "<Hbond %s %s %s>" % (self.donor_id, self.acceptor_id, self.hydrogen_id)
