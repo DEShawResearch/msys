@@ -413,12 +413,12 @@ void SpatialHashT<Float>::find_pairlist(Float r2, int voxid, Float x, Float y, F
 
         /* stragglers */
         for (; b<e; ++b, ++xi, ++yi, ++zi, ++ii) {
-            if (id >= *ii || excl.count(key_hi | *ii)) continue;
+          if (id >= *ii) continue;
             Float dx = x - *xi;
             Float dy = y - *yi;
             Float dz = z - *zi;
             Float d2 = dx*dx + dy*dy + dz*dz;
-            if (d2<=r2) {
+            if (d2<=r2 && !excl.count(key_hi | *ii)) {
                 ri[count] = id;
                 rj[count] = *ii;
                 rd[count] = d2;
