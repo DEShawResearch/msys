@@ -175,12 +175,16 @@ class TestDesmond(TestCase):
                     "Clone radius check failed for terms in '%s'; run dms-check-groups for more information." % table.name)
     
 
-def Validate(mol, strict=False, desmond=False, verbose=False, anton=False,
+def Validate(mol, strict=False, desmond=False, verbose=1, anton=False,
         all=False):
     global _mol
     _mol=mol
 
-    verbosity = 2 if verbose else 1
+    if isinstance(verbose, int):
+        verbosity = verbose
+    else:
+        verbosity = 2 if verbose else 1
+
     if all:
         strict = True
         desmond = True
