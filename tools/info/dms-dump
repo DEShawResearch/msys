@@ -45,10 +45,12 @@ def call_sqlite3(cmd, stdout=sys.stdout, stderr=None):
 
 
 def read_terms(conn, table):
+    cur = conn.cursor()
     try:
-        return conn.execute('select name from %s order by name' % table).fetchall()
+        cur.execute('select name from %s order by name' % table)
     except sqlite3.OperationalError:
         return []
+    return [str(x[0]) for x in cur]
 
 
     # count the number of p0, p1, ... columns in the table
