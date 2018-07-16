@@ -1,3 +1,7 @@
+1.7.233c7 Fix dms-dump (broken since 1.7.230).
+          Added SpatialHash::findPairlist.
+          Better verbosity API for validate.
+
 1.7.232c7 Use python/2.7.15 and 3.6.6 megamodules.
           Update boost from 1.63 to 1.67.
           Add bindings for System.addProvenance.
