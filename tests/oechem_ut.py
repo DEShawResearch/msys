@@ -113,7 +113,8 @@ class Main(unittest.TestCase):
     def testOmega(self):
         sdf = 'tests/files/methotrexate.sdf'
         mol = msys.Load(sdf)
-        dms = 'methotrexate.dms'
+        dmstmp = tempfile.NamedTemporaryFile(suffix='.dms')
+        dms = dmstmp.name
         msys.Save(mol, dms)
         mol = msys.Load(dms)
 
