@@ -15,6 +15,7 @@ import unittest
 from openeye import oechem
 from time import time
 from contextlib import contextmanager
+import tempfile
 
 class Timer(object):
     def __init__(self):

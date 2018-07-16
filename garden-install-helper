@@ -3,7 +3,7 @@ eval "$(garden-exec)"
 set -e
 
 NAME=msys
-VERSION=1.7.233c7
+VERSION=1.7.234c7
 
 # module versions that scripts in ./tools need to know
 . ./env.sh
