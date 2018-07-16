@@ -8,10 +8,6 @@
 
 namespace desres { namespace msys {
 
-    // exclusions of (Id a, Id b) pairs; include both (a, b) and (b, a) in
-    // the high and low order bits.
-    typedef std::unordered_set<uint64_t> SpatialHashExclusions;
-
     template <typename Float>
     class SpatialHashT {
 
@@ -164,6 +160,7 @@ namespace desres { namespace msys {
 
         /* find contacts in the original set of atoms, using the specified
          * set of exclusions in C-major order and assuming pre-voxelization */
+        template <typename SpatialHashExclusions>
         void findPairlistReuseVoxels(Float r, SpatialHashExclusions const& excl, contact_array_t *result) const;
 
         /* For expert users only.  Finds points within r of the
@@ -178,6 +175,7 @@ namespace desres { namespace msys {
         void find_contacts(Float r2, int voxid, Float x, Float y, Float z,
                            Id id, contact_array_t* result) const;
 
+        template <typename SpatialHashExclusions>
         void find_pairlist(Float r2, int voxid, Float x, Float y, Float z,
                            Id id, SpatialHashExclusions const& excl, contact_array_t* result) const;
 
@@ -185,6 +183,7 @@ namespace desres { namespace msys {
                                Float px, Float py, Float pz,
                                Id id, contact_array_t* result) const;
 
+        template <typename SpatialHashExclusions>
         void minimage_pairlist(Float r, Float ga, Float gb, Float gc,
                                Float px, Float py, Float pz,
                                Id id, SpatialHashExclusions const& excl, contact_array_t* result) const;

@@ -358,6 +358,7 @@ void SpatialHashT<Float>::findContactsReuseVoxels(Float r, const Float* pos,
     }
 }
 template <typename Float>
+template <typename SpatialHashExclusions>
 void SpatialHashT<Float>::findPairlistReuseVoxels(Float r, SpatialHashExclusions const& excl, contact_array_t *result) const {
     bool periodic = cx!=0 || cy!=0 || cz!=0;
     Float tmp[3];
@@ -391,7 +392,8 @@ void SpatialHashT<Float>::findPairlistReuseVoxels(Float r, SpatialHashExclusions
     }
 }
 
-template<typename Float>
+template <typename Float>
+template <typename SpatialHashExclusions>
 void SpatialHashT<Float>::find_pairlist(Float r2, int voxid, Float x, Float y, Float z,
                            Id id, SpatialHashExclusions const& excl, contact_array_t* result) const {
 
@@ -463,6 +465,7 @@ void SpatialHashT<Float>::minimage_contacts(Float r, Float ga, Float gb, Float g
 }
 
 template <typename Float>
+template <typename SpatialHashExclusions>
 void SpatialHashT<Float>::minimage_pairlist(Float r, Float ga, Float gb, Float gc,
                                             Float px, Float py, Float pz,
                                             Id id, SpatialHashExclusions const& excl,

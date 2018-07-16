@@ -181,6 +181,10 @@ static PyObject* hash_find_contacts(SpatialHash& hash,
 }
 
 namespace {
+    // exclusions of (Id a, Id b) pairs; include both (a, b) and (b, a) in
+    // the high and low order bits.
+    typedef std::unordered_set<uint64_t> SpatialHashExclusions;
+
     struct Exclusions : SpatialHashExclusions {
         void add(Id i, Id j) {
             uint64_t key1(i), key2(j);
