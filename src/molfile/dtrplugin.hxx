@@ -86,11 +86,12 @@ typedef int mode_t;
 #include <string>
 #include <stdexcept>
 #include <memory>
+#include <cmath>
 
 #include "dtrframe.hxx"
 
 namespace desres { namespace molfile {
-  
+
   const char * dtr_serialized_version();
 
   struct key_record_t {

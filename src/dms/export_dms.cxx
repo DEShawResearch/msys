@@ -688,7 +688,7 @@ void desres::msys::ExportDMS(SystemPtr h, const std::string& path,
         char buf[4096];
         size_t rc;
         while ((rc = fread(buf, 1, sizeof(buf), fp)) > 0) {
-            if (fwrite(buf, 1, rc, ofile) < 0) {
+            if (fwrite(buf, 1, rc, ofile) < 1) {
                 std::string _err = strerror(errno);
                 fclose(fp);
                 fclose(ofile);

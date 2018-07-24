@@ -442,7 +442,7 @@ void Timekeys::initWithBytes(size_t tksize, void* bytes, uint64_t reference_inte
             /* keep checking for constant framesize, but record that
             * the interval is not constant */
             if (verbose)
-              printf("frame %lu jiffies %lu != computed %lu = %lu + %lu * %lu\n",
+              printf("frame %llu jiffies %llu != computed %llu = %llu + %llu * %llu\n",
                 i, time, computed_time, m_first_jiffies, i, m_interval_jiffies);
             m_interval_jiffies=0;
           }
@@ -453,7 +453,7 @@ void Timekeys::initWithBytes(size_t tksize, void* bytes, uint64_t reference_inte
      * the explicit key records anymore. */
     if (m_interval_jiffies>0 && m_framesize>0) {
       if (verbose) {
-        printf("all times computable from m_first %lu interval %lu\n", m_first_jiffies, m_interval_jiffies);
+        printf("all times computable from m_first %llu interval %llu\n", m_first_jiffies, m_interval_jiffies);
       }
       keys.clear();
     }
@@ -964,7 +964,7 @@ void StkReader::init(int* changed) {
     if (framesets.size()>0) {
         reference_interval = framesets[0]->keys.interval_jiffies();
         if (verbose) {
-            printf("Got reference interval %lu from first frameset at %s\n",
+            printf("Got reference interval %llu from first frameset at %s\n",
                     reference_interval, framesets[0]->path().data());
         }
     }
@@ -976,7 +976,7 @@ void StkReader::init(int* changed) {
         if (reference_interval==0) {
             reference_interval = timekeys[i].interval_jiffies();
             if (verbose) {
-                printf("Got reference interval %lu from first processed timekeys at %s\n",
+                printf("Got reference interval %llu from first processed timekeys at %s\n",
                         reference_interval, fnames[i].data());
             }
         }
