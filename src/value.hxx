@@ -58,8 +58,9 @@ namespace desres { namespace msys {
         void assign(short v)   { fromInt(v); }
         void assign(int32_t v) { fromInt(v); }
         void assign(int64_t v) { fromInt(v); }
+#ifdef __APPLE__
         void assign(long v)    { fromInt(v); }
-
+#endif
         void assign(float v)  { fromFloat(v); }
         void assign(double v) { fromFloat(v); }
     
