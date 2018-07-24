@@ -198,7 +198,8 @@ const char* desres::msys::GuessSybylAtomType(SystemPtr mol, Id id, bool cyclic) 
 
 const char* desres::msys::GuessSybylBondType( SystemPtr mol, Id bnd,
                                               std::string const& itype, 
-                                              std::string const& jtype) {
+                                              std::string const& jtype, 
+                                              unsigned flags) {
 
     if (itype=="N.am" || jtype=="N.am") {
         Id n = mol->bond(bnd).i;
@@ -215,6 +216,14 @@ const char* desres::msys::GuessSybylBondType( SystemPtr mol, Id bnd,
             }
         }
     }
+
+    if (flags & Mol2Export::MOE) {
+        if ((itype == "C.cat" && jtype == "N.pl3") || 
+            (itype == "N.pl3" && jtype == "C.cat")) {
+            return "ar";
+        }
+    }
+
     if (itype=="C.ar" && jtype=="C.ar") return "ar";
     if (mol->bondFAST(bnd).aromatic) return "ar";
     int order = mol->bondFAST(bnd).order;

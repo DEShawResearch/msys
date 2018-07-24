@@ -23,12 +23,14 @@ namespace desres { namespace msys {
     const char* GuessSybylAtomType(SystemPtr mol, Id id, bool cyclic);
     const char* GuessSybylBondType(SystemPtr mol, Id bond_id, 
                                    std::string const& itype,
-                                   std::string const& jtype);
+                                   std::string const& jtype, 
+                                   unsigned flags);
 
     struct Mol2Export {
         enum Flags {
             Default     = 0,
-            Append      = 1 << 0
+            Append      = 1 << 0,
+            MOE         = 1 << 1,
         };
     };
 

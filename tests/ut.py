@@ -19,7 +19,6 @@ import tempfile
 import sqlite3
 import random
 
-
 def tmpfile(**kwds):
     return tempfile.NamedTemporaryFile(**kwds)
 
@@ -2882,6 +2881,17 @@ class Main(unittest.TestCase):
         m1 = msys.Load('tests/files/test_UID_not_reordered.mol2')
         m2 = msys.Load('tests/files/test_UID_corrected.mol2')
         self.assertEqual(m1.nresidues, m2.nresidues)
+
+    def testMol2Arginine(self):
+        arg = msys.Load('tests/files/arginine.pdb')
+        msys.AssignBondOrderAndFormalCharge(arg)
+        tmp=tempfile.NamedTemporaryFile(suffix='.mol2')
+        path=tmp.name
+        msys.SaveMol2(arg, path)
+
+        data = open(path).read()
+        assert ' N.pl3 ' in data, data
+        assert ' ar\n' in data, data
 
     def testAppendSDF(self):
         m=msys.CreateSystem()

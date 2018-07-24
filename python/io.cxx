@@ -131,6 +131,7 @@ namespace desres { namespace msys {
         enum_<Mol2Export::Flags>("Mol2ExportFlags")
             .value("Default",           Mol2Export::Default)
             .value("Append",            Mol2Export::Append)
+            .value("MOE",               Mol2Export::MOE)
             ;
 
         enum_<PDBExport::Flags>("PDBExportFlags")

@@ -2169,16 +2169,26 @@ def SavePDB(system, path, append=False):
         flags |= _msys.PDBExportFlags.Append
     _msys.ExportPDB(system._ptr, str(path), flags)
 
-def SaveMol2(system, path, selection='none', append=False):
+def SaveMol2(system, path, selection='none', append=False, moe=True):
     ''' Export the System to a mol2 file at the given path.  You should
     probably call AssignBondOrderAndFormalCharge() before exporting
-    the system.  '''
+    the system.  
+    
+    Args:
+        system (System): msys system
+        path (str): file name to save to
+        selection (str): msys selection string to restrict to
+        append (bool): if True, don't clobber path, just append to it
+        moe (bool): output guadinium groups with aromatic bonds so that MOE will read correctly
+    '''
     ptr=system._ptr
     path=str(path)
     prov=_msys.Provenance.fromArgs(sys.argv)
     flags = _msys.Mol2ExportFlags.Default
     if append:
         flags |= _msys.Mol2ExportFlags.Append
+    if moe:
+        flags |= _msys.Mol2ExportFlags.MOE
     _msys.ExportMOL2(ptr,path,prov,system.selectIds(selection),flags)
 
 def FromSmilesString(smiles, forbid_stereo=True):

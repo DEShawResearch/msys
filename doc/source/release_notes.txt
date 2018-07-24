@@ -1,3 +1,8 @@
+1.7.235c7 Add a 'moe' option to msys.SaveMol2 to output guanidinium
+          groups MOE can will parse correctly. This option is turned
+          on by default as it seems _most_ tools handle this variant
+          fine.
+
 1.7.233c7 Fix dms-dump (broken since 1.7.230).
           Added SpatialHash::findPairlist.
           Better verbosity API for validate.

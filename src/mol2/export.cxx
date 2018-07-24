@@ -9,7 +9,9 @@ using namespace desres::msys;
 
 static void export_mol2(SystemPtr omol, AnnotatedSystem& asys,
                         IdList parent_ids,
-                        FILE* fd, Provenance const& provenance) {
+                        FILE* fd, 
+                        Provenance const& provenance, 
+                        unsigned flags) {
 
     if (parent_ids.empty()) {
         parent_ids = omol->atoms();
@@ -68,7 +70,7 @@ static void export_mol2(SystemPtr omol, AnnotatedSystem& asys,
         Id ai = bnd.i;
         Id aj = bnd.j;
         Id parent_id = omol->findBond(parent_ids[ai], parent_ids[aj]);
-        const char* type = GuessSybylBondType(omol, parent_id, atypes[ai], atypes[aj]);
+        const char* type = GuessSybylBondType(omol, parent_id, atypes[ai], atypes[aj], flags);
         fprintf(fd, "%5u %5u %5u %s\n", local_id+1, ai+1, aj+1, type);
     }
 
@@ -119,6 +121,6 @@ void desres::msys::ExportMol2( SystemPtr mol, std::string const& path,
     FILE* fd = fopen(path.c_str(), mode);
     if (!fd) MSYS_FAIL("Could not open '" << "' for writing.");
     std::shared_ptr<FILE> dtor(fd, fclose);
-    export_mol2(mol,asys,ids,fd,provenance);
+    export_mol2(mol,asys,ids,fd,provenance,flags);
 }
 
