@@ -149,6 +149,21 @@ namespace desres { namespace msys { namespace pfx {
         return W ? std::sqrt(R/W) : 0;
     }
 
+    inline void inverse_3x3(double* dst, const double* src) {
+        double u[9], w[3], v[9], ut[9];
+        const double thresh = DBL_EPSILON;
+        memcpy(u, src, sizeof(u));
+        svd_3x3(u, w, v);
+        for (int i=0; i<3; i++) {
+            double ww = w[i] > thresh ? 1.0 / w[i] : 0;
+            for (int j=0; j<3; j++) {
+                u[3*j+i] *= ww;
+            }
+        }
+        trans_3x3(ut, u);
+        matmult_3x3(dst, v, ut);
+        for (int i=0; i<9; i++) if (fabs(dst[i]) < thresh) dst[i] = 0;
+    }
 }}}
 
 #endif

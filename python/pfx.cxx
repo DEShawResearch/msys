@@ -387,21 +387,8 @@ static PyGetSetDef pfx_getset[] = {
     { NULL }
 };
 
-PyDoc_STRVAR(svd_doc,
-"svd_3x3(A) -> U, w, V\n"
-"\n"
-"svd_3x3 computes the singular value decomposition of the 3x3 matrix A.\n"
-"The result is always calculated and returned in double precision.\n");
-static PyObject* wrap_svd(PyObject* self, PyObject* args, PyObject* kwds) {
-    static char *kwlist[] = {(char *)"A", 0};
-    PyObject* Aobj, *Aarr, *U, *W, *V, *result;
-    double u[9], w[3], v[9];
-    npy_intp mdims[2] = {3,3};
-    npy_intp vdims[1] = {3};
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist, &Aobj))
-        return NULL;
-
+static PyObject* extract_3x3(PyObject* Aobj) {
+    PyObject* Aarr;
     if (!(Aarr = PyArray_FromAny(
                  Aobj,
                  PyArray_DescrFromType(NPY_FLOAT64),
@@ -418,6 +405,42 @@ static PyObject* wrap_svd(PyObject* self, PyObject* args, PyObject* kwds) {
         Py_DECREF(Aarr);
         return NULL;
     }
+    return Aarr;
+}
+
+PyDoc_STRVAR(inverse_doc,
+"inverse_3x3(A) -> Ainv\n");
+static PyObject* wrap_inverse(PyObject* self, PyObject* args) {
+    PyObject *Aobj, *Aarr;
+    if (!PyArg_ParseTuple(args, "O", &Aobj))
+        return NULL;
+    if (!(Aarr = extract_3x3(Aobj)))
+        return NULL;
+    const double* src = (const double*)PyArray_DATA(Aarr);
+    double dst[9];
+    desres::msys::pfx::inverse_3x3(dst, src);
+    npy_intp dims[2] = {3,3};
+    auto Ainv = PyArray_SimpleNew(2, dims, NPY_FLOAT64);
+    memcpy(PyArray_DATA(Ainv), dst, sizeof(dst));
+    return Ainv;
+}
+
+PyDoc_STRVAR(svd_doc,
+"svd_3x3(A) -> U, w, V\n"
+"\n"
+"svd_3x3 computes the singular value decomposition of the 3x3 matrix A.\n"
+"The result is always calculated and returned in double precision.\n");
+static PyObject* wrap_svd(PyObject* self, PyObject* args, PyObject* kwds) {
+    static char *kwlist[] = {(char *)"A", 0};
+    PyObject* Aobj, *Aarr, *U, *W, *V, *result;
+    double u[9], w[3], v[9];
+    npy_intp mdims[2] = {3,3};
+    npy_intp vdims[1] = {3};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist, &Aobj))
+        return NULL;
+    if (!(Aarr = extract_3x3(Aobj)))
+        return NULL;
     
     memcpy(u,PyArray_DATA(Aarr), sizeof(u));
     desres::msys::pfx::svd_3x3(u,w,v);
@@ -520,6 +543,10 @@ static PyMethodDef module_methods[] = {
       (PyCFunction)wrap_svd, 
       METH_VARARGS | METH_KEYWORDS,
       svd_doc },
+    { "inverse_3x3", 
+      (PyCFunction)wrap_inverse, 
+      METH_VARARGS,
+      inverse_doc },
     { "aligned_rmsd",
       (PyCFunction)wrap_aligned_rmsd,
       METH_VARARGS | METH_KEYWORDS,
