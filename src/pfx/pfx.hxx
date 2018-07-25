@@ -211,27 +211,26 @@ namespace desres { namespace msys { namespace pfx {
         // in C-major rows.  vel, if non-NULL, must be of size Nx3.
         template <typename scalar, typename cell_scalar>
         void apply(scalar* pos, cell_scalar* cell, scalar* vel) const {
-            scalar box[9], proj[9], basis[9];
+            scalar box[9], proj[9], ocell[9];
             bool is_triclinic = false;
             if (!pos) return;
             const double* wts = _weights.empty() ? nullptr : &_weights[0];
 
             if (cell) {
-                std::copy(cell, cell+9, box);
-                is_triclinic = check_triclinic(box);
-                if (is_triclinic) {
-                    construct_orthonormal_basis(box, basis);
-                    printf("triclinic!: got basis\n");
-                    for (int i=0; i<3; i++) {
-                        printf("  %f %f %f\n",
-                                basis[3*i], basis[3*i+1], basis[3*i+2]);
-                    }
-                    printf("original cell:\n");
-                    for (int i=0; i<3; i++) {
-                        printf("  %f %f %f\n",
-                                box[3*i], box[3*i+1], box[3*i+2]);
-                    }
+                if ((is_triclinic = check_triclinic(cell))) {
+                    double dbox[9], dinv[9];
+                    scalar inv[9];
+                    std::copy(cell, cell+9, dbox);
+                    std::copy(cell, cell+9, ocell);
+                    inverse_3x3(dinv, dbox);
+                    std::copy(dinv, dinv+9, inv);
+                    apply_rotation(size(), pos, inv);
+                    memset(box, 0, sizeof(box));
+                    box[0] = box[4] = box[8] = 1;
+                } else {
+                    std::copy(cell, cell+9, box);
                 }
+
                 // compute projection for wrapping
                 make_projection(box, proj);
                 // bond wrapping
@@ -266,7 +265,12 @@ namespace desres { namespace msys { namespace pfx {
                 wrap_frags(box, proj, pos);
 
                 // copy back to input
+                if (is_triclinic) {
+                    apply_rotation(size(), pos, ocell);
+                    apply_rotation(3,      box, ocell);
+                }
                 std::copy(box, box+9, cell);
+
             }
             // final shift when doing alignment
             if (!_aref.empty()) {
