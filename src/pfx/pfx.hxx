@@ -155,19 +155,84 @@ namespace desres { namespace msys { namespace pfx {
             glue(n, atoms);
         }
 
+        template <typename T>
+        static T vecdot(const T* a, const T* b) {
+            return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+        }
+        template <typename T>
+        static void normalize(T* v) {
+            T norm = std::sqrt(vecdot(v, v));
+            if (norm > 0) {
+                v[0] /= norm;
+                v[1] /= norm;
+                v[2] /= norm;
+            }
+        }
+
+        template <typename T>
+        static bool check_triclinic(const T* cell) {
+           for (int i=0; i<3; i++) {
+               int j = (i+1)%3;
+               T dp = vecdot(cell+3*i, cell+3*j);
+               if (fabs(dp) > 1e-5) return true;
+           }
+           return false;
+        }
+
+        template <typename T>
+        static void construct_orthonormal_basis(const T* cell, T* basis) {
+            std::copy(cell, cell+9, basis);
+            T * e1 = basis+0, *e2 = basis+3, *e3 = basis+6;
+            // e1 parallel to b1
+            normalize(e1);
+            // e2: subtract projection of b2 along e1
+            {
+                T p1 = vecdot(e1, e2);
+                for (int i=0; i<3; i++) e2[i] -= p1*e1[i];
+                normalize(e2);
+            }
+            // e3: subtract projection of b3 along e1 and e2
+            {
+                T p1 = vecdot(e1, e3);
+                T p2 = vecdot(e2, e3);
+                printf("e1 %f %f %f\n", e1[0], e1[1], e1[2]);
+                printf("e2 %f %f %f\n", e2[0], e2[1], e2[2]);
+                printf("e3 %f %f %f\n", e3[0], e3[1], e3[2]);
+                printf("p1 %f p2 %f\n", p1, p2);
+                for (int i=0; i<3; i++) e3[i] -= p1*e1[i] + p2*e2[i];
+                printf("e3 %f %f %f\n", e3[0], e3[1], e3[2]);
+                normalize(e3);
+            }
+        }
+
         // Perform previously specified wrapping and alignment operations
         // on the provided data.  pos must be of size Nx3 where N==size().
         // cell, if non-NULL, must be of size 3x3 and hold unit cell vectors
         // in C-major rows.  vel, if non-NULL, must be of size Nx3.
         template <typename scalar, typename cell_scalar>
         void apply(scalar* pos, cell_scalar* cell, scalar* vel) const {
-            scalar box[9], proj[9];
+            scalar box[9], proj[9], basis[9];
+            bool is_triclinic = false;
             if (!pos) return;
             const double* wts = _weights.empty() ? nullptr : &_weights[0];
 
             if (cell) {
                 std::copy(cell, cell+9, box);
-                // compute projection for wrappign
+                is_triclinic = check_triclinic(box);
+                if (is_triclinic) {
+                    construct_orthonormal_basis(box, basis);
+                    printf("triclinic!: got basis\n");
+                    for (int i=0; i<3; i++) {
+                        printf("  %f %f %f\n",
+                                basis[3*i], basis[3*i+1], basis[3*i+2]);
+                    }
+                    printf("original cell:\n");
+                    for (int i=0; i<3; i++) {
+                        printf("  %f %f %f\n",
+                                box[3*i], box[3*i+1], box[3*i+2]);
+                    }
+                }
+                // compute projection for wrapping
                 make_projection(box, proj);
                 // bond wrapping
                 fix_bonds(box, proj, pos);
