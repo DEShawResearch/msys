@@ -39,10 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef MSYS_WITHOUT_THREEROE
-#include <ThreeRoe/ThreeRoe.hpp>
-#endif
-
+#include "../MsysThreeRoe.hpp"
 #include "dtrplugin.hxx"
 #include "dtrframe.hxx"
 #include "dtrutil.hxx"
@@ -686,9 +683,7 @@ metadata::metadata(const void *bufptr, ssize_t n, std::string *jobstep_id) {
     memcpy(frame_data, bufptr, n);
     frame_size = n;
 
-#ifndef MSYS_WITHOUT_THREEROE
     ThreeRoe hasher;
-#endif
 
     for (auto kv : full_frame_map) {
 
@@ -702,22 +697,15 @@ metadata::metadata(const void *bufptr, ssize_t n, std::string *jobstep_id) {
             void *copied_data_address = (void *) (((char *)kv.second.data - (char *)bufptr) +
                                                   (char *) frame_data);
             frame_map[kv.first] = dtr::Key(copied_data_address, kv.second.count, kv.second.type, swap);
-#ifndef MSYS_WITHOUT_THREEROE
             uint32_t v_size = kv.second.get_element_size();
             hasher.Update(kv.second.data, v_size);
-#endif
         } else {
             if (jobstep_id) {
                 (*jobstep_id) += (char *) kv.second.data;
             }
         }
     }
-#ifndef MSYS_WITHOUT_THREEROE
     hash = hasher.Final().first;
-#else
-    // FIXME: not sure what the implications are for stk files...
-    hash = 0;
-#endif
 }
 void DtrReader::read_meta() {
     

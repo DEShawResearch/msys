@@ -1,12 +1,5 @@
 #include "hash.hxx"
-
-#ifdef MSYS_WITHOUT_THREEROE
-uint64_t desres::msys::HashSystem(SystemPtr mol) {
-    MSYS_FAIL("Missing ThreeRoe support");
-    return 0;
-}
-#else
-#include <ThreeRoe/ThreeRoe.hpp>
+#include "MsysThreeRoe.hpp"
 
 namespace desres { namespace msys {
 
@@ -170,4 +163,3 @@ namespace desres { namespace msys {
     }
 }}
 
-#endif

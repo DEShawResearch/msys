@@ -15,7 +15,6 @@ BOOST=boost/1.67.0-01c7
 LPSOLVE=lp-solve/5.5.2.0-01c7
 INCHI=inchi/1.04-01c7
 SQLITE=sqlite/3.22.0-02c7
-THREEROE=threeroe/0.10.1c7
 BOOST_PYTHON3=boost-python36/1.67.0-01c7
 
 loadmodules() {
@@ -31,7 +30,6 @@ loadmodules() {
         $LPSOLVE/lib \
         $INCHI/lib \
         $SQLITE/lib-static \
-        $THREEROE/lib \
 
     export MSYS_VERSION=$VERSION
     export PYTHONVER=27,36
