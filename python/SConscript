@@ -11,8 +11,6 @@ env.Append(
         CPPPATH=['../src'],
         CXXFLAGS='' if is_windows else '-Wno-unused-local-typedefs',
         LIBS=['msys', 'msys-core'],
-        PYTHON27_LIBS=['boost_python27'],
-        PYTHON36_LIBS=['boost_python36'],
         )
 
 if is_linux:

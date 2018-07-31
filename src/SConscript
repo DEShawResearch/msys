@@ -9,6 +9,8 @@ opts.Add("MSYS_WITHOUT_LPSOLVE", "without lpsolve support?")
 opts.Add("MSYS_WITHOUT_INCHI", "without compiled-in inchi support?")
 opts.Add("MSYS_WITHOUT_THREEROE", "without ThreeRoe support?")
 opts.Add("MSYS_BOOST_SUFFIX", "suffix for boost libraries (e.g. -mt)")
+opts.Add("MSYS_BOOST_PYTHON_SUFFIX", "suffix for boost libraries (e.g. -py)")
+
 opts.Update(env)
 
 if "SCHRODINGER_SRC" in os.environ:
@@ -34,6 +36,13 @@ if env['PLATFORM'] == 'darwin':
 bsx=env.get('MSYS_BOOST_SUFFIX', '')
 boost_libs=[(x+bsx) for x in ( 
     'boost_iostreams', 'boost_filesystem', 'boost_system')]
+
+env.Append(
+        PYTHON27_LIBS=['boost_python${MSYS_BOOST_PYTHON_SUFFIX}27'],
+        PYTHON35_LIBS=['boost_python${MSYS_BOOST_PYTHON_SUFFIX}35'],
+        PYTHON36_LIBS=['boost_python${MSYS_BOOST_PYTHON_SUFFIX}36'],
+        PYTHON37_LIBS=['boost_python${MSYS_BOOST_PYTHON_SUFFIX}37'],
+        )
 
 coreenv = env.Clone()
 coreenv.AddLibrary('msys-core', Split('''
