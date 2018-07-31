@@ -1,7 +1,11 @@
-// yes, I'm that evil.  I want to get at the ParamTablePtr objects
-//#define private public
-
 #include "hash.hxx"
+
+#ifdef MSYS_WITHOUT_THREEROE
+uint64_t desres::msys::HashSystem(SystemPtr mol) {
+    MSYS_FAIL("Missing ThreeRoe support");
+    return 0;
+}
+#else
 #include <ThreeRoe/ThreeRoe.hpp>
 
 namespace desres { namespace msys {
@@ -165,3 +169,5 @@ namespace desres { namespace msys {
         return tr.Final().first;
     }
 }}
+
+#endif

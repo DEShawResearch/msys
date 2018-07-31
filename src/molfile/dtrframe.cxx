@@ -1,7 +1,6 @@
 #include "dtrframe.hxx"
 #include "dtrutil.hxx"
 #include "endianswap.h"
-#include <ThreeRoe/ThreeRoe.hpp>
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
@@ -158,6 +157,8 @@ namespace {
     };
 }
 
+#ifndef MSYS_WITHOUT_THREEROE
+#include <ThreeRoe/ThreeRoe.hpp>
 uint32_t compute_threeroe_hash(const char *datap, uint32_t data_size) {
 
     ThreeRoe hash_obj;
@@ -184,6 +185,7 @@ uint32_t compute_threeroe_hash(const char *datap, uint32_t data_size) {
     uint32_t rc = pair.first;
     return (rc);
 }
+#endif
 
 
 std::map<std::string, Key> 
@@ -223,6 +225,7 @@ desres::molfile::dtr::ParseFrame(size_t sz, const void* data, bool *swap) {
     }
 
     if (header->version > 0x00000100) {
+#ifndef MSYS_WITHOUT_THREEROE
         //
         // In version 2 and up (as defined by the frameset header), we
         // compute not just a Fletcher CRC but also a ThreeRoe hash for
@@ -239,6 +242,7 @@ desres::molfile::dtr::ParseFrame(size_t sz, const void* data, bool *swap) {
             DTR_FAILURE("ThreeRoe hash failure: want " << expected_threeroe_hash << " computed " << threeroe_hash 
                         << " htonl(expected) = " << htonl(expected_threeroe_hash));
         }
+#endif
     }
 
     if (header->nlabels==0) return map;
@@ -601,7 +605,11 @@ size_t desres::molfile::dtr::ConstructFrame(KeyMap const& map, void ** bufptr, b
     // the header, and then we compute the Fletcher CRC and put it
     // into the crc block.
     //
+#ifdef MSYS_WITHOUT_THREEROE
+    DTR_FAILURE("msys compiled with MSYS_WITHOUT_THREEROE; cannot write dtrs");
+#else
     header->threeroe_hash = htonl(compute_threeroe_hash(base, offset_crc_block));
+#endif
     *crc = fletcher(reinterpret_cast<uint16_t*>(base),offset_crc_block/2);
     return framesize;
 }

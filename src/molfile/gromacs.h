@@ -430,7 +430,7 @@ static int mdio_readline(md_file *mf, char *buf, int n, int strip) {
 	if (!buf || n < 1 || !mf) return mdio_seterror(MDIO_BADPARAMS);
 
 	// Read the line
-	fgets(buf, n, mf->f);
+	if (!fgets(buf, n, mf->f)) return mdio_seterror(MDIO_IOERROR);
 
 	// End of file reached?
 	if (feof(mf->f)) return mdio_seterror(MDIO_EOF);

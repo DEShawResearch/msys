@@ -82,21 +82,21 @@ SystemPtr iterator::next() {
     mol->ct(0).value("msys_file_offset") = file_offset;
 
     /* read mol_name */
-    fgets(buf, sizeof(buf), fd); 
+    if (!fgets(buf, sizeof(buf), fd)) MSYS_FAIL(strerror(errno));
     mol->name = buf;
     trim(mol->name);
     mol->ct(0).setName(mol->name);
     /* read natoms, nbonds, nsub */
     natoms = nbonds = 0;
     nsub = 0;
-    fgets(buf, sizeof(buf), fd);
+    if (!fgets(buf, sizeof(buf), fd)) MSYS_FAIL(strerror(errno));
     if (sscanf(buf, "%d %d %d", &natoms, &nbonds, &nsub)<1) {
         MSYS_FAIL("Could not parse num_atoms from line:\n" << buf);
     }
     /* read mol_type and ignore */
-    fgets(buf, sizeof(buf), fd);
+    if (!fgets(buf, sizeof(buf), fd)) MSYS_FAIL(strerror(errno));
     /* read charge_type and ignore */
-    fgets(buf, sizeof(buf), fd);
+    if (!fgets(buf, sizeof(buf), fd)) MSYS_FAIL(strerror(errno));
 
     while (fgets(buf, sizeof(buf), fd)) {
         if (buf[0]=='@') {

@@ -7,6 +7,7 @@ env=env.Clone()
 opts=Variables()
 opts.Add("MSYS_WITHOUT_LPSOLVE", "without lpsolve support?")
 opts.Add("MSYS_WITHOUT_INCHI", "without compiled-in inchi support?")
+opts.Add("MSYS_WITHOUT_THREEROE", "without ThreeRoe support?")
 opts.Add("MSYS_BOOST_SUFFIX", "suffix for boost libraries (e.g. -mt)")
 opts.Update(env)
 
@@ -109,6 +110,9 @@ if env.get("MSYS_WITHOUT_INCHI"):
     inchi = inchienv.AddObject('inchi.cxx')
 else:
     inchi = env.AddObject('inchi.cxx')
+
+if env.get("MSYS_WITHOUT_THREEROE"):
+    env.Append(CPPDEFINES='MSYS_WITHOUT_THREEROE'.split())
 
 def get_shlib_version():
     import subprocess
