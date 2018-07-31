@@ -143,21 +143,21 @@ namespace desres { namespace msys {
         ThreeRoe tr;
         static const bool debug=false;
 
-        debug && std::cout << tr.Final().first << '\n';
+        if (debug) std::cout << tr.Final().first << '\n';
         hash_atoms(tr, mol);
-        debug && std::cout << tr.Final().first << '\n';
+        if (debug) std::cout << tr.Final().first << '\n';
         hash_bonds(tr, mol);
-        debug && std::cout << tr.Final().first << '\n';
+        if (debug) std::cout << tr.Final().first << '\n';
         hash_residues(tr, mol);
-        debug && std::cout << tr.Final().first << '\n';
+        if (debug) std::cout << tr.Final().first << '\n';
         hash_chains(tr, mol);
-        debug && std::cout << tr.Final().first << '\n';
+        if (debug) std::cout << tr.Final().first << '\n';
         hash_cts(tr, mol);
-        debug && std::cout << tr.Final().first << '\n';
+        if (debug) std::cout << tr.Final().first << '\n';
         hash_tables(tr, mol);
-        debug && std::cout << tr.Final().first << '\n';
+        if (debug) std::cout << tr.Final().first << '\n';
         hash_other(tr, mol);
-        debug && std::cout << tr.Final().first << '\n';
+        if (debug) std::cout << tr.Final().first << '\n';
 
         return tr.Final().first;
     }
