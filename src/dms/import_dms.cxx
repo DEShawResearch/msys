@@ -533,10 +533,10 @@ static void read_cts(Sqlite dms, System& sys, KnownSet& known) {
 }
 
 static void check_dms_version(Sqlite dms, KnownSet& known) {
+    known.insert("dms_version");
     int my_major = msys_major_version();
     int my_minor = msys_minor_version();
     if (my_major == 0 && my_minor == 0) return;
-    known.insert("dms_version");
     Reader r = dms.fetch("dms_version");
     if (!r.size()) return;
     int MAJOR = r.column("major");
