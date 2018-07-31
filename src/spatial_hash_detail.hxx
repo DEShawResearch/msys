@@ -77,7 +77,7 @@ SpatialHashT<Float>::SpatialHashT( const Float *pos, int n, const Id* ids,
 #ifdef WIN32
         rot = (Float*)_aligned_malloc(9*sizeof(*rot), 16);
 #else
-        posix_memalign((void **)&rot, 16, 9*sizeof(*rot));
+        assert(0==posix_memalign((void **)&rot, 16, 9*sizeof(*rot)));
 #endif
         double d1=0, d2=0, d3=0; /* row dot-products */
         for (int i=0; i<3; i++) {
@@ -107,14 +107,14 @@ SpatialHashT<Float>::SpatialHashT( const Float *pos, int n, const Id* ids,
     _tmpy = (Float*)_aligned_malloc(ntarget*sizeof(*_tmpy), 16);
     _tmpz = (Float*)_aligned_malloc(ntarget*sizeof(*_tmpz), 16);
 #else
-    posix_memalign((void **)&_x, 16, ntarget*sizeof(*_x));
-    posix_memalign((void **)&_y, 16, ntarget*sizeof(*_y));
-    posix_memalign((void **)&_z, 16, ntarget*sizeof(*_z));
-    posix_memalign((void **)&_tmpx, 16, ntarget*sizeof(*_tmpx));
-    posix_memalign((void **)&_tmpy, 16, ntarget*sizeof(*_tmpy));
-    posix_memalign((void **)&_tmpz, 16, ntarget*sizeof(*_tmpz));
-    posix_memalign((void **)&_ids, 16, ntarget*sizeof(*_ids));
-    posix_memalign((void **)&_tmpids, 16, ntarget*sizeof(*_tmpids));
+    assert(0==posix_memalign((void **)&_x, 16, ntarget*sizeof(*_x)));
+    assert(0==posix_memalign((void **)&_y, 16, ntarget*sizeof(*_y)));
+    assert(0==posix_memalign((void **)&_z, 16, ntarget*sizeof(*_z)));
+    assert(0==posix_memalign((void **)&_tmpx, 16, ntarget*sizeof(*_tmpx)));
+    assert(0==posix_memalign((void **)&_tmpy, 16, ntarget*sizeof(*_tmpy)));
+    assert(0==posix_memalign((void **)&_tmpz, 16, ntarget*sizeof(*_tmpz)));
+    assert(0==posix_memalign((void **)&_ids, 16, ntarget*sizeof(*_ids)));
+    assert(0==posix_memalign((void **)&_tmpids, 16, ntarget*sizeof(*_tmpids)));
 #endif
     for (int i=0; i<ntarget; i++) {
         Id id = ids ? ids[i] : i;
