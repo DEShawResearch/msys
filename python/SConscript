@@ -10,7 +10,10 @@ is_schrodinger_build = "SCHRODINGER_SRC" in os.environ
 env.Append( 
         CPPPATH=['../src'],
         CXXFLAGS='' if is_windows else '-Wno-unused-local-typedefs',
-        LIBS=['msys', 'msys-core', 'boost_python27' + ('$MSYS_BOOST_SUFFIX' if is_schrodinger_build else '$BOOST_SUFFIX')] )
+        LIBS=['msys', 'msys-core'],
+        PYTHON27_LIBS=['boost_python27'],
+        PYTHON36_LIBS=['boost_python36'],
+        )
 
 if is_linux:
     env.Append(CCFLAGS='-Wno-cpp')
@@ -41,37 +44,16 @@ term.cxx
 wrap_obj.cxx
 variant.cxx
 '''.split()
-#variant.cxx
 
-pyext=env.AddPython2Extension('_msys', pymodfiles, prefix='msys')
-env.Requires(pyext, libmsys)
+pyext=env.AddPythonExtension('_msys', pymodfiles, prefix='msys')
 env.AddPythonModule('__init__.py', prefix='msys')
 env.AddPythonModule('atomsel.py', prefix='msys')
 
 pfxenv=env.Clone()
 pfxenv.Append(CXXFLAGS='-fno-strict-aliasing')
-pfxext = pfxenv.AddPython2Extension('pfx', 'pfx.cxx', prefix='msys')
+pfxext = pfxenv.AddPythonExtension('pfx', 'pfx.cxx', prefix='msys')
 pfxenv.Requires(pfxext, libmsys)
 
 env.AddHeaders(['capsule.hxx'], prefix='msys/python')
 env.SConscript('molfile/SConscript')
-
-# python3 build
-py3env = msysenv.Clone()
-py3env.AddPython3Module('__init__.py', prefix='msys')
-py3env.AddPython3Module('atomsel.py', prefix='msys')
-
-py3env.Append(
-        CXXFLAGS = '-Wno-cpp -Wno-unused-local-typedefs',
-        CPPPATH=['../src'],
-        LIBS=['msys', 'msys-core', 'boost_python36'],
-        )
-
-pfxenv=py3env.Clone()
-pfxenv.Append(CXXFLAGS='-fno-strict-aliasing')
-pfxext = pfxenv.AddPython3Extension('pfx', 'pfx.cxx', prefix='msys')
-pfxenv.Requires(pfxext, libmsys)
-
-pyext3=py3env.AddPython3Extension('_msys', pymodfiles, prefix='msys')
-env.Requires(pyext3, libmsys)
 

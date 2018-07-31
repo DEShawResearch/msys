@@ -8,7 +8,9 @@ cxx_flags = '' if sys.platform.startswith("win32") else '-Wno-unused-local-typed
 env.Append( 
         CPPPATH=['../../src', '../'],
         CXXFLAGS=cxx_flags,
-        LIBS=['msys', 'boost_python27$MSYS_BOOST_SUFFIX'])
+        PYTHON27_LIBS=['boost_python27'],
+        PYTHON36_LIBS=['boost_python36'],
+        LIBS=['msys'])
 
 if sys.platform != "win32":
     env.Append(CCFLAGS='-Wno-unused-function'.split())
@@ -28,35 +30,6 @@ writer.cxx
 molfilemodule.cxx
 ''')
 
-ext=env.AddPython2Extension('_molfile', srcs, prefix='msys/molfile')
-env.Requires(ext, libmsys)
-
-ext=env.AddPython2Extension('findframe','findframemodule.cxx',
-        prefix='msys/molfile')
-env.Requires(ext, libmsys)
-
+ext=env.AddPythonExtension('_molfile', srcs, prefix='msys/molfile')
+ext=env.AddPythonExtension('findframe','findframemodule.cxx', prefix='msys/molfile')
 env.AddPythonModule('__init__.py',prefix='msys/molfile')
-
-# python3
-env3 = msysenv.Clone()
-env3.Append( 
-        CPPPATH=['../../src', '../'],
-        CXXFLAGS=cxx_flags,
-        LIBS=['msys', 'boost_python36'])
-
-if sys.platform != "win32":
-    env3.Append(CCFLAGS='-Wno-unused-function'.split())
-else:
-    env3.Append(LIBS=['python27.lib'])
-if env3['PLATFORM']=='darwin':
-    env3.Append(CCFLAGS='-Wno-error')
-elif sys.platform.startswith("linux"):
-    env3.Append(CCFLAGS='-Wno-cpp')
-
-ext=env3.AddPython3Extension('_molfile', srcs, prefix='msys/molfile')
-env3.Requires(ext, libmsys)
-env3.AddPython3Module('__init__.py',prefix='msys/molfile')
-
-ext=env3.AddPython3Extension('findframe','findframemodule.cxx',
-        prefix='msys/molfile')
-env.Requires(ext, libmsys)

@@ -27,10 +27,6 @@ env.AddPythonModule('validate/validate.py', prefix='msys')
 env.AddPythonModule('validate/knot.py', prefix='msys')
 env.AddPythonModule('validate/groups.py', prefix='msys')
 
-env.AddPython3Module('validate/validate.py', prefix='msys')
-env.AddPython3Module('validate/knot.py', prefix='msys')
-env.AddPython3Module('validate/groups.py', prefix='msys')
-
 env.AddScript('validate/dms-validate')
 env.AddScript('validate/dms-find-knot')
 env.AddScript('validate/dtr-validate')
@@ -42,11 +38,9 @@ env.AddScript('info/dms-dump')
 env.AddScript('info/dms-info')
 env.AddScript('info/dms-sequence')
 env.AddPythonModule('info/sequence.py', prefix='msys')
-env.AddPython3Module('info/sequence.py', prefix='msys')
 
 # vdw
 env.AddPythonModule('vdw/vdw.py', prefix='msys')
-env.AddPython3Module('vdw/vdw.py', prefix='msys')
 env.AddScript('vdw/dms-override-vdw')
 env.AddScript('vdw/dms-scale-vdw')
 
@@ -65,10 +59,6 @@ env.AddPythonModule('scripts/update.py', prefix='msys')
 env.AddPythonModule('scripts/wrap.py', prefix='msys')
 env.AddPythonModule('scripts/reorder.py', prefix='msys')
 env.AddPythonModule('scripts/solvate.py', prefix='msys')
-env.AddPython3Module('scripts/update.py', prefix='msys')
-env.AddPython3Module('scripts/wrap.py', prefix='msys')
-env.AddPython3Module('scripts/reorder.py', prefix='msys')
-env.AddPython3Module('scripts/solvate.py', prefix='msys')
 
 env.AddShare('tip3p.dms', src='scripts/tip3p.dms')
 

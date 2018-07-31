@@ -6,11 +6,11 @@ env.Prepend(LIBS=[libmsys, 'msys-core', 'pthread'])
 env.Append(CPPPATH='../src')
 
 for p in Glob('test_*.cxx'):
-    env.AddUnitTest(p.name[:-4],p.name)
+    env.AddExampleProgram(p.name[:-4],p.name)
 
 env=msysenv.Clone()
 env.Prepend(LIBS=['msys-core'])
 env.Append(CPPPATH='../src')
 
 for p in Glob('core_test_*.cxx'):
-    env.AddUnitTest(p.name[:-4],p.name)
+    env.AddExampleProgram(p.name[:-4],p.name)

@@ -1,4 +1,8 @@
+from __future__ import division
+from __future__ import print_function
 
+from builtins import range
+from past.utils import old_div
 import os, msys
 
 def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
@@ -29,7 +33,7 @@ def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
         raise ValueError("Lipid tile has missing box dimensions.")
 
     if xsize is None or ysize is None:
-        if verbose: print "finding bounding box..."
+        if verbose: print("finding bounding box...")
         if len(mol.atoms):
             first=mol.atoms[0].pos
             xmin, ymin, zmin = first
@@ -56,8 +60,8 @@ def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
         ysize = xsize
 
     # extract where to put the lipid
-    nx = int(xsize/lipsize[0]) + 1
-    ny = int(ysize/lipsize[1]) + 1
+    nx = int(old_div(xsize,lipsize[0])) + 1
+    ny = int(old_div(ysize,lipsize[1])) + 1
 
     xshift = -0.5 * (nx-1)*lipsize[0]
     yshift = -0.5 * (ny-1)*lipsize[1]
@@ -76,7 +80,7 @@ def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
     ct.name = 'grease'
     ctnum = ct.id + 1
     # replicate the template lipid box
-    if verbose: print "replicating %d x %d" % (nx,ny)
+    if verbose: print("replicating %d x %d" % (nx,ny))
     for i in range(nx):
         xdelta = xshift + i*lipsize[0]
         for j in range(ny):
@@ -86,8 +90,8 @@ def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
                 a.x += xdelta
                 a.y += ydelta
 
-    if verbose: print "replicated system contains %d atoms" % mol.natoms
-    if verbose: print "removing overlap with solute"
+    if verbose: print("replicated system contains %d atoms" % mol.natoms)
+    if verbose: print("removing overlap with solute")
     headgroup_dist = 2.0
     mol = mol.clone(
         'not (ctnumber %d and same residue as (atomicnumber 8 15 and pbwithin %f of (noh and not ctnumber %d)))' % (
@@ -96,13 +100,13 @@ def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
     mol = mol.clone(
         'not (ctnumber %d and same residue as (pbwithin %f of (noh and not ctnumber %d)))' % (
             ctnum, dist, ctnum))
-    if verbose: print "after removing solute overlap, have %d atoms" % mol.natoms
+    if verbose: print("after removing solute overlap, have %d atoms" % mol.natoms)
 
-    if verbose: print "removing outer lipids and water"
+    if verbose: print("removing outer lipids and water")
     mol = mol.clone(
         'not (ctnumber %d and same residue as (atomicnumber 8 15 and (abs(x)>%f or abs(y)>%f)))' % (
             ctnum,xmax,ymax))
-    if verbose: print "after removing outer lipids, have %d atoms" % mol.natoms
+    if verbose: print("after removing outer lipids, have %d atoms" % mol.natoms)
 
     # renumber lipid resids
     lipnum = 1

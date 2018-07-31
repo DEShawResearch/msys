@@ -34,7 +34,6 @@ bsx=env.get('MSYS_BOOST_SUFFIX', '')
 boost_libs=[(x+bsx) for x in ( 
     'boost_iostreams', 'boost_filesystem', 'boost_system')]
 
-
 coreenv = env.Clone()
 coreenv.AddLibrary('msys-core', Split('''
 append.cxx
@@ -248,11 +247,11 @@ xyz.cxx
 
 '''), SHLIBVERSION=get_shlib_version())
 
-env.AddStagedHeaders(Glob("*.hxx"), prefix='msys')
-env.AddStagedHeaders(Glob('atomsel/*.h*'), prefix='msys/atomsel')
-env.AddStagedHeaders(Glob('fastjson/*.hxx'), prefix='msys/fastjson')
-env.AddStagedHeaders(Glob('pfx/*.hxx'), prefix='msys/pfx')
-env.AddStagedHeaders(Glob('molfile/*.h*'), prefix='msys/molfile')
+env.AddHeaders(Glob("*.hxx"), prefix='msys', stage=True)
+env.AddHeaders(Glob('atomsel/*.h*'), prefix='msys/atomsel')
+env.AddHeaders(Glob('fastjson/*.hxx'), prefix='msys/fastjson')
+env.AddHeaders(Glob('pfx/*.hxx'), prefix='msys/pfx')
+env.AddHeaders(Glob('molfile/*.h*'), prefix='msys/molfile', stage=True)
 
 prgenv=env.Clone()
 prgenv.Append(LIBS=['msys', 'msys-core'])

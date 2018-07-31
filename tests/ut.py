@@ -2889,7 +2889,7 @@ class Main(unittest.TestCase):
         path=tmp.name
         msys.SaveMol2(arg, path)
 
-        data = open(path).read()
+        with open(path) as fp: data = fp.read()
         assert ' N.pl3 ' in data, data
         assert ' ar\n' in data, data
 

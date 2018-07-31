@@ -21,9 +21,9 @@ import sys, os
 
 PREFIX=os.getenv('PREFIX')
 if PREFIX is not None:
-    sys.path.insert(0, os.path.abspath(os.path.join(PREFIX, 'lib', 'python')))
+    sys.path.insert(0, os.path.abspath(os.path.join(PREFIX, 'python')))
 else:
-    sys.path.insert(0, os.path.abspath('../../objs/Linux/x86_64/lib/python'))
+    sys.path.insert(0, os.path.abspath('../../objs/build/python'))
 
 # -- General configuration -----------------------------------------------------
 
