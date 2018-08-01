@@ -1,3 +1,0 @@
-[submodule "site_scons/sconsutils"]
-	path = site_scons/sconsutils
-	url = ssh://gitlab.en.desres.deshaw.com:29418/sw/libs/sconsutils
