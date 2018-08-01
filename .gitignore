@@ -1,4 +1,4 @@
-objs
+build
 *.dms
 /doc/build/
 desres.py
