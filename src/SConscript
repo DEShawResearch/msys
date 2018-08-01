@@ -257,6 +257,7 @@ xyz.cxx
 '''), SHLIBVERSION=get_shlib_version())
 
 env.AddHeaders(Glob("*.hxx"), prefix='msys', stage=True)
+env.AddHeaders(Glob("*.hpp"), prefix='msys', stage=True)
 env.AddHeaders(Glob('atomsel/*.h*'), prefix='msys/atomsel')
 env.AddHeaders(Glob('fastjson/*.hxx'), prefix='msys/fastjson')
 env.AddHeaders(Glob('pfx/*.hxx'), prefix='msys/pfx')

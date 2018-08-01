@@ -38,11 +38,11 @@ loadmodules() {
 genmodules() {
     cat << EOF > $GARDENDIR/lib-python
 load $PYTHON/bin
-prepend-path PYTHONPATH $PREFIX/python
+prepend-path PYTHONPATH $PREFIX/lib/python
 EOF
     cat << EOF > $GARDENDIR/lib-python3
 load $PYTHON3/bin
-prepend-path PYTHONPATH $PREFIX/python
+prepend-path PYTHONPATH $PREFIX/lib/python
 EOF
 
     # library
