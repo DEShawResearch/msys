@@ -1,4 +1,4 @@
-1.7.236c7 Use new sconsutils; should affect developers only.
+1.7.237c7 Use new sconsutils; should affect developers only.
 
 1.7.235c7 Add a 'moe' option to msys.SaveMol2 to output guanidinium
           groups MOE can will parse correctly. This option is turned
