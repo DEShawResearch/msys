@@ -1,8 +1,5 @@
-
-
-"""
-Given a system, find any instances where a bond is 'threaded' through a ring, 
-like so
+'''
+dms-find-knot system.dms [ options ]
 
                 /-------\
        \       /         \
@@ -11,6 +8,14 @@ like so
                \         /       \
                 \-------/         \
 
+*dms-find-knot* searches for bonds which pass through a ring of atoms; e.g.,
+a lipid tail passing through an aromatic ring in a protein.  Such geometries
+can accidentally arise during system construction and usually indicate
+a badly constructed system which will behave badly during simulation.
+
+If --untie is specified, the script will attempt to remove the knots by translating the offending bonds
+outside of the ring (iteratively to convergence).
+
 The algorithm works as follows:
 
     1. Produce a list of all cycles in the bond topology (i.e. rings)
@@ -18,7 +23,7 @@ The algorithm works as follows:
         a. Use boxing and distance cutoffs to reduce the number of bonds to check against
         b. Divide the ring into N triangles
         c. Check for a triangle-line intersection between the triangle and each relevant bond
-"""
+'''
 # Copyright (C) 2010 D.E. Shaw Research
 # @author Adam Lerer
 # @author Justin Gullingsrud (converted to msys)
@@ -223,3 +228,57 @@ def UntieKnots(mol, max_cycle_size=None, selection="all", move_lipid=False, iter
     if verbose:
         print("Failed to converge after %d iterations" % iteration_limit)
     return False
+
+
+def main():
+    import sys, os
+    from optparse import OptionParser
+    ut_intersection()
+    
+    parser = OptionParser("Usage: dms_find_knot [options] system.dms.\n\nGiven a dms file, find any instances where a bond is 'threaded' through a ring.")
+
+    parser.add_option("--max-cycle", help="Maximum cycle size to check (if this is set too large, disulfide-bond-induced rings will be checked).")
+
+    parser.add_option("-s", "--selection", help="Limit knot search to selection")
+    parser.add_option("--untie", action="store_true", help="Attempt to remove any knots found and write to --outfile", 
+                      default=False)
+    parser.add_option("--outfile",'-o', type=str, help="Output dms file; for use in combination with --untie", 
+                      default=None)
+    parser.add_option("--move-lipid", action="store_true", 
+                      help="Use with --untie; move the whole lipid molecule instead of just the two offending bond atoms",
+                      default=False)
+    parser.add_option("--ignore-excluded-knots", action="store_true", default=False,
+                      help="Ignore knots where the bond atoms are not interacting with the ring atoms," +
+                      " as determined by the exclusion table")
+
+    (o,a) = parser.parse_args(sys.argv)
+    if len(a)!=2:
+        parser.error("Incorrect number of arguments")
+
+    if (o.untie and not o.outfile) or (o.outfile and not o.untie):
+        parser.error("--outfile must be used in combination with --untie")
+ 
+    if not o.untie:
+        # need exclusion table if o.ignore_excluded_knots
+        mol=msys.Load(a[1], structure_only=not o.ignore_excluded_knots) 
+        klist = FindKnots(
+            mol,
+            max_cycle_size=o.max_cycle,
+            selection=o.selection,
+            ignore_excluded_knots=o.ignore_excluded_knots,
+            verbose=True)
+
+        sys.exit(len(klist)!=0)
+    else:
+        mol=msys.Load(a[1])
+        converged = UntieKnots(
+            mol,
+            max_cycle_size=o.max_cycle,
+            ignore_excluded_knots=o.ignore_excluded_knots,
+            selection=o.selection,
+            move_lipid=o.move_lipid,
+            verbose=True)
+        msys.Save(mol, o.outfile)
+
+        sys.exit(not converged)
+

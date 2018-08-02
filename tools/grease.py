@@ -1,9 +1,29 @@
+'''
+dms-grease input.dms lipid.dms output.dms [ options ]
+
+Tile a lipid bilayer around a solute.
+
+dms-grease builds a new chemical system consisting of the input system
+plus a lipid bilayer constructed by tiling *lipid.dms* in the x-y plane.
+If the *input.dms* is given as "-", then a pure membrane will be built.
+
+An error will be encountered if only one of *input.dms* and *lipid.dms* 
+have forcefield information; this is because Msys refuses to write DMS
+files that have only partial information for the nonbonded atom types.
+If you don't have forcefield information for one of the input files,
+use the *--structure-only* option to ignore the forcefield information
+in the one that does.
+
+The global cell of the new system will be orthorhombic and have x and
+y dimensions given by the specified size of the membrane, and z dimension
+given by the input structure or the lipid membrane template, whichever is
+greater.
+'''
+
 from __future__ import division
 from __future__ import print_function
 
-from builtins import range
-from past.utils import old_div
-import os, msys
+import sys, os, msys
 
 def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
             ctname='grease', verbose=True, 
@@ -60,8 +80,8 @@ def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
         ysize = xsize
 
     # extract where to put the lipid
-    nx = int(old_div(xsize,lipsize[0])) + 1
-    ny = int(old_div(ysize,lipsize[1])) + 1
+    nx = int(xsize // lipsize[0]) + 1
+    ny = int(ysize // lipsize[1]) + 1
 
     xshift = -0.5 * (nx-1)*lipsize[0]
     yshift = -0.5 * (ny-1)*lipsize[1]
@@ -116,4 +136,42 @@ def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,
                 lipnum += 1
 
     return mol
+
+def main():
+    import optparse
+    parser = optparse.OptionParser(__doc__)
+
+    parser.add_option('-t', '--thickness', default=0.0, type='float',
+        help='Minimum distance from edge of membrane to input structure')
+    parser.add_option('-x', '--xsize', default=None,
+        help='Size of membrane along x dimension')
+    parser.add_option('-y', '--ysize', default=None,
+        help='Size of membrane along y dimension')
+    parser.add_option(      '--square', default=False, action='store_true',
+        help='Ensure the resulting membrane is square')
+    parser.add_option('--structure-only', default=False, action='store_true',
+        help='Ignore forcefield in input.dms and lipid.dms')
+    parser.add_option('-v', '--verbose', default=True, action='store_true',
+        help="Be chatty")
+
+    opts, args = parser.parse_args()
+    if len(args)!=3:
+        parser.error("incorrect number of arguments")
+
+    input, lipid, output = args
+    structure_only = opts.structure_only
+    del opts.__dict__['structure_only']
+
+    if opts.verbose: print("Loading input file <%s>" % input)
+    if input=='-':
+        mol=msys.CreateSystem()
+    else:
+        mol=msys.LoadDMS(input, structure_only=structure_only)
+
+    tile=msys.LoadDMS(lipid, structure_only=structure_only)
+    
+    mol = Grease(mol, tile, **opts.__dict__)
+
+    if opts.verbose: print("Writing DMS file <%s>" % output)
+    msys.SaveDMS(mol,output)
 

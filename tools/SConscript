@@ -1,64 +1,22 @@
 Import('msysenv')
 Import('libmsys')
+import os
 
 env=msysenv.Clone()
 env.Prepend(CPPPATH=['../src'], LIBS=['msys', 'msys-core'])
 
-# converters
-env.AddProgram('mae2dms', 'converters/mae2dms.cxx')
-env.AddProgram('dms2mae', 'converters/dms2mae.cxx')
-env.AddProgram('stkcache-modify', 'converters/stkcache-modify.cxx')
-env.AddProgram('msys-fetch-pdb', 'converters/msys-fetch-pdb.cxx')
+for mod in Glob('*.py'):
+    env.AddPythonModule(mod.get_path(), prefix='msys')
 
-## grease
-env.AddPythonModule('grease/grease.py', prefix='msys')
-env.AddScript('grease/dms-grease')
+for mod in Glob('validate/*.py'):
+    env.AddPythonModule(mod.get_path(), prefix='validate/msys')
 
-## posre
-env.AddPythonModule('posre/posre.py', prefix='msys')
-env.AddScript('posre/dms-posre')
+for script in Glob('scripts/dms-*') + Glob('scripts/dtr-*'):
+    env.AddScript(script)
 
-# thermalize
-env.AddPythonModule('thermalize/thermalize.py', prefix='msys')
-env.AddScript('thermalize/dms-thermalize')
+for prog in Glob('bin/*.cxx'):
+    name = os.path.basename(prog.get_path())[:-4]
+    env.AddProgram(name, prog)
 
-# validate
-env.AddPythonModule('validate/validate.py', prefix='msys')
-env.AddPythonModule('validate/knot.py', prefix='msys')
-env.AddPythonModule('validate/groups.py', prefix='msys')
-
-env.AddScript('validate/dms-validate')
-env.AddScript('validate/dms-find-knot')
-env.AddScript('validate/dtr-validate')
-
-# info
-env.AddProgram('dms-version', ['info/dms-version.cxx'])
-env.AddScript('info/dms-diff')
-env.AddScript('info/dms-dump')
-env.AddScript('info/dms-info')
-env.AddScript('info/dms-sequence')
-env.AddPythonModule('info/sequence.py', prefix='msys')
-
-# vdw
-env.AddPythonModule('vdw/vdw.py', prefix='msys')
-env.AddScript('vdw/dms-override-vdw')
-env.AddScript('vdw/dms-scale-vdw')
-
-# other scripts
-env.AddScript('scripts/dms-check-groups')
-env.AddScript('scripts/dms-fix-mass')
-env.AddScript('scripts/dms-fix-water-residues')
-env.AddScript('scripts/dms-frame')
-env.AddScript('scripts/dms-reorder-atoms')
-env.AddScript('scripts/dms-select')
-env.AddScript('scripts/dms-set')
-env.AddScript('scripts/dms-tile')
-env.AddScript('scripts/dms-replicate')
-env.AddScript('scripts/dms-solvate')
-env.AddPythonModule('scripts/update.py', prefix='msys')
-env.AddPythonModule('scripts/wrap.py', prefix='msys')
-env.AddPythonModule('scripts/reorder.py', prefix='msys')
-env.AddPythonModule('scripts/solvate.py', prefix='msys')
-
-env.AddShare('tip3p.dms', src='scripts/tip3p.dms')
+env.AddShare('data/tip3p.dms')
 

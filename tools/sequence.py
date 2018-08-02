@@ -1,3 +1,4 @@
+from __future__ import print_function
 import msys
 
 # convert residue name to one-letter code
@@ -66,3 +67,22 @@ def Sequences(system_or_chain, distinct=True):
     return seqs
 
 
+doc = '''
+dms-sequence [--with-duplicates] [--without-duplicates] [ dms files ]
+Write sequences in a dms file to stdout.
+'''
+
+def main():
+    import optparse
+    parser = optparse.OptionParser(doc)
+    parser.add_option('--with-duplicates', action='store_false', default=True, 
+            dest='distinct', help="Print duplicate sequences")
+    parser.add_option('--without-duplicates', action='store_true', 
+            dest='distinct', help="Don't print duplicate sequences")
+
+    opts, args = parser.parse_args()
+    for path in args:
+        mol = msys.Load(path)
+        for s in Sequences(mol, **opts.__dict__):
+            print(s)
+        

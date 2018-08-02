@@ -1,10 +1,3 @@
-#!/usr/bin/garden-exec
-#{
-# garden env-keep-only
-# . $(dirname $0)/../share/env.sh
-# exec python $0 "$@"
-#}
-
 '''
 dms-info [ options ] [ dms files ]
 
@@ -12,11 +5,11 @@ Write a human-readable summary of the contents of a structure file to stdout.
 
 '''
 
+from __future__ import print_function
 import sys, os
-sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
 
 import msys
-import cStringIO
+import io
 from msys import vdw
 
 def print_info(mol, ct=None):
@@ -25,16 +18,16 @@ def print_info(mol, ct=None):
     bx,by,bz=mol.cell[1]
     cx,cy,cz=mol.cell[2]
     npseudo = len(mol.selectIds('atomicnumber 0'))
-    print "Structure", ctname
-    print "%12s: %8d (%d pseudo)" % ("Atoms", mol.natoms, npseudo)
-    print "%12s: %8d" % ("Bonds", mol.nbonds)
-    print "%12s: %8d" % ("Residues", mol.nresidues)
-    print "%12s: %8d" % ("Chains", mol.nchains)
-    print
-    print "%12s: %10s %10s %10s"  % ("Global cell", ax,ay,az)
-    print "%12s  %10s %10s %10s"  % ("", bx,by,bz)
-    print "%12s  %10s %10s %10s"  % ("", cx,cy,cz)
-    print
+    print("Structure", ctname)
+    print("%12s: %8d (%d pseudo)" % ("Atoms", mol.natoms, npseudo))
+    print("%12s: %8d" % ("Bonds", mol.nbonds))
+    print("%12s: %8d" % ("Residues", mol.nresidues))
+    print("%12s: %8d" % ("Chains", mol.nchains))
+    print()
+    print("%12s: %10s %10s %10s"  % ("Global cell", ax,ay,az))
+    print("%12s  %10s %10s %10s"  % ("", bx,by,bz))
+    print("%12s  %10s %10s %10s"  % ("", cx,cy,cz))
+    print()
     for sel, title in (
             ('protein', 'Protein'),
             ('lipid', 'Lipid'),
@@ -49,14 +42,14 @@ def print_info(mol, ct=None):
         atoms=ptr.selectAsList(sel)
         residues=set(ptr.atom(a).residue for a in atoms)
         chains=set(ptr.residue(r).chain for r in residues)
-        print "%12s: %8d atoms, %8d residues, %8d chains" % (
-                title, len(atoms), len(residues), len(chains))
+        print("%12s: %8d atoms, %8d residues, %8d chains" % (
+                title, len(atoms), len(residues), len(chains)))
 
     if ct is None:
-        print
-        print "Ct composition:"
+        print()
+        print("Ct composition:")
         for i, c in enumerate(mol.cts):
-            print "%8d) %-24s %8d atoms" % (i+1, c.name, c.natoms)
+            print("%8d) %-24s %8d atoms" % (i+1, c.name, c.natoms))
     
     tdict=dict()
     for table in mol.tables:
@@ -65,44 +58,44 @@ def print_info(mol, ct=None):
     for cat in sorted(tdict.keys()):
         tables = tdict[cat]
         title="%s tables" % cat
-        print "\n%s Tables:" % cat.title()
+        print("\n%s Tables:" % cat.title())
 
         for table in tables:
             n = table.noverrides
-            print "%28s: %d sites, %6d params, %6d terms" % (
+            print("%28s: %d sites, %6d params, %6d terms" % (
                     table.name, table.natoms, table.params.nparams, 
-                    table.nterms)
+                    table.nterms))
             if table.noverrides:
-                print "%27s overrides: %6d params, %6d pairs" %(
-                        '', table.noverrides, vdw.count_overrides(table))
+                print("%27s overrides: %6d params, %6d pairs" %(
+                        '', table.noverrides, vdw.count_overrides(table)))
 
     nbinfo=mol.nonbonded_info
-    print "\n%s:" % "Nonbonded Info"
-    print "%20s: %s" % ("vdw_funct", nbinfo.vdw_funct)
-    print "%20s: %s" % ("vdw_rule", nbinfo.vdw_rule)
+    print("\n%s:" % "Nonbonded Info")
+    print("%20s: %s" % ("vdw_funct", nbinfo.vdw_funct))
+    print("%20s: %s" % ("vdw_rule", nbinfo.vdw_rule))
 
-    print "\n%s:" % "Auxiliary Tables"
+    print("\n%s:" % "Auxiliary Tables")
     for name in mol.auxtable_names:
         if name=='forcefield':
             continue
         aux=mol.auxtable(name)
-        print "%28s: %d properties, %6d rows" % (name, aux.nprops, aux.nparams)
+        print("%28s: %d properties, %6d rows" % (name, aux.nprops, aux.nparams))
 
-    print "\n%s:" % "Forcefields"
+    print("\n%s:" % "Forcefields")
     if 'forcefield' in mol.auxtable_names:
         ff=mol.auxtable('forcefield')
         for p in ff.params:
             path = '<no path>' if 'path' not in ff.props else p['path']
-            print "%4d) %s" % (p.id+1, path)
+            print("%4d) %s" % (p.id+1, path))
 
-    print "\n%s:" % "Provenance"
+    print("\n%s:" % "Provenance")
     for i, p in enumerate(mol.provenance):
-        print "%4d) %16s %s" % (i+1, p.timestamp, p.user)
-        print "%12s: %s" % ("version", p.version)
-        print "%12s: %s" % ("workdir", p.workdir)
-        print "%12s: %s" % ("cmdline", p.cmdline)
-        print "%12s: %s" % ("executable", p.executable)
-        print
+        print("%4d) %16s %s" % (i+1, p.timestamp, p.user))
+        print("%12s: %s" % ("version", p.version))
+        print("%12s: %s" % ("workdir", p.workdir))
+        print("%12s: %s" % ("cmdline", p.cmdline))
+        print("%12s: %s" % ("executable", p.executable))
+        print()
 
 
 def main():
@@ -114,27 +107,24 @@ def main():
             help="Skip over empty systems")
 
     opts, args = parser.parse_args()
-    errors = cStringIO.StringIO()
+    errors = io.StringIO()
     for path in args:
         if opts.multi_ct:
             it = msys.LoadMany(path, error_writer = errors)
         else:
             it = [msys.Load(path)]
-        print "-" * 75
-        print path
-        print
+        print("-" * 75)
+        print(path)
+        print()
         for i, mol in enumerate(it):
             if mol is None: continue
             if opts.ignore_empty and mol.natoms==0: continue
             print_info(mol, ct=i if opts.multi_ct else None)
-            print
+            print()
             if opts.multi_ct:
-                print "." * 75
+                print("." * 75)
 
     errmsg = errors.getvalue()
     if errmsg:
-        print errmsg
+        print(errmsg)
 
-if __name__=="__main__": exit(main())
-
-# vim: filetype=python

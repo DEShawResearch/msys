@@ -5,6 +5,6 @@
 # exec python $0 "$@"
 #}
 
-import msys.tile
-msys.tile.main()
+import msys.sequence
+msys.sequence.main()
 

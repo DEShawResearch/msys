@@ -1,16 +1,5 @@
-#!/usr/bin/garden-exec
-#{
-# garden env-keep-only
-# . $(dirname $0)/../share/env.sh
-# exec python $0 "$@"
-#}
-
 '''
-dms-posre input.dms output.dms [ options ]
-
-Assign harmonic position restraints to selected atoms.  
-
-`dms-posre` adds position restraints to a dms file, using the existing atom
+Add position restraints to a dms file, using the existing atom
 positions for the reference positions of the restraints.  If ``--replace``
 is specified on the command line, any existing restraints will be replaced
 by the new set.  Otherwise, atoms that are already restrained in the existing
@@ -26,15 +15,37 @@ file will be restrained using the newly provided force constraints::
   dms-posre input.dms output.dms --replace
   ## or:
   dms-posre input.dms output.dms -s none --replace
-
 '''
 
-import sys, os
-sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','lib','python'))
-
 import msys
-from msys import posre
 import math
+
+def apply(mol, atoms, fcx, fcy, fcz, replace=False):
+    ''' add position restraints to atoms '''
+
+    table=mol.addTableFromSchema('posre_harm')
+    index={}
+    if replace:
+        for t in table.terms: t.remove()
+    else:
+        for t in table.terms:
+            index[t.atoms[0]] = t
+
+    param=table.params.addParam()
+    param['fcx']=fcx
+    param['fcy']=fcy
+    param['fcz']=fcz
+
+    for a in atoms:
+        t=index.get(a)
+        if t is None:
+            t=table.addTerm([a])
+        t.param = param
+        t['x0']=a.x
+        t['y0']=a.y
+        t['z0']=a.z
+
+    return table.nterms
 
 def main():
     import optparse
@@ -125,6 +136,3 @@ def main():
     if not opts.quiet: print "Writing DMS file <%s>" % args[1]
     msys.SaveDMS(mol,args[1])
 
-if __name__=="__main__": exit(main())
-
-# vim: filetype=python

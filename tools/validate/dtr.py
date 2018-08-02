@@ -1,16 +1,10 @@
-#!/usr/bin/garden-exec
-#{
-# garden env-keep-only
-# . `dirname $0`/../share/env.sh
-# exec python $0 "$@"
-#}
-
 '''
 dtr-validate input.{dtr,atr,etr,stk}
 
 Check that each frame in each input file is readable and provides
 position and box data.
 '''
+from __future__ import print_function
 
 import sys, os, fnmatch
 from msys import molfile
@@ -18,11 +12,11 @@ import numpy
 
 class Progress(object):
     def __init__(self, total, dots=50, nums=10):
-        points = map(int, numpy.linspace(1, total, dots))
-        progs = map(int, numpy.linspace(0,100,dots))
+        points = list(map(int, numpy.linspace(1, total, dots)))
+        progs = list(map(int, numpy.linspace(0,100,dots)))
         self.dots = dict(zip(points, progs))
-        points = map(int, numpy.linspace(1, total, nums))
-        progs = map(int, numpy.linspace(0,100,nums))
+        points = list(map(int, numpy.linspace(1, total, nums)))
+        progs = list(map(int, numpy.linspace(0,100,nums)))
         self.nums = dict(zip(points, progs))
         self.total = total
 
@@ -67,13 +61,13 @@ def main():
     natoms = r.natoms
     nframes = r.nframes
     if args.progress:
-        print "frames: %-9d atoms: %-9d" % (nframes, natoms)
+        print("frames: %-9d atoms: %-9d" % (nframes, natoms))
     if not args.energy:
         assert natoms > 0, "'%s' contains %d atoms." % (path, natoms)
     assert nframes > 0, "'%s' contains %d frames." % (path, nframes)
     if args.progress:
         progress = Progress(nframes)
-    for i in xrange(nframes):
+    for i in range(nframes):
         frame = r.frame(i)
         if not args.energy:
             assert frame.pos is not None, "'%s' is missing pos data at frame %d" % (path, i)
@@ -100,12 +94,9 @@ def main():
     # this replaces.
     #
     if args.parseable_output:
-        print "first_frame_time = ", first_frame_time
-        print "last_frame_time = ", frame.time
+        print("first_frame_time = ", first_frame_time)
+        print("last_frame_time = ", frame.time)
         if (nframes > 1):
-            print "delta_t = ", (frame.time - first_frame_time) / (nframes - 1)
-            print "num_frames = ", nframes
+            print("delta_t = ", (frame.time - first_frame_time) / (nframes - 1))
+            print("num_frames = ", nframes)
 
-main()
-
-# vim: filetype=python

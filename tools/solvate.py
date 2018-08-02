@@ -5,7 +5,7 @@ import numpy
 WATRAD = 2.4
 WATSEL = 'oxygen'
 WATCON = 1.0
-WATBOX = os.path.join(os.path.dirname(__file__), '../../../share/tip3p.dms')
+WATBOX = os.path.join(os.path.dirname(__file__), '../../../share/data/tip3p.dms')
 
 def remove_periodic_contacts(_mol, npro, dist):
     mol = _mol.clone()
