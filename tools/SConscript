@@ -9,7 +9,7 @@ for mod in Glob('*.py'):
     env.AddPythonModule(mod.get_path(), prefix='msys')
 
 for mod in Glob('validate/*.py'):
-    env.AddPythonModule(mod.get_path(), prefix='validate/msys')
+    env.AddPythonModule(mod.get_path(), prefix='msys/validate')
 
 for script in Glob('scripts/dms-*') + Glob('scripts/dtr-*'):
     env.AddScript(script.get_path())
