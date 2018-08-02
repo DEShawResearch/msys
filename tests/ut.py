@@ -960,6 +960,14 @@ class TestValidate(unittest.TestCase):
 
 class Main(unittest.TestCase):
 
+    def testMol2ChainSplit(self):
+        mol = msys.Load('tests/files/complex_aligned.mol2')
+        assert mol.nchains == 1, "got %d chains, expected 1" % mol.nchains
+
+    def testMol2ChainsMerge(self):
+        mol = msys.Load('tests/files/solvated_test.mol2')
+        assert mol.nchains == 4, "got %d chains, expected 4" % mol.nchains
+
     def testAddProvenance(self):
         mol = msys.CreateSystem()
         prov = msys._msys.Provenance()
