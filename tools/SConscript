@@ -12,7 +12,7 @@ for mod in Glob('validate/*.py'):
     env.AddPythonModule(mod.get_path(), prefix='validate/msys')
 
 for script in Glob('scripts/dms-*') + Glob('scripts/dtr-*'):
-    env.AddScript(script)
+    env.AddScript(script.get_path())
 
 for prog in Glob('bin/*.cxx'):
     name = os.path.basename(prog.get_path())[:-4]

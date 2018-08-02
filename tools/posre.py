@@ -16,6 +16,7 @@ file will be restrained using the newly provided force constraints::
   ## or:
   dms-posre input.dms output.dms -s none --replace
 '''
+from __future__ import print_function
 
 import msys
 import math
@@ -78,24 +79,24 @@ def main():
     if len(args)!=2:
         parser.error("incorrect number of arguments")
 
-    if not opts.quiet: print "Loading input file <%s>" % args[0]
+    if not opts.quiet: print("Loading input file <%s>" % args[0])
     mol=msys.LoadDMS(args[0])
 
     atoms=mol.select(opts.selection)
-    if not opts.quiet: print "Adding restraints to %d atoms" % len(atoms)
+    if not opts.quiet: print("Adding restraints to %d atoms" % len(atoms))
 
     fc=float(opts.f)
     fcx = fc if opts.x is None else float(opts.x)
     fcy = fc if opts.y is None else float(opts.y)
     fcz = fc if opts.z is None else float(opts.z)
-    if not opts.quiet: print "Using force constant (%s, %s, %s)" % (
-            fcx,fcy,fcz)
+    if not opts.quiet: print("Using force constant (%s, %s, %s)" % (
+            fcx,fcy,fcz))
 
     ref=opts.reference_structure
     if ref:
-        if not opts.quiet: print "Loading reference file <%s>" % ref
+        if not opts.quiet: print("Loading reference file <%s>" % ref)
         ref_mol = msys.LoadDMS(ref)
-        if not opts.quiet: print "Restraining atoms to reference positions"
+        if not opts.quiet: print("Restraining atoms to reference positions")
         if opts.reference_selection:
             ref_selection = opts.reference_selection
         else:
@@ -115,24 +116,24 @@ def main():
         if not opts.quiet:
             a_name = 'chain %s %s%d:%s' % (r.chain.name,r.name,r.resid,a.name)
             fmt = "Most energetic restraint: %s (%.1f kcal/mol, %.1f Angstroms)"
-            print fmt % (a_name, E_restr.max(), dist)
+            print(fmt % (a_name, E_restr.max(), dist))
         if opts.max_distance is not None:
             if dist > float(opts.max_distance):
-                print >> sys.stderr, "ERROR: Maximum distance exceeded."
+                print("ERROR: Maximum distance exceeded.", file=sys.stderr)
                 return 1
         if opts.max_energy is not None:
             if E_restr.max() > float(opts.max_energy):
-                print >> sys.stderr, "ERROR: Maximum energy exceeded."
+                print("ERROR: Maximum energy exceeded.", file=sys.stderr)
                 return 1
 
     else:
-        if not opts.quiet: print "Restraining atoms to current positions"
+        if not opts.quiet: print("Restraining atoms to current positions")
     n=posre.apply(mol, atoms, fcx, fcy, fcz, replace=opts.replace)
     if ref:
         for a, p in zip(atoms, cur_sel.positions):
             a.pos = p
-    if not opts.quiet: print "Now have restraints on %d atoms" % n
+    if not opts.quiet: print("Now have restraints on %d atoms" % n)
 
-    if not opts.quiet: print "Writing DMS file <%s>" % args[1]
+    if not opts.quiet: print("Writing DMS file <%s>" % args[1])
     msys.SaveDMS(mol,args[1])
 
