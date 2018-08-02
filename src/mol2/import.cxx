@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <unordered_map>
 
 using namespace desres::msys;
 
@@ -76,10 +77,11 @@ SystemPtr iterator::next() {
     int natoms, nbonds, nsub;
 
     SystemPtr mol = System::create();
-    SystemImporter imp(mol);
     mol->addCt();
     mol->ct(0).add("msys_file_offset", IntType);
     mol->ct(0).value("msys_file_offset") = file_offset;
+    mol->addChain(0);
+    std::unordered_map<std::string, Id> chain_to_id;
 
     /* read mol_name */
     if (!fgets(buf, sizeof(buf), fd)) MSYS_FAIL(strerror(errno));
@@ -87,11 +89,9 @@ SystemPtr iterator::next() {
     trim(mol->name);
     mol->ct(0).setName(mol->name);
     /* read natoms, nbonds, nsub */
-    natoms = nbonds = 0;
-    nsub = 0;
     if (!fgets(buf, sizeof(buf), fd)) MSYS_FAIL(strerror(errno));
-    if (sscanf(buf, "%d %d %d", &natoms, &nbonds, &nsub)<1) {
-        MSYS_FAIL("Could not parse num_atoms from line:\n" << buf);
+    if (sscanf(buf, "%d %d %d", &natoms, &nbonds, &nsub)!=3) {
+        MSYS_FAIL("Could not parse counts from line:\n" << buf);
     }
     /* read mol_type and ignore */
     if (!fgets(buf, sizeof(buf), fd)) MSYS_FAIL(strerror(errno));
@@ -119,19 +119,17 @@ SystemPtr iterator::next() {
                 break;
             case Atom:
                 {
-                int last_resid = 0;
-                int last_residue = 0;
-                char chain[] = "A";
                 for (int i=0; i<natoms; i++) {
-                    int id, residue, resid=0;
+                    int id, resid=0;
+                    Id residue = BadId, residue_id = BadId;
                     Float x,y,z,q=0;
                     char name[32], type[32], resname[32];
                     if (!fgets(buf, sizeof(buf), fd)) {
                         MSYS_FAIL("Missing expected Atom record " << i+1);
                     }
-                    int rc = sscanf(buf, "%d %s %lf %lf %lf %s %d %s %lf",
+                    int rc = sscanf(buf, "%d %s %lf %lf %lf %s %u %s %lf",
                             &id, name, &x, &y, &z, type, &residue, resname, &q);
-                    if (rc<6) {
+                    if (rc<8) {
                         MSYS_FAIL("Could not parse Atom record:\n" << buf);
                     }
                     // maybe the resid is encoded as digits at the end
@@ -149,23 +147,26 @@ SystemPtr iterator::next() {
                             }
                         }
                     }
-                    // if the resid resets to less than the previous value, start a
-                    // new chain.
-                    if (resid < last_resid || (resid==last_resid && residue != last_residue)) {
-                        chain[0]++;
+                    if (residue == mol->residueCount() + 1) {
+                        residue_id = mol->addResidue(0);
+                        auto& res = mol->residueFAST(residue_id);
+                        res.name = resname;
+                        res.resid = resid;
+                    } else if (residue == mol->residueCount()) {
+                        residue_id = residue - 1;
+                    } else {
+                        MSYS_FAIL("Nonconsecutive residue id: " << buf);
                     }
-
-                    Id atm = imp.addAtom(chain, "", resid, resname, name);
-                    atom_t& atom = mol->atom(atm);
-                    atom.x = x;
-                    atom.y = y;
-                    atom.z = z;
-                    atom.charge = q;
+                    Id atmid = mol->addAtom(residue_id);
+                    auto& atm = mol->atomFAST(atmid);
+                    atm.name = name;
+                    atm.x = x;
+                    atm.y = y;
+                    atm.z = z;
+                    atm.charge = q;
                     char* dot = strchr(type, '.');
                     if (dot) *dot='\0';
-                    atom.atomic_number = ElementForAbbreviation(type);
-                    last_resid = resid;
-                    last_residue = residue;
+                    atm.atomic_number = ElementForAbbreviation(type);
                 }
                 state = Skip;
                 }
@@ -207,7 +208,48 @@ SystemPtr iterator::next() {
                     if (!fgets(buf, sizeof(buf), fd)) {
                         MSYS_FAIL("Missing expected Substructure record " << i+1);
                     }
-
+                    // check that we read a consecutive id
+                    Id id = BadId;
+                    char chn[32];
+                    memset(chn, 0, sizeof(chn));
+                    if (sscanf(buf, "%u %*s %*d %*s %*d %s", &id, chn) < 1) {
+                        MSYS_FAIL("Could not parse Substructure record:\n" << buf);
+                    }
+                    if (id != (unsigned)(i+1)) {
+                        MSYS_FAIL("Nonconsecutive substructure ids:\n" << buf);
+                    }
+                    if (i==0) {
+                        // first residue goes in first chain
+                        chain_to_id[chn] = 0;
+                    } else {
+                        Id chnid = BadId;
+                        if (chain_to_id.count(chn) == 1) {
+                            chnid = chain_to_id[chn];
+                        } else {
+                            // first time seeing this chain.  Make a new chain.
+                            chnid = mol->addChain(0);
+                            chain_to_id[chn] = chnid;
+                        }
+                        if (chnid != 0) {
+                            // this residue got added to chain 0, but it's actually in
+                            // a different chain.  Fix it up.
+                            mol->setChain(id-1, chnid);
+                        }
+                    }
+                }
+                // update chain info
+                for (auto& p : chain_to_id) {
+                    auto& name = p.first;
+                    Id chnid = p.second;
+                    auto& chn = mol->chain(chnid);
+                    chn.name = name;
+                    for (const char* c = name.data(); *c; c++) {
+                        if (isdigit(*c)) {
+                            chn.segid = c;
+                            chn.name = std::string(name.data(), c);
+                            break;
+                        }
+                    }
                 }
                 state = Skip;
             default: ;
