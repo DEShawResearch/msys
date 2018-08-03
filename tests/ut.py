@@ -967,6 +967,13 @@ class Main(unittest.TestCase):
     def testMol2ChainsMerge(self):
         mol = msys.Load('tests/files/solvated_test.mol2')
         assert mol.nchains == 6, "got %d chains, expected 6" % mol.nchains
+        assert mol.ncts == 2
+        with tmpfile(suffix='.mol2') as tmp:
+            msys.Save(mol, tmp.name)
+            mol2 = msys.Load(tmp.name)
+        assert mol2.nchains == 6, "got %d chains, expected 6" % mol2.nchains
+        assert mol2.ncts == 2, "got %d cts, expected 2" % mol2.ncts
+
 
     def testAddProvenance(self):
         mol = msys.CreateSystem()

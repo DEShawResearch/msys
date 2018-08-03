@@ -2,6 +2,7 @@
 #include "../elements.hxx"
 #include "../clone.hxx"
 #include "../annotated_system.hxx"
+#include "../atomsel.hxx"
 #include <stdio.h>
 #include <math.h>
 
@@ -80,12 +81,13 @@ static void export_mol2(SystemPtr omol, AnnotatedSystem& asys,
         residue_t const& res = mol->residue(local_id);
         chain_t const& chn = mol->chain(res.chain);
         Id ri = mol->atomsForResidue(local_id).at(0);
-        fprintf(fd, "%7u %4s%-4d %4u %-8s 1 %-4s\n",
+        fprintf(fd, "%7u %4s%-4d %4u %-8s 1 %s%s\n",
                 local_id+1,                         /* residue id */
                 res.name.c_str(), res.resid,        /* residue name */
                 ri+1,                               /* root atom */
                 n==1 ? "GROUP" : "RESIDUE",
-                chn.name.c_str());
+                chn.name.c_str(),
+                chn.segid.c_str());
     }
 
     /* additional properties */
@@ -121,6 +123,22 @@ void desres::msys::ExportMol2( SystemPtr mol, std::string const& path,
     FILE* fd = fopen(path.c_str(), mode);
     if (!fd) MSYS_FAIL("Could not open '" << "' for writing.");
     std::shared_ptr<FILE> dtor(fd, fclose);
-    export_mol2(mol,asys,ids,fd,provenance,flags);
+    if (mol->ctCount() == 1) {
+        export_mol2(mol,asys,ids,fd,provenance,flags);
+    } else {
+        for (auto ct : mol->cts()) {
+            auto sub = Atomselect(mol, "ct " + std::to_string(ct));
+            IdList sel;
+            if (ids.empty()) {
+                std::swap(sel, sub);
+            } else {
+                std::set_intersection(ids.begin(), ids.end(),
+                                      sub.begin(), sub.end(),
+                                      std::back_inserter(sel));
+            }
+            if (sel.empty()) continue;
+            export_mol2(mol, asys, sel, fd, provenance, flags);
+        }
+    }
 }
 
