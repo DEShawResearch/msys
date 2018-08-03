@@ -1,3 +1,6 @@
+1.7.238c7 Fix broken lib-python3 from 1.7.237.
+          DESRESCode3964: fix mol2 reading and writing.
+
 1.7.237c7 Use new sconsutils; should affect developers only.
 
 1.7.235c7 Add a 'moe' option to msys.SaveMol2 to output guanidinium

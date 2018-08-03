@@ -3,7 +3,6 @@ eval "$(garden-exec)"
 set -e
 
 NAME=msys
-VERSION=1.7.238c7
 
 # module versions that scripts in ./tools need to know
 . ./env.sh
@@ -33,7 +32,6 @@ loadmodules() {
         $SQLITE/lib-static \
         $SCONSUTILS/lib-python \
 
-    export MSYS_VERSION=$VERSION
     export PYTHONVER=27,36
 }
 
@@ -71,7 +69,7 @@ cat doc/source/release_notes.txt
 }
 
 gendocs() {
-    (cd doc && VERSION=$VERSION BINDIR=$PREFIX/bin make clean genhelp html )
+    (cd doc && BINDIR=$PREFIX/bin make clean genhelp html )
     cp -r doc/build/html $PREFIX/doc/
 }
 
@@ -80,7 +78,7 @@ case $1 in
         echo $NAME
         ;;
     --version)
-	echo $VERSION
+	echo `src/version.py`c7
         ;;
     --exec)
         shift

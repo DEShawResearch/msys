@@ -1,3 +1,0 @@
-#!/bin/sh
-PREFIX=$PWD/objs/CentOS6/x86_64/ ./garden-install-helper --exec gendocs
-

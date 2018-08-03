@@ -1,6 +1,6 @@
 #include <boost/python.hpp>
-#include "version.hxx"
 #include "system.hxx"
+#include "version.hxx"
 
 namespace desres { namespace msys {
     void export_analyze();
@@ -27,8 +27,6 @@ BOOST_PYTHON_MODULE(_msys) {
                 MSYS_ABI_VERSION, desres::msys::abi_version());
         boost::python::throw_error_already_set();
     }
-    boost::python::scope().attr("version")=std::string(MSYS_VERSION);
-    boost::python::scope().attr("hexversion")=MSYS_VERSION_HEX;
     desres::msys::export_analyze();
     desres::msys::export_annotated_system();
     desres::msys::export_propmap();

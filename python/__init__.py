@@ -6,12 +6,12 @@ by chemists.
 
 from __future__ import print_function
 
-from . import _msys
+from . import _msys, version
 import numpy
 import sys
 import tempfile
 
-from ._msys import NonbondedInfo, version, hexversion
+from ._msys import NonbondedInfo
 from ._msys import RadiusForElement, MassForElement, ElementForAbbreviation
 from ._msys import GuessAtomicNumber, AbbreviationForElement
 from ._msys import ElectronegativityForElement

@@ -58,7 +58,8 @@ copyright = u'2011, D.E. Shaw Research'
 # built documents.
 #
 # The short X.Y version.
-version = os.getenv('VERSION')
+import msys
+version = msys.version.version
 # The full version, including alpha/beta/rc tags.
 release = version
 

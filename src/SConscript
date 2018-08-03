@@ -65,21 +65,20 @@ def split_version(verstr):
     return nice_verstr.split('.')
 
 def build_version_hxx( target, source, env ):
-    verstr = env['ENV'].get('MSYS_VERSION', '0.0.0')
-    major, minor, micro = split_version(verstr)
-    fd=file(target[0].path, 'w')
-    print >> fd, "#define MSYS_VERSION \"%s\"" % verstr
-    for x in 'major', 'minor', 'micro':
-        u=x.upper()
-        v=int(locals()[x])
-        print >> fd, "#define MSYS_%s_VERSION %d" % (u,v)
-    print >> fd, "#define MSYS_VERSION_HEX ((MSYS_MAJOR_VERSION << 16) | \\"
-    print >> fd, "                          (MSYS_MINOR_VERSION <<  8) | \\"
-    print >> fd, "                          (MSYS_MICRO_VERSION <<  0))"
-    print >> fd, "#define MSYS_ABI_VERSION 1"
+    with open(source[0].path) as fp:
+        exec(fp.read())
+    major, minor, micro = split_version(version)
+    print "writing", target[0].path
+    with open(target[0].path, 'w') as fp:
+        print >> fp, "#define MSYS_VERSION \"%s\"" % version
+        for x in 'major', 'minor', 'micro':
+            u=x.upper()
+            v=int(locals()[x])
+            print >> fp, "#define MSYS_%s_VERSION %d" % (u,v)
+        print >> fp, "#define MSYS_ABI_VERSION 1"
 
-    fd.close()
-env.Command('version.hxx', '../garden-install-helper', build_version_hxx )
+env.Command('version.hxx', 'version.py', build_version_hxx )
+env.AddPythonModule('version.py', prefix='msys')
 
 # flex/bison-generated smiles parser
 if sys.platform.startswith("win32"):
