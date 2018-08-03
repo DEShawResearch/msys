@@ -218,21 +218,19 @@ namespace desres { namespace msys { namespace pfx {
 
             if (cell) {
                 // disable triclinic for now
-#if 0
                 if ((is_triclinic = check_triclinic(cell))) {
                     double dbox[9], dinv[9];
                     scalar inv[9];
                     std::copy(cell, cell+9, dbox);
-                    std::copy(cell, cell+9, ocell);
+                    trans_3x3(ocell, cell);
                     inverse_3x3(dinv, dbox);
-                    std::copy(dinv, dinv+9, inv);
+                    trans_3x3(inv, dinv);
                     apply_rotation(size(), pos, inv);
                     memset(box, 0, sizeof(box));
                     box[0] = box[4] = box[8] = 1;
-                } else 
-#else
+                } else {
                     std::copy(cell, cell+9, box);
-#endif
+                }
 
                 // compute projection for wrapping
                 make_projection(box, proj);

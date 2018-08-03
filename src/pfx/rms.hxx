@@ -8,7 +8,8 @@
 namespace desres { namespace msys { namespace pfx {
 
     /* 3x3 matrix transpose */
-    inline void trans_3x3(double * a_tr, const double * a) {
+    template <typename T, typename U>
+    inline void trans_3x3(T * a_tr, const U * a) {
         int i,j;
         for(i=0; i<3; ++i) 
             for(j=0; j<3; ++j) 
