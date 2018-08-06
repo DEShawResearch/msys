@@ -80,7 +80,7 @@ def main():
     else:
         seed=int(seed)
 
-    mol(*opts.temperature, **seed)
+    apply(mol, opts.temperature, seed)
 
     if opts.remove_drift:
         print("Removing center of mass motion")

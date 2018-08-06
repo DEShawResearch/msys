@@ -163,7 +163,7 @@ def scale_main():
             print("Selected %d atoms with %s selection" % (len(s1), name))
         for j in range(i+1,n):
             s2 = mol.select(opts.ligand[j])
-            vdw.Scale(mol, s1, s2, sig, eps)
+            Scale(mol, s1, s2, sig, eps)
 
     mol.coalesceTables()
     mol = mol.clone()
@@ -227,7 +227,7 @@ def override_main():
     else:
         print("Selected %d atoms in selection1" % len(s2))
     if s1 and s2:
-        vdw.Override(mol, s1, s2, **{'sigma' : sigma, 'epsilon' : epsilon })
+        Override(mol, s1, s2, **{'sigma' : sigma, 'epsilon' : epsilon })
         mol.coalesceTables()
         mol = mol.clone()
     else:

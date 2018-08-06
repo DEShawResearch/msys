@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import msys
 import math
+import sys
 
 def apply(mol, atoms, fcx, fcy, fcz, replace=False):
     ''' add position restraints to atoms '''
@@ -128,7 +129,7 @@ def main():
 
     else:
         if not opts.quiet: print("Restraining atoms to current positions")
-    n=posre.apply(mol, atoms, fcx, fcy, fcz, replace=opts.replace)
+    n=apply(mol, atoms, fcx, fcy, fcz, replace=opts.replace)
     if ref:
         for a, p in zip(atoms, cur_sel.positions):
             a.pos = p
