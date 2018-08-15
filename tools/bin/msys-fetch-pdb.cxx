@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 static void print_usage(FILE* fp, const char* argv0) {
-    fprintf(fp, "Usage: %s CODE [-o ofile] [-h,--help]\n", argv0);
+    fprintf(fp, "Usage: msys-fetch-pdb CODE [-o ofile] [-h,--help]\n");
 }
 
 static const char* ofile = nullptr;
@@ -12,7 +12,7 @@ static std::vector<char*> parse_cmdline(int argc, char **argv) {
     for (int i=1; i<argc; i++) {
         if ( !strcmp(argv[i], "-h") ||
              !strcmp(argv[i], "--help")) {
-            print_usage(stderr, argv[0]);
+            print_usage(stdout, argv[0]);
             exit(0);
         } else if (!strcmp(argv[i], "-o") ||
                    !strcmp(argv[i], "--output")) {
