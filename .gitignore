@@ -1,8 +1,4 @@
 build
-*.dms
 /doc/build/
-desres.py
-build.sh
 *.pyc
 *~
-*.stk.cache.*
