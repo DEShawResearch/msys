@@ -1,4 +1,0 @@
-#!/bin/sh
-cd "$(dirname "$0")" &&
-exec garden with -c ./garden-install-helper --exec scons "$@"
-

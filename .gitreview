@@ -1,5 +1,0 @@
-[gerrit]
-host=gitlab.en.desres.deshaw.com
-port=29418
-project=sw/libs/msys
-defaultbranch=master
