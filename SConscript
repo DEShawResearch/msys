@@ -37,6 +37,8 @@ env.SConscript('src/SConscript')
 if "SCHRODINGER_SRC" not in os.environ:
     env.SConscript('tests/SConscript')
 
+env.SConscript('external/inchi/SConscript')
+
 env.AddShare('env.sh')
 env.SConscript('python/SConscript')
 env.SConscript('tools/SConscript')
