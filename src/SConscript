@@ -23,14 +23,13 @@ else:
 
 if sys.platform.startswith("win32"):
     env.AppendUnique(LIBS=['libsqlite3', 'zlib', 'snappy'] + schrod_win_libs)
-    if not env.get('MSYS_WITHOUT_LPSOLVE'):
-        env.AppendUnique(LIBS=['lpsolve'])
 else:
     env.AppendUnique(LIBS=['sqlite3', 'z'])
 if env['PLATFORM'] == 'darwin':
     env.AppendUnique(LIBS=schrod_osx_libs)
-    if not env.get('MSYS_WITHOUT_LPSOLVE'):
-        env.AppendUnique(LIBS=['lpsolve55'])
+
+if not env.get('MSYS_WITHOUT_LPSOLVE'):
+    env.AppendUnique(LIBS=['lpsolve55'])
 
 bsx=env.get('MSYS_BOOST_SUFFIX', '')
 boost_libs=[(x+bsx) for x in ( 

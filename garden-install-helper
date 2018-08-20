@@ -27,11 +27,11 @@ loadmodules() {
         $SCONS/bin \
         $BOOST/lib \
         $BOOST_PYTHON3/lib \
-        $LPSOLVE/lib \
         $INCHI/lib \
         $SQLITE/lib-static \
         $SCONSUTILS/lib-python \
 
+        #$LPSOLVE/lib \
     export PYTHONVER=27,36
 }
 
