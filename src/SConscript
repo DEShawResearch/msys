@@ -117,6 +117,7 @@ if env.get("MSYS_WITHOUT_INCHI"):
     inchi = inchienv.AddObject('inchi.cxx')
 else:
     inchi = env.AddObject('inchi.cxx')
+    env.Append(LIBS=['inchi'])
 
 def get_shlib_version():
     import subprocess
