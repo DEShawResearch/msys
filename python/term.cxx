@@ -134,6 +134,7 @@ namespace desres { namespace msys {
 
             /* misc */
             .def("resetParams", &TermTable::resetParams)
+            .def("replaceWithSortedTerms", ReplaceTableWithSortedTerms)
             ;
     }
 

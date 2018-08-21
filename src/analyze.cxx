@@ -1,11 +1,13 @@
 #include "analyze.hxx"
 #include "analyze/bond_orders.hxx"
+#include "append.hxx"
 #include "elements.hxx"
 #include "graph.hxx"
 #include "geom.hxx"
 #include "contacts.hxx"
-#include <stdio.h>
+#include <numeric>
 #include <queue>
+#include <stdio.h>
 
 
 #if defined(WIN32) && !defined(drand48)
@@ -598,6 +600,44 @@ void desres::msys::GuessHydrogenPositions(SystemPtr mol, IdList const& hatoms) {
                 hyd1.z = root.z + def_bond*uz;
             }
         }
+    }
+}
+
+// This is here rather than in term_table.cxx because term_table.cxx gets compiled into
+// msys_core, and msys_core isn't versioned, so if you were to load an older msys core
+// first you would hit a missing symbol error.
+TermTablePtr desres::msys::ReplaceTableWithSortedTerms(TermTablePtr src) {
+
+    // construct new table with temporary name
+    auto sys = src->system();
+    std::string name = src->name();
+    std::string tmpname = name + ".tmp";
+    while (sys->table(tmpname)) tmpname += "X";
+    auto dst = sys->addTable(tmpname, src->atomCount(), src->params());
+    // copy basic properties
+    dst->category = src->category;
+    dst->tableProps() = src->tableProps();
+    // same atom ids
+    IdList amap(sys->maxAtomId());
+    std::iota(amap.begin(), amap.end(), 0);
+    // same param ids
+    IdList pmap(src->params()->paramCount());
+    std::iota(pmap.begin(), pmap.end(), 0);
+    // list of terms, sorted by atom ids
+    IdList terms = src->terms();
+    std::sort(terms.begin(), terms.end(),
+            [&src](Id a, Id b) { return src->atoms(a) < src->atoms(b); });
+
+    AppendTerms(dst, src, amap, terms, pmap);
+    // swap the tables
+    src->destroy();
+    dst->rename(name);
+
+    return dst;
+}
+void desres::msys::ReplaceTablesWithSortedTerms(SystemPtr mol) {
+    for (auto name : mol->tableNames()) {
+        ReplaceTableWithSortedTerms(mol->table(name));
     }
 }
 

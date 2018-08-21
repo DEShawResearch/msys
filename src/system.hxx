@@ -524,6 +524,7 @@ namespace desres { namespace msys {
 
     int abi_version();
 
+    void ReplaceTablesWithSortedTerms(SystemPtr mol);
 }}
 
 #endif

@@ -230,6 +230,10 @@ namespace desres { namespace msys {
 
     typedef std::shared_ptr<TermTable> TermTablePtr;
 
+    // Construct a new table with terms sorted by atom ids.
+    // Replace the table in the parent system with the sorted version.
+    // Return the new table.
+    TermTablePtr ReplaceTableWithSortedTerms(TermTablePtr table);
 }}
 
 #endif

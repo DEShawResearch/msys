@@ -2615,6 +2615,18 @@ class Main(unittest.TestCase):
         self.assertEqual( m.atom(3)['foo'], 3.14 )
         self.assertEqual( m.bond(1)['bar'], 42)
 
+    def testReplaceWithSortedTerms(self):
+        mol = msys.Load('tests/files/1vcc.mae')
+        perm = NP.random.permutation(mol.natoms).tolist()
+        new = mol.clone(perm)
+        self.assertFalse(all(t.id == t.atoms[0].id for t in new.table('nonbonded').terms))
+        params1 = { t.atoms[0] : t['sigma'] for t in new.table('nonbonded').terms }
+        new.table('nonbonded').replaceWithSortedTerms()
+        self.assertTrue( all(t.id == t.atoms[0].id for t in new.table('nonbonded').terms))
+        params2 = { t.atoms[0] : t['sigma'] for t in new.table('nonbonded').terms }
+        self.assertEqual(params1, params2)
+
+
     def testRemoveTable(self):
         m=msys.CreateSystem()
         a=m.addAtom()

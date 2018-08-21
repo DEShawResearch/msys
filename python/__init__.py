@@ -733,6 +733,12 @@ class TermTable(object):
         '''
         self._ptr.coalesce()
 
+    def replaceWithSortedTerms(self):
+        ''' Replace table in self.system with a version of self that has terms sorted
+        by atom ids.
+        '''
+        return TermTable(self._ptr.replaceWithSortedTerms())
+
     @property
     def props(self):
         ''' Table properties '''
@@ -1451,7 +1457,7 @@ class System(object):
         also be shared in the new system.
         '''
         ptr = self._ptr
-        if not sel:
+        if sel is None:
             ids = ptr.atomsAsList()
         elif isinstance(sel, str):
             ids = ptr.selectAsList(sel)
