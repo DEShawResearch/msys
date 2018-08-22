@@ -5,8 +5,8 @@ import sys
 env=env.Clone()
 
 opts=Variables()
-opts.Add("MSYS_WITHOUT_LPSOLVE", "without lpsolve support?")
-opts.Add("MSYS_WITHOUT_INCHI", "without compiled-in inchi support?")
+opts.Add("MSYS_WITH_LPSOLVE", "include lpsolve support?", os.getenv('MSYS_WITH_LPSOLVE'))
+opts.Add("MSYS_WITH_INCHI", "include inchi support?", os.getenv('MSYS_WITH_INCHI'))
 opts.Add("MSYS_BOOST_SUFFIX", "suffix for boost libraries (e.g. -mt)")
 opts.Add("MSYS_BOOST_PYTHON_SUFFIX", "suffix for boost libraries (e.g. -py)")
 
@@ -28,7 +28,7 @@ else:
 if env['PLATFORM'] == 'darwin':
     env.AppendUnique(LIBS=schrod_osx_libs)
 
-if not env.get('MSYS_WITHOUT_LPSOLVE'):
+if env.get('MSYS_WITH_LPSOLVE'):
     env.AppendUnique(LIBS=['lpsolve55'])
 
 bsx=env.get('MSYS_BOOST_SUFFIX', '')
@@ -100,23 +100,23 @@ sdf/export.cxx
 sdf/import.cxx
 ''')
 
-if env.get('MSYS_WITHOUT_LPSOLVE'):
-    lpenv=env.Clone()
-    lpenv.Append(CPPDEFINES=['MSYS_WITHOUT_LPSOLVE'])
-    lpobjs=lpenv.AddObject(['analyze.cxx'])
-else:
+if env.get('MSYS_WITH_LPSOLVE'):
     lpobjs=env.AddObject(Split('''
 analyze.cxx
 analyze/bond_orders.cxx
 '''))
+else:
+    lpenv=env.Clone()
+    lpenv.Append(CPPDEFINES=['MSYS_WITHOUT_LPSOLVE'])
+    lpobjs=lpenv.AddObject(['analyze.cxx'])
 
-if env.get("MSYS_WITHOUT_INCHI"):
+if env.get("MSYS_WITH_INCHI"):
+    inchi = env.AddObject('inchi.cxx')
+    env.Append(LIBS=['inchi'])
+else:
     inchienv = env.Clone()
     inchienv.Append(CPPDEFINES='MSYS_WITHOUT_INCHI'.split())
     inchi = inchienv.AddObject('inchi.cxx')
-else:
-    inchi = env.AddObject('inchi.cxx')
-    env.Append(LIBS=['inchi'])
 
 def get_shlib_version():
     import subprocess

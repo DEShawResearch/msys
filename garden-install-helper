@@ -33,6 +33,8 @@ loadmodules() {
         $SCONSUTILS/lib-python \
 
     export PYTHONVER=27,36
+    export MSYS_WITH_LPSOLVE=1
+    export MSYS_WITH_INCHI=1
 }
 
 genmodules() {
