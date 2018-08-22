@@ -3148,6 +3148,7 @@ class Main(unittest.TestCase):
         atoms_B = [b0,b1,b2,b3,b4,b5,b6,b7]
         graph_A = msys.Graph(atoms_A)
         graph_B = msys.Graph(atoms_B)
+        self.assertEqual(sorted(atoms_B), sorted(graph_B.atoms()))
         self.assertTrue(graph_A != graph_B)
         # Test match
         matches = graph_A.match(graph_B)

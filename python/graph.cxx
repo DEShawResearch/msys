@@ -37,6 +37,9 @@ namespace {
         }
         return outer_L;
     }
+    list graph_atoms(Graph const& g) {
+        return to_python(g.atoms());
+    }
 }
 
 namespace desres { namespace msys { 
@@ -50,7 +53,7 @@ namespace desres { namespace msys {
             .def("create",  create).staticmethod("create")
             .def("hash", hash)
             .def("size", &Graph::size)
-            .def("atoms", &Graph::atoms, return_const())
+            .def("atoms", graph_atoms)
             .def("system", &Graph::system)
             .def("match", match)
             .def("matchAll", matchAll)
