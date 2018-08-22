@@ -3085,6 +3085,12 @@ class Main(unittest.TestCase):
                     msg=msg%(name, k, str([i for i in v if i not in match]), str([i for i in match if i not in v]))
                     self.assertTrue(False,msg)
 
+    def testGraphDistinctAtoms(self):
+        mol = msys.CreateSystem()
+        mol.addAtom().atomic_number = 2
+        with self.assertRaises(RuntimeError):
+            msys.Graph([mol.atom(0), mol.atom(0)])
+
     def testGraph(self):
         sys_A = msys.CreateSystem()
         res = sys_A.addResidue()

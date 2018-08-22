@@ -3,6 +3,7 @@
 #include <queue>
 #include <sstream> // for ostringstream
 #include <iostream> // for debugging
+#include <unordered_set>
 
 using namespace desres::msys;
 
@@ -42,6 +43,10 @@ GraphPtr Graph::create(SystemPtr sys, const IdList& atoms) {
 Graph::Graph(SystemPtr sys, const IdList& atoms) {
     typedef std::map<std::pair<int,Id>, Id> attrHash;
     typedef std::multimap<Id,Id> countMap;
+
+    if (std::unordered_set<Id>(atoms.begin(), atoms.end()).size() != atoms.size()) {
+        MSYS_FAIL("atoms must be distinct");
+    }
 
     _sys = sys;
     attrHash hash_to_idx;
