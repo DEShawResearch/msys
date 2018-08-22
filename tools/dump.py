@@ -37,7 +37,7 @@ after the inputs files.
 ''' % diff_opts
 
 def call_sqlite3(cmd, stdout=sys.stdout, stderr=None):
-    p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    p = subprocess.Popen(cmd, universal_newlines=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     p_stdout, p_stderr = p.communicate()
 
     def should_remove_line(line):
@@ -305,15 +305,17 @@ def main():
         p.add_argument('ifiles', nargs=2, help='structure file')
         args = p.parse_args()
         kwds = dict(without_provenance=True, without_forcefield=True, without_paraminfo=True, reorder=True)
-        kwds.update(args.__dict__)
+        for k, v in args.__dict__.items():
+            if v:
+                kwds[k] = v
         diff_main(**kwds)
 
 def dump_main(ifile, **kwds):
         dmsdump( ifile, sys.stdout, **kwds)
 
 def diff_main(ifiles, **kwds):
-    out1 = tempfile.NamedTemporaryFile()
-    out2 = tempfile.NamedTemporaryFile()
+    out1 = tempfile.NamedTemporaryFile(mode='w+')
+    out2 = tempfile.NamedTemporaryFile(mode='w+')
     dmsdump(ifiles[0], out1, **kwds)
     dmsdump(ifiles[1], out2, **kwds)
     out1.flush()
