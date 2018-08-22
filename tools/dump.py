@@ -1,5 +1,11 @@
-'''
+from __future__ import print_function
+import os
+import subprocess
+import sys
+import sqlite3
+import tempfile
 
+dump_doc = '''
 dmsdump [ options ] input.dms
 
 dms-dump generates a textual representation of a dms file that can be
@@ -18,12 +24,17 @@ file in order to make this happen:
    each line.
 '''
 
-from __future__ import print_function
-import optparse
-import subprocess
-import sys
-import sqlite3
+diff_opts = "--without-provenance --without-forcefield --without-paraminfo --reorder" 
+diff_doc = '''
+Writes to stdout a Unix diff of the result of running dms-dump
+on ``file1.dms`` and ``file2.dms``.  The environment variable
+``DMSDIFF`` can be used to specify an alternate file comparison
+utility.
 
+The options %s
+will be passed along to dms-dump, along with any other arguments
+after the inputs files.
+''' % diff_opts
 
 def call_sqlite3(cmd, stdout=sys.stdout, stderr=None):
     p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
@@ -119,6 +130,8 @@ def dmsdump(ipath, out, without_provenance = False,
                         without_paraminfo = False,
                         without_pos = False,
                         reorder = False ):
+    if not os.path.isfile(ipath):
+        raise IOError("No dms file at '%s'" % ipath)
     cmd='sqlite3 -header'.split()
     cmd.append(ipath)
     conn = sqlite3.connect(ipath)
@@ -264,24 +277,48 @@ def dmsdump(ipath, out, without_provenance = False,
             sql='select "%s", %s from %s' % (blk, ','.join(params), blk)
             call_sqlite3(cmd + [sql], stdout=out)
 
-def main():
-    parser = optparse.OptionParser( usage=__doc__)
-    parser.add_option('--without-provenance', help="don't write provenance",
-            action="store_true", default=False)
-    parser.add_option('--without-groups', help="don't write grp_xxx columns",
-            action="store_true", default=False)
-    parser.add_option('--without-forcefield', help="don't write forcefield info",
-            action="store_true", default=False)
-    parser.add_option('--without-paraminfo', help="don't write memo, type, ff, comment, or typekey in terms",
-            action="store_true", default=False)
-    parser.add_option('--without-pos', help="don't write pos and vel",
-            action="store_true", default=False)
-    parser.add_option('--reorder', default=False, action="store_true", 
+def parser():
+    from argparse import ArgumentParser
+    parser = ArgumentParser()
+    parser.add_argument('--without-provenance', help="don't write provenance",
+            action="store_true")
+    parser.add_argument('--without-groups', help="don't write grp_xxx columns",
+            action="store_true")
+    parser.add_argument('--without-forcefield', help="don't write forcefield info",
+            action="store_true")
+    parser.add_argument('--without-paraminfo', help="don't write memo, type, ff, comment, or typekey in terms",
+            action="store_true")
+    parser.add_argument('--without-pos', help="don't write pos and vel",
+            action="store_true")
+    parser.add_argument('--reorder', action="store_true", 
             help='order ouput of terms by particle id')
+    return parser
 
-    opts, args = parser.parse_args()
-    if len(args) != 1:
-        parser.error("Incorrect number of arguments")
+def main():
+    prog = os.path.basename(sys.argv[0])
+    p = parser()
+    if prog.startswith('dms-dump'):
+        p.add_argument('ifile', help='structure file')
+        args = p.parse_args()
+        dump_main(**args.__dict__)
+    elif prog.startswith('dms-diff'):
+        p.add_argument('ifiles', nargs=2, help='structure file')
+        args = p.parse_args()
+        kwds = dict(without_provenance=True, without_forcefield=True, without_paraminfo=True, reorder=True)
+        kwds.update(args.__dict__)
+        diff_main(**kwds)
 
-    dmsdump( args[0], sys.stdout, **opts.__dict__)
+def dump_main(ifile, **kwds):
+        dmsdump( ifile, sys.stdout, **kwds)
+
+def diff_main(ifiles, **kwds):
+    out1 = tempfile.NamedTemporaryFile()
+    out2 = tempfile.NamedTemporaryFile()
+    dmsdump(ifiles[0], out1, **kwds)
+    dmsdump(ifiles[1], out2, **kwds)
+    out1.flush()
+    out2.flush()
+    diff = os.getenv('DMSDIFF', 'diff')
+    subprocess.call(['diff', out1.name, out2.name])
+
 
