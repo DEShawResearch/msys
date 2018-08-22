@@ -1,3 +1,10 @@
+1.7.240c7 Added ReplaceTableWithSortedTerms.
+          Implement dms-diff in python instead of shell.
+          Fix the Graph.atoms method.
+          Use inchi/1.05.
+          Make msys.Graph check for duplicates.
+          Tweaks to the build for external users.
+
 1.7.239c7 DESRESCode#3974: Fix some broken tool scripts.
 
 1.7.238c7 Fix broken lib-python3 from 1.7.237.
