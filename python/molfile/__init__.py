@@ -15,6 +15,16 @@ Random access to frames (only dtr files support this currently)::
 
     f27 = molfile.dtr.read('/path/to/foo.dtr').frame(27) # 0-based index
 
+Write a trajectory to a frameset (dtr)::
+
+    f = msys.molfile.Frame(natoms)
+    w = msys.molfile.dtr.write('output.dtr', natoms=natoms)
+    for i, xyz in enumerate(xyzs):
+        f.pos[:] = xyz
+        f.time = i
+        w.frame(f)
+        w.close()
+
 Convert an mae file to a pdb file::
 
     input=molfile.mae.read('foo.mae')
