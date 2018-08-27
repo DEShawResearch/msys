@@ -49,6 +49,21 @@ namespace desres { namespace msys { namespace pfx {
 ( ( (m11)*(m22)*(m33) + (m12)*(m23)*(m31) + (m13)*(m21)*(m32) ) \
   - ( (m11)*(m23)*(m32) + (m12)*(m21)*(m33) + (m13)*(m22)*(m31) ) )
 
+    template <typename scalar>
+    bool inverse_3x3(scalar* dst, const scalar* src) {
+        const scalar a = src[0]; const scalar b = src[1]; const scalar c = src[2];
+        const scalar d = src[3]; const scalar e = src[4]; const scalar f = src[5];
+        const scalar g = src[6]; const scalar h = src[7]; const scalar i = src[8];
+        const scalar det = DET_3x3(a,b,c,d,e,f,g,h,i);
+        if (det==0) return false;
+        const scalar idet = scalar(1)/det;
+        dst[0] = e*i - f*h; dst[1] = c*h - b*i; dst[2] = b*f - c*e;
+        dst[3] = f*g - d*i; dst[4] = a*i - c*g; dst[5] = c*d - a*f;
+        dst[6] = d*h - e*g; dst[7] = b*g - a*h; dst[8] = a*e - b*d;
+        for (int i=0; i<9; i++) dst[i] *= idet;
+        return true;
+    }
+
     /* compute the alignment matrix by the method of Kabsch (1976, 1978).
      * Returned matrix is in row-major format, such that the matrix-vector
      * product R x_pos = x_ref; i.e. mat superposes pos onto ref.  ref 
@@ -150,21 +165,6 @@ namespace desres { namespace msys { namespace pfx {
         return W ? std::sqrt(R/W) : 0;
     }
 
-    inline void inverse_3x3(double* dst, const double* src) {
-        double u[9], w[3], v[9], ut[9];
-        const double thresh = DBL_EPSILON;
-        memcpy(u, src, sizeof(u));
-        svd_3x3(u, w, v);
-        for (int i=0; i<3; i++) {
-            double ww = w[i] > thresh ? 1.0 / w[i] : 0;
-            for (int j=0; j<3; j++) {
-                u[3*j+i] *= ww;
-            }
-        }
-        trans_3x3(ut, u);
-        matmult_3x3(dst, v, ut);
-        for (int i=0; i<9; i++) if (fabs(dst[i]) < thresh) dst[i] = 0;
-    }
 }}}
 
 #endif

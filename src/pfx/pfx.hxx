@@ -155,94 +155,27 @@ namespace desres { namespace msys { namespace pfx {
             glue(n, atoms);
         }
 
-        template <typename T>
-        static T vecdot(const T* a, const T* b) {
-            return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
-        }
-        template <typename T>
-        static void normalize(T* v) {
-            T norm = std::sqrt(vecdot(v, v));
-            if (norm > 0) {
-                v[0] /= norm;
-                v[1] /= norm;
-                v[2] /= norm;
-            }
-        }
-
-        template <typename T>
-        static bool check_triclinic(const T* cell) {
-           for (int i=0; i<3; i++) {
-               int j = (i+1)%3;
-               T dp = vecdot(cell+3*i, cell+3*j);
-               if (fabs(dp) > 1e-5) return true;
-           }
-           return false;
-        }
-
-        template <typename T>
-        static void construct_orthonormal_basis(const T* cell, T* basis) {
-            std::copy(cell, cell+9, basis);
-            T * e1 = basis+0, *e2 = basis+3, *e3 = basis+6;
-            // e1 parallel to b1
-            normalize(e1);
-            // e2: subtract projection of b2 along e1
-            {
-                T p1 = vecdot(e1, e2);
-                for (int i=0; i<3; i++) e2[i] -= p1*e1[i];
-                normalize(e2);
-            }
-            // e3: subtract projection of b3 along e1 and e2
-            {
-                T p1 = vecdot(e1, e3);
-                T p2 = vecdot(e2, e3);
-                printf("e1 %f %f %f\n", e1[0], e1[1], e1[2]);
-                printf("e2 %f %f %f\n", e2[0], e2[1], e2[2]);
-                printf("e3 %f %f %f\n", e3[0], e3[1], e3[2]);
-                printf("p1 %f p2 %f\n", p1, p2);
-                for (int i=0; i<3; i++) e3[i] -= p1*e1[i] + p2*e2[i];
-                printf("e3 %f %f %f\n", e3[0], e3[1], e3[2]);
-                normalize(e3);
-            }
-        }
-
         // Perform previously specified wrapping and alignment operations
         // on the provided data.  pos must be of size Nx3 where N==size().
         // cell, if non-NULL, must be of size 3x3 and hold unit cell vectors
         // in C-major rows.  vel, if non-NULL, must be of size Nx3.
         template <typename scalar, typename cell_scalar>
         void apply(scalar* pos, cell_scalar* cell, scalar* vel) const {
-            scalar box[9], proj[9], ocell[9];
-            bool is_triclinic = false;
+            scalar box[9], inv[9];
             if (!pos) return;
             const double* wts = _weights.empty() ? nullptr : &_weights[0];
-
             if (cell) {
-                // disable triclinic for now
-#if 0
-                if ((is_triclinic = check_triclinic(cell))) {
-                    double dbox[9], dinv[9];
-                    scalar inv[9];
-                    std::copy(cell, cell+9, dbox);
-                    trans_3x3(ocell, cell);
-                    inverse_3x3(dinv, dbox);
-                    trans_3x3(inv, dinv);
-                    apply_rotation(size(), pos, inv);
-                    memset(box, 0, sizeof(box));
-                    box[0] = box[4] = box[8] = 1;
-                } else {
-                    std::copy(cell, cell+9, box);
+                trans_3x3(box, cell);
+                if (!inverse_3x3(inv, box)) {
+                    memset(inv, 0, sizeof(inv));
                 }
-#else
-                    std::copy(cell, cell+9, box);
-#endif
+                std::copy(cell, cell+9, box);
 
-                // compute projection for wrapping
-                make_projection(box, proj);
-                // bond wrapping
-                fix_bonds(box, proj, pos);
+                // fix bonds
+                fix_bonds(box, inv, pos);
                 // apply glue
                 for (unsigned i=0, n=_glue.size(); i<n; i++) {
-                    _glue[i].join(box, proj, pos);
+                    _glue[i].join(box, inv, pos);
                 }
             }
             // align or center
@@ -252,28 +185,27 @@ namespace desres { namespace msys { namespace pfx {
                 apply_shift(size(), pos, -center[0], -center[1], -center[2]);
                 if (!_aref.empty()) {
                     // alignment
-                    scalar mat[9];
+                    scalar mat[9], matT[9];
                     compute_alignment(_align.size(), &_align[0], &_aref[0],
                                       pos, mat, wts);
                     apply_rotation(size(), pos, mat);
-                    if (cell) {
-                        apply_rotation(3, box, mat);
-                        apply_rotation(3, proj, mat);
-                    }
                     if (vel) {
                         apply_rotation(size(), vel, mat);
+                    }
+                    if (cell) {
+                        apply_rotation(3, box, mat);
+                        trans_3x3(matT, mat);
+                        // compute inv <- inv @ mat'
+                        apply_rotation(3, matT, inv);
+                        std::copy(matT, matT+9, inv);
                     }
                 }
             }
             if (cell) {
                 // wrap frags
-                wrap_frags(box, proj, pos);
+                wrap_frags(box, inv, pos);
 
                 // copy back to input
-                if (is_triclinic) {
-                    apply_rotation(size(), pos, ocell);
-                    apply_rotation(3,      box, ocell);
-                }
                 std::copy(box, box+9, cell);
 
             }
