@@ -1,5 +1,5 @@
 from __future__ import print_function
-
+from collections import defaultdict
 import sys, msys
 import unittest as UT
 from msys import knot, groups
@@ -150,6 +150,21 @@ class TestBasic(TestCase):
         ''' There should be no massless atoms with atomic number > 0.'''
         massless_atoms = [atom.id for atom in self.mol.atoms if atom.atomic_number > 0 and atom.mass == 0]
         self.assertTrue(len(massless_atoms)==0, "Found massless atoms with atomic number > 0: %s" % massless_atoms)
+
+    def testVirtualsInMultipleVirtualTables(self):
+        ''' Virtuals should be in only one 'virtual_*' table '''
+        # Ticket number Anton2#5176
+        atomid_to_vtables = defaultdict(list)
+        vtables = [t for t in self.mol.tables if t.name.startswith('virtual_')]
+        vatoms = self.mol.select('atomicnumber 0')
+        for table in vtables:
+            for va in vatoms:
+                terms = table.findWithAny([va])
+                if len(terms) > 0:
+                    atomid_to_vtables[va.id] += [table.name]
+        virtuals_in_multiple_vtables = [aid for (aid, tables) in atomid_to_vtables.items()
+                                       if len(tables) > 1]
+        self.assertTrue(len(virtuals_in_multiple_vtables)==0, "Found virtuals that belong to multiple virtual_* tables: %s" % virtuals_in_multiple_vtables)
 
 
 class TestDesmond(TestCase):
