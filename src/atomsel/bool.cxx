@@ -7,7 +7,6 @@ using namespace desres::msys::atomsel;
 typedef void (*eval_t)(Selection& s, System* mol);
 
 static void eval_all(Selection& s, System* mol) {
-    s.fill();
 }
 
 static void eval_none(Selection& s, System* mol) {

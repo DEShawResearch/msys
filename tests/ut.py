@@ -609,6 +609,17 @@ class AtomselCoverage(unittest.TestCase):
             a.residue.name=resname
             self.assertEqual(len(m.select('ion')), 1, 'failed for %s' % resname)
 
+    def testAllBoolean(self):
+        heavy = [a.id for a in self.mol.atoms if a.atomic_number > 1]
+        self.check('atomicnumber > 1', heavy)
+        self.check('all and atomicnumber > 1', heavy)
+        self.check('atomicnumber > 1 and all', heavy)
+
+        self.check('none and atomicnumber > 1', [])
+        self.check('atomicnumber > 1 and none', [])
+        self.check('none or atomicnumber > 1', heavy)
+        self.check('atomicnumber > 1 or none', heavy)
+
     def testAnum(self):
         self.check('atomicnumber 6', [0])
         self.check('atomicnumber 1', [1])
