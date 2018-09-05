@@ -1,3 +1,5 @@
+1.7.243c7 Python3.7.
+
 1.7.242c7 Atomselection bug for 'all'.
 
 1.7.241c7 Fix for dms-dump.
