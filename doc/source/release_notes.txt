@@ -2,6 +2,8 @@
         Change old "ion" selection to "legacy_ion".
         Handle ComputeTopologicalIds for systems with crazy pseudos.
         Handle nonconsecutive resids in mol2 files.
+        Avoid crashing in find-contacts for unreasonable coordinates.
+        Fix for undecodeable bytes in DtrReader.keyvals [DESRESCode#4002].
 
 1.7.243 Python3.7.
 
