@@ -602,6 +602,13 @@ class AtomselCoverage(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             self.mol.select('')
 
+    def testIons(self):
+        m=msys.CreateSystem()
+        a=m.addAtom()
+        for resname in 'Cl-', 'K+':
+            a.residue.name=resname
+            self.assertEqual(len(m.select('legacy_ion')), 1, 'failed for %s' % resname)
+
     def testAllBoolean(self):
         heavy = [a.id for a in self.mol.atoms if a.atomic_number > 1]
         self.check('atomicnumber > 1', heavy)
