@@ -1,103 +1,105 @@
-1.7.243c7 Python3.7.
+1.7.244 Make "ion" selection atomic number and bond based.
 
-1.7.242c7 Atomselection bug for 'all'.
+1.7.243 Python3.7.
 
-1.7.241c7 Fix for dms-dump.
+1.7.242 Atomselection bug for 'all'.
+
+1.7.241 Fix for dms-dump.
           Docs for molfile trajectory writing.
           Triclinic support for pfx.
           Add dms-validate check for virtuals in multiple virtual tables.
 
-1.7.240c7 Added ReplaceTableWithSortedTerms.
+1.7.240 Added ReplaceTableWithSortedTerms.
           Implement dms-diff in python instead of shell.
           Fix the Graph.atoms method.
           Use inchi/1.05.
           Make msys.Graph check for duplicates.
           Tweaks to the build for external users.
 
-1.7.239c7 DESRESCode#3974: Fix some broken tool scripts.
+1.7.239 DESRESCode#3974: Fix some broken tool scripts.
 
-1.7.238c7 Fix broken lib-python3 from 1.7.237.
+1.7.238 Fix broken lib-python3 from 1.7.237.
           DESRESCode#3964: fix mol2 reading and writing.
 
-1.7.237c7 Use new sconsutils; should affect developers only.
+1.7.237 Use new sconsutils; should affect developers only.
 
-1.7.235c7 Add a 'moe' option to msys.SaveMol2 to output guanidinium
+1.7.235 Add a 'moe' option to msys.SaveMol2 to output guanidinium
           groups MOE can will parse correctly. This option is turned
           on by default as it seems _most_ tools handle this variant
           fine.
 
-1.7.233c7 Fix dms-dump (broken since 1.7.230).
+1.7.233 Fix dms-dump (broken since 1.7.230).
           Added SpatialHash::findPairlist.
           Better verbosity API for validate.
 
-1.7.232c7 Use python/2.7.15 and 3.6.6 megamodules.
+1.7.232 Use python/2.7.15 and 3.6.6 megamodules.
           Update boost from 1.63 to 1.67.
           Add bindings for System.addProvenance.
 
-1.7.230c7 Added virtual_lc1 schema
+1.7.230 Added virtual_lc1 schema
           Fix for dms-dump with .sqliterc files
           Unused param fix for v2 compatibility
 
-1.7.229c7 Added dtr_frame_{from,as}_bytes.
+1.7.229 Added dtr_frame_{from,as}_bytes.
 
-1.7.228c7 Added msys.FormatDMS.
+1.7.228 Added msys.FormatDMS.
           Pickled systems use zlib; 3-20x smaller pickles.
           FindDistinctFragment returns full map of equivalent fragments.
           
-1.7.227c7 Support K+ as an ion residue name.
+1.7.227 Support K+ as an ion residue name.
           Include tempered_nonbonded and modified_interaction in dms-dump
           Add table schemas for constraint_ahNR
 
-1.7.226c7 Fix molfile.StkFile for python3
+1.7.226 Fix molfile.StkFile for python3
           Use new megamodules (-03c7).
           Check for atom count consistency in stks.
           dtr-validate: add check for constrained hydrogens.
           Add LoadMany for concatenated dms files.
 
-1.7.225c7 Use 1/1024 fs as the time quantum for dtr trajectory processing.
+1.7.225 Use 1/1024 fs as the time quantum for dtr trajectory processing.
           Make msys.SaveDMS(..., unbuffered=True) around 10x faster.
           Remove vestigial ExportDMSMany reference.
           Make SystemImporter python bindings work.
 
-1.7.224c7 msys.ConvertFromOEChem will no longer complain about
+1.7.224 msys.ConvertFromOEChem will no longer complain about
           molecules not having hydrogens that don't actually have
           hydrogens, e.g., O=S=O.
           msys.ConvertToOEChem will always set the dimension of the
           molecule to 3D as msys really only traffics in 3D molecules.
 
-1.7.223c7 Yet another fix for double precision in timekeys files.
+1.7.223 Yet another fix for double precision in timekeys files.
           Expose error message from numpy version clashes
 
-1.7.222c7 msys.ConvertToOEChem can take a list of atoms to convert to convert a subset much faster.
+1.7.222 msys.ConvertToOEChem can take a list of atoms to convert to convert a subset much faster.
 
-1.7.221c7 msys.Convert(To/From)OEChem will preserve the molecule title
+1.7.221 msys.Convert(To/From)OEChem will preserve the molecule title
           Fix SaveDMS for unbuffered=True.
           Added (..., sanitize=True) option to msys.ConvertToRdkit.
 
-1.7.220c7 Added msys.ConvertFromOEChem (DESRESCode#3785).
+1.7.220 Added msys.ConvertFromOEChem (DESRESCode#3785).
 
-1.7.219c7 Report strerror(errno) when reading dms files (DESRESInfra#39849)
+1.7.219 Report strerror(errno) when reading dms files (DESRESInfra#39849)
 
-1.7.218c7 Write .dms.gz files using gzip.  DESRESCode#3771.
+1.7.218 Write .dms.gz files using gzip.  DESRESCode#3771.
           Added rigid_explicitN schema.
           All dms-tools and msys.Load support jobids as arguments.
           Sort atoms and bonds by atom ids.
           More precise handling of timekeys in large stks.
 
-1.7.216c7 Fixing msys.ConvertToRdkit to work with RDKit 2017.09.
+1.7.216 Fixing msys.ConvertToRdkit to work with RDKit 2017.09.
           Sanity check added to Chem.DetectBondStereoChemistry was
           being tripped and needed to be worked around.
 
           Refactored test cases and making sure to run RDKit and
           OEChem conversion test cases.
 
-1.7.215c7 Removed v7 stk cache code and added utility to rename
+1.7.215 Removed v7 stk cache code and added utility to rename
           a dtr in an stk cache file.
 
-1.7.214c7 Make msys.InChI include stereo by default (SNon=True).
+1.7.214 Make msys.InChI include stereo by default (SNon=True).
           Fix mol2 handling of resids (DESRESCode#3747).
 
-1.7.213c7 Bump megamodule versions.
+1.7.213 Bump megamodule versions.
           Don't filter metals in bond order assigner (DESRESCode#3713).
           Ignore excluded knots in dms-validate (DESRESCode#3566).
           Added an ignore_excluded option to findContactIds()
@@ -105,23 +107,23 @@
           Fix pdb download.
           Expose SystemImporter from python.
 
-1.7.212c7 Added msys.ConvertToOEChem.
+1.7.212 Added msys.ConvertToOEChem.
           Added --without-pos option to dms-dump.
 
-1.7.211c7 Optionally compute and store resonant charge and bond order.
+1.7.211 Optionally compute and store resonant charge and bond order.
 
-1.7.210c7 python3 support.
+1.7.210 python3 support.
 
-1.7.208c7 Added molfile.list_fields()
+1.7.208 Added molfile.list_fields()
           Make DtrReader.frame(...) not panic if the FORMAT is empty.
           Fixed reading of dms files with table properties.
           Use new sphinx-rtd-theme for fixed doc search.
           Avoid a deadly exception when writing a dms with missing nbtypes.
           Handle variable-sized frames in etr files.
 
-1.7.207c7 DESRESCode#3590 - changes from schrodinger.
+1.7.207 DESRESCode#3590 - changes from schrodinger.
 
-1.7.206c7 Bring back GuessHydrogenPositions
+1.7.206 Bring back GuessHydrogenPositions
           New dms-solvate for those who can't use viparr.
           dms-tile checks for reasonable box size.
           DESRESCode#3571 : Added dms-validate case for massless atoms
@@ -129,10 +131,10 @@
           Bugfix in bond order assigner
           Make old, non-monotonic stks only generate warning.
 
-1.7.205c7 Added PyCapsule interface for easier pybind11 integration.
+1.7.205 Added PyCapsule interface for easier pybind11 integration.
           Added msys.System.hash() function to replace dms-hash.
 
-1.7.204c7 Added Cl- to 'ion' atom selection.
+1.7.204 Added Cl- to 'ion' atom selection.
           Using cent7 garden modules.
 
 1.7.203 Fix for dms-frame broken by DESRESCode#3486 in previous release.
@@ -469,7 +471,7 @@
 1.7.61 IMPROVED: Across-the-board speedups for all atom selections.
        IMPROVED: Notable improvements to "nearest" selections.
        NEW: "pbnearest" selection.
-       NEW: lc5-lc7 schemas.
+       NEW: lc5-l schemas.
        FIXED: Loading webpdb crashed in 1.7.60.
 
 1.7.60 NEW: dms-find-knot has a --untie option to remove knots.
