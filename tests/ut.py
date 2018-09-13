@@ -1438,6 +1438,12 @@ class Main(unittest.TestCase):
         ids = msys.ComputeTopologicalIds(mol)
         self.assertEqual(len(ids), mol.natoms)
 
+    def testTopoIdsPdffMethane(self):
+        mol = msys.LoadDMS('tests/files/methane-pdff.dms')
+        for a in mol.select('atomicnumber 0'): a.atomic_number = 99
+        tids = msys.ComputeTopologicalIds(mol)
+        anums = [a.atomic_number for a in mol.atoms]
+
     def testGuessHydrogenPositions(self):
         mol = msys.LoadDMS('tests/files/ww.dms')
         hs = mol.select('hydrogen and not water')
