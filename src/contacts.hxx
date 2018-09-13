@@ -102,11 +102,23 @@ namespace desres { namespace msys {
         Float xsize = max[0]-xmin;
         Float ysize = max[1]-ymin;
         Float zsize = max[2]-zmin;
-        const Float ir = 1/rad;
+        Float ir = 1/rad;
         const Float r2 = rad*rad;
         int nx = (int)(xsize*ir)+1;
         int ny = (int)(ysize*ir)+1;
         int nz = (int)(zsize*ir)+1;
+
+        static const int maxdim = 100;
+        if (nx<=0 || ny<=0 || nz<=0 || nx>maxdim || ny>maxdim || nz>maxdim) {
+            Float xmax = max[0];
+            Float ymax = max[1];
+            Float zmax = max[2];
+            Float dbig = std::max(std::max(xmax-xmin, ymax-ymin), zmax-zmin);
+            ir = Float(maxdim) / dbig;
+            nx = (xmax-xmin)*ir + 1;
+            ny = (ymax-ymin)*ir + 1;
+            nz = (zmax-zmin)*ir + 1;
+        }
         int nvoxel = nx*ny*nz;
 
         voxel* mesh = new voxel[nvoxel];
