@@ -32,13 +32,15 @@ using boost::python::ssize_t;
 namespace {
 #if PY_MAJOR_VERSION >= 3
     auto py_string_check = [](PyObject* o) { return PyUnicode_Check(o); };
-    auto py_from_string_size = PyUnicode_FromStringAndSize;
+    auto py_bytes_from_string_size = PyBytes_FromStringAndSize;
+    auto py_string_from_string_size = PyUnicode_FromStringAndSize;
     auto py_as_string = PyUnicode_AsUTF8;
     auto py_as_string_size = PyBytes_AsStringAndSize;
     auto py_as_bytes = PyBytes_FromStringAndSize;
 #else
     auto py_string_check = [](PyObject* o) { return PyString_Check(o); };
-    auto py_from_string_size = PyString_FromStringAndSize;
+    auto py_bytes_from_string_size = PyString_FromStringAndSize;
+    auto py_string_from_string_size = PyString_FromStringAndSize;
     auto py_as_string = PyString_AsString;
     auto py_as_string_size = PyString_AsStringAndSize;
     auto py_as_bytes = PyString_FromStringAndSize;
@@ -341,8 +343,11 @@ namespace {
                     val.get((double*)PyArray_DATA(arr)); 
                     break;
                 case dtr::Key::TYPE_CHAR:
+                    arr = py_string_from_string_size(
+                        reinterpret_cast<const char*>(val.data), val.count);
+                    break;
                 case dtr::Key::TYPE_UCHAR:
-                    arr = py_from_string_size(
+                    arr = py_bytes_from_string_size(
                         reinterpret_cast<const char*>(val.data), val.count);
                     break;
                 default:;

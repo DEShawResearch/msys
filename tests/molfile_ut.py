@@ -84,6 +84,11 @@ class DtrTestCase(unittest.TestCase):
         self.natoms=10000000
         self.writer=molfile.dtr.write(self.PATH, natoms=self.natoms)
 
+    def testCheckpointBytes(self):
+        kv = molfile.DtrReader("/f/a/jobstep/14388415/0/checkpoint.atr").keyvals(0)
+        self.assertEqual(kv["TITLE"], "ANTON")
+        self.assertEqual(kv["ANTON2_CHECKPOINT_CM_TIMES_SQUARE"][:16], b'\x1d\x00\x00\x00Times square')
+
     def testDtrBox(self):
         for dbl in False, True:
             self.setUp()
