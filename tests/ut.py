@@ -971,6 +971,10 @@ class TestValidate(unittest.TestCase):
 
 class Main(unittest.TestCase):
 
+    def testMol2NonconsecutiveResid(self):
+        mol = msys.Load('tests/files/nonconsecutive-resid.mol2')
+        self.assertEqual(mol.nresidues, 301)
+
     def testMol2ChainSplit(self):
         mol = msys.Load('tests/files/complex_aligned.mol2')
         assert mol.nchains == 2, "got %d chains, expected 2" % mol.nchains

@@ -152,10 +152,8 @@ SystemPtr iterator::next() {
                         auto& res = mol->residueFAST(residue_id);
                         res.name = resname;
                         res.resid = resid;
-                    } else if (residue == mol->residueCount()) {
+                    } else if (residue <= mol->residueCount()) {
                         residue_id = residue - 1;
-                    } else {
-                        MSYS_FAIL("Nonconsecutive residue id: " << buf);
                     }
                     Id atmid = mol->addAtom(residue_id);
                     auto& atm = mol->atomFAST(atmid);
