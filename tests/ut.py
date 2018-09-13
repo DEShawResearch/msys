@@ -1440,9 +1440,12 @@ class Main(unittest.TestCase):
 
     def testTopoIdsPdffMethane(self):
         mol = msys.LoadDMS('tests/files/methane-pdff.dms')
-        for a in mol.select('atomicnumber 0'): a.atomic_number = 99
+        #for a in mol.select('atomicnumber 0'): a.atomic_number = 99
         tids = msys.ComputeTopologicalIds(mol)
-        anums = [a.atomic_number for a in mol.atoms]
+        #anums = [a.atomic_number for a in mol.atoms]
+        #print(list(zip(anums, tids)))
+        #from collections import Counter
+        #print(Counter(tids))
 
     def testGuessHydrogenPositions(self):
         mol = msys.LoadDMS('tests/files/ww.dms')

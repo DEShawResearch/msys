@@ -1,5 +1,6 @@
 1.7.244 Make "ion" selection atomic number and bond based.
         Change old "ion" selection to "legacy_ion".
+        Handle ComputeTopologicalIds for systems with crazy pseudos.
 
 1.7.243 Python3.7.
 

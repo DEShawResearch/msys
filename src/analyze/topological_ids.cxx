@@ -6,6 +6,7 @@
 #include "../param_table.hxx"
 #include "../analyze.hxx"
 #include "../graph.hxx"
+#include "../clone.hxx"
 
 using namespace desres::msys;
 
@@ -270,6 +271,20 @@ namespace desres { namespace msys {
     IdList ComputeTopologicalIds(SystemPtr mol) {
         Id maxaid=mol->maxAtomId();
         if(maxaid==0) return IdList();
+
+        // Something deep in the code assumes that atomic numbers aren't zero.  If we
+        // get a molecule like that, change the atomic number to something unlikely so
+        // that we can still get reasonable answers out.
+        SystemPtr newmol;
+        for (auto id : mol->atoms()) {
+            if (mol->atomFAST(id).atomic_number == 0) {
+                if (!newmol) {
+                    newmol = Clone(mol, mol->atoms());
+                    mol = newmol;
+                }
+                mol->atomFAST(id).atomic_number = 127;
+            }
+        }
 
         /* 0) get fragments */
         MultiIdList fragments;
