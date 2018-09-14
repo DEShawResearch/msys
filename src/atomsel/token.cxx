@@ -39,7 +39,7 @@ static std::unordered_map<std::string,std::string> macros = {
     {"amino","protein"},
     {"aromatic","resname HIS PHE TRP TYR"},
     {"basic","resname ARG HIS LYS HSP"},
-    {"bonded","numbonds > 0"},
+    {"bonded","degree > 0"},
     {"buried"," resname ALA LEU VAL ILE PHE CYS MET TRP"},
     {"cg","resname CYT C GUA G"},
     {"charged","basic or acidic"},
@@ -62,7 +62,7 @@ static std::unordered_map<std::string,std::string> macros = {
     // there are too many possible atomic numbers to list.  both amber and charmm have parameters
     // for dozens of monoatomic species and even a few diatomics.  So just exclude organic
     // atoms which are probably never intended to be bare ions, and the noble gases.
-    {"ion", "numbonds 0 and not atomicnumber 0 1 2 5 6 7 8 10 18 36 54 86" },
+    {"ion", "degree 0 and not atomicnumber 0 1 2 5 6 7 8 10 18 36 54 86" },
     {"ions","ion"},
     {"sugar","resname AGLC"},
     {"solvent","not (protein or sugar or nucleic or lipid)"},

@@ -138,7 +138,8 @@ The following selection keywords are available:
   index             integer     `Atom`.id
   mass              float       `Atom`.mass
   name              string      `Atom`.name
-  numbonds          integer     `Atom`.nbonds
+  numbonds          integer     `Atom`.nbonds - includes bonds to pseudoatoms
+  degree            integer     number of bonds to real atoms; 0 for pseudoatoms
   resid             integer     `Residue`.resid
   residue           integer     `Residue`.id
   resname           string      `Residue`.name
@@ -194,7 +195,7 @@ The following are implemented as macros.
   amino         protein
   aromatic      resname HIS PHE TRP TYR
   basic         resname ARG HIS LYS HSP
-  bonded        numbonds > 0
+  bonded        degree > 0
   buried        resname ALA LEU VAL ILE PHE CYS MET TRP
   cg            resname CYT C GUA G
   charged       basic or acidic
@@ -210,7 +211,8 @@ The following are implemented as macros.
   surface       protein and not buried
   lipid         resname DLPE DMPC DPPC GPC LPPC PALM PC PGCL POPC POPE
   lipids        lipid
-  ion           resname AL BA CA Ca CAL CD CES CLA CL Cl CO CS CU Cu CU1 CUA HG IN IOD K MG MN3 MO3 MO4 MO5 MO6 NA Na NAW OC7 PB POT PT RB SOD TB TL WO4 YB ZN ZN1 ZN2
+  legacy_ion           resname AL BA CA Ca CAL CD CES CLA CL 'Cl-' Cl CO CS CU Cu CU1 CUA HG IN IOD K 'K+' MG MN3 MO3 MO4 MO5 MO6 NA Na NAW OC7 PB POT PT RB SOD TB TL WO4 YB ZN ZN1 ZN2
+  ion           degree 0 and not atomicnumber 0 1 2 5 6 7 8 10 18 36 54 86
   ions          ion
   sugar         resname AGLC
   solvent       not (protein or sugar or nucleic or lipid)

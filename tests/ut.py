@@ -608,6 +608,29 @@ class AtomselCoverage(unittest.TestCase):
         for resname in 'Cl-', 'K+':
             a.residue.name=resname
             self.assertEqual(len(m.select('legacy_ion')), 1, 'failed for %s' % resname)
+        a.atomic_number = 9
+        self.assertEqual(m.selectIds('ion'), [0])
+        for n in 0,1,2,5,6,7,8:
+            a.atomic_number = n
+        self.assertEqual(m.selectIds('ion'), [])
+
+    def testDegree(self):
+        m = msys.CreateSystem()
+        a0 = m.addAtom()
+        a1 = m.addAtom()
+        a2 = m.addAtom()
+        a0.atomic_number = 6
+        a1.atomic_number = 0
+        a2.atomic_number = 1
+        a0.addBond(a1)
+        a0.addBond(a2)
+        self.assertEqual(m.selectIds('numbonds 0'), [])
+        self.assertEqual(m.selectIds('numbonds 1'), [1,2])
+        self.assertEqual(m.selectIds('numbonds 2'), [0])
+        self.assertEqual(m.selectIds('degree 0'), [1])
+        self.assertEqual(m.selectIds('degree 1'), [0,2])
+        self.assertEqual(m.selectIds('degree 2'), [])
+
 
     def testAllBoolean(self):
         heavy = [a.id for a in self.mol.atoms if a.atomic_number > 1]

@@ -30,6 +30,19 @@ static int get_numbonds(Query* q, Id i) {
     auto mol = q->mol;
     return mol->bondCountForAtom(i);
 }
+static int get_degree(Query* q, Id i) {
+    auto mol = q->mol;
+    if (mol->atomFAST(i).atomic_number == 0) return 0;
+    int degree = 0;
+    for (auto bid : mol->bondsForAtom(i)) {
+        bond_t const& bnd = mol->bondFAST(bid);
+        if (mol->atomFAST(bnd.other(i)).atomic_number > 0) {
+            ++degree;
+        }
+    }
+    return degree;
+}
+
 static int get_ctnumber(Query* q, Id i) {
     auto mol = q->mol;
     return mol->chainFAST(mol->residueFAST(mol->atomFAST(i).residue).chain).ct+1;
@@ -145,6 +158,7 @@ static const std::unordered_map<std::string, Getter> map = {
     {"index", get_index},
     {"name", get_name},
     {"numbonds", get_numbonds},
+    {"degree", get_degree},
     {"resid", get_resid},
     {"residue", get_residue},
     {"resname", get_resname},
