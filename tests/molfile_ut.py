@@ -89,6 +89,18 @@ class DtrTestCase(unittest.TestCase):
         self.assertEqual(kv["TITLE"], "ANTON")
         self.assertEqual(kv["ANTON2_CHECKPOINT_CM_TIMES_SQUARE"][:16], b'\x1d\x00\x00\x00Times square')
 
+        CHK = 'ANTON2_CHECKPOINT_ITEMS'
+        blob = kv[CHK]
+        tmpdir = tempfile.mkdtemp(dir='/tmp', suffix='.dtr')
+        writer = msys.molfile.DtrWriter(tmpdir, natoms=10)
+        writer.append(kv['CHEMICALTIME'][0], kv)
+        writer.sync()
+        
+        atr1 = molfile.DtrReader(tmpdir)
+        blob1 = atr1.keyvals(0)[CHK]
+        
+        self.assertEqual(blob, blob1)
+
     def testDtrBox(self):
         for dbl in False, True:
             self.setUp()

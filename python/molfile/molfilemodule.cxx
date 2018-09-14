@@ -32,14 +32,12 @@ using boost::python::ssize_t;
 namespace {
 #if PY_MAJOR_VERSION >= 3
     auto py_string_check = [](PyObject* o) { return PyUnicode_Check(o); };
-    auto py_bytes_from_string_size = PyBytes_FromStringAndSize;
     auto py_string_from_string_size = PyUnicode_FromStringAndSize;
     auto py_as_string = PyUnicode_AsUTF8;
     auto py_as_string_size = PyBytes_AsStringAndSize;
     auto py_as_bytes = PyBytes_FromStringAndSize;
 #else
     auto py_string_check = [](PyObject* o) { return PyString_Check(o); };
-    auto py_bytes_from_string_size = PyString_FromStringAndSize;
     auto py_string_from_string_size = PyString_FromStringAndSize;
     auto py_as_string = PyString_AsString;
     auto py_as_string_size = PyString_AsStringAndSize;
@@ -121,6 +119,8 @@ namespace {
             if (py_string_check(ptr)) {
                 const char* s = py_as_string(ptr);
                 keyval.set(py_as_string(ptr), strlen(s));
+            } else if (PyByteArray_Check(ptr)) {
+                keyval.set((unsigned char *)PyByteArray_AsString(ptr), PyByteArray_Size(ptr));
             } else if (PyArray_Check(ptr)) {
                 if (PyArray_NDIM(ptr)!=1) {
                     PyErr_Format(PyExc_ValueError, "array for key %s must be 1d", key.c_str());
@@ -153,7 +153,7 @@ namespace {
                         throw_error_already_set();
                 }
             } else {
-                PyErr_Format(PyExc_ValueError, "values must be string or numpy array");
+                PyErr_Format(PyExc_ValueError, "values must be string, bytearray, or numpy array");
                 throw error_already_set();
             }
             map[key] = keyval;
@@ -318,6 +318,9 @@ namespace {
             npy_intp dims = val.count;
             PyObject* arr = NULL;
             switch (val.type) {
+                case dtr::Key::TYPE_UCHAR:
+                    arr = PyByteArray_FromStringAndSize((const char*)val.data, val.count);
+                    break;
                 case dtr::Key::TYPE_INT32:
                     arr = PyArray_SimpleNew(1, &dims, NPY_INT32);
                     val.get((int32_t*)PyArray_DATA(arr)); 
@@ -344,10 +347,6 @@ namespace {
                     break;
                 case dtr::Key::TYPE_CHAR:
                     arr = py_string_from_string_size(
-                        reinterpret_cast<const char*>(val.data), val.count);
-                    break;
-                case dtr::Key::TYPE_UCHAR:
-                    arr = py_bytes_from_string_size(
                         reinterpret_cast<const char*>(val.data), val.count);
                     break;
                 default:;

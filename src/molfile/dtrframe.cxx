@@ -307,6 +307,16 @@ std::string Key::toString() const {
     return std::string(buf, buf+count);
 }
 
+bool Key::get(unsigned char* buf) const {
+    if (!data) return false;
+    if (type==TYPE_UCHAR) {
+        if (buf) memcpy(buf, data, count*sizeof(*buf));
+    } else {
+        DTR_FAILURE("Frame data of type " << typenames[type] << " cannot be converted to uint8");
+    }
+    return true;
+}
+
 bool Key::get(float* buf) const {
     if (!data) return false;
     if (type==TYPE_FLOAT32) {
