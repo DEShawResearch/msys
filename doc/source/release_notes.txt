@@ -1,3 +1,6 @@
+1.7.245 Use bytearray for dtr unsigned char fields.
+        New "degree" selection keyword for bonds between real atoms.
+
 1.7.244 Make "ion" selection atomic number and bond based.
         Change old "ion" selection to "legacy_ion".
         Handle ComputeTopologicalIds for systems with crazy pseudos.
