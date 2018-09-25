@@ -12,8 +12,8 @@ namespace desres { namespace msys {
 
     private:
         struct Node {
-            int attr;   /* two bytes for atomic number, two for
-                           degree (including external bonds) */
+            uint64_t attr;   /* four bytes for atomic number / color, four for
+                                degree (including external bonds) */
             int nnbr;   /* number of bonds within the template */
             int* nbr;   /* 0-based index of neighbors */
         };
@@ -31,7 +31,7 @@ namespace desres { namespace msys {
                 int other_root, std::vector<IdPair>& matches) const;
 
         /* Constructor is private; must use create() function */
-        Graph(SystemPtr sys, const IdList& atoms);
+        Graph(SystemPtr sys, const IdList& atoms, const IdList& colors);
 
     public:
         Graph(Graph const&) = delete;
@@ -48,6 +48,9 @@ namespace desres { namespace msys {
          * Atoms with atomic_number 0 are ignored. */
         static std::shared_ptr<Graph> create(SystemPtr sys,
                 const IdList& atoms);
+
+        static std::shared_ptr<Graph> create(SystemPtr sys,
+                const IdList& atoms, IdList const& colors);
 
         /* number of particles used in the isomorphism check */
         unsigned size() const { return _nodes.size(); }

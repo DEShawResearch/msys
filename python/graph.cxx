@@ -9,6 +9,10 @@ namespace {
         return Graph::create(mol, ids_from_python(atoms));
     }
 
+    GraphPtr create_with_colors(SystemPtr mol, list atoms, list colors) {
+        return Graph::create(mol, ids_from_python(atoms), ids_from_python(colors));
+    }
+
     std::string hash(Graph const& self) {
         return Graph::hash(self.system(), self.atoms());
     }
@@ -51,6 +55,7 @@ namespace desres { namespace msys {
             .def("__ne__",      list_ne<GraphPtr>)
             .def("__hash__",    obj_hash<GraphPtr>)
             .def("create",  create).staticmethod("create")
+            .def("create_with_colors",  create_with_colors).staticmethod("create_with_colors")
             .def("hash", hash)
             .def("size", &Graph::size)
             .def("atoms", graph_atoms)

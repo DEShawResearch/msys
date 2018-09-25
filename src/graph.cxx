@@ -4,6 +4,7 @@
 #include <sstream> // for ostringstream
 #include <iostream> // for debugging
 #include <unordered_set>
+#include <unordered_map>
 
 using namespace desres::msys;
 
@@ -37,26 +38,37 @@ std::string Graph::hash(SystemPtr sys, IdList const& atoms){
 }
 
 GraphPtr Graph::create(SystemPtr sys, const IdList& atoms) {
-    return GraphPtr(new Graph(sys, atoms));
+    return GraphPtr(new Graph(sys, atoms, IdList()));
+}
+GraphPtr Graph::create(SystemPtr sys, const IdList& atoms, IdList const& colors) {
+    return GraphPtr(new Graph(sys, atoms, colors));
 }
 
-Graph::Graph(SystemPtr sys, const IdList& atoms) {
+Graph::Graph(SystemPtr sys, const IdList& atoms, const IdList& colors) {
     typedef std::map<std::pair<int,Id>, Id> attrHash;
     typedef std::multimap<Id,Id> countMap;
 
     if (std::unordered_set<Id>(atoms.begin(), atoms.end()).size() != atoms.size()) {
         MSYS_FAIL("atoms must be distinct");
     }
+    if (colors.size() > 0 && colors.size() != atoms.size()) {
+        MSYS_FAIL("wrong size for colors: got " << colors.size() << " != " << atoms.size());
+    }
 
     _sys = sys;
     attrHash hash_to_idx;
     countMap count_to_idx;
     msys::MultiIdList freq_partition;
+    std::unordered_map<Id,Id> colormap;
+
     /* Initialize frequency of atom occurance */
-    for (Id id : atoms){
+    for (Id i=0, n=atoms.size(); i<n; i++) {
+        Id id = atoms[i];
         atom_t const& atm = sys->atom(id);
-        if (atm.atomic_number < 1) continue;    
-        std::pair<int,Id> key(atm.atomic_number, sys->bondCountForAtom(id));
+        Id color = colors.empty() ? atm.atomic_number : colors[i];
+        if (color==0) continue;
+        colormap[id] = color;
+        std::pair<Id,Id> key(color, sys->bondCountForAtom(id));
         attrHash::iterator ihash=hash_to_idx.lower_bound(key);
         if (ihash==hash_to_idx.end() || hash_to_idx.key_comp()(key, ihash->first) ){
            ihash=hash_to_idx.insert(ihash, attrHash::value_type(key, freq_partition.size()));
@@ -76,10 +88,6 @@ Graph::Graph(SystemPtr sys, const IdList& atoms) {
     /* first pass: construct the offsets into the nbr table */
     for (auto const& entry : count_to_idx){
         for (Id id : freq_partition[entry.second]){
-            /* Already checked above 
-             * atom_t const& atm = sys->atom(id);
-             * if (atm.atomic_number < 1) continue; 
-             */
             id_map[id] = _nodes.size();
             _ids.push_back(id);
             _nodes.push_back(Node());
@@ -96,24 +104,23 @@ Graph::Graph(SystemPtr sys, const IdList& atoms) {
     int nidx=0;
     for (auto const& entry : count_to_idx){
         for (Id id : freq_partition[entry.second]){
-            atom_t const& atm = sys->atom(id);
-            /* Already checked above
-             * if (atm.atomic_number < 1) continue;
-             */
             Node& node = _nodes[nidx++];
             node.nbr = &_nbrs[node.nnbr];
             node.nnbr = 0;
             int degree = 0;
             IdList const& bonded = sys->bondedAtoms(id);
             for (Id other : bonded) {
-                if (sys->atom(other).atomic_number == 0) continue; // Pseudo atom
+                if (colormap.find(other) != colormap.end()) {
+                    if (colormap[other] == 0) continue;
+                }
+                else if (sys->atomFAST(other).atomic_number == 0) continue; // Pseudo atom
                 ++degree;
-                if (sys->atom(other).atomic_number == -1) continue; // External atom
+                if (sys->atomFAST(other).atomic_number == -1) continue; // External atom
                 std::map<Id,int>::const_iterator it = id_map.find(other);
                 if (it != id_map.end())
                     node.nbr[node.nnbr++] = it->second;
             }
-            node.attr = (atm.atomic_number << 16) | degree;
+            node.attr = (int64_t(colormap[id]) << 32) | degree;
         }
     }
 }

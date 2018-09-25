@@ -2289,13 +2289,30 @@ class Graph(object):
         graph._sys = _sys
         return graph
 
-    def __init__(self, system_or_atoms):
+    def __init__(self, system_or_atoms, colors=None):
+        """Construct Graph
+        Arguments:
+            system_or_atoms: System or [Atoms]
+            colors: None, [Int] or Callable
+
+        If colors is provided, it is used to specify the vertex color
+        for each atom in the graph.  By default, atomic number is used.
+        A color may be provided for each atom, or a callable accepting an
+        Atom as argument.  Atoms with color zero are ignored for purposes
+        of graph matching, and no mapping will be returned for them.
+        """
+
         if isinstance(system_or_atoms, System):
             ptr = system_or_atoms._ptr
             ids = ptr.atomsAsList()
         else:
             ptr, ids = _convert_ids(system_or_atoms)
-        self._ptr = _msys.GraphPtr.create(ptr,ids)
+        if colors is None:
+            self._ptr = _msys.GraphPtr.create(ptr,ids)
+        else:
+            if callable(colors):
+                colors = [colors(Atom(ptr, i)) for i in ids]
+            self._ptr = _msys.GraphPtr.create_with_colors(ptr,ids,colors)
         self._sys = ptr
 
     def size(self):

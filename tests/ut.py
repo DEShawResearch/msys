@@ -3132,6 +3132,39 @@ class Main(unittest.TestCase):
                     msg=msg%(name, k, str([i for i in v if i not in match]), str([i for i in match if i not in v]))
                     self.assertTrue(False,msg)
 
+    def testGraphColors(self):
+        G = msys.Graph
+        mol1 = msys.Load('tests/files/tip5p.mae').clone('fragid 0')
+        mol2 = mol1.clone()
+
+        # 1) no color: pseudos ignored, heavy atoms matched 1-1
+        m1 = G(mol1).match(G(mol2))
+        self.assertEqual(sorted(k.id for k in m1), [0,1,2])
+        for k,v in m1.items(): self.assertEqual(k.id, v.id)
+
+        # 2) color from atomic number: same result
+        anum = lambda x: x.atomic_number
+        m2 = G(mol1, anum).match(G(mol2, anum))
+        self.assertEqual(m1, m2)
+
+        # 3) color from atomic number + 1: match everything 1-1 since pseudos are no longer ignored
+        anum = lambda x: x.atomic_number+1
+        m3 = G(mol1, anum).match(G(mol2, anum))
+        self.assertEqual(sorted(k.id for k in m3), [0,1,2,3,4])
+        for k,v in m3.items(): self.assertEqual(k.id, v.id)
+
+        # 4) use particle name as the attribute for vsites; vsites are Vrt0 and Vrt1
+        from collections import defaultdict
+        d = defaultdict(lambda: len(d))
+        colors = [(a.atomic_number if a.atomic_number > 0 else d[a.name]+128)for a in mol1.atoms]
+        self.assertEqual(colors, [8,1,1,128,129])
+        m4 = G(mol1, colors).matchAll(G(mol2, colors))
+        self.assertEqual(len(m4), 2)
+        colors[-1] = colors[-2]
+        m5 = G(mol1, colors).matchAll(G(mol2, colors))
+        self.assertEqual(len(m5), 4)
+
+
     def testGraphDistinctAtoms(self):
         mol = msys.CreateSystem()
         mol.addAtom().atomic_number = 2
