@@ -1860,7 +1860,9 @@ def Load(path, structure_only=False, without_tables=None):
         job = yas.GetJobs(jobid)
         if not job:
             raise ValueError("No such job '%s'" % jobid)
-        input_ark = json.loads(job.input_ark)
+        input_ark = job.input_ark
+        if not isinstance(input_ark, dict):
+            input_ark = json.loads(input_ark)
         path = str(input_ark['boot']['file'])
 
     ptr = _msys.Load(path, structure_only, without_tables)
