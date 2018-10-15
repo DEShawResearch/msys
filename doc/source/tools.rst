@@ -62,9 +62,15 @@ dms-sequence
 ------------
 .. include:: ../build/genhelp/dms-sequence
 
+.. automodule:: msys.sequence
+    :members:
+
 dms-set
 -------
 .. include:: ../build/genhelp/dms-set
+
+.. automodule:: msys.update
+    :members:
 
 ------------------
 Structure building
@@ -74,13 +80,22 @@ dms-grease
 ----------
 .. include:: ../build/genhelp/dms-grease
   
+.. automodule:: msys.grease
+    :members:
+
 dms-thermalize
 --------------
 .. include:: ../build/genhelp/dms-thermalize
 
+.. automodule:: msys.thermalize
+    :members:
+
 dms-posre
 ---------
 .. include:: ../build/genhelp/dms-posre
+
+.. automodule:: msys.posre
+    :members:
 
 dms-override-vdw
 ----------------
@@ -106,6 +121,9 @@ Validation
 dms-find-knot
 -------------
 .. include:: ../build/genhelp/dms-find-knot
+
+.. automodule:: msys.knot
+    :members:
 
 dms-validate
 ------------
