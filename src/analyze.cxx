@@ -5,6 +5,7 @@
 #include "graph.hxx"
 #include "geom.hxx"
 #include "contacts.hxx"
+#include "pfx/pfx.hxx"
 #include <numeric>
 #include <queue>
 #include <stdio.h>
@@ -136,30 +137,70 @@ namespace desres { namespace msys {
     }
 
 
-    void GuessBondConnectivity(SystemPtr mol) {
-        std::vector<Float> pos(3*mol->maxAtomId());
+    void GuessBondConnectivity(SystemPtr mol, bool periodic) {
+        const IdList atoms(mol->atoms());
         static const double cutoff = 4.0;
+        std::vector<Float> pos(3*mol->maxAtomId());
         if (pos.empty()) return;
-        IdList atoms(mol->atoms());
         for (Id i : atoms) {
             atom_t const& atom = mol->atom(i);
             pos[3*i  ] = atom.x;
             pos[3*i+1] = atom.y;
             pos[3*i+2] = atom.z;
         }
-        BondFinder finder(mol);
-        if (mol->ctCount()==1) {
-            find_contacts(cutoff, &pos[0],
-                          atoms.begin(), atoms.end(),
-                          atoms.begin(), atoms.end(),
-                          finder);
+
+        if (periodic) {
+            /* brute force method that handles triclinics */
+            const double* cell = mol->global_cell[0];
+            Float box[9], inv[9], vec[3];
+            pfx::trans_3x3(box, cell);
+            if (!pfx::inverse_3x3(inv, box)) {
+                memset(inv, 0, sizeof(inv));
+            }
+            std::copy(cell, cell+9, box);
+
+            for (Id i=0, n=atoms.size(); i<n; i++) {
+                const auto& iatm = mol->atomFAST(atoms[i]);
+                const auto ai = iatm.atomic_number;
+                const auto ri = RadiusForElement(ai);
+                for (Id j=i+1; j<n; j++) {
+                    const auto& jatm = mol->atomFAST(atoms[j]);
+                    const auto aj = jatm.atomic_number;
+                    // don't bond H-H or Virt-Virt
+                    if ((ai==1 && aj==1) || (ai==0 && aj==0)) continue;
+                    const auto rj = RadiusForElement(aj);
+                    const double cut = 0.6 * (ri+rj);
+                    Float d[3] = {jatm.x-iatm.x, jatm.y-iatm.y, jatm.z-iatm.z};
+                    std::copy(d,d+3,vec);
+                    pfx::wrap_vector(box, inv, d);
+                    Float dx = d[0]+vec[0];
+                    Float dy = d[1]+vec[1];
+                    Float dz = d[2]+vec[2];
+                    Float d2 = dx*dx + dy*dy + dz*dz;
+                    if (atoms[i]==809 || atoms[j]==809) {
+                        printf("%u %u d %.3f cut %.3f\n", atoms[i], atoms[j], sqrt(d2), cut);
+                    }
+                    if (d2 < cut*cut) {
+                        mol->addBond(atoms[i], atoms[j]);
+                    }
+                }
+            }
+
         } else {
-            for (Id i=0, n=mol->ctCount(); i<n; i++) {
-                IdList const& atoms = mol->atomsForCt(i);
+            BondFinder finder(mol);
+            if (mol->ctCount()==1) {
                 find_contacts(cutoff, &pos[0],
                               atoms.begin(), atoms.end(),
                               atoms.begin(), atoms.end(),
                               finder);
+            } else {
+                for (Id i=0, n=mol->ctCount(); i<n; i++) {
+                    IdList const& atoms = mol->atomsForCt(i);
+                    find_contacts(cutoff, &pos[0],
+                                  atoms.begin(), atoms.end(),
+                                  atoms.begin(), atoms.end(),
+                                  finder);
+                }
             }
         }
         /* if a pseudo has multiple bonds: 

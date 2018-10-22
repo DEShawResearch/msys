@@ -1480,7 +1480,7 @@ class System(object):
         '''
         return self.clone(self._ptr.orderedIds())
 
-    def guessBonds(self, replace=True, reanalyze=True):
+    def guessBonds(self, replace=True, reanalyze=True, periodic=False):
         ''' Guess bond connectivity based on an atomic-number based
         atom radius.  
 
@@ -1492,7 +1492,7 @@ class System(object):
         '''
         if replace:
             self.delBonds(self.bonds)
-        _msys.GuessBondConnectivity(self._ptr)
+        _msys.GuessBondConnectivity(self._ptr, bool(periodic))
         if reanalyze:
             self.analyze()
 

@@ -35,7 +35,7 @@ namespace desres { namespace msys {
 
     /* Add bonds based on estimated VDW radii determined from atomic
      * number (Bondi radii). */
-    void GuessBondConnectivity(SystemPtr mol);
+    void GuessBondConnectivity(SystemPtr mol, bool periodic=false);
 
     /* Find representative fragments representing the complete set of
      * topologically distinct fragments, as determined by atomic number.
