@@ -1,4 +1,9 @@
 1.7.246 Fix msys.Load(jobid) for both return types of yas_job.input_ark
+        Read CRYSIN records from mol2 files.
+        Wrap ImportPDBUnitCell.
+        Added periodic option to System.findBonds.
+        Add docs on msys.sequence and a few other tools.
+        Added color option to Graph.
 
 1.7.245 Use bytearray for dtr unsigned char fields.
         New "degree" selection keyword for bonds between real atoms.
