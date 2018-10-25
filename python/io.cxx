@@ -108,6 +108,22 @@ namespace {
         }
         ExportMol2(mol, path, prov, ids, flags);
     }
+
+    list import_pdb_unit_cell(double A, double B, double C,
+                              double alpha, double beta, double gamma) {
+        double cell[9];
+        ImportPDBUnitCell(A,B,C,alpha,beta,gamma,cell);
+        list L;
+        for (int i=0; i<3; i++) {
+            list sub;
+            for (int j=0; j<3; j++) {
+                sub.append(cell[3*i+j]);
+            }
+            L.append(sub);
+        }
+        return L;
+    }
+
 }
 
 namespace desres { namespace msys { 
@@ -167,6 +183,7 @@ namespace desres { namespace msys {
         def("ImportPrmTop", import_prmtop);
         def("ImportCrdCoordinates", ImportCrdCoordinates);
         def("ImportPDBCoordinates", ImportPDBCoordinates);
+        def("ImportPDBUnitCell", import_pdb_unit_cell);
         def("ImportMOL2", ImportMol2);
         def("ImportMOL2Many", import_mol2_many);
         def("ExportMOL2", export_mol2);
