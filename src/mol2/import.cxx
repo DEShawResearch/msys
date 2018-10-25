@@ -1,5 +1,6 @@
 #include "../mol2.hxx"
 #include "../sssr.hxx"
+#include "../pdb.hxx"
 #include "../import.hxx"
 #include "../analyze.hxx"
 #include "../elements.hxx"
@@ -14,7 +15,7 @@ using namespace desres::msys;
 namespace {
     class iterator : public LoadIterator {
         FILE* fd;
-        enum State { Skip, Molecule, Atom, Bond, Substructure } state;
+        enum State { Skip, Molecule, Atom, Bond, Substructure, Crystal } state;
         char buf[256];
         long file_offset;
 
@@ -110,6 +111,8 @@ SystemPtr iterator::next() {
                 state = Bond;
             } else if (!strncmp(buf, "@<TRIPOS>SUBSTRUCTURE", 21)) {
                 state = Substructure;
+            } else if (!strncmp(buf, "@<TRIPOS>CRYSIN", 15)) {
+                state = Crystal;
             } else {
                 state = Skip;
             }
@@ -250,6 +253,21 @@ SystemPtr iterator::next() {
                     }
                 }
                 state = Skip;
+                break;
+            case Crystal: {
+                    if (!fgets(buf, sizeof(buf), fd)) {
+                        MSYS_FAIL("Missing expected Crystal record");
+                    }
+                    double A, B, C, alpha, beta, gamma;
+                    int rc = sscanf(buf, "%lf %lf %lf %lf %lf %lf",
+                            &A, &B, &C, &alpha, &beta, &gamma);
+                    if (rc != 6) {
+                        MSYS_FAIL("Parsing Crystal record:\n" << buf);
+                    }
+                    ImportPDBUnitCell(A, B, C, alpha, beta, gamma, mol->global_cell[0]);
+                }
+                state = Skip;
+                break;
             default: ;
         }
     }
