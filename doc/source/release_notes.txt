@@ -1,3 +1,6 @@
+1.7.247 Include pseudos when validating against nonbonded contacts 
+          [DESRESCode#4042]
+
 1.7.246 Fix msys.Load(jobid) for both return types of yas_job.input_ark
         Read CRYSIN records from mol2 files.
         Wrap ImportPDBUnitCell.

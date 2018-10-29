@@ -53,7 +53,7 @@ class TestAnton(TestCase):
 
     def testContacts(self):
         ''' No nonbonded atoms within 1A of each other '''
-        ids = self.mol.selectIds('atomicnumber > 0')
+        ids = self.mol.selectIds('all')
         contacts = self.mol.findContactIds(1.0, ids, ignore_excluded=True)
         formatted_results = '\n'.join('%6d %6d %f' % x for x in contacts[:10])
         num = len(contacts)
