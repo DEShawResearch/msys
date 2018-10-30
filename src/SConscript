@@ -119,11 +119,10 @@ else:
     inchi = inchienv.AddObject('inchi.cxx')
 
 def get_shlib_version():
-    import subprocess
-    ver = env['ENV'].get('MSYS_VERSION')
-    if ver is not None:
-        return ver.replace('.', '_')
-    return None
+    root = Dir('#').abspath
+    with open('%s/src/version.py' % root) as fp:
+        exec(fp.read())
+    return version.replace('.', '_')
 
 dtoaenv = env.Clone()
 # new gcc on OS X emits for-loop-analysis warning.
