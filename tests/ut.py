@@ -2912,7 +2912,7 @@ class Main(unittest.TestCase):
 
     def testConcatenatedMae(self):
         d=os.path.dirname(__file__)
-        m=msys.Load(os.path.join(d, 'mae/two.mae'))
+        m=msys.Load(os.path.join(d, 'files/two.mae'))
         self.assertEqual(m.ncts, 4)
         self.assertEqual(m.nchains, 4)
         self.assertEqual(m.natoms, 9498)
@@ -2980,7 +2980,7 @@ class Main(unittest.TestCase):
 
     def testAlchemicalMaeRestraint(self):
         d=os.path.dirname(__file__)
-        m=msys.Load(os.path.join(d, 'mae/alchemical_restraint.mae'))
+        m=msys.Load(os.path.join(d, 'files/alchemical_restraint.mae'))
         self.assertEqual(m.natoms, 5)
         con=m.table('constraint_ah2')
         res=m.table('posre_harm')
@@ -2994,7 +2994,7 @@ class Main(unittest.TestCase):
 
     def testMaeFBHW(self):
         d=os.path.dirname(__file__)
-        m=msys.Load(os.path.join(d, 'mae/fbhw.mae'))
+        m=msys.Load(os.path.join(d, 'files/fbhw.mae'))
         posre=m.table('posre_fbhw')
         self.assertEqual(posre.params.nparams, 1)
         self.assertEqual(posre.nterms, 32)
