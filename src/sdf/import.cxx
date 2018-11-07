@@ -426,6 +426,7 @@ SystemPtr desres::msys::ImportSdf(std::string const& path) {
     while ((ct = iter.next())) {
         AppendSystem(mol, ct);
     }
+    mol->updateFragids();
     return mol;
 }
 
