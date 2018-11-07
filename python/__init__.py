@@ -2359,14 +2359,25 @@ def GuessHydrogenPositions(atoms):
     ptr, ids = _convert_ids(atoms)
     _msys.GuessHydrogenPositions(ptr, ids)
 
-def FindDistinctFragments(system):
+def FindDistinctFragments(system, consider_stereo=False):
     ''' Find connected sets of atoms with identical topology.
     
+    Arguments:
+        system: System
+            chemical system
+
+        consider_stereo: bool
+            if true, treat fragments with different stereochemistry as distinct
+
     Returns:
         dict[int -> [int]]: mapping from representative fragment id to ids of fragments
                             having identical topology.
+
+    Notes:
+        Stereochemistry is determined by computing the InChI string of the fragment.
+         
     '''
-    return _msys.FindDistinctFragments(system._ptr)
+    return _msys.FindDistinctFragments(system._ptr, consider_stereo)
 
 def ComputeTopologicalIds(system):
     ''' Compute and return the topological ids for the atoms or system '''

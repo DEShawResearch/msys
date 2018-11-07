@@ -1050,6 +1050,15 @@ class Main(unittest.TestCase):
         result = msys.FindDistinctFragments(mol)
         self.assertEqual(result, { 0 : [0,3], 1 : [1,2,4] })
 
+    def testFindDistinctFragmentsStereo(self):
+        mol = msys.Load('tests/files/stereo.sdf')
+        frags = msys.FindDistinctFragments(mol)
+        self.assertEqual(len(frags), 1)
+    
+        frags = msys.FindDistinctFragments(mol, consider_stereo=True)
+        self.assertEqual(len(frags), 2)
+
+
     def testSortAtoms(self):
         mol = msys.Load('tests/files/2f4k.dms')
         atoms = mol.atoms

@@ -43,7 +43,7 @@ namespace desres { namespace msys {
      * Return mapping from representative fragment id to fragments having
      * identical topology.
      */
-    std::map<Id,IdList> FindDistinctFragments(SystemPtr mol, MultiIdList const& fragments);
+    std::map<Id,IdList> FindDistinctFragments(SystemPtr mol, MultiIdList const& fragments, bool consider_stereo=false);
 
     /* Assign atom and residue types; do this after loading a new
      * system from a file or creating it from scratch.  This method

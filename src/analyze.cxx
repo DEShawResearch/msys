@@ -4,8 +4,10 @@
 #include "elements.hxx"
 #include "graph.hxx"
 #include "geom.hxx"
+#include "clone.hxx"
 #include "contacts.hxx"
 #include "pfx/pfx.hxx"
+#include "inchi.hxx"
 #include <numeric>
 #include <queue>
 #include <stdio.h>
@@ -177,9 +179,6 @@ namespace desres { namespace msys {
                     Float dy = d[1]+vec[1];
                     Float dz = d[2]+vec[2];
                     Float d2 = dx*dx + dy*dy + dz*dz;
-                    if (atoms[i]==809 || atoms[j]==809) {
-                        printf("%u %u d %.3f cut %.3f\n", atoms[i], atoms[j], sqrt(d2), cut);
-                    }
                     if (d2 < cut*cut) {
                         mol->addBond(atoms[i], atoms[j]);
                     }
@@ -245,14 +244,22 @@ namespace desres { namespace msys {
         }
     }
 
-    std::map<Id,IdList> FindDistinctFragments(SystemPtr mol, MultiIdList const& fragments) {
+    std::map<Id,IdList> FindDistinctFragments(SystemPtr mol, MultiIdList const& fragments, bool consider_stereo) {
         std::map<Id, IdList> result;
         /* will compute graphs lazily */
         std::vector<GraphPtr> graphs(fragments.size());
         typedef std::map<std::string, IdList> FragmentHash;
         FragmentHash fragment_hash;
         for (Id i=0; i<fragments.size(); i++) {
-            fragment_hash[Graph::hash(mol, fragments[i])].push_back(i);
+            std::string key;
+            if (consider_stereo) {
+                unsigned flags = InChI::DoNotAddH | InChI::FixedH;
+                auto frag = Clone(mol, fragments[i]);
+                key = InChI::create(frag, flags).string();
+            } else {
+                key = Graph::hash(mol, fragments[i]);
+            }
+            fragment_hash[key].push_back(i);
         }
         FragmentHash::iterator it;
         for (it=fragment_hash.begin(); it!=fragment_hash.end(); ++it) {

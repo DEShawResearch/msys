@@ -27,11 +27,11 @@ namespace {
         AssignBondOrderAndFormalCharge(mol, ids_from_python(ids), total_charge, flags);
     }
 
-    dict find_distinct_fragments(SystemPtr mol) {
+    dict find_distinct_fragments(SystemPtr mol, bool consider_stereo) {
         MultiIdList fragments;
         mol->updateFragids(&fragments);
         dict result;
-        for (auto& iter : FindDistinctFragments(mol, fragments)) {
+        for (auto& iter : FindDistinctFragments(mol, fragments, consider_stereo)) {
             result[iter.first] = to_python(iter.second);
         }
         return result;
