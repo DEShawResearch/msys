@@ -1,3 +1,6 @@
+1.7.248 Add consider_stereo flag to FindDistinctFragments.
+        Fix missing call to updateFragids in ImportSdf.
+
 1.7.247 Include pseudos when validating against nonbonded contacts [DESRESCode#4042]
         Fix missing shlib version on msys.so.
 

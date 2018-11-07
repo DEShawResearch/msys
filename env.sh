@@ -1,5 +1,5 @@
 PYTHON=desres-python/2.7.15-08c7
-PYTHON3=desres-python/3.7.0-01c7
+PYTHON3=desres-python/3.7.0-02c7
 YAS=yas/0.116-beta-c7
 
 garden prepend-path PYTHONPATH $(dirname $0)/../lib/python
