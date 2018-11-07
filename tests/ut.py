@@ -497,6 +497,14 @@ class TestInChI(unittest.TestCase):
             m = msys.Load('tests/files/%s' % k)
             self.assertEqual(InChI(m, SNon=True).string, v)
 
+    def testVsites(self):
+        mol = msys.Load('tests/files/tip5p.mae').clone('fragid 0')
+        # for some reason our tip5p file has formal_charge=1 on everything
+        for a in mol.atoms: a.formal_charge=0
+        self.assertEqual([a.atomic_number for a in mol.atoms], [8,1,1,0,0])
+        inchi = msys.InChI(mol).string
+        self.assertEqual(inchi, 'InChI=1/H2O/h1H2')
+
 
 class TestAmber(unittest.TestCase):
     def testStructureOnly(self):

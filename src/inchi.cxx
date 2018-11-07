@@ -2,6 +2,7 @@
 #include "clone.hxx"
 #include "elements.hxx"
 #include "analyze.hxx"
+#include "atomsel.hxx"
 #include <string.h>
 
 using namespace desres::msys;
@@ -59,6 +60,8 @@ InChI InChI::create(SystemPtr mol, unsigned options) {
     if (mol->maxAtomId() != mol->atomCount()) {
         mol = Clone(mol, mol->atoms());
     }
+    /* exclude virtuals */
+    mol = Clone(mol, Atomselect(mol, "atomicnumber > 0"));
 
     inchi_Input  input[1];
     inchi_Output output[1];
