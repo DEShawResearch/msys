@@ -26,6 +26,12 @@ To build Msys, you'll need at a minimum the following:
  and msys supports both python 2.7 and python 3.5 and later, in order build msys, you must use a python
  2.7 interpreter; i.e. `python` must correspond to python2.7.
 
+ * sconsutils, a set of extensions to Scons.  A copy has been placed in /external; add it to your PYTHONPATH before
+ building with:
+
+    export PYTHONPATH=external:$PYTHONPATH
+
+
 Msys can make use of several optional libraries when they are explicitly
 enabled during compilation.  These libraries are:
 
