@@ -1,5 +1,5 @@
 #include "../ff.hxx"
-#include <cstdio>
+#include "../../override.hxx"
 
 namespace {
 
@@ -7,23 +7,26 @@ namespace {
         void apply( SystemPtr h,
                     const Json& blk,
                     const SiteMap& sitemap,
-                    const VdwMap&  vdwmap, bool alchemical ) const {}
+                    const VdwMap&  vdwmap ) const {}
     };
 
     struct VdwTypes : public Ffio {
         void apply( SystemPtr h, 
                     const Json& blk,
                     const SiteMap& sitemap,
-                    const VdwMap&  vdwmap, bool alchemical ) const {
+                    const VdwMap&  vdwmap ) const {
 
             std::string funct;
             if (vdwmap.funct()=="lj12_6_sig_epsilon") {
                 funct="vdw_12_6";
             } else if (vdwmap.funct()=="exp_6x") {
-                funct="vdw_exp6";
-            } else if (vdwmap.funct()=="polynomial_pij") {
+                funct="vdw_exp_6";
+            } else if (vdwmap.funct()=="polynomial_cij") {
                 funct="polynomial_cij";
             } else {
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+                return;
+#endif
                 std::stringstream ss;
                 ss << "Unrecognized mae vdw_funct '" << vdwmap.funct()
                     << "'";
@@ -31,7 +34,9 @@ namespace {
             }
 
             TermTablePtr table = AddNonbonded(h,funct, vdwmap.rule());
-            ParamTablePtr params = table->paramTable();
+            TermTablePtr atable;
+            ParamTablePtr params = table->params();
+            Id typecol = params->addProp("type", StringType);
 
             typedef std::map<VdwType, Id> TypeMap;
             TypeMap map;
@@ -41,62 +46,72 @@ namespace {
                 const VdwType* types[2];
                 types[0] = &vdwmap.type(site);
                 types[1] = &vdwmap.typeB(site);
-                Id p[2];
+                Id p[2]={BadId,BadId};
                 for (int j=0; j<2; j++) {
                     const VdwType& type = *types[j];
+                    if (type=="") continue;
                     TypeMap::const_iterator e = map.find(type);
                     if (e==map.end()) {
                         p[j] = map[type] = params->addParam();
+                        params->value(p[j], typecol) = type;
                         const VdwParam& vals = vdwmap.param(type);
-                        for (Id k=0; k<params->propCount(); k++) {
-                            params->value(p[j], k) = vals.at(k);
+                        for (Id k=0; k<vals.size(); k++) {
+                            params->value(p[j], k) = vals[k];
                         }
                     } else {
                         p[j] = e->second;
                     }
                 }
                 IdList ids(1,site);
-                sitemap.addUnrolledTerms(table, p[0], ids, false, p[1] );
+                sitemap.addUnrolledTerms(table, p[0], ids );
+
+                if (!bad(p[1])) {
+                    /* alchemical nonbonded term */
+                    if (!atable) {
+                        atable = h->addTable(
+                                "alchemical_nonbonded", 1, params);
+                        atable->category = NONBONDED;
+                        atable->addTermProp("chargeB", FloatType);
+                        atable->addTermProp("moiety", IntType);
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+                        atable->addTermProp("chargeC", FloatType);
+#endif
+                    }
+                    IdList realids(1,sitemap.site(site));
+                    Id term = atable->addTerm(realids, p[1]);
+                    atable->termPropValue(term,"chargeB") = 
+                        vdwmap.chargeB(site);
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+                    atable->termPropValue(term,"chargeC") = 
+                        vdwmap.chargeC(site);
+#endif
+
+                }
             }
 
-#if 0
             if (vdwmap.combined().size()) {
-                /* create nonbonded_combined_param extra table with columns
-                 * param1, param2, properties... */
-                ent::DictPtr d;
-                static const char table_name[] = "nonbonded_combined_param";
-                if (h.hasExtraTable(table_name)) {
-                    d=h.getExtraTable(table_name);
-                } else {
-                    d.reset(new ent::Dict);
-                    h.addExtraTable(table_name, d);
-                    d->addColumn( "param1", ent::DICT_VALUE_INT );
-                    d->addColumn( "param2", ent::DICT_VALUE_INT );
-
-                    for (int i=0; i<info->nprops; i++) {
-                        d->addColumn(info->propnames[i], ent::DICT_VALUE_FLOAT);
-                    }
+                OverrideTablePtr o = table->overrides();
+                ParamTablePtr p = o->params();
+                for (Id i=0; i<params->propCount(); i++) {
+                    p->addProp(params->propName(i), params->propType(i));
                 }
-                EntryMap::const_iterator i, j, e=emap.end();
-                for (i=emap.begin(); i!=e; ++i) {
-                    const VdwType& itype = i->first;
-                    int iid = nb.getEntryId(i->second);
-                    for (j=emap.begin(); j!=e; ++j) {
-                        const VdwType& jtype = j->first;
-                        int jid = nb.getEntryId(j->second);
-                        if (vdwmap.has_combined(itype,jtype)) {
-                            const VdwParam& p = vdwmap.param(itype,jtype);
-                            ent::DictEntry& row = *(d->addRow());
-                            row[0] = ent::DictValue(iid);
-                            row[1] = ent::DictValue(jid);
-                            for (int iprop=0; iprop<info->nprops; iprop++) {
-                                row[2+iprop]=ent::DictValue(p.at(iprop));
+                for (auto ti : map) {
+                    VdwType const& itype = ti.first;
+                    for (auto tj : map) {
+                        VdwType const& jtype = tj.first;
+                        if (vdwmap.has_combined(itype, jtype)) {
+                            Id row = p->addParam();
+                            VdwParam const& props = vdwmap.param(itype, jtype);
+                            for (Id i=0; i<props.size(); i++) {
+                                p->value(row,i)=props[i];
                             }
+                            Id pi = ti.second;
+                            Id pj = tj.second;
+                            o->set(IdPair(pi,pj), row);
                         }
                     }
                 }
             }
-#endif
         }
     };
     RegisterFfio<VdwTypes> _("ffio_vdwtypes");

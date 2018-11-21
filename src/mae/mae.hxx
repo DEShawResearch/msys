@@ -1,7 +1,7 @@
 /* @COPYRIGHT@ */
 
-#include <fastjson/fastjson.hxx>
-#include <iostream>
+#include "../fastjson/fastjson.hxx"
+#include "../istream.hxx"
 
 /* Import an mae file into a json.  Both blocks and array blocks are 
  * represented as objects (dictionaries); array blocks are dictionaries
@@ -34,8 +34,26 @@
 
 namespace desres { namespace msys { namespace mae {
 
-    void import_mae( std::istream& in, fastjson::Json& js );
-    void export_mae( const fastjson::Json& js, std::ostream& out );
+    using fastjson::Json;
+
+    void import_mae( std::istream& in, Json& js );
+    void export_mae( const Json& js, std::ostream& out );
+
+    struct tokenizer;
+
+    class import_iterator {
+        istream* in;
+        tokenizer* tk;
+        std::streamsize _offset;
+
+    public:
+        explicit import_iterator(std::istream& file);
+        ~import_iterator();
+
+        /* read the next ct block; return true on success or false on EOF */
+        bool next(Json& js);
+        std::streamsize offset() const { return _offset; }
+    };
 
 }}}
 

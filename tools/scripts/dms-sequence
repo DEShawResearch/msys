@@ -1,0 +1,10 @@
+#!/usr/bin/garden-exec
+#{
+# garden env-keep-only
+# . $(dirname $0)/../share/env.sh
+# exec python $0 "$@"
+#}
+
+import msys.sequence
+msys.sequence.main()
+

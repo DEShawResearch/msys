@@ -4,7 +4,7 @@
 #include "../value.hxx"
 
 #define DMS_MAX_TERM_PROPS  6
-#define DMS_MAX_PARAM_PROPS 20
+#define DMS_MAX_PARAM_PROPS 30
 
 namespace desres { namespace msys { 
 
@@ -26,15 +26,10 @@ namespace desres { namespace msys {
     };
 
     unsigned schema_count();
-    const char* schema_name(unsigned i);
+    schema_t schema(unsigned i);
 
     unsigned nonbonded_schema_count();
-    const char* nonbonded_schema_name(unsigned i);
-
-    const schema_t* find_schema(const std::string& name);
-    const schema_t* find_nonbonded_schema(const std::string& name);
-
-
+    schema_t nonbonded_schema(unsigned i);
 }}
 
 #endif

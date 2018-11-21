@@ -1,11 +1,199 @@
 Import('env')
-env=env.Clone()
-env.Append(LIBS=['pcre'])
+import os
+import sys
 
-libmsys=env.AddLibrary('msys', Split('''
+env=env.Clone()
+
+opts=Variables()
+opts.Add("MSYS_WITH_LPSOLVE", "include lpsolve support?", os.getenv('MSYS_WITH_LPSOLVE'))
+opts.Add("MSYS_WITH_INCHI", "include inchi support?", os.getenv('MSYS_WITH_INCHI'))
+opts.Add("MSYS_BOOST_SUFFIX", "suffix for boost libraries (e.g. -mt)")
+opts.Add("MSYS_BOOST_PYTHON_SUFFIX", "suffix for boost libraries (e.g. -py)")
+
+opts.Update(env)
+
+if "SCHRODINGER_SRC" in os.environ:
+    schrod_win_libs = ['libreassign_ff', 'libdesres']
+    schrod_osx_libs = ['reassignff', 'desres']
+    schrod_only_objs = ['mae/modify_pair.cxx']
+else:
+    schrod_win_libs = []
+    schrod_osx_libs = []
+    schrod_only_objs = []
+
+if sys.platform.startswith("win32"):
+    env.AppendUnique(LIBS=['libsqlite3', 'zlib', 'snappy'] + schrod_win_libs)
+else:
+    env.AppendUnique(LIBS=['sqlite3', 'z'])
+if env['PLATFORM'] == 'darwin':
+    env.AppendUnique(LIBS=schrod_osx_libs)
+
+if env.get('MSYS_WITH_LPSOLVE'):
+    env.AppendUnique(LIBS=['lpsolve55'])
+
+bsx=env.get('MSYS_BOOST_SUFFIX', '')
+boost_libs=[(x+bsx) for x in ( 
+    'boost_iostreams', 'boost_filesystem', 'boost_system')]
+
+env.Append(
+        PYTHON27_LIBS=['boost_python${MSYS_BOOST_PYTHON_SUFFIX}27'],
+        PYTHON35_LIBS=['boost_python${MSYS_BOOST_PYTHON_SUFFIX}35'],
+        PYTHON36_LIBS=['boost_python${MSYS_BOOST_PYTHON_SUFFIX}36'],
+        PYTHON37_LIBS=['boost_python${MSYS_BOOST_PYTHON_SUFFIX}37'],
+        )
+
+coreenv = env.Clone()
+coreenv.AddLibrary('msys-core', Split('''
+append.cxx
+clone.cxx
+override.cxx
+param_table.cxx
+system.cxx
+term_table.cxx
+value.cxx
+'''))
+
+env.Append(LIBS=boost_libs)
+
+msysenv=env
+Export('msysenv')
+
+def split_version(verstr):
+    import re
+    nice_verstr = re.match('([0-9\.]*)', verstr).group(0)
+    return nice_verstr.split('.')
+
+def build_version_hxx( target, source, env ):
+    with open(source[0].path) as fp:
+        exec(fp.read())
+    major, minor, micro = split_version(version)
+    print "writing", target[0].path
+    with open(target[0].path, 'w') as fp:
+        print >> fp, "#define MSYS_VERSION \"%s\"" % version
+        for x in 'major', 'minor', 'micro':
+            u=x.upper()
+            v=int(locals()[x])
+            print >> fp, "#define MSYS_%s_VERSION %d" % (u,v)
+        print >> fp, "#define MSYS_ABI_VERSION 1"
+
+env.Command('version.hxx', 'version.py', build_version_hxx )
+env.AddPythonModule('version.py', prefix='msys')
+
+# flex/bison-generated smiles parser
+if sys.platform.startswith("win32"):
+    lexobjs = []
+    smiles_objs = []
+else:
+    lexenv = env.Clone()
+    lexenv.Append(CPPDEFINES='YY_NO_INPUT')
+    lexenv.Append(CXXFLAGS='-Wno-deprecated-register')
+    lexenv.Append(CXXFLAGS='-Wno-sign-compare') # needed for docker/desres build
+    lexobjs = lexenv.AddObject('smiles/lexer.cxx')
+    smiles_objs = 'smiles/smiles.cxx smiles/parser.cxx'.split()
+
+# sdf parser
+if sys.platform.startswith("win32"):
+    sdfobjs = [] # too many posix dependencies in sdf for windows to handle
+else:
+    sdfobjs = Split('''
+sdf/export.cxx
+sdf/import.cxx
+''')
+
+if env.get('MSYS_WITH_LPSOLVE'):
+    lpobjs=env.AddObject(Split('''
+analyze.cxx
+analyze/bond_orders.cxx
+'''))
+else:
+    lpenv=env.Clone()
+    lpenv.Append(CPPDEFINES=['MSYS_WITHOUT_LPSOLVE'])
+    lpobjs=lpenv.AddObject(['analyze.cxx'])
+
+if env.get("MSYS_WITH_INCHI"):
+    inchi = env.AddObject('inchi.cxx')
+    env.Append(LIBS=['inchi'])
+else:
+    inchienv = env.Clone()
+    inchienv.Append(CPPDEFINES='MSYS_WITHOUT_INCHI'.split())
+    inchi = inchienv.AddObject('inchi.cxx')
+
+def get_shlib_version():
+    root = Dir('#').abspath
+    with open('%s/src/version.py' % root) as fp:
+        exec(fp.read())
+    return version.replace('.', '_')
+
+dtoaenv = env.Clone()
+# new gcc on OS X emits for-loop-analysis warning.
+dtoaenv.Append(CCFLAGS=['-Wno-error'])
+dtoaobjs = dtoaenv.AddObject(Split('''
+fastjson/dtoa/bignum.cc
+fastjson/dtoa/diy-fp.cc
+fastjson/dtoa/fixed-dtoa.cc
+fastjson/dtoa/bignum-dtoa.cc
+fastjson/dtoa/dtoa.cc
+fastjson/dtoa/cached-powers.cc
+fastjson/dtoa/fast-dtoa.cc
+'''))
+
+libmsys_env = env.Clone()
+libmsys_env.Append(LIBS=['msys-core'])
+if sys.platform.startswith("darwin"):
+    if "SCHRODINGER_SRC" in os.environ:
+        msys_dylib = '@rpath/../lib/libmsys.dylib'
+    elif "DESMOND" in os.environ:
+        desmond_release = os.environ["DESMOND"]
+        msys_dylib = '@rpath/../../../{}/lib/Darwin-x86_64/libmsys.dylib'.format(desmond_release)
+    else:
+        msys_dylib = None
+    if msys_dylib:
+        libmsys_env.Append(LINKFLAGS=['-dynamiclib', '-install_name', msys_dylib])
+libmsys=libmsys_env.AddLibrary('msys', lexobjs + lpobjs + sdfobjs + schrod_only_objs + [inchi] + smiles_objs + dtoaobjs + Split('''
+
+smarts.cxx
+analyze/eigensystem.cxx
+analyze/get_fragments.cxx
+analyze/topological_ids.cxx
+
+amber/import_prmtop.cxx
+
+atomsel.cxx
+atomsel/token.cxx
+atomsel/atomsel.cxx
+atomsel/bool.cxx
+atomsel/expr.cxx
+atomsel/key.cxx
+atomsel/within.cxx
+atomsel/query.cxx
+
 dms/dms.cxx
 dms/export_dms.cxx
 dms/import_dms.cxx
+
+molfile/libmolfile_plugin.c
+molfile/molfile.cxx
+molfile/msys.cxx
+molfile/dtrframe.cxx
+molfile/dtrplugin.cxx
+molfile/dxplugin.cxx
+molfile/dcdplugin.c
+molfile/gromacsplugin.cxx
+molfile/rst7plugin.cxx
+molfile/psfplugin.c
+molfile/xyzplugin.c
+
+fastjson/json.cxx
+fastjson/JSON_parser.c
+fastjson/parse.cxx
+fastjson/print.cxx
+
+elements.cxx
+geom.cxx
+hash.cxx
+
+io.cxx
+istream.cxx
 
 mae/ff.cxx
 mae/export_mae.cxx
@@ -22,8 +210,10 @@ mae/ff/constraints.cxx
 mae/ff/dihedrals.cxx
 mae/ff/dihedrals6atom.cxx
 mae/ff/exclusions.cxx
+mae/ff/fbhw.cxx
 mae/ff/inplanewags.cxx
 mae/ff/pairs.cxx
+mae/ff/pseudopol.cxx
 mae/ff/restraints.cxx
 mae/ff/vdwtypes.cxx
 mae/ff/virtuals.cxx
@@ -40,36 +230,40 @@ mae/destro/prep_alchemical_mae.cxx
 mae/destro/Tokenizer.cxx
 mae/destro/Zing.cxx
 
+mol2/assign.cxx
+mol2/export.cxx
+mol2/import.cxx
+
+pdb/pdb.cxx
+pdb/webpdb.c
+
+pfx/graph.cxx
+psf/import.cxx
+
 schema.cxx
 schema/schema.cxx
+spatial_hash.cxx
+spatial_hash_double.cxx
 
-append.cxx
-clone.cxx
-param_table.cxx
-ref.cxx
-system.cxx
-system_handle.cxx
-term_table.cxx
-term_handle.cxx
-value.cxx
+annotated_system.cxx
+graph.cxx
+import.cxx
+provenance.cxx
+analyze/sssr.cxx
+xyz.cxx
 
-atomsel.cxx
-atomsel/expression.cxx
-atomsel/k-nearest.cxx
-atomsel/keyword.cxx
-atomsel/keyword_predicate.cxx
-atomsel/msys_keyword.cxx
-atomsel/selection.cxx
-atomsel/predicate.cxx
-atomsel/regex.cxx
-atomsel/vmd.cxx
-atomsel/vmd_keyword.cxx
-atomsel/VmdLexer.c
-atomsel/VmdParser.c
-atomsel/within_predicate.cxx
-'''))
-#view.cxx
+'''), SHLIBVERSION=get_shlib_version())
 
-env.Alias('install', env.Install('$PREFIX/include/msys', Glob("*.hxx")))
+env.AddHeaders(Glob("*.hxx"), prefix='msys', stage=True)
+env.AddHeaders(Glob("*.hpp"), prefix='msys', stage=True)
+env.AddHeaders(Glob('atomsel/*.h*'), prefix='msys/atomsel')
+env.AddHeaders(Glob('fastjson/*.hxx'), prefix='msys/fastjson')
+env.AddHeaders(Glob('pfx/*.hxx'), prefix='msys/pfx')
+env.AddHeaders(Glob('molfile/*.h*'), prefix='msys/molfile', stage=True)
+
+prgenv=env.Clone()
+prgenv.Append(LIBS=['msys', 'msys-core'])
+prgenv.AddProgram('fstime', 'molfile/fstime.cxx')
+prgenv.AddProgram('fsdump', 'molfile/fsdump.cxx')
 
 Export("libmsys")

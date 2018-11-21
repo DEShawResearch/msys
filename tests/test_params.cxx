@@ -8,8 +8,7 @@ int main(int argc, char *argv[]) {
 
     ParamTablePtr p = ParamTable::create();
 
-    assert(p->paramCount()==0);
-    assert(p->propCount()==0);
+    assert(p->paramCount()==0); assert(p->propCount()==0);
 
     /* add some properties */
     p->addProp("fc", FloatType);
@@ -30,10 +29,20 @@ int main(int argc, char *argv[]) {
     assert(p->propName(1)=="r0");
     assert(p->propName(2)=="foo");
 
+    bool caught=false;
+    try {
+        p->value(0,"fcx");
+    } catch (Failure& e) {
+        caught=true;
+    } 
+    assert(caught);
+
     assert(p->value(param,0).asFloat()==0.0);
     assert(p->value(param,r0).asFloat()==0.0);
     assert(p->value(param,2).asFloat()==0.0);
     assert(p->value(param,2).asInt()==0.0);
+
+    assert(p->value(param,0)==p->value(param,0));
 
     p->value(param,0).fromFloat(435.5);
     assert(p->value(param,0).asFloat()==435.5);

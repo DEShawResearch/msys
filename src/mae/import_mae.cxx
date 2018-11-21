@@ -1,40 +1,39 @@
-#include <boost/algorithm/string.hpp>
 #include "mae.hxx"
 #include "sitemap.hxx"
 #include "vdwmap.hxx"
 #include "ff.hxx"
+#include "../clone.hxx"
 #include "../mae.hxx"
+#include "../import.hxx"
+#include "../analyze.hxx"
 
 #include "destro/prep_alchemical_mae.hxx"
 
 #include <cstdio>
 #include <fstream>
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+#include <reassign_ff.hxx>
+#endif
 
-using desres::fastjson::Json;
+using desres::msys::fastjson::Json;
 using namespace desres::msys;
 
+template <typename Container>
+void split(Container& c, std::string const& str, char delim) {
+    // while letters remain, skip delimiter(s), add word
+    size_t pos = 0;
+    for (;;) {
+        while (str[pos]==delim) ++pos;
+        size_t end = pos;
+        while (str[end]!='\0' && str[end] != delim) ++end;
+        if (end==pos) break;
+        c.emplace_back(str.substr(pos,end-pos));
+        pos = end;
+    }
+}
+
+
 namespace {
-
-    static Id find_chain(SystemPtr h, const std::string& name) {
-        IdList chains = h->chains();
-        for (Id i=0, n=chains.size(); i<n; i++) {
-            Id id = chains[i];
-            if (h->chain(id).name==name) return id;
-        }
-        return BadId;
-    }
-
-    static Id find_residue(SystemPtr h, Id chn, const std::string& name,
-                                                int resid ) {
-        IdList residues = h->residuesForChain(chn);
-        for (Id i=0, n=residues.size(); i<n; i++) {
-            Id id = residues[i];
-            if (h->residue(id).num==resid && h->residue(id).name==name) {
-                return id;
-            }
-        }
-        return BadId;
-    }
 
     const char * ANUMS     = "m_atomic_number";
     const char * RESIDS    = "m_residue_number";
@@ -54,24 +53,38 @@ namespace {
     const char * GRP_BIAS   = "ffio_grp_cm_moi";
     const char * GRP_FROZEN = "ffio_grp_frozen";
     const char * FORMAL_CHG = "m_formal_charge";
+    const char * INSERTION =  "m_insertion_code";
+    const char * GROW_NAME =  "m_grow_name";
+    const char * MMOD_TYPE =  "m_mmod_type";
+    const char * FEP_MAPPING =  "fep_mapping";
 
     const std::string empty;
 
-    bool contains_non_whitespace(const std::string& s) {
-        for (unsigned i=0; i<s.size(); i++) if (!isspace(s[i])) return true;
-        return false;
+    void import_cell( const Json& ct, SystemPtr h ) {
+        h->global_cell[0][0]=ct.get("chorus_box_ax").as_float(0);
+        h->global_cell[0][1]=ct.get("chorus_box_ay").as_float(0);
+        h->global_cell[0][2]=ct.get("chorus_box_az").as_float(0);
+        h->global_cell[1][0]=ct.get("chorus_box_bx").as_float(0);
+        h->global_cell[1][1]=ct.get("chorus_box_by").as_float(0);
+        h->global_cell[1][2]=ct.get("chorus_box_bz").as_float(0);
+        h->global_cell[2][0]=ct.get("chorus_box_cx").as_float(0);
+        h->global_cell[2][1]=ct.get("chorus_box_cy").as_float(0);
+        h->global_cell[2][2]=ct.get("chorus_box_cz").as_float(0);
     }
 
-    void import_cell( const Json& ct, SystemPtr h ) {
-        h->global_cell.A[0]=ct.get("chorus_box_ax").as_float(0);
-        h->global_cell.A[1]=ct.get("chorus_box_ay").as_float(0);
-        h->global_cell.A[2]=ct.get("chorus_box_az").as_float(0);
-        h->global_cell.B[0]=ct.get("chorus_box_bx").as_float(0);
-        h->global_cell.B[1]=ct.get("chorus_box_by").as_float(0);
-        h->global_cell.B[2]=ct.get("chorus_box_bz").as_float(0);
-        h->global_cell.C[0]=ct.get("chorus_box_cx").as_float(0);
-        h->global_cell.C[1]=ct.get("chorus_box_cy").as_float(0);
-        h->global_cell.C[2]=ct.get("chorus_box_cz").as_float(0);
+    void add_keyval(component_t& ct, std::string const& key, Json const& blk) {
+        Json::kind_t kind = blk.kind();
+        ValueType type = kind==Json::Int ? IntType :
+                         kind==Json::Float ? FloatType :
+                                             StringType;
+        ct.add(key,type);
+        ValueRef val = ct.value(key);
+        switch (kind) {
+            case Json::Int: val=blk.as_int(0); break;
+            case Json::Float: val=blk.as_float(0); break;
+            case Json::String: val=blk.as_string(""); break;
+            default: ;
+        }
     }
 
     void import_particles( const Json& ct, SystemPtr h,
@@ -83,8 +96,31 @@ namespace {
         const Json& m_atom = ct.get("m_atom");
         if (!m_atom) return;
 
-        Id chn = BadId;
-        Id res = BadId;
+        Id ctid = h->addCt();
+        h->ct(ctid).setName(ct.get("m_title").as_string(""));
+        /* other keyvals */
+        for (int i=0; i<ct.size(); i++) {
+            const char* key = ct.key(i);
+            if (!strncmp(key, "chorus_box_", 11)) continue;
+            if (!strcmp(key, "m_title")) continue;
+            if (!strcmp(key, "__name__")) continue;
+            Json const& blk = ct.elem(i);
+            Json::kind_t kind = blk.kind();
+            if (kind==Json::Int || kind==Json::Float || kind==Json::String) {
+                add_keyval(h->ct(ctid), key, blk);
+            } else if (!strcmp(key, "m_depend")) {
+                Json const& prop = blk.get("m_depend_property");
+                Json const& dep = blk.get("m_depend_dependency");
+                int n = blk.get("__size__").as_int(0);
+                if (prop.kind()==Json::Array && dep.kind()==Json::Array) {
+                    for (int j=0; j<n; j++) {
+                        std::string hkey("m_depend/");
+                        hkey += prop.elem(j).as_string("");
+                        add_keyval(h->ct(ctid), hkey, dep.elem(j));
+                    }
+                }
+            }
+        }
 
         const Json& anums = m_atom.get(ANUMS);
         const Json& resids = m_atom.get(RESIDS);
@@ -104,49 +140,39 @@ namespace {
         const Json& bias = m_atom.get(GRP_BIAS);
         const Json& frz = m_atom.get(GRP_FROZEN);
         const Json& formals = m_atom.get(FORMAL_CHG);
-        Id gtmp=BadId, gene=BadId, glig=BadId, gbias=BadId, gfrz=BadId;
+        const Json& inserts = m_atom.get(INSERTION);
+        const Json& grow = m_atom.get(GROW_NAME);
+        const Json& mmod_type = m_atom.get(MMOD_TYPE);
+        const Json& fep_atom_mapping = m_atom.get(FEP_MAPPING);
 
-        if (!!temp) gtmp=h->atomProps()->addProp("grp_temperature", IntType);
-        if (!!nrg)  gene=h->atomProps()->addProp("grp_energy", IntType);
-        if (!!lig)  glig=h->atomProps()->addProp("grp_ligand", IntType);
-        if (!!bias) gbias=h->atomProps()->addProp("grp_bias", IntType);
-        if (!!frz)  gfrz=h->atomProps()->addProp("grp_frozen", IntType);
+        Id gtmp=BadId, gene=BadId, glig=BadId, gbias=BadId, gfrz=BadId;
+        Id growcol=BadId;
+        Id mmodcol=BadId;
+        Id mapping_pid=BadId;
+
+        if (!!temp) gtmp=h->addAtomProp("grp_temperature", IntType);
+        if (!!nrg)  gene=h->addAtomProp("grp_energy", IntType);
+        if (!!lig)  glig=h->addAtomProp("grp_ligand", IntType);
+        if (!!bias) gbias=h->addAtomProp("grp_bias", IntType);
+        if (!!frz)  gfrz=h->addAtomProp("grp_frozen", IntType);
+        if (!!fep_atom_mapping)  mapping_pid=h->addAtomProp("fep_mapping", IntType);
+
+        SystemImporter imp(h);
 
         int j,n = m_atom.get("__size__").as_int();
         for (j=0; j<n; j++) {
             int anum=anums.elem(j).as_int();
-            std::string segid = segids.elem(j).as_string("");
             std::string chainname=chains.elem(j).as_string("");
             int resid=resids.elem(j).as_int(0);
             std::string resname=resnames.elem(j).as_string("UNK");
             std::string name=names.elem(j).as_string("");
+            std::string segid=segids.elem(j).as_string("");
+            const char* insert=inserts.elem(j).as_string("");
 
-            boost::trim(segid);
-            boost::trim(chainname);
-            boost::trim(resname);
-            boost::trim(name);
+            Id id = imp.addAtom(chainname, segid, resid, resname, name, insert, ctid);
 
-            /* prefer segid to chain */
-            if (contains_non_whitespace(segid)) {
-                chainname = segid;
-            }
-
-            if (bad(chn) || h->chain(chn).name!=chainname) {
-                chn = h->addChain();
-                h->chain(chn).name = chainname;
-                res = BadId;
-            }
-
-            if (bad(res) || h->residue(res).num!=resid 
-                         || h->residue(res).name!=resname) {
-                res = h->addResidue(chn);
-                h->residue(res).num=resid;
-                h->residue(res).name=resname;
-            }
-            Id id = h->addAtom(res);
-            atom_t& atm = h->atom(id);
+            atom_t& atm = h->atomFAST(id);
             atm.atomic_number = anum;
-            atm.name = name;
             atm.x = x.elem(j).as_float(0);
             atm.y = y.elem(j).as_float(0);
             atm.z = z.elem(j).as_float(0);
@@ -154,12 +180,28 @@ namespace {
             atm.vy = vy.elem(j).as_float(0);
             atm.vz = vz.elem(j).as_float(0);
             if (!!formals) atm.formal_charge = formals.elem(j).as_int(0);
-            ParamTablePtr aprops = h->atomProps();
-            if (!!temp) aprops->value(id,gtmp)=temp.elem(j).as_int(0);
-            if (!!nrg)  aprops->value(id,gene)=nrg.elem(j).as_int(0);
-            if (!!lig)  aprops->value(id,glig)=lig.elem(j).as_int(0);
-            if (!!bias) aprops->value(id,gbias)=bias.elem(j).as_int(0);
-            if (!!frz)  aprops->value(id,gfrz)=frz.elem(j).as_int(0);
+            if (!!temp) h->atomPropValue(id,gtmp)=temp.elem(j).as_int(0);
+            if (!!nrg)  h->atomPropValue(id,gene)=nrg.elem(j).as_int(0);
+            if (!!lig)  h->atomPropValue(id,glig)=lig.elem(j).as_int(0);
+            if (!!bias) h->atomPropValue(id,gbias)=bias.elem(j).as_int(0);
+            if (!!frz)  h->atomPropValue(id,gfrz)=frz.elem(j).as_int(0);
+            if (!!fep_atom_mapping)  h->atomPropValue(id,mapping_pid)=fep_atom_mapping.elem(j).as_int(0);
+            if (!!grow) {
+                std::string g(grow.elem(j).as_string(""));
+                trim(g);
+                if (!g.empty()) {
+                    if (bad(growcol)) {
+                        growcol=h->addAtomProp("m_grow_name", StringType);
+                    }
+                    h->atomPropValue(id,growcol)=g;
+                }
+            }
+            if (!!mmod_type) {
+                if (bad(mmodcol)) {
+                    mmodcol=h->addAtomProp("m_mmod_type",IntType);
+                }
+                h->atomPropValue(id,mmodcol)=mmod_type.elem(j).as_int();
+            }
             atoms.push_back(id);
             *natoms += 1;
         }
@@ -209,9 +251,7 @@ namespace {
             const Json& vx = pseudo.get(VXCOL);
             const Json& vy = pseudo.get(VYCOL);
             const Json& vz = pseudo.get(VZCOL);
-
-            chn = BadId;
-            res = BadId;
+            const Json& fep_pseudo_mapping = pseudo.get(FEP_MAPPING);
 
             int j,n = pseudo.get("__size__").as_int();
             for (j=0; j<n; j++) {
@@ -221,39 +261,15 @@ namespace {
                 std::string resname=resnames.elem(j).as_string("UNK");
                 std::string name=names.elem(j).as_string("");
 
-                boost::trim(segid);
-                boost::trim(chainname);
-                boost::trim(resname);
-                boost::trim(name);
-
-                if (bad(chn) || h->chain(chn).name!=chainname) {
-                    chn = find_chain(h,chainname);
-                    if (bad(chn)) {
-                        chn = h->addChain();
-                        h->chain(chn).name = chainname;
-                    }
-                    res = BadId;
-                }
-
-                if (bad(res) || h->residue(res).num!=resid 
-                             || h->residue(res).name!=resname) {
-                    res = find_residue(h, chn, resname, resid);
-                    if (bad(res)) {
-                        res = h->addResidue(chn);
-                        h->residue(res).num = resid;
-                        h->residue(res).name = resname;
-                    }
-                }
-
-                Id id = h->addAtom(res);
+                Id id = imp.addAtom(chainname, segid, resid, resname, name, "", ctid);
                 atom_t& atom = h->atom(id);
-                atom.name = name;
                 atom.x = x.elem(j).as_float(0);
                 atom.y = y.elem(j).as_float(0);
                 atom.z = z.elem(j).as_float(0);
                 atom.vx = vx.elem(j).as_float(0);
                 atom.vy = vy.elem(j).as_float(0);
                 atom.vz = vz.elem(j).as_float(0);
+                if (!!fep_pseudo_mapping)  h->atomPropValue(id,mapping_pid)=fep_pseudo_mapping.elem(j).as_int(0);
                 atoms.push_back(id);
                 *npseudos += 1;
             }
@@ -261,62 +277,247 @@ namespace {
     }
 
     void write_ffinfo( const Json& ff, SystemPtr h ) {
-        ParamTablePtr extra = h->extra("forcefield");
+        ParamTablePtr extra = h->auxTable("forcefield");
         if (!extra) {
             extra=ParamTable::create();
             extra->addProp( "id", IntType);
             extra->addProp( "path", StringType);
             extra->addProp( "info", StringType);
-            h->addExtra("forcefield", extra);
+            h->addAuxTable("forcefield", extra);
         }
-        std::string info;
-        info += ff.get("viparr_command").as_string("");
-        info += "\n";
-        const Json& arr = ff.get("viparr_info").get("viparr_section");
-        if (arr.valid()) for (int i=0; i<arr.size(); i++) {
-            info += arr.elem(i).as_string("");
-            info += "\n";
+        /* hash by path so we don't add duplicates */
+        std::map<std::string,Id> pathmap;
+        for (Id i=0; i<extra->paramCount(); i++) {
+            pathmap[extra->value(i,1).asString()] = i;
         }
-        Id row = extra->addParam();
-        extra->value(row,0) = row;
-        extra->value(row,1) = ff.get("viparr_workdir").as_string("");
-        extra->value(row,2) = info;
+        /* parse the viparr 1.x command to get the forcefield paths */
+        std::string cmd = ff.get("viparr_command").as_string("");
+        std::string workdir = ff.get("viparr_workdir").as_string(".");
+        workdir += "/";
+        std::vector<std::string> tokens;
+        split(tokens, cmd, ' ');
+        if (tokens.size()>2) {
+            for (unsigned i=1; i<tokens.size()-1; i++) {
+                if (tokens[i]=="-f") {
+                    std::string const& path = tokens.at(i+1);
+                    if (!pathmap.count(path)) {
+                        Id row = extra->addParam();
+                        extra->value(row,0) = row;
+                        extra->value(row,1) = path;
+                        pathmap[path] = row;
+                    }
+                } else if (tokens[i]=="-d" || tokens[i]=="-m") {
+                    std::string path = tokens.at(i+1);
+                    if (path.substr(0,1)!="/") {
+                        path = workdir + path;
+                    }
+                    if (!pathmap.count(path)) {
+                        Id row = extra->addParam();
+                        extra->value(row,0) = row;
+                        extra->value(row,1) = path;
+                        pathmap[path] = row;
+                    }
+                }
+            }
+        }
+
+        /* We use a different table in viparr 4.x */
+        const Json& ffinfo = ff.get("msys_forcefield");
+        if (ffinfo.valid()) {
+            int i,n = ffinfo.get("__size__").as_int();
+            for (i=0; i<n; i++) {
+                std::string path = ffinfo.get("path").elem(i).as_string("");
+                std::string info = ffinfo.get("info").elem(i).as_string("");
+                if (path.empty() && info.empty()) continue;
+                if (pathmap.count(path)) continue;
+                /* convert escaped newlines in info back into newlines */
+                size_t pos = 0;
+                while ((pos=info.find("\\n", pos))!=std::string::npos) {
+                    info.replace(pos,2,"\n");
+                }
+                Id row = extra->addParam();
+                extra->value(row,0) = row;
+                extra->value(row,1) = path;
+                extra->value(row,2) = info;
+            }
+        }
+
+        /* add a provenance entry */
+        if (h->provenance().empty()) {
+            Provenance p;
+            p.timestamp = ff.get("date").as_string("");
+            p.user = ff.get("user").as_string("");
+            p.workdir = ff.get("viparr_workdir").as_string("");
+            p.cmdline = ff.get("viparr_command").as_string("");
+            h->addProvenance(p);
+        }
     }
 
     bool skippable(const std::string& s) {
         return s=="ffio_sites"
             || s=="ffio_atoms" 
             || s=="viparr_info"
+            || s=="msys_forcefield"
             || s=="ffio_pseudo"
+            || (s.compare(0, 9,"ffio_cmap") == 0)
             ;
     }
 
-    bool endswith(const char * word, const char * suffix ) {
-        const char * a = strstr(word, suffix);
-        if (!a) return false;
-        size_t startlen = a-word;
-        return startlen + strlen(suffix) == strlen(word);
+    bool is_full_system(Json const& ct) {
+        const Json& type = ct.get("ffio_ct_type");
+        return type.valid() && !strcmp(type.as_string(), "full_system");
     }
-}
-                           
-namespace desres { namespace msys {
 
-    SystemPtr ImportMAE( std::string const& path,
-                         bool ignore_unrecognized ) {
+    void import_provenance(Json const& ct, SystemPtr h) {
+        if (!h->provenance().empty()) return;
+        const Json& prov = ct.get("msys_provenance");
+        if (prov.valid()) {
+            int i,n = prov.get("__size__").as_int();
+            for (i=0; i<n; i++) {
+                Provenance p;
+                p.version = prov.get("version").elem(i).as_string("");
+                p.timestamp = prov.get("timestamp").elem(i).as_string("");
+                p.user = prov.get("user").elem(i).as_string("");
+                p.workdir = prov.get("workdir").elem(i).as_string("");
+                p.cmdline = prov.get("cmdline").elem(i).as_string("");
+                p.executable = prov.get("executable").elem(i).as_string("");
 
-        /* slurp in the file */
-        std::ifstream in(path.c_str());
-        if (!in) {
-            std::stringstream ss;
-            ss << "Failed opening MAE file at '" << path << "'";
-            throw std::runtime_error(ss.str());
+                h->addProvenance(p);
+            }
         }
-        std::stringstream buf;
-        buf << in.rdbuf();
+    }
 
-        /* create a json representation */
+    void append_system(SystemPtr h, Json const& ct,
+                       const bool ignore_unrecognized,
+                       const bool without_tables) {
+
+        h->name = ct.get("m_title").as_string("");
+
+        IdList atoms;
+        int natoms=0, npseudos=0;
+        import_cell( ct, h );
+        import_particles( ct, h, atoms, &natoms, &npseudos );
+        import_provenance(ct, h);
+        if (without_tables) return;
+
+        const Json& ff = ct.get("ffio_ff");
+        if (ff.valid()) {
+            write_ffinfo(ff, h);
+
+            const Json& sites = ff.get("ffio_atoms").valid() ?
+                ff.get("ffio_atoms") : ff.get("ffio_sites");
+
+            mae::SiteMap sitemap( h, sites, atoms, natoms, npseudos );
+            mae::VdwMap vdwmap( ff );
+
+            int j,n = ff.size();
+            for (j=0; j<n; j++) {
+                const Json& blk = ff.elem(j);
+                if (blk.kind()!=Json::Object) continue;
+                if (!blk.get("__size__").as_int()) continue;
+                std::string name = ff.key(j);
+                if (skippable(name)) continue;
+                const mae::Ffio * imp = mae::Ffio::get(name);
+                if (!imp) {
+                    if (ignore_unrecognized) {
+                        std::cerr << "skipping unrecognized block '" 
+                                << name << "'" << std::endl;
+                    } else {
+                        std::stringstream ss;
+                        ss << "No handler for block '" << name << "'";
+                        throw std::runtime_error(ss.str());
+                    }
+                } else if (imp->wants_all()) {
+                    imp->apply( h, ff,  sitemap, vdwmap );
+                } else {
+                    imp->apply( h, blk, sitemap, vdwmap );
+                }
+            }
+        }
+    }
+
+    SystemPtr clone_structure_only(SystemPtr h) {
+        // clone the non-pseudos if any pseudos were loaded.
+        IdList ids;
+        const Id n=h->maxAtomId();
+        ids.reserve(n);
+        for (Id i=0, n=h->maxAtomId(); i<n; i++) {
+            if (h->atomFAST(i).atomic_number>0) {
+                ids.push_back(i);
+            }
+        }
+        if (ids.size()<n) {
+            h = Clone(h, ids);
+        }
+        return h;
+    }
+
+    class iterator : public LoadIterator {
+        const bool ignore_unrecognized;
+        const bool structure_only;
+
+        std::ifstream in;
+        mae::import_iterator *it;
+
+    public:
+        iterator(bool _ignore_unrecognized, bool _structure_only)
+        : ignore_unrecognized(_ignore_unrecognized), 
+          structure_only(_structure_only),
+          it()
+          {}
+
+        void init(std::string const& path) {
+            in.open(path.c_str());
+            if (!in) {
+                MSYS_FAIL("Failed opening MAE file at '" << path << "'");
+            }
+            it = new mae::import_iterator(in);
+        }
+
+        ~iterator() {
+            delete it;
+        }
+
+        SystemPtr next() {
+            Json block;
+            while (it->next(block)) {
+                if (is_full_system(block)) continue;
+                SystemPtr h = System::create();
+                bool without_tables = structure_only;
+                append_system(h, block, ignore_unrecognized, without_tables);
+                if (structure_only) h = clone_structure_only(h);
+                h->ct(0).add("msys_file_offset", IntType);
+                h->ct(0).value("msys_file_offset") = it->offset();
+                Analyze(h);
+                return h;
+            }
+            return SystemPtr();
+        }
+    };
+
+    SystemPtr read_all(std::istream& file, 
+                       bool ignore_unrecognized,
+                       bool structure_only,
+                       bool without_tables) {
+
+        std::stringstream buf;
+        buf << file.rdbuf();
+
+#ifndef DESMOND_USE_ACADEMIC
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+        std::string bytes = buf.str();
+        if (bytes.size() == 0){
+          MSYS_FAIL("Input file empty.");
+        }
+        std::string new_bytes;
+        reassign_ff(bytes.c_str(), new_bytes);
+        buf.str("");
+        buf << new_bytes;
+#endif
+#endif
+
         Json M;
-        mae::import_mae( buf, M );
+        mae::import_mae(buf, M);
 
         /* if alchemical, do the conversion on the original mae contents,
          * then recreate the json */
@@ -333,61 +534,71 @@ namespace desres { namespace msys {
             mae::import_mae( in, M );
         }
 
+        /* read all ct blocks into the same system */
         SystemPtr h = System::create();
-
         for (int i=0; i<M.size(); i++) {
             const Json& ct = M.elem(i);
-            const Json& type = ct.get("ffio_ct_type");
-            if (type.valid() && !strcmp(type.as_string(), "full_system")) {
-                continue;
-            }
-            
-            IdList atoms;
-            int natoms=0, npseudos=0;
-            import_cell( ct, h );
-            import_particles( ct, h, atoms, &natoms, &npseudos );
-
-            const Json& ff = ct.get("ffio_ff");
-            if (ff.valid()) {
-                write_ffinfo(ff, h);
-
-                const Json& sites = ff.get("ffio_atoms").valid() ?
-                    ff.get("ffio_atoms") : ff.get("ffio_sites");
-
-                mae::SiteMap sitemap( h, sites, atoms, natoms, npseudos );
-                mae::VdwMap vdwmap( ff );
-
-                int j,n = ff.size();
-                for (j=0; j<n; j++) {
-                    const Json& blk = ff.elem(j);
-                    if (blk.kind()!=Json::Object) continue;
-                    if (!blk.get("__size__").as_int()) continue;
-                    std::string name = ff.key(j);
-                    if (skippable(name)) continue;
-                    const char * suffix = "_alchemical";
-                    bool alchemical = endswith(name.c_str(), suffix);
-                    if (alchemical) {
-                        name = name.substr(0,name.size()-strlen(suffix));
-                    }
-                    const mae::Ffio * imp = mae::Ffio::get(name);
-                    if (!imp) {
-                        if (ignore_unrecognized) {
-                            std::cerr << "skipping unrecognized block '" 
-                                    << name << "'" << std::endl;
-                        } else {
-                            std::stringstream ss;
-                            ss << "No handler for block '" << name << "'";
-                            throw std::runtime_error(ss.str());
-                        }
-                    } else if (imp->wants_all()) {
-                        imp->apply( h, ff,  sitemap, vdwmap, alchemical );
-                    } else {
-                        imp->apply( h, blk, sitemap, vdwmap, alchemical );
-                    }
-                }
-            }
+            if (is_full_system(ct)) continue;
+            append_system(h, ct, ignore_unrecognized, without_tables);
         }
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+        CreateAlchemicalSoftTables(h);
+        ModifyQCPair(h);
+#endif
+        if (structure_only) h = clone_structure_only(h);
+        Analyze(h);
         return h;
+    }
+}
+                           
+namespace desres { namespace msys {
+
+    SystemPtr ImportMAE( std::string const& path,
+                         bool ignore_unrecognized,
+                         bool structure_only,
+                         bool without_tables) {
+
+        std::ifstream file(path.c_str());
+        if (!file) {
+            MSYS_FAIL("Failed opening MAE file at '" << path << "'");
+        }
+        SystemPtr sys = read_all(file, ignore_unrecognized, 
+                                       structure_only,
+                                       without_tables);
+        sys->name = path;
+        return sys;
+    }
+
+    SystemPtr ImportMAEFromBytes( const char* bytes, int64_t len,
+                         bool ignore_unrecognized, bool structure_only ) {
+
+#if defined(__APPLE__) || defined(_WIN32) || defined(_WIN64)
+        // pubsetbuf fails on windows and mac
+        std::string buf(bytes, len);
+        std::istringstream file(buf);
+#else
+        std::istringstream file;
+        file.rdbuf()->pubsetbuf(const_cast<char *>(bytes), len);
+#endif
+        return read_all(file, ignore_unrecognized, structure_only,
+                                                   structure_only);
+    }
+
+    SystemPtr ImportMAEFromStream( std::istream& file,
+                                   bool ignore_unrecognized,
+                                   bool structure_only) {
+
+        return read_all(file, ignore_unrecognized, structure_only,
+                                                   structure_only);
+    }
+
+    LoadIteratorPtr MaeIterator(std::string const& path,
+                                bool structure_only) {
+        const bool ignore_unrecognized = false;
+        iterator* it = new iterator(ignore_unrecognized, structure_only);
+        LoadIteratorPtr ptr(it);
+        it->init(path);
+        return ptr;
     }
 
 }}

@@ -10,7 +10,7 @@
  * Returns the current character in the file
  * @return current char
  */
-char desres::Destro::Tokenizer::peek() {
+char desres::msys::Destro::Tokenizer::peek() {
   return m_c;
 }
 
@@ -19,7 +19,7 @@ char desres::Destro::Tokenizer::peek() {
  * and point information.
  * @return (new) current char
  */
-char desres::Destro::Tokenizer::read() {
+char desres::msys::Destro::Tokenizer::read() {
   m_c = m_input->get(); 
   if (m_c == '\n') m_line++;
   m_point++;
@@ -30,7 +30,7 @@ char desres::Destro::Tokenizer::read() {
  * Test for end-of-file (stream,string, ...)
  * @return true iff at end of file
  */
-bool desres::Destro::Tokenizer::eof() const {
+bool desres::msys::Destro::Tokenizer::eof() const {
   return m_input->eof();
 }
 
@@ -39,7 +39,7 @@ bool desres::Destro::Tokenizer::eof() const {
  * this test to short-circuit the tokenizer when at
  * [, ], {, or }.
  */
-bool desres::Destro::Tokenizer::issingle(char c) {
+bool desres::msys::Destro::Tokenizer::issingle(char c) {
   return (c == '[' || c == ']' || c == '{' || c == '}');
 }
 
@@ -47,7 +47,7 @@ bool desres::Destro::Tokenizer::issingle(char c) {
  * Build from an istream
  * @param input The stream to parse
  */
-desres::Destro::Tokenizer::Tokenizer(std::istream& input)
+desres::msys::Destro::Tokenizer::Tokenizer(std::istream& input)
   : m_c(0),
     m_buffer(NULL),
     m_input(&input),
@@ -68,7 +68,7 @@ desres::Destro::Tokenizer::Tokenizer(std::istream& input)
  * Make sure stream is ready to read and grab 1st token.
  * We require that the stream is not at EOF to start.
  */
-void desres::Destro::Tokenizer::prime_the_pump() {
+void desres::msys::Destro::Tokenizer::prime_the_pump() {
   if (m_input->eof()) throw dessert("cannot parse empty destro");
   read();
 }
@@ -79,7 +79,7 @@ void desres::Destro::Tokenizer::prime_the_pump() {
  * in the destructor.
  * @param input The string to parse
  */
-desres::Destro::Tokenizer::Tokenizer(const std::string& input)
+desres::msys::Destro::Tokenizer::Tokenizer(const std::string& input)
   : m_c(0),
     m_buffer(NULL),
     m_input(new std::stringstream(input)),
@@ -103,7 +103,7 @@ desres::Destro::Tokenizer::Tokenizer(const std::string& input)
  * closed.
  * @param input The FILE* to parse
  */
-desres::Destro::Tokenizer::Tokenizer(FILE* input)
+desres::msys::Destro::Tokenizer::Tokenizer(FILE* input)
   : m_c(0),
     m_buffer(new FILEbuf(input)),
     m_input(new std::istream(m_buffer)),
@@ -125,7 +125,7 @@ desres::Destro::Tokenizer::Tokenizer(FILE* input)
  * The destructor cleans up any heap allocated temporaries created
  * during construction.
  */
-desres::Destro::Tokenizer::~Tokenizer() {
+desres::msys::Destro::Tokenizer::~Tokenizer() {
   if (m_token) free(m_token);
   delete m_buffer;
   if (m_input_owned) delete m_input;
@@ -142,7 +142,7 @@ desres::Destro::Tokenizer::~Tokenizer() {
  * defined using this one-character lookahead.
  * @return The current (possibly new) token 
  */
-const char * desres::Destro::Tokenizer::token(bool ignore_single_character_tokens) {
+const char * desres::msys::Destro::Tokenizer::token(bool ignore_single_character_tokens) {
   // -----------------------------------------------
   // Keep returning the same token until next()
   // is called.
@@ -192,7 +192,7 @@ const char * desres::Destro::Tokenizer::token(bool ignore_single_character_token
       // Everything else starts with some other character
       // -----------------------------------------------
       if (issingle(c)) {
-        state = SINGLECHAR;
+        state = ignore_single_character_tokens ? STARTOTHER : SINGLECHAR;
       } else if (c == '"') {
         state = STARTSTRING;
       } else {
@@ -263,7 +263,7 @@ const char * desres::Destro::Tokenizer::token(bool ignore_single_character_token
 /*!
  * Set state to read a new token on the next request.
  */
-void desres::Destro::Tokenizer::next() {
+void desres::msys::Destro::Tokenizer::next() {
   m_isfresh = false;
 }
 
@@ -271,7 +271,7 @@ void desres::Destro::Tokenizer::next() {
  * Line associated with current token
  * @return The line number
  */
-unsigned desres::Destro::Tokenizer::line() const {
+unsigned desres::msys::Destro::Tokenizer::line() const {
   return m_tokenline;
 }
 
@@ -279,7 +279,7 @@ unsigned desres::Destro::Tokenizer::line() const {
  * File offset associated with current token.
  * @return The offset
  */
-size_t desres::Destro::Tokenizer::point() const {
+size_t desres::msys::Destro::Tokenizer::point() const {
   return m_tokenpoint;
 }
 
@@ -294,7 +294,7 @@ size_t desres::Destro::Tokenizer::point() const {
  * to grab it.
  * @return The comment (or empty string if no comment)
  */
-std::string desres::Destro::Tokenizer::optional_comment() {
+std::string desres::msys::Destro::Tokenizer::optional_comment() {
   std::string comment;
   char c;
   // -----------------------------------------------
@@ -341,7 +341,7 @@ std::string desres::Destro::Tokenizer::optional_comment() {
  * @param match
  * @return The matching token body
  */
-const char * desres::Destro::Tokenizer::predict(const char * match) {
+const char * desres::msys::Destro::Tokenizer::predict(const char * match) {
   const char * tok = token();
   if (strcmp(match, "") && strcmp(tok, match)) {
     std::stringstream str;
@@ -361,7 +361,7 @@ const char * desres::Destro::Tokenizer::predict(const char * match) {
  * names used in block (which embed [ and {) without quotes.
  * @return The matching token body
  */
-const char * desres::Destro::Tokenizer::predict_value() {
+const char * desres::msys::Destro::Tokenizer::predict_value() {
   const char * tok = token(true);  // Ignore single char tokens here
   if ( (tok[0] == '\0') || (strcmp(tok,":::") == 0) || (strcmp(tok,"}") == 0)) {
     std::stringstream str;
@@ -380,7 +380,7 @@ const char * desres::Destro::Tokenizer::predict_value() {
  * @param match Token body to try to match
  * @return True on a match, False on EOF or a non-match
  */
-bool desres::Destro::Tokenizer::not_a(const char * match) {
+bool desres::msys::Destro::Tokenizer::not_a(const char * match) {
   const char * tok = token();
   if (!strcmp(tok, END_OF_FILE)) return false; // EOF always quits
   return strcmp(tok, match);
@@ -391,4 +391,4 @@ bool desres::Destro::Tokenizer::not_a(const char * match) {
  * Normal parsing will not create this character sequence, so it makes a
  * good special token.
  */
-const char * desres::Destro::Tokenizer::END_OF_FILE = "";
+const char * desres::msys::Destro::Tokenizer::END_OF_FILE = "";

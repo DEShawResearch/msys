@@ -9,7 +9,7 @@
 //  P R O T E C T E D
 // -----------------------------------------------
 
-void desres::DestroArray::touch(ZingPool& zpool) const {
+void desres::msys::DestroArray::touch(ZingPool& zpool) const {
   // Touch my name
   DestroNamedBlock::touch(zpool);
 
@@ -27,8 +27,8 @@ void desres::DestroArray::touch(ZingPool& zpool) const {
 
 }
 
-desres::DestroArray::key_value_t*
-desres::DestroArray::find_schema(const std::string& attr,const desres::ZingPool& pool) {
+desres::msys::DestroArray::key_value_t*
+desres::msys::DestroArray::find_schema(const std::string& attr,const desres::msys::ZingPool& pool) {
   for(std::vector<key_value_t>::iterator p = m_data.begin(),
       en = m_data.end(); p != en; ++p) {
     if ((*p).key.string(pool) == attr) {
@@ -38,8 +38,8 @@ desres::DestroArray::find_schema(const std::string& attr,const desres::ZingPool&
   return NULL;
 }
 
-const desres::DestroArray::key_value_t*
-desres::DestroArray::find_schema(const std::string& attr,const desres::ZingPool& pool) const {
+const desres::msys::DestroArray::key_value_t*
+desres::msys::DestroArray::find_schema(const std::string& attr,const desres::msys::ZingPool& pool) const {
   for(std::vector<key_value_t>::const_iterator p = m_data.begin(),
       en = m_data.end(); p != en; ++p) {
     if ((*p).key.string(pool) == attr) return &(*p);
@@ -49,7 +49,7 @@ desres::DestroArray::find_schema(const std::string& attr,const desres::ZingPool&
 
 
 
-ssize_t desres::DestroArray::integer(const std::string& string) {
+ssize_t desres::msys::DestroArray::integer(const std::string& string) {
   size_t length = string.size();
   if (length == 0) {
     throw dessert("string not convertable to integer");
@@ -79,7 +79,7 @@ ssize_t desres::DestroArray::integer(const std::string& string) {
 // -----------------------------------------------
 //  P U B L I C
 // -----------------------------------------------
-desres::DestroArray::DestroArray(Destro* parent, size_t num_elements)
+desres::msys::DestroArray::DestroArray(Destro* parent, size_t num_elements)
   : DestroNamedBlock(parent)
 {
   for(size_t i=0; i<num_elements; ++i) {
@@ -87,15 +87,15 @@ desres::DestroArray::DestroArray(Destro* parent, size_t num_elements)
   }
 }
 
-desres::DestroArray::~DestroArray() {
+desres::msys::DestroArray::~DestroArray() {
 }
 
-size_t desres::DestroArray::size() const {
+size_t desres::msys::DestroArray::size() const {
   return m_rows.size();
 }
 
 
-desres::Destro& desres::DestroArray::bulk_row(const std::string& offset, const std::vector<std::string>& elements) {
+desres::msys::Destro& desres::msys::DestroArray::bulk_row(const std::string& offset, const std::vector<std::string>& elements) {
   ZingPool& zpool = mutable_pool(); // check that array is mutable
 
   ssize_t rowid;
@@ -114,7 +114,7 @@ desres::Destro& desres::DestroArray::bulk_row(const std::string& offset, const s
     throw dessert("invalid number of elements in bulk row");
   }
 
-  desres::Destro& row = new_block(offset);
+  desres::msys::Destro& row = new_block(offset);
 
   for(unsigned i=0;i<width;++i) {
     key_value_t& location = m_data[i];
@@ -138,7 +138,7 @@ desres::Destro& desres::DestroArray::bulk_row(const std::string& offset, const s
   return row;
 }
 
-void desres::DestroArray::resize(size_t n) {
+void desres::msys::DestroArray::resize(size_t n) {
   mutable_pool(); // check that array is mutable
 
   size_t sz = size();
@@ -166,7 +166,7 @@ void desres::DestroArray::resize(size_t n) {
 
 
 
-void desres::DestroArray::add_schema(char type,const std::string& attr,const std::string& doc) {
+void desres::msys::DestroArray::add_schema(char type,const std::string& attr,const std::string& doc) {
   ZingPool& zpool = mutable_pool();
 
   // Perhaps we just need to update the one we have
@@ -194,7 +194,7 @@ void desres::DestroArray::add_schema(char type,const std::string& attr,const std
   keyvalue.precision = -1;
 }
 
-std::map<std::string,desres::Destro::schema_t> desres::DestroArray::schemas() const {
+std::map<std::string,desres::msys::Destro::schema_t> desres::msys::DestroArray::schemas() const {
   const ZingPool& zpool = pool();
   std::map<std::string,schema_t> result;
   for(std::vector<key_value_t>::const_iterator p = m_data.begin(),
@@ -209,9 +209,9 @@ std::map<std::string,desres::Destro::schema_t> desres::DestroArray::schemas() co
   return result;/*GCOV-IGNORE*/
 }
 
-std::vector<desres::Destro::schema_t> desres::DestroArray::ordered_schema() const {
+std::vector<desres::msys::Destro::schema_t> desres::msys::DestroArray::ordered_schema() const {
   const ZingPool& zpool = pool();
-  std::vector<desres::Destro::schema_t> result;
+  std::vector<desres::msys::Destro::schema_t> result;
   for(std::vector<key_value_t>::const_iterator p = m_data.begin(),
         en = m_data.end(); p != en; ++p) {
     const key_value_t& description = *p;
@@ -225,11 +225,11 @@ std::vector<desres::Destro::schema_t> desres::DestroArray::ordered_schema() cons
   return result;/*GCOV-IGNORE*/
 }
 
-std::string desres::DestroArray::get_value(const std::string&) const {
+std::string desres::msys::DestroArray::get_value(const std::string&) const {
   throw dessert("get_value not meaningful for arrays",DESSERT_LOC);
 }
 
-char desres::DestroArray::get_type(const std::string& attr) const {
+char desres::msys::DestroArray::get_type(const std::string& attr) const {
   const ZingPool& zpool = pool();
   const key_value_t* location = find_schema(attr,zpool);
   if (location == NULL) {
@@ -238,7 +238,7 @@ char desres::DestroArray::get_type(const std::string& attr) const {
   return location->type;
 }
 
-int desres::DestroArray::get_precision(const std::string& attr) const {
+int desres::msys::DestroArray::get_precision(const std::string& attr) const {
   const ZingPool& zpool = pool();
   const key_value_t* location = find_schema(attr,zpool);
   if (location == NULL) {
@@ -248,7 +248,7 @@ int desres::DestroArray::get_precision(const std::string& attr) const {
   return location->precision;
 }
 
-void desres::DestroArray::set_precision(const std::string& attr,int precision) {
+void desres::msys::DestroArray::set_precision(const std::string& attr,int precision) {
   mutable_pool();
 
   if (precision > s_max_precision) precision = s_max_precision;
@@ -260,7 +260,7 @@ void desres::DestroArray::set_precision(const std::string& attr,int precision) {
   location->precision = precision;
 }
 
-std::string desres::DestroArray::get_doc(const std::string& attr) const {
+std::string desres::msys::DestroArray::get_doc(const std::string& attr) const {
   const ZingPool& zpool = pool();
   const key_value_t* location = find_schema(attr,zpool);
   if (location == NULL) {
@@ -269,7 +269,7 @@ std::string desres::DestroArray::get_doc(const std::string& attr) const {
   return location->doc.string(zpool);
 }
 
-void desres::DestroArray::set_doc(const std::string& attr, const std::string& doc) {
+void desres::msys::DestroArray::set_doc(const std::string& attr, const std::string& doc) {
   mutable_pool();
 
   ZingPool& zpool = pool();
@@ -280,15 +280,15 @@ void desres::DestroArray::set_doc(const std::string& attr, const std::string& do
   location->doc = Zing(doc,zpool);
 }
 
-desres::Destro::Attribute desres::DestroArray::get_attr(const std::string& attr) {
+desres::msys::Destro::Attribute desres::msys::DestroArray::get_attr(const std::string& attr) {
   return Attribute(this,attr);
 }
 
-const desres::Destro::Attribute desres::DestroArray::get_attr(const std::string& attr) const {
+const desres::msys::Destro::Attribute desres::msys::DestroArray::get_attr(const std::string& attr) const {
   return Attribute(const_cast<DestroArray*>(this),attr);
 }
 
-void desres::DestroArray::set_unsafe(const std::string& attr,const std::string& value) {
+void desres::msys::DestroArray::set_unsafe(const std::string& attr,const std::string& value) {
   ZingPool& zpool = mutable_pool();
   key_value_t* location = find_schema(attr,zpool);
   if (location == NULL) {
@@ -304,7 +304,7 @@ void desres::DestroArray::set_unsafe(const std::string& attr,const std::string& 
   }
 }
 
-void desres::DestroArray::set_attr(char type,const std::string& attr,const std::string& value) {
+void desres::msys::DestroArray::set_attr(char type,const std::string& attr,const std::string& value) {
   ZingPool& zpool = mutable_pool();
   key_value_t* location = find_schema(attr,zpool);
 
@@ -328,7 +328,7 @@ void desres::DestroArray::set_attr(char type,const std::string& attr,const std::
 
 }
 
-void desres::DestroArray::clear(const std::string& attr) {
+void desres::msys::DestroArray::clear(const std::string& attr) {
   ZingPool& zpool = mutable_pool();
   key_value_t* location = find_schema(attr,zpool);
 
@@ -341,7 +341,7 @@ void desres::DestroArray::clear(const std::string& attr) {
   }
 }
 
-void desres::DestroArray::del(const std::string& attr) {
+void desres::msys::DestroArray::del(const std::string& attr) {
   // Perhaps it is an attribute....
   ZingPool& zpool = mutable_pool();
   for(std::vector<key_value_t>::iterator p = m_data.begin(),
@@ -355,7 +355,7 @@ void desres::DestroArray::del(const std::string& attr) {
   // Otherwise, silently ignore
 }
 
-void desres::DestroArray::del(size_t blockno) {
+void desres::msys::DestroArray::del(size_t blockno) {
   if (blockno >= 1 && blockno <= size()) {
 
     // Erase row's entry in each column data
@@ -376,38 +376,38 @@ void desres::DestroArray::del(size_t blockno) {
   }
 }
 
-desres::Destro& desres::DestroArray::new_block(const std::string& name) {
+desres::msys::Destro& desres::msys::DestroArray::new_block(const std::string& name) {
   mutable_pool();
   size_t n = size()+1;
   resize(n);
   return block(n);
 }
 
-desres::DestroArray& desres::DestroArray::new_array(const std::string& name,size_t num_elements) {
+desres::msys::DestroArray& desres::msys::DestroArray::new_array(const std::string& name,size_t num_elements) {
   throw dessert("new_array not meaningful for arrays");
 }
 
-desres::Destro::Attribute desres::DestroArray::operator[](const std::string& name) {
+desres::msys::Destro::Attribute desres::msys::DestroArray::operator[](const std::string& name) {
   return Attribute(this,name);
 }
 
-const desres::Destro::Attribute desres::DestroArray::operator[](const std::string& name) const {
+const desres::msys::Destro::Attribute desres::msys::DestroArray::operator[](const std::string& name) const {
   return Attribute(const_cast<DestroArray*>(this),name);
 }
 
-desres::Destro& desres::DestroArray::operator[](ssize_t i) {
+desres::msys::Destro& desres::msys::DestroArray::operator[](ssize_t i) {
   return block(i);
 }
 
-const desres::Destro& desres::DestroArray::operator[](ssize_t i) const {
+const desres::msys::Destro& desres::msys::DestroArray::operator[](ssize_t i) const {
   return block(i);
 }
 
-bool desres::DestroArray::is_array() const {
+bool desres::msys::DestroArray::is_array() const {
   return true;
 }
 
-bool desres::DestroArray::has_block(const std::string& blockname) const {
+bool desres::msys::DestroArray::has_block(const std::string& blockname) const {
   ssize_t ival;
   try {
     ival = integer(blockname);
@@ -419,34 +419,34 @@ bool desres::DestroArray::has_block(const std::string& blockname) const {
   return (uval >= 1 && uval <= size());
 }
 
-bool desres::DestroArray::has_attr(const std::string& attr) const {
+bool desres::msys::DestroArray::has_attr(const std::string& attr) const {
   const key_value_t* location = find_schema(attr,pool());
   return (location != NULL);
 }
 
-bool desres::DestroArray::has_value(const std::string&) const {
+bool desres::msys::DestroArray::has_value(const std::string&) const {
   throw dessert("has_value not meaningful for arrays");
 }
 
-desres::Destro& desres::DestroArray::block(size_t i) {
+desres::msys::Destro& desres::msys::DestroArray::block(size_t i) {
   return m_rows.at(i-1);
 }
 
-const desres::Destro& desres::DestroArray::block(size_t i) const {
+const desres::msys::Destro& desres::msys::DestroArray::block(size_t i) const {
   return m_rows.at(i-1);
 }
 
-desres::Destro& desres::DestroArray::block(const std::string& name) {
+desres::msys::Destro& desres::msys::DestroArray::block(const std::string& name) {
   ssize_t i = integer(name);
   return block(i);
 }
 
-const desres::Destro& desres::DestroArray::block(const std::string& name) const {
+const desres::msys::Destro& desres::msys::DestroArray::block(const std::string& name) const {
   ssize_t i = integer(name);
   return block(i);
 }
 
-void desres::DestroArray::write(std::ostream& os, int level) const {
+void desres::msys::DestroArray::write(std::ostream& os, int level) const {
   std::string aname = name();
   //if (aname == "") throw dessert("Cannot write unnamed array");
   if (aname == "") aname = "anonymous";
@@ -491,7 +491,7 @@ void desres::DestroArray::write(std::ostream& os, int level) const {
 
 }
 
-size_t desres::DestroArray::footprint() const {
+size_t desres::msys::DestroArray::footprint() const {
   size_t foot = DestroNamedBlock::footprint();
 
   // Add in the size of the keys
@@ -511,12 +511,12 @@ size_t desres::DestroArray::footprint() const {
 // Unpack string to value
 // -----------------------------------------------
 template<class T>
-T unpack(const std::string& x) {
-  throw desres::dessert("Not implemented",DESSERT_LOC);  /*GCOV-IGNORE*/
+static T unpack(const std::string& x) {
+  throw desres::msys::dessert("Not implemented",DESSERT_LOC);  /*GCOV-IGNORE*/
 }
 
 template<> long unpack<long>(const std::string& x) {
-  if (x == "<>") throw desres::dessert("unpacking empty value");
+  if (x == "<>") throw desres::msys::dessert("unpacking empty value");
   return strtol(x.c_str(),NULL,10);
 }
 template<> bool unpack<bool>(const std::string& x) {return unpack<long>(x);}
@@ -526,7 +526,7 @@ template<> unsigned int unpack<unsigned int>(const std::string& x) {return unpac
 template<> unsigned short unpack<unsigned short>(const std::string& x) {return unpack<long>(x);}
 template<> unsigned long unpack<unsigned long>(const std::string& x) {return unpack<long>(x);}
 template<> double unpack<double>(const std::string& x) {
-  if (x == "<>") throw desres::dessert("unpack empty token");
+  if (x == "<>") throw desres::msys::dessert("unpack empty token");
   return strtod(x.c_str(),NULL);
 }
 template<> float unpack<float>(const std::string& x) {return unpack<double>(x);}
@@ -551,7 +551,7 @@ template unsigned short unpack(const std::string&,unsigned short);
 template unsigned long unpack(const std::string&,unsigned long);
 
 template<class T>
-void desres::DestroArray::column(const std::string& attr, std::vector<T>& values) const {
+void desres::msys::DestroArray::column(const std::string& attr, std::vector<T>& values) const {
   values.resize(0);
 
   const ZingPool& zpool = pool();
@@ -562,25 +562,25 @@ void desres::DestroArray::column(const std::string& attr, std::vector<T>& values
   values.resize(n);
   for(size_t i=0; i<n; ++i) {
     Zing z = location->values.at(i);
-    if (z.is_empty()) throw desres::dessert("Cannot unpack empty value");
+    if (z.is_empty()) throw desres::msys::dessert("Cannot unpack empty value");
     values[i] = unpack<T>(z.string(zpool));
   }
 
 }
 
-template void desres::DestroArray::column<bool>(const std::string& attr, std::vector<bool>& values) const;
-template void desres::DestroArray::column<int>(const std::string& attr, std::vector<int>& values) const;
-template void desres::DestroArray::column<short>(const std::string& attr, std::vector<short>& values) const;
-template void desres::DestroArray::column<long>(const std::string& attr, std::vector<long>& values) const;
-template void desres::DestroArray::column<unsigned int>(const std::string& attr, std::vector<unsigned int>& values) const;
-template void desres::DestroArray::column<unsigned short>(const std::string& attr, std::vector<unsigned short>& values) const;
-template void desres::DestroArray::column<unsigned long>(const std::string& attr, std::vector<unsigned long>& values) const;
-template void desres::DestroArray::column<float>(const std::string& attr, std::vector<float>& values) const;
-template void desres::DestroArray::column<double>(const std::string& attr, std::vector<double>& values) const;
-template void desres::DestroArray::column<std::string>(const std::string& attr, std::vector<std::string>& values) const;
+template void desres::msys::DestroArray::column<bool>(const std::string& attr, std::vector<bool>& values) const;
+template void desres::msys::DestroArray::column<int>(const std::string& attr, std::vector<int>& values) const;
+template void desres::msys::DestroArray::column<short>(const std::string& attr, std::vector<short>& values) const;
+template void desres::msys::DestroArray::column<long>(const std::string& attr, std::vector<long>& values) const;
+template void desres::msys::DestroArray::column<unsigned int>(const std::string& attr, std::vector<unsigned int>& values) const;
+template void desres::msys::DestroArray::column<unsigned short>(const std::string& attr, std::vector<unsigned short>& values) const;
+template void desres::msys::DestroArray::column<unsigned long>(const std::string& attr, std::vector<unsigned long>& values) const;
+template void desres::msys::DestroArray::column<float>(const std::string& attr, std::vector<float>& values) const;
+template void desres::msys::DestroArray::column<double>(const std::string& attr, std::vector<double>& values) const;
+template void desres::msys::DestroArray::column<std::string>(const std::string& attr, std::vector<std::string>& values) const;
 
 template<class T>
-void desres::DestroArray::column(const std::string& attr, std::vector<T>& values, const T& defval) const {
+void desres::msys::DestroArray::column(const std::string& attr, std::vector<T>& values, const T& defval) const {
   const ZingPool& zpool = pool();
   const key_value_t* location = find_schema(attr,zpool);
 
@@ -597,28 +597,28 @@ void desres::DestroArray::column(const std::string& attr, std::vector<T>& values
 
 }
 
-template void desres::DestroArray::column<bool>(const std::string& attr, std::vector<bool>& values,const bool&) const;
-template void desres::DestroArray::column<int>(const std::string& attr, std::vector<int>& values,const int&) const;
-template void desres::DestroArray::column<short>(const std::string& attr, std::vector<short>& values,const short&) const;
-template void desres::DestroArray::column<long>(const std::string& attr, std::vector<long>& values,const long&) const;
-template void desres::DestroArray::column<unsigned int>(const std::string& attr, std::vector<unsigned int>& values,const unsigned int&) const;
-template void desres::DestroArray::column<unsigned short>(const std::string& attr, std::vector<unsigned short>& values,const unsigned short&) const;
-template void desres::DestroArray::column<unsigned long>(const std::string& attr, std::vector<unsigned long>& values,const unsigned long&) const;
-template void desres::DestroArray::column<float>(const std::string& attr, std::vector<float>& values,const float&) const;
-template void desres::DestroArray::column<double>(const std::string& attr, std::vector<double>& values,const double&) const;
-template void desres::DestroArray::column<std::string>(const std::string& attr, std::vector<std::string>& values,const std::string&) const;
+template void desres::msys::DestroArray::column<bool>(const std::string& attr, std::vector<bool>& values,const bool&) const;
+template void desres::msys::DestroArray::column<int>(const std::string& attr, std::vector<int>& values,const int&) const;
+template void desres::msys::DestroArray::column<short>(const std::string& attr, std::vector<short>& values,const short&) const;
+template void desres::msys::DestroArray::column<long>(const std::string& attr, std::vector<long>& values,const long&) const;
+template void desres::msys::DestroArray::column<unsigned int>(const std::string& attr, std::vector<unsigned int>& values,const unsigned int&) const;
+template void desres::msys::DestroArray::column<unsigned short>(const std::string& attr, std::vector<unsigned short>& values,const unsigned short&) const;
+template void desres::msys::DestroArray::column<unsigned long>(const std::string& attr, std::vector<unsigned long>& values,const unsigned long&) const;
+template void desres::msys::DestroArray::column<float>(const std::string& attr, std::vector<float>& values,const float&) const;
+template void desres::msys::DestroArray::column<double>(const std::string& attr, std::vector<double>& values,const double&) const;
+template void desres::msys::DestroArray::column<std::string>(const std::string& attr, std::vector<std::string>& values,const std::string&) const;
 
 static std::string precision_string(const bool* val,char type, int precision) {
-  if (type != 'b') throw desres::dessert("cannot store a bool here",DESSERT_LOC);
+  if (type != 'b') throw desres::msys::dessert("cannot store a bool here",DESSERT_LOC);
   if (*val) return "1";
   return "0";
 }
 static std::string precision_string(const double* val,char type, int precision) {
-  if (type != 'r') throw desres::dessert("cannot store a double here",DESSERT_LOC);
+  if (type != 'r') throw desres::msys::dessert("cannot store a double here",DESSERT_LOC);
 
-  //char string[32+desres::Destro::s_max_precision];
+  //char string[32+desres::msys::Destro::s_max_precision];
   char string[1024];
-  if (precision < 0) precision = desres::Destro::s_default_double_precision;
+  if (precision < 0) precision = desres::msys::Destro::s_default_double_precision;
   ::sprintf(string,"%.*g",precision,*val);
   return string;
 }
@@ -635,7 +635,7 @@ static std::string iprecision_string(const T* val,char type, int precision) {
     return precision_string(&xval,type,precision);
   }
   default:
-    throw desres::dessert("cannot store an int here",DESSERT_LOC);
+    throw desres::msys::dessert("cannot store an int here",DESSERT_LOC);
   }
 }
 static std::string precision_string(const int* val,char type, int precision) {
@@ -657,25 +657,25 @@ static std::string precision_string(const unsigned long* val,char type, int prec
   return iprecision_string(val,type,precision);
 }
 static std::string precision_string(const float* val,char type, int precision) {
-  if (type != 'r') throw desres::dessert("cannot store a float here",DESSERT_LOC);
+  if (type != 'r') throw desres::msys::dessert("cannot store a float here",DESSERT_LOC);
 
-  //char string[32+desres::Destro::s_max_precision];
+  //char string[32+desres::msys::Destro::s_max_precision];
   char string[1024];
-  if (precision < 0) precision = desres::Destro::s_default_float_precision;
+  if (precision < 0) precision = desres::msys::Destro::s_default_float_precision;
   ::sprintf(string,"%.*g",precision,*val);
   return string;
 }
 
 
 template<class T>
-void desres::DestroArray::set_column(const std::string& attr, const T* begin, size_t n, size_t stride) {
+void desres::msys::DestroArray::set_column(const std::string& attr, const T* begin, size_t n, size_t stride) {
   ZingPool& zpool = mutable_pool();
   key_value_t* location = find_schema(attr,zpool);
-  if (!location) throw desres::dessert("attibute error: "+attr);
+  if (!location) throw desres::msys::dessert("attibute error: "+attr);
   if (!begin) return; // Ignore NULL pointers
 
   // Must be the right size
-  if (n != size()) throw desres::dessert("size mismatch in column");
+  if (n != size()) throw desres::msys::dessert("size mismatch in column");
 
   std::vector<Zing>& column = location->values;
   for(size_t i=0; i<n; ++i) {
@@ -685,24 +685,24 @@ void desres::DestroArray::set_column(const std::string& attr, const T* begin, si
   }
 }
 
-template void desres::DestroArray::set_column<bool>(const std::string& attr, const bool* begin, size_t size, size_t stride);
-template void desres::DestroArray::set_column<int>(const std::string& attr, const int* begin, size_t size, size_t stride);
-template void desres::DestroArray::set_column<short>(const std::string& attr, const short* begin, size_t size, size_t stride);
-template void desres::DestroArray::set_column<long>(const std::string& attr, const long* begin, size_t size, size_t stride);
-template void desres::DestroArray::set_column<unsigned int>(const std::string& attr, const unsigned int* begin, size_t size, size_t stride);
-template void desres::DestroArray::set_column<unsigned short>(const std::string& attr, const unsigned short* begin, size_t size, size_t stride);
-template void desres::DestroArray::set_column<unsigned long>(const std::string& attr, const unsigned long* begin, size_t size, size_t stride);
-template void desres::DestroArray::set_column<float>(const std::string& attr, const float* begin, size_t size, size_t stride);
-template void desres::DestroArray::set_column<double>(const std::string& attr, const double* begin, size_t size, size_t stride);
+template void desres::msys::DestroArray::set_column<bool>(const std::string& attr, const bool* begin, size_t size, size_t stride);
+template void desres::msys::DestroArray::set_column<int>(const std::string& attr, const int* begin, size_t size, size_t stride);
+template void desres::msys::DestroArray::set_column<short>(const std::string& attr, const short* begin, size_t size, size_t stride);
+template void desres::msys::DestroArray::set_column<long>(const std::string& attr, const long* begin, size_t size, size_t stride);
+template void desres::msys::DestroArray::set_column<unsigned int>(const std::string& attr, const unsigned int* begin, size_t size, size_t stride);
+template void desres::msys::DestroArray::set_column<unsigned short>(const std::string& attr, const unsigned short* begin, size_t size, size_t stride);
+template void desres::msys::DestroArray::set_column<unsigned long>(const std::string& attr, const unsigned long* begin, size_t size, size_t stride);
+template void desres::msys::DestroArray::set_column<float>(const std::string& attr, const float* begin, size_t size, size_t stride);
+template void desres::msys::DestroArray::set_column<double>(const std::string& attr, const double* begin, size_t size, size_t stride);
 
 template<class T>
-void desres::DestroArray::set_column(const std::string& attr, const T& container) {
+void desres::msys::DestroArray::set_column(const std::string& attr, const T& container) {
   ZingPool& zpool = mutable_pool();
   key_value_t* location = find_schema(attr,zpool);
-  if (!location) throw desres::dessert("attibute error: "+attr);
+  if (!location) throw desres::msys::dessert("attibute error: "+attr);
 
   // Must be the right size
-  if (container.size() != size()) throw desres::dessert("size mismatch in column");
+  if (container.size() != size()) throw desres::msys::dessert("size mismatch in column");
 
   std::vector<Zing>& column = location->values;
   size_t i = 0;
@@ -715,12 +715,12 @@ void desres::DestroArray::set_column(const std::string& attr, const T& container
   }
 }
 
-template void desres::DestroArray::set_column<std::vector<bool> >(const std::string& attr, const std::vector<bool>& container);
-template void desres::DestroArray::set_column<std::vector<int> >(const std::string& attr, const std::vector<int>& container);
-template void desres::DestroArray::set_column<std::vector<short> >(const std::string& attr, const std::vector<short>& container);
-template void desres::DestroArray::set_column<std::vector<long> >(const std::string& attr, const std::vector<long>& container);
-template void desres::DestroArray::set_column<std::vector<unsigned int> >(const std::string& attr, const std::vector<unsigned int>& container);
-template void desres::DestroArray::set_column<std::vector<unsigned short> >(const std::string& attr, const std::vector<unsigned short>& container);
-template void desres::DestroArray::set_column<std::vector<unsigned long> >(const std::string& attr, const std::vector<unsigned long>& container);
-template void desres::DestroArray::set_column<std::vector<float> >(const std::string& attr, const std::vector<float>& container);
-template void desres::DestroArray::set_column<std::vector<double> >(const std::string& attr, const std::vector<double>& container);
+template void desres::msys::DestroArray::set_column<std::vector<bool> >(const std::string& attr, const std::vector<bool>& container);
+template void desres::msys::DestroArray::set_column<std::vector<int> >(const std::string& attr, const std::vector<int>& container);
+template void desres::msys::DestroArray::set_column<std::vector<short> >(const std::string& attr, const std::vector<short>& container);
+template void desres::msys::DestroArray::set_column<std::vector<long> >(const std::string& attr, const std::vector<long>& container);
+template void desres::msys::DestroArray::set_column<std::vector<unsigned int> >(const std::string& attr, const std::vector<unsigned int>& container);
+template void desres::msys::DestroArray::set_column<std::vector<unsigned short> >(const std::string& attr, const std::vector<unsigned short>& container);
+template void desres::msys::DestroArray::set_column<std::vector<unsigned long> >(const std::string& attr, const std::vector<unsigned long>& container);
+template void desres::msys::DestroArray::set_column<std::vector<float> >(const std::string& attr, const std::vector<float>& container);
+template void desres::msys::DestroArray::set_column<std::vector<double> >(const std::string& attr, const std::vector<double>& container);

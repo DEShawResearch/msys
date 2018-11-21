@@ -1,22 +1,57 @@
-Import('env')
+Import('msysenv')
 Import('libmsys')
+import sys, os
+env=msysenv.Clone()
 
-env=env.Clone()
+is_linux = sys.platform.startswith("linux")
+is_windows = sys.platform.startswith("win32")
+is_schrodinger_build = "SCHRODINGER_SRC" in os.environ
+
 env.Append( 
         CPPPATH=['../src'],
-        LIBS=['msys', 'boost_python$BOOST_SUFFIX'] )
+        CXXFLAGS='' if is_windows else '-Wno-unused-local-typedefs',
+        LIBS=['msys', 'msys-core'],
+        )
+
+if is_linux:
+    env.Append(CCFLAGS='-Wno-cpp')
+elif is_windows:
+    env.Append(LIBS=["python27"])
+else:
+    # MacOS
+    env.Append(CCFLAGS='-Wno-error')
+if env.get("MSYS_WITHOUT_INCHI"):
+    env.Append(CPPDEFINES='MSYS_WITHOUT_INCHI')
 
 pymodfiles='''
+analyze.cxx
+annotated_system.cxx
 atom.cxx
 bond.cxx
-residue.cxx
 chain.cxx
+graph.cxx
+inchi.cxx
+io.cxx
+override.cxx
 param.cxx
-system.cxx
-term.cxx
-vector.cxx
 pymod.cxx
+residue.cxx
+system.cxx
+spatial_hash.cxx
+term.cxx
+wrap_obj.cxx
+variant.cxx
 '''.split()
 
-env.AddPythonExtension('_msys', pymodfiles, prefix='msys')
+pyext=env.AddPythonExtension('_msys', pymodfiles, prefix='msys')
 env.AddPythonModule('__init__.py', prefix='msys')
+env.AddPythonModule('atomsel.py', prefix='msys')
+
+pfxenv=env.Clone()
+pfxenv.Append(CXXFLAGS='-fno-strict-aliasing')
+pfxext = pfxenv.AddPythonExtension('pfx', 'pfx.cxx', prefix='msys')
+pfxenv.Requires(pfxext, libmsys)
+
+env.AddHeaders(['capsule.hxx'], prefix='msys/python')
+env.SConscript('molfile/SConscript')
+

@@ -6,8 +6,8 @@
 // -----------------------------------------------
 // P R I V A T E
 // -----------------------------------------------
-desres::DestroBlock::key_value_t*
-desres::DestroBlock::find_schema(const std::string& attr,const desres::ZingPool& pool) {
+desres::msys::DestroBlock::key_value_t*
+desres::msys::DestroBlock::find_schema(const std::string& attr,const desres::msys::ZingPool& pool) {
   for(std::vector<key_value_t>::iterator p = m_data.begin(),
       en = m_data.end(); p != en; ++p) {
     if ((*p).key.string(pool) == attr) return &(*p);
@@ -15,8 +15,8 @@ desres::DestroBlock::find_schema(const std::string& attr,const desres::ZingPool&
   return NULL;
 }
 
-const desres::DestroBlock::key_value_t*
-desres::DestroBlock::find_schema(const std::string& attr,const desres::ZingPool& pool) const {
+const desres::msys::DestroBlock::key_value_t*
+desres::msys::DestroBlock::find_schema(const std::string& attr,const desres::msys::ZingPool& pool) const {
   for(std::vector<key_value_t>::const_iterator p = m_data.begin(),
       en = m_data.end(); p != en; ++p) {
     if ((*p).key.string(pool) == attr) return &(*p);
@@ -25,7 +25,7 @@ desres::DestroBlock::find_schema(const std::string& attr,const desres::ZingPool&
 }
 
 
-ssize_t desres::DestroBlock::offset_of_block(const std::string& name) const {
+ssize_t desres::msys::DestroBlock::offset_of_block(const std::string& name) const {
   for(std::vector<Destro*>::const_iterator p=m_subblocks.begin(),
       en = m_subblocks.end(); p != en; ++p) {
     if ((*p)->name() == name) {
@@ -38,7 +38,7 @@ ssize_t desres::DestroBlock::offset_of_block(const std::string& name) const {
 // -----------------------------------------------
 // P R O T E C T E D
 // -----------------------------------------------
-desres::Destro& desres::DestroBlock::add_block(const std::string& name) {
+desres::msys::Destro& desres::msys::DestroBlock::add_block(const std::string& name) {
   Destro* block = NULL;
   try {
     block = new DestroBlock(this);
@@ -51,7 +51,7 @@ desres::Destro& desres::DestroBlock::add_block(const std::string& name) {
   }
 }
 
-void desres::DestroBlock::touch(ZingPool& zpool) const {
+void desres::msys::DestroBlock::touch(ZingPool& zpool) const {
   // Touch my name
   DestroNamedBlock::touch(zpool);
 
@@ -75,12 +75,12 @@ void desres::DestroBlock::touch(ZingPool& zpool) const {
 // -----------------------------------------------
 //  P U B L I C
 // -----------------------------------------------
-desres::DestroBlock::DestroBlock(Destro* parent)
+desres::msys::DestroBlock::DestroBlock(Destro* parent)
   : DestroNamedBlock(parent)
 {
 }
 
-desres::DestroBlock::~DestroBlock()
+desres::msys::DestroBlock::~DestroBlock()
 {
   // Clean up subblocks
   for(std::vector<Destro*>::const_iterator p=m_subblocks.begin(),
@@ -90,12 +90,12 @@ desres::DestroBlock::~DestroBlock()
 }
 
 // size_t size() const;
-size_t desres::DestroBlock::size() const {
+size_t desres::msys::DestroBlock::size() const {
   return m_subblocks.size();
 }
 
 
-void desres::DestroBlock::add_schema(char type,const std::string& attr,const std::string& doc) {
+void desres::msys::DestroBlock::add_schema(char type,const std::string& attr,const std::string& doc) {
   ZingPool& zpool = pool();
 
   key_value_t* location = find_schema(attr,zpool);
@@ -116,12 +116,12 @@ void desres::DestroBlock::add_schema(char type,const std::string& attr,const std
   }
 }
 
-void desres::DestroBlock::add_schema_and_value(char type,const std::string& attr,const std::string& doc,const std::string& value) {
+void desres::msys::DestroBlock::add_schema_and_value(char type,const std::string& attr,const std::string& doc,const std::string& value) {
   add_schema(type,attr,doc);
   set_attr(type,attr,value);
 }
 
-std::map<std::string,desres::Destro::schema_t> desres::DestroBlock::schemas() const {
+std::map<std::string,desres::msys::Destro::schema_t> desres::msys::DestroBlock::schemas() const {
   const ZingPool& zpool = pool();
   std::map<std::string,schema_t> result;
   for(std::vector<key_value_t>::const_iterator p = m_data.begin(),
@@ -136,9 +136,9 @@ std::map<std::string,desres::Destro::schema_t> desres::DestroBlock::schemas() co
   return result;/*GCOV-IGNORE*/
 }
 
-std::vector<desres::Destro::schema_t> desres::DestroBlock::ordered_schema() const {
+std::vector<desres::msys::Destro::schema_t> desres::msys::DestroBlock::ordered_schema() const {
   const ZingPool& zpool = pool();
-  std::vector<desres::Destro::schema_t> result;
+  std::vector<desres::msys::Destro::schema_t> result;
   for(std::vector<key_value_t>::const_iterator p = m_data.begin(),
         en = m_data.end(); p != en; ++p) {
     const key_value_t& description = *p;
@@ -151,7 +151,7 @@ std::vector<desres::Destro::schema_t> desres::DestroBlock::ordered_schema() cons
   return result;/*GCOV-IGNORE*/
 }
 
-std::string desres::DestroBlock::get_value(const std::string& attr) const {
+std::string desres::msys::DestroBlock::get_value(const std::string& attr) const {
   const ZingPool& zpool = pool();
   const key_value_t* location = find_schema(attr,zpool);
   if (location == NULL) {
@@ -163,7 +163,7 @@ std::string desres::DestroBlock::get_value(const std::string& attr) const {
   return location->value.string(zpool);
 }
 
-char desres::DestroBlock::get_type(const std::string& attr) const {
+char desres::msys::DestroBlock::get_type(const std::string& attr) const {
   const ZingPool& zpool = pool();
   const key_value_t* location = find_schema(attr,zpool);
   if (location == NULL) {
@@ -172,7 +172,7 @@ char desres::DestroBlock::get_type(const std::string& attr) const {
   return location->type;
 }
 
-int  desres::DestroBlock::get_precision(const std::string& attr) const {
+int  desres::msys::DestroBlock::get_precision(const std::string& attr) const {
   const ZingPool& zpool = pool();
   const key_value_t* location = find_schema(attr,zpool);
   if (location == NULL) {
@@ -181,7 +181,7 @@ int  desres::DestroBlock::get_precision(const std::string& attr) const {
   return location->precision;
 }
 
-void desres::DestroBlock::set_precision(const std::string& attr,int precision) {
+void desres::msys::DestroBlock::set_precision(const std::string& attr,int precision) {
   const ZingPool& zpool = pool();
   key_value_t* location = find_schema(attr,zpool);
   if (location == NULL) {
@@ -191,7 +191,7 @@ void desres::DestroBlock::set_precision(const std::string& attr,int precision) {
   location->precision = precision;
 }
 
-std::string desres::DestroBlock::get_doc(const std::string& attr) const {
+std::string desres::msys::DestroBlock::get_doc(const std::string& attr) const {
   const ZingPool& zpool = pool();
   const key_value_t* location = find_schema(attr,zpool);
   if (location == NULL) {
@@ -200,7 +200,7 @@ std::string desres::DestroBlock::get_doc(const std::string& attr) const {
   return location->doc.string(zpool);
 }
 
-void desres::DestroBlock::set_doc(const std::string& attr, const std::string& doc) {
+void desres::msys::DestroBlock::set_doc(const std::string& attr, const std::string& doc) {
   ZingPool& zpool = pool();
   key_value_t* location = find_schema(attr,zpool);
   if (location == NULL) {
@@ -209,21 +209,21 @@ void desres::DestroBlock::set_doc(const std::string& attr, const std::string& do
   location->doc = Zing(doc,zpool);
 }
 
-desres::Destro::Attribute desres::DestroBlock::get_attr(const std::string& attr) {
+desres::msys::Destro::Attribute desres::msys::DestroBlock::get_attr(const std::string& attr) {
   return Attribute(this,attr);
 }
 
-const desres::Destro::Attribute desres::DestroBlock::get_attr(const std::string& attr) const {
+const desres::msys::Destro::Attribute desres::msys::DestroBlock::get_attr(const std::string& attr) const {
   return Attribute(const_cast<DestroBlock*>(this),attr);
 }
 
-void desres::DestroBlock::set_unsafe(const std::string& attr,const std::string& value) {
+void desres::msys::DestroBlock::set_unsafe(const std::string& attr,const std::string& value) {
   ZingPool& zpool = pool();
   key_value_t* location = find_schema(attr,zpool);
   raw_update(location,zpool,value);
 }
 
-void desres::DestroBlock::set_attr(char type,const std::string& attr,const std::string& value) {
+void desres::msys::DestroBlock::set_attr(char type,const std::string& attr,const std::string& value) {
   ZingPool& zpool = pool();
   key_value_t* location = find_schema(attr,zpool);
   if (location == NULL) {
@@ -235,7 +235,7 @@ void desres::DestroBlock::set_attr(char type,const std::string& attr,const std::
   raw_update(location,zpool,value);
 }
 
-void desres::DestroBlock::clear(const std::string& attr) {
+void desres::msys::DestroBlock::clear(const std::string& attr) {
   ZingPool& zpool = pool();
   key_value_t* location = find_schema(attr,zpool);
   if (location != NULL) {
@@ -243,7 +243,7 @@ void desres::DestroBlock::clear(const std::string& attr) {
   }
 }
 
-void desres::DestroBlock::del(const std::string& attr) {
+void desres::msys::DestroBlock::del(const std::string& attr) {
 
   // Perhaps it is an attribute....
   ZingPool& zpool = pool();
@@ -268,7 +268,7 @@ void desres::DestroBlock::del(const std::string& attr) {
   // Otherwise, silently ignore
 }
 
-void desres::DestroBlock::del(size_t blockno) {
+void desres::msys::DestroBlock::del(size_t blockno) {
   if (blockno >= 1 && blockno <= m_subblocks.size()) {
     m_subblocks.erase(m_subblocks.begin()+(blockno-1));
   }
@@ -276,7 +276,7 @@ void desres::DestroBlock::del(size_t blockno) {
   // Silently ignore non-existant blocks
 }
 
-desres::Destro& desres::DestroBlock::new_block(const std::string& name) {
+desres::msys::Destro& desres::msys::DestroBlock::new_block(const std::string& name) {
   // Might already exist
   ssize_t offset = offset_of_block(name);
   if (offset >= 0) {
@@ -289,7 +289,7 @@ desres::Destro& desres::DestroBlock::new_block(const std::string& name) {
   return add_block(name);
 }
 
-desres::DestroArray& desres::DestroBlock::new_array(const std::string& name, size_t num_elements) {
+desres::msys::DestroArray& desres::msys::DestroBlock::new_array(const std::string& name, size_t num_elements) {
   // Might already exist
   ssize_t offset = offset_of_block(name);
   if (offset >= 0) {
@@ -313,47 +313,47 @@ desres::DestroArray& desres::DestroBlock::new_array(const std::string& name, siz
   }
 }
 
-desres::Destro::Attribute desres::DestroBlock::operator[](const std::string& attr) {
+desres::msys::Destro::Attribute desres::msys::DestroBlock::operator[](const std::string& attr) {
   return Destro::operator[](attr);
 }
 
-const desres::Destro::Attribute desres::DestroBlock::operator[](const std::string& attr) const {
+const desres::msys::Destro::Attribute desres::msys::DestroBlock::operator[](const std::string& attr) const {
   return Destro::operator[](attr);
 }
 
-desres::Destro& desres::DestroBlock::operator[](ssize_t i) {
+desres::msys::Destro& desres::msys::DestroBlock::operator[](ssize_t i) {
   return Destro::operator[](i);
 }
 
-const desres::Destro& desres::DestroBlock::operator[](ssize_t i) const { /*GCOV-IGNORE*/
+const desres::msys::Destro& desres::msys::DestroBlock::operator[](ssize_t i) const { /*GCOV-IGNORE*/
   return Destro::operator[](i);/*GCOV-IGNORE*/
 }
 
-bool desres::DestroBlock::has_block(const std::string& name) const {
+bool desres::msys::DestroBlock::has_block(const std::string& name) const {
   return offset_of_block(name) >= 0;
 }
 
-bool desres::DestroBlock::has_attr(const std::string& attr) const {
+bool desres::msys::DestroBlock::has_attr(const std::string& attr) const {
   const key_value_t* location = find_schema(attr,pool());
   return (location != NULL);
 }
 
-bool desres::DestroBlock::has_value(const std::string& attr) const {
+bool desres::msys::DestroBlock::has_value(const std::string& attr) const {
   const ZingPool& zpool = pool();
   const key_value_t* location = find_schema(attr,zpool);
   if (!location) return false;
   return !(location->value.is_empty() || location->value.string(zpool) == "<>");
 }
 
-desres::Destro& desres::DestroBlock::block(size_t i) {
+desres::msys::Destro& desres::msys::DestroBlock::block(size_t i) {
   return *m_subblocks.at(i-1);
 }
 
-const desres::Destro& desres::DestroBlock::block(size_t i) const {
+const desres::msys::Destro& desres::msys::DestroBlock::block(size_t i) const {
   return *m_subblocks.at(i-1);
 }
 
-desres::Destro& desres::DestroBlock::block(const std::string& name) {
+desres::msys::Destro& desres::msys::DestroBlock::block(const std::string& name) {
 
   for(std::vector<Destro*>::iterator p = m_subblocks.begin(),
         en=m_subblocks.end(); p != en; ++p) {
@@ -366,7 +366,7 @@ desres::Destro& desres::DestroBlock::block(const std::string& name) {
   throw dessert("Attribute error: " + name);
 }
 
-const desres::Destro& desres::DestroBlock::block(const std::string& name) const {
+const desres::msys::Destro& desres::msys::DestroBlock::block(const std::string& name) const {
 
   for(std::vector<Destro*>::const_iterator p = m_subblocks.begin(),
         en=m_subblocks.end(); p != en; ++p) {
@@ -376,7 +376,7 @@ const desres::Destro& desres::DestroBlock::block(const std::string& name) const 
   throw dessert("Attribute error: " + name);
 }
 
-void desres::DestroBlock::write(std::ostream& os, int level) const {
+void desres::msys::DestroBlock::write(std::ostream& os, int level) const {
   int newlevel = 0;
   std::string indentation = indent(level,newlevel);
   int dummy = 0;
@@ -416,7 +416,7 @@ void desres::DestroBlock::write(std::ostream& os, int level) const {
   os << indentation << '}' << lineterm;
 }
 
-size_t desres::DestroBlock::footprint() const {
+size_t desres::msys::DestroBlock::footprint() const {
   size_t foot = DestroNamedBlock::footprint() +
     sizeof(m_subblocks) + sizeof(m_data);
 
@@ -436,8 +436,8 @@ size_t desres::DestroBlock::footprint() const {
 
 // std::string name() const;
 // void name(const std::string& name);
-// desres::ZingPool& pool();
-// const desres::ZingPool& pool() const;
+// desres::msys::ZingPool& pool();
+// const desres::msys::ZingPool& pool() const;
 
 // void add_schema(char type,const std::string& attr,const std::string& doc="");
 
@@ -451,7 +451,7 @@ size_t desres::DestroBlock::footprint() const {
 // Attribute get_attr(const std::string& attr);
 // const Attribute get_attr(const std::string& attr) const;
 
-void desres::DestroBlock::raw_update(key_value_t* location,ZingPool& zpool,std::string value) {
+void desres::msys::DestroBlock::raw_update(key_value_t* location,ZingPool& zpool,std::string value) {
   if (location == NULL) throw dessert("no location provided");
 
   location->value = zingify(value,zpool);

@@ -1,0 +1,147 @@
+#!/usr/bin/garden-exec
+#{
+# garden env-keep-only
+# . `dirname $0`/../share/env.sh
+# exec python $0 "$@"
+#}
+
+'''
+dms-frame input.dms output.dms [ options ]
+
+Extract a frame from a trajectory into a dms file, and perform optional
+centering and periodic wrapping.
+                    
+dms-frame reads coordinates from a coordinate or trajectory file and
+copies them into a DMS file.  Periodic wrapping may also be applied
+to the coordinates.  If the input coordinate file is a trajectory containing
+multiple frames, the frame may be selected either with a time, in which case
+the frame whose time is closest to the provided value will be selected,
+or with a frame index, which can be negative in the usual Python sense
+(i.e. index -1 chooses the last frame).  Either time or index may be 
+provided, but not both.
+
+If a centering selection is provided, the center will be calculated from
+the input coordinates after applying any glue or periodic wrapping.  The
+selection will be centered on the origin, and the rest of the system will
+be wrapped so as to fit in the periodic cell.
+
+Velocities will be copied from the input frame if they are present; if
+not, the velocities in the input dms file will be used.  Specifying 
+`--zero-velocities` makes the velocities zero in the output file.
+
+'''
+
+import sys, os
+
+import msys
+from msys.wrap import Wrapper
+from msys import molfile
+
+def main():
+    from argparse import ArgumentParser
+    parser = ArgumentParser(description=__doc__)
+
+    parser.add_argument('-i', "--input-path", default=None,
+            help="Input trajectory")
+    parser.add_argument('--input-type',
+            help="molfile type for input trajectory")
+    parser.add_argument('-t', "--time", default=None, type=float,
+            help="Selected frame time")
+    parser.add_argument('-n', "--index", default=None, type=int,
+            help="Selected frame index")
+    parser.add_argument('--zero-velocities', action="store_true", default=False,
+            help="Use zero velocities instead of reading from frame")
+    parser.add_argument('-c', '--center', default=None,
+            help="Centering selection")
+    parser.add_argument('-g', '--glue', default=[], action='append',
+            help="Glue selections (multiple)")
+    parser.add_argument('--wrap', action="store_true", default=False,
+            help="Apply periodic wrapping; implied by --center")
+    parser.add_argument('--unrotate', action="store_true", default=False,
+            help="Align global cell with coordinate axes; fails on triclinic")
+    parser.add_argument('ifile', metavar='input.dms',
+            help='input structure file')
+    parser.add_argument('ofile', metavar='output.dms',
+            help='output structure file')
+
+    opts = parser.parse_args()
+    print "Reading input file", opts.ifile
+    mol=msys.Load(opts.ifile)
+    print "Input file contains %d atoms, %d bonds" % (mol.natoms, mol.nbonds)
+
+    if opts.input_path is not None:
+        if opts.input_type is None:
+            plugin = molfile.guess_filetype(opts.input_path)
+            if plugin is None:
+                plugin = molfile.dtr
+        else:
+            plugin = getattr(molfile, opts.input_type)
+
+        print "Reading trajectory of type %s (%s) at %s" % (
+                plugin.name, plugin.prettyname, opts.input_path)
+        try:
+            T=plugin.read(opts.input_path, double_precision=True)
+            dbl=True
+        except:
+            T=plugin.read(opts.input_path, double_precision=False)
+            dbl=False
+        print "Trajectory contains %d frames, %d atoms" % (T.nframes, T.natoms)
+        if T.natoms != mol.natoms:
+            raise ValueError, "Trajectory and structure file have different #atoms"
+        if opts.time is not None:
+            F = T.at_time_near(opts.time)
+            ind = molfile.findframe.at_time_near(T.times, F.time)
+        elif opts.index is not None:
+            if T.nframes==-1:
+                if opts.index<0:
+                    raise ValueError("Specify non-negative index for this filetype")
+                for i, F in enumerate(T.frames()):
+                    if i==opts.index: break
+                else:
+                    raise ValueError("Could not find frame %d in file" % opts.index)
+            else:
+                F = T.frame(opts.index)
+            ind = opts.index
+        else:
+            raise ValueError, "Specify either --index or --frame"
+        print "Selected frame %d with time %s" % (ind, F.time)
+        if dbl:
+            mol.positions = F.dpos
+        else:
+            mol.positions = F.pos
+        for i in range(3):
+            mol.cell[i][:] = F.box[i]
+        if opts.zero_velocities:
+            print "Setting velocities to zero"
+            for a in mol.atoms:
+                a.vx=0
+                a.vy=0
+                a.vz=0
+        else:
+            if dbl:
+                vel = F.dvel
+            else:
+                vel = F.vel
+            if vel is None:
+                print "No velocities in frame, not updating velocities"
+            else:
+                print "Updating velocities"
+                for i, a in enumerate(mol.atoms):
+                    a.vel = vel[i]
+
+    else:   # opts.input_path
+        if opts.time is not None or opts.index is not None:
+            raise ValueError("time (-t) or index (-n) specified, but no input trajectory (-i)")
+        print "Reading coordinates from input structure file."
+
+    if opts.wrap or opts.glue or opts.center or opts.unrotate:
+        print "Applying periodic wrapping"
+        w=Wrapper(mol, center=opts.center, glue=opts.glue, unrotate=opts.unrotate)
+        w.wrap()
+
+    print "Writing", opts.ofile
+    msys.Save(mol, opts.ofile)
+
+if __name__=="__main__": main()
+
+# vim: filetype=python

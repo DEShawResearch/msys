@@ -7,11 +7,11 @@ namespace {
         void apply( SystemPtr h,
                     const Json& blk,
                     const SiteMap& sitemap,
-                    const VdwMap&, bool alchemical ) const {
+                    const VdwMap& ) const {
 
             MaeAtoms atoms(blk);
 
-            typedef boost::shared_ptr<ParamMap> ParamMapPtr;
+            typedef std::shared_ptr<ParamMap> ParamMapPtr;
             typedef std::pair<TermTablePtr, ParamMapPtr> type_t;
             typedef std::map<std::string, type_t> TypeMap;
             TypeMap typemap;
@@ -20,14 +20,13 @@ namespace {
             int i,n = blk.get("__size__").as_int();
             for (i=0; i<n; i++) {
                 std::string f = fn.elem(i).as_string();
-                boost::to_lower(f);
+                to_lower(f);
                 type_t type = typemap[f];
                 if (!type.first) {
                     std::string name = std::string("virtual_")+f;
                     type.first = AddTable(h, name);
-                    ParamTablePtr params = type.first->paramTable();
-                    type.second = ParamMapPtr(new ParamMap(
-                                params, blk, params->propCount()));
+                    ParamTablePtr params = type.first->params();
+                    type.second = ParamMapPtr(new ParamMap(params, blk));
                     typemap[f] = type;
                 }
                 Id m = type.first->atomCount();

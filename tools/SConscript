@@ -1,8 +1,22 @@
-Import('env')
+Import('msysenv')
+Import('libmsys')
+import os
 
-env=env.Clone()
-env.Prepend(CPPPATH=['../src'], LIBS=['msys', 'boost_filesystem', 'boost_system'])
+env=msysenv.Clone()
+env.Prepend(CPPPATH=['../src'], LIBS=['msys', 'msys-core'])
 
-env.AddProgram('mae2dms', 'converters/mae2dms.cxx')
-env.AddProgram('dms2mae', 'converters/dms2mae.cxx')
+for mod in Glob('*.py'):
+    env.AddPythonModule(mod.get_path(), prefix='msys')
+
+for mod in Glob('validate/*.py'):
+    env.AddPythonModule(mod.get_path(), prefix='msys/validate')
+
+for script in Glob('scripts/dms-*') + Glob('scripts/dtr-*'):
+    env.AddScript(script.get_path())
+
+for prog in Glob('bin/*.cxx'):
+    name = os.path.basename(prog.get_path())[:-4]
+    env.AddProgram(name, prog)
+
+env.AddShare('data/tip3p.dms')
 

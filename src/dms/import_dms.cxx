@@ -1,5 +1,9 @@
 #include "dms.hxx"
+#include "../analyze.hxx"
+#include "../clone.hxx"
 #include "../dms.hxx"
+#include "../import.hxx"
+#include "../override.hxx"
 #include "../term_table.hxx"
 
 #include <sstream>
@@ -7,33 +11,30 @@
 #include <string.h>
 #include <stdexcept>
 
-#include <boost/algorithm/string.hpp> /* for boost::trim */
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+#include <cstdio>
+#include <string>
+#include <sstream>
+#endif
+
+#if defined(WIN32) || defined(WIN64)
+#else
+#define MSYS_HAS_MMAP
+#endif
+
+#if defined(MSYS_HAS_MMAP)
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <fcntl.h>
+#endif
 
 using namespace desres::msys;
 
 typedef std::set<String> KnownSet;
 
-namespace {
-
-    struct ResKey {
-        int     resnum;
-        String  resname;
-        String  chain;
-
-        ResKey() {}
-        ResKey(int num, const String& name, const String& chn)
-        : resnum(num), resname(name), chain(chn) {}
-
-        bool operator<(const ResKey& r) const {
-            if (resnum!=r.resnum) return resnum<r.resnum;
-            int rc = strcmp(resname.c_str(), r.resname.c_str());
-            if (rc) return rc<0;
-            return strcmp(chain.c_str(), r.chain.c_str())<0;
-        }
-    };
-}
-
-static bool is_pN(const char * s) {
+static bool is_pN(std::string const& _s) {
+    const char* s = _s.c_str();
     if (s[0]!='p') return false;
     while (*(++s)) {
         if (*s<'0' || *s>'9') return false;
@@ -41,40 +42,41 @@ static bool is_pN(const char * s) {
     return true;
 }
 
-static void read(dms_reader_t* r, int col, ValueRef val) {
+static void read(Reader r, int col, ValueRef val) {
     switch (val.type()) {
         case FloatType: 
-            val=dms_reader_get_double(r,col); 
+            val=r.get_flt(col); 
             break;
         case IntType: 
-            val=dms_reader_get_int(r,col); 
+            val=r.get_int(col); 
             break;
         default:
         case StringType: 
-            val=dms_reader_get_string(r,col); 
+            val=r.get_str(col); 
             break;
     }
 }
 
-static IdList read_params( dms_reader_t* r, ParamTablePtr p ) {
-    int i,n = dms_reader_column_count(r);
+static IdList read_params( Reader r, ParamTablePtr p,
+                           bool ignore_ids = true ) {
+    int i,n = r.size();
     int idcol=-1;
     for (i=0; i<n; i++) {
-        const char * prop = dms_reader_column_name(r,i);
+        std::string prop = r.name(i);
         /* ignore id, assuming param ids are 0-based */
-        if (!strcmp(prop, "id")) {
+        if (ignore_ids && prop=="id") {
             idcol=i;
             continue;
         }
-        p->addProp(prop, dms_reader_column_type(r,i));
+        p->addProp(prop, r.type(i));
     }
     IdList idmap;
-    for (; r; dms_reader_next(&r)) {
+    for (; r; r.next()) {
         Id param = p->addParam();
         int j=0;
         for (i=0; i<n; i++) {
             if (i==idcol) {
-                Id id = dms_reader_get_int(r,i);
+                Id id = r.get_int(i);
                 while (idmap.size()<id) idmap.push_back(BadId);
                 idmap.push_back(param);
                 continue;
@@ -85,8 +87,7 @@ static IdList read_params( dms_reader_t* r, ParamTablePtr p ) {
     return idmap;
 }
 
-static void read_table( dms_t* dms, 
-                        const IdList& gidmap,
+static void read_table( Sqlite dms, 
                         System& sys, 
                         const std::string& category,
                         const std::string& table,
@@ -94,219 +95,394 @@ static void read_table( dms_t* dms,
 
     std::string term_table = table + "_term";
     std::string param_table = table + "_param";
-    bool alchemical = false;
-    if (table.substr(0,11)=="alchemical_") {
-        param_table = param_table.substr(11);
-        alchemical = true;
-    }
-    dms_reader_t* r;
 
     /* find the terms table */
     known.insert(term_table);
     known.insert(param_table);
-    dms_fetch(dms,term_table.c_str(),&r);
-    if (!r) return;
+    Reader r = dms.fetch(term_table);
+    if (!r.size()) {
+        term_table = table;
+        known.insert(term_table);
+        r = dms.fetch(term_table);
+        if (!r.size()) {
+            MSYS_FAIL(category << " table " << table << " not found");
+            return;
+        }
+    }
 
-    /* get the number of particle columns */
+    /* extract column data */
+    int paramcol=-1;
+    int paramAcol=-1;
+    int paramBcol=-1;
     std::vector<int> cols;
     /* everything not an atom or param is an extra term property */
     typedef std::map<int,std::pair<String,ValueType> > ExtraMap;
     ExtraMap extra;
-    int paramcol=-1, paramBcol=-1;
-    int i,n = dms_reader_column_count(r);
-    for (i=0; i<n; i++) {
-        const char* prop = dms_reader_column_name(r,i);
+    for (int i=0; i<r.size(); i++) {
+        std::string prop = r.name(i);
         if (is_pN(prop)) cols.push_back(i);
-        else if (!strcmp(prop, "param")) paramcol=i;
-        else if (!strcmp(prop, "paramA")) paramcol=i;
-        else if (!strcmp(prop, "paramB")) paramBcol=i;
+        else if (prop=="param") paramcol=i;
+        else if (prop=="paramA") paramAcol=i;
+        else if (prop=="paramB") paramBcol=i;
         else {
-            extra[i]=std::make_pair(
-                    std::string(prop),dms_reader_column_type(r,i));
+            extra[i]=std::make_pair( prop,r.type(i));
         }
     }
-    unsigned natoms = cols.size();
+    const unsigned natoms = cols.size();
 
     /* create and fill a TermTable entry in the System */
-    TermTablePtr terms;
-    if (alchemical) {
-        terms = sys.addTable(table.substr(11), natoms);
-    } else {
-        terms = sys.addTable(table, natoms);
-    }
-    terms->category = category;
-    for (ExtraMap::const_iterator i=extra.begin(); i!=extra.end(); ++i) {
-        terms->addTermProp(i->second.first, i->second.second);
-    }
+    TermTablePtr terms = sys.addTable(table, natoms);
+    terms->category = parse(category);
 
-    /* fill the ParamTable for the TermTable, but only if it hasn't already
-     * been filled. */
+    /* If a param column was found, then we expect there to be a parameter
+     * table with the usual name.  If paramA and paramB were found, then
+     * the table is alchemical, and the name of the parameter table is found
+     * by removing the leading "alchemical_" from the table name.
+     * If none of the three were found, and the param_table table was not 
+     * found, then there is no parameter table at all, so we create one 
+     * using the "extra" columns as properties.  Anything else we call 
+     * not well formatted. */
     IdList idmap;
-    {
-        dms_reader_t* rp;
-        dms_fetch(dms,param_table.c_str(),&rp);
-        if (terms->paramCount()) {
-            /* must have already been filled by the alchemical or 
-             * non-alchemical version of this table.  Make a dummy 
-             * ParamTablePtr so that we can get the idmap. */
-            idmap = read_params(rp, ParamTable::create());
+    ParamTablePtr rp;
+    bool separate_param_table = false;
+    if (paramcol>=0 && paramAcol==-1 && paramBcol==-1) {
+        Reader r = dms.fetch(param_table);
+        if (!r.size()) MSYS_FAIL("Missing param table at " << param_table);
+        idmap = read_params(r, terms->params());
+        separate_param_table = true;
+    } else if (paramcol==-1 && paramAcol>=0 && paramBcol>=0) {
+        param_table = param_table.substr(11);
+        Reader r = dms.fetch(param_table);
+        if (!r.size()) MSYS_FAIL("Missing param table at " << param_table);
+        rp = ParamTable::create();
+        idmap = read_params(r, rp);
+        separate_param_table = true;
+        for (Id i=0; i<rp->propCount(); i++) {
+            terms->params()->addProp(rp->propName(i)+"A", rp->propType(i));
+            terms->params()->addProp(rp->propName(i)+"B", rp->propType(i));
+        }
+    } else if (paramcol==-1 && paramAcol==-1 && paramBcol==-1) {
+        Reader r = dms.fetch(param_table);
+        if (r) {
+            idmap = read_params(r, terms->params());
+            separate_param_table = true;
         } else {
-            idmap = read_params(rp, terms->paramTable());
+            for (ExtraMap::const_iterator i=extra.begin();i!=extra.end();++i) {
+                terms->params()->addProp(i->second.first, i->second.second);
+            }
+        }
+    } else {
+        MSYS_FAIL("Term table " << term_table << " is misformatted.");
+    }
+    
+    /* add extra properties */
+    if (separate_param_table) {
+        for (ExtraMap::const_iterator i=extra.begin(); i!=extra.end(); ++i) {
+            terms->addTermProp(i->second.first, i->second.second);
         }
     }
-    //printf("created %s with %d params, %d props\n",
-        //param_table.c_str(), params->paramCount(), params->propCount());
 
+    /* inject terms */
     IdList atoms(natoms);
-    for (; r; dms_reader_next(&r)) {
+    for (; r; r.next()) {
+        /* read atoms */
         for (unsigned i=0; i<natoms; i++) {
-            atoms[i] = gidmap.at(dms_reader_get_int(r,cols[i]));
+            atoms[i] = r.get_int(cols[i]);
         }
-        Id param = paramcol>=0 ? dms_reader_get_int(r,paramcol) : BadId;
-        if (!bad(param)) param=idmap.at(param);
-        Id term = terms->addTerm(atoms, param);
-        if (paramBcol>=0) {
-            Id paramB = dms_reader_get_int(r,paramBcol);
-            terms->setParamB(term,idmap.at(paramB));
+        /* read param properties */
+        Id param = BadId;
+        if (rp) {
+            /* alchemical case: each term gets its own param. */
+            Id paramA = idmap.at(r.get_int(paramAcol));
+            Id paramB = idmap.at(r.get_int(paramBcol));
+            param = terms->params()->addParam();
+            for (Id i=0; i<rp->propCount(); i++) {
+                terms->params()->value(param,2*i  )=rp->value(paramA,i);
+                terms->params()->value(param,2*i+1)=rp->value(paramB,i);
+            }
+        } else if (paramcol>=0) {
+            /* regular non-alchemical case */
+            param = idmap.at(r.get_int(paramcol));
+        } else if (!separate_param_table) {
+            /* params come from extra cols */
+            param = terms->params()->addParam();
+            Id j=0;
+            for (ExtraMap::const_iterator i=extra.begin(); i!=extra.end(); ++i) {
+                read(r,i->first,terms->params()->value(param,j++));
+            }
         }
-        /* extra properties */
-        Id j=0;
-        for (ExtraMap::const_iterator e=extra.begin(); e!=extra.end(); ++e) {
-            read(r,e->first,terms->termPropValue(term, j++));
+        Id term = terms->addTerm(atoms,param);
+        /* read term properties */
+        if (separate_param_table) {
+            Id j=0;
+            for (ExtraMap::const_iterator e=extra.begin(); e!=extra.end(); ++e) {
+                read(r,e->first,terms->termPropValue(term, j++));
+            }
         }
     }
-    //printf("created %s with %d atoms, %d extra properties, %d terms\n",
-        //term_table.c_str(), 
-        //terms->atomCount(), 
-        //terms->props().propCount(),
-        //terms->termCount());
 }
 
-static void read_metatables(dms_t* dms, const IdList& gidmap, System& sys,
-                             KnownSet& known) {
+static void read_metatables(Sqlite dms, System& sys, KnownSet& known) {
     static const char * categories[] = { 
         "bond", "constraint", "virtual", "polar" 
     };
-    dms_reader_t* r;
     for (unsigned i=0; i<sizeof(categories)/sizeof(categories[0]); i++) {
         std::string category = categories[i];
         std::string metatable = category + "_term";
         known.insert(metatable);
-        if (dms_fetch(dms,metatable.c_str(),&r)) {
-            int col=dms_reader_column(r,"name");
-            for (; r; dms_reader_next(&r)) {
-                std::string table = dms_reader_get_string(r,col);
-                read_table( dms, gidmap, sys, category, table, known );
+        Reader r = dms.fetch(metatable);
+        if (r) {
+            int col=r.column("name");
+            for (; r; r.next()) {
+                std::string table = r.get_str(col);
+                read_table( dms, sys, category, table, known );
+            }
+        }
+    }
+    std::string category = "nonbonded";
+    std::string metatable = "nonbonded_table";
+    known.insert(metatable);
+    Reader r = dms.fetch(metatable);
+    if (r) {
+        int col=r.column("name");
+        for (; r; r.next()) {
+            std::string table = r.get_str(col);
+            read_table( dms, sys, category, table, known );
+        }
+    }
+}
+
+static void read_table_properties(Sqlite dms, System& sys, KnownSet& known) {
+    std::string proptable = "msys_table_properties";
+    known.insert(proptable);
+    if (dms.has(proptable)) {
+        Reader r = dms.fetch(proptable, false);
+        for (; r; r.next()) {
+            const char* name = r.get_str(0);
+            TermTablePtr table = sys.table(name);
+            if (!table) continue;
+            Variant& v = table->tableProps()[r.get_str(1)];
+            switch ((ValueType)r.get_int(2)) {
+                case IntType:   v = (int64_t)r.get_int(3); break;
+                case FloatType: v =          r.get_flt(3); break;
+                case StringType:v =          r.get_str(3); break;
+                default:;
             }
         }
     }
 }
 
 static void 
-read_nonbonded( dms_t* dms, System& sys, const std::vector<Id>& nbtypes,
-                const std::map<Id,Id>& nbtypesB, KnownSet& known ) {
-    TermTablePtr terms = sys.addTable("nonbonded", 1);
-    terms->category="nonbonded";
+read_nonbonded( Sqlite dms, System& sys, 
+        IdList const& nbtypes, KnownSet& known ) {
 
-    dms_reader_t* r;
-    IdList idmap;
     known.insert("nonbonded_param");
-    if (dms_fetch(dms,"nonbonded_param",&r)) {
-        idmap = read_params(r, terms->paramTable());
-        //printf("created %s with %d params, %d props\n",
-                //"nonbonded_param", params->paramCount(), params->propCount());
-    }
+    Reader r = dms.fetch("nonbonded_param");
+    if (!r) return;
+
+    TermTablePtr terms = sys.addTable("nonbonded", 1);
+    terms->category=NONBONDED;
+    IdList idmap = read_params(r, terms->params());
+
     IdList atoms(1);
     unsigned i,n = nbtypes.size();
     for (i=0; i<n; i++) {
         atoms[0]=i;
         Id nb = nbtypes[i];
-        if (!bad(nb)) nb = idmap.at(nb);
-        Id term = terms->addTerm(atoms, nb);
-        std::map<Id,Id>::const_iterator iter = nbtypesB.find(atoms[0]);
-        if (iter!=nbtypesB.end()) {
-            terms->setParamB(term,iter->second);
+        if (!bad(nb)) {
+            try {
+                nb = idmap.at(nb);
+            }
+            catch (std::exception& e) {
+                std::stringstream ss;
+                ss << "ImportDMS: particle " << i << " has invalid nbtype " << nb;
+
+                throw std::runtime_error(ss.str());
+            }
+        }
+        terms->addTerm(atoms, nb);
+    }
+    known.insert("alchemical_particle");
+    r = dms.fetch("alchemical_particle");
+    if (r.size()) {
+        int P0 = r.column("p0");
+        int TYPEA = r.column("nbtypeA");
+        int TYPEB = r.column("nbtypeB");
+        /* chargeA gets treated specially: it overrides particle.charge */
+        int CHARGEA = r.column("chargeA");
+
+        if (P0<0 || TYPEA<0 || TYPEB<0) {
+            throw std::runtime_error("malformed alchemical_particle table");
+        }
+        TermTablePtr alc = 
+            sys.addTable("alchemical_nonbonded", 1, terms->params());
+        alc->category = NONBONDED;
+        std::vector<int> termprops;
+        for (int i=0; i<r.size(); i++) {
+            if (i==P0 || i==CHARGEA || i==TYPEA || i==TYPEB) continue;
+            alc->addTermProp(r.name(i), r.type(i));
+            termprops.push_back(i);
+        }
+        for (; r; r.next()) {
+            int p0 = r.get_int(P0);
+            atoms[0] = p0;
+            if (!sys.hasAtom(atoms[0])) {
+                MSYS_FAIL("alchemical_particle table has bad p0 '" << p0 << "'");
+            }
+            /* override nonbonded param */
+            Id paramA = r.get_int(TYPEA);
+            terms->setParam(atoms[0], idmap.at(paramA));
+
+            /* add alchemical state */
+            Id paramB = r.get_int(TYPEB);
+            Id term = alc->addTerm(atoms, idmap.at(paramB));
+
+            /* override charge */
+            if (CHARGEA>=0) {
+                atom_t& atm = sys.atom(atoms[0]);
+                atm.charge = r.get_flt(CHARGEA);
+            }
+
+            /* add the rest as term properties */
+            for (Id i=0; i<termprops.size(); i++) {
+                read(r, termprops[i], alc->termPropValue(term, i));
+            }
         }
     }
 }
 
-static void
-read_exclusions(dms_t* dms, const IdList& gidmap, System& sys, KnownSet& known) {
-    TermTablePtr terms = sys.addTable("exclusion", 2);
-    terms->category="exclusion";
+static void 
+read_combined( Sqlite dms, System& sys, KnownSet& known ) {
 
-    dms_reader_t* r;
-    IdList atoms(2);
+    static const char* TABLE = "nonbonded_combined_param";
+    known.insert(TABLE);
+    Reader r = dms.fetch(TABLE);
+    if (!r) return;
+    TermTablePtr nb = sys.table("nonbonded");
+    if (!nb) MSYS_FAIL("nonbonded_combined_param in dms file, but no nonbonded_param table");
+
+    ParamTablePtr cb = ParamTable::create();
+    read_params(r, cb, false);
+    ParamTablePtr params = nb->overrides()->params();
+
+    /* find param1 and param2 columns.  */
+    Id param1col = BadId, param2col = BadId;
+    IdList pcols;
+    for (Id i=0; i<cb->propCount(); i++) {
+        std::string prop = cb->propName(i);
+        if (prop=="param1") param1col = i;
+        else if (prop=="param2") param2col = i;
+        else {
+            params->addProp(prop, cb->propType(i));
+            pcols.push_back(i);
+        }
+    }
+    if (bad(param1col)) MSYS_FAIL("Missing param1 from " << TABLE);
+    if (bad(param2col)) MSYS_FAIL("Missing param2 from " << TABLE);
+
+    for (Id p=0; p<cb->paramCount(); p++) {
+        params->addParam();
+        for (Id i=0; i<pcols.size(); i++) {
+            params->value(p,i) = cb->value(p,pcols[i]);
+        }
+        Id param1 = cb->value(p,param1col).asInt();
+        Id param2 = cb->value(p,param2col).asInt();
+        IdPair key(param1,param2);
+        /* don't allow conflicting overrides on input. */
+        Id oldp = nb->overrides()->get(key);
+        if (!bad(oldp)) {
+            if (params->compare(oldp,p)) {
+                MSYS_FAIL("Conflicting " << TABLE << " entries for param1=" << param1 << " param2=" << param2);
+            }
+        }
+        nb->overrides()->set(IdPair(param1,param2), p);
+    }
+}
+
+
+static void
+read_exclusions(Sqlite dms, System& sys, KnownSet& known) {
     known.insert("exclusion");
     /* some dms writers export exclusions with a term and param table. */
     known.insert("exclusion_term");
     known.insert("exclusion_param");
-    for (dms_fetch(dms,"exclusion",&r); r; dms_reader_next(&r)) {
-        atoms[0] = gidmap.at(dms_reader_get_int(r,0));
-        atoms[1] = gidmap.at(dms_reader_get_int(r,1));
+
+    Reader r = dms.fetch("exclusion");
+    if (!r) return;
+
+    TermTablePtr terms = sys.addTable("exclusion", 2);
+    terms->category=EXCLUSION;
+    IdList atoms(2);
+
+    for (; r; r.next()) {
+        atoms[0] = r.get_int(0);
+        atoms[1] = r.get_int(1);
         terms->addTerm(atoms,-1);
     }
-    //printf("read %d exclusions\n", terms->termCount());
 }
 
 static void
-read_nbinfo(dms_t* dms, System& sys, KnownSet& known) {
-    dms_reader_t *r;
+read_nbinfo(Sqlite dms, System& sys, KnownSet& known) {
     known.insert("nonbonded_info");
-    if (dms_fetch(dms,"nonbonded_info",&r)) {
-        int funct_col = dms_reader_column(r,"vdw_funct");
-        int rule_col = dms_reader_column(r, "vdw_rule");
+    Reader r = dms.fetch("nonbonded_info");
+    if (r) {
+        int funct_col = r.column("vdw_funct");
+        int rule_col = r.column( "vdw_rule");
+        int esfunct_col = r.column("es_funct");
         if (funct_col>=0) {
             sys.nonbonded_info.vdw_funct = 
-                dms_reader_get_string(r,funct_col);
+                r.get_str(funct_col);
         }
         if (rule_col>=0) {
             sys.nonbonded_info.vdw_rule =
-                dms_reader_get_string(r,rule_col);
+                r.get_str(rule_col);
+        }
+        if (esfunct_col>=0) {
+            sys.nonbonded_info.es_funct = 
+                r.get_str(esfunct_col);
         }
     }
-    dms_reader_free(r);
 }
 
 static void
-read_cell(dms_t* dms, System& sys, KnownSet& known) {
-    dms_reader_t* r;
+read_cell(Sqlite dms, System& sys, KnownSet& known) {
     known.insert("global_cell");
-    if (dms_fetch(dms,"global_cell",&r)) {
+    Reader r = dms.fetch("global_cell");
+    if (r) {
         int col[3];
-        col[0]=dms_reader_column(r,"x");
-        col[1]=dms_reader_column(r,"y");
-        col[2]=dms_reader_column(r,"z");
+        col[0]=r.column("x");
+        col[1]=r.column("y");
+        col[2]=r.column("z");
         GlobalCell& cell = sys.global_cell;
-        for (int i=0; i<3; i++) cell.A[i]=dms_reader_get_double(r,col[i]);
-        dms_reader_next(&r);
-        for (int i=0; i<3; i++) cell.B[i]=dms_reader_get_double(r,col[i]);
-        dms_reader_next(&r);
-        for (int i=0; i<3; i++) cell.C[i]=dms_reader_get_double(r,col[i]);
-        dms_reader_next(&r);
+        for (int i=0; i<3; i++) {
+            for (int j=0; j<3; j++) {
+                cell[i][j] = r.get_flt(col[j]);
+            }
+            r.next();
+        }
         if (r) {
             throw std::runtime_error("global_cell table has too many rows");
         }
     }
 }
 
-static void read_extra( dms_t* dms, System& sys, const KnownSet& known) {
-    dms_reader_t* r;
-    if (dms_fetch(dms,"sqlite_master",&r)) {
-        int NAME = dms_reader_column(r,"name");
-        int TYPE = dms_reader_column(r,"type");
+static void read_extra( Sqlite dms, System& sys, const KnownSet& known) {
+    Reader r = dms.fetch("sqlite_master");
+    if (r) {
+        int NAME = r.column("name");
+        int TYPE = r.column("type");
         if (NAME<0 || TYPE<0) {
             throw std::runtime_error("malformed sqlite_master table");
         }
-        for (; r; dms_reader_next(&r)) {
-            if (!strcmp(dms_reader_get_string(r,TYPE), "table")) {
-                std::string extra = dms_reader_get_string(r,NAME);
+        for (; r; r.next()) {
+            if (!strcmp(r.get_str(TYPE), "table")) {
+                std::string extra = r.get_str(NAME);
                 if (known.count(extra)) continue;
-                dms_reader_t* p;
-                if (dms_fetch(dms, extra.c_str(), &p)) {
+                Reader p = dms.fetch(extra);
+                if (p) {
                     ParamTablePtr ptr = ParamTable::create();
-                    sys.addExtra(extra, ptr);
-                    read_params(p, ptr);
+                    sys.addAuxTable(extra, ptr);
+                    read_params(p, ptr, false);
                     //printf("extra %s with %d params, %d props\n",
                         //extra.c_str(), ptr->paramCount(), ptr->propCount());
                 }
@@ -315,86 +491,123 @@ static void read_extra( dms_t* dms, System& sys, const KnownSet& known) {
     }
 }
 
-static void
-read_alchemical_particle( dms_t* dms, System& sys, 
-                          IdList& nbtypes, std::map<Id,Id>& nbtypesB,
-                          KnownSet& known ) {
-    known.insert("alchemical_particle");
-    dms_reader_t* r;
-    if (dms_fetch(dms,"alchemical_particle",&r)) {
-        int P0 = dms_reader_column(r,"p0");
-        int MOIETY = dms_reader_column(r,"moiety");
-        int TYPEA = dms_reader_column(r,"nbtypeA");
-        int TYPEB = dms_reader_column(r,"nbtypeB");
-        int CHARGEA = dms_reader_column(r,"chargeA");
-        int CHARGEB = dms_reader_column(r,"chargeB");
+static void read_provenance( Sqlite dms, System& sys, KnownSet& known) {
+    known.insert("provenance");
+    Reader r = dms.fetch( "provenance");
+    if (r) {
+        int version = r.column( "version");
+        int timestamp = r.column( "timestamp");
+        int user = r.column( "user");
+        int workdir = r.column( "workdir");
+        int cmdline = r.column( "cmdline");
+        int executable = r.column("executable");
 
-        if (P0<0 || MOIETY<0 || TYPEA<0 || TYPEB<0
-                 || CHARGEA<0 || CHARGEB<0) {
-            throw std::runtime_error("malformed alchemical_particle table");
-        }
-        for (; r; dms_reader_next(&r)) {
-            Id id = dms_reader_get_int(r,P0);
-            if (!sys.hasAtom(id)) {
-                std::stringstream ss;
-                ss << "alchemical_particle table has bad p0 '" << id << "'";
-                throw std::runtime_error(ss.str());
-            }
-            atom_t& atm = sys.atom(id);
-            atm.alchemical = true;
-            atm.moiety = dms_reader_get_int(r,MOIETY);
-            atm.charge = dms_reader_get_double(r,CHARGEA);
-            atm.chargeB = dms_reader_get_double(r,CHARGEB);
-            nbtypes.at(id) = dms_reader_get_int(r,TYPEA);
-            nbtypesB[id] = dms_reader_get_int(r,TYPEB);
+        for (; r; r.next()) {
+            Provenance p;
+            if (version>=0)   p.version   = r.get_str( version);
+            if (timestamp>=0) p.timestamp = r.get_str( timestamp);
+            if (user>=0)      p.user      = r.get_str( user);
+            if (workdir>=0)   p.workdir   = r.get_str( workdir);
+            if (cmdline>=0)   p.cmdline   = r.get_str( cmdline);
+            if (executable>=0) p.executable=r.get_str(executable);
+            sys.addProvenance(p);
         }
     }
 }
-                                       
 
-SystemPtr desres::msys::ImportDMS( const std::string& path,
-                                   bool structure_only ) {
+static void read_cts(Sqlite dms, System& sys, KnownSet& known) {
+    known.insert("msys_ct");
+    Reader r = dms.fetch("msys_ct");
+    if (!r.size()) return;
+
+    ParamTablePtr keyvals = ParamTable::create();
+    read_params(r, keyvals);
+    while (sys.ctCount() < keyvals->paramCount()) sys.addCt();
+    for (Id i=0; i<keyvals->paramCount(); i++) {
+        for (Id j=0; j<keyvals->propCount(); j++) {
+            ValueRef val = keyvals->value(i,j);
+            sys.ct(i).add(keyvals->propName(j), val.type());
+            sys.ct(i).value(keyvals->propName(j)) = val;
+        }
+    }
+}
+
+static void check_dms_version(Sqlite dms, KnownSet& known) {
+    known.insert("dms_version");
+    int my_major = msys_major_version();
+    int my_minor = msys_minor_version();
+    if (my_major == 0 && my_minor == 0) return;
+    Reader r = dms.fetch("dms_version");
+    if (!r.size()) return;
+    int MAJOR = r.column("major");
+    int MINOR = r.column("minor");
+    if (MAJOR<0 || MINOR<0) {
+        MSYS_FAIL("dms_version table is malformatted");
+    }
+    for (; r; r.next()) {
+        int major = r.get_int(MAJOR);
+        int minor = r.get_int(MINOR);
+        if (major > msys_major_version() ||
+            minor > msys_minor_version() ) {
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+        MSYS_WARN("Application compiled with msys " << msys_version()
+                << " is too old to read dms file with version "
+                << major << "." << minor);
+#else
+        MSYS_FAIL("Application compiled with msys " << msys_version()
+                << " is too old to read dms file with version "
+                << major << "." << minor);
+#endif
+        }
+    }
+}
+
+static SystemPtr import_dms( Sqlite dms, bool structure_only, 
+                                         bool without_tables ) {
 
     SystemPtr h = System::create();
     System& sys = *h;
 
-    dms_t * dms = dms_read(path.c_str());
-    dms_reader_t * r;
+    KnownSet known;
+    known.insert("particle");
+    known.insert("bond");
+    known.insert("msys_hash");
+    
+    check_dms_version(dms, known);
 
-    Id chnid = BadId;
-    Id resid = BadId;
+    read_cts(dms, sys, known);
 
-    typedef std::map<ResKey,Id> ResMap;
-    ResMap resmap;
+    SystemImporter imp(h);
+
     IdList nbtypes;
-    IdList gidmap; /* map dms gids to msys ids */
     std::map<Id,Id> nbtypesB;
     
-    dms_fetch(dms, "particle", &r);
-    if (!r) {
-        std::stringstream ss;
-        ss << "Could not find particle table in file '" << path << "'";
-        throw std::runtime_error(ss.str());
-    }
+    Reader r = dms.fetch("particle", false); /* no strict typing */
+    if (!r.size()) MSYS_FAIL("Missing particle table");
 
-    int CHAIN = dms_reader_column(r,"chain");
-    int RESNAME = dms_reader_column(r,"resname");
-    int RESID = dms_reader_column(r,"resid");
-    int X = dms_reader_column(r,"x");
-    int Y = dms_reader_column(r,"y");
-    int Z = dms_reader_column(r,"z");
-    int VX = dms_reader_column(r,"vx");
-    int VY = dms_reader_column(r,"vy");
-    int VZ = dms_reader_column(r,"vz");
-    int MASS = dms_reader_column(r,"mass");
-    int ANUM = dms_reader_column(r,"anum");
-    int NAME = dms_reader_column(r,"name");
-    int NBTYPE = dms_reader_column(r,"nbtype");
-    int GID = dms_reader_column(r,"id");
-    int CHARGE = dms_reader_column(r,"charge");
+    int SEGID = r.column("segid");
+    int CHAIN = r.column("chain");
+    int RESNAME = r.column("resname");
+    int RESID = r.column("resid");
+    int X = r.column("x");
+    int Y = r.column("y");
+    int Z = r.column("z");
+    int VX = r.column("vx");
+    int VY = r.column("vy");
+    int VZ = r.column("vz");
+    int MASS = r.column("mass");
+    int ANUM = r.column("anum");
+    int NAME = r.column("name");
+    int NBTYPE = r.column("nbtype");
+    int GID = r.column("id");
+    int CHARGE = r.column("charge");
+    int FORMAL = r.column("formal_charge");
+    int INSERT = r.column("insertion");
+    int CT = r.column("msys_ct");
     
     /* the rest of the columns are extra atom properties */
     std::set<int> handled;
+    handled.insert(SEGID);
     handled.insert(CHAIN);
     handled.insert(RESNAME);
     handled.insert(RESID);
@@ -410,63 +623,44 @@ SystemPtr desres::msys::ImportDMS( const std::string& path,
     handled.insert(NBTYPE);
     handled.insert(GID);
     handled.insert(CHARGE);
+    handled.insert(FORMAL);
+    handled.insert(INSERT);
+    handled.insert(CT);
 
     typedef std::map<int,ValueType> ExtraMap;
     ExtraMap extra;
-    for (int i=0, n=dms_reader_column_count(r); i<n; i++) {
+    for (int i=0, n=r.size(); i<n; i++) {
         if (handled.count(i)) continue;
-        extra[i]=dms_reader_column_type(r,i);
-        sys.atomProps()->addProp(dms_reader_column_name(r,i), extra[i]);
+        extra[i]=r.type(i);
+        sys.addAtomProp(r.name(i), extra[i]);
     }
 
     /* read the particle table */
-    for (; r; dms_reader_next(&r)) {
-        /* start a new chain if necessary */
-        const char * chainname = dms_reader_get_string(r,CHAIN);
-        if (bad(chnid) || strcmp(chainname, sys.chain(chnid).name.c_str())) {
-            chnid = sys.addChain();
-            sys.chain(chnid).name = chainname;
-            resid = BadId;
-        }
+    for (; r; r.next()) {
+        int anum = r.get_int(ANUM);
 
-        /* start a new residue if necessary */
-        const char * resname = dms_reader_get_string(r, RESNAME);
-        int resnum = dms_reader_get_int(r, RESID);
-        std::pair<ResMap::iterator,bool> p;
-        p = resmap.insert(std::make_pair(ResKey(resnum,resname,chainname),
-                    resid));
-        if (p.second) {
-            /* new resname/resnum in this chain, so start a new residue. */
-            resid = sys.addResidue(chnid);
-            residue_t& res = sys.residue(resid);
-            p.first->second = resid;
-            res.name = resname;
-            res.num = resnum;
+        /* add atom */
+        Id ct = CT<0 ? 0 : r.get_int(CT);
+        const char * chainname = CHAIN<0 ? "" : r.get_str(CHAIN);
+        const char * segid = SEGID<0 ? "" : r.get_str( SEGID);
+        const char * resname = RESNAME<0 ? "" : r.get_str( RESNAME);
+        const char * aname = NAME<0 ? "" : r.get_str( NAME);
+        const char * insert = INSERT<0 ? "" : r.get_str(INSERT);
+        int resnum = RESID<0 ? 0 : r.get_int( RESID);
+        Id atmid = imp.addAtom(chainname, segid, resnum, resname, aname,insert,ct);
 
-            boost::trim(res.name);
-        } else {
-            /* use existing residue */
-            resid = p.first->second;
-        }
-
-        /* add the atom */
-        Id atmid = sys.addAtom(resid);
-        atom_t& atm = sys.atom(atmid);
-        atm.x = dms_reader_get_double(r, X);
-        atm.y = dms_reader_get_double(r, Y);
-        atm.z = dms_reader_get_double(r, Z);
-        atm.vx = dms_reader_get_double(r, VX);
-        atm.vy = dms_reader_get_double(r, VY);
-        atm.vz = dms_reader_get_double(r, VZ);
-        atm.mass = dms_reader_get_double(r, MASS);
-        atm.atomic_number = dms_reader_get_int(r, ANUM);
-        atm.name = dms_reader_get_string(r, NAME);
-        atm.gid = dms_reader_get_int(r, GID);
-        atm.charge = dms_reader_get_double(r, CHARGE);
-        while (gidmap.size()<atm.gid) gidmap.push_back(BadId);
-        gidmap.push_back(atmid);
-
-        boost::trim(atm.name);
+        /* add atom properties */
+        atom_t& atm = sys.atomFAST(atmid);
+        atm.x = r.get_flt( X);
+        atm.y = r.get_flt( Y);
+        atm.z = r.get_flt( Z);
+        atm.vx = r.get_flt( VX);
+        atm.vy = r.get_flt( VY);
+        atm.vz = r.get_flt( VZ);
+        atm.mass = r.get_flt( MASS);
+        atm.atomic_number = anum;
+        atm.charge = r.get_flt( CHARGE);
+        atm.formal_charge = FORMAL<0 ? 0 : r.get_int(FORMAL);
 
         /* extra atom properties */
         Id propcol=0;
@@ -474,55 +668,226 @@ SystemPtr desres::msys::ImportDMS( const std::string& path,
                 iter!=extra.end(); ++iter, ++propcol) {
             int col = iter->first;
             ValueType type = iter->second;
-            ValueRef ref = sys.atomProps()->value(atmid, propcol);
+            ValueRef ref = sys.atomPropValue(atmid, propcol);
             if (type==IntType) 
-                ref=dms_reader_get_int(r,col);
+                ref=r.get_int(col);
             else if (type==FloatType)
-                ref=dms_reader_get_double(r,col);
+                ref=r.get_flt(col);
             else
-                ref=dms_reader_get_string(r,col);
+                ref=r.get_str(col);
         }
-        nbtypes.push_back(NBTYPE>=0 ? dms_reader_get_int(r,NBTYPE) : BadId);
+        nbtypes.push_back(NBTYPE>=0 ? r.get_int(NBTYPE) : BadId);
     }
 
-    dms_fetch(dms, "bond", &r);
+    r = dms.fetch("bond", false); /* no strict typing */
     if (r) {
-        int p0=dms_reader_column(r,"p0");
-        int p1=dms_reader_column(r,"p1");
-        int o = dms_reader_column(r,"order");
+        int p0=r.column("p0");
+        int p1=r.column("p1");
+        int o = r.column("order");
 
         /* read the bond table */
-        for (; r; dms_reader_next(&r)) {
-            int ai = dms_reader_get_int(r, p0);
-            int aj = dms_reader_get_int(r, p1);
-            double order = o<0 ? 1 : dms_reader_get_double(r, o);
-            Id id = sys.addBond(gidmap.at(ai),gidmap.at(aj));
-            sys.bond(id).order = order;
+        for (; r; r.next()) {
+            int ai = r.get_int( p0);
+            int aj = r.get_int( p1);
+            int order = o<0 ? 1 : r.get_int(o);
+            Id id;
+            try {
+                id = sys.addBond(ai, aj);
+            }
+            catch (std::exception& e) {
+                MSYS_FAIL("Failed adding bond (" << ai << ", " << aj << ")\n"
+                        << e.what());
+            }
+            sys.bondFAST(id).order = order;
         }
     }
 
-    sys.update_fragids();
-
-    //printf("got %d chains, %d residues, %d atoms, %d fragments.\n",
-            //sys.chainCount(), sys.residueCount(), sys.atomCount(), frags);
-
-    KnownSet known;
-    known.insert("particle");
-    known.insert("bond");
-
     read_cell(dms, sys, known);
-    read_alchemical_particle( dms, sys, nbtypes, nbtypesB, known );
+    read_provenance(dms, sys, known);
 
-    if (!structure_only) {
-        read_metatables(dms, gidmap, sys, known);
-        read_nonbonded(dms, sys, nbtypes, nbtypesB, known);
-        read_exclusions(dms, gidmap, sys, known);
+    if (!without_tables) {
+        read_metatables(dms, sys, known);
+        read_nonbonded(dms, sys, nbtypes, known);
+        read_combined(dms, sys, known);
+        read_exclusions(dms, sys, known);
         read_nbinfo(dms, sys, known);
+        read_table_properties(dms, sys, known);
         read_extra(dms, sys, known);
     }
 
-    dms_close(dms);
-    
+    if (structure_only) {
+        // clone the non-pseudos if any pseudos were loaded.
+        IdList ids;
+        const Id n=sys.maxAtomId();
+        ids.reserve(n);
+        for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
+            if (sys.atomFAST(i).atomic_number>0) {
+                ids.push_back(i);
+            }
+        }
+        if (ids.size()<n) {
+            h = Clone(h, ids);
+            /* careful - at this point, sys points to freed memory! */
+        }
+    }
+
+    Analyze(h);
     return h;
+}
+
+namespace {
+
+    class iterator : public LoadIterator {
+        // iteration over concatenated dms files
+
+        int fd = 0;
+        size_t offset = 0;
+        const bool structure_only;
+        const bool without_tables;
+
+    public:
+        iterator(std::string const& path, bool structure_only,
+                                          bool without_tables)
+        : structure_only(structure_only),
+          without_tables(without_tables)
+        {
+            fd = ::open(path.data(), O_RDONLY);
+            if (fd < 0) {
+                MSYS_FAIL("Opening DMS file '" << path << "' for reading: "
+                        << strerror(errno));
+            }
+
+        }
+
+        void close() {
+            if (fd > 0) {
+                ::close(fd);
+                fd = 0;
+            }
+        }
+
+        ~iterator() {
+            close();
+        }
+
+        SystemPtr next();
+    };
+}
+
+SystemPtr iterator::next() {
+#if defined(MSYS_HAS_MMAP)
+    if (fd <= 0) return nullptr;
+    // The first 100 bytes of an sqlite file correspond to the database header.
+    char header[100];
+    if (pread(fd, header, sizeof(header), offset) != sizeof(header)) {
+        // calling this end of file
+        close();
+        return nullptr;
+    }
+    // validate the header string
+    if (strcmp(header, "SQLite format 3")) {
+        MSYS_FAIL("File has incorrect magic header string");
+    }
+
+    // get the page size: 2 bytes, big endian.
+    // "The database page size in bytes. Must be a power of two between 512
+    // and 32768 inclusive, or the value 1 representing a page size of 65536."
+    uint32_t page_size =
+        ((uint16_t)header[16] << 8) +
+        ((uint16_t)header[17]     );
+    if (page_size == 1) page_size = 65536;
+
+    // get the number of pages.  DMS files written with older versions of
+    // msys/sqlite will have zero here.  If so, we can't determine where the
+    // db ends, so just bail rather than hope that this is the last entry.
+    uint32_t page_count = 
+        ((uint32_t)header[28] << 24) +
+        ((uint32_t)header[29] << 16) +
+        ((uint32_t)header[30] <<  8) +
+        ((uint32_t)header[31]      );
+
+    if (page_count == 0) {
+        close();
+        MSYS_FAIL("Entry at offset " << offset << " has zero page_count, possibly because it was written with an older version of msys");
+    }
+    uint64_t dbsize = page_size * page_count;
+
+    // mmap the file
+    void* ptr = mmap(0, dbsize, PROT_READ, MAP_PRIVATE, fd, offset);
+    if (ptr == MAP_FAILED) {
+        close();
+        MSYS_FAIL("Mapping DMS entry at " << offset << " size " << dbsize
+                << ": " << strerror(errno));
+    }
+
+    // read the db and import the system
+    SystemPtr mol;
+    try {
+        Sqlite dms = Sqlite::read_bytes(ptr, dbsize);
+        mol = import_dms(dms, structure_only, without_tables);
+    }
+    catch (std::exception& e) {
+        munmap(ptr, dbsize);
+        throw;
+    }
+
+    munmap(ptr, dbsize);
+    offset += dbsize;
+
+    if (mol->ctCount()) {
+        mol->name = mol->ct(0).name();
+    }
+    return mol;
+#else
+    MSYS_FAIL("DMS iteration without mmap support not available");
+#endif
+}
+
+SystemPtr desres::msys::ImportDMS(const std::string& path, 
+                                  bool structure_only,
+                                  bool without_tables) {
+    SystemPtr sys;
+    try {
+        Sqlite dms = Sqlite::read(path);
+        sys = import_dms(dms, structure_only, without_tables);
+    }
+    catch (std::exception& e) {
+        std::stringstream ss;
+        ss << "Error opening dms file at '" << path << "': " << e.what();
+        throw std::runtime_error(ss.str());
+    }
+    sys->name = path;
+    return sys;
+}
+
+SystemPtr desres::msys::ImportDMSFromBytes( const char* bytes, int64_t len,
+                                            bool structure_only,
+                                            bool without_tables ) {
+    SystemPtr sys;
+    try {
+        Sqlite dms = Sqlite::read_bytes(bytes, len);
+        sys = import_dms(dms, structure_only, without_tables);
+    }
+    catch (std::exception& e) {
+        std::stringstream ss;
+        ss << "Error reading DMS byte stream: " << e.what();
+        throw std::runtime_error(ss.str());
+    }
+    return sys;
+}
+
+static void no_close(sqlite3*) {}
+
+SystemPtr desres::msys::sqlite::ImportDMS(sqlite3* db,
+                                  bool structure_only,
+                                  bool without_tables) {
+    Sqlite dms(std::shared_ptr<sqlite3>(db,no_close));
+    return import_dms(dms, structure_only, without_tables);
+}
+
+LoadIteratorPtr desres::msys::DMSIterator(std::string const& path,
+                                          bool structure_only,
+                                          bool without_tables) {
+    return std::make_shared<iterator>(path, structure_only, without_tables);
 }
 

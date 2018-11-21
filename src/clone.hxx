@@ -5,7 +5,19 @@
 
 namespace desres { namespace msys {
 
-    SystemPtr Clone( SystemPtr m, IdList const& atoms );
+    // Bud off a new system from the old.  If ShareParams is true,
+    // then ParamTables are never copied; they will be shared between
+    // the old and new systems.  By default, copies of the ParamTables
+    // are made, but ParamTables shared _within_ the old system will
+    // also be shared in the new system.
+    struct CloneOption { 
+        enum Flags { Default     = 0
+                   , ShareParams = 1 << 0
+        };
+    };
+
+    SystemPtr Clone( SystemPtr m, IdList const& atoms,
+                     CloneOption::Flags flags = CloneOption::Default );
 
 }}
 

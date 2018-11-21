@@ -8,7 +8,7 @@
 #include <cstring>
 
 // compatibility layer for dessert
-namespace desres { 
+namespace desres { namespace msys {
 
   struct dessert : std::runtime_error {
     explicit dessert(const std::string &s) 
@@ -20,7 +20,7 @@ namespace desres {
     virtual ~dessert() throw() {}
   };
 
-}
+}}
 
 #ifdef _MSC_VER
 #define DESSERT_LOC __FILE__, __LINE__, __FUNCSIG__

@@ -1,0 +1,194 @@
+{ 
+  s_m_m2io_version
+  :::
+  2.0.0 
+} 
+
+f_m_ct { 
+  s_m_title
+  s_m_entry_id
+  s_m_entry_name
+  i_sd_PUBCHEM\_COMPOUND\_CID
+  r_sd_PUBCHEM\_CONFORMER\_RMSD
+  i_sd_PUBCHEM\_CONFORMER\_DIVERSEORDER
+  s_sd_PUBCHEM\_MMFF94\_PARTIAL\_CHARGES
+  i_sd_PUBCHEM\_EFFECTIVE\_ROTOR\_COUNT
+  s_sd_PUBCHEM\_PHARMACOPHORE\_FEATURES
+  i_sd_PUBCHEM\_HEAVY\_ATOM\_COUNT
+  i_sd_PUBCHEM\_ATOM\_DEF\_STEREO\_COUNT
+  i_sd_PUBCHEM\_ATOM\_UDEF\_STEREO\_COUNT
+  i_sd_PUBCHEM\_BOND\_DEF\_STEREO\_COUNT
+  i_sd_PUBCHEM\_BOND\_UDEF\_STEREO\_COUNT
+  i_sd_PUBCHEM\_ISOTOPIC\_ATOM\_COUNT
+  i_sd_PUBCHEM\_COMPONENT\_COUNT
+  i_sd_PUBCHEM\_CACTVS\_TAUTO\_COUNT
+  s_sd_PUBCHEM\_CONFORMER\_ID
+  r_sd_PUBCHEM\_MMFF94\_ENERGY
+  r_sd_PUBCHEM\_FEATURE\_SELFOVERLAP
+  s_sd_PUBCHEM\_SHAPE\_FINGERPRINT
+  s_sd_PUBCHEM\_SHAPE\_MULTIPOLES
+  r_sd_PUBCHEM\_SHAPE\_SELFOVERLAP
+  r_sd_PUBCHEM\_SHAPE\_VOLUME
+  s_sd_PUBCHEM\_COORDINATE\_TYPE
+  :::
+  2777373 
+  1 
+  PC2777373.1 
+  2777373 
+                   0.4 
+  1     
+  "15
+1 1.82
+10 -0.15
+11 0.15
+12 0.15
+13 0.15
+14 0.15
+15 0.15
+2 -0.82
+3 -0.82
+4 -0.82
+5 -0.09
+6 0.21
+7 0.21
+8 -0.15
+9 -0.15" 
+  1     
+  "5
+1 2 acceptor
+1 3 acceptor
+1 4 acceptor
+4 1 2 3 4 anion
+6 5 6 7 8 9 10 rings" 
+  10    
+  0     
+  0     
+  0     
+  0     
+  0     
+  1     
+  1     
+  002A611D00000001 
+               24.5599 
+                 25.44 
+  "10857977 72 18267015231843236161
+12524768 44 18201441414792774397
+12897270 3 18411422838198159671
+12932764 1 18410579487178624161
+14325111 11 18410570665484785153
+14390081 3 18413386557491626905
+15310529 11 17240208728854852629
+15775835 57 18335144146054397248
+16945 1 18271808965185762335
+19973954 147 18343865523788776248
+20201158 50 17988926652024797286
+20645464 45 18059850683865550784
+21040471 1 18337955563100857933
+23552423 10 18260832656290223231
+2748010 2 18340203089511728517
+3248919 1 17203607077608722433
+369184 2 18411693292568331113
+5084963 1 17822571594935338305
+8030462 33 18333450953987484855" 
+  "187.06
+3.97
+1.45
+0.83
+0.36
+0
+-0.17
+-0.02
+-0.01
+-0.25
+0.17
+0.51
+0
+0" 
+               372.578 
+                 112.1 
+  "2
+5
+10" 
+  m_atom[15] { 
+    # First column is atom index #
+    i_m_mmod_type
+    r_m_x_coord
+    r_m_y_coord
+    r_m_z_coord
+    i_m_residue_number
+    s_m_insertion_code
+    s_m_mmod_res
+    s_m_chain_name
+    i_m_color
+    r_m_charge1
+    r_m_charge2
+    s_m_pdb_residue_name
+    s_m_pdb_atom_name
+    s_m_grow_name
+    i_m_atomic_number
+    i_m_formal_charge
+    i_m_representation
+    i_m_visibility
+    s_m_color_rgb
+    s_m_atom_name
+    i_m_template_index
+    :::
+    1      113    1.776000    0.002200    0.001100   900 " " X " "   13   0.00000   0.00000 "UNK " "    " "    "   16   0    0    1 E1E11E "" 0     
+    2       18    2.145600    1.242100    0.713800   900 " " X " "   70   0.00000   0.00000 "UNK " "    " "    "    8  -1    0    1 FF2F2F "" 0     
+    3       15    2.187000   -1.227900    0.712900   900 " " X " "   70   0.00000   0.00000 "UNK " "    " "    "    8   0    0    1 FF2F2F "" 0     
+    4       15    2.184800   -0.001600   -1.420700   900 " " X " "   70   0.00000   0.00000 "UNK " "    " "    "    8   0    0    1 FF2F2F "" 0     
+    5       31   -0.034200   -0.000600   -0.000800   900 " " X " "   43   0.00000   0.00000 "UNK " "    " "    "    7   1    0    1 5757FF "" 0     
+    6        2   -0.681900    1.172600   -0.003700   900 " " X " "    2   0.00000   0.00000 "UNK " "    " "    "    6   0    0    1 A0A0A0 "" 0     
+    7        2   -0.678300   -1.175500    0.001700   900 " " X " "    2   0.00000   0.00000 "UNK " "    " "    "    6   0    0    1 A0A0A0 "" 0     
+    8        2   -2.069200    1.201000   -0.004400   900 " " X " "    2   0.00000   0.00000 "UNK " "    " "    "    6   0    0    1 A0A0A0 "" 0     
+    9        2   -2.065500   -1.207900    0.001700   900 " " X " "    2   0.00000   0.00000 "UNK " "    " "    "    6   0    0    1 A0A0A0 "" 0     
+    10       2   -2.764300   -0.004400   -0.001600   900 " " X " "    2   0.00000   0.00000 "UNK " "    " "    "    6   0    0    1 A0A0A0 "" 0     
+    11      41   -0.091000    2.079200   -0.020200   900 " " X " "   21   0.00000   0.00000 "UNK " "    " "    "    1   0    0    1 FFFFFF "" 0     
+    12      41   -0.082900   -2.079200   -0.008500   900 " " X " "   21   0.00000   0.00000 "UNK " "    " "    "    1   0    0    1 FFFFFF "" 0     
+    13      41   -2.602200    2.145800   -0.010700   900 " " X " "   21   0.00000   0.00000 "UNK " "    " "    "    1   0    0    1 FFFFFF "" 0     
+    14      41   -2.595800   -2.154200    0.000700   900 " " X " "   21   0.00000   0.00000 "UNK " "    " "    "    1   0    0    1 FFFFFF "" 0     
+    15      41   -3.850300   -0.006100   -0.003500   900 " " X " "   21   0.00000   0.00000 "UNK " "    " "    "    1   0    0    1 FFFFFF "" 0     
+    :::
+  } 
+  m_bond[30] { 
+    # First column is bond index #
+    i_m_from
+    i_m_to
+    i_m_order
+    i_m_from_rep
+    i_m_to_rep
+    :::
+    1          1      2   1 1 1 
+    2          1      3   2 1 1 
+    3          1      4   2 1 1 
+    4          1      5   1 1 1 
+    5          2      1   1 1 1 
+    6          3      1   2 1 1 
+    7          4      1   2 1 1 
+    8          5      1   1 1 1 
+    9          5      6   2 1 1 
+    10         5      7   1 1 1 
+    11         6      5   2 1 1 
+    12         6      8   1 1 1 
+    13         6     11   1 1 1 
+    14         7      5   1 1 1 
+    15         7      9   2 1 1 
+    16         7     12   1 1 1 
+    17         8      6   1 1 1 
+    18         8     10   2 1 1 
+    19         8     13   1 1 1 
+    20         9      7   2 1 1 
+    21         9     10   1 1 1 
+    22         9     14   1 1 1 
+    23        10      8   2 1 1 
+    24        10      9   1 1 1 
+    25        10     15   1 1 1 
+    26        11      6   1 1 1 
+    27        12      7   1 1 1 
+    28        13      8   1 1 1 
+    29        14      9   1 1 1 
+    30        15     10   1 1 1 
+    :::
+  } 
+} 
+

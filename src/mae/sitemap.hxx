@@ -3,7 +3,7 @@
 
 #include "../system.hxx"
 #include "../term_table.hxx"
-#include <fastjson/fastjson.hxx>
+#include "../fastjson/fastjson.hxx"
 
 namespace desres { namespace msys { namespace mae {
 
@@ -26,27 +26,17 @@ namespace desres { namespace msys { namespace mae {
         Id addTerm(TermTablePtr table, 
                      Id p,
                      const IdList& ids) const;
-
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+    void addUnrolledTerms( TermTablePtr nb, 
+                           Id param, 
+                           const IdList& ids,
+                           bool constrained = false, const char* schedule = 0 ) const;
+#else
         void addUnrolledTerms( TermTablePtr nb, 
                                Id param, 
                                const IdList& ids,
-                               bool constrained, 
-                               Id paramB ) const;
-
-        void addUnrolledTerms( TermTablePtr nb, 
-                               Id param, 
-                               const IdList& ids,
-                               bool constrained = false ) const {
-            return addUnrolledTerms( nb, param, ids, constrained, BadId );
-        }
-
-        void addUnrolledTerms( TermTablePtr nb, 
-                               Id param, 
-                               const IdList& ids,
-                               Id paramB ) const {
-            return addUnrolledTerms( nb, param, ids, false, paramB );
-        }
-
+                               bool constrained = false ) const;
+#endif
         void addUnrolledPseudoBonds(SystemPtr h, Id parent, Id pseudo) const;
     };
 

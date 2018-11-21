@@ -1,0 +1,1005 @@
+1.7.249 Make InChI ignore vsites.
+
+1.7.248 Add consider_stereo flag to FindDistinctFragments.
+        Fix missing call to updateFragids in ImportSdf.
+
+1.7.247 Include pseudos when validating against nonbonded contacts [DESRESCode#4042]
+        Fix missing shlib version on msys.so.
+
+1.7.246 Fix msys.Load(jobid) for both return types of yas_job.input_ark
+        Read CRYSIN records from mol2 files.
+        Wrap ImportPDBUnitCell.
+        Added periodic option to System.findBonds.
+        Add docs on msys.sequence and a few other tools.
+        Added color option to Graph.
+
+1.7.245 Use bytearray for dtr unsigned char fields.
+        New "degree" selection keyword for bonds between real atoms.
+
+1.7.244 Make "ion" selection atomic number and bond based.
+        Change old "ion" selection to "legacy_ion".
+        Handle ComputeTopologicalIds for systems with crazy pseudos.
+        Handle nonconsecutive resids in mol2 files.
+        Avoid crashing in find-contacts for unreasonable coordinates.
+        Fix for undecodeable bytes in DtrReader.keyvals [DESRESCode#4002].
+
+1.7.243 Python3.7.
+
+1.7.242 Atomselection bug for 'all'.
+
+1.7.241 Fix for dms-dump.
+          Docs for molfile trajectory writing.
+          Triclinic support for pfx.
+          Add dms-validate check for virtuals in multiple virtual tables.
+
+1.7.240 Added ReplaceTableWithSortedTerms.
+          Implement dms-diff in python instead of shell.
+          Fix the Graph.atoms method.
+          Use inchi/1.05.
+          Make msys.Graph check for duplicates.
+          Tweaks to the build for external users.
+
+1.7.239 DESRESCode#3974: Fix some broken tool scripts.
+
+1.7.238 Fix broken lib-python3 from 1.7.237.
+          DESRESCode#3964: fix mol2 reading and writing.
+
+1.7.237 Use new sconsutils; should affect developers only.
+
+1.7.235 Add a 'moe' option to msys.SaveMol2 to output guanidinium
+          groups MOE can will parse correctly. This option is turned
+          on by default as it seems _most_ tools handle this variant
+          fine.
+
+1.7.233 Fix dms-dump (broken since 1.7.230).
+          Added SpatialHash::findPairlist.
+          Better verbosity API for validate.
+
+1.7.232 Use python/2.7.15 and 3.6.6 megamodules.
+          Update boost from 1.63 to 1.67.
+          Add bindings for System.addProvenance.
+
+1.7.230 Added virtual_lc1 schema
+          Fix for dms-dump with .sqliterc files
+          Unused param fix for v2 compatibility
+
+1.7.229 Added dtr_frame_{from,as}_bytes.
+
+1.7.228 Added msys.FormatDMS.
+          Pickled systems use zlib; 3-20x smaller pickles.
+          FindDistinctFragment returns full map of equivalent fragments.
+          
+1.7.227 Support K+ as an ion residue name.
+          Include tempered_nonbonded and modified_interaction in dms-dump
+          Add table schemas for constraint_ahNR
+
+1.7.226 Fix molfile.StkFile for python3
+          Use new megamodules (-03c7).
+          Check for atom count consistency in stks.
+          dtr-validate: add check for constrained hydrogens.
+          Add LoadMany for concatenated dms files.
+
+1.7.225 Use 1/1024 fs as the time quantum for dtr trajectory processing.
+          Make msys.SaveDMS(..., unbuffered=True) around 10x faster.
+          Remove vestigial ExportDMSMany reference.
+          Make SystemImporter python bindings work.
+
+1.7.224 msys.ConvertFromOEChem will no longer complain about
+          molecules not having hydrogens that don't actually have
+          hydrogens, e.g., O=S=O.
+          msys.ConvertToOEChem will always set the dimension of the
+          molecule to 3D as msys really only traffics in 3D molecules.
+
+1.7.223 Yet another fix for double precision in timekeys files.
+          Expose error message from numpy version clashes
+
+1.7.222 msys.ConvertToOEChem can take a list of atoms to convert to convert a subset much faster.
+
+1.7.221 msys.Convert(To/From)OEChem will preserve the molecule title
+          Fix SaveDMS for unbuffered=True.
+          Added (..., sanitize=True) option to msys.ConvertToRdkit.
+
+1.7.220 Added msys.ConvertFromOEChem (DESRESCode#3785).
+
+1.7.219 Report strerror(errno) when reading dms files (DESRESInfra#39849)
+
+1.7.218 Write .dms.gz files using gzip.  DESRESCode#3771.
+          Added rigid_explicitN schema.
+          All dms-tools and msys.Load support jobids as arguments.
+          Sort atoms and bonds by atom ids.
+          More precise handling of timekeys in large stks.
+
+1.7.216 Fixing msys.ConvertToRdkit to work with RDKit 2017.09.
+          Sanity check added to Chem.DetectBondStereoChemistry was
+          being tripped and needed to be worked around.
+
+          Refactored test cases and making sure to run RDKit and
+          OEChem conversion test cases.
+
+1.7.215 Removed v7 stk cache code and added utility to rename
+          a dtr in an stk cache file.
+
+1.7.214 Make msys.InChI include stereo by default (SNon=True).
+          Fix mol2 handling of resids (DESRESCode#3747).
+
+1.7.213 Bump megamodule versions.
+          Don't filter metals in bond order assigner (DESRESCode#3713).
+          Ignore excluded knots in dms-validate (DESRESCode#3566).
+          Added an ignore_excluded option to findContactIds()
+          Fix altloc writing (DESRESCode#3626).
+          Fix pdb download.
+          Expose SystemImporter from python.
+
+1.7.212 Added msys.ConvertToOEChem.
+          Added --without-pos option to dms-dump.
+
+1.7.211 Optionally compute and store resonant charge and bond order.
+
+1.7.210 python3 support.
+
+1.7.208 Added molfile.list_fields()
+          Make DtrReader.frame(...) not panic if the FORMAT is empty.
+          Fixed reading of dms files with table properties.
+          Use new sphinx-rtd-theme for fixed doc search.
+          Avoid a deadly exception when writing a dms with missing nbtypes.
+          Handle variable-sized frames in etr files.
+
+1.7.207 DESRESCode#3590 - changes from schrodinger.
+
+1.7.206 Bring back GuessHydrogenPositions
+          New dms-solvate for those who can't use viparr.
+          dms-tile checks for reasonable box size.
+          DESRESCode#3571 : Added dms-validate case for massless atoms
+          DESRES_ROOT is deprecated, have the cache query DESRES_LOCATION
+          Bugfix in bond order assigner
+          Make old, non-monotonic stks only generate warning.
+
+1.7.205 Added PyCapsule interface for easier pybind11 integration.
+          Added msys.System.hash() function to replace dms-hash.
+
+1.7.204 Added Cl- to 'ion' atom selection.
+          Using cent7 garden modules.
+
+1.7.203 Fix for dms-frame broken by DESRESCode#3486 in previous release.
+        Double precision support for SpatialHash in C++.
+        Eliminate dms-hash.
+
+1.7.202 DESRESCode#3486 - changes from schrodinger.
+        Added SpatialHash::findContactsReuseVoxels.
+        dms-validate skips knot check when system is alchemical.
+        New libmsys-core and versioned libmsys.
+        gcc/6.3 portability.
+        Remove cealign.
+
+1.7.157 DESRESCode#3438 - fix reading sdf files without trailing delim.
+        DESRESCode#3472 - fix msys.System.guessBonds.
+        DESRESCode#3450 - pickle support for residues and chains.
+        DESRESCode#3461 - fix ComputeTopologicalIds bindings.
+        DESRESCode#3452 - use garden flex and bison for CentOS7 support.
+        use desres-python/2.7.13-02.
+
+1.7.156 Fix build of docs.
+
+1.7.155 Python/2.7.12-03st.
+
+1.7.154 Python/2.7.12-02st, gcc/5.2.0-33x, boost/1.59-06.
+
+1.7.153 Fixed reading of dms files with table properties.
+        Experimental new msys to rdkit converter.
+        Experimental new IndexedFileLoader.
+        Support for ETR writing.
+        Added ElectronegativityForElement.
+        Don't write mae files with bad key names.
+        Rip out resonant_charge and resonant_order.
+        Removed msys2mol2 - use dms-select instead.
+        Don't grow the SpatialHash grid too large.
+        SpatialHash input checks.
+        Fixes for smiles charge parsing.
+        Fix LoadDMS(buffer).
+
+1.7.149 Pass --reorder to dms-dump in dms-diff.
+        Handle coordinate-only Amber crd files. (DESRESCode#3183).
+        Fix dms-frame (DESRESCode#3205).
+
+1.7.148 Fixed typo in dtr-validate.
+
+1.7.147 C++: TermTable::atomsFast() and paramFAST().
+        Pickle support for Systems (DESRESCode#3148).
+        Include all of msys module in the docs.
+        Fixes for Mac build/test.
+
+1.7.145 Use just SSE4_1 for findContacts since drdb has only that.
+
+1.7.144 C++: Replace boost::shared_ptr with std::shared_ptr.
+        Better smiles support (DESRESCode#3109)
+        SSE4 acceleration of findContacts.
+        Fix AnnotatedSystem.repr (DESRESCode#3108)
+        Added optional weights argument to pfx.aligned_rmsd.
+        Throw exception on empty atom selections.
+
+1.7.143 C++: Spatial hash doesn't compute the square root anymore.
+        C++: Fix installation of atomsel headers.
+        Skip over newlines and tabs in atom selections.
+
+1.7.142 NEW: msys-fetch-pdb tool
+        NEW: SpatialHash.findContacts (supports minimum image checks)
+        FIXED: parsing of negative integers in atom selections
+        FIXED: dms-grease periodic wrapping.
+        IMPROVED: error reporting in atom selections.
+        Tracking ticket: DESRESCode#3040.
+
+1.7.141 Fix incorrect check for leading zero in json int.
+        Disable multithreaded molfile.read_frames.
+        Handle negative integers in atom selections.
+        Report line number in sdf import errors.
+        Fix empty atom selections in System.atomsel.
+        Fix preservation of absolute stereo in sdf I/O.
+        Move alchemical system generation to sw/libs/atommatch.
+
+1.7.140 Using Python/2.7.11-03st
+        DESRESCode#2857: Fix msys.Term.system property.
+        DESRESCode#2779: dms-replicate sets resid, chain or ct as needed.
+        C++: Move ThreeRoe out of dtrplugin header.
+
+1.7.139 Make molfile use sequential access for dtr.
+        Fix bug with ETRs if no TSS values followed FORMAT.
+
+1.7.138 mol2 processing fixes: preserve sybyl_type; fix aromatic bond type.
+        Make dms-frame complain about -t or -n without -i.
+        Added dtr-validate to tools documentation.
+
+1.7.137 SDF file processing just uses LoadMany now.
+        ScanSDF is gone; use LoadMany, to read, FormatSDF to write.
+
+1.7.136 Fix bug in System.atomsel when alignment produces reflections.
+
+1.7.135 System.selectIds takes optional pos and box.
+        The 'fragment' atom selection keyword is now a synonym for 'fragid'.
+        dtr-validate now takes only a single path.
+        Molfile handles single-row seqfiles.
+        Make dms-validate handle systems with virtuals more intelligently.
+
+1.7.134 Double the speed of within searches for small target selections.
+
+1.7.133 Don't put inchi strings in alchemical dms.
+
+1.7.132 rst7 support in dms-frame.
+        dms-frame no longer wraps by default.
+        Added MakeAlchemical python bindings.
+        Build with latest OS X compiler.
+
+1.7.131 Added near-workalike fstime and fsdump.
+        Added DtrReader.keyvals().
+        C++: AnnotatedSystem no longer holds a SystemPtr, and is itself not
+        a shared_ptr.
+        Made smarts matching around 3x faster.
+        Better error checking on archive file writing.
+        Added etr as valid extension type for dtr.
+
+1.7.130 Support for alchemical ffio_morsebonds.
+        Handle NULL chains, segids, etc. in dms files.
+        Allow extra blank line after M END in ScanSDF.
+        C++: make pfx::Graph constructible directly from SystemPtr.
+        Fix a memory leak affecting all dms file reading (!).
+
+1.7.129 Support for ffio_morsebonds in mae files.
+        More efficient term table indexing.
+        Support for .gz files in ScanSDF.
+
+1.7.128 Handle stk files containing empty dtrs (DESRESCode#2406).
+
+1.7.127 Added --energy option to dtr-validate.
+
+1.7.126 Alchemical fix for multiple dihedrals.
+
+1.7.125 Fix reading of stk files whose parent directory changed.
+
+1.7.124 Added AllowBadCharges option to AnnotatedSystem.
+        Support more valences for heavy atoms.
+        Fix writing of sdf files with formal charge=4.
+        Fix pfx for very extended system.
+        Use pandas.read_csv for eneseq files when available.
+        Accomodate empty eneseq files.
+
+1.7.123 New stk caching ready to roll out.
+        Added SmartsPattern.match for Python.
+
+1.7.122 Handle long title lines in ScanSDF.
+
+1.7.121 Fixed charge parsing in ScanSDF.
+        Added --add-hydrogens and --guess-hydrogen-positions to dms-select.
+
+1.7.120 Added --sorted option to dms-select.
+        Fixed .gro box size unit conversion.
+        Fixed bond order assignment for systems with bonds to pseudos.
+
+1.7.119 Experimental ETR support and new STK caching - do not use!
+
+1.7.118 Added paramtype atom selection keyword.
+
+1.7.117 More ScanSDF robustness improvements.
+
+1.7.116 Improvements to ScanSDF and FormatSDF.
+
+1.7.115 Add checkpoint option to dtr-validate to turn off delta_t checks.
+
+1.7.114 Make dtr-validate perform some additional checks on timekeys.
+
+1.7.113 dtr-validate backwards compatibility.
+        Fix sdf import bug handling entries containing doublet radical.
+        Start using the new stk cache.
+
+1.7.112 Disregard difference in type and memo in identifying alchemical terms.
+        Accommodate missing tables in both A and B states in alchemical mapping.
+
+1.7.111 Support for gromacs files (gro, g96, trr, trj, xtc).
+        Build with C++11.
+        Better error handling in dms export.
+
+1.7.110 Stk cache files are placed alongside original stk.
+        DtrReader class supports sequential reading for stk.
+
+1.7.109 Revert the 1.7.103 changes to structure_only.  structure_only now
+        excludes pseudos.  Also excluded in mae files (previously wasn't).
+
+        Added new without_tables option to Load(), which causes term tables
+        to be ignored during loading but otherwise gives you all particles.
+
+1.7.108 Another shot at build fixes.
+
+1.7.107 Build fixes.
+
+1.7.106 Added --unrotate option to dms-frame.
+
+1.7.105 Smiles functionality factored out into its own garden module.
+
+1.7.104 Experimental SMILES parsing.
+        Added LoadSDF function.
+        The mol2 exporter mistakenly assigned C.cat atom type in some cases.
+
+1.7.103 Loading structure-only now includes pseudos.
+        Fix a bug in import where residues were sometimes erroneously split.
+
+1.7.100 No more versioned libmsys.so.
+
+1.7.99 Create a versioned libmsys.so.
+       Fix molfile-based reading of dms with pseudos.
+       More HBond finder improvements.
+       Added raw dtr I/O support for Python.
+
+1.7.98 Better xyz, dx, and Amber prm/rst7 file support.
+       HBondFinder allows multiple donor hydrogens.
+       Eliminate primegen dependency.
+
+1.7.97 Fix mol2 bond type output.
+       Fix molfile xyz plugin.
+       Added dx plugin.
+
+1.7.96 Fix mol2 atom type output.
+
+1.7.95 Fix the /lib submodule, which behaved differently under garden.
+
+1.7.94 Bump lp_solve version to get tighter symbol visibility.
+       Fix race condition in build script.
+       mol2 exporter now always assigns Sybyl atom types.
+
+1.7.93 Hydrogen bond finder.
+
+1.7.92 Added weights option to Pfx.align.
+       Fix OSX compilation issues.
+       Enhance molfile.Timekeys Python interface.
+
+1.7.91 Added ostream operator to SmallString.
+
+1.7.90 Incorporated molfile into msys.  Use 'from msys import molfile'.
+       pbwithin selection now handles rotated unit cell correctly.
+       [pb]nearest now handles empty subselection.
+       Slight change to SpatialHash interface.
+
+1.7.88 Added SmartsPattern::match().
+
+1.7.87 Use Python/2.7.9-05st.
+       Added boost::serialization-based archive format (.msys extension).
+
+1.7.86 Bump to numpy/1.6.2-35A
+       Fix tools scripts so they use the right version of numpy and molfile.
+       Make the rms routines more general.
+
+1.7.85 Fixed construction of provenance from Python.
+       Improvements to mmod_type handling in dms2mae.
+       Table properties in TermTable.  New msys_table_properties in dms.
+       Incorporate fastjson and pfx into msys.
+
+1.7.84 IMPROVED: Alchemical mapping now merges dummy fragments connected to the same real atom into one fragment, and thus retains more permissible terms.
+
+1.7.83 System.topology now returns a pfx.Graph object.
+
+1.7.82 Fixed reading and writing of large (>2GB) dms files.
+
+1.7.80 Fix memory leak in msys.pfx.aligned_rmsd.
+       Added Python bindings for CalcDihedralGeometry.
+
+1.7.79 Revert boost version change.
+
+1.7.78 C++ header fixes for spatial_hash.
+       C++ - Bump boost and zlib versions.
+
+1.7.77 FIXED: dms-alchemical typos.
+
+1.7.76 NEW: SpatialHash Python class for efficient findWithin and findNearest.
+       NEW: System.selectArr to return atom selections as numpy array of ids.
+       NEW: C++ within.hxx renamed to spatial_hash.hxx.
+
+1.7.75 FIXED: Allow structure-only saves with partial nonbonded params.
+       FIXED: Use sse2 rather than sse4 in new FindWithin code.
+       FIXED: FindWithin crashed on empty subselection.
+       NEW: keep-none for dms-alchemical.
+       NEW: Write msys_file_offset in mol2 files.
+
+1.7.74 FIXED: xyz files now written with element name rather than number.
+       FIXED: better bond guessing for systems with virtuals.
+       NEW: distance based atom selections got a lot faster.
+
+1.7.72 FIXED: bfactor and occupancy output in pdb files wasn't quite working.
+       FIXED: System.append() and PDB importer now always preserve atom order.
+       FIXED: permissions on dms-fix-water-residues.
+
+1.7.71 FIXED: write bfactor and occupancy to pdb files.
+       NEW: C++ system.hxx no longer includes {term,param}_table.hxx.
+
+1.7.70 FIXED: handling of element names with extraneous characters
+       FIXED: addTable should be no-op when table already exists.
+       NEW: dms-set takes any supported file type.
+
+1.7.69 FIXED: Fix error handling in certain Python bindings.
+       FIXED: dms-validate for check-gruops.
+       FIXED: validate output formatting
+       FIXED: read/write PDB space group
+       NEW: Saving to stdout.sdf writes to stdout.
+       NEW: API change for msys.groups
+
+1.7.68 NEW: dms-validate --anton checks for contacts shorter than 1A,
+            including those that cross periodic boundaries.
+       FIXED: The bond guesser (used during loading of pdb files) sometimes
+              handled hydrogens bonded to multiple atoms incorrectly.
+       FIXED: System.findContactIds should be stable now.
+       FIXED: System.topology was too slow.
+
+1.7.67 FIXED: AppendSystem is smarter about merging global cells.
+       FIXED: PDB readers weren't storing the global cell.
+       FIXED: pfx.apply() wasn't returning the correct global cell,
+              and the Python bindings for rsmd() failed for double
+              precision inputs.
+
+1.7.66 FIXED: msys.pfx.rmsd() was invalid when given double precision
+              coordinates, and pfx.apply() was not returning the transformed
+              unit cell when doing an alignment.
+
+        MODULE SPLITS: atommatch now lives in the atommatch garden module.
+                       psfgen now lives in the desres-psfgen garden module.
+
+1.7.65 IMPROVED: dms-validate checks that each water molecule has
+                 its own resid and lives in its own residue
+       NEW: dms-fix-water-residues for putting each water molecule in
+            its own residue.
+       FIXED: appending systems now correctly merges nonbonded_info.
+
+1.7.64 FIXED: SDF writer checks for isfinite() before calling floatify.
+
+1.7.63 IMPROVED: SDF reader is more robust and handles multi-line values.
+
+1.7.62 NEW: Bond.other(atom) from Python.
+       NEW: C++ interface for FindWithin.
+
+1.7.61 IMPROVED: Across-the-board speedups for all atom selections.
+       IMPROVED: Notable improvements to "nearest" selections.
+       NEW: "pbnearest" selection.
+       NEW: lc5-l schemas.
+       FIXED: Loading webpdb crashed in 1.7.60.
+
+1.7.60 NEW: dms-find-knot has a --untie option to remove knots.
+       NEW: LoadMany support for PDB files.
+       IMPROVED: dms-find-knot has a --ignore-excluded-knots that uses
+                 the exclusion table
+       IMPROVED: "nearest k to subsel" is much faster.
+       IMPROVED: Delete property in ct block using python del operator.
+
+1.7.59 FIXED: mol2 importer choked on resid 0.
+       IMPROVED: read and writes TER records between chains in pdb files
+       NEW: System.getTable() returns None on missing table.
+       FIXED: (C++) don't link against libmolfile or libpython.
+
+1.7.58 IMPROVED: dms-tile permits multiple input files, and requires -o.
+
+1.7.57 IMPROVED: mol2 export includes original resids.
+
+1.7.55 FIXED: dms-thermalize with --remove-drift doesn't accelerate pseudos.
+       FIXED: addTableWithSchema accepts user-supplied name.
+       IMPROVED: dms-frame gets otuput format from path name.
+       NEW: Use pfx instead of periodicfix in dms-frame and other places.
+
+1.7.54 FIXED: pdb export includes insertion code.
+
+1.7.53 FIXED: dms-tile sets nonbonded_info and cell.
+       IMPROVED: dms-info shows counts of pseudos and nucleic.
+       NEW: Load handles PSF files.
+       NEW: ReadPDBCoordinates() function.
+
+1.7.52 CentOS6 portability.
+
+1.7.49 FIXED: mol2 export was missing residues not in the first chain.
+       IMPROVED: mol2 export now includes chain name.
+
+1.7.48 FIXED: sdf export writes bond type 4 for resonant bond.
+       FIXED: clone() and append() preserve bond resonant_order.
+
+1.7.47 IMPROVED: psfgen.Psfgen got setCoordinates.
+       IMPROVED: update to molfile/1.11.16.
+       FIXED: psfgen.write() to dms was writing uninitialized global cell.
+
+1.7.43 FIXED: System.name wasn't set when loading a pdb.
+       FIXED: The segid atom selection keyword was missing.
+       FIXED: The web pdb access code regex was too restrictive.
+       FIXED: dms-reorder atoms: reference selection applies to all atoms.
+       IMPROVED: load mae files with multiple consecutive m2io_version blocks.
+       IMPROVED: Better error reporting of truncated mae files.
+
+1.7.42 FIXED: Added POPS to the lipid atom selection macro.
+       FIXED: The structure analyzer recognized waters with pseudos now.
+       FIXED: Allow writing mae files with multi-line ct properties.
+       IMPROVED: Added share_params option to clone().
+       NEW: Can load from the pdb databank by specifying an accession code.
+
+1.7.41 IMPROVED: SaveDMS accepts structure_only flag.
+       IMPROVED: dms-validate --desmond runs the dms-check-groups test.
+       FIXED: System.delXXX was confused by empty selections.
+
+1.7.40 FIXED: build of command line tool documentation.
+       IMPROVED: error recovery in msys.LoadMany (yield None on bad entry)
+       IMPROVED: dms-validate checks for nonzero volume.
+       IMPROVED: dms-thermalize has a --remove-drift option, on by default.
+
+1.7.39 treetop/57-Anton2
+
+1.7.38 IMPROVED: dms-select replaced its --append option with support for
+                 multiple input files.
+       IMPROVED: Compilation improvements.
+
+1.7.37 IMPROVED: PDB reader guesses atomic number form name if element is
+                 missing.  END and ENDMDL records split PDB into cts.
+       IMPROVED: PDB reader and writer handle formal charge in columns 79-80.
+       IMPROVED: dms-select has -A/--assign option to assign formal charge
+                 and bond order.
+       NEW: dms-tile and dms-replicate scripts.
+
+1.7.35 FIXED: dms-dump truncated its fields to 10 characters; now output
+              is separated by '|' rather than being formatted into columns.
+
+1.7.34 IMPROVED: annotated system is now handles radicals
+                 (bond order assigner still does not)
+
+1.7.33 FIXED: SDF counts line specification
+
+1.7.32 FIXED: SDF exporter writes ct key-values.
+
+1.7.31 FIXED: Read MAE files with fields containing hash symbols.
+       NEW: Atommatch takes optional pair of atoms which must be matched.
+
+1.7.30 FIXED: Another maegz fix.
+
+1.7.29 FIXED: MAE export was confused by bonds to pseudos.
+       FIXED: Bad image filename for latex2pdf documentation.
+
+1.7.28 FIXED: Handle MAE files with m2io_version block at the end.
+
+1.7.27 FIXED: Documentation of command line tools matches result of -h.
+       FIXED: SaveMAE supports lists of Systems again.
+       FIXED: dms-find-knot finds knots crossing periodic boundaries.
+       IMPROVED: dms-find-knot is much faster.
+       NEW: SerializeMAE instead of SaveMAE(path=None) for MAE contents.
+       NEW: XYZ file export.
+       NEW: dms-posre takes --max-energy and --max-distance options.
+       FIXED: dms-grease puts lipids in their own ct, leaving chains unchanged.
+
+1.7.24 IMPROVED: Documentation
+       REMOVED: ExportMAE() no longer takes a list argument; use append=True.
+       NEW: ExportMAE() takes path=None to return MAE file contents.
+       FIXED: Type checks for delAtom, etc.
+       FIXED: Don't consider saturated elements for hydrogen addition.
+
+1.7.23 FIXED: bond order assignments for disulfides and hypervalent halogens
+
+1.7.22 FIXED: Handle maegz files containing multiple zlib streams.
+
+1.7.21 NEW: Add dms-atommatch program and msys.atommatch Python library
+       FIXED: dms-alchemical keeps more bonded terms involving dummy atoms
+
+1.7.19 FIXED: dms-alchemical handles constraint tables with extra
+              informative parameter columns.
+
+1.7.18 FIXED: dms-alchemical handles more complex topologies.
+       FIXED: dms-alchemical keeps dihedral terms, not just bonds and angles.
+
+1.7.17 NEW: Python bindings for ComputeTopologicalIds.
+       NEW: dms-check-groups to check for valid initial conformation.
+       NEW: AddHydrogens routine.
+       NEW: Can append to a specific ct, rather than always create new cts.
+       IMPROVED: GuessHydrogenPositions works much better now.
+       IMPROVED: dms-fix-mass checks for consistency of atomic number and mass.
+       FIXED: MAE writer now handles negative atomic numbers.
+
+1.7.16 NEW: faster InChI c interface added
+       IMPROVED: bond order assignment speed (dimension of ILP reduced)
+       OTHER: resonance bond order/formal charge generation disabled
+
+1.7.15 FIXED: Make dms-select use desres-cleanenv.
+
+1.7.14 NEW: msys.Save() function understands filename extensions.
+       FIXED: Better hybridization detection.
+       FIXED: SaveMAE preserves atom order (broken since 1.7.0).
+       C++: load.hxx was renamed to io.hxx.
+
+1.7.13 NEW: Python bindings for {Period,Group}ForElement.
+       NEW: Python bindings for Calc{Distance,Angle,Dihedral,Planarity}.
+
+1.7.12 NEW: The GlobalCell class is gone; System.cell is now represented
+            a 3x3 NumPy array.  getCell() still returns a copy of the cell
+            as before.  Small API change but no change in behavior of the
+            existing interfaces.
+       NEW: The Vec3 class was removed from the Python interface; it was there
+             only to support the GlobalCell class.
+
+1.7.11 NEW: AbbreviationForElement in Python interface.
+       FIXED: ct properties were being improperly shared.
+       FIXED: mol2 and sdf import/export better supports multiple entries.
+       FIXED: dms-dump looks for more than six cmap tables.
+
+1.7.10 FIXED: Atom selections with names beginning with digits were broken
+              since 1.7.7.
+
+1.7.9  FIXED: Amber prm files with nontrivial dihedral phases could be misread.
+
+1.7.8  FIXED: Amber prm file should still add bonds when structure_only=True.
+       FIXED: Amber prm file was sometimes incorrectly rejected.
+       FIXED: GuessAtomicNumber for python.
+
+1.7.7  NEW: New atom selection parser based on flex/yacc.
+       NEW: smarts atom selection keyword.
+       NEW: ParamTable.addParam() takes keyword arguments.
+       FIXED: msys.AssignBondOrderAndFormalCharges(mol) is now much faster.
+       FIXED: dms-validate has more useful options.
+       FIXED: dms-alchemical does a sanity check.
+
+1.7.6  FIXED: msys.knots was broken, which broke dms-validate.
+       FIXED: dms-validate didn't properly handle systems with pseudos.
+       FIXED: Read occupancy and bfactor from PDB files.
+       FIXED: Bring back msys.GetSSSR.
+
+1.7.5  FIXED: SaveMAE puts quotes around strings containing braces.
+       FIXED: Catch misuse of System.chain(<string>), etc.
+
+1.7.3  FIXED: maedms didn't apply LJ scale to pair terms with vdw overrides.
+
+1.7.2  NEW:   System.clone() accepts a list of atom ids.
+       NEW:   Recipes section in the documentation.
+       FIXED: Better bond order assigner.
+       FIXED: Read proper_harm in MAE files.
+
+1.7.1  NEW: dms-select learned --coalesce.
+       NEW: inchi.InChI function.
+       FIXED: SDF reader handles formal charge and some keyvals
+       FIXED: bond order assigner gives up instead of hanging
+       FIXED: Improved aromaticity and hybridization detection.
+
+1.7.0  NEW: Ct class for multiple components and system attributes.
+       NEW: ctnumber atom selection keyword (matches VMD's).
+       NEW: dms_version in the DMS file.
+       FIXED: Load[Many] failed on some compressed MAE files.
+       DEPRECATED: all glue functionality (modern periodicfix doesn't need it).
+
+1.6.35 NEW: Class AnnotatedSystem to cache rings and aromaticity
+       FIXED: Aromaticity detection now operates on entire ring systems
+       REMOVED: SSSR/ring aromaticity global functions in Python interface
+       REMOVED: SSSR cache and AllRelevantSSSR function in System
+
+1.6.33 NEW: NBFix support in ExportMAE.
+       NEW: ExportMAEMany.  msys.SaveMAE accepts list of Systems.
+       NEW: msys_provenance and msys_forcefield blocks in exported MAE systems.
+       NEW: msys.LoadMany works with all filetypes.
+       NEW: msys.Graph.matchAll can do substructure searches.
+
+1.6.32 NEW: msys.LoadMany and C++ LoadIterator interface for working with
+            multi-structure files.
+       NEW: msys.Atomsel class with RMSD calculation and superposition.
+       FIXED: dms-set was broken.
+
+1.6.31 FIXED: Read m_grow_name in ImportMAE.
+
+1.6.30 FIXED: dms-frame was broken.
+       FIXED: protein backbone must have minimally correct bond topology.
+
+1.6.28 NEW: dms-sequence tool and msys.sequence.Sequences() function.
+       NEW: dms-reorder-atoms
+       FIXED: dms-scale-vdw now requires --scale options.
+       FIXED: Bond guesser keeps only the shortest bond to hydrogens.
+       FIXED: Make PDB output more conformant.
+       FIXED: ExportMAE no longer writes 0-length chain names.
+
+1.6.25 REMOVED: msys.glue module and dms-glue program.
+       FIXED: No more MSYS_CLEANENV.
+
+1.6.24 REMOVED: mview is now in its own mview module.
+
+1.6.23 NEW: inchi.Strings python interface.
+       FIXED: mae and dms read and write insertion code.
+
+1.6.21 NEW: Print count of override pairs in dms-info.
+       NEW: mview tool for viewing dms file contents.
+       NEW: Added es_funct field to nonbonded_info.
+
+1.6.20 NEW: Enable support for hybridization matching in SMARTS matcher.
+       FIXED: Deleted printf chatter.
+
+1.6.19 NEW: Load() has a structure_only option.
+
+1.6.18 FIXED: SmartsMatcher for systems with pseudos.
+       FIXED: TermTable find methods don't return duplicate terms when
+              the terms contain duplicate atoms.
+
+1.6.17 NEW: class SmartsPattern.
+       NEW: MassForElement() function.
+       FIXED: dms-dump handles systems with missing expected tables.
+
+1.6.15 NEW: Added 'insertion' as a residue property.
+       NEW: PDB reader reads 'altloc' as extra atom property.
+       NEW: Added System.atomsGroupedBy(prop) convenience method.
+       NEW: dms-posre learned --reference-structure and --reference-selection
+       C++: aromatic.hxx is visible.
+
+1.6.14 NEW: Using gcc/4.7.2, Python/2.7.3, and numpy/1.6.2.
+
+1.6.13 FIXED: dms-alchemical handles hoh constraints in the atom map.
+
+1.6.12 FIXED: TermTable.findOnly() makes its input sorted and unique.
+       NEW: Param.keys() and Term.keys()
+
+1.6.11 NEW: SDF export.
+       NEW: RadiusForElement() function.
+       NEW: FindDistinctFragments() function.
+       NEW: dms-inchi tool.
+       FIXED: LoadMAE handles forcefield provenance better.
+
+1.6.10 FIXED: CreateSystem() is thread-safe again.
+
+1.6.9  FIXED: System.atoms is now (amortized) constant time.
+       NEW: dms-select now reads any msys-supported file type, not just dms.
+       NEW: mae2dms supports fbhw terms.
+
+1.6.8  FIXED: Bug in sidechain detection for residues with non-unique names.
+
+1.6.7  FIXED: FindKnot uses within selections instead of boxing.
+       FIXED: Restored the max-cycle option to FindKnot.
+
+1.6.6  NEW: 'sidechain' atom selection.
+       FIXED: bad int and float literals in atom selections are caught.
+       FIXED: FindKnot uses accurate ring finder from GetSSSR.
+       REMOVED: stretch_quartic schema.
+
+1.6.5  NEW:   stretch_quartic schema.
+
+1.6.4  FIXED: dms-alchemical checks for valid atom maps.
+       FIXED: dms-alchemical avoid writing unnecessary alchemical terms.
+       NEW: TermTable.findWithOnly.
+
+1.6.3  FIXED: SavePDB writes element determined from atomic number.
+
+1.6.2  NEW: Heuristic for guessing bonds.  From Python: System.guessBonds()
+       NEW: xyz importer.
+       NEW: xyz and pdb importers guess bonds.
+       NEW: pdb importer reads and writes unit cell.
+
+1.6.1  NEW: mol2 import/export support.
+       NEW: AssignBondOrderAndFormalCharge function (was in Viparr)
+       NEW: GetSSSR (smallest set of smallest rings) (was in Viparr)
+
+1.6.0  NEW: The Python atom selection handles large selections much more
+            efficiently.
+       NEW: Added System.selectIds(), which is more efficient than
+            System.select() if all you need are the ids.
+       NEW: C++ interface for working with override tables.
+       NEW: Experimental support for multiple nonbonded tables.  When present,
+            a new metatable in the DMS file will be created.
+
+1.5.14 NEW: protein, backbone, and water analysis is done on load instead of
+            being repeated for each selection.  This is faster and allows
+            these selections to work on cloned subsets of the original system.
+       FIXED: dms-uncharge works again now.
+       FIXED: examples/alchemical_pair.py (for Schrodinger).
+       FIXED: Python findWithAny, findWithAll, findExact for empty input.
+       FIXED: __eq__ and __ne__ methods of System and ParamTable.
+       FIXED: dms-dump raises an exception on sqlite errors.
+
+1.5.13 NEW: Psfgen.read() and Psfgen.write() handle unit cell.
+       FIXED: findWith{Any,All} on empty tables.
+
+1.5.12 NEW: Psfgen.applyResidue does point mutations.
+       NEW: C++ interface for filtered bonds.
+       NEW: TermTable::resetParams(); in Python TermTable.params is settable.
+       FIXED: deleting terms is faster now.
+       FIXED: Psfgen.read() works now.
+       FIXED: TermTable::hasTerm().
+       FIXED: Destroyed TermTables appear empty.
+       FIXED: Document dms-posre better.
+
+1.5.11 NEW: Slightly optimized within selections.
+       FIXED: dms-alchemical for noncontiguous alchemical ranges.
+
+1.5.8  NEW: dms-fix-mass for fixing inconsitent masses.
+       NEW: dms-find-knot for finding bonds passing through rings.
+       NEW: dms-validate runs the knot check.
+       FIXED: dms-alchemical handles alchemical_improper_harm .
+
+1.5.7  FIXED: dms-alchemical was confused by extra properties in the B state.
+
+1.5.6  FIXED: Memory leak in setPositions and setVelocities.
+
+1.5.5  NEW: {get,set}Positions is ~100x faster due to NumPy integration.
+       NEW: {get,set}Velocities is ~500x faster due to NumPy integration.
+       NEW: System.center and Residue.center use NumPy.
+       NEW: Low-level SystemPtr positions and velocities accessors take
+            optional ids argument to get/set values for specified atoms.
+       NEW: C++ interface for TermTable provides iterator for efficiency.
+
+1.5.4  FIXED: SaveMAE reports error on failure.
+       NEW: SaveMAE and SaveDMS print errno information on failure.
+
+1.5.3  FIXED: Support SC{EE,NB}_SCALE_FACTOR in Amber PrmTop importer.
+
+1.5.2  FIXED: System.setCell() converts its input to the correct type.
+
+1.5.1  FIXED: dms-frame reads in double precision if possible.
+       FIXED: Better error messages when accessing nonexistent Term properties.
+       NEW: Added getPositions(), getVelocities(), and getCell() to System.
+
+1.5.0  REMOVED: dms-neutralize, dms-solvate
+       REMOVED: Undocumented "builder" module.
+       FIXED: Documentation for dms-override-vdw, dms-scale-vdw
+       NEW: dms-frame tool for extracting coordinates and doing periodic fix.
+       NEW: C++ interface for guessing file type.
+
+1.4.8  NEW dms-frame script for frame extraction with centering and wrapping.
+
+1.4.7  NEW: ParamTable::find and TermTable::find{WithAny,WithAll,Exact}.
+       NEW: msys.SavePDB.
+       NEW: better logging in dms-override-vdw and dms-scale-vdw.
+       FIXED: reading of alchemical dms files.
+       FIXED: LoadPDB now uses correct chain/segid logic.
+       FIXED: dms-dump prints nonbonded_combined information.
+
+1.4.6  Portability (build without C++0x, and on OS X).
+
+1.4.5  Renamed dms-scale-vdw --scale option to --scale-sigma and added
+       --scale-epsilon.
+
+1.4.4  Add minimal build configuration options.
+       DMS import no longer panics on empty particle table.
+
+1.4.3  Added dms-scale-vdw.
+
+1.4.2  Make ImportDMS thread-safe.
+
+1.4.1  Another way to handle nonbonded_combined_param tables.  We now
+       store the 2d table directly, so that we don't choke on systems
+       whose entire vdw table has overrides.  API changes at the Python
+       and C++ level; dms-override-vdw is unchanged.
+
+1.4.0  The nonbonded_combined_param is now loaded into a TermTable
+       called nonbonded_combined which has a new category called override.
+       No change to the dms representation, but code that uses msys must
+       use the new API in override.hxx to handle vdw overrides.
+
+       The clone() method now copies provenance.
+
+       Reimplemented dms-combine-vdw correctly and renamed it to
+       dms-override-vdw.
+
+1.3.7  Hide functions that can conflict with other shared libraries.
+
+1.3.6  Added executable path to provenance.
+
+1.3.5  Internal changes to facilitate inclusion in larger builds.
+
+1.3.4  DEPRECATED: dms-neutralize, dms-solvate.
+       Fixed typo in dms-neutralize.
+       Fixed equality checks between msys handles of different type.
+       Fixed hashing of Term and Param handles.
+       Fixed dms-dump nonbonded output for nonbonded param.
+       mae2dms and dms2mae now try to preserve ffio_vdwtype names.
+
+1.3.3  Added dms-combine-vdw.
+
+1.3.2  Using 73-Desmond modules.
+
+1.3.1  Fix ImportMAE handling of virtuals (broken in 1.3.0).
+       Turn off type checking of particle and bond tables.
+       Fix GuessAtomicNumber (affects ReadParmTop only).
+
+1.3.0  Alchemical terms now appear in their own TermTable, and the paramB
+       interfaces have been removed.
+
+       Alchemical particles are now listed in an "alchemical_nonbonded" table;
+       the chargeB, moiety, and alchemical properties have been removed.
+
+       Alchemical particles can have arbitrary term properties, including
+       "chargeC".
+
+       Msys can now detect sharing of parameters by TermTables that share
+       a ParamTable, not just within a single TermTable.
+
+1.2.5  Export/import formal_charge to/from dms.
+
+1.2.4  Avoid exporting std::vector of primitive types to python.
+       Prmtop import bugfix for when torsions contain negative force constants
+
+1.2.3  Export version info to python.
+
+1.2.2  Module file now adds the -lmsys to DESRES_MODULE_LDLIBS
+
+1.2.1  Much improved support for glue, including in clone() and append()
+       operations.  The glue table has been renamed to msys_glue, though
+       msys will still read from both tables and merge the two.
+
+       dms-thermalize: the random seed is now 1 by default so that results
+       are reproducible.
+
+1.2.0  segid is now a property of Chain.
+       New tools: dms-set and dms-macro
+
+1.1.1  dms-neutralize: fix for positive solute charge (DESRESCode#1352)
+       dms-neutralize: remove ions if needed to achieve specified concentration
+       Fix bug in atom selections on systems with deleted atoms
+
+1.1.0  Added user-defined atom selection macros.
+       New atom selection documentation.
+       Bumped the minor version since selection macros are visible in the
+       dms file.
+
+1.0.13 Disambiguate residues by segid (DESRESCode#1345,1346)
+
+1.0.12 dms-builder fixes
+
+1.0.11 Fixed a memory corruption bug in the dms reading code.
+
+1.0.10 neutralize: set the residue name of ions equal to the atom name.
+       builder: preliminary support for charmm36.
+       builder: guess atom type based on name if not provided in top file.
+
+1.0.9  msys.Load() supports .maeff and .maeff.gz now.
+       Documentation for DMS files converted from Desmond documentation.
+       dms-validate --desmond to check for bonds between nonbonded atoms.
+
+1.0.8  gzipped dms files are detected and handled automatically.
+       Added msys.Load() for guessing file type from filename.
+       dms-info works now on dms, mae, and prmtop files.
+       Documentation for dms-validate.
+
+1.0.7  Support for importing Amber prmtop and crd files.
+       Update fastjson dependency.
+       Documentation fixes.
+
+1.0.6  Anton version: aligning dependencies with treetop/43-Anton.
+       Blame scarpazz.
+
+1.0.5  System.positions property.
+
+1.0.4  Typo in dms-validate.
+
+1.0.3  Bugfix: clone() and append() did not copy auxiliary tables (e.g. cmap).
+
+1.0.2  Internal: fix symbol conflicts with other packages.
+
+1.0.1  Documentation updates.
+       Added dms-posre.
+
+1.0.0  First stable release.
+

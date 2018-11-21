@@ -2,80 +2,95 @@
 #define desres_msys_dms_dms_hxx 
 
 #include "../value.hxx"
+#include <memory>
 
 struct sqlite3;
+struct sqlite3_stmt;
 
-typedef struct dms {
-    struct sqlite3 * db;
-    dms( sqlite3* _db) : db(_db) {}
-} dms_t;
 
-/* opaque handles */
-typedef struct dms_reader dms_reader_t;
-typedef struct dms_writer dms_writer_t;
+namespace desres { namespace msys {
 
-/* Initialize the dms handle */
-dms_t * dms_read( const char * path );
+    class Reader;
+    class Writer;
 
-/* Initialize dms handle for writing */
-dms_t * dms_write( const char * path );
+    class Sqlite {
+        std::shared_ptr<sqlite3>  _db;
+        bool _unbuffered = false;
 
-/* Release dms resources */
-void dms_close( dms_t * dms );
+        const char* errmsg() const;
 
-/* execute some raw SQL */
-void dms_exec( dms_t * dms, const char * sql );
+    public:
+        Sqlite() 
+        {}
 
-/* does the table exist? */
-int dms_has_table( dms_t * dms, const char * name );
+        Sqlite(std::shared_ptr<sqlite3> db, bool unbuffered=false)
+        : _db(db), _unbuffered(unbuffered)
+        {
+            if (unbuffered) {
+                // avoid taking individual file locks on each disk access
+                exec("pragma locking_mode=EXCLUSIVE");
+                exec("pragma journal_mode=MEMORY");
+            }
+        }
 
-/* size of table; 0 if it doesn't exist */
-int dms_table_size( dms_t * dms, const char * name );
+        static Sqlite read(std::string const& path, bool unbuffered = false);
+        static Sqlite read_bytes(const void* bytes, int64_t len);
+        static Sqlite write(std::string const& path, bool unbuffered = false);
 
-/* fetch all entries in the table.  NULL if doesn't exist.  Return true
- * if table has at least one entry, false if not. */
-int dms_fetch( dms_t * dms, const char * name, dms_reader_t ** r );
+        std::string contents() const;
 
-/* advance to next row.  If we're done, free r and set to NULL */
-void dms_reader_next( dms_reader_t ** r );
+        // finish must be called on an Sqlite returned from write().
+        void finish();
 
-/* free the reader */
-void dms_reader_free( dms_reader_t * r );
+        void exec(std::string const& sql);
 
-/* get the number of columns */
-int dms_reader_column_count( dms_reader_t * r );
+        bool has(std::string const& table) const;
+        int size(std::string const& table) const;
+        Reader fetch(std::string const& table, bool strict_types=true) const;
+        Writer insert(std::string const& table) const;
+    };
 
-/* get the name of the given column */
-const char * dms_reader_column_name( dms_reader_t * r, int col );
+    class Reader {
+        std::shared_ptr<sqlite3> _db;
+        std::shared_ptr<sqlite3_stmt> _stmt;
+        std::string _table;
 
-/* what kind of data was declared for the given column */
-desres::msys::ValueType dms_reader_column_type( dms_reader_t * r, int col );
+        typedef std::pair<std::string, ValueType> column_t;
+        std::vector<column_t> _cols;
+        bool _strict_types;
 
-/* get the column for the given name, or -1 if not present */
-int dms_reader_column( dms_reader_t * r, const char * name );
+        const char* errmsg() const;
 
-/* get an int from the given column */
-int dms_reader_get_int( dms_reader_t * r, int col );
+    public:
+        Reader(std::shared_ptr<sqlite3> db, std::string const& table,
+               bool strict_types);
+        bool strict_types() const { return _strict_types; }
+        void next();
+        bool done() const { return !_stmt; }
+        operator bool() const { return !done(); }
+        int size() const { return _cols.size(); }
+        std::string name(int col) const;
+        ValueType type(int col) const;
 
-/* get a double from the given column */
-double dms_reader_get_double( dms_reader_t * r, int col );
+        /* Get the type actually stored for the current row */
+        ValueType current_type(int col) const;
+        int column(std::string const& name) const;
+        int get_int(int col) const;
+        double get_flt(int col) const;
+        const char* get_str(int col) const;
+    };
 
-/* get a volatile string from the given column */
-const char * dms_reader_get_string( dms_reader_t * r, int col );
+    class Writer {
+        std::shared_ptr<sqlite3> _db;
+        std::shared_ptr<sqlite3_stmt> _stmt;
 
-/* prepare to insert records */
-void dms_insert( dms_t * dms, const char * table, dms_writer_t ** w );
-
-/* bind values to columns */
-void dms_writer_bind_int( dms_writer_t * w, int col, int v );
-void dms_writer_bind_double( dms_writer_t * w, int col, double v );
-void dms_writer_bind_string( dms_writer_t * w, int col, const char * v );
-void dms_writer_bind_null( dms_writer_t* w, int col);
-
-/* execute the write step */
-void dms_writer_next( dms_writer_t * w );
-
-/* free the write */
-void dms_writer_free( dms_writer_t * w );
+    public:
+        Writer(std::shared_ptr<sqlite3> db, std::string const& table);
+        void next();
+        void bind_int(int col, int v);
+        void bind_flt(int col, double v);
+        void bind_str(int col, std::string const& v);
+    };
+}}
 
 #endif

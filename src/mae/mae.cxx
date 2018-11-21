@@ -1,6 +1,7 @@
 /* @COPYRIGHT@ */
 
 #include "mae.hxx"
+#include "../types.hxx"
 
 #include <ctype.h>
 #include <stdio.h>
@@ -12,42 +13,62 @@
 #include <sstream>
 #include <stdexcept>
 
-using desres::fastjson::Json;
+#ifdef WIN32
+#ifdef _WIN64
+ typedef __int64 ssize_t;
+#else
+ typedef int ssize_t;
+#endif
+
+#endif
+
+
+
+using desres::msys::fastjson::Json;
 
 /*!
  * \brief Takes a stream and returns maestro tokens.
  * This tokenizer is built on streams and uses a small, tight
  * finite state automata to construct a token
  */
-typedef struct tokenizer_t {
 
-  char buf[256];
+namespace desres { namespace msys { namespace mae {
 
-  /*! \brief The current character */
-  char m_c;
+    struct tokenizer {
 
-  std::streamsize bufpos;
-  std::streamsize bufsize;
+        char buf[256];
+  
+        /*! \brief The current character */
+        char m_c;
+  
+        std::streamsize bufpos;
+        std::streamsize bufsize;
+  
+        /*! \brief the stream for the file we're parsing */
+        istream * m_input;
+  
+        /*! \brief The current token */
+        char * m_token;
+  
+        /*! \brief number of malloc'ed bytes in m_token */
+        ssize_t max_token_size;
+  
+        /*! \brief True iff the token is already read */
+        int m_isfresh;
+  
+        /*! \brief Current line in file */
+        unsigned m_line;
 
-  /*! \brief the stream for the file we're parsing */
-  std::istream * m_input;
+        /* current position in file */
+        std::streamsize m_offset;
+  
+        /*! \brief Line where token starts */
+        unsigned m_tokenline;
+    };
+}}}
 
-  /*! \brief The current token */
-  char * m_token;
-
-  /*! \brief number of malloc'ed bytes in m_token */
-  ssize_t max_token_size;
-
-  /*! \brief True iff the token is already read */
-  int m_isfresh;
-
-  /*! \brief Current line in file */
-  unsigned m_line;
-
-  /*! \brief Line where token starts */
-  unsigned m_tokenline;
-
-} tokenizer;
+using namespace desres::msys;
+using desres::msys::mae::tokenizer;
 
 /*! \brief Get current character */
 /*!
@@ -64,9 +85,11 @@ static inline char tokenizer_peek(const tokenizer * tk) { return tk->m_c; }
 */
 static inline char tokenizer_read(tokenizer * tk) {
   if (tk->bufpos==tk->bufsize) {
-      tk->m_input->read(tk->buf, sizeof(tk->buf));
+      tk->m_offset += tk->bufsize;
+      //printf("tokenizer_read %lu\n", sizeof(tk->buf));
+      tk->bufsize = tk->m_input->read(tk->buf, sizeof(tk->buf));
       tk->bufpos = 0;
-      tk->bufsize = tk->m_input->gcount();
+      //printf("  gcount %ld\n", tk->bufsize);
   } 
   tk->m_c = tk->bufsize ? tk->buf[tk->bufpos++] : -1;
   if (tk->m_c == '\n') tk->m_line++;
@@ -78,13 +101,13 @@ static inline char tokenizer_read(tokenizer * tk) {
  * @param input The stream to parse
  */
 
-void tokenizer_init( tokenizer * tk, std::istream& input );
+static void tokenizer_init( tokenizer * tk, istream& input );
 
 /*!
  * The destructor cleans up any heap allocated temporaries created
  * during construction.
  */
-void tokenizer_release( tokenizer * tk);
+static void tokenizer_release( tokenizer * tk);
 
 /*!
  * Set state to read a new token on the next request.
@@ -130,7 +153,7 @@ enum ACTION {
   CONTINUEOTHER  /* 9 */
 };
 
-void tokenizer_init( tokenizer * tk, std::istream& input ) {
+void tokenizer_init( tokenizer * tk, istream& input ) {
     memset(tk,0,sizeof(*tk));
     tk->m_input = &input;
     tk->m_line = 1;
@@ -281,7 +304,11 @@ static inline const char * tokenizer_token(tokenizer * tk, int ignore_single) {
           c = tokenizer_read(tk);
         }
       } else {
-        if (issingle(c) || isspace(c) || c == '#' || c == '"') {
+        if (issingle(c) || isspace(c) || c == '"') {
+          *ptr++ = '\0';
+          state = DONE;
+          /* allow hashes in tokens; comments require preceding space */
+        } else if (c=='#' && isspace(ptr[-1])) {
           *ptr++ = '\0';
           state = DONE;
         } else {
@@ -344,12 +371,13 @@ tokenizer_predict(tokenizer * tk, const char * match) {
 static inline const char *
 tokenizer_predict_value(tokenizer * tk) {
   const char * tok = tokenizer_token(tk,1);
-  if ( (tok[0] == '\0') || (strcmp(tok,":::") == 0) || (strcmp(tok,"}") == 0)) {
-      MAE_ERROR2("Line %d predicted a value token, have '%s'",
-                  tokenizer_line(tk),
-                  (isprint(tok[0])?tok:"<unprintable>"));
+  if(tok[0]=='\0') {
+      MSYS_FAIL("Premature end of file at line " << tokenizer_line(tk));
+  } else if (!strcmp(tok,":::") || !strcmp(tok,"}")) {
+      MSYS_FAIL("Line " << tokenizer_line(tk) << " unexpected characters '" << tok << "'");
+  } else {
+    tokenizer_next(tk);
   }
-  tokenizer_next(tk);
   return tok;
 }
 
@@ -377,8 +405,7 @@ static int predict_schema( Json& js, tokenizer * tk );
 
 static void check_name( const tokenizer * tk, const char * name ) {
     if (strlen(name) && !(isalpha(*name) || *name == '_')) {
-        MAE_ERROR2("Line %d predicted a block name, have '%s'",
-                    tokenizer_line(tk), name);
+        MSYS_FAIL("Line " << tokenizer_line(tk) << " predicted a block name, have '" << name << "'");
     }
 }
 
@@ -483,6 +510,7 @@ static void predict_nameless_block( Json& js, const char * name,
         predict_blockbody( subblock, tk );
     }
     js.append(key, subblock);
+    free(key);
 }
 
 static void predict_block(Json& js, tokenizer * tk ) {
@@ -592,8 +620,8 @@ static char * quotify( const char * s ) {
     for (p=s; *p; ++p) {
         if (isspace(*p) || !isprint(*p) || *p=='"' || *p=='<' || *p=='\\') {
             needs_escape = 1;
-            if (isspace(*p) && !(*p==' ' || *p=='\t'))
-                MAE_ERROR1("unprintable whitespace in <%s>", s);
+            //if (isspace(*p) && !(*p==' ' || *p=='\t'))
+                //MAE_ERROR1("unprintable whitespace in <%s>", s);
         }
     }
     if (!needs_escape) return NULL;
@@ -694,27 +722,44 @@ static void write_values( const Json& ct, int depth, FILE * fd ) {
 
 namespace desres { namespace msys { namespace mae {
 
+    import_iterator::import_iterator(std::istream& file) 
+    : in(istream::wrap(file)), tk(), _offset() {
+        tk = new tokenizer;
+        tokenizer_init(tk, *in);
+    }
+
+    import_iterator::~import_iterator() {
+        tokenizer_release(tk);
+        delete tk;
+        delete in;
+    }
+
+    bool import_iterator::next(Json& block) {
+        _offset = tk->m_offset + tk->bufpos;
+        /* eat the meta block, if any */
+        while (!strcmp("{", tokenizer_token(tk,0))) {
+            tokenizer_predict(tk, "{");
+            block.to_object();
+            predict_schema_and_values(block, tk);
+            tokenizer_predict(tk, "}");
+            _offset = tk->m_offset + tk->bufpos;
+        }
+        if (tokenizer_not_a(tk, END_OF_FILE)) {
+            block.to_object();
+            const char * name = tokenizer_predict(tk, END_OF_FILE);
+            fill_nameless( block, name, tk );
+            return true;
+        }
+        return false;
+    }
+
     void import_mae( std::istream& input, Json& js ) {
-    
         Json block;
         js.to_array();
-    
-        tokenizer tk[1];
-        tokenizer_init(tk, input);
-    
-        block.to_object();
-        fill_nameless( block, "meta", tk );
-        js.append(block);
-    
-        while (tokenizer_not_a(tk, END_OF_FILE)) {
-            const char * name = tokenizer_predict(tk, END_OF_FILE);
-            block.to_object();
-            fill_nameless( block, name, tk );
-            js.append(block);
-        }
-    
-        tokenizer_release(tk);
+        import_iterator it(input);
+        while (it.next(block)) js.append(block);
     }
+
 
     void export_mae( const Json& js, FILE * fd ) {
         int depth=0;

@@ -2,6 +2,8 @@
 #define mol_value_hxx
 
 #include "types.hxx"
+#include <map>
+#include <boost/variant/variant.hpp>
 
 namespace desres { namespace msys {
 
@@ -16,13 +18,32 @@ namespace desres { namespace msys {
         Float   f;
         char *  s;
     };
+
+    typedef boost::variant<Int,Float,String> Variant;
+    typedef std::map<String,Variant> VariantMap;
     
+    struct ValueCallback {
+        /* let holders of the values know about mutations.  This interface
+         * could be refined to hold some sort of id about which value
+         * changed, but for now a simple thunk will suffice. */
+        virtual void valueChanged() = 0;
+        virtual ~ValueCallback() {}
+    };
+
     class ValueRef {
         ValueType   _type;
         Value&      _val;
+        ValueCallback *_cb;
     
     public:
-        ValueRef( ValueType type, Value& val ) : _type(type), _val(val) {}
+        ValueRef( ValueType type, Value& val ) 
+        : _type(type), _val(val), _cb(NULL) {}
+
+        /* constructor taking a callback to notify when modifications are
+         * made */
+        ValueRef( ValueType type, Value& val, ValueCallback* cb) 
+        : _type(type), _val(val), _cb(cb) {}
+
         ValueType type() const { return _type; }
     
         Int asInt() const;
@@ -37,7 +58,9 @@ namespace desres { namespace msys {
         void assign(short v)   { fromInt(v); }
         void assign(int32_t v) { fromInt(v); }
         void assign(int64_t v) { fromInt(v); }
-    
+#ifdef __APPLE__
+        void assign(long v)    { fromInt(v); }
+#endif
         void assign(float v)  { fromFloat(v); }
         void assign(double v) { fromFloat(v); }
     
@@ -65,13 +88,29 @@ namespace desres { namespace msys {
     
         /* string conversions allowed from StringType values */
         operator std::string() const { return asString(); }
+        const char* c_str() const;
     
-        /* comparision */
+        /* comparision to a concrete type is performed by converting this
+         * to the type of the argument. */
         template <typename T>
         bool operator==(const T& rhs) const {
             T lhs = *this;
             return lhs==rhs;
         }
+
+        /* comparison between IntType and FloatType invokes the 
+         * underlying C comparison of Int and Float.  Comparison of strings
+         * uses strcmp.  Any other comparison returns false. */
+        bool operator==(const ValueRef& rhs) const;
+
+        /* return -1, 0 or 1 if this compares less than, equal to, or
+         * greater than rhs */
+        int compare(const ValueRef& rhs) const;
+
+        bool operator<(const ValueRef& rhs) const {
+            return compare(rhs)<0;
+        }
+
         template <typename T>
         bool operator!=(const T& rhs) const {
             return ! operator==(rhs);

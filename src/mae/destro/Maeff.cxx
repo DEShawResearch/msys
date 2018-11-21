@@ -7,7 +7,7 @@
 // -----------------------------------------------
 // P R I V A T E
 // -----------------------------------------------
-void desres::Maeff::init(Tokenizer& tokenizer) {
+void desres::msys::Maeff::init(Tokenizer& tokenizer) {
   fill_nameless(m_meta,tokenizer);
 
   while(tokenizer.not_a()) {
@@ -19,31 +19,31 @@ void desres::Maeff::init(Tokenizer& tokenizer) {
 // -----------------------------------------------
 //  P U B L I C
 // -----------------------------------------------
-desres::Maeff::Maeff()
+desres::msys::Maeff::Maeff()
   : DestroTop(), m_meta(this)
 {
   m_meta.add_schema_and_value('s',"m_m2io_version","","2.0.0");
 }
 
-desres::Maeff::Maeff(Tokenizer& tokenizer)
+desres::msys::Maeff::Maeff(Tokenizer& tokenizer)
   : DestroTop(), m_meta(this)
 {
   init(tokenizer);
 }
 
-desres::Maeff::~Maeff()
+desres::msys::Maeff::~Maeff()
 {
 }
 
-desres::Destro& desres::Maeff::meta() {
+desres::msys::Destro& desres::msys::Maeff::meta() {
   return m_meta;
 }
 
-const desres::Destro& desres::Maeff::meta() const {
+const desres::msys::Destro& desres::msys::Maeff::meta() const {
   return m_meta;
 }
 
-std::string desres::Maeff::adjustname(const std::string& name) {
+std::string desres::msys::Maeff::adjustname(const std::string& name) {
   // Name must be m_ct or ct
   if (name == "m_ct" || name == "ct" || name == "") {
     return "f_m_ct";
@@ -51,7 +51,7 @@ std::string desres::Maeff::adjustname(const std::string& name) {
   return name;
 }
 
-desres::Destro& desres::Maeff::new_block(const std::string& name) {
+desres::msys::Destro& desres::msys::Maeff::new_block(const std::string& name) {
   std::string realname = adjustname(name);
   if (realname != "f_m_ct") {
     std::stringstream str;
@@ -62,35 +62,35 @@ desres::Destro& desres::Maeff::new_block(const std::string& name) {
   return add_block(realname);
 }
 
-void desres::Maeff::add_schema(char type,const std::string& attr,const std::string& doc) {
+void desres::msys::Maeff::add_schema(char type,const std::string& attr,const std::string& doc) {
   throw dessert("use the meta() block to modify m_m2io_version");
 }
 
 
-bool desres::Maeff::has_block(const std::string& name) const {
+bool desres::msys::Maeff::has_block(const std::string& name) const {
   std::string realname = adjustname(name);
   return DestroTop::has_block(realname);
 }
 
-desres::Destro& desres::Maeff::block(size_t i) {
+desres::msys::Destro& desres::msys::Maeff::block(size_t i) {
   return DestroTop::block(i);
 }
 
-const desres::Destro& desres::Maeff::block(size_t i) const {
+const desres::msys::Destro& desres::msys::Maeff::block(size_t i) const {
   return DestroTop::block(i);
 }
 
-desres::Destro& desres::Maeff::block(const std::string& name) {
+desres::msys::Destro& desres::msys::Maeff::block(const std::string& name) {
   std::string realname = adjustname(name);
   return DestroTop::block(realname);
 }
 
-const desres::Destro& desres::Maeff::block(const std::string& name) const {
+const desres::msys::Destro& desres::msys::Maeff::block(const std::string& name) const {
   std::string realname = adjustname(name);
   return DestroTop::block(realname);
 }
 
-void desres::Maeff::write(std::ostream& os, int level) const {
+void desres::msys::Maeff::write(std::ostream& os, int level) const {
   m_meta.write(os,level);
   size_t n = size();
   for(size_t i=1; i<=n; ++i) {
@@ -98,11 +98,11 @@ void desres::Maeff::write(std::ostream& os, int level) const {
   }
 }
 
-size_t desres::Maeff::footprint() const {
+size_t desres::msys::Maeff::footprint() const {
   return DestroTop::footprint() + m_meta.footprint();
 }
 
-void desres::Maeff::touch(ZingPool& zpool) const {
+void desres::msys::Maeff::touch(ZingPool& zpool) const {
   m_meta.touch(zpool);
-  desres::DestroTop::touch(zpool);
+  desres::msys::DestroTop::touch(zpool);
 }

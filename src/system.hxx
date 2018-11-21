@@ -3,107 +3,141 @@
 
 #include <vector>
 #include <map>
-#include <boost/enable_shared_from_this.hpp>
 
-#include "types.hxx"
-#include "param_table.hxx"
+#include "term_table.hxx"
+#include "provenance.hxx"
+#include "value.hxx"
+#include "smallstring.hxx"
 
 namespace desres { namespace msys {
 
-    class TermTable;
-    typedef boost::shared_ptr<TermTable> TermTablePtr;
+    class GlobalCell {
+        std::vector<double> data;
 
-        
-    struct Vec3 {
-        Float x,y,z;
-        
-        Vec3() 
-        : x(0), y(0), z(0) {}
+    public:
+        GlobalCell() : data(9) {}
+        double*       operator[](unsigned i)       { return &data.at(3*i); }
+        const double* operator[](unsigned i) const { return &data.at(3*i); }
 
-        Vec3(Float const& _x, Float const& _y, Float const& _z)
-        : x(_x), y(_y), z(_z) {}
 
-        Float& operator[](unsigned i) {
-            return i==0 ? x : i==1 ? y : z;
-        }
-        Float const& operator[](unsigned i) const {
-            return i==0 ? x : i==1 ? y : z;
-        }
-
-        bool operator==(Vec3 const& o) const {
-            return x==o.x && y==o.y && z==o.z;
-        }
-        bool operator!=(Vec3 const& o) const {
-            return x!=o.x || y!=o.y || z!=o.z;
-        }
-
-    };
-
-    struct GlobalCell {
-        Vec3 A, B, C;
-        Vec3& operator[](unsigned i) { 
-          return i==0 ? A : i==1 ? B : C;
-        }
-        Vec3 const& operator[](unsigned i) const { 
-          return i==0 ? A : i==1 ? B : C;
-        }
+        /* Allow merge when corresponding vectors are equal, or when
+         * self or other is identically 0, in which case the non-zero
+         * cell is adopted. */
+        void merge(GlobalCell const& other);
     };
 
     struct NonbondedInfo {
         String vdw_funct;
         String vdw_rule;
+        String es_funct;
+
+        /* Allow merge when corresponding fields are equal, or when one
+         * of them is empty, in which case the non-empty value is adopted.
+         */
+        void merge(NonbondedInfo const& other);
+    };
+
+    enum AtomType {
+        AtomOther   = 0,
+        AtomProBack = 1,
+        AtomNucBack = 2,
+        AtomProSide = 3
     };
 
     struct atom_t {
-        Id  gid;
         Id  fragid;
         Id  residue;
+
+        int8_t atomic_number;
+        int8_t formal_charge;
+        int8_t stereo_parity;
+        int8_t aromatic;
     
         Float x,y,z;    /* position */
         Float charge;   /* partial charge */
         Float vx,vy,vz; /* velocity */
         Float mass;
-        Float chargeB;
     
-        int atomic_number;
-        int formal_charge;
-        int moiety;
-        bool alchemical;
+        SmallString<30> name;
+        AtomType type;
     
-        String name;
-    
-        atom_t() 
-        : gid(0), fragid(BadId), residue(BadId),
-          x(0), y(0), z(0), charge(0), vx(0), vy(0), vz(0), mass(0), chargeB(0),
-          atomic_number(0), formal_charge(0), moiety(0), alchemical(false)
-        {}
+        atom_t() {
+            memset(this,0,sizeof(*this));
+        }
+
+        /* Don't abuse these.  In particular, bear in mind that that an atom's
+         * memory location will move around if atoms are added.  */
+        double       *pos()       { return &x; }
+        const double *pos() const { return &x; }
     };
     
     struct bond_t {
-        Id  i;      /* id of first bond partner     */
-        Id  j;      /* id of second bond partner    */
-        Float order;  /* resonant bond order          */
-    
-        bond_t() : i(BadId), j(BadId), order(1) {}
-        bond_t(Id ai, Id aj) : i(ai), j(aj), order(1) {}
+        Id  i=BadId;                /* id of first bond partner     */
+        Id  j=BadId;                /* id of second bond partner    */
+        int8_t order=1;             /* formal bond order            */
+        int8_t stereo=0;            /* negative when atom order is flipped */
+        int8_t aromatic=0;          /* no Kekule form specified     */
+
+        bond_t() {}
+        bond_t(Id ai, Id aj) { i=ai; j=aj; }
         Id other(Id id) const { return id==i ? j : i; }
     };
     
+    enum ResidueType {
+        ResidueOther    = 0,
+        ResidueProtein  = 1,
+        ResidueNucleic  = 2,
+        ResidueWater    = 3
+    };
+
     struct residue_t {
-        String  name;
-        int     num;
         Id      chain;
+        int     resid;
+        SmallString<30> name;
+        SmallString<6> insertion;
+        ResidueType type;
     
-        residue_t() : num(0), chain(BadId) {}
+        residue_t() : chain(BadId), resid(), type() {}
     };
     
     struct chain_t {
+        Id      ct;
         String  name;
+        String  segid;
     
-        chain_t() {}
+        chain_t() : ct(BadId) {}
     };
-    
-    class System : public boost::enable_shared_from_this<System> {
+
+    class component_t {
+        ParamTablePtr _kv;
+
+    public:
+        /* constructor: maintain a single row with msys_name as the first
+         * property. */
+        component_t();
+
+        /* must implement copy constructor so that we don't share _kv! */
+        component_t(component_t const& c) { *this = c; }
+        component_t& operator=(component_t const& c);
+
+        /* getter/setter for name */
+        String name() const;
+        void setName(String const& s);
+
+        /* other keys besides name */
+        std::vector<String> keys() const;
+        void del(String const& key);
+        Id add(String const& key, ValueType type);
+        ValueType type(String const& key) const;
+
+        bool has(String const& key) const;
+        ValueRef value(String const& key);
+        ValueRef value(Id key);
+
+        inline ParamTablePtr kv() { return _kv; }
+    };
+
+    class System : public std::enable_shared_from_this<System> {
     
         static IdList _empty;
     
@@ -137,63 +171,185 @@ namespace desres { namespace msys {
         IdSet       _deadchains;
         MultiIdList   _chainresidues; /* chain id -> residue id */
     
+        typedef std::vector<component_t> CtList;
+        CtList      _cts;
+        IdSet       _deadcts;
+        MultiIdList _ctchains; /* ct id -> chain id */
+    
         typedef std::map<String,TermTablePtr> TableMap;
         TableMap    _tables;
 
-        /* extra tables.  basically a hack for cmap */
-        typedef std::map<String, ParamTablePtr> ExtraMap;
-        ExtraMap    _extras;
+        /* auxiliary tables.  basically a hack for cmap */
+        typedef std::map<String, ParamTablePtr> AuxTableMap;
+        AuxTableMap _auxtables;
+
+        /* provenance.  Ideally, you would append to this just before 
+         * serializing to disk. */
+        std::vector<Provenance> _provenance;
 
         /* create only as shared pointer. */
         System();
+
     public:
-        static boost::shared_ptr<System> create();
+        static std::shared_ptr<System> create();
         ~System();
 
         String          name;
         GlobalCell      global_cell;
         NonbondedInfo   nonbonded_info;
-    
+
+        /* get the provenance history */
+        std::vector<Provenance> const& provenance() const {
+            return _provenance;
+        }
+
+        /* add a provenance entry.  Should be used only by ImportDMS! */
+        void addProvenance(Provenance const& p) {
+            _provenance.push_back(p);
+        }
+
         /* element accessors */
         atom_t& atom(Id id) { return _atoms.at(id); }
         bond_t& bond(Id id) { return _bonds.at(id); }
         residue_t& residue(Id id) { return _residues.at(id); }
         chain_t& chain(Id id) { return _chains.at(id); }
+        component_t& ct(Id id) { return _cts.at(id); }
     
         const atom_t& atom(Id id) const { return _atoms.at(id); }
         const bond_t& bond(Id id) const { return _bonds.at(id); }
         const residue_t& residue(Id id) const { return _residues.at(id); }
         const chain_t& chain(Id id) const { return _chains.at(id); }
+        const component_t& ct(Id id) const { return _cts.at(id); }
+
+        /* unchecked element accessors */
+        atom_t& atomFAST(Id id) { return _atoms[id]; }
+        bond_t& bondFAST(Id id) { return _bonds[id]; }
+        residue_t& residueFAST(Id id) { return _residues[id]; }
+        chain_t& chainFAST(Id id) { return _chains[id]; }
+        component_t& ctFAST(Id id) { return _cts[id]; }
+
+        const atom_t& atomFAST(Id id) const { return _atoms[id]; }
+        const bond_t& bondFAST(Id id) const { return _bonds[id]; }
+        const residue_t& residueFAST(Id id) const { return _residues[id]; }
+        const chain_t& chainFAST(Id id) const { return _chains[id]; }
+        const component_t& ctFAST(Id id) const { return _cts[id]; }
+
+        /* id iterator, skipping deleted ids */
+        class iterator {
+            friend class System;
+            Id            _i;
+            const IdSet*  _dead;
+
+            iterator(Id i, const IdSet* dead) 
+            : _i(i), _dead(dead) {
+                while (_dead && _dead->count(_i)) ++_i;
+            }
+
+
+            bool equal(iterator const& c) const { return _i==c._i; }
+            const Id& dereference() const { return _i; }
+            void increment() { do ++_i; while (_dead && _dead->count(_i)); }
+
+        public:
+            typedef std::forward_iterator_tag iterator_category;
+            typedef Id value_type;
+            typedef ptrdiff_t difference_type;
+            typedef const Id* pointer;
+            typedef const Id& reference;
+
+            iterator() : _i(), _dead() {}
+            const Id& operator*() const { return dereference(); }
+            const Id* operator->() const { return &dereference(); }
+            iterator& operator++() { increment(); return *this; }
+            bool operator==(iterator const& c) const { return equal(c); }
+            bool operator!=(iterator const& c) const { return !equal(c); }
+        };
+
+        template <typename T>
+        void getPositions(T setter) const {
+            for (iterator i=atomBegin(), e=atomEnd(); i!=e; ++i) {
+                atom_t const& a = atomFAST(*i);
+                *setter++ = a.x;
+                *setter++ = a.y;
+                *setter++ = a.z;
+            }
+        }
+
+        template <typename T>
+        void setPositions(T getter) {
+            for (iterator i=atomBegin(), e=atomEnd(); i!=e; ++i) {
+                atom_t& a = atomFAST(*i);
+                a.x = *getter++;
+                a.y = *getter++;
+                a.z = *getter++;
+            }
+        }
+
+        template <typename T>
+        void setVelocities(T getter) {
+            for (iterator i=atomBegin(), e=atomEnd(); i!=e; ++i) {
+                atom_t& a = atomFAST(*i);
+                a.vx = *getter++;
+                a.vy = *getter++;
+                a.vz = *getter++;
+            }
+        }
+
+        /* iterators over element ids */
+        iterator atomBegin() const { 
+            return iterator(0, _deadatoms.empty() ? NULL : &_deadatoms); 
+        }
+        iterator atomEnd() const { return iterator(maxAtomId(), NULL); }
+        iterator bondBegin() const { 
+            return iterator(0, _deadbonds.empty() ? NULL : &_deadbonds); 
+        }
+        iterator bondEnd() const { return iterator(maxBondId(), NULL); }
+        iterator residueBegin() const { 
+            return iterator(0, _deadresidues.empty() ? NULL : &_deadresidues); 
+        }
+        iterator residueEnd() const { return iterator(maxResidueId(), NULL); }
+        iterator chainBegin() const { 
+            return iterator(0, _deadchains.empty() ? NULL : &_deadchains); 
+        }
+        iterator chainEnd() const { return iterator(maxChainId(), NULL); }
 
         /* add an element */
         Id addAtom(Id residue);
         Id addBond(Id i, Id j);
         Id addResidue(Id chain);
-        Id addChain();
+
+        /* If ct is not supplied, add chain to first ct, creating a new one
+         * if necessary */
+        Id addChain(Id ct=BadId);
+        Id addCt();
 
         /* delete an element */
         void delAtom(Id id);
         void delBond(Id id);
         void delResidue(Id id);
         void delChain(Id id);
+        void delCt(Id id);
 
         /* One more than highest valid id */
-        Id maxAtomId() const;
-        Id maxBondId() const;
-        Id maxResidueId() const;
-        Id maxChainId() const;
+        Id maxAtomId() const { return _atoms.size(); }
+        Id maxBondId() const { return _bonds.size(); }
+        Id maxResidueId() const { return _residues.size(); }
+        Id maxChainId() const { return _chains.size(); }
+        Id maxCtId() const { return _cts.size(); }
 
         /* list of elements ids */
         IdList atoms() const;
         IdList bonds() const;
         IdList residues() const;
         IdList chains() const;
+        IdList cts() const;
 
         /* number of elements */
         Id atomCount() const { return _atoms.size() - _deadatoms.size(); }
         Id bondCount() const { return _bonds.size() - _deadbonds.size(); }
         Id residueCount() const {return _residues.size()-_deadresidues.size();}
         Id chainCount() const { return _chains.size() - _deadchains.size(); }
+        Id ctCount() const { return _cts.size() - _deadcts.size(); }
 
         /* count of subelements */
         Id bondCountForAtom(Id id) const {
@@ -208,12 +364,32 @@ namespace desres { namespace msys {
             if (id>=_chainresidues.size()) return 0;
             return _chainresidues[id].size();
         }
+        Id chainCountForCt(Id id) const {
+            if (id>=_ctchains.size()) return 0;
+            return _ctchains[id].size();
+        }
 
         /* list of subelements */
         IdList const& bondsForAtom(Id id) const {
             if (id>=_bondindex.size()) return _empty;
             return _bondindex[id];
         }
+        /* filtered list of subelements.  Predicate implements
+         * bool operator()(bond_t const& b) const; */
+        template <typename T>
+        IdList filteredBondsForAtom(Id id, T const& predicate) const {
+            IdList const& src = _bondindex.at(id);
+            IdList dst;
+            for (IdList::const_iterator it=src.begin(); it!=src.end(); ++it) {
+                Id bid = *it;
+                bond_t const& b = bondFAST(bid);
+                if (predicate(b)) {
+                    dst.push_back(bid);
+                }
+            }
+            return dst;
+        }
+
         IdList const& atomsForResidue(Id id) const {
             if (id>=_residueatoms.size()) return _empty;
             return _residueatoms[id];
@@ -222,6 +398,18 @@ namespace desres { namespace msys {
             if (id>=_chainresidues.size()) return _empty;
             return _chainresidues[id];
         }
+        IdList const& chainsForCt(Id id) const {
+            if (id>=_ctchains.size()) return _empty;
+            return _ctchains[id];
+        }
+
+        IdList atomsForCt(Id id) const;
+        Id atomCountForCt(Id id) const;
+        IdList bondsForCt(Id id) const;
+        Id bondCountForCt(Id id) const;
+
+        IdList residuesForCt(Id id) const;
+
 
         /* is the the given element id valid? */
         bool hasAtom(Id id) const {
@@ -236,65 +424,107 @@ namespace desres { namespace msys {
         bool hasChain(Id id) const {
             return id<_chains.size() && !_deadchains.count(id);
         }
-
-
-        /* delete multiple elements at once (convenience) */
-        template <typename T> void delAtoms(const T& ids) {
-            typedef typename T::const_iterator iterator;
-            for (iterator i=ids.begin(), e=ids.end(); i!=e; ++i) delAtom(*i);
-        }
-        template <typename T> void delBonds(const T& ids) {
-            typedef typename T::const_iterator iterator;
-            for (iterator i=ids.begin(), e=ids.end(); i!=e; ++i) delBond(*i);
-        }
-        template <typename T> void delResidues(const T& ids) {
-            typedef typename T::const_iterator iterator;
-            for (iterator i=ids.begin(), e=ids.end(); i!=e; ++i) delResidue(*i);
-        }
-        template <typename T> void delChains(const T& ids) {
-            typedef typename T::const_iterator iterator;
-            for (iterator i=ids.begin(), e=ids.end(); i!=e; ++i) delChain(*i);
+        bool hasCt(Id id) const {
+            return id<_cts.size() && !_deadcts.count(id);
         }
 
         /* operations on term tables */
         std::vector<String> tableNames() const;
+        /* fetch the table with the given name; return NULL if not present */
         TermTablePtr table(const String& name) const;
+        /* get the name of the table; throw if table doesn't belong to this */
+        String tableName(std::shared_ptr<TermTable const> table) const;
+        /* rename the table with the given name; throw if no such table,
+         * or if a table named newname already exists.  */
+        void renameTable(String const& oldname, String const& newname);
+
         TermTablePtr addTable(const String& name, Id natoms,
                               ParamTablePtr ptr = ParamTablePtr() );
         void delTable(const String& name);
         void removeTable(TermTablePtr terms);
 
-        /* operations on extra tables */
-        std::vector<String> extraNames() const;
-        ParamTablePtr extra(const String& name) const;
-        void addExtra(const String& name, ParamTablePtr ptr);
-        void delExtra(const String& name);
-        void removeExtra(ParamTablePtr extra);
+        /* invoke coalesce on each table */
+        void coalesceTables();
+
+        /* operations on auxiliary tables */
+        std::vector<String> auxTableNames() const;
+        ParamTablePtr auxTable(String const& name) const;
+        void addAuxTable(String const& name, ParamTablePtr aux);
+        void delAuxTable(String const& name);
+        void removeAuxTable(ParamTablePtr aux);
 
         /* assign the atom to the given residue */
         void setResidue(Id atom, Id residue);
 
-        /* extended element properties */
-        ParamTablePtr atomProps() const { return _atomprops; }
-        ParamTablePtr bondProps() const { return _bondprops; }
+        /* assign the residue to the given chain */
+        void setChain(Id residue, Id chain);
 
-        bool findBond( Id i, Id j, Id * id = NULL) const;
+        /* assign the chain to the given ct */
+        void setCt(Id chain, Id ct);
+
+        /* extended atom properties */
+        Id atomPropCount() const;
+        String atomPropName(Id i) const;
+        ValueType atomPropType(Id i) const;
+        Id atomPropIndex(String const& name) const;
+        Id addAtomProp(String const& name, ValueType type);
+        void delAtomProp(Id index);
+        ValueRef atomPropValue(Id term, Id index);
+        ValueRef atomPropValue(Id term, String const& name);
+
+        /* extended bond properties */
+        Id bondPropCount() const;
+        String bondPropName(Id i) const;
+        ValueType bondPropType(Id i) const;
+        Id bondPropIndex(String const& name) const;
+        Id addBondProp(String const& name, ValueType type);
+        void delBondProp(Id index);
+        ValueRef bondPropValue(Id term, Id index);
+        ValueRef bondPropValue(Id term, String const& name);
+
+        /* find a bond between i and j (order independent), returning
+         * its id or BadId if such a bond does not exist. */
+        Id findBond( Id i, Id j) const;
 
         /* ids of atoms bonded to given atom */
         IdList bondedAtoms(Id id) const;
+
+        /* bonded atoms satisfying a predicate.  predicate implements
+         * bool operator()(atom_t const& atm) const; */
+        template <typename T>
+        IdList filteredBondedAtoms(Id id, T const& predicate) const {
+            if (id>=_bondindex.size()) return _empty;
+            IdList const& src = _bondindex[id];
+            IdList dst;
+            for (IdList::const_iterator it=src.begin(); it!=src.end(); ++it) {
+                Id bid = *it;
+                Id other = bond(bid).other(id);
+                atom_t const& atm = atom(other);
+                if (predicate(atm)) {
+                    dst.push_back(other);
+                }
+            }
+            return dst;
+        }
     
         /* update the fragid of each atom according to its bond topology:
-        * bonded atoms share the same fragid.  Return the number of
-        * frags found, and atomid to fragment partitioning if requested */
-        Id update_fragids(MultiIdList* fragments=NULL);
+         * bonded atoms share the same fragid.  Return the number of
+         * frags found, and atomid to fragment partitioning if requested */
+        Id updateFragids(MultiIdList* fragments=NULL);
 
-        /* renumber gids of atoms, starting with starting_gid.  Return next
-         * available gid. */
-        Id renumberGids(Id starting_gid=0);
+        /* Return ids of atoms based on their order of appearance in
+         * a depth-first traversal of the structure hierarchy. */
+        IdList orderedIds() const;
+
+        inline ParamTablePtr atomProps() { return _atomprops; }
+        inline ParamTablePtr bondProps() { return _bondprops; }
     };
 
-    typedef boost::shared_ptr<System> SystemPtr;
+    typedef std::shared_ptr<System> SystemPtr;
 
+    int abi_version();
+
+    void ReplaceTablesWithSortedTerms(SystemPtr mol);
 }}
 
 #endif

@@ -1,14 +1,23 @@
 #include "atomsel.hxx"
-#include "atomsel/vmd.hxx"
-#include "atomsel/msys_keyword.hxx"
+#include "atomsel/token.hxx"
 
 namespace desres { namespace msys { 
 
     IdList Atomselect(SystemPtr ptr, const std::string& txt) {
-        atomsel::PredicatePtr pred = atomsel::vmd::parse(txt,ptr);
-        atomsel::Selection sel = atomsel::full_selection(ptr);
-        pred->eval(sel);
-        return sel.ids();
+        return Atomselect(ptr, txt, nullptr, nullptr);
+    }
+
+    IdList Atomselect(SystemPtr ptr, const std::string& txt,
+                      const float* pos, const double* cell) {
+
+        atomsel::Query q;
+        q.mol = ptr.get();
+        q.pos = pos;
+        q.cell = cell;
+        q.parse(txt);
+        auto s = atomsel::full_selection(q.mol);
+        q.pred->eval(s);
+        return s.ids();
     }
 
 }}

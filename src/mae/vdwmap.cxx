@@ -3,11 +3,11 @@
 #include <sstream>
 #include <set>
 #include <cstdio>
-
-#include <boost/algorithm/string.hpp>
+#include <cmath>    // for HUGE_VAL
+#include "ff.hxx"
 
 using namespace desres::msys::mae;
-using desres::fastjson::Json;
+using desres::msys::fastjson::Json;
 
 VdwMap::VdwMap( const Json& ffio_ff ) {
     _rule = ffio_ff.get("ffio_comb_rule").as_string("");
@@ -47,20 +47,35 @@ VdwMap::VdwMap( const Json& ffio_ff ) {
         ffio_ff.get("ffio_atoms") : ffio_ff.get("ffio_sites");
     const Json& types = sites.get("ffio_vdwtype");
     const Json& typesB = sites.get("ffio_vdwtypeB");
+    const Json& chargeB = sites.get("ffio_chargeB");
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+    const Json& chargeC = sites.get("ffio_chargeC");
+#endif
     if (types.valid()) {
         int i,n = types.size();
         for (i=0; i<n; i++) {
             _vdwnames.push_back( types.elem(i).as_string());
-            if (typesB.valid()) {
-                const Json& elem = typesB.elem(i);
-                _vdwnamesB.push_back(elem.as_string(_vdwnames[i].c_str()));
+            if (typesB.valid() && typesB.elem(i).kind()==Json::String) {
+                _vdwnamesB.push_back(typesB.elem(i).as_string());
             } else {
-                _vdwnamesB.push_back(_vdwnames[i]);
+                _vdwnamesB.push_back("");
             }
+            if (chargeB.valid() && chargeB.elem(i).kind()==Json::Float) {
+                _chargeB.push_back(chargeB.elem(i).as_float());
+            } else {
+                _chargeB.push_back(HUGE_VAL);
+            }
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+            if (chargeC.valid() && chargeC.elem(i).kind()==Json::Float) {
+                _chargeC.push_back(chargeC.elem(i).as_float());
+            } else {
+                _chargeC.push_back(HUGE_VAL);
+            }
+#endif
         }
     }
-    boost::to_lower(_funct);
-    boost::to_lower(_rule);
+    to_lower(_funct);
+    to_lower(_rule);
 
     const Json& combined = ffio_ff.get("ffio_vdwtypes_combined");
     if (combined.valid()) {
@@ -124,3 +139,25 @@ const VdwType& VdwMap::typeB( int id ) const {
     }
     return _vdwnamesB[id-1];
 }
+
+double VdwMap::chargeB( int id ) const {
+    int n = _chargeB.size();
+    if (id<1 || id>n) {
+        std::stringstream ss;
+        ss << "illegal site id " << id;
+        throw std::runtime_error(ss.str());
+    }
+    return _chargeB[id-1];
+}
+
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+double VdwMap::chargeC( int id ) const {
+    int n = _chargeC.size();
+    if (id<1 || id>n) {
+        std::stringstream ss;
+        ss << "illegal site id " << id;
+        throw std::runtime_error(ss.str());
+    }
+    return _chargeC[id-1];
+}
+#endif

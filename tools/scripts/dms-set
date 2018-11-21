@@ -1,0 +1,77 @@
+#!/usr/bin/garden-exec
+#{
+# garden env-keep-only
+# . `dirname $0`/../share/env.sh
+# exec python $0 "$@"
+#}
+
+'''
+dms-set input.dms output.dms [-s selection] [ options ] atomprop=FOO residue.resprop=BAR chain.chainprop=BAZ box.[xyzd]=LENGTH
+
+Updates the atom, residue, and/or chain properties of the particles
+in input.dms; writes result to output.dms.
+
+*dms-set* creates a new dms file with modifications to the atom, residue,
+chain, or table properties.  Multiple updates may be specified, in which
+case they will be applied in the order they are given.  If an atom selection
+is provided, it is evaluated before any of the updates are applied.
+
+Updates to residues and chains are applied to every residue or chain
+with `at least one atom` in the selection.  Updates to tables are applied
+to terms whose atoms are `completely contained` in the selection.  Since
+the update is specified in terms of an atom selection, the order of atoms
+in the terms is irrelevant in determining whether a term is affected by
+a update.
+
+Example: Change the name CD1 atoms in LYS residues to CD.
+
+   ``dms-set input.dms output.dms -s "resname LYS and name CD1" name=CD``
+
+
+Example: Change the stretch term force constant to 0 for a pair of atoms
+with ids 32 and 42.  As described above, this would not affect the stretch
+terms involving atoms 32 or 42 with any other atom; only the term involving
+both atoms. 
+
+   ``dms-set input.dms output.dms -s "index 32 42" stretch_harm.fc=0.0``
+
+'''
+
+import sys, os
+import msys
+from msys import update
+
+def main():
+    import optparse
+    parser = optparse.OptionParser(__doc__)
+
+    parser.add_option('-s', '--selection', default=None,
+            help="select of atoms to update")
+    parser.add_option('-v', '--verbose', action='store_true', default=False,
+            help="Be chatty")
+
+    opts, args = parser.parse_args()
+    if len(args)<2: parser.error("incorrect number of arguments")
+    ifile, ofile = args[:2]
+
+    mol=msys.Load(ifile)
+    if opts.selection:
+        atoms=mol.select(opts.selection)
+    else:
+        atoms=mol.atoms
+
+    for arg in args[2:]:
+        try:
+            lhs, rhs = arg.split('=')
+        except:
+            #print >> sys.stderr, "'%s' is not of the form FOO=BAR" % arg
+            #exit(1)
+            parser.error("'%s' is not of the form FOO=BAR" % arg)
+
+        update.Update(mol, atoms, lhs, rhs)
+
+    msys.Save(mol.clone(),ofile)
+
+if __name__=="__main__": exit(main())
+
+# vim: filetype=python

@@ -7,10 +7,10 @@ namespace {
         void apply( SystemPtr h,
                     const Json& blk,
                     const SiteMap& sitemap,
-                    const VdwMap&, bool alchemical  ) const {
+                    const VdwMap& ) const {
 
             TermTablePtr table = AddTable(h, "inplanewag_harm");
-            ParamMap map(table->paramTable(), blk);
+            ParamMap map(table->params(), blk);
             const Json& ai = blk.get("ffio_ai");
             const Json& aj = blk.get("ffio_aj");
             const Json& ak = blk.get("ffio_ak");
@@ -20,7 +20,7 @@ namespace {
             int i,n = blk.get("__size__").as_int();
             for (i=0; i<n; i++) {
                 std::string f = fn.elem(i).as_string();
-                boost::to_lower(f);
+                to_lower(f);
                 if (f!="harm") {
                     FFIO_ERROR("Expected ffio_funct='harm' in ffio_inplanewags; got " << f);
                 }

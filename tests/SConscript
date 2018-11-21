@@ -1,12 +1,16 @@
-Import('env')
+Import('msysenv')
 Import('libmsys')
 
-env=env.Clone()
-env.Prepend(CPPPATH=['../src'], LIBS=[libmsys])
+env=msysenv.Clone()
+env.Prepend(LIBS=[libmsys, 'msys-core', 'pthread'])
+env.Append(CPPPATH='../src')
 
-env.AddUnitTest('test_params', 'test_params.cxx')
-env.AddUnitTest('test_dms', 'test_dms.cxx')
-env.AddUnitTest('test_atomsel', 'test_atomsel.cxx')
-env.AddUnitTest('test_schema', 'test_schema.cxx')
-env.AddUnitTest('test_mae', 'test_mae.cxx')
+for p in Glob('test_*.cxx'):
+    env.AddExampleProgram(p.name[:-4],p.name)
 
+env=msysenv.Clone()
+env.Prepend(LIBS=['msys-core'])
+env.Append(CPPPATH='../src')
+
+for p in Glob('core_test_*.cxx'):
+    env.AddExampleProgram(p.name[:-4],p.name)

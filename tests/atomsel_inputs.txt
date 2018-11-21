@@ -1,0 +1,108 @@
+ctnumber 1
+ctnumber 2
+ctnumber 3
+ctnumber 4
+all
+none
+index 10 20 30
+resid 1 to 20 22 24 to 27 35
+protein
+backbone
+sidechain
+hydrogen
+atomicnumber 1
+chain A B
+water
+x<3
+y>=1
+z<=-5
+pbwithin 3 of protein
+(not atomicnumber 1) and pbwithin 3 of protein
+backbone and pbwithin 4 of water
+same residue as within 4 of protein 
+(not atomicnumber 1) and within 1.5 of protein 
+(not atomicnumber 1) and within 2.5 of protein 
+(not atomicnumber 1) and within 5.5 of protein 
+
+(not atomicnumber 1) and exwithin 3.5 of protein 
+(not atomicnumber 1) and exwithin 4.5 of protein 
+(not atomicnumber 1) and exwithin 5.5 of protein 
+
+within 0 of protein
+withinbonds 2 of name C CA N O
+fragment 0
+fragment 1
+not oxygen or water
+(not oxygen) or water
+not (oxygen or water)
+not oxygen and water
+(not oxygen) and water
+not (oxygen and water)
+sqr(x)/36 + sqr(y)/81 + sqr(z)/125 < 1
+sqrt(sqr(x)+sqr(y))<5
+abs(x-y)<5
+residue % 10 == 0
+water and noh
+water and noh and nearest 1 to protein 
+water and noh and nearest 10 to protein 
+water and noh and nearest 100 to protein 
+
+nearest 1 to protein 
+nearest 10 to protein 
+nearest 100 to protein 
+nearest 1000 to protein 
+nearest 20000 to protein 
+
+water and same residue as nearest 1 to protein 
+water and same residue as nearest 10 to protein 
+water and same residue as nearest 100 to protein 
+x + y * z < 3
+x * y - z < 3
+
+name "C.*"
+name "C[a-z]"
+name "C[A-Z]"
+
+element H
+element C
+element N
+element O
+element P
+
+at
+acidic
+cyclic
+acyclic
+aliphatic
+alpha
+amino
+aromatic
+basic
+bonded
+buried
+cg
+charged
+hetero
+hydrophobic
+small
+medium
+large
+neutral
+polar
+purine
+pyrimidine
+surface
+lipid
+lipids
+ion
+ions
+sugar
+solvent
+carbon
+hydrogen
+nitrogen
+oxygen
+sulfur
+noh
+heme
+

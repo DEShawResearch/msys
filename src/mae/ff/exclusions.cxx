@@ -5,8 +5,7 @@ namespace {
     struct Exclusions : public Ffio {
         void apply( SystemPtr h,
         const Json& blk,
-        const SiteMap& sitemap,
-        const VdwMap&, bool alchemical  ) const {
+        const SiteMap& sitemap, const VdwMap& ) const {
 
             TermTablePtr table = AddTable(h, "exclusion");
             IdList ids(2);

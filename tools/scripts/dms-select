@@ -1,0 +1,90 @@
+#!/usr/bin/garden-exec
+#{
+# garden env-keep-only
+# . `dirname $0`/../share/env.sh
+# exec python $0 "$@"
+#}
+
+'''
+Write or append a selection from input_file to an output file.
+'''
+
+import sys, os
+import msys
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+
+    parser.add_argument('files', nargs='+', help='input files')
+    parser.add_argument('-s', '--selection',
+            help="Atom selection text")
+    parser.add_argument('-o', '--output', required=True,
+            help="Write new system to given file")
+    parser.add_argument('-v', '--verbose', action='store_true', default=True,
+            help="Be chatty")
+    parser.add_argument('-q', '--quiet', action='store_false', dest='verbose',
+            help="Don't be chatty")
+    parser.add_argument('-c', '--coalesce', action='store_true', default=False,
+            help='Coalesce input file parameters before saving')
+    parser.add_argument('--structure-only', action='store_true', default=False,
+            help='Write no forcefield information or pseudos')
+    parser.add_argument('-A', '--assign', action='store_true', default=False,
+            help='Assign bond order and formal charge')
+    parser.add_argument('--sorted', action='store_true', default=False,
+            help='Write atoms in structurally sorted order')
+    #parser.add_argument('--add-hydrogens', action='store_true', default=False,
+            #help='Add missing hydrogens based on valence and formal charge')
+    #parser.add_argument('--guess-hydrogen-positions', action='store_true',
+            #default=False,
+            #help='Guess 3d coordinates for hydrogens added by --add-hydrogen')
+
+    opts = parser.parse_args()
+    def log(msg, verbose=opts.verbose):
+        if verbose:
+            print >> sys.stderr, msg
+
+    path = opts.files[0]
+    log("Loading %s" % path)
+    mol = msys.Load(path)
+
+    for path in opts.files[1:]:
+        log("Loading %s" % path)
+        mol.append(msys.Load(path))
+
+    #if opts.add_hydrogens:
+        #new = msys.AddHydrogens(mol)
+        #for i,n in enumerate(new):
+            #n.name = 'H%d' % i
+        #log("Added %d hydrogens" % len(new))
+        #if opts.guess_hydrogen_positions:
+            #log("Guessing 3d coordinates for %d hydrogens" % len(new))
+            #msys.GuessHydrogenPositions(new)
+
+    if opts.assign:
+        log("Assigning bond order and formal charge")
+        msys.AssignBondOrderAndFormalCharge(mol)
+
+    if opts.selection:
+        log('Cloning "%s"' % opts.selection)
+        mol=mol.clone(opts.selection)
+
+    log("Selected %d chain(s), %d residue(s), %d atom(s)" % (
+                len(mol.chains), len(mol.residues), len(mol.atoms)))
+
+    if opts.coalesce:
+        log("Coalescing tables")
+        mol.coalesceTables()
+        mol = mol.clone()
+
+    if opts.sorted:
+        log("Sorting atoms")
+        mol = mol.sorted()
+
+    if opts.output:
+        log("Saving %s" % opts.output)
+        msys.Save(mol, opts.output, structure_only=opts.structure_only)
+
+if __name__=="__main__": main()
+
+# vim: filetype=python

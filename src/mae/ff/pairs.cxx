@@ -60,15 +60,24 @@ namespace {
        p[2] = sf * sqrt(Ci*Cj);
     }   
 
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+    struct PairData
+    {
+      std::string         schedule;
+      std::vector<double> cs;
+    };
+#endif
+
     typedef void (*combine_func)( const Param& vi, const Param& vj, double sf,
                                              Param& p );
 
+    template <bool alchemical>
     struct Pairs : public Ffio {
 
         void apply( SystemPtr h,
                     const Json& blk,
                     const SiteMap& sitemap,
-                    const VdwMap& vdwmap, bool alchemical ) const {
+                    const VdwMap& vdwmap ) const {
 
             const char * pname;
             combine_func combine = NULL;
@@ -96,13 +105,19 @@ namespace {
                     << "' in ffio_pairs.");
             }
 
-            TermTablePtr table = AddTable(h,pname);
-            ParamMap map(table->paramTable(), blk);
-            Id nprops = table->propCount();
+            std::string prefix;
+            if (alchemical) prefix = "alchemical_";
+            TermTablePtr table = AddTable(h,prefix+pname);
+            ParamMap map(table->params(), blk);
+            Id nprops = table->params()->propCount();
+            if (alchemical) nprops /= 2;
 
             const Json& ai = blk.get("ffio_ai");
             const Json& aj = blk.get("ffio_aj");
             const Json& fn = blk.get("ffio_funct");
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+            const Json& sc = blk.get("ffio_schedule");
+#endif
             const Json& c1 = blk.get("ffio_c1");
             const Json& c2 = blk.get("ffio_c2");
             const Json& c1B = blk.get("ffio_c1B");
@@ -121,7 +136,11 @@ namespace {
 
             do {
               IdList ids(2);
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+              typedef std::map<IdList, PairData> PairHash;
+#else
               typedef std::map<IdList, std::vector<double> > PairHash;
+#endif
               PairHash pairhash;
               PairHash pairhashB;
   
@@ -135,8 +154,14 @@ namespace {
                 ids[0]=ai.elem(i).as_int();
                 ids[1]=aj.elem(i).as_int();
                 std::pair<PairHash::iterator,bool> r, rB;
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+                r=pairhash.insert(std::make_pair( ids, PairData() ));
+                std::string&         sched  = r.first->second.schedule;
+                std::vector<double>& params = r.first->second.cs;
+#else
                 r=pairhash.insert(std::make_pair( ids, std::vector<double>()));
                 std::vector<double>& params = r.first->second;
+#endif
                 std::vector<double>* paramsB = NULL;
                 if (r.second) {
                     /* first time seeing this pair */
@@ -144,16 +169,25 @@ namespace {
                     params.insert(params.begin(), nprops, HUGE_VAL);
                 }
                 if (alchemical) {
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+                    rB=pairhashB.insert(std::make_pair( ids, PairData() ));
+                    paramsB = &rB.first->second.cs;
+#else
                     rB=pairhashB.insert(std::make_pair( ids, std::vector<double>()));
                     paramsB = &rB.first->second;
+#endif
                     if (rB.second) {
-                        /* first time seeing this alchemical pair */
+                        ///* first time seeing this alchemical pair */
                         paramsB->clear();
                         paramsB->insert(paramsB->begin(), nprops, HUGE_VAL);
                     }
                 }
                 std::string f = fn.elem(i).as_string();
-                boost::to_lower(f);
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+                const char* s = sc.valid() ? sc.elem(i).as_string() : "NULL";
+                sched = s;
+#endif
+                to_lower(f);
                 if (f=="coulomb" || f=="coulomb_scale") {
                     if (params.back()!=HUGE_VAL) continue;
                     Id iatom = sitemap.site(ai.elem(i).as_int());
@@ -165,9 +199,11 @@ namespace {
 
                     if (alchemical) {
                         double qscale = c1B.elem(i).as_float();
-                        double qi = h->atom(iatom).chargeB;
-                        double qj = h->atom(jatom).chargeB;
-                        paramsB->back() = qscale * qi * qj;
+                        double qiB = vdwmap.chargeB(ai.elem(i).as_int());
+                        double qjB = vdwmap.chargeB(aj.elem(i).as_int());
+                        if (qiB==HUGE_VAL) qiB=qi;
+                        if (qjB==HUGE_VAL) qjB=qj;
+                        paramsB->back() = qscale * qiB * qjB;
                     }
 
                 } else if (f=="coulomb_qij") {
@@ -185,7 +221,10 @@ namespace {
                     const VdwType& jtype = vdwmap.type(indj);
                     if (vdwmap.has_combined(itype, jtype)) {
                         const VdwParam& p = vdwmap.param(itype,jtype);
-                        combine( p, p, 1.0, params );
+                        /* DESRESCode#1634 - apply the LJ scale factor to
+                         * the combined LJ parameter */
+                        double lscale = c1.elem(i).as_float();
+                        combine( p, p, lscale, params );
                     } else {
                         const VdwParam& iparam = vdwmap.param(itype);
                         const VdwParam& jparam = vdwmap.param(jtype);
@@ -194,14 +233,19 @@ namespace {
                     }
 
                     if (alchemical) {
-                        const VdwType& itype = vdwmap.typeB(indi);
-                        const VdwType& jtype = vdwmap.typeB(indj);
-                        if (vdwmap.has_combined(itype, jtype)) {
-                            const VdwParam& p = vdwmap.param(itype,jtype);
-                            combine( p, p, 1.0, *paramsB );
+                        const VdwType& itypeB = vdwmap.typeB(indi);
+                        const VdwType& jtypeB = vdwmap.typeB(indj);
+                        if (vdwmap.has_combined(itypeB, jtypeB)) {
+                            const VdwParam& p = vdwmap.param(itypeB,jtypeB);
+                            double lscale = c1B.elem(i).as_float();
+                            combine( p, p, lscale, *paramsB );
                         } else {
-                            const VdwParam& iparam = vdwmap.param(itype);
-                            const VdwParam& jparam = vdwmap.param(jtype);
+                            const VdwParam& iparam = 
+                                itypeB.size() ? vdwmap.param(itypeB)
+                                              : vdwmap.param(itype);
+                            const VdwParam& jparam = 
+                                jtypeB.size() ? vdwmap.param(jtypeB)
+                                              : vdwmap.param(jtype);
                             double lscale = c1B.elem(i).as_float();
                             combine( iparam, jparam, lscale, *paramsB );
                         }
@@ -229,32 +273,47 @@ namespace {
               PairHash::iterator iter, iterB;
               iterB = pairhashB.begin();
               for (iter=pairhash.begin(); iter!=pairhash.end(); ++iter) {
+                  if (alchemical) {
+                      /* extend with B state */
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+                      iter->second.cs.insert(iter->second.cs.end(),
+                                            iterB->second.cs.begin(), 
+                                            iterB->second.cs.end());
+#else
+                      iter->second.insert(iter->second.end(),
+                                          iterB->second.begin(), 
+                                          iterB->second.end());
+#endif
+                      ++iterB;
+                  }
                   /* we may have had an mae file with and LJ pair and no
                    * corresponding ES pair, or vice versa, in which case
                    * we would still have the HUGE_VAL sentinel values in
                    * the params.  Convert those back to 0.0. */
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+                  for (unsigned i=0; i<iter->second.cs.size(); i++) {
+                      if (iter->second.cs[i]==HUGE_VAL) {
+                          iter->second.cs[i]=0;
+#else
                   for (unsigned i=0; i<iter->second.size(); i++) {
                       if (iter->second[i]==HUGE_VAL) {
                           iter->second[i]=0;
+#endif
                       }
                   }
+#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
+                  Id A = map.add(iter->second.cs);
+                  sitemap.addUnrolledTerms( table, A, iter->first, 0, iter->second.schedule == "NULL" ? 0 : iter->second.schedule.c_str() );
+#else
                   Id A = map.add(iter->second);
-                  Id B = BadId;
-                  if (alchemical) {
-                      for (unsigned i=0; i<iterB->second.size(); i++) {
-                          if (iterB->second[i]==HUGE_VAL) {
-                              iterB->second[i]=0;
-                          }
-                      }
-                      B=map.add(iterB->second);
-                      ++iterB;
-                  }
-                  sitemap.addUnrolledTerms( table, A, iter->first, false, B );
+                  sitemap.addUnrolledTerms( table, A, iter->first );
+#endif
               }
             } while (skipped.size());
         }
     };
 
-    RegisterFfio<Pairs> _("ffio_pairs");
+    RegisterFfio<Pairs<false> > _1("ffio_pairs");
+    RegisterFfio<Pairs<true> > _2("ffio_pairs_alchemical");
 }
 
