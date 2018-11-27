@@ -1,4 +1,5 @@
 1.7.249 Make InChI ignore vsites.
+        msys.ConvertFromOEChem now preserves chain and residue information.
 
 1.7.248 Add consider_stereo flag to FindDistinctFragments.
         Fix missing call to updateFragids in ImportSdf.

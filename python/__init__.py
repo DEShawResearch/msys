@@ -2000,11 +2000,36 @@ def ConvertFromOEChem(oe_mol, force=False):
             raise ValueError("ConvertFromOEChem expects explicit hydrogens to be set on the molecule first, i.e., call OEAddExplicitHydrogens first")
 
     msys_system = CreateSystem()
-    res = msys_system.addResidue()
+    default_res = None
 
+    chain_id_to_msys_chain = {}
+    oe_res_to_msys_res = {}
     oe_idx_to_msys_id = {}
     for oe_atom in oe_mol.GetAtoms():
-        msys_atom = res.addAtom()
+        if not oechem.OEHasResidue(oe_atom):
+            if default_res is None:
+                default_res = msys_system.addResidue()
+            msys_res = default_res
+        else:
+            oe_res = oechem.OEAtomGetResidue(oe_atom)
+            if oe_res in oe_res_to_msys_res:
+                msys_res = oe_res_to_msys_res[oe_res]
+            else:
+                chain_id = oe_res.GetChainID()
+                if chain_id in chain_id_to_msys_chain:
+                    msys_chain = chain_id_to_msys_chain[chain_id]
+                else:
+                    msys_chain = msys_system.addChain()
+                    msys_chain.name = chain_id
+                    chain_id_to_msys_chain[chain_id] = msys_chain
+
+                msys_res = msys_chain.addResidue()
+                msys_res.insertion = oe_res.GetInsertCode()
+                msys_res.name = oe_res.GetName()
+                msys_res.resid = oe_res.GetResidueNumber()
+                oe_res_to_msys_res[oe_res] = msys_res
+
+        msys_atom = msys_res.addAtom()
 
         oe_idx = oe_atom.GetIdx()
         oe_idx_to_msys_id[oe_idx] = msys_atom.id
@@ -2013,7 +2038,7 @@ def ConvertFromOEChem(oe_mol, force=False):
         msys_atom.formal_charge = oe_atom.GetFormalCharge()
         msys_atom.pos = oe_mol.GetCoords(oe_atom)
 
-    msys_atoms = res.atoms
+    msys_atoms = msys_system.atoms
     for oe_bond in oe_mol.GetBonds():
         bgnIdx = oe_idx_to_msys_id[oe_bond.GetBgnIdx()]
         endIdx = oe_idx_to_msys_id[oe_bond.GetEndIdx()]
