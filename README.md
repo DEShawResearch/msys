@@ -35,7 +35,7 @@ To build Msys, you'll need at a minimum the following:
 Msys can make use of several optional libraries when they are explicitly
 enabled during compilation.  These libraries are:
 
- * lpsolve (https://sourceforge.net/projects/lpsolve/), needed for bond order and formal charge assigment.
+ * lpsolve (https://sourceforge.net/projects/lpsolve/), needed for bond order and formal charge assignment.
 
  * The InChI library (https://www.inchi-trust.org/downloads/) version 1.05.
 
@@ -85,7 +85,7 @@ Assuming the build was successful, you can generate an InChI string in msys usin
     # 'InChI=1/C8H9F3NOS/c9-8(10,11)6(13)5-14-7-3-1-2-4-12-7/h1-4,6,12-13H,5H2/t6-/m1/s1'
 
 
-Building with Lpsolve Support
+Building with lpsolve Support
 -----------------------------
 
 Msys uses lpsolve in a module that determines chemically reasonable bond orders and formal charges
