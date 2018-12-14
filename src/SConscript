@@ -182,6 +182,7 @@ molfile/gromacsplugin.cxx
 molfile/rst7plugin.cxx
 molfile/psfplugin.c
 molfile/xyzplugin.c
+molfile/vtfplugin.cxx
 
 fastjson/json.cxx
 fastjson/JSON_parser.c
