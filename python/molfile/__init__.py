@@ -23,7 +23,7 @@ Write a trajectory to a frameset (dtr)::
         f.pos[:] = xyz
         f.time = i
         w.frame(f)
-        w.close()
+    w.close()
 
 Convert an mae file to a pdb file::
 
