@@ -791,6 +791,12 @@ class TestAtomsel(unittest.TestCase):
 
 class TestSdf(unittest.TestCase):
 
+    def testIter(self):
+        with open('tests/files/cofactors.sdf') as fp:
+            s = fp.read()
+        for m in msys.ParseSDF(s):
+            pass
+
     def testCoordPrecision(self):
         tmp = tempfile.NamedTemporaryFile(suffix='.sdf')
         mol = msys.CreateSystem()

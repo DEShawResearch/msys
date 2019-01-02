@@ -2131,7 +2131,7 @@ def ParseSDF(text):
     '''
     it = _msys.ParseSDF(text)
     while True:
-        mol = next(it)
+        mol = it.next()
         if mol is None:
             break
         yield System(mol)
