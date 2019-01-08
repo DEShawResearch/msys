@@ -13,6 +13,9 @@ void CmpPredicate::eval(Selection& s) {
     case Token::EQ:
         for (Id i=0, n=s.size(); i<n; i++) if (s[i]) s[i]=L[i]==R[i];
         break;
+    case Token::NE:
+        for (Id i=0, n=s.size(); i<n; i++) if (s[i]) s[i]=L[i]!=R[i];
+        break;
     case Token::LT:
         for (Id i=0, n=s.size(); i<n; i++) {
             if (s[i]) s[i]=L[i]<R[i];
@@ -28,6 +31,7 @@ void CmpPredicate::eval(Selection& s) {
         for (Id i=0, n=s.size(); i<n; i++) if (s[i]) s[i]=L[i]>=R[i];
         break;
     default:;
+        MSYS_FAIL("unrecognized binary operator");
     }
 }
 
