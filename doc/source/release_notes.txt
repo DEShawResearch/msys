@@ -1,3 +1,5 @@
+1.7.254 desres-python/3.7.2-02.
+
 1.7.253 Bump desres-python/3.7.0 to 3.7.2.
         Support the != operator in atomsel.
         Fix documentation in molfile.
