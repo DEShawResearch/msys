@@ -1,3 +1,7 @@
+1.7.253 Bump desres-python/3.7.0 to 3.7.2.
+        Support the != operator in atomsel.
+        Fix documentation in molfile.
+
 1.7.252 Fix ParseSDF for python3.
 
 1.7.251 Added vtfplugin.
