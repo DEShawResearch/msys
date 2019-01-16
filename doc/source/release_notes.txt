@@ -1,3 +1,6 @@
+1.7.255 desres-python/3.7.2-04
+        Fix for writing dms files with tables containing more than 10 atoms.
+
 1.7.254 desres-python/3.7.2-02.
 
 1.7.253 Bump desres-python/3.7.0 to 3.7.2.
