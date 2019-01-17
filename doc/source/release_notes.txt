@@ -1,3 +1,5 @@
+1.7.256 Fix for Graph to support viparr-style graph matching.
+
 1.7.255 desres-python/3.7.2-04
         Fix for writing dms files with tables containing more than 10 atoms.
 
