@@ -1,4 +1,6 @@
 1.7.257 Remove dms-scale-vdw and dms-override-vdw.
+        Make dms-find-knot agree with dms-validate.
+        Added msys.MatchFragments.
 
 1.7.256 Fix for Graph to support viparr-style graph matching.
 
