@@ -2404,6 +2404,50 @@ def FindDistinctFragments(system, consider_stereo=False):
     '''
     return _msys.FindDistinctFragments(system._ptr, consider_stereo)
 
+def MatchFragments(mol1, mol2):
+    """construct an atom to atom mapping for all fragments from mol1 to mol2
+
+    Arguments:
+        mol1: System
+        mol2: System
+
+    Returns:
+        dict[Atom -> Atom] or None
+    """
+    frags1 = msys.FindDistinctFragments(mol1)
+    frags2 = msys.FindDistinctFragments(mol2)
+    if len(frags1) != len(frags2):
+        return None
+    ids1 = mol1.updateFragids()
+    ids2 = mol2.updateFragids()
+
+    # first pass: match representative fragments in 1 to fragments in 2
+    fragmap = dict()
+    graphs = { f : msys.Graph(ids1[f]) for f in frags1 }
+    for fid2 in frags2:
+        graph2 = msys.Graph(ids2[fid2])
+        for fid1, graph1 in graphs.items():
+            if graph1.match(graph2):
+                fragmap[fid1] = fid2
+                break
+        else:
+            return None
+        del graphs[fid1]
+    # second pass: match up individual fragments
+    mapper = dict()
+    for f1, f2 in fragmap.items():
+        list1 = frags1[f1]
+        list2 = frags2[f2]
+        if len(list1) != len(list2):
+            return None
+        for frag1, frag2 in zip(list1, list2):
+            g1 = msys.Graph(ids1[frag1])
+            g2 = msys.Graph(ids2[frag2])
+            match = g1.match(g2)
+            mapper.update(match)
+    return mapper
+
+
 def ComputeTopologicalIds(system):
     ''' Compute and return the topological ids for the atoms or system '''
     ids = _msys.ComputeTopologicalIds(system._ptr)
