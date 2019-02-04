@@ -35,5 +35,4 @@ Contents:
    formats
    release_notes
 
-* :ref:`genindex`
 
