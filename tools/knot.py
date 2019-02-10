@@ -237,7 +237,7 @@ def main():
     
     parser = OptionParser("Usage: dms_find_knot [options] system.dms.\n\nGiven a dms file, find any instances where a bond is 'threaded' through a ring.")
 
-    parser.add_option("--max-cycle", help="Maximum cycle size to check (if this is set too large, disulfide-bond-induced rings will be checked).")
+    parser.add_option("--max-cycle", default=10, help="Maximum cycle size to check (if this is set too large, disulfide-bond-induced rings will be checked).")
 
     parser.add_option("-s", "--selection", help="Limit knot search to selection")
     parser.add_option("--untie", action="store_true", help="Attempt to remove any knots found and write to --outfile", 

@@ -1,3 +1,24 @@
+1.7.257 Remove dms-scale-vdw and dms-override-vdw.
+        Make dms-find-knot agree with dms-validate.
+        Added msys.MatchFragments.
+
+1.7.256 Fix for Graph to support viparr-style graph matching.
+
+1.7.255 desres-python/3.7.2-04
+        Fix for writing dms files with tables containing more than 10 atoms.
+
+1.7.254 desres-python/3.7.2-02.
+
+1.7.253 Bump desres-python/3.7.0 to 3.7.2.
+        Support the != operator in atomsel.
+        Fix documentation in molfile.
+
+1.7.252 Fix ParseSDF for python3.
+
+1.7.251 Added vtfplugin.
+
+1.7.250 msys.ConvertFromOEChem now preserves chain and residue information.
+
 1.7.249 Make InChI ignore vsites.
 
 1.7.248 Add consider_stereo flag to FindDistinctFragments.
