@@ -741,6 +741,11 @@ class AtomselCoverage(unittest.TestCase):
         self.assertEqual(self.mol.selectIds('y -3', pos), [1])
         self.assertEqual(self.mol.selectIds('z 42', pos), [2])
 
+    def testCmp(self):
+        self.check('vy == 42', [1])
+        self.check('vy != 42', [0,2])
+
+
 class TestAtomsel(unittest.TestCase):
     
     def testSmarts(self):
@@ -790,6 +795,12 @@ class TestAtomsel(unittest.TestCase):
                 self.assertEqual(old, new, "failed on '%s': oldlen %d newlen %d" % (sel, len(old), len(new)))
 
 class TestSdf(unittest.TestCase):
+
+    def testIter(self):
+        with open('tests/files/cofactors.sdf') as fp:
+            s = fp.read()
+        for m in msys.ParseSDF(s):
+            pass
 
     def testCoordPrecision(self):
         tmp = tempfile.NamedTemporaryFile(suffix='.sdf')

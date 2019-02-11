@@ -160,6 +160,7 @@ class Main(unittest.TestCase):
             'tests/files/test_UID_corrected.mol2',
             'tests/files/fused.sdf',
             'tests/files/3RYZ.pdb',
+            'tests/files/1DUF.pdb',
             ]
 
         for testfile in testfiles:
@@ -173,6 +174,11 @@ class Main(unittest.TestCase):
 
                 with TimedLogMessage("ConvertFromOEChem"):
                     system = msys.ConvertFromOEChem(mol)
+
+                if 'pdb' in testfile:
+                    assert len(system.residues) > 1
+                    if '1DUF' in testfile:
+                        assert len(system.chains) > 1
 
                 with TimedLogMessage("ConvertToOEChem"):
                     new_oemol = msys.ConvertToOEChem(system)

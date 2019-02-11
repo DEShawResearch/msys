@@ -97,14 +97,6 @@ dms-posre
 .. automodule:: msys.posre
     :members:
 
-dms-override-vdw
-----------------
-.. include:: ../build/genhelp/dms-override-vdw
-
-dms-scale-vdw
--------------
-.. include:: ../build/genhelp/dms-scale-vdw
-
 dms-tile
 --------
 .. include:: ../build/genhelp/dms-tile

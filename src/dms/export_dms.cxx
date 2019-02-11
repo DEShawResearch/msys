@@ -323,7 +323,7 @@ static void export_view(TermTablePtr table, const std::string& name, Sqlite dms)
     std::stringstream ss;
     ss << "create view " << name << " as \n" << "  select ";
     for (Id i=0; i<table->atomCount(); i++) {
-        ss << "p" << (char)('0'+i);
+        ss << "p" << i;
         if (props.size() || tprops.size() || i!=table->atomCount()-1) {
             ss << ", ";
         }

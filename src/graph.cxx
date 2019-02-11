@@ -65,8 +65,13 @@ Graph::Graph(SystemPtr sys, const IdList& atoms, const IdList& colors) {
     for (Id i=0, n=atoms.size(); i<n; i++) {
         Id id = atoms[i];
         atom_t const& atm = sys->atom(id);
-        Id color = colors.empty() ? atm.atomic_number : colors[i];
-        if (color==0) continue;
+        int64_t color;
+        if (colors.empty()) {
+            color = atm.atomic_number;
+        } else {
+            color = colors[i];
+        }
+        if (color<1) continue;
         colormap[id] = color;
         std::pair<Id,Id> key(color, sys->bondCountForAtom(id));
         attrHash::iterator ihash=hash_to_idx.lower_bound(key);
