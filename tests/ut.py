@@ -1581,7 +1581,6 @@ class Main(unittest.TestCase):
         msys.SaveMAE(m,'/usr/tmp/big.dms')
         print("done")
 
-class TestHash(unittest.TestCase):
     def testAtom(self):
 
         m=msys.CreateSystem()

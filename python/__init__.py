@@ -2630,8 +2630,6 @@ class SpatialHash(object):
         return self._hash.findPairlist(radius, excl, reuse_voxels)
 
 
-    def __getitem__(self, index):
-        ''' Get structure at given index
 
 HydrogenBond.__repr__ = lambda self: "<Hbond %s %s %s>" % (self.donor_id, self.acceptor_id, self.hydrogen_id)
 HydrogenBond.donor = property(lambda x: x.donor_id, doc="Donor atom id")
