@@ -10,7 +10,6 @@ import sys, os
 
 import msys
 import io
-from msys import vdw
 
 def print_info(mol, ct=None):
     ctname = ':' if ct is None else "%d: %s" % (ct, mol.name)
@@ -67,7 +66,7 @@ def print_info(mol, ct=None):
                     table.nterms))
             if table.noverrides:
                 print("%27s overrides: %6d params, %6d pairs" %(
-                        '', table.noverrides, vdw.count_overrides(table)))
+                        '', table.noverrides, table.count_overrides()))
 
     nbinfo=mol.nonbonded_info
     print("\n%s:" % "Nonbonded Info")

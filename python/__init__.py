@@ -890,6 +890,17 @@ class TermTable(object):
         ''' number of parameter overrides '''
         return self._ptr.overrides().count()
 
+    def count_overrides(self):
+        ''' return the number of pairwise nonbonded interactions which 
+        are affected by the overrides in the given term table. '''
+        # count the number of atoms for each nonbonded param
+        nparams = self.params.nparams
+        pcount = [0] * nparams
+        for t in self.terms:
+            pcount[t.param.id] += 1
+        cnt = sum(pcount[pi.id] * pcount[pj.id] for pi, pj in self.overrides())
+        return cnt
+
     def overrides(self):
         ''' return a mapping from pairs of Params in self.params to a Param
         in self.override_params. '''
@@ -2281,14 +2292,14 @@ def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge=None,
     form complete connected fragments.
 
     WARNING: calling this function on a chemically incomplete system,
-    i.e. just protein backbone, may cause msys to hang indefinitely.
+        i.e. just protein backbone, may cause msys to hang indefinitely.
 
     Arguments:
-    system_or_atoms: either a System or a list of Atoms
-    total_charge: if not None, integral total charge
-    compute_resonant_charges (bool): compute and store resonant charge
-        in atom property 'resonant_charge' and resonant bond order in
-        bond property 'resonant_order'.
+        system_or_atoms: either a System or a list of Atoms
+        total_charge: if not None, integral total charge
+        compute_resonant_charges (bool): compute and store resonant charge
+            in atom property 'resonant_charge' and resonant bond order in
+            bond property 'resonant_order'.
     """
     if isinstance(system_or_atoms, System):
         ptr = system_or_atoms._ptr
@@ -2735,7 +2746,7 @@ class SystemImporter:
         '''Process existing atoms in the system
 
         Args:
-            atoms (list[Atom]) atoms in system
+            atoms (list[msys.Atom]) atoms in system
 
         Note:
             can be called multiple times; each time clears the internal
