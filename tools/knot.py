@@ -1,5 +1,6 @@
 '''
 dms-find-knot system.dms [ options ]
+::
 
                 /-------\
        \       /         \
@@ -7,6 +8,7 @@ dms-find-knot system.dms [ options ]
          \----\  ---------------\
                \         /       \
                 \-------/         \
+
 
 *dms-find-knot* searches for bonds which pass through a ring of atoms; e.g.,
 a lipid tail passing through an aromatic ring in a protein.  Such geometries

@@ -1,3 +1,5 @@
+1.7.258 Fix broken dms-info caused by remove of msys.vdw.
+
 1.7.257 Remove dms-scale-vdw and dms-override-vdw.
         Make dms-find-knot agree with dms-validate.
         Added msys.MatchFragments.
