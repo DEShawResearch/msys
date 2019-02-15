@@ -27,11 +27,14 @@ namespace {
         AssignBondOrderAndFormalCharge(mol, ids_from_python(ids), total_charge, flags);
     }
 
-    dict find_distinct_fragments(SystemPtr mol, bool consider_stereo) {
+    dict find_distinct_fragments(SystemPtr mol, object keys_obj) {
         MultiIdList fragments;
         mol->updateFragids(&fragments);
+        std::vector<std::string> keys;
+        size_t i, n = len(keys_obj);
+        for (i=0; i<n; i++) keys.push_back(extract<std::string>(keys_obj[i]));
         dict result;
-        for (auto& iter : FindDistinctFragments(mol, fragments, consider_stereo)) {
+        for (auto& iter : FindDistinctFragments(mol, fragments, keys)) {
             result[iter.first] = to_python(iter.second);
         }
         return result;

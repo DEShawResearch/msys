@@ -1074,7 +1074,7 @@ class Main(unittest.TestCase):
         frags = msys.FindDistinctFragments(mol)
         self.assertEqual(len(frags), 1)
     
-        frags = msys.FindDistinctFragments(mol, consider_stereo=True)
+        frags = msys.FindDistinctFragments(mol, key='inchi')
         self.assertEqual(len(frags), 2)
 
 

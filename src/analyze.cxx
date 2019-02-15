@@ -7,7 +7,6 @@
 #include "clone.hxx"
 #include "contacts.hxx"
 #include "pfx/pfx.hxx"
-#include "inchi.hxx"
 #include <numeric>
 #include <queue>
 #include <stdio.h>
@@ -244,7 +243,7 @@ namespace desres { namespace msys {
         }
     }
 
-    std::map<Id,IdList> FindDistinctFragments(SystemPtr mol, MultiIdList const& fragments, bool consider_stereo) {
+    std::map<Id,IdList> FindDistinctFragments(SystemPtr mol, MultiIdList const& fragments, std::vector<std::string> const& keys) {
         std::map<Id, IdList> result;
         /* will compute graphs lazily */
         std::vector<GraphPtr> graphs(fragments.size());
@@ -252,12 +251,10 @@ namespace desres { namespace msys {
         FragmentHash fragment_hash;
         for (Id i=0; i<fragments.size(); i++) {
             std::string key;
-            if (consider_stereo) {
-                unsigned flags = InChI::DoNotAddH | InChI::FixedH;
-                auto frag = Clone(mol, fragments[i]);
-                key = InChI::create(frag, flags).string();
-            } else {
+            if (keys.empty()) {
                 key = Graph::hash(mol, fragments[i]);
+            } else {
+                key = keys.at(i);
             }
             fragment_hash[key].push_back(i);
         }

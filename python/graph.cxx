@@ -17,6 +17,10 @@ namespace {
         return Graph::hash(self.system(), self.atoms());
     }
 
+    std::string hash_atoms(SystemPtr mol, IdList const& ids) {
+        return Graph::hash(mol, ids);
+    }
+
     object match(Graph const& self, GraphPtr other) {
         std::vector<IdPair> matches;
         if (self.match(other, matches)) {
@@ -57,6 +61,7 @@ namespace desres { namespace msys {
             .def("create",  create).staticmethod("create")
             .def("create_with_colors",  create_with_colors).staticmethod("create_with_colors")
             .def("hash", hash)
+            .def("hash_atoms", hash_atoms).staticmethod("hash_atoms")
             .def("size", &Graph::size)
             .def("atoms", graph_atoms)
             .def("system", &Graph::system)

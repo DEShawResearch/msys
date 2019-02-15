@@ -2365,6 +2365,18 @@ class Graph(object):
         ''' string hash of atoms and bonds in graph '''
         return self._ptr.hash()
 
+    @staticmethod
+    def hash_atoms(atoms):
+        ''' string hash of specified atoms
+        
+        Arguments:
+            atoms ([msys.Atom]): list of atoms
+
+        '''
+        ptr, ids = _convert_ids(atoms)
+        return _msys.GraphPtr.hash_atoms(ptr, ids)
+
+
     def match(self, graph):
         ''' Find a graph isomorphism between self and the given Graph.
         If no isomorphism could be found, return None; otherwise return
@@ -2395,38 +2407,53 @@ def GuessHydrogenPositions(atoms):
     ptr, ids = _convert_ids(atoms)
     _msys.GuessHydrogenPositions(ptr, ids)
 
-def FindDistinctFragments(system, consider_stereo=False):
+def FindDistinctFragments(system, key='graph'):
     ''' Find connected sets of atoms with identical topology.
     
     Arguments:
         system: System
             chemical system
 
-        consider_stereo: bool
-            if true, treat fragments with different stereochemistry as distinct
-
+        key: str
+            one of 'graph', 'inchi', 'oechem_smiles', or list of strings, one per fragment
+            
     Returns:
         dict[int -> [int]]: mapping from representative fragment id to ids of fragments
                             having identical topology.
 
     Notes:
-        Stereochemistry is determined by computing the InChI string of the fragment.
-         
+        Fragments are distinguished according to value given by 'key';
+        if 'graph', topologically identical fragments will be considered identical even
+        if they have different stereochemistry.  Choose one of the other options to
+        include stereochemistry in the fragment disambiguation.
     '''
-    return _msys.FindDistinctFragments(system._ptr, consider_stereo)
+    frags = system.updateFragids()
+    if key == 'graph':
+        keys = []   # uses default Graph hash
+    elif key == 'inchi':
+        keys = [InChI(system.clone(f)).string for f in frags]
+    elif key == 'oechem_smiles':
+        from openeye import oechem
+        keys = [oechem.OEMolToSmiles(ConvertToOEChem(f)) for f in frags]
+    elif isinstance(key, list):
+        keys = key
+    else:
+        raise ValueError("unsupported key %s'" % key)
+    return _msys.FindDistinctFragments(system._ptr, keys)
 
-def MatchFragments(mol1, mol2):
+def MatchFragments(mol1, mol2, key='graph'):
     """construct an atom to atom mapping for all fragments from mol1 to mol2
 
     Arguments:
         mol1: System
         mol2: System
+        key: see FindDistinctFragments
 
     Returns:
         dict[Atom -> Atom] or None
     """
-    frags1 = msys.FindDistinctFragments(mol1)
-    frags2 = msys.FindDistinctFragments(mol2)
+    frags1 = msys.FindDistinctFragments(mol1, key)
+    frags2 = msys.FindDistinctFragments(mol2, key)
     if len(frags1) != len(frags2):
         return None
     ids1 = mol1.updateFragids()

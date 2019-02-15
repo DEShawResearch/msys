@@ -32,6 +32,11 @@ def TimedLogMessage(*args):
     #print("%.2f seconds to run:" % t.elapsed(), *args)
 
 class Main(unittest.TestCase):
+
+    def testFindDistinctBigFragments(self):
+        mol = msys.Load('tests/files/pro.dms')
+        result = msys.FindDistinctFragments(mol, key='oechem_smiles')
+
     def testSmall(self):
         mol = msys.Load('tests/files/jandor-bad.sdf')
         
