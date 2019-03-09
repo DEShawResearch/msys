@@ -19,28 +19,28 @@ def main():
     y=args.y if args.y is not None else args.l
     z=args.z if args.z is not None else args.l
     if None in (x,y,z):
-        print >> sys.stderr, "ERROR: Box dimensions incompletely specified"
+        print("ERROR: Box dimensions incompletely specified", file=sys.stderr)
         exit(1)
 
     if args.seed is not None:
-        print "Random number seed:", args.seed
+        print("Random number seed:", args.seed)
         numpy.random.seed(args.seed)
 
-    print "Loading '%s'" % args.ifile
+    print("Loading '%s'" % args.ifile)
     mol = msys.Load(args.ifile)
 
-    print "Assigning mass based on atomic number"
+    print("Assigning mass based on atomic number")
     for a in mol.atoms:
         a.mass = msys.MassForElement(a.atomic_number)
 
     if args.align: 
-        print "Aligning principal axis of input structure"
+        print("Aligning principal axis of input structure")
         align_principal_axes(mol)
     else:
-        print "NOT aligning principal axis of input structure"
+        print("NOT aligning principal axis of input structure")
 
     if args.randomize:
-        print "Randomizing molecule orientation"
+        print("Randomizing molecule orientation")
 
     # convert g/cm^3 to molecular density
     fac_to_gcm3 = 10.0/6.022
@@ -49,25 +49,25 @@ def main():
 
     out = replicate(mol, x, y, z, moldensity, randomize=args.randomize)
 
-    print "Eliminating redundant forcefield terms"
+    print("Eliminating redundant forcefield terms")
     out.coalesceTables()
     out = out.clone()
 
     if args.temperature is not None:
-        print "Thermalizing velocities to %sK" % args.temperature
+        print("Thermalizing velocities to %sK" % args.temperature)
         from msys import thermalize
         thermalize.apply(out, args.temperature, args.seed)
 
     if args.unbuffered:
         if not args.ofile.endswith('.dms'):
-            print "WARNING: unbuffered saves require DMS format, but output file name ends with '%s'" % (args.ofile[-4:])
-        print "Saving unbuffered DMS file '%s'" % args.ofile
+            print("WARNING: unbuffered saves require DMS format, but output file name ends with '%s'" % (args.ofile[-4:]))
+        print("Saving unbuffered DMS file '%s'" % args.ofile)
         msys.SaveDMS(out, args.ofile, unbuffered=True)
     else:
-        print "Saving '%s'" % args.ofile
+        print("Saving '%s'" % args.ofile)
         msys.Save(out, args.ofile)
 
-    print "Done"
+    print("Done")
 
 def parse_args():
     import argparse
@@ -129,13 +129,13 @@ def replicate(mol, x, y, z, density, randomize=False):
             density = trialdensity
     n=nx*ny*nz
 
-    print "Requested molecular density: %8.5f" % target_density
-    print "Actual molecular density:    %8.5f" % (n/vol)
+    print("Requested molecular density: %8.5f" % target_density)
+    print("Actual molecular density:    %8.5f" % (n/vol))
 
     cell=numpy.diag((x/nx, y/ny, z/nz))
 
-    print "Tiling %d x %d x %d: %d total copies, %d atoms" % (
-            nx,ny,nz,n,n*mol.natoms)
+    print("Tiling %d x %d x %d: %d total copies, %d atoms" % (
+            nx,ny,nz,n,n*mol.natoms))
     xshift = -0.5 * (nx-1)*cell[0]
     yshift = -0.5 * (ny-1)*cell[1]
     zshift = -0.5 * (nz-1)*cell[2]

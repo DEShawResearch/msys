@@ -1,6 +1,7 @@
 '''
 DESRES extensions for SCons
 '''
+from __future__ import print_function
 
 from SCons.Script import *
 import os
@@ -64,9 +65,11 @@ def munge_header(env, source, target):
     with open(dst) as fp:
         lines = fp.readlines()
     with open(dst, 'w') as fp:
-        print >>fp, '#!/usr/bin/env python'
-        print >>fp, 'import os, sys'
-        print >>fp, 'sys.path.insert(0,os.path.dirname(__file__)+"/../lib/python")'
+        print('#!/usr/bin/env python', file=fp)
+        print('from __future__ import print_function', file=fp)
+        print('import os, sys', file=fp)
+        print('sys.path.insert(0,os.path.dirname(__file__)+"/../lib/python")', file=fp)
+
         skip = lines[1].startswith('#{')
         for line in lines[1:]:
             if skip:
@@ -218,7 +221,7 @@ def _AddWheel(env, tomlfile, pyver='36'):
     # obtain wheel tag using specified python version
     wmod = 'wheel' if pyver.startswith('2') else 'setuptools'
     exe = 'python%s' % '.'.join(pyver)
-    tag = subprocess.check_output([exe, '-c', 'import %s.pep425tags as wp; tags=wp.get_supported(); best=[t for t in tags if "manylinux" not in "".join(t)][0]; print("-".join(best))' % wmod]).strip()
+    tag = subprocess.check_output([exe, '-c', 'import %s.pep425tags as wp; tags=wp.get_supported(); best=[t for t in tags if "manylinux" not in "".join(t)][0]; print("-".join(best))' % wmod], universal_newlines=True).strip()
 
     # set things up for enscons.
     env.Replace(
@@ -327,18 +330,18 @@ def generate(env):
     for ver in env['PYTHONVER']:
         cfg = 'python%s-config' % '.'.join(ver)
         exe = 'python%s' % '.'.join(ver)
-        incs=subprocess.check_output([cfg, '--includes']).strip()
-        prefix=subprocess.check_output([cfg, '--prefix']).strip()
-        libs=subprocess.check_output([cfg, '--libs']).strip()
-        incs += ' -I' + subprocess.check_output([exe, '-c', 'import numpy; print(numpy.get_include())']).strip()
+        incs=subprocess.check_output([cfg, '--includes'], universal_newlines=True).strip()
+        prefix=subprocess.check_output([cfg, '--prefix'], universal_newlines=True).strip()
+        libs=subprocess.check_output([cfg, '--libs'], universal_newlines=True).strip()
+        incs += ' -I' + subprocess.check_output([exe, '-c', 'import numpy; print(numpy.get_include())'], universal_newlines=True).strip()
         kwds = { 'PYTHON%s_PREFIX' % ver : prefix,
                  'PYTHON%s_CPPFLAGS' % ver : incs,
                  'PYTHON%s_LDFLAGS' % ver : libs,
                  }
         if ver.startswith('3'):
-            soabi = subprocess.check_output([exe, "-c", "import sysconfig;print(sysconfig.get_config_var('SOABI'))"]).strip()
+            soabi = subprocess.check_output([exe, "-c", "import sysconfig;print(sysconfig.get_config_var('SOABI'))"], universal_newlines=True).strip()
             kwds['PYTHON%s_SOABI' % ver] = soabi
-            cache = subprocess.check_output([exe, '-c', 'import importlib.util as i;print(i.cache_from_source("foo.py"))']).strip()
+            cache = subprocess.check_output([exe, '-c', 'import importlib.util as i;print(i.cache_from_source("foo.py"))'], universal_newlines=True).strip()
             kwds['PYTHON%s_CACHEDIR' % ver] = os.path.dirname(cache)
             kwds['PYTHON%s_CACHEEXT' % ver] = '.'.join(cache.split('.')[-2:])
         else:

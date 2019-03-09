@@ -3,6 +3,14 @@ import os
 import sys
 import subprocess
 
+#
+# Inherit environment from outside for these environment variables
+#
+TOOLCHAIN = ["CC", "CXX", "LD", "AR", "AS", "STRIP"]
+for envvar in TOOLCHAIN:
+    if envvar in os.environ:
+        env.Replace(**{envvar: os.environ[envvar]})
+
 # Avoid doing dependency checks on garden files.
 if True:
     cpp=[]
@@ -18,10 +26,10 @@ if True:
 if "SCHRODINGER_SRC" not in os.environ:
     env.Append(
             # SSE2 for src/within.hxx.  It's optional, but way way slower without.
-            CCFLAGS='-O2 -g -msse4.1',
+            CCFLAGS=['-O2', '-g', '-msse4.1'],
             CFLAGS='-Wall',
             # sadly, need -Wno-deprecated-declarations because of boost.
-            CXXFLAGS='-std=c++14 -Wall -Werror -Wno-deprecated-declarations',
+            CXXFLAGS="-std=c++14 -Wall -Wno-deprecated-declarations",
             CPPDEFINES=[
                 'BOOST_SYSTEM_NO_DEPRECATED',
                 ],
