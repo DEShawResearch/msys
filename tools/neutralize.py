@@ -1,3 +1,7 @@
+"""
+Replace water molecules with ions
+"""
+
 from __future__ import print_function
 
 import msys, math
@@ -49,6 +53,7 @@ def parse_ion(name):
     atm.formal_charge = int(atm.charge)
     return mol
 
+
 def Neutralize(mol, cation='Na', anion='Cl', 
         charge='formal_charge',
         chain='ION', chain2='ION2',
@@ -66,8 +71,7 @@ def Neutralize(mol, cation='Na', anion='Cl',
         mol (msys.System): input solvated system
         cation (str): element for cation species
         anion (str): element for anion species
-        charge (str): either 'formal_charge', 'charge', or ZZ
-
+        charge (str): either 'formal_charge', 'charge', or explicit value
         chain (str): chain name for counterions
         chain2 (str): chain name for counter-counterions
         concentration (float): 
@@ -76,6 +80,7 @@ def Neutralize(mol, cation='Na', anion='Cl',
         concentration (float): molar concentration of added ions with same charge
         keep (str): selection of ions/waters that cannot be deleted or replaced
         random_seed (int): random seed to determine which water molecules to replace
+        verbose (bool): be chatty
 
     Returns:
         msys.System: a new system with ions added
