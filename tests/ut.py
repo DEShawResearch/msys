@@ -28,6 +28,22 @@ def vsize():
         s = p.read()
     return int(s)
 
+class TestNeutralize(unittest.TestCase):
+    def test1(self):
+        from msys.neutralize import Neutralize
+        mol = msys.Load('tests/files/2f4k.dms')
+        msys.AssignBondOrderAndFormalCharge(mol)
+
+        new = Neutralize(mol, verbose=True, concentration=0.1)
+        self.assertEqual(len(new.selectIds('element Na')), 7)
+        self.assertEqual(len(new.selectIds('element Cl')), 8)
+        self.assertEqual(sum(a.formal_charge for a in new.atoms), 0)
+
+        new = Neutralize(mol, verbose=True, concentration=0.2, cation='K')
+        self.assertEqual(len(new.selectIds('element K')), 15)
+        self.assertEqual(len(new.selectIds('element Cl')), 17)
+        self.assertEqual(sum(a.formal_charge for a in new.atoms), 0)
+
 class TestSmiles(unittest.TestCase):
     def testCharge(self):
         for sym, q in (
