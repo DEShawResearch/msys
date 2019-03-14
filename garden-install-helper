@@ -40,7 +40,7 @@ genmodules() {
 load $PYTHON/bin
 prepend-path PYTHONPATH $PREFIX/lib/python
 EOF
-    cat << EOF > $GARDENDIR/lib-python3
+    cat << EOF > $GARDENDIR/lib-python37
 load $PYTHON3/bin
 prepend-path PYTHONPATH $PREFIX/lib/python
 EOF
