@@ -1,3 +1,6 @@
+1.7.260 Added neutralize.Neutralize and dms-neutralize.
+        Replace spaces with '_' in mol2 names and resnames.
+
 1.7.259 New FindDistinctFragments interface.
 
 1.7.258 Fix broken dms-info caused by remove of msys.vdw.
