@@ -1,4 +1,6 @@
-1.7.260 Added neutralize.Neutralize and dms-neutralize.
+1.7.262 Fix dms-neutralize and add --structure-only option.
+
+1.7.261 Added neutralize.Neutralize and dms-neutralize.
         Replace spaces with '_' in mol2 names and resnames.
 
 1.7.259 New FindDistinctFragments interface.

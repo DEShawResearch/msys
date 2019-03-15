@@ -15,6 +15,7 @@ def parse_args():
     arg("input_file", help="solvated input file")
     arg("output", help="output file")
     arg("-A", "--assign", action="store_true", help="Assign formal charges")
+    arg('--structure-only', action='store_true', help='Load no forcefield information or pseudos')
     arg("--cation", default="Na", help="element for cation species")
     arg("--anion", default="Cl", help="element for anion species")
     arg("--charge", default="formal_charge", help="atom charge attribute; or value")
@@ -31,7 +32,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    mol = msys.Load(args.input_file)
+    mol = msys.Load(args.input_file, structure_only=args.structure_only)
     if args.assign:
         msys.AssignBondOrderAndFormalCharge(mol)
 
@@ -49,7 +50,7 @@ def main():
             verbose=args.verbose,
             )
 
-    msys.Save(mol, args.output)
+    msys.Save(new, args.output)
 
 if __name__=="__main__":
     main()
