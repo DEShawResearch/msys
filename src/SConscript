@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 Import('env')
 import os
 import sys
@@ -32,7 +34,7 @@ if env.get('MSYS_WITH_LPSOLVE'):
     env.AppendUnique(LIBS=['lpsolve55'])
 
 bsx=env.get('MSYS_BOOST_SUFFIX', '')
-boost_libs=[(x+bsx) for x in ( 
+boost_libs=[(x+bsx) for x in (
     'boost_iostreams', 'boost_filesystem', 'boost_system')]
 
 env.Append(
@@ -63,18 +65,19 @@ def split_version(verstr):
     nice_verstr = re.match('([0-9\.]*)', verstr).group(0)
     return nice_verstr.split('.')
 
-def build_version_hxx( target, source, env ):
+def build_version_hxx( target, source, env):
+    ldict = {}
     with open(source[0].path) as fp:
-        exec(fp.read())
-    major, minor, micro = split_version(version)
-    print "writing", target[0].path
+        exec(fp.read(), globals(), ldict)
+    major, minor, micro = split_version(ldict["version"])
+    print("writing", target[0].path)
     with open(target[0].path, 'w') as fp:
-        print >> fp, "#define MSYS_VERSION \"%s\"" % version
-        for x in 'major', 'minor', 'micro':
+        print("#define MSYS_VERSION \"%s\"" % ldict["version"], file=fp)
+        for x in ('major', 'minor', 'micro'):
             u=x.upper()
             v=int(locals()[x])
-            print >> fp, "#define MSYS_%s_VERSION %d" % (u,v)
-        print >> fp, "#define MSYS_ABI_VERSION 1"
+            print("#define MSYS_%s_VERSION %d" % (u,v), file=fp)
+        print("#define MSYS_ABI_VERSION 1", file=fp)
 
 env.Command('version.hxx', 'version.py', build_version_hxx )
 env.AddPythonModule('version.py', prefix='msys')
@@ -119,10 +122,23 @@ else:
     inchi = inchienv.AddObject('inchi.cxx')
 
 def get_shlib_version():
+    if env['PLATFORM'] == 'darwin':
+        # See https://www.sicpers.info/2013/03/how-to-version-a-mach-o-library/
+        # When using env.InstallVersionedLib:
+        #   On OSX, the minor/micro version number cannot be above 256. With
+        #   msys 1.7.256, we get an error like "malformed 32-bit x.y.z version number: 1.7.258"
+        #   or "malformed 64-bit a.b.c.d.e version number 1.7.258.0".
+        # When not using env.InstallVersionedLib, but still using
+        #   SHLIBVERSION, I got different errors like this
+        #   scons: *** [build/lib/libmsys.1_7_258.dylib] AppleLinkInvalidCurrentVersionException : Version component 1_7_258 (from 1_7_258) is not a number
+        # Conclusion: versioned libraries do not work for micro verions above 256 on OSX
+        return ''
+
     root = Dir('#').abspath
+    ldict = {}
     with open('%s/src/version.py' % root) as fp:
-        exec(fp.read())
-    return version.replace('.', '_')
+        exec(fp.read(), globals(), ldict)
+    return ldict["version"].replace('.', '_')
 
 dtoaenv = env.Clone()
 # new gcc on OS X emits for-loop-analysis warning.
@@ -219,11 +235,11 @@ mae/ff/restraints.cxx
 mae/ff/vdwtypes.cxx
 mae/ff/virtuals.cxx
 
-mae/destro/Attribute.cxx         
-mae/destro/DestroArray.cxx       
-mae/destro/DestroBlock.cxx       
-mae/destro/Destro.cxx            
-mae/destro/DestroNamedBlock.cxx  
+mae/destro/Attribute.cxx
+mae/destro/DestroArray.cxx
+mae/destro/DestroBlock.cxx
+mae/destro/Destro.cxx
+mae/destro/DestroNamedBlock.cxx
 mae/destro/DestroRow.cxx
 mae/destro/DestroTop.cxx
 mae/destro/Maeff.cxx

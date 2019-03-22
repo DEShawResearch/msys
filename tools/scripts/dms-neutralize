@@ -1,0 +1,58 @@
+#!/usr/bin/garden-exec
+#{
+# garden env-keep-only
+# . `dirname $0`/../share/env.sh
+# exec python $0 "$@"
+#}
+
+import msys
+from msys.neutralize import Neutralize
+
+def parse_args():
+    from argparse import ArgumentParser
+    parser = ArgumentParser(description=__doc__)
+    arg = parser.add_argument
+    arg("input_file", help="solvated input file")
+    arg("output", help="output file")
+    arg("-A", "--assign", action="store_true", help="Assign formal charges")
+    arg('--structure-only', action='store_true', help='Load no forcefield information or pseudos')
+    arg("--cation", default="Na", help="element for cation species")
+    arg("--anion", default="Cl", help="element for anion species")
+    arg("--charge", default="formal_charge", help="atom charge attribute; or value")
+    arg("--chain", default="ION", help="counterion chain name")
+    arg("--chain2", default="ION2", help="counter-counterion chain name")
+    arg("--solute-pad", default=5.0, type=float, help="min ion-solute distance")
+    arg("--ion-pad", default=3.0, type=float, help="min ion-ion distance")
+    arg("--concentration", default=0.0, type=float, help="molar concentration of counter-counterions")
+    arg("--keep", default="none", help="selection of ion/waters not to be replaced")
+    arg("--seed", type=int, default=0, help="random seed for water selection")
+    arg("-v", "--verbose", action="store_true", help="Be chatty")
+
+    return parser.parse_args()
+
+def main():
+    args = parse_args()
+    mol = msys.Load(args.input_file, structure_only=args.structure_only)
+    if args.assign:
+        msys.AssignBondOrderAndFormalCharge(mol)
+
+    new = Neutralize(mol,
+            cation=args.cation,
+            anion=args.anion,
+            charge=args.charge,
+            chain=args.chain,
+            chain2=args.chain2,
+            solute_pad=args.solute_pad,
+            ion_pad=args.ion_pad,
+            concentration=args.concentration,
+            keep=args.keep,
+            random_seed=args.seed,
+            verbose=args.verbose,
+            )
+
+    msys.Save(new, args.output)
+
+if __name__=="__main__":
+    main()
+
+# vim: filetype=python

@@ -41,11 +41,11 @@ if __name__=="__main__":
         parser.error("incorrect number of arguments")
 
     ifile, ofile = args
-    print "Loading", ifile
+    print("Loading", ifile)
     mol = msys.Load(ifile)
-    print "Splitting..."
+    print("Splitting...")
     mol=split(mol, opts.selection)
-    print "Saving", ofile
+    print("Saving", ofile)
     msys.SaveDMS(mol, ofile)
 
 # vim: filetype=python

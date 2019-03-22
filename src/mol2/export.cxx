@@ -44,11 +44,17 @@ static void export_mol2(SystemPtr omol, AnnotatedSystem& asys,
         if (aname.size()<1 || aname.size()>7 || !isalpha(aname[0])) { 
             aname = AbbreviationForElement(atm.atomic_number)+std::to_string(local_id);
         }
+        for (auto& c : aname) {
+            if (isspace(c)) c='_';
+        }
 
         /* Use residue name unless it's invalid */
         std::string rname(res.name);
         if (rname.size()<1 || rname.size()>7 || !isalpha(rname[0])) {
             rname = "UNK";
+        }
+        for (auto& c : aname) {
+            if (isspace(c)) c='_';
         }
 
         /* guess an atom type using the original molecule */

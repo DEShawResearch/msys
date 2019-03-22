@@ -4,7 +4,6 @@
 # . $(dirname $0)/../share/env.sh
 # exec python $0 "$@"
 #}
-
 '''
 dms-check-groups system.dms [ options ]
 
@@ -15,6 +14,7 @@ any problems with the initial model it should be evident from from just
 those terms.
 
 '''
+
 import msys
 from msys import groups
 from msys.wrap import Wrapper
@@ -28,29 +28,29 @@ def main():
     if len(args)!=1:
         parser.error("incorrect number of arguments")
 
-    print "Reading input file", args[0]
+    print("Reading input file", args[0])
     mol=msys.Load(args[0])
 
-    print "Fixing bonds"
+    print("Fixing bonds")
     Wrapper(mol).wrap()
 
     ok = True
     for table in mol.tables:
-        print "Checking midpoints for table %s with %d atoms, %d terms" % (
-            table.name, table.natoms, table.nterms)
+        print("Checking midpoints for table %s with %d atoms, %d terms" % (
+            table.name, table.natoms, table.nterms))
         bad = groups.clone_buffer_violations(table, opts.radius)
         if bad:
-            print "Violations for atoms:", ' '.join(map(str, sorted(bad)))
-            print "%d atoms, %d %s terms affected." % (
+            print("Violations for atoms:", ' '.join(map(str, sorted(bad))))
+            print("%d atoms, %d %s terms affected." % (
                     len(bad),
                     len(table.findWithAny([mol.atom(i) for i in bad])), 
-                    table.name)
+                    table.name))
             ok = False
 
     if ok:
-        print "All tables look ok"
+        print("All tables look ok")
     else:
-        print "Some tables have suspicious terms"
+        print("Some tables have suspicious terms")
     return not ok
 
 if __name__=="__main__": exit(main())

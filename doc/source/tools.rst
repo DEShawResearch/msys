@@ -106,6 +106,14 @@ dms-replicate
 .. include:: ../build/genhelp/dms-replicate
 
 
+dms-solvate
+-----------
+.. include:: ../build/genhelp/dms-solvate
+
+dms-neutralize
+--------------
+.. include:: ../build/genhelp/dms-neutralize
+
 ----------
 Validation
 ----------

@@ -1,3 +1,10 @@
+1.7.262 Fix dms-neutralize and add --structure-only option.
+
+1.7.261 Added neutralize.Neutralize and dms-neutralize.
+        Replace spaces with '_' in mol2 names and resnames.
+
+1.7.259 New FindDistinctFragments interface.
+
 1.7.258 Fix broken dms-info caused by remove of msys.vdw.
 
 1.7.257 Remove dms-scale-vdw and dms-override-vdw.
