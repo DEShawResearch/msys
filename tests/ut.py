@@ -134,8 +134,8 @@ class TestHash(unittest.TestCase):
         self.assertEqual(len(h), 7)
 
     def testSystem(self):
-        mol = msys.Load('tests/files/stable-hash-6896670165215326854.dms')
-        self.assertEqual(mol.hash(), 6896670165215326854)
+        mol = msys.Load('tests/files/2f4k.dms')
+        self.assertEqual(mol.hash(), 3583905226189957559)
 
 class TestHbond(unittest.TestCase):
     def test1(self):
@@ -1509,15 +1509,6 @@ class Main(unittest.TestCase):
         ids = msys.ComputeTopologicalIds(mol)
         self.assertEqual(len(ids), mol.natoms)
 
-    def testTopoIdsPdffMethane(self):
-        mol = msys.LoadDMS('tests/files/methane-pdff.dms')
-        #for a in mol.select('atomicnumber 0'): a.atomic_number = 99
-        tids = msys.ComputeTopologicalIds(mol)
-        #anums = [a.atomic_number for a in mol.atoms]
-        #print(list(zip(anums, tids)))
-        #from collections import Counter
-        #print(Counter(tids))
-
     def testGuessHydrogenPositions(self):
         mol = msys.LoadDMS('tests/files/ww.dms')
         hs = mol.select('hydrogen and not water')
@@ -2340,7 +2331,11 @@ class Main(unittest.TestCase):
         msys.LoadDMS(buffer=s)
                 
     def testLoadDmsMany(self):
-        mols = [m for m in msys.LoadMany('tests/files/3.dms')]
+        tmp = tempfile.NamedTemporaryFile(suffix='.dms')
+        for mol in (msys.Load('tests/files/%s' % m) for m in ('1vcc.mae', 'cofactors.sdf', 'ww.dms')):
+            tmp.write(msys.FormatDMS(mol))
+        tmp.flush()
+        mols = [m for m in msys.LoadMany(tmp.name)]
         self.assertEqual(len(mols), 3)
         self.assertEqual([m.natoms for m in mols], [26228, 562, 7614])
 

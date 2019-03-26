@@ -34,7 +34,9 @@ def TimedLogMessage(*args):
 class Main(unittest.TestCase):
 
     def testFindDistinctBigFragments(self):
-        mol = msys.Load('tests/files/pro.dms')
+        mol = msys.Load('tests/files/1vcc.dms')
+        mol.append(msys.Load('tests/files/2f4k.dms'))
+        self.assertEqual(mol.ncts, 2)
         result = msys.FindDistinctFragments(mol, key='oechem_smiles')
 
     def testSmall(self):
