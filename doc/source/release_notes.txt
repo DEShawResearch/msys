@@ -1,4 +1,4 @@
-1.7.263 Conda support.
+1.7.264 Conda support.
         Replace some test files with synthetic data.
         desres-python/3.7.2-08.
 
