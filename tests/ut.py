@@ -35,6 +35,8 @@ class TestNeutralize(unittest.TestCase):
         msys.AssignBondOrderAndFormalCharge(mol)
 
         new = Neutralize(mol, verbose=True, concentration=0.1)
+        print("old atoms", mol.natoms)
+        print("new atoms:",new.natoms)
         self.assertEqual(len(new.selectIds('element Na')), 7)
         self.assertEqual(len(new.selectIds('element Cl')), 8)
         self.assertEqual(sum(a.formal_charge for a in new.atoms), 0)

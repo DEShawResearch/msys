@@ -2,11 +2,13 @@
 #{
 # garden env-keep-only
 # . `dirname $0`/../share/env.sh
+# garden load valgrind/3.12.0-02c7/bin
 # exec python $0 "$@"
 #}
 
 import msys
 from msys.neutralize import Neutralize
+import os
 
 def parse_args():
     from argparse import ArgumentParser
@@ -23,18 +25,29 @@ def parse_args():
     arg("--chain2", default="ION2", help="counter-counterion chain name")
     arg("--solute-pad", default=5.0, type=float, help="min ion-solute distance")
     arg("--ion-pad", default=3.0, type=float, help="min ion-ion distance")
+    arg("--water-pad", default=3.5, type=float, help="min ion-water distance")
     arg("--concentration", default=0.0, type=float, help="molar concentration of counter-counterions")
     arg("--keep", default="none", help="selection of ion/waters not to be replaced")
     arg("--seed", type=int, default=0, help="random seed for water selection")
     arg("-v", "--verbose", action="store_true", help="Be chatty")
 
-    return parser.parse_args()
+    args = parser.parse_args()
+    if len(args.cation) > 2:
+        if not os.path.isfile(args.cation):
+            parser.error("no cation file found at '%s'" % args.cation)
+        args.cation = msys.Load(args.cation)
+    if len(args.anion) > 2:
+        if not os.path.isfile(args.anion):
+            parser.error("no anion file found at '%s'" % args.anion)
+        args.anion = msys.Load(args.anion)
+    return args
 
 def main():
     args = parse_args()
     mol = msys.Load(args.input_file, structure_only=args.structure_only)
     if args.assign:
         msys.AssignBondOrderAndFormalCharge(mol)
+
 
     new = Neutralize(mol,
             cation=args.cation,
@@ -44,6 +57,7 @@ def main():
             chain2=args.chain2,
             solute_pad=args.solute_pad,
             ion_pad=args.ion_pad,
+            water_pad=args.water_pad,
             concentration=args.concentration,
             keep=args.keep,
             random_seed=args.seed,

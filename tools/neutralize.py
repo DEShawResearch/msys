@@ -34,10 +34,13 @@ def parse_ion(name):
     if isinstance(name, str):
         anum = msys.ElementForAbbreviation(name.capitalize())
     elif isinstance(name, msys.System):
-        return name
+        mol = name.clone()
+        mol.positions = mol.positions - mol.center
+        return mol
     else:
         anum = int(name)
     mol = msys.CreateSystem()
+    mol.name = str(name)
     atm = mol.addAtom()
     atm.atomic_number = anum
     atm.name = msys.AbbreviationForElement(anum)
@@ -59,6 +62,7 @@ def Neutralize(mol, cation='Na', anion='Cl',
         chain='ION', chain2='ION2',
         solute_pad=5.0,
         ion_pad=3.0,
+        water_pad=3.5,
         concentration=0.0,
         keep='none',
         random_seed=0,
@@ -77,6 +81,7 @@ def Neutralize(mol, cation='Na', anion='Cl',
         concentration (float): 
         solute_pad (float): minimum distance between placed ions and non-water
         ion_pad (float): minimum distance between placed ions.
+        water_pad (float): minimum distance between placed ions and water
         concentration (float): molar concentration of added ions with same charge
         keep (str): selection of ions/waters that cannot be deleted or replaced
         random_seed (int): random seed to determine which water molecules to replace
@@ -103,20 +108,39 @@ def Neutralize(mol, cation='Na', anion='Cl',
     # Clone system
     mol = mol.clone()
 
-    # create a single ct for all the ions
-    ct = mol.addCt()
-    ct.name = 'ion'
-
-    # first, we add sufficient counterions to neutralize.  Then we add 
-    # counterions and counter-counterions until counter-counterions are
-    # up to the desired concentration.  
+    # parse or generate systems for ion species
     cationsys = parse_ion(cation)
     anionsys = parse_ion(anion)
-    cationatom = cationsys.atoms[0]
-    anionatom = anionsys.atoms[0]
+    if len(cationsys.updateFragids()) != 1:
+        raise RuntimeError("cation system is disconnected")
+    if len(anionsys.updateFragids()) != 1:
+        raise RuntimeError("anion system is disconnected")
 
-    solute=mol.select("""not ((atomicnumber %d and not bonded) or (atomicnumber %d and not bonded)) or (%s)""" %
-                      (cationatom.atomic_number, anionatom.atomic_number, keep))
+    # identify cation and anion already present in the system.
+    cation_graph = msys.Graph(cationsys)
+    anion_graph = msys.Graph(anionsys)
+    if cation_graph.match(anion_graph):
+        raise RuntimeError("cation system is idential to anion system")
+
+    existing_cation_fragids = []
+    existing_anion_fragids = []
+    for k,v in msys.FindDistinctFragments(mol).items():
+        graph = msys.Graph(mol.select('fragid %d' % k))
+        if cation_graph.match(graph):
+            existing_cation_fragids = v
+        elif anion_graph.match(graph):
+            existing_anion_fragids = v
+    existing_fragids = existing_cation_fragids + existing_anion_fragids
+    if verbose:
+        print("Starting with %d %s ions" % (len(existing_cation_fragids), cationsys.name))
+        print("Starting with %d %s ions" % (len(existing_anion_fragids), anionsys.name))
+
+    # get the charge on the solute, defined as everything not identical to one of the ion species.
+    if not existing_fragids:
+        solute = mol.atoms
+    else:
+        solute = mol.select('not fragid ' + ' '.join(map(str, existing_fragids)))
+
     if charge == 'formal_charge':
         cg = sum(a.formal_charge for a in solute)
     elif charge == 'charge':
@@ -126,36 +150,38 @@ def Neutralize(mol, cation='Na', anion='Cl',
     if verbose:
         print("neutralize: solute charge=%s" % cg)
 
+    # first, we add sufficient counterions to neutralize.  Then we add 
+    # counterions and counter-counterions until counter-counterions are
+    # up to the desired concentration.  
     if cg >= 0:
         ionsys = anionsys
         othersys = cationsys
-        ionatom = anionatom
-        otheratom = cationatom
+        existing_ion_fragids = existing_anion_fragids
+        existing_other_fragids = existing_cation_fragids
     else:
         ionsys = cationsys
         othersys = anionsys
-        ionatom = cationatom
-        otheratom = anionatom
+        existing_ion_fragids = existing_cation_fragids
+        existing_other_fragids = existing_anion_fragids
+    nions_prev = len(existing_ion_fragids)
+    nother_prev = len(existing_other_fragids)
 
-    nions = int(math.fabs(cg/ionatom.charge)+0.5)
+    if charge == 'formal_charge':
+        ioncharge = sum(a.formal_charge for a in ionsys.atoms)
+        othercharge = sum(a.formal_charge for a in othersys.atoms)
+    else:
+        ioncharge = sum(a.charge for a in ionsys.atoms)
+        othercharge = sum(a.charge for a in othersys.atoms)
+
+    nions = int(math.fabs(cg/ioncharge)+0.5)
 
     # find the water residues
-    water = mol.select('water and (not hydrogen) and (not within %f of (not water)) and (not (%s))'
+    water = mol.select('water and noh and (not pbwithin %f of (not water)) and (not (%s))'
             % (solute_pad, keep))
     residues = sorted(set(a.residue for a in water), key=lambda x: x.id)
     nwat = len(residues)
     if verbose:
         print("waters available to be replaced by ions:", nwat)
-
-    # compute number of ions already present
-    nions_prev = len(mol.select('atomicnumber %d and not bonded and (not (%s))'
-                                % (ionatom.atomic_number, keep)))
-    nother_prev = len(mol.select('atomicnumber %d and not bonded and (not (%s))'
-                                 % (otheratom.atomic_number,keep)))
-
-    if verbose:
-        print("Starting with %d %s ions" % (nions_prev, ionatom.name))
-        print("Starting with %d %s ions" % (nother_prev, otheratom.name))
 
     # convert molar concentration to number based on available waters.  The
     # molar concentration of water is about 55.345 mol/L.  Use all available
@@ -163,35 +189,31 @@ def Neutralize(mol, cation='Na', anion='Cl',
     ntotalwat = len(set(a.residue for a in mol.select('water')))
     if verbose:
         print("Starting with %d water molecules" % ntotalwat)
-    cgratio = math.fabs(otheratom.charge/ionatom.charge)
+    cgratio = math.fabs(othercharge/ioncharge)
     nother = int((concentration/55.345) * (ntotalwat-nions+nions_prev))
     nions += int(nother*cgratio)
 
 
     if nions >= 0 and verbose:
-        print("New system should contain %d %s ions" % (nions, ionatom.name))
+        print("New system should contain %d %s ions" % (nions, ionsys.name))
     if nother >= 0 and verbose:
-        print("New system should contain %d %s ions" % (nother, otheratom.name))
+        print("New system should contain %d %s ions" % (nother, othersys.name))
 
     # subtract off the ions already present in solution
     nions -= nions_prev
     nother -= nother_prev
     if nions < 0:
         # delete ions
-        sel=mol.select('atomicnumber %d and not bonded and not (%s)' %
-                (ionatom.atomic_number, keep))
-        if len(sel) < -nions:
-            raise RuntimeError("""Cannot decrease concentration - 
-            not enough ions to delete""")
+        if len(existing_ion_fragids) < -nions:
+            raise RuntimeError("Cannot decrease concentration - not enough ions to delete")
+        sel=mol.select('fragid ' + ' '.join(existing_ion_fragids) + ' and not (%s)' % keep)
         for r in sel[:-nions]: r.remove()
         nions = 0
     if nother < 0:
         # delete other 
-        sel=mol.select('atomicnumber %d and not bonded and not (%s)' %
-                (otheratom.atomic_number, keep))
-        if len(sel) < -nother:
-            raise RuntimeError("""Cannot decrease concentration - not enough 
-            other ions to delete""")
+        if len(existing_other_fragids) < -nother:
+            raise RuntimeError("Cannot decrease concentration - not enough other ions to delete")
+        sel=mol.select('fragid ' + ' '.join(existing_other_fragids) + ' and not (%s)' % keep)
         for r in sel[:-nother]: r.remove()
         nother = 0
 
@@ -203,6 +225,10 @@ def Neutralize(mol, cation='Na', anion='Cl',
     # Shuffle the residues
     random.seed(random_seed)
     random.shuffle(residues)
+
+    # create a single ct for all the ions
+    ct = mol.addCt()
+    ct.name = 'ion'
 
     # Remove overly close residues among the first nions + nother waters
     # Cache the centers to save time
@@ -243,10 +269,11 @@ def Neutralize(mol, cation='Na', anion='Cl',
             res=residues[i]
             if multiple_waters(res):
                 handle_multiple_waters(res)
-            newion = ct.append(ionsys)[0]
-            newion.pos = compute_center(res)
-            newion.residue.chain.name = chain
-            newion.residue.resid=i+1
+            shift = compute_center(res)
+            for newion in ct.append(ionsys):
+                newion.pos += shift
+                newion.residue.chain.name = chain
+                newion.residue.resid=i+1
             residues_removed.add(res.id)
             res.remove()
 
@@ -255,15 +282,18 @@ def Neutralize(mol, cation='Na', anion='Cl',
             res=residues[i]
             if multiple_waters(res):
                 handle_multiple_waters(res)
-            newion = ct.append(othersys)[0]
-            newion.pos = compute_center(res)
-            newion.residue.chain.name = chain2
-            newion.residue.resid=i+1-nions
+            shift = compute_center(res)
+            for newion in ct.append(othersys):
+                newion.pos += shift
+                newion.residue.chain.name = chain2
+                newion.residue.resid=i+1-nions
             residues_removed.add(res.id)
             res.remove()
 
     assert not (residues_removed & keep_residues)
 
     mol.coalesceTables()
-    return mol.clone()
+    mol = mol.clone()
+    # remove overlapping waters
+    return mol.clone('not (same residue as (water and pbwithin %s of ct %s))' % (water_pad, mol.ncts-1))
 
