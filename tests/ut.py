@@ -764,6 +764,17 @@ class AtomselCoverage(unittest.TestCase):
 
 class TestAtomsel(unittest.TestCase):
     
+    def testSequence(self):
+        mol=msys.Load('tests/files/2f4k.dms')
+        for sel, ids in (
+                ("name CA and sequence F", [73,141,244]),
+                ("name CA and sequence RS", [199,223]),
+                ("name CA and sequence R..F", [199,223,234,244]),
+                ("name CA and sequence FG..R.A", [141, 161, 168, 185, 199, 223, 234]),
+                ("name CA and sequence F K", [73, 93, 141, 244, 473, 510]),
+                ):
+            self.assertEqual(mol.selectIds(sel), ids)
+
     def testSmarts(self):
         mol=msys.Load('tests/files/ch4.dms')
         self.assertEqual(mol.selectIds('smarts C'), [0])
@@ -1017,12 +1028,9 @@ class TestValidate(unittest.TestCase):
         self.assertEqual(len(with_ignoring), 0)
     def testUntieKnot(self):
         mol=msys.Load('tests/files/knot.mae')
-        print("find knot")
         results=knot.FindKnots(mol,verbose=False)
         self.assertEqual(len(results), 2)
-        print("untie knot")
         success = knot.UntieKnots(mol,verbose=False)
-        print("refind knot")
         results_after_untying = knot.FindKnots(mol,verbose=False)
         self.assertEqual(len(results_after_untying),0)
         self.assertTrue(success)
