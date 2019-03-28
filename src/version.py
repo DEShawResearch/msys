@@ -2,7 +2,7 @@
 
 from __future__ import print_function
 
-version = "1.7.264"
+version = "1.7.265"
 major_version, minor_version, micro_version = [int(_x) for _x in version.split('.')]
 hexversion = (major_version << 16) | \
              (minor_version << 8)  | \
