@@ -21,7 +21,13 @@ void WithinPredicate::eval( Selection& S ) {
 
     std::vector<float> coords;
     if (!pos) {
-        sys->getPositions(std::back_inserter(coords));
+        coords.resize(3*sys->maxAtomId());
+        for (auto id : sys->atoms()) {
+            atom_t const& atm = sys->atomFAST(id);
+            coords[3*id  ] = atm.x;
+            coords[3*id+1] = atm.y;
+            coords[3*id+2] = atm.z;
+        }
         pos = &coords[0];
     }
     if (periodic && !cell) {
@@ -69,7 +75,13 @@ void KNearestPredicate::eval( Selection& S ) {
 
     std::vector<float> coords;
     if (!pos) {
-        _sys->getPositions(std::back_inserter(coords));
+        coords.resize(3*_sys->maxAtomId());
+        for (auto id : _sys->atoms()) {
+            atom_t const& atm = _sys->atomFAST(id);
+            coords[3*id  ] = atm.x;
+            coords[3*id+1] = atm.y;
+            coords[3*id+2] = atm.z;
+        }
         pos = &coords[0];
     }
     if (periodic && !cell) {
