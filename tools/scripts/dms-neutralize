@@ -25,7 +25,7 @@ def parse_args():
     arg("--chain2", default="ION2", help="counter-counterion chain name")
     arg("--solute-pad", default=5.0, type=float, help="min ion-solute distance")
     arg("--ion-pad", default=3.0, type=float, help="min ion-ion distance")
-    arg("--water-pad", default=3.5, type=float, help="min ion-water distance")
+    arg("--water-pad", default=0.0, type=float, help="min ion-water distance")
     arg("--concentration", default=0.0, type=float, help="molar concentration of counter-counterions")
     arg("--keep", default="none", help="selection of ion/waters not to be replaced")
     arg("--seed", type=int, default=0, help="random seed for water selection")
