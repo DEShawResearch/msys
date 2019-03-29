@@ -35,6 +35,8 @@ class TestNeutralize(unittest.TestCase):
         msys.AssignBondOrderAndFormalCharge(mol)
 
         new = Neutralize(mol, verbose=True, concentration=0.1)
+        print("old atoms", mol.natoms)
+        print("new atoms:",new.natoms)
         self.assertEqual(len(new.selectIds('element Na')), 7)
         self.assertEqual(len(new.selectIds('element Cl')), 8)
         self.assertEqual(sum(a.formal_charge for a in new.atoms), 0)
@@ -134,8 +136,8 @@ class TestHash(unittest.TestCase):
         self.assertEqual(len(h), 7)
 
     def testSystem(self):
-        mol = msys.Load('tests/files/stable-hash-6896670165215326854.dms')
-        self.assertEqual(mol.hash(), 6896670165215326854)
+        mol = msys.Load('tests/files/2f4k.dms')
+        self.assertEqual(mol.hash(), 3583905226189957559)
 
 class TestHbond(unittest.TestCase):
     def test1(self):
@@ -764,6 +766,17 @@ class AtomselCoverage(unittest.TestCase):
 
 class TestAtomsel(unittest.TestCase):
     
+    def testSequence(self):
+        mol=msys.Load('tests/files/2f4k.dms')
+        for sel, ids in (
+                ("name CA and sequence F", [73,141,244]),
+                ("name CA and sequence RS", [199,223]),
+                ("name CA and sequence R..F", [199,223,234,244]),
+                ("name CA and sequence FG..R.A", [141, 161, 168, 185, 199, 223, 234]),
+                ("name CA and sequence F K", [73, 93, 141, 244, 473, 510]),
+                ):
+            self.assertEqual(mol.selectIds(sel), ids)
+
     def testSmarts(self):
         mol=msys.Load('tests/files/ch4.dms')
         self.assertEqual(mol.selectIds('smarts C'), [0])
@@ -1017,12 +1030,9 @@ class TestValidate(unittest.TestCase):
         self.assertEqual(len(with_ignoring), 0)
     def testUntieKnot(self):
         mol=msys.Load('tests/files/knot.mae')
-        print("find knot")
         results=knot.FindKnots(mol,verbose=False)
         self.assertEqual(len(results), 2)
-        print("untie knot")
         success = knot.UntieKnots(mol,verbose=False)
-        print("refind knot")
         results_after_untying = knot.FindKnots(mol,verbose=False)
         self.assertEqual(len(results_after_untying),0)
         self.assertTrue(success)
@@ -1508,15 +1518,6 @@ class Main(unittest.TestCase):
         mol = msys.LoadDMS('tests/files/ww.dms')
         ids = msys.ComputeTopologicalIds(mol)
         self.assertEqual(len(ids), mol.natoms)
-
-    def testTopoIdsPdffMethane(self):
-        mol = msys.LoadDMS('tests/files/methane-pdff.dms')
-        #for a in mol.select('atomicnumber 0'): a.atomic_number = 99
-        tids = msys.ComputeTopologicalIds(mol)
-        #anums = [a.atomic_number for a in mol.atoms]
-        #print(list(zip(anums, tids)))
-        #from collections import Counter
-        #print(Counter(tids))
 
     def testGuessHydrogenPositions(self):
         mol = msys.LoadDMS('tests/files/ww.dms')
@@ -2340,7 +2341,11 @@ class Main(unittest.TestCase):
         msys.LoadDMS(buffer=s)
                 
     def testLoadDmsMany(self):
-        mols = [m for m in msys.LoadMany('tests/files/3.dms')]
+        tmp = tempfile.NamedTemporaryFile(suffix='.dms')
+        for mol in (msys.Load('tests/files/%s' % m) for m in ('1vcc.mae', 'cofactors.sdf', 'ww.dms')):
+            tmp.write(msys.FormatDMS(mol))
+        tmp.flush()
+        mols = [m for m in msys.LoadMany(tmp.name)]
         self.assertEqual(len(mols), 3)
         self.assertEqual([m.natoms for m in mols], [26228, 562, 7614])
 

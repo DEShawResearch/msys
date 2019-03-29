@@ -438,10 +438,13 @@ class TestBonds(unittest.TestCase):
 
 class TestPseudo(unittest.TestCase):
     def test1(self):
-        path='tests/files/pseudo.dms'
-        m=msys.Load(path)
-        r=molfile.dms.read(path)
-        self.assertEqual(m.natoms, r.natoms)
+        mol = msys.CreateSystem()
+        mol.addAtom().atomic_number=0
+        mol.addAtom().atomic_number=8
+        tmp = tempfile.NamedTemporaryFile(suffix='.dms')
+        msys.Save(mol, tmp.name)
+        r=molfile.dms.read(tmp.name)
+        self.assertEqual(mol.natoms, r.natoms)
 
 class TestFrameIterator(unittest.TestCase):
 

@@ -1,3 +1,13 @@
+1.7.266 Turn off water-pad by default in Neutralize.
+        Fix for within selections when atoms have been deleted.
+
+1.7.265 Support molecular ionic species in Neutralize.
+        Add support for VMD-style sequence selection.
+    
+1.7.264 Conda support.
+        Replace some test files with synthetic data.
+        desres-python/3.7.2-08.
+
 1.7.262 Fix dms-neutralize and add --structure-only option.
 
 1.7.261 Added neutralize.Neutralize and dms-neutralize.

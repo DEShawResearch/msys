@@ -240,10 +240,92 @@ static void eval_paramtype(System* mol, std::vector<std::string> const& pats,
     s.intersect(sel);
 }
 
+static std::unordered_map<std::string, char> single_letter_residue_map({
+        { "GLY", 'G'},
+        { "ALA", 'A'},
+	{ "VAL", 'V'},
+	{ "PHE", 'F'},
+	{ "PRO", 'P'},
+	{ "MET", 'M'},
+	{ "ILE", 'I'},
+	{ "LEU", 'L'},
+	{ "ASP", 'D'},
+	{ "GLU", 'E'},
+	{ "LYS", 'K'},
+	{ "ARG", 'R'},
+	{ "SER", 'S'},
+	{ "THR", 'T'},
+	{ "TYR", 'Y'},
+	{ "HIS", 'H'},
+	{ "CYS", 'C'},
+	{ "ASN", 'N'},
+	{ "GLN", 'Q'},
+	{ "TRP", 'W'},
+        // HIS synonyms
+        { "HSE", 'H'},
+        { "HSD", 'H'},
+        { "HSP", 'H'},
+        { "HID", 'H'},
+        { "HIP", 'H'},
+        // CYS synonyms
+        { "CYX", 'C'},
+        // LYS synonyms
+        { "LYP", 'K'},
+        // nucleics
+        { "ADE", 'A'},
+        { "A", 'A'},
+        { "THY", 'T' },
+        { "T", 'T' },
+        { "CYT", 'C' },
+        { "C", 'C' },
+        { "GUA", 'G' },
+        { "G", 'G' },
+});
+
+static void eval_sequence(System* mol, std::vector<std::string> const& pats, Selection& s) {
+
+    std::vector<std::regex> regs;
+    for (auto const& pat : pats) {
+        regs.emplace_back(pat);
+    }
+    // convert each chain to a list of single character residue names.
+    // match the regex against the chain.
+    // for every hit, turn on the corresponding atoms in the residues
+    Selection sel(mol->maxAtomId());
+    for (auto chain_id : mol->chains()) {
+        std::string codes;
+        for (auto residue_id : mol->residuesForChain(chain_id)) {
+            auto const& res = mol->residueFAST(residue_id);
+            if (res.type == ResidueWater) {
+                codes.push_back('X');
+            } else {
+                auto p = single_letter_residue_map.find(mol->residueFAST(residue_id).name);
+                char c = (p == single_letter_residue_map.end()) ? 'X' : p->second;
+                codes.push_back(c);
+            }
+        }
+        for (auto const& reg : regs) {
+            auto match = std::sregex_iterator(codes.begin(), codes.end(), reg);
+            auto end = std::sregex_iterator();
+            for (; match!=end; ++match) {
+                for (auto i=match->position(), j=match->position() + match->length(); i!=j; ++i) {
+                    auto residue_id = mol->residuesForChain(chain_id).at(i);
+                    for (auto atmid : mol->atomsForResidue(residue_id)) {
+                        sel[atmid] = 1;
+                    }
+                }
+            }
+        }
+    }
+    s.intersect(sel);
+}
+
+
 typedef void (*sfunc)(System*, std::vector<std::string>const&, Selection&);
 static const std::unordered_map<std::string,sfunc> strfuncs = {
     {"smarts", eval_smarts},
     {"paramtype", eval_paramtype},
+    {"sequence", eval_sequence},
 };
 
 bool desres::msys::atomsel::is_keyword(std::string const& name, System* mol) {
