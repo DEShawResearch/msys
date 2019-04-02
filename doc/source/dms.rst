@@ -1,48 +1,13 @@
+DMS files
+=========
 
-The DMS file format
-===================
-
-The preferred file format for Msys structures is the DMS file.
-
-
-DMS versioning
---------------
-
-Beginning with msys 1.7.0, a **dms_version** table is included in DMS
-files written by msys.  The version table schema consists of a major
-and minor version number, and will correspond to the major and minor
-version of msys.  Going forward, msys will refuse to load DMS files
-whose version is is higher than the msys version; thus, if and when
-msys reaches version 1.8, files written by that version of msys will not
-(necessarily) be readable by msys 1.7.  There is always the possibility
-that forward compatibility could be ported to a later msys 1.7 version.
-Backward compatibility with older dms versions will always be maintained.
-
-The DMS versioning scheme serves to prevent problems arising from new
-data structures being added to the DMS file in newer versions of msys 
-which are not properly recognized by older versions.  For example,
-the **nonbonded_combined_param** table was added in msys 1.4.0, but
-because there was no dms version string at that time, older versions of
-msys would have treated that table as an auxiliary table instead of
-as a set of overrides to the nonbonded table.
-
-In order to maintain this dms version semantics, it behooves the developers
-of msys to think carefully about any new artifact appearing in the dms
-file, or how data in the dms file is represented.  Any new dms table that
-changes the forcefield or the result of atom selection must bring with
-it an increment to the msys minor version.  
-
-Schema changes in 1.7
-^^^^^^^^^^^^^^^^^^^^^
-
-An **msys_ct** table was added, which stores arbitrary key-value pairs
-for components of the full system.  The **particle** table has a new
-column called *ct* which assigns the particle to a row of the **msys_ct**
-table.  
-
-Msys 1.6.x should be able to read msys 1.7.x files with no problems, since
-the ct information will just be ignored with no effect on atom selections
-or forcefield.
+Msys defines and implements an sqlite-based schema called DMS for
+chemical systems.   This section provides an overview of the DMS
+format which will be useful for users who wish to inspect their DMS
+files manually using native sqlite tools, or who need to understand
+the functional form of the forcefield tables found in DMS files in
+order to, say, convert between file formats or use msys systems in
+their own programs.
 
 DMS Schema
 ----------
@@ -106,16 +71,68 @@ starting at zero.  The ordering of the particles in a DMS file for the
 purpose of, e.g., writing coordinate data, is given by the order of
 their ids.  The minimal schema for the **particle** table is:
 
-  ======    =======     ===========
-  Column    Type        Description
-  ======    =======     ===========
-  anum      INTEGER     atomic number
-  id        INTEGER     unique particle identifier   
-  x         FLOAT       x-coordinate in LENGTH       
-  y         FLOAT       y-coordinate in LENGTH       
-  z         FLOAT       z-coordinate in LENGTH       
-  ======    =======     ===========
+  ============= =======     ===========
+  Column        Type        Description
+  ============= =======     ===========
+  anum          INTEGER     atomic number
+  id            INTEGER     unique particle identifier   
+  msys_ct       INTEGER     ct identifier
+  x             FLOAT       x-coordinate in LENGTH       
+  y             FLOAT       y-coordinate in LENGTH       
+  z             FLOAT       z-coordinate in LENGTH       
+  mass          FLOAT       particle mass in MASS        
+  charge        FLOAT       particle charge in CHARGE    
+  vx            FLOAT       x-velocity in LENGTH/TIME    
+  vy            FLOAT       y-velocity in LENGTH/TIME    
+  vz            FLOAT       z-velocity in LENGTH/TIME    
+  nbtype        INTEGER     nonbonded type 
+  resid         INTEGER     residue number               
+  resname       TEXT        residue name                 
+  chain         TEXT        chain identifier             
+  name          TEXT        atom name                    
+  formal_charge FLOAT       format particle charge 
+  ============= =======     ===========
 
+
+Msys organizes chemical system into a hierarchical structure.  The
+hierarchy has the following names: ct, chain, residue, atom.  Rows
+in the particle table of a dms file are mapped into these four
+structural levels according to one or more columns in the particle
+table.  The relevant columns for each structural level are:
+
+    =========   =======
+    structure   columns
+    =========   =======
+    ct          msys_ct
+    chain       chain,segid
+    residue     resname,resid,insertion
+    atom        id
+    =========   =======
+
+Of these columns, only the id column is required.  The id will be
+contiguous and start at 0.  The id determines the order of the particles
+in the structure, important when dealing with simulation trajectories.
+The other columns are treated as 0/empty string if not present.
+
+Particles are mapped to ct object according to their msys_ct value.
+Within a ct, there will be one chain object for each distinct
+(chain,segid) tuple.  Within a chain object, there will be one residue
+object for each distinct (resname,resid,insertion) tuple.  For example,
+in the following hypothetical particle table with most columns elided:
+
+    ==  =====   =====
+    id  chain   resid   
+    ==  =====   =====
+    0   A       1
+    1   A       1
+    2   B       1
+    3   C       2
+    4   B       2
+    ==  =====   =====
+
+there would be one ct containing three chains with 1, 2, and 1 residues
+in chains A, B and C, respectively.  Residues A/1, B/1, B/2, and C/2
+would contain atoms 0-1, 2, 3 and 4.
 
 Bonds
 ^^^^^
@@ -142,14 +159,14 @@ Each *p0*, *p1* pair should be unique, non-NULL, and satisfy *p0 < p1*.
 The global cell
 ^^^^^^^^^^^^^^^
 
-  ======    =======     ===========
-  Column    Type        Description
-  ======    =======     ===========
-  id        INTEGER     vector index (0, 1, or 2)    
-  x         FLOAT       *x* component in LENGTH      
-  y         FLOAT       *y* component in LENGTH      
-  z         FLOAT       *z* component in LENGTH      
-  ======    =======     ===========
+  ======        =======     ===========
+  Column        Type        Description
+  ======        =======     ===========
+  id            INTEGER     vector index (0, 1, or 2)    
+  x             FLOAT       *x* component in LENGTH      
+  y             FLOAT       *y* component in LENGTH      
+  z             FLOAT       *z* component in LENGTH      
+  ======        =======     ===========
 
 The global_cell table specifies the dimensions of the periodic cell
 in which particles interact.  There shall be three records, with *id*
@@ -162,30 +179,48 @@ Additional particle properties
 
 Additional per-particle properties not already specified in the
 **particle** table should be added to the particle table as columns.
-Here are the schema for the additional properties expected and/or
-recognized by Desmond and by Viparr.
 
   ===============   =======     ===========
   Column            Type        Description
   ===============   =======     ===========
-  mass              FLOAT       Desmond: particle mass in MASS        
-  charge            FLOAT       Desmond: particle charge in CHARGE    
-  vx                FLOAT       Desmond: x-velocity in LENGTH/TIME    
-  vy                FLOAT       Desmond: y-velocity in LENGTH/TIME    
-  vz                FLOAT       Desmond: z-velocity in LENGTH/TIME    
-  nbtype            INTEGER     Desmond: nonbonded type 
-  grp_temperature   INTEGER     Desmond: temperature group        
-  grp_energy        INTEGER     Desmond: energy group             
-  grp_ligand        INTEGER     Desmond: ligand group             
-  grp_bias          INTEGER     Desmond: force biasing group      
-  resid             INTEGER     Viparr: residue number               
-  resname           TEXT        Viparr: residue name                 
-  chain             TEXT        Viparr: chain identifier             
-  name              TEXT        Viparr: atom name                    
-  formal_charge     FLOAT       Viparr: format particle charge 
+  grp_temperature   INTEGER     temperature group        
+  grp_energy        INTEGER     energy group             
+  grp_ligand        INTEGER     ligand group             
+  grp_bias          INTEGER     force biasing group      
   occupancy         FLOAT       pdb occupancy value          
   bfactor           FLOAT       pdb temperature factor       
   ===============   =======     ===========
+
+Ct properties
+^^^^^^^^^^^^^
+
+The **msys_ct** table holds properties of each *ct* in the System.
+The *msys_ct* field in the **particle** table maps each particle
+to a ct.  The **msys_ct** table has only one required column,
+*msys_name*, which holds the name of the ct.  Additional columns
+are created in this table to hold ct properties.
+
+Versioning
+^^^^^^^^^^
+
+Beginning with msys 1.7.0, a **dms_version** table is included in DMS
+files written by msys.  The version table schema consists of a major
+and minor version number, and will correspond to the major and minor
+version of msys.  Going forward, msys will refuse to load DMS files
+whose version is is higher than the msys version; thus, if and when
+msys reaches version 1.8, files written by that version of msys will not
+(necessarily) be readable by msys 1.7.  There is always the possibility
+that forward compatibility could be ported to a later msys 1.7 version.
+Backward compatibility with older dms versions will always be maintained.
+
+The DMS versioning scheme serves to prevent problems arising from new
+data structures being added to the DMS file in newer versions of msys 
+which are not properly recognized by older versions.  For example,
+the **nonbonded_combined_param** table was added in msys 1.4.0, but
+because there was no dms version string at that time, older versions of
+msys would have treated that table as an auxiliary table instead of
+as a set of overrides to the nonbonded table.
+
 
 Forcefields
 -----------

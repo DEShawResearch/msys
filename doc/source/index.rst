@@ -32,7 +32,7 @@ Contents:
    nonbonded
    tools
    recipes
-   formats
+   dms
    release_notes
 
 
