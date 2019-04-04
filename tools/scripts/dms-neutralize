@@ -44,7 +44,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    mol = msys.Load(args.input_file, structure_only=args.structure_only)
+    mol = msys.Load(args.input_file)
     if args.assign:
         msys.AssignBondOrderAndFormalCharge(mol)
 
@@ -64,7 +64,7 @@ def main():
             verbose=args.verbose,
             )
 
-    msys.Save(new, args.output)
+    msys.Save(new, args.output, structure_only=args.structure_only)
 
 if __name__=="__main__":
     main()
