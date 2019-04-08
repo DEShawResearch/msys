@@ -1002,6 +1002,20 @@ class System(object):
 
     def __repr__(self): return "<System '%s'>" % self.name
 
+    def save(self, path, structure_only=False):
+        """Write self to path
+
+        Arguments:
+            path (str): file path
+            structure_only (bool): write only atom information, not forcefield
+
+        Returns:
+            self
+        """
+        Save(self, path, structure_only=structure_only)
+        return self
+
+
     def hash(self):
         ''' hash of contents of this system.
 

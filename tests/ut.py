@@ -1066,6 +1066,13 @@ class Tools(unittest.TestCase):
 
 class Main(unittest.TestCase):
 
+    def testSave(self):
+        mol1 = msys.Load('tests/files/ch4.dms')
+        tmp = tmpfile(suffix='.dms')
+        mol1.save(mol1, tmp.name)
+        mol2 = msys.Load(tmp.name)
+        assert mol1.hash() == mol2.hash()
+
     def testMol2NonconsecutiveResid(self):
         mol = msys.Load('tests/files/nonconsecutive-resid.mol2')
         self.assertEqual(mol.nresidues, 301)
