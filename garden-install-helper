@@ -69,7 +69,8 @@ cat doc/source/release_notes.txt
 }
 
 gendocs() {
-    (cd doc && BINDIR=$PREFIX/bin make clean genhelp html )
+    prefix=${PREFIX:-$PWD/build}
+    (cd doc && BINDIR=$prefix/bin make clean genhelp html )
     cp -r doc/build/html $PREFIX/doc/
 }
 
