@@ -1054,15 +1054,15 @@ class Tools(unittest.TestCase):
         from msys import dump
         file1, file2 = self.make_systems()
         self.assertEqual(dump.diff_main([file1.name, file1.name]), 0)
-        self.assertEqual(dump.diff_main([file2.name, file1.name]), 1)
-        self.assertEqual(dump.diff_main([file1.name, file2.name]), 1)
+        self.assertEqual(dump.diff_main([file2.name, file1.name], quiet=True), 1)
+        self.assertEqual(dump.diff_main([file1.name, file2.name], quiet=True), 1)
 
     def testDmsDiff(self):
         import subprocess
         file1, file2 = self.make_systems()
-        self.assertEqual(subprocess.call(['dms-diff', file1.name, file1.name]), 0)
-        self.assertEqual(subprocess.call(['dms-diff', file2.name, file1.name]), 1)
-        self.assertEqual(subprocess.call(['dms-diff', file1.name, file2.name]), 1)
+        self.assertEqual(subprocess.call(['dms-diff', file1.name, file1.name], stdout=subprocess.PIPE), 0)
+        self.assertEqual(subprocess.call(['dms-diff', file2.name, file1.name], stdout=subprocess.PIPE), 1)
+        self.assertEqual(subprocess.call(['dms-diff', file1.name, file2.name], stdout=subprocess.PIPE), 1)
 
 class Main(unittest.TestCase):
 

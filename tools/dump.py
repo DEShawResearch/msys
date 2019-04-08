@@ -303,6 +303,8 @@ def main():
         return dump_main(**args.__dict__)
     elif prog.startswith('dms-diff'):
         p.add_argument('ifiles', nargs=2, help='structure file')
+        p.add_argument('-q', '--quiet', action='store_true',
+                help="report only when files differ")
         args = p.parse_args()
         kwds = dict(without_provenance=True, without_forcefield=True, without_paraminfo=True, reorder=True)
         for k, v in args.__dict__.items():
@@ -313,7 +315,7 @@ def main():
 def dump_main(ifile, **kwds):
         return dmsdump( ifile, sys.stdout, **kwds)
 
-def diff_main(ifiles, **kwds):
+def diff_main(ifiles, quiet=False, **kwds):
     out1 = tempfile.NamedTemporaryFile(mode='w+')
     out2 = tempfile.NamedTemporaryFile(mode='w+')
     dmsdump(ifiles[0], out1, **kwds)
@@ -321,6 +323,7 @@ def diff_main(ifiles, **kwds):
     out1.flush()
     out2.flush()
     diff = os.getenv('DMSDIFF', 'diff')
-    return subprocess.call(['diff', out1.name, out2.name])
+    stdout = tempfile.NamedTemporaryFile(mode='w+') if quiet else None
+    return subprocess.call(['diff', out1.name, out2.name], stdout=stdout)
 
 

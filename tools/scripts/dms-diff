@@ -6,8 +6,5 @@
 #}
 
 import msys.dump
-rc = msys.dump.main()
-print "dms-diff got rc", rc
-exit(rc)
 exit(msys.dump.main())
 
