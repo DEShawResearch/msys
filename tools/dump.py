@@ -300,7 +300,7 @@ def main():
     if prog.startswith('dms-dump'):
         p.add_argument('ifile', help='structure file')
         args = p.parse_args()
-        dump_main(**args.__dict__)
+        return dump_main(**args.__dict__)
     elif prog.startswith('dms-diff'):
         p.add_argument('ifiles', nargs=2, help='structure file')
         args = p.parse_args()
@@ -308,10 +308,10 @@ def main():
         for k, v in args.__dict__.items():
             if v:
                 kwds[k] = v
-        diff_main(**kwds)
+        return diff_main(**kwds)
 
 def dump_main(ifile, **kwds):
-        dmsdump( ifile, sys.stdout, **kwds)
+        return dmsdump( ifile, sys.stdout, **kwds)
 
 def diff_main(ifiles, **kwds):
     out1 = tempfile.NamedTemporaryFile(mode='w+')
@@ -321,6 +321,6 @@ def diff_main(ifiles, **kwds):
     out1.flush()
     out2.flush()
     diff = os.getenv('DMSDIFF', 'diff')
-    subprocess.call(['diff', out1.name, out2.name])
+    return subprocess.call(['diff', out1.name, out2.name])
 
 

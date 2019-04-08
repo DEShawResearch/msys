@@ -1037,6 +1037,33 @@ class TestValidate(unittest.TestCase):
         self.assertEqual(len(results_after_untying),0)
         self.assertTrue(success)
 
+class Tools(unittest.TestCase):
+    @staticmethod
+    def make_systems():
+        tmp1 = tmpfile(suffix='.dms')
+        tmp2 = tmpfile(suffix='.dms')
+        mol1 = msys.CreateSystem()
+        mol2 = msys.CreateSystem()
+        mol1.addAtom().atomic_number=1
+        mol2.addAtom().atomic_number=2
+        msys.Save(mol1, tmp1.name)
+        msys.Save(mol2, tmp2.name)
+        return tmp1, tmp2
+
+    def testDiff(self):
+        from msys import dump
+        file1, file2 = self.make_systems()
+        self.assertEqual(dump.diff_main([file1.name, file1.name]), 0)
+        self.assertEqual(dump.diff_main([file2.name, file1.name]), 1)
+        self.assertEqual(dump.diff_main([file1.name, file2.name]), 1)
+
+    def testDmsDiff(self):
+        import subprocess
+        file1, file2 = self.make_systems()
+        self.assertEqual(subprocess.call(['dms-diff', file1.name, file1.name]), 0)
+        self.assertEqual(subprocess.call(['dms-diff', file2.name, file1.name]), 1)
+        self.assertEqual(subprocess.call(['dms-diff', file1.name, file2.name]), 1)
+
 class Main(unittest.TestCase):
 
     def testMol2NonconsecutiveResid(self):
