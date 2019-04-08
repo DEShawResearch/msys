@@ -5,7 +5,7 @@ then
    shift
    PYSUFFIX='3'
    garden load $PYTHON3/bin
-   garden load $YAS/lib-python3
+   garden load $YAS/lib-python37
 else
    PYSUFFIX=''
    garden load $PYTHON/bin

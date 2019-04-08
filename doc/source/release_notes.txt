@@ -1,4 +1,4 @@
-1.7.269 Propagate return code in dms-diff.
+1.7.270 Propagate return code in dms-diff.
         Added System.save().
         Fix structure-only for dms-neutralize.
         Documention DMS functional forms.
