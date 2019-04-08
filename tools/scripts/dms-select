@@ -9,8 +9,6 @@
 Write or append a selection from input_file to an output file.
 '''
 
-from __future__ import print_function
-
 import sys, os
 import msys
 

@@ -167,9 +167,6 @@ class TestBasic(TestCase):
         self.assertTrue(len(virtuals_in_multiple_vtables)==0, "Found virtuals that belong to multiple virtual_* tables: %s" % virtuals_in_multiple_vtables)
 
 
-                            "Atoms %s form a term in the %s table but are not connected by bonds" % (t.atoms, table.name))
-
-
 def Validate(mol, strict=False, verbose=1, anton=False,
         all=False):
     global _mol
