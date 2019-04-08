@@ -1,7 +1,9 @@
-1.7.268 Propagate return code in dms-diff.
+1.7.269 Propagate return code in dms-diff.
         Added System.save().
         Fix structure-only for dms-neutralize.
         Documention DMS functional forms.
+        Load mathjax in docs.
+        Use python3 as executable in tools.
 
 1.7.266 Turn off water-pad by default in Neutralize.
         Fix for within selections when atoms have been deleted.
