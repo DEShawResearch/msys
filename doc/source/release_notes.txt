@@ -1,3 +1,8 @@
+1.7.267 Propagate return code in dms-diff.
+        Added System.save().
+        Fix structure-only for dms-neutralize.
+        Documention DMS functional forms.
+
 1.7.266 Turn off water-pad by default in Neutralize.
         Fix for within selections when atoms have been deleted.
 
