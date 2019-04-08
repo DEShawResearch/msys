@@ -15,6 +15,7 @@ import numpy as NP
 import json
 import gzip
 import shutil
+import subprocess
 import tempfile
 import sqlite3
 import random
@@ -1058,11 +1059,14 @@ class Tools(unittest.TestCase):
         self.assertEqual(dump.diff_main([file1.name, file2.name], quiet=True), 1)
 
     def testDmsDiff(self):
-        import subprocess
         file1, file2 = self.make_systems()
         self.assertEqual(subprocess.call(['dms-diff', file1.name, file1.name], stdout=subprocess.PIPE), 0)
         self.assertEqual(subprocess.call(['dms-diff', file2.name, file1.name], stdout=subprocess.PIPE), 1)
         self.assertEqual(subprocess.call(['dms-diff', file1.name, file2.name], stdout=subprocess.PIPE), 1)
+
+    def testDmsSelect(self):
+        file1, file2 = self.make_systems()
+        self.assertEqual(subprocess.call(['dms-select', file1.name, '-o', file2.name], stderr=subprocess.PIPE), 0)
 
 class Main(unittest.TestCase):
 

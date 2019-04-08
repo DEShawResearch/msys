@@ -129,10 +129,6 @@ dms-validate
 ------------
 .. include:: ../build/genhelp/dms-validate
 
-dms-check-groups
-----------------
-.. include:: ../build/genhelp/dms-check-groups
-
 dtr-validate
 ----------------
 .. include:: ../build/genhelp/dtr-validate

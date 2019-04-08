@@ -2,7 +2,7 @@ from __future__ import print_function
 from collections import defaultdict
 import sys, msys
 import unittest as UT
-from msys import knot, groups
+from msys import knot
 from msys.wrap import Wrapper
 import numpy
 
@@ -167,30 +167,10 @@ class TestBasic(TestCase):
         self.assertTrue(len(virtuals_in_multiple_vtables)==0, "Found virtuals that belong to multiple virtual_* tables: %s" % virtuals_in_multiple_vtables)
 
 
-class TestDesmond(TestCase):
-    def testBondsBetweenNonbonded(self):
-        ''' Flag bond terms or exclusions between atoms in different fragments.
-        These atoms cannot be guaranteed to remain within a clone buffer
-        radius of each other.  '''
-        for table in self.mol.tables:
-            if table.category in ('exclusion', 'bond') and table.natoms>1:
-                for t in table.terms:
-                    fragids = set(a.fragid for a in t.atoms)
-                    self.assertEqual(len(fragids), 1, 
                             "Atoms %s form a term in the %s table but are not connected by bonds" % (t.atoms, table.name))
 
-    def testGroups(self):
-        ''' Atoms in bonded terms must be within a clone radius of each
-        other. '''
-        radius = 5.5
-        mol = self.mol.clone()
-        Wrapper(mol).wrap()
-        for table in mol.tables:
-            self.assertFalse(groups.clone_buffer_violations(table, radius),
-                    "Clone radius check failed for terms in '%s'; run dms-check-groups for more information." % table.name)
-    
 
-def Validate(mol, strict=False, desmond=False, verbose=1, anton=False,
+def Validate(mol, strict=False, verbose=1, anton=False,
         all=False):
     global _mol
     _mol=mol
@@ -202,7 +182,6 @@ def Validate(mol, strict=False, desmond=False, verbose=1, anton=False,
 
     if all:
         strict = True
-        desmond = True
     if strict:
         anton = True
 
@@ -213,9 +192,6 @@ def Validate(mol, strict=False, desmond=False, verbose=1, anton=False,
 
     if strict: 
         tests.append(UT.TestLoader().loadTestsFromTestCase(TestStrict))
-
-    if desmond:
-        tests.append(UT.TestLoader().loadTestsFromTestCase(TestDesmond))
 
     suite=UT.TestSuite(tests)
     result=UT.TextTestRunner(verbosity=verbosity).run(suite)
@@ -256,17 +232,6 @@ investigating why a system fails theses checks.
  * split waters: each water molecule must have its own unique resid,
    and live in its own residue.
 
-Desmond-specific checks:
-
- * bonded terms: check that neither the exclusion table nor any table
-   in the bond_term metable contains terms whose atoms are not connected
-   through the bond table.  
-
- * groups: check that all atoms in a bonded term are within a typical
-   clone buffer radius of each other.  The value for the clone buffer
-   used in dms-validate is 5.5, but an alternative radius may be provided
-   using the dms-check-groups tool.
-
 '''
 
 def parse_args():
@@ -276,8 +241,6 @@ def parse_args():
             help="Input file or jobid")
     parser.add_argument('--strict', action='store_true',
             help="Run strict tests")
-    parser.add_argument('--desmond', action='store_true',
-            help="Run Desmond-specific tests")
     parser.add_argument('--verbose', action='store_true',
             help="Be chatty")
     parser.add_argument('--all', action='store_true',

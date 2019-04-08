@@ -9,6 +9,8 @@
 Write or append a selection from input_file to an output file.
 '''
 
+from __future__ import print_function
+
 import sys, os
 import msys
 
@@ -42,7 +44,7 @@ def main():
     opts = parser.parse_args()
     def log(msg, verbose=opts.verbose):
         if verbose:
-            print >> sys.stderr, msg
+            print(msg, file=sys.stderr)
 
     path = opts.files[0]
     log("Loading %s" % path)
