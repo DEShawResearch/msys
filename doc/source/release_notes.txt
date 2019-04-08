@@ -1,3 +1,6 @@
+1.7.271 Remove old desmond validation routines.
+        Python3 fix for dms-select.
+
 1.7.270 Propagate return code in dms-diff.
         Added System.save().
         Fix structure-only for dms-neutralize.
