@@ -1,4 +1,4 @@
-garden env-keep-only TMPDIR
+garden env-keep-only TMPDIR PREFIX
 source `dirname $0`/../env.sh
 if [ "$1" == "-3" ]
 then
