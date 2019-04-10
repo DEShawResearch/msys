@@ -40,6 +40,14 @@ extensions = ['sphinx.ext.autodoc',
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
+mathjax_path = "http://gerrit.en.desres.deshaw.com/jenkins/job/sup-docs/SUP_Documentation/_static/MathJax/MathJax.js"
+mathjax_config = {
+    'jax': ["input/TeX", "output/PreviewHTML"],
+    'extensions': ["tex2jax.js", "mml2jax.js", "MathMenu.js", "MathZoom.js", "fast-preview.js", "AssistiveMML.js", "a11y/accessibility-menu.js"],
+    'TeX': {
+        'extensions': ["AMSmath.js", "AMSsymbols.js", "noErrors.js", "noUndefined.js"]
+    }
+}
 
 # The suffix of source filenames.
 source_suffix = '.rst'
