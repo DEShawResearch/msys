@@ -22,6 +22,7 @@ loadmodules() {
     garden load \
         $GCC/bin \
         $PYTHON3/bin \
+        $PYTHON/bin \
         $SCONS/bin \
         $BOOST/lib \
         $LPSOLVE/lib \
@@ -69,7 +70,7 @@ cat doc/source/release_notes.txt
 
 gendocs() {
     prefix=${PREFIX:-$PWD/build}
-    (cd doc && BINDIR=$prefix/bin make clean genhelp html )
+    (cd doc && BINDIR=$prefix/bin garden with -m $PYTHON3/bin make clean genhelp html )
     cp -r doc/build/html $PREFIX/doc/
 }
 
@@ -92,7 +93,7 @@ case $1 in
 	loadmodules
 
         nprocs=`getconf _NPROCESSORS_ONLN`
-        garden with -m $PYTHON/bin -- $0 --exec scons install -j $nprocs PREFIX=$PREFIX OBJDIR=$TMPDIR
+        $0 --exec scons install -j $nprocs PREFIX=$PREFIX OBJDIR=$TMPDIR
 
         ./tests/ut.py
         ./tests/ut.py -3
