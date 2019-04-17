@@ -230,7 +230,7 @@ namespace {
                 if (bnd.order == 4) {
                     bnd.order = 1;
                     bnd.aromatic = 1;
-                } else if (bnd.order<1 || bnd.order>4) {
+                } else if (bnd.order<0 || bnd.order>4) {
                     MSYS_FAIL("Unsupported bond type in bond record: " << skip_to_end());
                 }
             }

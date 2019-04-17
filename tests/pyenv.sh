@@ -11,6 +11,5 @@ else
    garden load $PYTHON/bin
    garden load $YAS/lib-python
 fi
-which python
 garden in-path PATH ${PREFIX:-`dirname $0`/../build}/bin
 

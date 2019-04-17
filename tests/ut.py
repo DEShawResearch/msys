@@ -826,6 +826,21 @@ class TestAtomsel(unittest.TestCase):
 
 class TestSdf(unittest.TestCase):
 
+    def testZeroBondOrder(self):
+        mol = msys.CreateSystem()
+        c=mol.addAtom()
+        c.atomic_number=17
+        c.formal_charge=-1
+        v=mol.addAtom()
+        v.atomic_number=0
+        bnd=c.addBond(v)
+        bnd.order=0
+        sdf = msys.FormatSDF(mol)
+        new=next(msys.ParseSDF(sdf))
+        self.assertEqual(new.bond(0).order, 0)
+        self.assertEqual(new.atom(0).formal_charge, -1)
+
+
     def testIter(self):
         with open('tests/files/cofactors.sdf') as fp:
             s = fp.read()
