@@ -206,14 +206,14 @@ def Neutralize(mol, cation='Na', anion='Cl',
         # delete ions
         if len(existing_ion_fragids) < -nions:
             raise RuntimeError("Cannot decrease concentration - not enough ions to delete")
-        sel=mol.select('fragid ' + ' '.join(existing_ion_fragids) + ' and not (%s)' % keep)
+        sel=mol.select('fragid ' + ' '.join(map(str, existing_ion_fragids)) + ' and not (%s)' % keep)
         for r in sel[:-nions]: r.remove()
         nions = 0
     if nother < 0:
         # delete other 
         if len(existing_other_fragids) < -nother:
             raise RuntimeError("Cannot decrease concentration - not enough other ions to delete")
-        sel=mol.select('fragid ' + ' '.join(existing_other_fragids) + ' and not (%s)' % keep)
+        sel=mol.select('fragid ' + ' '.join(map(str, existing_other_fragids)) + ' and not (%s)' % keep)
         for r in sel[:-nother]: r.remove()
         nother = 0
 
@@ -293,7 +293,6 @@ def Neutralize(mol, cation='Na', anion='Cl',
     assert not (residues_removed & keep_residues)
 
     mol.coalesceTables()
-    mol = mol.clone()
     # remove overlapping waters
     return mol.clone('not (same residue as (water and pbwithin %s of ct %s))' % (water_pad, mol.ncts-1))
 
