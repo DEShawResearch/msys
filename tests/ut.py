@@ -1092,6 +1092,11 @@ class Main(unittest.TestCase):
         mol2 = msys.Load(tmp.name)
         assert mol1.hash() == mol2.hash()
 
+    def testMol2NoResidues(self):
+        mol = msys.Load('tests/files/m_112.mol2')
+        self.assertEqual(mol.nresidues, 1)
+        self.assertEqual(mol.natoms, 18)
+
     def testMol2NonconsecutiveResid(self):
         mol = msys.Load('tests/files/nonconsecutive-resid.mol2')
         self.assertEqual(mol.nresidues, 301)

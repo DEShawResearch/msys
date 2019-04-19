@@ -75,7 +75,7 @@ SystemPtr iterator::next() {
      * then return nothing but empty systems */
     if (state!=Molecule) return SystemPtr();
 
-    int natoms, nbonds, nsub;
+    int natoms, nbonds, nsub=0;
 
     SystemPtr mol = System::create();
     mol->addCt();
@@ -89,11 +89,16 @@ SystemPtr iterator::next() {
     mol->name = buf;
     trim(mol->name);
     mol->ct(0).setName(mol->name);
-    /* read natoms, nbonds, nsub */
+    /* read natoms, nbonds, optionally nsub */
     if (!fgets(buf, sizeof(buf), fd)) MSYS_FAIL(strerror(errno));
-    if (sscanf(buf, "%d %d %d", &natoms, &nbonds, &nsub)!=3) {
+    if (sscanf(buf, "%d %d %d", &natoms, &nbonds, &nsub)<2) {
         MSYS_FAIL("Could not parse counts from line:\n" << buf);
     }
+    if (nsub==0) {
+        /* create a single residue for all atoms */
+        mol->addResidue(0);
+    }
+
     /* read mol_type and ignore */
     if (!fgets(buf, sizeof(buf), fd)) MSYS_FAIL(strerror(errno));
     /* read charge_type and ignore */
@@ -150,13 +155,17 @@ SystemPtr iterator::next() {
                             }
                         }
                     }
-                    if (residue == mol->residueCount() + 1) {
+                    if (nsub==0) {
+                        residue_id=0;
+                    } else if (residue == mol->residueCount() + 1) {
                         residue_id = mol->addResidue(0);
                         auto& res = mol->residueFAST(residue_id);
                         res.name = resname;
                         res.resid = resid;
                     } else if (residue <= mol->residueCount()) {
                         residue_id = residue - 1;
+                    } else {
+                        MSYS_FAIL("Could not infer substructure id from Atom record:\n" << buf);
                     }
                     Id atmid = mol->addAtom(residue_id);
                     auto& atm = mol->atomFAST(atmid);
