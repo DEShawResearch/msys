@@ -1,3 +1,5 @@
+1.7.272 Support reading bond order 0 in sdf.
+
 1.7.271 Remove old desmond validation routines.
         Python3 fix for dms-select.
 
