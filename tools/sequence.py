@@ -58,8 +58,7 @@ def Sequences(system_or_chain, distinct=True):
     for c in chains:
         seq = ''.join(code.get(r.name,'X') for r in c.residues)
         seq = seq.strip('X')
-        if not seq.translate(None, 'X'):
-            # got all X
+        if set(seq) == {'X'}:
             seq = ''
         seqs.append(seq)
     if distinct:
