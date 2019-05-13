@@ -66,7 +66,7 @@ def main():
             for k in range(nz):
                 zdelta = zshift + k*cell[2]
                 delta = xdelta + ydelta + zdelta
-                mol = cycle.next()
+                mol = next(cycle)
                 mol.translate(delta)
                 out._ptr.append(mol._ptr, msys._msys.BadId)
                 mol.translate(-delta)
