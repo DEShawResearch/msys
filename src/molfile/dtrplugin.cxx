@@ -701,7 +701,8 @@ metadata::metadata(const void *bufptr, ssize_t n, std::string *jobstep_id) {
             hasher.Update(kv.second.data, v_size);
         } else {
             if (jobstep_id) {
-                (*jobstep_id) += (char *) kv.second.data;
+                const char *ptr = (const char *)kv.second.data;
+                jobstep_id->append(ptr, kv.second.count);
             }
         }
     }
@@ -2461,21 +2462,27 @@ std::ostream& DtrReader::dump(std::ostream &out) const {
 }
 
 std::istream& DtrReader::load_v8(std::istream &in) {
-  char c;
-  uint64_t meta_hash;
+    char c;
+    uint64_t meta_hash;
 
-  in >> dtr
-     >> _natoms
-     >> with_velocity
-     >> m_ndir1
-     >> m_ndir2
-     >> meta_hash
-     >> jobstep_id;
+    in >> dtr
+       >> _natoms
+       >> with_velocity
+       >> m_ndir1
+       >> m_ndir2
+       >> meta_hash
+       >> jobstep_id;
 
-  in.get(c);
-  keys.load(in);
+    for (auto c : jobstep_id) {
+        if (!isdigit(c)) {
+            MSYS_FAIL("non-numeric jobstep_id character found in cache");
+        }
+    }
 
-  return in;
+    in.get(c);
+    keys.load(in);
+
+    return in;
 }
 
 std::ostream& StkReader::dump(std::ostream &out) const {
