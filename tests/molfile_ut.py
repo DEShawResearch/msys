@@ -894,6 +894,28 @@ class TestDtrWriter(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             molfile.dtr_noclobber.write(self.PATH, natoms=10).frame(frame)
 
+class TestDtrWriterEtr(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.PATH = os.path.join(tempfile.mkdtemp(), 'molfile_test_writer.etr')
+
+    def tearDown(self):
+        SH.rmtree(self.PATH, ignore_errors=True)
+
+    def testEtrFormat(self):
+        keyvals = {'A':'B', 'X':numpy.ones(10), 'Y':numpy.array([1.0])}
+        writer = msys.molfile.DtrWriter(self.PATH, 0, format=msys.molfile.DtrWriter.ETR)
+        writer.append(1.0, keyvals)
+        writer.append(2.0, keyvals)
+        writer.append(3.0, keyvals)
+        writer.sync()
+        reader = msys.molfile.DtrReader(self.PATH)
+        kv = {}
+        reader.frame(0, keyvals=kv)
+        assert(kv['FORMAT'] == 'ETR_V1')
+        assert(kv['Y'][0] == 1.0)
+
 
 class TestQuantizedTime(unittest.TestCase):
     def test_6659382(self):

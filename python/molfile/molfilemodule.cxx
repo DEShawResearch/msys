@@ -104,8 +104,9 @@ namespace {
     DtrWriter* dtr_init(std::string const& path,
                         uint32_t natoms,
                         int mode,
-                        uint32_t fpf) {
-        return new DtrWriter(path, DtrWriter::Type::DTR, natoms, DtrWriter::Mode(mode), fpf);
+                        uint32_t fpf,
+                        DtrWriter::Type type) {
+        return new DtrWriter(path, type, natoms, DtrWriter::Mode(mode), fpf);
     }
 
     void convert_keyvals_to_keymap(dict keyvals, dtr::KeyMap& map) {
@@ -179,7 +180,16 @@ namespace {
 
     void export_dtrwriter() {
 
-        class_<DtrWriter, boost::noncopyable>("DtrWriter", no_init)
+        auto writer = class_<DtrWriter, boost::noncopyable>("DtrWriter", no_init);
+        scope the_scope = writer;
+
+        enum_<DtrWriter::Type>("Type")
+            .value("DTR", DtrWriter::Type::DTR)
+            .value("ETR", DtrWriter::Type::ETR)
+            .export_values()
+            ;
+
+        writer
             .def("__init__",
                 make_constructor( 
                     dtr_init,
@@ -187,13 +197,13 @@ namespace {
                     (arg("path"),
                      arg("natoms"),
                      arg("mode")=0,
-                     arg("frames_per_file")=0)))
+                     arg("frames_per_file")=0,
+                     arg("format")=DtrWriter::Type::DTR)))
             .def("append", dtr_append,
                     (arg("time"),
                      arg("keyvals")))
             .def("sync", &DtrWriter::sync)
             ;
-
     }
 
 }
