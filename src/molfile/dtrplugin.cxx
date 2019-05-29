@@ -1374,7 +1374,7 @@ static void read_scalars(
 #endif
 }
 
-static void handle_etr_v1(uint32_t len, const void *buf, molfile_timestep_t *ts, dtr::KeyMap meta_blobs, dtr::KeyMap *frame_blobsp, bool swap) {
+static void handle_etr_v1(uint32_t len, const void *buf, dtr::KeyMap meta_blobs, dtr::KeyMap *frame_blobsp, bool swap) {
 
     //
     // Iteratre through the meta blobs and add entries to the
@@ -1911,20 +1911,24 @@ KeyMap DtrReader::frame_from_bytes(const void *buf, uint64_t len,
     bool swap;
     KeyMap blobs = ParseFrame(len, buf, &swap);
 
-    if (ts) {
+    // We will dispatch to routines based on format, which can be
+    // defined in either the meta frame or the frame.
+    std::string format;
+    auto p = metap->get_frame_map()->find("FORMAT");
+    if (p != metap->get_frame_map()->end()) {
+        format += (char *) p->second.data;
+    }
+    
+    if (format == "") {
+        format = blobs["FORMAT"].toString();
+    }
 
-        // We will dispatch to routines based on format, which can be
-        // defined in either the meta frame or the frame.
-        std::string format;
-        auto p = metap->get_frame_map()->find("FORMAT");
-        if (p != metap->get_frame_map()->end()) {
-            format += (char *) p->second.data;
-        }
-        
-        if (format == "") {
-            format = blobs["FORMAT"].toString();
-        }
-
+    // TS - handle ETR whether or not we got a frame, so that keyvals() from python works,
+    // because we still want to unpack _D. For the others, do nothing.
+    if (format=="ETR_V1") {
+        handle_etr_v1(len, buf, *metap->get_frame_map(), &blobs, swap);
+    }
+    else if (ts) {
         const float * rmass = NULL;
 
         std::string key = "INVMASS";
@@ -1947,9 +1951,6 @@ KeyMap DtrReader::frame_from_bytes(const void *buf, uint64_t len,
 
         } else if (format=="FORCE_V_1" || format == "DBL_FORCE_V_1") {
             handle_force_v1(blobs, _natoms, with_velocity, ts);
-
-        } else if (format=="ETR_V1") {
-            handle_etr_v1(len, buf, ts, *metap->get_frame_map(), &blobs, swap);
 
         } else if (!format.empty()) {
             DTR_FAILURE("can't handle format " << format);

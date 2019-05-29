@@ -911,10 +911,13 @@ class TestDtrWriterEtr(unittest.TestCase):
         writer.append(3.0, keyvals)
         writer.sync()
         reader = msys.molfile.DtrReader(self.PATH)
-        kv = {}
-        reader.frame(0, keyvals=kv)
-        assert(kv['FORMAT'] == 'ETR_V1')
-        assert(kv['Y'][0] == 1.0)
+        kv1 = {}
+        reader.frame(0, keyvals=kv1)
+        kv2 = reader.keyvals(0)
+        assert(numpy.all(kv1[k] == kv2[k]) for k in kv1)
+        assert(set(kv1.keys()) == set(kv2.keys()))
+        assert(kv1['FORMAT'] == 'ETR_V1')
+        assert(kv1['Y'][0] == 1.0)
 
 
 class TestQuantizedTime(unittest.TestCase):
