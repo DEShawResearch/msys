@@ -1,3 +1,7 @@
+1.7.276 Store atom name in ConvertToRdkit.
+        DtrReader.keyvals() automatically unpacks ETR frames
+        Allow ETRs to be written by DtrWriters
+
 1.7.275 Fix stk cache file writing.
 
 1.7.274 Fix dms-tile.
