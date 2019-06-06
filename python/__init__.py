@@ -2097,6 +2097,7 @@ def ConvertToRdkit(mol, sanitize=True):
     for atm in mol.atoms:
         ratm = Chem.Atom(atm.atomic_number)
         ratm.SetFormalCharge(atm.formal_charge)
+        ratm.SetProp("_Name", atm.name)
         emol.AddAtom(ratm)
     for bnd in mol.bonds:
         emol.AddBond(bnd.first.id, bnd.second.id, Chem.BondType(bnd.order))
