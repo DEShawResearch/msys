@@ -140,6 +140,51 @@ class TestHash(unittest.TestCase):
         mol = msys.Load('tests/files/2f4k.dms')
         self.assertEqual(mol.hash(), 3583905226189957559)
 
+    def testSorted(self):
+        m1=msys.CreateSystem()
+        m1.name='1'
+        m1.addAtom()
+        m1.addAtom()
+        m1.updateFragids()
+        tname = 'stretch_harm'
+        m1.addTableFromSchema(tname)
+
+        m2=m1.clone()
+        m2.name='2'
+
+        # system 1: terms [0,1], [1,0], [0,1]
+        table = m1.table(tname)
+        param = table.params.addParam()
+        atoms = m1.atoms
+        table.addTerm(atoms, param)
+        atoms.reverse()
+        table.addTerm(atoms, param)
+        atoms.reverse()
+        table.addTerm(atoms, param)
+
+        # system 1: terms [1,0], [0,1], [0,1]
+        table = m2.table(tname)
+        param = table.params.addParam()
+        atoms = m2.atoms
+        atoms.reverse()
+        table.addTerm(atoms, param)
+        atoms.reverse()
+        table.addTerm(atoms, param)
+        table.addTerm(atoms, param)
+
+        self.assertEqual(m1.hash(sorted=True), m2.hash(sorted=True))
+        self.assertNotEqual(m1.hash(sorted=False), m2.hash(sorted=False))
+
+        # change parameters for first term in system 1 and third term in system 2
+        # these systems are now equivalent, so we must break ties by parameters
+        # or we'll get a different hash.
+        m1.table(tname).term(0)['r0'] = 42
+        m2.table(tname).term(2)['r0'] = 42
+        self.assertEqual(m1.hash(sorted=True), m2.hash(sorted=True))
+        self.assertNotEqual(m1.hash(sorted=False), m2.hash(sorted=False))
+
+
+
 class TestHbond(unittest.TestCase):
     def test1(self):
         mol = msys.Load('tests/files/1vcc.mae', structure_only=True)

@@ -671,7 +671,17 @@ TermTablePtr desres::msys::ReplaceTableWithSortedTerms(TermTablePtr src) {
     // list of terms, sorted by atom ids
     IdList terms = src->terms();
     std::sort(terms.begin(), terms.end(),
-            [&src](Id a, Id b) { return src->atoms(a) < src->atoms(b); });
+            [&src](Id a, Id b) {
+                auto aids = src->atoms(a);
+                auto bids = src->atoms(b);
+                if (aids == bids) {
+                    Id pa = src->param(a);
+                    Id pb = src->param(b);
+                    return (src->params()->compare(pa, pb) < 0);
+                }
+                return (aids < bids);
+            });
+
 
     AppendTerms(dst, src, amap, terms, pmap);
     // swap the tables

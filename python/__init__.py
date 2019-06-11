@@ -1016,13 +1016,16 @@ class System(object):
         return self
 
 
-    def hash(self):
+    def hash(self, sorted=True):
         ''' hash of contents of this system.
 
         The hash is insensitive to provenance and System.name.
-        However, adding atoms, bonds, terms, etc., then removing them may not
-        leave the hash unchanged.
         '''
+        if sorted:
+            # clone and put terms in order.
+            self = self.clone()
+            for table in self.tables:
+                table = table.replaceWithSortedTerms()
         return _msys.HashSystem(self._ptr)
 
     def asCapsule(self):
