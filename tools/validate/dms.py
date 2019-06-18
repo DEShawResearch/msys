@@ -15,8 +15,9 @@ class TestCase(UT.TestCase):
 class TestAnton(TestCase):
     def testHasConstraints(self):
         ''' The system must have constraints '''
-        constraints=[t for t in self.mol.tables if t.category=='constraint']
-        self.assertTrue(len(constraints)>0)
+        if self.mol.selectIds('hydrogen'):
+            nconstraints=sum(t.nterms for t in self.mol.tables if t.category=='constraint')
+            self.assertTrue(nconstraints > 0)
 
     def testHasConstrainedHydrogens(self):
         ''' The hydrogens in the system have to be constrained '''
