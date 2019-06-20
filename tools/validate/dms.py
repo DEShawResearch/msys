@@ -168,7 +168,7 @@ class TestBasic(TestCase):
         self.assertTrue(len(virtuals_in_multiple_vtables)==0, "Found virtuals that belong to multiple virtual_* tables: %s" % virtuals_in_multiple_vtables)
 
 
-def Validate(mol, strict=False, verbose=1, anton=False,
+def Validate(mol, strict=False, verbose=1, anton=True,
         all=False):
     global _mol
     _mol=mol
@@ -243,6 +243,8 @@ def parse_args():
             help="Be chatty")
     parser.add_argument('--all', action='store_true',
             help="Run all tests")
+    parser.add_argument('--without-anton', action='store_false', dest='anton',
+            help="Don't run Anton-specific tests")
     parser.add_argument('--anton', action='store_true',
             help="Run Anton-specific tests")
     return parser.parse_args()
