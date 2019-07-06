@@ -20,7 +20,6 @@
 #ifdef WIN32
 #undef ssize_t
 #endif
-#include <boost/thread.hpp>
 #include <boost/python/docstring_options.hpp>
 
 using namespace desres::molfile;
