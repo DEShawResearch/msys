@@ -1,3 +1,9 @@
+1.7.277 Make System.hash sort terms by default.
+        dtr-validate: require constraints only if there are hydrogens.
+                      Run anton2 tests by default.
+        Drop #include of boost/thread.
+        Initial implementation of experimental json format.
+
 1.7.276 Store atom name in ConvertToRdkit.
         DtrReader.keyvals() automatically unpacks ETR frames
         Allow ETRs to be written by DtrWriters
