@@ -9,6 +9,7 @@ env=env.Clone()
 opts=Variables()
 opts.Add("MSYS_WITH_LPSOLVE", "include lpsolve support?", os.getenv('MSYS_WITH_LPSOLVE'))
 opts.Add("MSYS_WITH_INCHI", "include inchi support?", os.getenv('MSYS_WITH_INCHI'))
+opts.Add("MSYS_WITHOUT_RAPIDJSON", "include rapidjson support?", os.getenv('MSYS_WITHOUT_RAPIDJSON'))
 opts.Add("MSYS_BOOST_SUFFIX", "suffix for boost libraries (e.g. -mt)")
 opts.Add("MSYS_BOOST_PYTHON_SUFFIX", "suffix for boost libraries (e.g. -py)")
 
@@ -121,6 +122,14 @@ else:
     inchienv.Append(CPPDEFINES='MSYS_WITHOUT_INCHI'.split())
     inchi = inchienv.AddObject('inchi.cxx')
 
+
+if env.get("MSYS_WITHOUT_RAPIDJSON"):
+    jsenv = env.Clone()
+    jsenv.Append(CPPDEFINES='MSYS_WITHOUT_RAPIDJSON'.split())
+else:
+    jsenv = env
+jsobjs = jsenv.AddObject(['json/import.cxx', 'json/export.cxx'])
+
 def get_shlib_version():
     if env['PLATFORM'] == 'darwin':
         # See https://www.sicpers.info/2013/03/how-to-version-a-mach-o-library/
@@ -153,6 +162,7 @@ fastjson/dtoa/cached-powers.cc
 fastjson/dtoa/fast-dtoa.cc
 '''))
 
+
 libmsys_env = env.Clone()
 libmsys_env.Append(LIBS=['msys-core'])
 if sys.platform.startswith("darwin"):
@@ -165,7 +175,7 @@ if sys.platform.startswith("darwin"):
         msys_dylib = None
     if msys_dylib:
         libmsys_env.Append(LINKFLAGS=['-dynamiclib', '-install_name', msys_dylib])
-libmsys=libmsys_env.AddLibrary('msys', lexobjs + lpobjs + sdfobjs + schrod_only_objs + [inchi] + smiles_objs + dtoaobjs + Split('''
+libmsys=libmsys_env.AddLibrary('msys', lexobjs + lpobjs + sdfobjs + schrod_only_objs + [inchi] + smiles_objs + dtoaobjs + jsobjs + Split('''
 
 smarts.cxx
 analyze/eigensystem.cxx

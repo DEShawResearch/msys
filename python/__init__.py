@@ -2196,6 +2196,12 @@ def FormatDMS(system):
     ''' Return the DMS form of the system as bytes '''
     return _msys.FormatDMS(system._ptr)
 
+def FormatJson(system):
+    """Json formatted system (EXPERIMENTAL)"""
+    return _msys.FormatJson(system._ptr)
+
+def ParseJson(text):
+    return System(_msys.ParseJson(text))
 
 def SerializeMAE(system, with_forcefield=True):
     ''' Return the MAE form of the System as bytes. '''

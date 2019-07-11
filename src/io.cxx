@@ -9,6 +9,7 @@
 #ifndef _MSC_VER
 #include "sdf.hxx"
 #endif
+#include "json.hxx"
 
 #include <sys/stat.h>
 
@@ -46,7 +47,8 @@ namespace {
         "SDF",
 #endif
         "WEBPDB",
-        "PSF"
+        "PSF",
+        "JSON"
     };
 
     class DefaultIterator : public LoadIterator {
@@ -81,6 +83,7 @@ namespace desres { namespace msys {
         const char* SDF[] = {"sdf","sdf.gz","sdfgz", 0};
 #endif
         const char* PSF[] = {"psf", 0};
+        const char* JSON[] = {"json", 0};
 
         if (match(path, DMS)) return DmsFileFormat;
         if (match(path, MAE)) return MaeFileFormat;
@@ -92,6 +95,7 @@ namespace desres { namespace msys {
         if (match(path, SDF)) return SdfFileFormat;
 #endif
         if (match(path, PSF)) return PsfFileFormat;
+        if (match(path, JSON)) return JsonFileFormat;
         if (match_web(path))  return WebPdbFileFormat;
         return UnrecognizedFileFormat;
     }
@@ -142,6 +146,10 @@ namespace desres { namespace msys {
                 break;
             case WebPdbFileFormat:
                 m=ImportWebPDB(path);
+                break;
+            case JsonFileFormat:
+                m=ImportJson(path);
+                break;
             default:
                 ;
         }
@@ -231,6 +239,11 @@ namespace desres { namespace msys {
                     );
                 break;
 #endif
+            case JsonFileFormat:
+                ExportJson(mol, path, prov,
+                    (flags & SaveOptions::StructureOnly ? JsonExport::StructureOnly : 0)
+                    );
+                break;
             default:
                 MSYS_FAIL("No support for saving file '" << path << "' of type "
                         << FileFormatAsString(format));

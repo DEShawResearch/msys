@@ -15,6 +15,7 @@ LPSOLVE=lp-solve/5.5.2.0-01c7
 INCHI=inchi/1.05-01c7
 SQLITE=sqlite/3.24.0-01c7
 SCONSUTILS=sconsutils/1.47c7
+RAPIDJSON=rapidjson/1.1.0-01c7
 
 loadmodules() {
     # load $PYTHON last so that we use python2 for sphinx, since
@@ -29,6 +30,7 @@ loadmodules() {
         $INCHI/lib \
         $SQLITE/lib-static \
         $SCONSUTILS/lib-python \
+        $RAPIDJSON/lib \
 
     export PYTHONVER=27,37
     export MSYS_WITH_LPSOLVE=1

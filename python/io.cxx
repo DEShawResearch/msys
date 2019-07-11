@@ -11,6 +11,7 @@
 #include "xyz.hxx"
 #include "io.hxx"
 #include "amber.hxx"
+#include "json.hxx"
 
 namespace {
 
@@ -19,6 +20,10 @@ namespace {
 #else
     auto py_as_bytes = PyString_FromStringAndSize;
 #endif
+
+    std::string format_json(SystemPtr mol) {
+        return FormatJson(mol, Provenance());
+    }
 
     PyObject* format_dms(SystemPtr mol) {
         std::string contents = FormatDMS(mol, Provenance());
@@ -195,5 +200,7 @@ namespace desres { namespace msys {
         def("ParseSDF", SdfTextIterator);
         def("FormatSDF", FormatSdf);
 #endif
+        def("FormatJson", format_json);
+        def("ParseJson", ParseJson);
     }
 }}

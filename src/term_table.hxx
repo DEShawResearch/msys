@@ -76,6 +76,7 @@ namespace desres { namespace msys {
 
         SystemPtr system() const { return _system.lock(); }
         ParamTablePtr params() { return _params; }
+        inline ParamTablePtr props() { return _props; }
         Id atomCount() const { return _natoms; }
 
         /* category describing what sort of TermTable we have */
