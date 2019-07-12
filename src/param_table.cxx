@@ -109,6 +109,7 @@ Id ParamTable::duplicate(Id param) {
 }
 
 int ParamTable::compare(Id L, Id R) {
+    if (bad(L) && bad(R)) return 0;
     if (!(hasParam(L) && hasParam(R))) {
         throw std::runtime_error("comparison of invalid param ids");
     }
