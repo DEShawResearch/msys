@@ -296,8 +296,7 @@ namespace desres { namespace msys {
     SystemPtr ImportJson(std::string const& path) {
         Document d;
         auto json = slurp(path.data());
-        //d.Parse<kParseFullPrecisionFlag>(json.get());
-        d.Parse(json.get());
+        d.Parse<kParseFullPrecisionFlag>(json.get());
         SystemPtr mol = import_json(d);
         return mol;
     }
