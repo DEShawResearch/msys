@@ -281,20 +281,17 @@ static SystemPtr import_json(Document const& d) {
 namespace desres { namespace msys {
 
     SystemPtr ImportJson(std::string const& path) {
-        //double t0=now()*1000;
         Document d;
         auto json = slurp(path.data());
+        //d.Parse<kParseFullPrecisionFlag>(json.get());
         d.Parse(json.get());
-        //double t1=now()*1000;
         SystemPtr mol = import_json(d);
-        //double t2 = now()*1000;
-        //printf("parse %.3fms import %.3fms\n", t1-t0, t2-t1);
         return mol;
     }
 
     SystemPtr ParseJson(const char* text) {
         Document d;
-        d.Parse(text);
+        d.Parse<kParseFullPrecisionFlag>(text);
         SystemPtr mol = import_json(d);
         return mol;
     }

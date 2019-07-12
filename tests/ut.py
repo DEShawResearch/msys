@@ -30,15 +30,12 @@ def vsize():
     return int(s)
 
 class TestJson(unittest.TestCase):
-    def XXtest2f4k(self):
-        #tmp = tmpfile(suffix='.json')
-        tmpname = 'foo.json'
-
+    def test2f4k(self):
+        tmp = tmpfile(suffix='.json')
         old = msys.Load('tests/files/2f4k.dms')
-        msys.Save(old, tmpname)
-        new = msys.Load(tmpname)
-        # fails, don't know why yet.  dms-diff works.
-        self.assertEqual(old.hash(False), new.hash(False))
+        msys.Save(old, tmp.name)
+        new = msys.Load(tmp.name)
+        self.assertEqual(old.hash(), new.hash())
 
     def testFormatParse(self):
         mol = msys.Load('tests/files/2f4k.dms')
