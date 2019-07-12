@@ -42,8 +42,9 @@ static combining_rule_t combiner_for(std::string rule) {
     MSYS_FAIL("Unsupported combining rule '" << rule << "'");
 }
 
+namespace desres { namespace msys { namespace ff {
 template<>
-void ff::build<ff::Component::exclusions>(
+void build<Component::exclusions>(
         SystemPtr mol,
         Forcefield const& ff,
         Tuples const& tuples) {
@@ -111,3 +112,4 @@ void ff::build<ff::Component::exclusions>(
     }
 }
 
+}}} // namespace
