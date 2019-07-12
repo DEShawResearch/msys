@@ -22,7 +22,7 @@ namespace {
         for (VariantMap::value_type keyvals : p) {
             s.append(keyvals.first);
         }
-        return s;
+        return std::move(s);
     }
 
     class get_visitor : public boost::static_visitor<> {

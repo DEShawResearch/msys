@@ -28,7 +28,7 @@ namespace {
             for (IdPair const& p : matches) {
                 L.append(make_tuple(p.first, p.second));
             }
-            return L;
+            return std::move(L);
         }
         return object();
     }
@@ -43,7 +43,7 @@ namespace {
                 L.append(make_tuple(p.first, p.second));
             outer_L.append(L);
         }
-        return outer_L;
+        return std::move(outer_L);
     }
     list graph_atoms(Graph const& g) {
         return to_python(g.atoms());
