@@ -274,6 +274,18 @@ static void export_terms(Value& obj, TermTablePtr table, Document& d) {
     obj.AddMember("terms", terms, alloc);
 }
 
+static Value export_aux(Document& d, NameMap& map, System const& mol) {
+    auto& alloc = d.GetAllocator();
+    Value aux(kObjectType);
+    for (auto& name : mol.auxTableNames()) {
+        Value s;
+        s.SetString(name.data(), name.size(), alloc);
+        aux.AddMember(s, export_params(mol.auxTable(name), d, map), alloc);
+    }
+    return aux;
+}
+
+
 static Value export_tables(Document& d, NameMap& map, System const& mol) {
     auto& alloc = d.GetAllocator();
     Value tables(kObjectType);
@@ -318,6 +330,7 @@ static void export_json(Document& d, System& mol, Provenance const& provenance, 
     d.AddMember("chains", export_chains(d, map, mol), alloc);
     if (!(flags & desres::msys::JsonExport::StructureOnly)) {
         d.AddMember("tables", export_tables(d, map, mol), alloc);
+        d.AddMember("aux", export_aux(d, map, mol), alloc);
     }
 }
 

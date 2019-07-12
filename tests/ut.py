@@ -45,7 +45,18 @@ class TestJson(unittest.TestCase):
         self.assertEqual(d['cell'], cell)
         new = msys.ParseJson(js)
         self.assertEqual(new.cell.flatten().tolist(), cell)
-        
+
+    def testCh4(self):
+        old = msys.Load('tests/files/ch4.dms')
+        js = msys.FormatJson(old)
+        new = msys.ParseJson(js)
+        ff = new.auxtable('viparr_info')
+        assert ff.nparams==1
+        items = [(k, ff.param(0)[k]) for k in ff.props]
+        self.assertEqual(items, [
+            ('version', '3.0.3'),
+            ('workdir', '/d/en/gullingj-0/p4/dms_inputs'),
+            ('cmdline', 'mae2dms /proj/desres/root/Linux/x86_64/maeff_inputs/1.3.1/share/ch4.mae ch4.dms ')])
 
 class TestNeutralize(unittest.TestCase):
     def test1(self):

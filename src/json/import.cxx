@@ -12,6 +12,7 @@ using namespace desres;
 using msys::System;
 using msys::SystemPtr;
 using msys::ParamTablePtr;
+using msys::ParamTable;
 using msys::Id;
 
 static std::shared_ptr<char> slurp(const char* path) {
@@ -228,6 +229,17 @@ static void read_params(Value const& val, Value const& names, ParamTablePtr para
     }
 }
 
+static void read_aux(Document const& d, SystemPtr mol) {
+    auto& names = d["names"];
+    auto const& tables = d.FindMember("aux");
+    if (tables == d.MemberEnd()) return;
+    for (auto& m : tables->value.GetObject()) {
+        auto params = ParamTable::create();
+        read_params(m.value, names, params);
+        mol->addAuxTable(m.name.GetString(), params);
+    }
+}
+
 static void read_tables(Document const& d, SystemPtr mol) {
     auto& names = d["names"];
     auto const& tables = d.FindMember("tables");
@@ -274,6 +286,7 @@ static SystemPtr import_json(Document const& d) {
     read_cell(d, mol);
     read_bonds(d, mol);
     read_tables(d, mol);
+    read_aux(d, mol);
     msys::Analyze(mol);
     return mol;
 }
