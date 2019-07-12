@@ -197,6 +197,9 @@ dms/dms.cxx
 dms/export_dms.cxx
 dms/import_dms.cxx
 
+ff/exclusions.cxx
+ff/component.cxx
+
 molfile/libmolfile_plugin.c
 molfile/molfile.cxx
 molfile/msys.cxx
