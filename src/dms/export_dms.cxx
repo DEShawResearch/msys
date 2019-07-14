@@ -603,7 +603,9 @@ static void export_dms(SystemPtr h, Sqlite dms, Provenance const& provenance,
         export_nbinfo(   sys,            dms);
     }
 
-    export_provenance(sys,provenance,dms);
+    if (!provenance.version.empty()) {
+        export_provenance(sys,provenance,dms);
+    }
     export_version(                  dms);
     
     dms.finish();

@@ -1299,6 +1299,12 @@ class Main(unittest.TestCase):
         self.assertEqual([a.resid for a in oldres],
                          [a.resid for a in newres])
 
+    def testPickleProvenance(self):
+        import copy
+        old = msys.CreateSystem()
+        new = copy.deepcopy(old)
+        self.assertEqual(new.provenance, [])
+
     def testFormatDMS(self):
         old = msys.Load('tests/files/2f4k.dms')
         dms = msys.FormatDMS(old)
