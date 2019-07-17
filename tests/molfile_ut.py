@@ -840,6 +840,12 @@ class TestDtrWriter(unittest.TestCase):
     def tearDown(self):
         SH.rmtree(self.PATH, ignore_errors=True)
 
+    def testClose(self):
+        d = molfile.dtr.write(self.PATH, natoms=10)
+        d.close()
+        del d
+        d = None
+
     def testMixedAtomCount(self):
         d = molfile.dtr.write(self.PATH, natoms=10)
         f = molfile.Frame(20)

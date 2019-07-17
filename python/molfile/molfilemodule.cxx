@@ -202,6 +202,7 @@ namespace {
                     (arg("time"),
                      arg("keyvals")))
             .def("sync", &DtrWriter::sync)
+            .def("close", &DtrWriter::close)
             ;
     }
 

@@ -2395,6 +2395,10 @@ void DtrWriter::append(double time, KeyMap const& map) {
 }
 
 DtrWriter::~DtrWriter() {
+    close();
+}
+
+void DtrWriter::close() {
   sync();
   if (frame_fd>0) ::close(frame_fd);
   if (timekeys_file) fclose(timekeys_file);
@@ -2402,6 +2406,13 @@ DtrWriter::~DtrWriter() {
   if (framebuffer) free(framebuffer);
   if (etr_key_buffer) free(etr_key_buffer);
   if (etr_frame_buffer) free(etr_frame_buffer);
+
+  frame_fd=0;
+  timekeys_file=nullptr;
+  meta_file=nullptr;
+  framebuffer=nullptr;
+  etr_key_buffer=nullptr;
+  etr_frame_buffer=nullptr;
 }
 
 /* Write out the size and then the bytes */

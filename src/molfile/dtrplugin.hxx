@@ -425,6 +425,9 @@ namespace desres { namespace molfile {
     // commit timekeys current frame file to disk.  0 on success.
     int sync();
 
+    // sync and close all file handles
+    void close();
+
     // remove timekeys with times strictly greater than the given time
     void truncate(double after_time);
   };
