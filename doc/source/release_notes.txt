@@ -1,3 +1,11 @@
+1.7.278 Silence some compile warnings.
+        Fix for ParamTable::compare.
+        Routine to build amber-style pairs and exclusions.
+        Make json format use full precision parsing.
+        Make json format handle aux tables.
+        Skip writing of blank provenance entries.
+        Add a close() method to DtrWriter.
+        
 1.7.277 Make System.hash sort terms by default.
         dtr-validate: require constraints only if there are hydrogens.
                       Run anton2 tests by default.
