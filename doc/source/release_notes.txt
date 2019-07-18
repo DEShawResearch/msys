@@ -5,6 +5,9 @@
         Make json format handle aux tables.
         Skip writing of blank provenance entries.
         Add a close() method to DtrWriter.
+        Handle mae export when ct fields contain whitespace.
+        Bump python version.
+        Don't prereq a desres-python from lib-python.
         
 1.7.277 Make System.hash sort terms by default.
         dtr-validate: require constraints only if there are hydrogens.
