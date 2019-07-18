@@ -1982,13 +1982,6 @@ class Main(unittest.TestCase):
         self.assertEqual(m2.ncts, 2)
         self.assertEqual(m2.natoms, 2*m.natoms)
 
-    def testMaeFields(self):
-        m=msys.CreateSystem()
-        m.addAtom().atomic_number=8
-        m.ct(0)['foo bar'] = 32
-        with self.assertRaises(RuntimeError):
-            msys.SerializeMAE(m)
-
     def testRemove(self):
         m=msys.CreateSystem()
         r=m.addResidue()
@@ -3103,6 +3096,12 @@ class Main(unittest.TestCase):
         self.assertEqual(m.ncts, 4)
         self.assertEqual(m.nchains, 4)
         self.assertEqual(m.natoms, 9498)
+
+    def testMaeWhitespaceKey(self):
+        m=msys.CreateSystem()
+        m.addAtom()
+        m.ct(0)['key with whitespace'] = 42
+        msys.SerializeMAE(m)
 
     def testAppendMae(self):
         tmp=tempfile.NamedTemporaryFile(suffix='.mae')

@@ -53,13 +53,17 @@ static void build_ct_fields( SystemPtr mol, Destro& M ) {
 
     /* other fields */
     for (String key : mol->ct(0).keys()) {
-        for (auto c : key) {
+        ValueRef val = mol->ct(0).value(key);
+        for (auto& c : key) {
+            bool first=true;
             if (isspace(c)) {
-                MSYS_FAIL("data field '" << key << "' whose name contains whitespace cannot be written to mae format.");
+                if (first) {
+                    MSYS_WARN("data field '" << key << "' will have whitespace converted to underscores.");
+                    first = false;
+                }
+                c='_';
             }
         }
-
-        ValueRef val = mol->ct(0).value(key);
         char type = "irs"[val.type()];
         if (!strncmp(key.c_str(), "m_depend/", 9)) {
             m_depends[key.substr(9)] = val.asInt();
