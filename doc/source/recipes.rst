@@ -5,6 +5,18 @@ Recipes
 Here are some illustrative Python scripts for situations when a command line
 tool isn't available.
 
+Obtaining force-field parameters for certain atoms
+----------------------------------------------------
+
+Force-field parameters are saved in "terms" inside the force-field "tables" ::
+
+    table = mol.table('stretch_harm')
+    atoms = mol.select('index 0 1')
+    terms = table.findWithAll(atoms)
+    print(dict(terms[0]))
+    # {'constrained': 0, 'fc': 317.0, 'memo': 'JCC,7,(1986),230; AA', 'r0': 1.522, 'type': 'C CT'}
+
+
 Adding artificial bonds
 -----------------------
 
