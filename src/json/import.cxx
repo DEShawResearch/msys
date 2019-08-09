@@ -62,6 +62,10 @@ static std::shared_ptr<char> slurp(const char* path) {
 static void read_chains(Document const& d, SystemPtr mol) {
     auto& names = d["names"];
     auto& chains = d["chains"];
+    if (chains.ObjectEmpty()) {
+        mol->addChain();
+        return;
+    }
     
     // required fields
     auto& name = chains["name"];
@@ -81,6 +85,10 @@ static void read_chains(Document const& d, SystemPtr mol) {
 static void read_residues(Document const& d, SystemPtr mol) {
     auto& names = d["names"];
     auto& residues = d["residues"];
+    if (residues.ObjectEmpty()) {
+        mol->addResidue(0);
+        return;
+    }
     
     // required fields
     auto& chain = residues["chain"];
@@ -141,6 +149,7 @@ static void read_tags(Value const& tags, ParamTablePtr params, Value const& name
 
 static void read_cell(Document const& d, SystemPtr mol) {
     auto& cell = d["cell"];
+    if (cell.Empty()) return;
     double* dst = mol->global_cell[0];
     for (int i=0; i<9; i++) {
         dst[i] = cell[i].GetDouble();
@@ -152,34 +161,35 @@ static void read_particles(Document const& d, SystemPtr mol) {
     auto& particles = d["particles"];
     const Id natoms = particles["count"].GetInt();
     // required fields
-    auto& residue = particles["residue"];
     auto& anum = particles["atomic_number"];
     auto& fc = particles["formal_charge"];
     auto& name = particles["name"];
-    auto& x = particles["x"];
-    auto& y = particles["y"];
-    auto& z = particles["z"];
 
     // optional fields
-    auto const& vx = particles.FindMember("vx");
-    auto const& vy = particles.FindMember("vy");
-    auto const& vz = particles.FindMember("vz");
+    auto const& pos = particles.FindMember("position");
+    auto const& vel = particles.FindMember("velocity");
+    auto const& residue = particles.FindMember("residue");
     auto const& mass = particles.FindMember("mass");
     auto const& charge = particles.FindMember("charge");
     
 
     for (Id i=0; i<natoms; i++) {
-        auto& atm = mol->atomFAST(mol->addAtom(residue[i].GetInt()));
+        Id res = residue != particles.MemberEnd() ? residue->value[i].GetInt() : 0;
+        auto& atm = mol->atomFAST(mol->addAtom(res));
         atm.name = names[name[i].GetInt()].GetString();
-        atm.x = x[i].GetDouble();
-        atm.y = y[i].GetDouble();
-        atm.z = z[i].GetDouble();
+        if (pos != particles.MemberEnd()) {
+            atm.x = pos->value[3*i  ].GetDouble();
+            atm.y = pos->value[3*i+1].GetDouble();
+            atm.z = pos->value[3*i+2].GetDouble();
+        }
+        if (vel != particles.MemberEnd()) {
+            atm.vx = vel->value[3*i  ].GetDouble();
+            atm.vy = vel->value[3*i+1].GetDouble();
+            atm.vz = vel->value[3*i+2].GetDouble();
+        }
         atm.atomic_number = anum[i].GetInt();
         atm.formal_charge = fc[i].GetInt();
 
-        if (vx != particles.MemberEnd()) atm.vx = vx->value[i].GetDouble();
-        if (vy != particles.MemberEnd()) atm.vy = vy->value[i].GetDouble();
-        if (vz != particles.MemberEnd()) atm.vz = vz->value[i].GetDouble();
         if (mass != particles.MemberEnd()) atm.mass = mass->value[i].GetDouble();
         if (charge != particles.MemberEnd()) atm.charge = charge->value[i].GetDouble();
     }

@@ -58,6 +58,21 @@ class TestJson(unittest.TestCase):
             ('workdir', '/d/en/gullingj-0/p4/dms_inputs'),
             ('cmdline', 'mae2dms /proj/desres/root/Linux/x86_64/maeff_inputs/1.3.1/share/ch4.mae ch4.dms ')])
 
+    def testEmptyPosVelRes(self):
+        mol = msys.CreateSystem()
+        res = mol.addResidue()
+        res.addAtom()
+        res.addAtom()
+        res.addAtom()
+        js = msys.FormatJson(mol)
+        print(len(js), js)
+        d = json.loads(js)
+        self.assertFalse("pos" in d["particles"])
+        self.assertFalse("vel" in d["particles"])
+        self.assertFalse("res" in d["particles"])
+        self.assertTrue("name" in d["particles"])
+
+
 class TestNeutralize(unittest.TestCase):
     def test1(self):
         from msys.neutralize import Neutralize

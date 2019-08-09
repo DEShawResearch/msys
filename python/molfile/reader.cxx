@@ -144,7 +144,7 @@ namespace {
         d["yaxis"] = yaxis;
         d["zaxis"] = zaxis;
         d["dims"] = size;
-        return d;
+        return std::move(d);
     }
 
     void reader_grid_data(Reader const& r, int n, PyObject* arr) {

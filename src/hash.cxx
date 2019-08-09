@@ -90,9 +90,9 @@ namespace desres { namespace msys {
             ThreeRoe& tr;
 
             prop_visitor(ThreeRoe& t) : tr(t) {}
-            void operator()(Int& v) const { tr.Update(&v, sizeof(v)); }
-            void operator()(Float& v) const { tr.Update(&v, sizeof(v)); }
-            void operator()(String& v) const { tr.Update(v.data(), v.size()); }
+            void operator()(Int const& v) const { tr.Update(&v, sizeof(v)); }
+            void operator()(Float const& v) const { tr.Update(&v, sizeof(v)); }
+            void operator()(String const& v) const { tr.Update(v.data(), v.size()); }
         };
     }
 

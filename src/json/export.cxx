@@ -143,9 +143,12 @@ static Value export_cell(Document& d, NameMap& map, System& mol) {
     auto& alloc = d.GetAllocator();
     const double* cell = mol.global_cell[0];
     Value arr(kArrayType);
+    bool nonzero = false;
     for (int i=0; i<9; i++) {
         arr.PushBack(cell[i], alloc);
+        if (cell[i] != 0) nonzero = true;
     }
+    if (!nonzero) arr.Clear();
     return arr;
 }
 
@@ -155,44 +158,43 @@ static Value export_particles(Document& d, NameMap& map, System& mol) {
     Value names(kArrayType);
     Value anums(kArrayType);
     Value residues(kArrayType);
-    Value x(kArrayType);
-    Value y(kArrayType);
-    Value z(kArrayType);
-    Value vx(kArrayType);
-    Value vy(kArrayType);
-    Value vz(kArrayType);
+    Value pos(kArrayType);
+    Value vel(kArrayType);
     Value fc(kArrayType);
     Value mass(kArrayType);
     Value charge(kArrayType);
+
+    bool nonzero_pos=false;
+    bool nonzero_vel=false;
+    bool nonzero_res=false;
 
     for (auto i=mol.atomBegin(), e=mol.atomEnd(); i!=e; ++i) {
         auto const& a = mol.atomFAST(*i);
         names.PushBack(register_name(a.name,map,d), alloc);
         anums.PushBack(a.atomic_number, alloc);
         residues.PushBack(a.residue, alloc);
-        x.PushBack(a.x, alloc);
-        y.PushBack(a.y, alloc);
-        z.PushBack(a.z, alloc);
-        vx.PushBack(a.vx, alloc);
-        vy.PushBack(a.vy, alloc);
-        vz.PushBack(a.vz, alloc);
+        pos.PushBack(a.x, alloc);
+        pos.PushBack(a.y, alloc);
+        pos.PushBack(a.z, alloc);
+        vel.PushBack(a.vx, alloc);
+        vel.PushBack(a.vy, alloc);
+        vel.PushBack(a.vz, alloc);
         fc.PushBack(a.formal_charge, alloc);
         mass.PushBack(a.mass, alloc);
         charge.PushBack(a.charge, alloc);
+        if (a.residue!=0) nonzero_res=true;
+        if (a.x!=0  || a.y!=0  || a.z!=0)  nonzero_pos=true;
+        if (a.vx!=0 || a.vy!=0 || a.vz!=0) nonzero_vel=true;
     }
     p.AddMember("count", mol.atomCount(), alloc);
     p.AddMember("name", names, alloc);
     p.AddMember("atomic_number", anums, alloc);
-    p.AddMember("residue", residues, alloc);
     p.AddMember("formal_charge", fc, alloc);
     p.AddMember("mass", mass, alloc);
     p.AddMember("charge", charge, alloc);
-    p.AddMember("x", x, alloc);
-    p.AddMember("y", y, alloc);
-    p.AddMember("z", z, alloc);
-    p.AddMember("vx", vx, alloc);
-    p.AddMember("vy", vy, alloc);
-    p.AddMember("vz", vz, alloc);
+    if (nonzero_pos) p.AddMember("position", pos, alloc);
+    if (nonzero_vel) p.AddMember("velocity", vel, alloc);
+    if (nonzero_res) p.AddMember("residue", residues, alloc);
     p.AddMember("tags", export_tags(mol.atomProps(), d, map), alloc);
     return p;
 }
@@ -222,19 +224,24 @@ static Value export_residues(Document& d, NameMap& map, System const& mol) {
     Value resid(kArrayType);
     Value name(kArrayType);
     Value insertion(kArrayType);
+    bool nonzero = false;
     for (auto i=mol.residueBegin(), e=mol.residueEnd(); i!=e; ++i) {
         auto const& a = mol.residueFAST(*i);
         chain.PushBack(a.chain, alloc);
         resid.PushBack(a.resid, alloc);
         name.PushBack(register_name(a.name,map,d), alloc);
         insertion.PushBack(register_name(a.insertion,map,d), alloc);
+        if (a.chain!=0 || a.resid!=0 || !a.name.empty() || !a.insertion.empty()) {
+            nonzero = true;
+        }
     }
-    residues.AddMember("count", mol.residueCount(), alloc);
-    residues.AddMember("chain", chain, alloc);
-    residues.AddMember("resid", resid, alloc);
-    residues.AddMember("name", name, alloc);
-    // Make this optional
-    residues.AddMember("insertion", insertion, alloc);
+    if (nonzero || mol.residueCount() > 1) {
+        residues.AddMember("count", mol.residueCount(), alloc);
+        residues.AddMember("chain", chain, alloc);
+        residues.AddMember("resid", resid, alloc);
+        residues.AddMember("name", name, alloc);
+        residues.AddMember("insertion", insertion, alloc);
+    }
     return residues;
 }
 
@@ -243,15 +250,18 @@ static Value export_chains(Document& d, NameMap& map, System const& mol) {
     Value chains(kObjectType);
     Value name(kArrayType);
     Value segid(kArrayType);
+    bool nonzero = false;
     for (auto i=mol.chainBegin(), e=mol.chainEnd(); i!=e; ++i) {
         auto const& a = mol.chainFAST(*i);
         name.PushBack(register_name(a.name,map,d), alloc);
         segid.PushBack(register_name(a.segid,map,d), alloc);
+        if (!(a.name.empty() && a.segid.empty())) nonzero=false;
     }
-    chains.AddMember("name", name, alloc);
-    // Make this optional
-    chains.AddMember("segid", segid, alloc);
-    chains.AddMember("count", mol.chainCount(), alloc);
+    if (nonzero || mol.chainCount()>1) {
+        chains.AddMember("name", name, alloc);
+        chains.AddMember("segid", segid, alloc);
+        chains.AddMember("count", mol.chainCount(), alloc);
+    }
     return chains;
 }
 
