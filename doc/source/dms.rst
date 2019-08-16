@@ -424,7 +424,7 @@ The second dihedral functional form is:
 
 where :math:`f_c` is the dihedral angle force constant in units of
 Energy/radians\ :math:`^2` and :math:`\phi_0` is the equilibrium dihedral angle
-in radians.  The :math:`\phi` angle is formed by the planes
+in degrees (converted to radians internally). The :math:`\phi` angle is formed by the planes
 :math:`p0`\ --\ :math:`p1`\ --\ :math:`p2` and :math:`p1`\ --\ :math:`p2`\ --\ :math:`p3`\ .  Terms in
 ``improper_harm`` are handled by this potential function.
 
