@@ -50,7 +50,8 @@ Id ParamTable::addProp( const String& name, ValueType type) {
     Id index = propIndex(name);
     if (!bad(index)) {
         if (propType(index)!=type) {
-            throw std::runtime_error("attempt to change type of prop");
+            MSYS_FAIL("could not add prop '" << name << "' with type "
+                    << type << "; already exists with type " << propType(index));
         }
         return index;
     }
