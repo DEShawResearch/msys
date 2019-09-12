@@ -1,7 +1,7 @@
 #!/usr/bin/garden-exec
 #{
 # source `dirname $0`/pyenv.sh
-# garden load openeye-toolkits/2017.10.1-01c7/lib-python${PYSUFFIX}
+# garden load openeye-toolkits/2019.4.2-02c7/lib-python37
 # exec python $0 "$@"
 #}
 
