@@ -41,7 +41,7 @@ class Main(unittest.TestCase):
 
     def testSmall(self):
         mol = msys.Load('tests/files/jandor-bad.sdf')
-        
+
         # by default ConvertToOEChem doesn't assign the formal charges, should it?!
         contains_radicals = "C[C@H]([C@@H]1[C@H]2[C@H](C(=C(N2C1=O)C(=O)OCc3ccc(cc3)[N](=O)[O])Sc4ncccn4)OC)O"
         oemol = msys.ConvertToOEChem(mol)
@@ -75,7 +75,7 @@ class Main(unittest.TestCase):
     def checkStereo(self, atom, expected):
         self.assertTrue(atom.IsChiral())
         self.assertTrue(atom.HasStereoSpecified())
-        
+
         v = []
         for nbr in atom.GetAtoms():
             v.append(nbr)
@@ -235,6 +235,14 @@ class Main(unittest.TestCase):
             assert oechem.OEReadMolecule(ifs, mol)
         assert oechem.OESuppressHydrogens(mol)
         self.assertRaises(ValueError, msys.ConvertFromOEChem, mol)
+
+    def testNearlyPlanar(self):
+        dms = msys.Load("tests/files/desresff420.dms")
+        oe1 = msys.ConvertToOEChem(dms)
+        oe2 = msys.ConvertToOEChem(dms.select("fragment 0"))
+        s1 = oechem.OEMolToSmiles(oe1)
+        s2 = oechem.OEMolToSmiles(oe2)
+        assert s1 == s2
 
     def testLinearMoleculesWithNoHydrogens(self):
         from openeye import oeomega

@@ -1973,7 +1973,7 @@ def ConvertToOEChem(mol_or_atoms):
         bonds = list()
         for a in atoms:
             bonds += a.bonds
-        bonds = set(bonds)
+        bonds = sorted(set(bonds), key=lambda x: x.id)
         coords = numpy.array([a.pos for a in atoms])
 
     for idx, atm in enumerate(atoms):

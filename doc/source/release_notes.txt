@@ -1,3 +1,4 @@
+1.7.279 Ensure ConvertToOEChem gives deterministic order of bonds
 1.7.278 Silence some compile warnings.
         Fix for ParamTable::compare.
         Routine to build amber-style pairs and exclusions.
