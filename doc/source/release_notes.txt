@@ -1,4 +1,9 @@
 1.7.279 Ensure ConvertToOEChem gives deterministic order of bonds
+        Add documentation on extracting force-field parameters
+        Fixed docs for improper definition (DESRESCode4243)
+        Drop python2 from build and tests.
+        Better error message when addProp fails.
+
 1.7.278 Silence some compile warnings.
         Fix for ParamTable::compare.
         Routine to build amber-style pairs and exclusions.
