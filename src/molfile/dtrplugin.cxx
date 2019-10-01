@@ -2485,9 +2485,11 @@ std::istream& DtrReader::load_v8(std::istream &in) {
        >> meta_hash
        >> jobstep_id;
 
-    for (auto c : jobstep_id) {
-        if (!isdigit(c)) {
-            MSYS_FAIL("non-numeric jobstep_id character found in cache");
+    if (jobstep_id != "UNREAD") {
+        for (auto c : jobstep_id) {
+            if (!isdigit(c)) {
+                MSYS_FAIL("non-numeric jobstep_id character found in cache");
+            }
         }
     }
 
