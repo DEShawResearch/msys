@@ -1690,6 +1690,23 @@ class Main(unittest.TestCase):
         msys.AssignBondOrderAndFormalCharge(sys)
         msys.AssignBondOrderAndFormalCharge(sys.select('water'))
 
+    def testAssignBondOrderTimeout(self):
+        mol = msys.FromSmilesString('c12c3c4c5c1c6c7c8c2c9c1c3c2c3c4c4c%10c5c5c6c6c7c7c%11c8c9c8c9c1c2c1c2c3c4c3c4c%10c5c5c6c6c7c7c%11c8c8c9c1c1c2c3c2c4c5c6c3c7c8c1c23')
+        with self.assertRaises(Exception):
+            msys.AssignBondOrderAndFormalCharge(mol, timeout=1)
+
+        mol = msys.FromSmilesString('c1ccccc1')
+        for b in mol.bonds: b.order=1
+        msys.AssignBondOrderAndFormalCharge(mol, timeout=1)
+        orders = [b.order for b in mol.bonds]
+        self.assertEqual(orders, [1,2,1,2,1,2,1,1,1,1,1,1])
+
+        for b in mol.bonds: b.order=1
+        msys.AssignBondOrderAndFormalCharge(mol)
+        orders = [b.order for b in mol.bonds]
+        self.assertEqual(orders, [1,2,1,2,1,2,1,1,1,1,1,1])
+
+
     def testResonantCharges(self):
         mol = msys.Load('tests/files/jandor.sdf')
         msys.AssignBondOrderAndFormalCharge(mol)

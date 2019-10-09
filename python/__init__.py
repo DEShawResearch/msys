@@ -21,6 +21,7 @@ from ._msys import BadId
 from .atomsel import Atomsel
 from . import molfile
 
+
 class Handle(object):
     __slots__ = ('_ptr', '_id')
 
@@ -2304,8 +2305,13 @@ def GetRingSystems(atoms):
     ptr, _ids = _convert_ids(atoms)
     return _msys.RingSystems(ptr, _ids)
 
+def _assign(m, *args):
+    AssignBondOrderAndFormalCharge(m, *args)
+    return m
+
 def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge=None,
-                                   compute_resonant_charges=False):
+                                   compute_resonant_charges=False, *,
+                                   timeout=None):
     """Assign bond orders and formal charges to a molecular system.
 
     Determines bond orders and formal charges by preferring neutral
@@ -2325,6 +2331,20 @@ def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge=None,
             in atom property 'resonant_charge' and resonant bond order in
             bond property 'resonant_order'.
     """
+    if timeout is not None:
+        if not isinstance(system_or_atoms, System):
+            raise ValueError("timeout supported only for System input")
+        from multiprocessing import Pool
+        pool = Pool()
+        result = pool.apply_async(_assign, args=(system_or_atoms, total_charge, compute_resonant_charges))
+        mol = result.get(timeout)
+        pool.close()
+        for src, dst in zip(mol.atoms, system_or_atoms.atoms):
+            dst.formal_charge = src.formal_charge
+        for src, dst in zip(mol.bonds, system_or_atoms.bonds):
+            dst.order = src.order
+        return
+
     if isinstance(system_or_atoms, System):
         ptr = system_or_atoms._ptr
         if total_charge is None:
