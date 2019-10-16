@@ -52,6 +52,14 @@ namespace desres { namespace msys {
     void Analyze(SystemPtr mol);
 
     void GuessHydrogenPositions(SystemPtr mol, IdList const& hatoms);
+ 
+   /* Returns lists of non-pseudo bonds, pseudo bonds, angles, and dihedrals
+    * in a given fragment or set of fragments */
+    void GetBondsAnglesDihedrals(SystemPtr sys, const IdList& atoms,
+            std::vector<IdList>& non_pseudo_bonds,
+            std::vector<IdList>& pseudo_bonds,
+            std::vector<IdList>& angles,
+            std::vector<IdList>& dihedrals);
 
 }}
 

@@ -179,6 +179,7 @@ smarts.cxx
 analyze/eigensystem.cxx
 analyze/get_fragments.cxx
 analyze/topological_ids.cxx
+analyze/get_bonds_angles_dihedrals.cxx
 
 amber/import_prmtop.cxx
 

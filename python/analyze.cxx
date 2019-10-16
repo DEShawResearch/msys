@@ -64,6 +64,32 @@ namespace {
         GuessHydrogenPositions(mol, ids_from_python(ids));
     }
 
+    list convert_vector_idlist(std::vector<IdList> const& v) {
+        list L;
+        for (auto ids : v) {
+            list s;
+            for (auto id : ids) {
+                s.append(id);
+            }
+            L.append(s);
+        }
+        return L;
+    }
+
+    dict get_bonds_angles_dihedrals(SystemPtr mol) {
+        std::vector<IdList> non_pseudo_bonds;
+        std::vector<IdList> pseudo_bonds;
+        std::vector<IdList> angles;
+        std::vector<IdList> dihedrals;
+        GetBondsAnglesDihedrals(mol, mol->atoms(), non_pseudo_bonds, pseudo_bonds, angles, dihedrals);
+        dict d;
+        d["non_pseudo_bonds"] = convert_vector_idlist(non_pseudo_bonds);
+        d["pseudo_bonds"] = convert_vector_idlist(pseudo_bonds);
+        d["angles"] = convert_vector_idlist(angles);
+        d["dihedrals"] = convert_vector_idlist(dihedrals);
+        return d;
+    }
+
 }
 
 namespace desres { namespace msys { 
@@ -93,6 +119,7 @@ namespace desres { namespace msys {
         def("Analyze", Analyze);
         def("GuessAtomicNumber", GuessAtomicNumber);
         def("ElectronegativityForElement", elec_for_element, "Allen-scale electronegativity");
+        def("GetBondsAnglesDihedrals", get_bonds_angles_dihedrals);
 
         class_<SmartsPattern>("SmartsPattern", init<std::string const&>())
             .def("atomCount", &SmartsPattern::atomCount)

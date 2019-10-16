@@ -2535,6 +2535,12 @@ def ComputeTopologicalIds(system):
     ids = _msys.ComputeTopologicalIds(system._ptr)
     return [x for x in ids]
 
+def GetBondsAnglesDihedrals(system):
+    ''' Return bonds, angles and dihedrals deduced from bond topology
+    Returns: dict
+    '''
+    return _msys.GetBondsAnglesDihedrals(system._ptr)
+
 def CalcDistance(a, b):
     ''' Distance between atoms or positions a and b '''
     if not isinstance(a,numpy.ndarray): a = a.pos
