@@ -9,11 +9,12 @@
 #include <fstream>
 #include <cstring>
 #include <cmath>
+#include <iomanip>
 
 using namespace desres::msys;
 
 namespace {
-    
+
     std::string parse_flag(std::string const& line) {
         std::string flag = line.substr(5);
         trim(flag);
@@ -32,7 +33,7 @@ namespace {
             if (lp==std::string::npos || rp==std::string::npos) {
                 MSYS_FAIL("Expected %FORMAT(fmt), got '" << line << "'");
             }
-            if (sscanf(line.c_str()+lp+1, "%d%c%d", 
+            if (sscanf(line.c_str()+lp+1, "%d%c%d",
                        &nperline, &type, &width)!=3) {
                 MSYS_FAIL("Error parsing FORMAT '" << line << "'");
             }
@@ -56,7 +57,7 @@ namespace {
     };
     typedef std::map<std::string, Section> SectionMap;
 
-    void parse_ints(SectionMap const& map, String const& name, std::vector<int>& v) 
+    void parse_ints(SectionMap const& map, String const& name, std::vector<int>& v)
     {
         SectionMap::const_iterator it=map.find(name);
         if (it==map.end()) MSYS_FAIL("Missing section " << name);
@@ -69,8 +70,8 @@ namespace {
         }
     }
 
-    void parse_strs(SectionMap const& map, String const& name, 
-                    std::vector<String>& v) 
+    void parse_strs(SectionMap const& map, String const& name,
+                    std::vector<String>& v)
     {
         SectionMap::const_iterator it=map.find(name);
         if (it==map.end()) MSYS_FAIL("Missing section " << name);
@@ -81,7 +82,7 @@ namespace {
         }
     }
 
-    void parse_flts(SectionMap const& map, String const& name, std::vector<double>& v) 
+    void parse_flts(SectionMap const& map, String const& name, std::vector<double>& v)
     {
         SectionMap::const_iterator it=map.find(name);
         if (it==map.end()) MSYS_FAIL("Missing section " << name);
@@ -93,7 +94,7 @@ namespace {
             }
         }
     }
-    
+
 }
 
 namespace {
@@ -150,7 +151,7 @@ static void parse_nonbonded(SystemPtr mol, SectionMap const& map, int ntypes,
         IdList ids(1, i);
         nb->addTerm(ids, param);
     }
-    
+
     for (PairList::const_iterator it=pairs.begin(); it!=pairs.end(); ++it) {
         Id ai = it->ai;
         Id aj = it->aj;
@@ -180,7 +181,7 @@ static void parse_nonbonded(SystemPtr mol, SectionMap const& map, int ntypes,
 static void parse_stretch(SystemPtr mol, SectionMap const& map,
                           bool without_tables,
                           int ntypes, int nbonh, int nbona) {
-    
+
     std::vector<double> r0(ntypes), fc(ntypes);
     std::vector<int> bonh(nbonh*3), bona(nbona*3);
 
@@ -226,10 +227,10 @@ static void parse_stretch(SystemPtr mol, SectionMap const& map,
         tb->addTerm(ids, bona[3*i+2]-1);
     }
 }
- 
+
 static void parse_angle(SystemPtr mol, SectionMap const& map,
                           int ntypes, int nbonh, int nbona) {
-    
+
     std::vector<double> r0(ntypes), fc(ntypes);
     std::vector<int> bonh(nbonh*4), bona(nbona*4);
 
@@ -257,8 +258,87 @@ static void parse_angle(SystemPtr mol, SectionMap const& map,
         ids[2] = bona[4*i+2]/3;
         tb->addTerm(ids, bona[4*i+3]-1);
     }
-} 
+}
 
+
+/*
+    DESRESCode#3431 Note that while cmaps live in a std::vector and
+    are therefore 0-indexed, they are referred to in the
+    torsion_torsion_cmap table 1-indexed. Atomids are 0 indexed
+*/
+static void parse_cmap(SystemPtr mol, SectionMap const& map) {
+    std::string prefix = "";
+
+    std::vector<int> counts(2);
+    if (map.find("CMAP_COUNT") != map.end()){
+        parse_ints(map, "CMAP_COUNT", counts);
+    }else if(map.find("CHARMM_CMAP_COUNT") != map.end()){
+        prefix = "CHARMM_";
+        parse_ints(map, "CHARMM_CMAP_COUNT", counts);
+    }else{
+        return;
+    }
+
+    /* Load the table */
+    std::vector<int> resolution(counts[1]);
+    parse_ints(map, prefix+"CMAP_RESOLUTION", resolution);
+
+    for (int i=0; i<counts[1]; i++) {
+        std::vector<double> table(resolution[i]*resolution[i]);
+        {
+            std::stringstream ss;
+            ss << prefix << "CMAP_PARAMETER_" <<  std::setfill('0') << std::setw(2) << i+1;
+            std::string secname = ss.str();
+            parse_flts(map, secname, table);
+        }
+        ParamTablePtr cmap_table = ParamTable::create();
+        cmap_table->addProp("phi", FloatType);
+        cmap_table->addProp("psi", FloatType);
+        cmap_table->addProp("energy", FloatType);
+
+        double spacing = 360.0/resolution[i];
+        for (int iphi=0; iphi<resolution[i]; iphi++) {
+            for (int ipsi=0; ipsi<resolution[i]; ipsi++) {
+                Id row = cmap_table->addParam();
+                cmap_table->value(row, 0) = -180.0 + iphi*spacing;
+                cmap_table->value(row, 1) = -180.0 + ipsi*spacing;
+                cmap_table->value(row, 2) = table[resolution[i]*iphi+ipsi];
+            }
+        }
+
+        {
+            std::stringstream ss;
+            ss << "cmap" << i+1;
+            std::string tname = ss.str();
+            mol->addAuxTable(tname, cmap_table);
+        }
+    }
+
+    /* Map terms to tables */
+    IdList ids(8);
+    TermTablePtr tb = AddTable(mol, "torsiontorsion_cmap");
+    ParamTablePtr params = tb->params();
+
+    std::vector<int> terms(counts[0]*6);
+    parse_ints(map, prefix+"CMAP_INDEX", terms);
+    for (int i=0; i<counts[0]; i++) {
+        ids[0] =          terms[6*i  ] - 1;
+        ids[1] = ids[4] = terms[6*i+1] - 1;
+        ids[2] = ids[5] = terms[6*i+2] - 1;
+        ids[3] = ids[6] = terms[6*i+3] - 1;
+        ids[7]          = terms[6*i+4] - 1;
+        int ind = terms[6*i+5];
+
+        Id param = params->addParam();
+        {
+            std::stringstream ss;
+            ss << "cmap" << ind;
+            std::string tname = ss.str();
+            params->value(param, "cmapid") = tname;
+        }
+        tb->addTerm(ids, param);
+    }
+}
 
 namespace {
     struct CompareTorsion {
@@ -270,10 +350,10 @@ namespace {
         }
     };
 }
-    
+
 static PairList parse_torsion(SystemPtr mol, SectionMap const& map,
                           int ntypes, int nbonh, int nbona) {
-    
+
     std::vector<double> phase(ntypes), fc(ntypes), period(ntypes);
     std::vector<int> bonh(nbonh*5), bona(nbona*5);
     std::vector<double> scee(ntypes, 1.2);
@@ -374,7 +454,7 @@ static PairList parse_torsion(SystemPtr mol, SectionMap const& map,
         params->value(param, 1) = oldsum + fc_orig;
     }
     return pairs;
-} 
+}
 
 static void parse_exclusions(SystemPtr mol, SectionMap const& map, int n) {
     if (n==0) return;
@@ -404,7 +484,7 @@ SystemPtr desres::msys::ImportPrmTop( std::string const& path,
     if (!in) MSYS_FAIL("Could not open prmtop file at '" << path << "'");
 
     SystemPtr mol = System::create();
-    
+
     /* first line is version */
     std::getline(in, line);
 
@@ -415,12 +495,12 @@ SystemPtr desres::msys::ImportPrmTop( std::string const& path,
     /* slurp in the rest of the file assuming %FLAG and %FORMAT are always
        on their own line.
     */
-    SectionMap section; 
+    SectionMap section;
     while (in) {
         std::string flag = parse_flag(line);
         Section& sec = section[flag];
         sec.flag = flag;
-        while (std::getline(in, line) && line.size()<1);
+        while (std::getline(in, line) && (line.size()<1 || line.substr(0,8)=="%COMMENT"));
         sec.fmt = Format(line);
         while (std::getline(in, line)) {
             if (line.size()<1) continue;
@@ -458,11 +538,11 @@ SystemPtr desres::msys::ImportPrmTop( std::string const& path,
     }
     if (ptrs[Ifpert]>0)
         MSYS_FAIL("IFPERT > 0: cannot read perturbation information");
-    
+
 
     std::vector<int> resptrs(ptrs[Nres]);
     parse_ints(section, "RESIDUE_POINTER", resptrs);
-   
+
     std::vector<String> resnames(ptrs[Nres]);
     parse_strs(section, "RESIDUE_LABEL", resnames);
 
@@ -495,14 +575,15 @@ SystemPtr desres::msys::ImportPrmTop( std::string const& path,
 
     if (!without_tables) {
         parse_angle(mol, section, ptrs[Numang], ptrs[Ntheth], ptrs[Ntheta]);
-        PairList pairs = parse_torsion(mol, section, 
+        PairList pairs = parse_torsion(mol, section,
                                       ptrs[Nptra], ptrs[Nphih], ptrs[Nphia]);
         parse_nonbonded(mol, section, ptrs[Ntypes], pairs);
         parse_exclusions(mol, section, ptrs[Nnb]);
+        parse_cmap(mol, section);
     }
 
     Analyze(mol);
     mol->coalesceTables();
     return Clone(mol, mol->atoms());
 }
- 
+
