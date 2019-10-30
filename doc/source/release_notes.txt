@@ -1,3 +1,7 @@
+1.7.281 canonicalize atoms and bonds before calculating
+          bond orders and formal charges
+        bugfix for usage of msys.* in MatchFragments python code        
+
 1.7.280 Handle UNREAD as jobstep_id in stk cache.
 
 1.7.279 Ensure ConvertToOEChem gives deterministic order of bonds
