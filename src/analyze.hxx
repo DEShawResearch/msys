@@ -33,6 +33,18 @@ namespace desres { namespace msys {
     /* Compute topology ids.  FIXME definition please */
     IdList ComputeTopologicalIds(SystemPtr mol);
 
+    /* Takes a molecule, and reorders the atoms so that all topologically
+     * identical atoms are grouped together, and topological groups are sorted
+     * by ascending id. The bonds are also sorted by the topological ids of their
+     * constituent atoms.
+     * returns a SystenPtr to the canonicalized system, and mappings
+     * between the old atom/bond ids and the canonicalized ids
+     */
+    SystemPtr CanonicalizeMoleculeByTopids(SystemPtr mol,
+                                           IdList const& atoms,
+                                           std::map<Id, Id> &aid_to_canId,
+                                           std::map<Id, Id> &bid_to_canId);
+
     /* Add bonds based on estimated VDW radii determined from atomic
      * number (Bondi radii). */
     void GuessBondConnectivity(SystemPtr mol, bool periodic=false);
@@ -52,7 +64,7 @@ namespace desres { namespace msys {
     void Analyze(SystemPtr mol);
 
     void GuessHydrogenPositions(SystemPtr mol, IdList const& hatoms);
- 
+
    /* Returns lists of non-pseudo bonds, pseudo bonds, angles, and dihedrals
     * in a given fragment or set of fragments */
     void GetBondsAnglesDihedrals(SystemPtr sys, const IdList& atoms,

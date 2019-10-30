@@ -10,7 +10,7 @@
 #include <numeric>
 #include <queue>
 #include <stdio.h>
-
+#include <tuple>
 
 #if defined(WIN32) && !defined(drand48)
 #define drand48() ((double)rand()/(double)RAND_MAX)
@@ -30,7 +30,7 @@ namespace {
             if (i>=j) return true;
             int ai = mol->atomFAST(i).atomic_number;
             int aj = mol->atomFAST(j).atomic_number;
-            if ((ai==1 && aj==1) || (ai==0 && aj==0)) 
+            if ((ai==1 && aj==1) || (ai==0 && aj==0))
                 return true;
             return false;
         }
@@ -51,6 +51,61 @@ namespace {
 }
 
 namespace desres { namespace msys {
+
+    SystemPtr CanonicalizeMoleculeByTopids(SystemPtr mol, IdList const& atoms,
+                                           std::map<Id, Id> &aid_to_canId,
+                                           std::map<Id, Id> &bid_to_canId){
+        aid_to_canId.clear();
+        bid_to_canId.clear();
+
+        IdList topids = ComputeTopologicalIds(mol);
+        std::map<Id, IdList> topid_to_atomid;
+        for(Id aid : atoms){
+            topid_to_atomid[topids.at(aid)].push_back(aid);
+        }
+        IdList neworder;
+        for (auto const& kv : topid_to_atomid) {
+            for( auto const& v: kv.second){
+                aid_to_canId[v] = neworder.size();
+                neworder.push_back(v);
+            }
+        }
+        std::vector< std::tuple<Id, Id, Id, Id, Id> > newBonds;
+        for (Id bid : mol->bonds()) {
+            bond_t const& bond = mol->bond(bid);
+            auto it0 = aid_to_canId.find(bond.i);
+            auto it1 = aid_to_canId.find(bond.j);
+            /* only keep the bond if we have both atoms */
+            if(it0 == aid_to_canId.end() or it1 == aid_to_canId.end()) continue;
+            Id newAtom0 = it0->second;
+            Id newAtom1 = it1->second;
+            Id tid0 = topids.at(bond.i);
+            Id tid1 = topids.at(bond.j);
+            if ( tid1 < tid0 ){
+                std::swap(tid0, tid1);
+            }
+            if ( newAtom1 < newAtom0){
+                std::swap(newAtom0, newAtom1);
+            }
+            newBonds.push_back(std::make_tuple(tid0, tid1, newAtom0, newAtom1, bid));
+        }
+        std::sort(newBonds.begin(), newBonds.end());
+        SystemPtr newmol = Clone(mol, neworder);
+        /* remove all the old bonds */
+            for (Id bid : newmol->bonds()){
+                newmol->delBond(bid);
+        }
+        /* we can clone again here if we want the bonds to start back at id=0 */
+        // newmol = Clone(newmol, neworder);
+
+        /* add in the new bonds and keep track of their ids */
+        for (auto const& v : newBonds){
+            Id canid = newmol->addBond(std::get<2>(v), std::get<3>(v));
+            bid_to_canId[std::get<4>(v)] = canid;
+        }
+        return newmol;
+    }
+
 
     void AssignBondOrderAndFormalCharge(SystemPtr mol, unsigned flags) {
         MultiIdList fragments;
@@ -87,7 +142,7 @@ namespace desres { namespace msys {
                 for (Id i=1; i<frags.size(); i++) {
                     GraphPtr sel = graphs[frags[i]];
                     if (!ref->match(sel, perm)) {
-                        /* didn't match, so push into the next iteration 
+                        /* didn't match, so push into the next iteration
                          * for another bond order calculation */
                         unmatched.push_back(frags[i]);
                     } else {
@@ -119,7 +174,8 @@ namespace desres { namespace msys {
         }
     }
 
-    void AssignBondOrderAndFormalCharge(SystemPtr mol, 
+
+    void AssignBondOrderAndFormalCharge(SystemPtr mol,
                                         IdList const& atoms,
                                         int total_charge,
                                         unsigned flags) {
@@ -127,13 +183,41 @@ namespace desres { namespace msys {
         MSYS_FAIL("LPSOLVE functionality was not included.");
 #else
         if (atoms.empty()) return;
+
+        /* get a canonicalized ordering for the molecule based on topids */
+        std::map<Id, Id> aid_to_canId;
+        std::map<Id, Id> bid_to_canId;
+        SystemPtr canmol = CanonicalizeMoleculeByTopids(mol, atoms, aid_to_canId, bid_to_canId);
+
         bool compute_resonant_charge = flags & AssignBondOrder::ComputeResonantCharges;
-        BondOrderAssigner boa(mol, atoms, compute_resonant_charge);
+        BondOrderAssigner boa(canmol, canmol->atoms(), compute_resonant_charge);
         if (total_charge != INT_MAX) {
             boa.setTotalCharge(total_charge);
         }
         boa.solveIntegerLinearProgram();
         boa.assignSolutionToAtoms();
+
+        Id qprop = BadId, oprop = BadId;
+        Id can_qprop = BadId, can_oprop = BadId;
+        if (compute_resonant_charge) {
+            qprop = mol->addAtomProp("resonant_charge", FloatType);
+            oprop = mol->addBondProp("resonant_order", FloatType);
+            can_qprop = canmol->atomPropIndex("resonant_charge");
+            can_oprop = canmol->bondPropIndex("resonant_order");
+        }
+        /* copy fc/bo from canonical mol to input mol */
+        for ( auto const& kv : aid_to_canId){
+            mol->atom(kv.first).formal_charge = canmol->atom(kv.second).formal_charge;
+            if (compute_resonant_charge) {
+                mol->atomPropValue(kv.first, qprop) = canmol->atomPropValue(kv.second, can_qprop);
+            }
+        }
+        for ( auto const& kv : bid_to_canId){
+            mol->bond(kv.first).order = canmol->bond(kv.second).order;
+            if (compute_resonant_charge) {
+                mol->bondPropValue(kv.first, oprop) = canmol->bondPropValue(kv.second, can_oprop);
+            }
+        }
 #endif
     }
 
@@ -201,10 +285,10 @@ namespace desres { namespace msys {
                 }
             }
         }
-        /* if a pseudo has multiple bonds: 
+        /* if a pseudo has multiple bonds:
               keep the shortest non-pseudo bond (ie closest atom is "parent"),
            if a hydrogen has multiple bonds:
-              keep the shortest heavy bond (preserving any virtual bonds) 
+              keep the shortest heavy bond (preserving any virtual bonds)
         */
         for (Id i=0; i<mol->maxAtomId(); i++) {
             if (!mol->hasAtom(i)) continue;
@@ -316,7 +400,7 @@ namespace {
                 cb=nbr;
             } else {
                 /* already have a cb candidate.  Pick the better one. */
-                if (mol->atomFAST(nbr).atomic_number==1 || 
+                if (mol->atomFAST(nbr).atomic_number==1 ||
                     toupper(mol->atomFAST(nbr).name[0]=='H')) continue;
                 cb=nbr;
             }
@@ -343,7 +427,7 @@ namespace {
     // always been slower than using Graph::match.  Go figure.
     static std::string waterhash;
     static GraphPtr watergraph;
-    struct _ { 
+    struct _ {
         _() {
             SystemPtr m = System::create();
             m->addChain();
@@ -456,7 +540,7 @@ namespace {
             if (atype==AtomNucBack) ++nnuc;
         }
         ResidueType rtype=ResidueOther;
-        if (npro>=4 && 
+        if (npro>=4 &&
             ca_atm!=BadId && c_atm!=BadId && n_atm != BadId &&
             !bad(self->findBond(ca_atm,n_atm)) &&
             !bad(self->findBond(ca_atm,c_atm)) &&
@@ -475,7 +559,7 @@ namespace {
 }
 
 void desres::msys::Analyze(SystemPtr self) {
-    
+
     self->updateFragids();
     for (auto it=self->residueBegin(), e=self->residueEnd(); it!=e; ++it) {
         analyze_residue(self, *it);

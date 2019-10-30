@@ -1,10 +1,12 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/garden-exec
+#{
+# garden env-keep-only --user
+# garden load desres-python/3.7.2-08c7/bin
+# garden prepend-path PYTHONPATH $(dirname $0)/../../build/lib/python
+# python "$0" "$@"
+#}
 
 # Run from current directory (...msys/tests/smarts_tests)
-import sys
-import os
-TMPDIR=os.getenv('TMPDIR', '../../objs/Linux/x86_64')
-sys.path.insert(0,os.path.join(TMPDIR, 'lib', 'python'))
 import msys
 import ast
 import pprint
