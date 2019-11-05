@@ -2104,7 +2104,11 @@ def ConvertToRdkit(mol, sanitize=True):
         ratm.SetProp("_Name", atm.name)
         emol.AddAtom(ratm)
     for bnd in mol.bonds:
-        emol.AddBond(bnd.first.id, bnd.second.id, Chem.BondType(bnd.order))
+        if 0 in (bnd.first.atomic_number, bnd.second.atomic_number):
+            order = 0
+        else:
+            order = bnd.order
+        emol.AddBond(bnd.first.id, bnd.second.id, Chem.BondType(order))
     rdmol = emol.GetMol()
     conf = Chem.Conformer(mol.natoms)
     for i, pos in enumerate(mol.getPositions()):
