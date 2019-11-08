@@ -1,0 +1,275 @@
+#!/usr/bin/garden-exec
+#{
+# garden env-keep-only
+# . $(dirname $0)/../share/env.sh
+# exec python $0 "$@"
+#}
+
+'''
+dms-diff-ff dms0 dms1 [--full-validate] [--include-water] [--verbose]
+
+diffs the forcefield parameters between input0 and input1
+
+As a first pass, topologically equivalent terms in the inputs are verified to
+have the same parameters. If "--full-validate" is provided, then the first
+pass is expaned to check that identical molecules within each input
+also have identical parameters. By default, full-validation of water parameters
+is skipped unless "--include-water" is provided.
+
+For the second pass, molecules between inputs are graph matched, and parameters
+for matching terms within the matched molecules are compared.
+'''
+
+
+import os
+import numpy as np
+import msys
+
+# This creates a "mass" and "charge" table
+# so we can use a consistent algorithm to check all the
+# forcefield related pieces
+def addTablesForConsistency(mol):
+    mass = mol.addTable("mass", 1)
+    mass.params.addProp("amu", float)
+    mass.category = "bond"
+    charge = mol.addTable("charge", 1)
+    charge.params.addProp("q", float)
+    charge.category = "bond"
+    for a in mol.atoms:
+        p = mass.params.addParam()
+        p["amu"] = a.mass
+        mass.addTerm([a], p)
+        p = charge.params.addParam()
+        p["q"] = a.charge
+        charge.addTerm([a], p)
+
+def extractForcefieldTerms(mol, excluded_params = ["memo", "type", "nbfix_identifier"]):
+    allterms = dict()
+    for table in mol.tables:
+        pnames = sorted([k for k in table.params.props if k not in excluded_params and table.params.propType(k)==float])
+        tname = table.name+" : "+" ".join(pnames)
+        allterms[tname] = table.terms
+    return(allterms)
+
+# Extract the atomids and parameter values for this term
+# Including mapping the atomids  to alternative ids using the provided mapping
+# We then sort the mapped atomids for consistency
+# FIXME: We may need to extend this to better handle improper torsions
+# FIXME2: Also CMAP
+def getMappedTerm(term, mapping, pnames):
+    name = term.table.name
+    aid = tuple([mapping[a.id] for a in term.atoms])
+    if name.startswith("constraint"):
+        aid = tuple([aid[0]]+sorted(aid[1:]))
+    elif aid[-1] < aid[0]:
+        aid = tuple(reversed(aid))
+    p = term.param
+    if p is not None:
+        params = [p[k] for k in pnames]
+    else:
+        params = [None]
+    return aid, params
+
+
+def compareForcefields(mol0, mol1, rtol=0.001, prefix="", verbose=False):
+    # mapping from mol1 atoms to mol0 atoms
+    matches = msys.MatchFragments(mol1, mol0)
+    if matches is None or len(matches)!= len(mol1.atoms):
+        raise RuntimeError("The provided systems do not have the same composition")
+    matches = {k.id: v.id for k,v in matches.items()}
+    # print(f"Atoms matched are: {matches}")
+
+    allterms0 = extractForcefieldTerms(mol0)
+    allterms1 = extractForcefieldTerms(mol1)
+
+    forms0 = set(allterms0.keys())
+    forms1 = set(allterms1.keys())
+    if forms0 != forms1:
+        s.append(f"inconsistent forcefield tables detected. extra tables are: mol0= {forms0-forms1} mol1={forms1-forms0}")
+
+    for fullname in sorted(forms0&forms1):
+        name, pnames = fullname.split(' : ')
+        pnames = pnames.split()
+        terms0 = allterms0[fullname]
+        terms1 = allterms1[fullname]
+        nt0 = len(terms0)
+        nt1 = len(terms1)
+        if nt0==0 and nt1==0: continue
+        s = []
+        if nt0 != nt1:
+            s.append(f"inconsistent forcefield tables detected. term counts for {name} are: mol0= {nt0} mol1={nt1}")
+
+        # run through mol0 terms
+        identity = [i for i in range(mol0.natoms)]
+        terms0_mapped = dict()
+        for t in terms0:
+            aid, params = getMappedTerm(t, identity, pnames)
+            if aid not in terms0_mapped:
+                terms0_mapped[aid] = []
+            terms0_mapped[aid].append(tuple(params))
+
+        # convert all mol1 terms to mol0 terms, supporting multiterm dihedrals
+        terms1_mapped = dict()
+        amap_to_orig = dict()
+        for t in terms1:
+            aid, params = getMappedTerm(t, matches, pnames)
+            if aid not in terms1_mapped:
+                terms1_mapped[aid] = []
+                amap_to_orig[aid] = t.atoms
+            terms1_mapped[aid].append(tuple(params))
+
+        nt0 = len(terms0_mapped)
+        nt1 = len(terms1_mapped)
+        if nt0 != nt1:
+            s.append(f"inconsistent forcefield tables detected. term counts by atoms-tuple are {name} are: mol0= {nt0} mol1={nt1}")
+
+        found = set()
+        matched = 0
+        maxdeviations = {k:0.0 for k in pnames}
+        for aid in sorted(terms0_mapped.keys()):
+            if aid not in terms1_mapped:
+                s.append(f"parameter entry from mol0 is missing in mol1: {name} {aid}")
+                continue
+            found.add(aid)
+            entry0 = terms0_mapped[aid]
+            entry1 = terms1_mapped[aid]
+            if len(entry0) != len(entry1):
+                s.append(f"parameter entry lengths in mol0 are different from mol1: {name} {pname} {aid} {len(entry0)} != {amap_to_orig[aid]} {len(entry1)}")
+                continue
+
+            allGood = True
+            for params, pmapped in zip(sorted(entry0), sorted(entry1)):
+                for pname, p0, p1 in zip(pnames, params, pmapped):
+                    if p0 is None and p1 is None: continue
+                    if (p0 is None)^(p1 is None):
+                        print(f"Found one None value: {name} {pname} {aid} {p0} {amap_to_orig[aid]} {p1}")
+                        raise RuntimeError("Only one of the checked parameters is None... This shouldnt happen")
+                    delta = p0-p1
+                    maxdeviations[pname] = max(maxdeviations[pname], abs(delta))
+                    if not np.isclose(p0, p1, rtol=rtol):
+                        s.append(f"parameter in mol0 is different (rtol={rtol}) from mol1: {name} {pname} {aid} {p0} != {amap_to_orig[aid]} {p1} ({delta})")
+                        allGood = False
+            if allGood: matched += 1
+
+        for aid in set(terms1_mapped.keys())-found:
+            s.append(f"parameter entry in mol1 is missing in mol0: {name} {amap_to_orig[aid]}")
+
+        if len(s) == 0:
+            print(prefix+f"Matched {matched}/{len(terms0_mapped)} {name} terms. No inconsistencies found")
+        else:
+            print(prefix+f"Matched {matched}/{len(terms0_mapped)} {name} terms. Found {len(s)} inconsistencies")
+            if verbose:
+                print("\n".join([prefix+"    "+tmp for tmp in s]))
+            else:
+                tmp = "   ".join([f"{k}= {maxdeviations[k]}" for k in pnames])
+                print(prefix+f"   maximum deviations found are: {tmp}")
+
+def validateMolecule(mol, prefix="", verbose=True):
+    fragids = mol.updateFragids()
+    nfrags = len(fragids)
+    if nfrags != 1:
+        raise RuntimeError("You must call validateMolecule with a single connected component")
+    topids = msys.ComputeTopologicalIds(mol)
+
+    allterms = extractForcefieldTerms(mol)
+    s = []
+    for fullname, terms in allterms.items():
+        name, pnames = fullname.split(' : ')
+        pnames = pnames.split()
+
+        # run through mol0 terms, and aggregate by atomids
+        identity = [i for i in range(mol.natoms)]
+        terms0_mapped = dict()
+        for t in terms:
+            aid, params = getMappedTerm(t, identity, pnames)
+            if aid not in terms0_mapped:
+                terms0_mapped[aid] = []
+            terms0_mapped[aid].append(tuple(params))
+
+        # convert atomids to topids, and check for consistency
+        terms_mapped = dict()
+        tid_to_atoms = dict()
+        for aids, entry0 in terms0_mapped.items():
+            tids = tuple([topids[i] for i in aids])
+            if tids not in terms_mapped:
+                terms_mapped[tids] = entry0
+                tid_to_atoms[tids] = aids
+
+            entry1 = terms_mapped[tids]
+            for params, pmapped in zip(sorted(entry0), sorted(entry1)):
+                for pname, p0, p1 in zip(pnames, params, pmapped):
+                    if p0 is None and p1 is None: continue
+                    try:
+                        isclose = np.isclose(p0, p1)
+                    except:
+                        print(fullname, p0, p1)
+                        raise
+                    if (p0 is None)^(p1 is None) or not isclose:
+                        s.append(f"Topologicaly identical parameters dissagree: {name} {pname} {aids} {p0} != {tid_to_atoms[tids]} {p1} ({p0-p1})v")
+
+            # print(name, t.atoms, pnames, params)
+    if len(s) == 0:
+        if verbose: print(prefix+"No inconsistencies found")
+    else:
+        print("\n".join([prefix+tmp for tmp in s]))
+
+def validateDMS(mol, full_validate=False, include_water=False, prefix="    ", verbose=False):
+    for table in mol.tables:
+        if table.name == "torsiontorsion_cmap":
+            print("WARNING: We dont support diffing CMAP 2-D parameter tables at this time")
+
+    pieces = msys.FindDistinctFragments(mol)
+    print(prefix+f"found {len(pieces)} distinct fragments")
+    for refId, otherIds in pieces.items():
+        m0 = mol.clone(f"fragid {refId}")
+        is_water = (m0.natoms==3 and m0.nbonds==2 and sorted([a.atomic_number for a in m0.atoms])==[1,1,8])
+        if is_water and not include_water: continue
+        validateMolecule(m0, prefix=prefix+f"fragment {refId}: ", verbose=verbose)
+        for checkId in otherIds:
+            if checkId == refId: continue
+            m1 = mol.clone(f"fragid {checkId}")
+            validateMolecule(m1, prefix=prefix+f"fragment {checkId}: ", verbose=verbose)
+            if full_validate:
+                compareForcefields(m0, m1, prefix=prefix+f"fragments {refId} <-> {checkId}: ", verbose=verbose)
+
+def compareDMS(sys0, sys1, full_validate, include_water, verbose):
+
+    mol0 = sys0.clone()
+    addTablesForConsistency(mol0)
+
+    mol1 = sys1.clone()
+    addTablesForConsistency(mol1)
+
+    # check composition
+    print(f"Running self-validation on system0:")
+    validateDMS(mol0, full_validate, include_water, prefix="    system0 ")
+
+    print(f"Running self-validation on system1:")
+    validateDMS(mol1, full_validate, include_water, prefix="    system1 ")
+
+    print("Comparing system0 to system1 now: ")
+    compareForcefields(mol0, mol1, verbose=verbose, prefix="    ")
+
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(usage=__doc__)
+    parser.add_argument("dms0", type=os.path.abspath, help='dms file 1' )
+    parser.add_argument("dms1", type=os.path.abspath, help='dms file 2' )
+    parser.add_argument("-f", "--full-validate", action="store_true", default=False,
+        help="validate that all identical molecules within a dms file have the same parameters")
+    parser.add_argument("-w", "--include-water", action="store_true", default=False,
+        help="compare water forcefield parameters within each dms (slow)")
+    parser.add_argument("-v", "--verbose", action="store_true", default=False,
+        help="print out verbose details of mismatches")
+    args = parser.parse_args()
+#
+    sys0 = msys.Load(args.dms0)
+    sys1 = msys.Load(args.dms1)
+
+    compareDMS(sys0, sys1, args.full_validate, args.include_water, args.verbose)
+
+
+if __name__=="__main__": main()
+
+# vim: filetype=python

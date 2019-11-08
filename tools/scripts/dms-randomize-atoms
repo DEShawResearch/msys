@@ -1,0 +1,43 @@
+#!/usr/bin/garden-exec
+#{
+# garden env-keep-only
+# . `dirname $0`/../share/env.sh
+# exec python $0 "$@"
+#}
+#
+
+'''
+dms-randomize-atoms indms outdms
+
+randomizes the order of atoms in the input file, and then sorts them 
+based on a depth first traversal of the resulting structure hierarchy (to
+put atoms in the same residue close to each other in the output)
+
+This can be used as a starting point for downstream tools to ensure
+invariance to atom ordering. All forcefield terms in input file
+will be preserved on output (with properly modified atom indices)
+'''
+
+import os
+import random
+import msys
+
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(usage=__doc__)
+    parser.add_argument("indms", type=os.path.abspath, help='dms input' )
+    parser.add_argument("outdms", type=os.path.abspath, help='dms output with atom order randomized' )
+    args = parser.parse_args()
+
+    sys0 = msys.Load(args.indms)
+    atoms = sys0.atoms
+    random.shuffle(atoms)
+    sys1 = sys0.clone(atoms).sorted()
+    msys.SaveDMS(sys1, args.outdms)
+
+
+if __name__=="__main__": main()
+
+# vim: filetype=python
+
