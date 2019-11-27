@@ -6,6 +6,16 @@
 #include <stdlib.h>
 #include <vector>
 #include <set>
+#include "../types.hxx"
+
+#if defined __has_include
+#  if __has_include (<tng/tng_compress.h>)
+#    include <tng/tng_compress.h>
+#    define MSYS_WITH_TNG
+#  endif
+#endif
+
+static const char tng_compression_type[] = "TNG_V2";
 
 using namespace desres::molfile::dtr;
 
@@ -187,7 +197,7 @@ uint32_t compute_threeroe_hash(const char *datap, uint32_t data_size) {
 
 
 std::map<std::string, Key> 
-desres::molfile::dtr::ParseFrame(size_t sz, const void* data, bool *swap) {
+desres::molfile::dtr::ParseFrame(size_t sz, const void* data, bool *swap, void** allocated) {
     std::map<std::string,Key> map;
 
     // parse header
@@ -293,6 +303,45 @@ desres::molfile::dtr::ParseFrame(size_t sz, const void* data, bool *swap) {
         }
 
         map[label] = Key(addr, count, types.at(code), *swap);
+    }
+    auto cp = map.find("COMPRESSED_POSITION");
+    if (cp != map.end()) {
+#if defined MSYS_WITH_TNG
+        auto p = map.find("COMPRESSION_TYPE");
+        if (p == map.end()) {
+            DTR_FAILURE("got COMPRESSED_POSITION field but no COMPRESSION_TYPE field");
+        }
+        if (map.find("POSITION") != map.end()) {
+            DTR_FAILURE("got both COMPRESSED_POSITION field and POSITION field");
+        }
+        if (allocated == nullptr) {
+            DTR_FAILURE("address of pointer to allocated memory not provided; refusing to leak memory");
+        }
+        const char* compression_type = reinterpret_cast<const char *>(p->second.data);
+        if (!strcmp(compression_type, tng_compression_type)) {
+            int vel, natoms, nframes;
+            int algo[4];
+            double precision;
+            char* data = const_cast<char *>(reinterpret_cast<const char *>(cp->second.data));
+            int rc = tng_compress_inquire(data, &vel, &natoms, &nframes, &precision, algo);
+            if (rc != 0) {
+                DTR_FAILURE("compressed block does not appear to be in TNG format");
+            }
+            int nitems = 3*natoms*nframes;
+            *allocated = realloc(*allocated, nitems*sizeof(float));
+            float* pos = reinterpret_cast<float *>(*allocated);
+            rc = tng_compress_uncompress_float(data, pos);
+            if (rc != 0) {
+                DTR_FAILURE("uncompression failed");
+            }
+            map["POSITION"] = Key(pos, nitems, Key::TYPE_FLOAT32, false);
+        } else {
+            DTR_FAILURE("unrecognized compression type '" << compression_type << "'");
+        }
+        map.erase(cp);
+#else
+        DTR_FAILURE("COMPRESSED_POSITION field found, but TNG support not enabled");
+#endif
     }
     
     return map;
@@ -476,8 +525,62 @@ static uint64_t field_size(KeyMap const& map) {
     return sz;
 }
 
-size_t desres::molfile::dtr::ConstructFrame(KeyMap const& map, void ** bufptr, bool use_padding) {
+size_t desres::molfile::dtr::ConstructFrame(KeyMap const& _map, void ** bufptr, bool use_padding,
+        double coordinate_precision) {
     if (!bufptr) return 0;
+
+    KeyMap map = _map;
+    char* compressed_positions = nullptr;
+    if (coordinate_precision > 0) {
+#if defined MSYS_WITH_TNG
+        int compressed_position_size = 0;
+        use_padding = false;
+        const bool verbose = getenv("DTRPLUGIN_VERBOSE");
+        // replace any POSITION field with a compressed version
+        for (auto& kv : map) {
+            if (kv.first == "POSITION") {
+                int natoms = kv.second.count/3;
+                int nframes = 1;
+                int speed = 1;
+                int algo[4] = {TNG_COMPRESS_ALGO_POS_XTC2,0,-1,-1};
+                int nitems = -1;
+                double prec = coordinate_precision;
+                double t=-desres::msys::now();
+                if (kv.second.type == Key::TYPE_FLOAT32) {
+                    const float* pos = reinterpret_cast<const float *>(kv.second.data);
+                    float* ppos = const_cast<float *>(pos);
+                    compressed_positions = tng_compress_pos_float(
+                            ppos, natoms, nframes, prec, speed, algo, &nitems);
+                } else if (kv.second.type == Key::TYPE_FLOAT64) {
+                    const double* pos = reinterpret_cast<const double *>(kv.second.data);
+                    double* ppos = const_cast<double *>(pos);
+                    compressed_positions = tng_compress_pos(
+                            ppos, natoms, nframes, prec, speed, algo, &nitems);
+                } else {
+                    DTR_FAILURE("POSITION field not float32 or float64");
+                }
+                t+=desres::msys::now();
+                if (verbose) printf("COMPRESS %.3fms %d bytes %.3f MB/s ratio %.3f\n",
+                        t*1000, natoms*12, natoms*12*1e-6/t, double(natoms*12)/nitems);
+                if (nitems <= 0) {
+                    DTR_FAILURE("compression failed!");
+                }
+                compressed_position_size = nitems;
+            }
+        }
+        if (compressed_positions != nullptr) {
+            map.erase(map.find("POSITION"));
+            map["COMPRESSED_POSITION"] = Key(
+                    compressed_positions,
+                    compressed_position_size,
+                    Key::TYPE_UCHAR,
+                    false);
+            map["COMPRESSION_TYPE"] = Key(tng_compression_type, sizeof(tng_compression_type), Key::TYPE_CHAR, false);
+        }
+#else
+        DTR_FAILURE("coordinate_precision > 0 requested, but TNG support not enabled");
+#endif
+    }
     uint64_t offset_header_block = 0;
     uint64_t size_header_block =
         alignInteger( sizeof(header_t), align_size );
@@ -613,5 +716,6 @@ size_t desres::molfile::dtr::ConstructFrame(KeyMap const& map, void ** bufptr, b
     //
     header->threeroe_hash = htonl(compute_threeroe_hash(base, offset_crc_block));
     *crc = fletcher(reinterpret_cast<uint16_t*>(base),offset_crc_block/2);
+    free(compressed_positions);
     return framesize;
 }

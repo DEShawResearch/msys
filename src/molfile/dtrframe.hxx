@@ -55,9 +55,10 @@ namespace desres { namespace molfile { namespace dtr {
     };
 
     typedef std::map<std::string, Key> KeyMap;
-    KeyMap ParseFrame(size_t sz, const void* data, bool *swap_endian);
+    KeyMap ParseFrame(size_t sz, const void* data, bool *swap_endian, void **allocated=nullptr);
 
-    size_t ConstructFrame(KeyMap const& map, void ** bufptr, bool use_padding = true);
+    size_t ConstructFrame(KeyMap const& map, void ** bufptr, bool use_padding = true,
+            double coordinate_precision=0);
 
     uint32_t fletcher( const uint16_t *data, unsigned len );
 

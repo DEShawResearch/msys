@@ -9,6 +9,7 @@ env=env.Clone()
 opts=Variables()
 opts.Add("MSYS_WITH_LPSOLVE", "include lpsolve support?", os.getenv('MSYS_WITH_LPSOLVE'))
 opts.Add("MSYS_WITH_INCHI", "include inchi support?", os.getenv('MSYS_WITH_INCHI'))
+opts.Add("MSYS_WITH_TNG", "include TNG support?", os.getenv('MSYS_WITH_TNG'))
 opts.Add("MSYS_WITHOUT_RAPIDJSON", "include rapidjson support?", os.getenv('MSYS_WITHOUT_RAPIDJSON'))
 opts.Add("MSYS_BOOST_SUFFIX", "suffix for boost libraries (e.g. -mt)")
 opts.Add("MSYS_BOOST_PYTHON_SUFFIX", "suffix for boost libraries (e.g. -py)")
@@ -33,6 +34,8 @@ if env['PLATFORM'] == 'darwin':
 
 if env.get('MSYS_WITH_LPSOLVE'):
     env.AppendUnique(LIBS=['lpsolve55'])
+if env.get('MSYS_WITH_TNG'):
+    env.AppendUnique(LIBS=['tng_io'])
 
 bsx=env.get('MSYS_BOOST_SUFFIX', '')
 boost_libs=[(x+bsx) for x in (

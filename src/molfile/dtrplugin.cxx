@@ -1239,7 +1239,8 @@ void DtrReader::init_common() {
 
           read_file(fname, buffer);
           bool swap;
-          KeyMap blobs = ParseFrame(buffer.size(), &buffer[0], &swap);
+          void* allocated = nullptr;
+          KeyMap blobs = ParseFrame(buffer.size(), &buffer[0], &swap, &allocated);
           with_momentum = blobs.find("MOMENTUM")!=blobs.end();
 
           // I'm aware of these sources of atom count: 
@@ -1262,6 +1263,7 @@ void DtrReader::init_common() {
                   break;
               }
           }
+          free(allocated);
       }
   }
 
@@ -1909,7 +1911,7 @@ KeyMap DtrReader::frame_from_bytes(const void *buf, uint64_t len,
                                 molfile_timestep_t *ts) const {
 
     bool swap;
-    KeyMap blobs = ParseFrame(len, buf, &swap);
+    KeyMap blobs = ParseFrame(len, buf, &swap, &decompressed_data);
 
     // We will dispatch to routines based on format, which can be
     // defined in either the meta frame or the frame.
@@ -1973,12 +1975,13 @@ void write_all( int fd, const char * buf, ssize_t count ) {
 }
 
 DtrWriter::DtrWriter(std::string const& path, Type type, uint32_t natoms_, 
-              Mode mode, uint32_t fpf, const dtr::KeyMap* metap)
+              Mode mode, uint32_t fpf, const dtr::KeyMap* metap, double precision)
 : traj_type(type), natoms(natoms_), frame_fd(0), framefile_offset(0),
   nwritten(0), last_time(HUGE_VAL), timekeys_file(NULL),
   framebuffer(), meta_map(), meta_written(false), 
   meta_file(NULL), etr_keys(0),
-  etr_frame_size(0), etr_frame_buffer(NULL), etr_key_buffer(NULL)
+  etr_frame_size(0), etr_frame_buffer(NULL), etr_key_buffer(NULL),
+  coordinate_precision(precision)
 {
     if (fpf > 0) {
         frames_per_file = fpf;
@@ -2358,7 +2361,7 @@ void DtrWriter::append(double time, KeyMap const& map) {
 	etr_map["_D"] = dtr::Key(etr_frame_buffer, etr_frame_size, desres::molfile::dtr::Key::TYPE_CHAR, false);
 	framesize = ConstructFrame(etr_map, &framebuffer, false);
     } else {
-	framesize = ConstructFrame(map, &framebuffer);
+	framesize = ConstructFrame(map, &framebuffer, true, coordinate_precision);
     }
 
     uint64_t keys_in_file = nwritten % frames_per_file;

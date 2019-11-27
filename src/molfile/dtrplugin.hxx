@@ -274,6 +274,7 @@ namespace desres { namespace molfile {
     mutable std::string _last_path;
 
     std::string jobstep_id;
+    mutable void* decompressed_data = nullptr;
 
   public:
     enum {
@@ -307,6 +308,7 @@ namespace desres { namespace molfile {
 
     virtual ~DtrReader() {
       if (_last_fd>0) close(_last_fd);
+      free(decompressed_data);
     }
 
     Timekeys keys;
@@ -408,11 +410,13 @@ namespace desres { namespace molfile {
     uint32_t etr_frame_size;
     void *etr_frame_buffer;
     uint32_t *etr_key_buffer;
+    double coordinate_precision = 0;
 
     // initialize for writing at path
     DtrWriter(std::string const& path, Type type, uint32_t natoms_, 
               Mode mode=CLOBBER, uint32_t fpf = 0,
-              const dtr::KeyMap* metap = nullptr);
+              const dtr::KeyMap* metap = nullptr,
+              double precision = 0);
 
     ~DtrWriter();
 

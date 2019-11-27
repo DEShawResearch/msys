@@ -104,8 +104,10 @@ namespace {
                         uint32_t natoms,
                         int mode,
                         uint32_t fpf,
-                        DtrWriter::Type type) {
-        return new DtrWriter(path, type, natoms, DtrWriter::Mode(mode), fpf);
+                        DtrWriter::Type type,
+                        double precision) {
+        return new DtrWriter(path, type, natoms, DtrWriter::Mode(mode), fpf,
+                nullptr, precision);
     }
 
     void convert_keyvals_to_keymap(dict keyvals, dtr::KeyMap& map) {
@@ -166,11 +168,11 @@ namespace {
         w.append(time, keymap);
     }
 
-    PyObject* py_frame_as_bytes(dict keyvals, bool use_padding) {
+    PyObject* py_frame_as_bytes(dict keyvals, bool use_padding, double precision) {
         dtr::KeyMap keymap;
         convert_keyvals_to_keymap(keyvals, keymap);
         void* buf = nullptr;
-        size_t len = dtr::ConstructFrame(keymap, &buf, use_padding);
+        size_t len = dtr::ConstructFrame(keymap, &buf, use_padding, precision);
         char* ptr = static_cast<char *>(buf);
         PyObject* bytes = py_as_bytes(ptr, len);
         free(buf);
@@ -197,7 +199,8 @@ namespace {
                      arg("natoms"),
                      arg("mode")=0,
                      arg("frames_per_file")=0,
-                     arg("format")=DtrWriter::Type::DTR)))
+                     arg("format")=DtrWriter::Type::DTR,
+                     arg("precision")=0.0)))
             .def("append", dtr_append,
                     (arg("time"),
                      arg("keyvals")))
@@ -376,9 +379,11 @@ namespace {
         }
         std::shared_ptr<Py_buffer> ptr(view, PyBuffer_Release);
         bool swap_endian = false;   // FIXME ignored
-        auto keymap = dtr::ParseFrame(view->len, view->buf, &swap_endian);
+        void* allocated = nullptr;  // allocated when buffer contains compressed positions
+        auto keymap = dtr::ParseFrame(view->len, view->buf, &swap_endian, &allocated);
         dict d;
         py_keyvals(keymap, d.ptr());
+        free(allocated);    // py_keyvals makes a copy
         return d;
     }
 
@@ -601,7 +606,7 @@ void desres::molfile::export_dtrreader() {
 
     def("dtr_frame_from_bytes", py_frame_from_bytes);
     def("dtr_frame_as_bytes", py_frame_as_bytes,
-            (arg("keyvals"), arg("use_padding")=false));
+            (arg("keyvals"), arg("use_padding")=false, arg("precision")=0.0));
                 
     scope().attr("dtr_serialized_version")=dtr_serialized_version();
 }

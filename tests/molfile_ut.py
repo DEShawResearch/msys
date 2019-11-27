@@ -965,6 +965,23 @@ class TestDtrFrame(unittest.TestCase):
                 else:
                     self.assertTrue(v==v2, k)
 
+    def test_compressed_pos_round_trip(self):
+        pos = msys.Load('tests/files/2f4k.dms').positions.flatten().astype('f')
+        kv = dict(POSITION=pos)
+        data0 = molfile.dtr_frame_as_bytes(kv, precision=0)
+        data2 = molfile.dtr_frame_as_bytes(kv, precision=1e-2)
+        data3 = molfile.dtr_frame_as_bytes(kv, precision=1e-3)
+
+        pos0 = molfile.dtr_frame_from_bytes(data0)['POSITION']
+        pos2 = molfile.dtr_frame_from_bytes(data2)['POSITION']
+        pos3 = molfile.dtr_frame_from_bytes(data3)['POSITION']
+
+        self.assertTrue((pos==pos0).all())
+        self.assertTrue(numpy.allclose(pos, pos2, atol=1e-2))
+        self.assertFalse(numpy.allclose(pos, pos2, atol=1e-3))
+        self.assertTrue(numpy.allclose(pos, pos3, atol=1e-3))
+        self.assertFalse(numpy.allclose(pos, pos3, atol=1e-4))
+
 
 if __name__=="__main__":
   unittest.main(verbosity=2)
