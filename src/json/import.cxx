@@ -1,12 +1,18 @@
 #include "../json.hxx"
 #include "../analyze.hxx"
-
-#include <rapidjson/document.h>
-#include <rapidjson/reader.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#if defined __has_include
+#  if __has_include (<rapidjson/document.h>)
+#    include <rapidjson/document.h>
+#    include <rapidjson/reader.h>
+#    define MSYS_WITH_RAPID_JSON
 using namespace rapidjson;
+#  endif
+#endif
+
+
 using namespace desres;
 
 using msys::System;
@@ -14,6 +20,8 @@ using msys::SystemPtr;
 using msys::ParamTablePtr;
 using msys::ParamTable;
 using msys::Id;
+
+#if defined(MSYS_WITH_RAPID_JSON)
 
 static std::shared_ptr<char> slurp(const char* path) {
 
@@ -320,3 +328,20 @@ namespace desres { namespace msys {
 
 }}
 
+#else
+#warning "rapidjson not available; no json import support"
+namespace desres { namespace msys {
+
+    SystemPtr ImportJson(std::string const& path) {
+        MSYS_FAIL("msys compiled without rapidjson support; json import not available");
+        return nullptr;
+    }
+
+    SystemPtr ParseJson(const char* text) {
+        MSYS_FAIL("msys compiled without rapidjson support; json import not available");
+        return nullptr;
+    }
+
+}}
+
+#endif

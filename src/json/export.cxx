@@ -1,22 +1,32 @@
 #include "../json.hxx"
 
+#if defined __has_include
+#  if __has_include (<rapidjson/document.h>)
 #include <rapidjson/document.h>
 #include <rapidjson/writer.h>
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/filewritestream.h>
 #include <rapidjson/stringbuffer.h>
+#    define MSYS_WITH_RAPID_JSON
+using namespace rapidjson;
+#  endif
+#endif
+
+
+
 
 #include <unordered_map>
 #include <fstream>
 #include "../MsysThreeRoe.hpp"
 
-using namespace rapidjson;
 using namespace desres;
 using msys::System;
 using msys::Provenance;
 using msys::SmallString;
 using msys::TermTablePtr;
 using msys::Id;
+
+#if defined MSYS_WITH_RAPID_JSON
 
 /* mapping from hash of string to index in document's names array */
 typedef std::unordered_map<uint64_t, uint64_t> NameMap;
@@ -385,3 +395,21 @@ namespace desres { namespace msys {
 
 }}
 
+#else
+#warning "rapidjson not available; no json export support"
+namespace desres { namespace msys {
+
+    void ExportJson(SystemPtr mol, std::string const& path, Provenance const& provenance,
+            unsigned flags) {
+        MSYS_FAIL("rapidjson not available; no json export support");
+            }
+
+
+
+    std::string FormatJson(SystemPtr mol, Provenance const& provenance, unsigned flags) {
+         MSYS_FAIL("rapidjson not available; no json export support");
+    }
+
+}}
+
+#endif
