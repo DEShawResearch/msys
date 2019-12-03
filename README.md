@@ -22,9 +22,7 @@ To build Msys, you'll need at a minimum the following:
 
  * The numpy (http://www.numpy.org) headers for each python version you want to support.
 
- * Scons (https://scons.org), a build tool.  Note that although scons 3.0 and later support python 3,
- and msys supports python 3.5 and later, in order build msys, you must use a python
- 2.7 interpreter; i.e. `python` must correspond to python2.7.
+ * Scons (https://scons.org), a build tool, available through `pip install`.
 
  * sconsutils, a set of extensions to Scons.  A copy has been placed in /external; add it to your PYTHONPATH before
  building with:
