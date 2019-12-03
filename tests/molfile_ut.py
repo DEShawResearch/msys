@@ -276,18 +276,21 @@ class TestStk(unittest.TestCase):
         m=molfile.dtr.write('1.dtr', natoms=10)
         m.frame(molfile.Frame(10, False))
         m.close()
-        with open('junk.stk', 'w') as f:
-            print('1.dtr', file=f)
+        junkfile = tempfile.NamedTemporaryFile(suffix='.stk')
+        junk = junkfile.name
+        cwd = os.getcwd()
+        with open(junk, 'w') as f:
+            print('%s/1.dtr' % cwd, file=f)
 
         #print "----- first read of junk.stk ------"
-        r=molfile.dtr.read('junk.stk')
+        r=molfile.dtr.read(junk)
         self.assertEqual(r.nframes, 1)
         self.assertEqual(r.natoms, 10)
         self.assertEqual(r.has_velocities, False)
         self.assertTrue(r.frame(0).vel is None)
 
         #print "----- second read of junk.stk ------"
-        r=molfile.dtr.read('junk.stk')
+        r=molfile.dtr.read(junk)
         self.assertEqual(r.nframes, 1)
         self.assertEqual(r.natoms, 10)
         self.assertEqual(r.has_velocities, False)
@@ -302,11 +305,11 @@ class TestStk(unittest.TestCase):
         f.time=1
         m.frame(f)
         m.close()
-        with open('junk.stk', 'w') as f:
-            print('2.dtr', file=f)
+        with open(junk, 'w') as f:
+            print('%s/2.dtr' % cwd, file=f)
 
         #print "----- read modified junk.stk ------"
-        r=molfile.dtr.read('junk.stk')
+        r=molfile.dtr.read(junk)
         self.assertEqual(r.nframes, 2)
         self.assertEqual(r.natoms, 20)
         self.assertEqual(r.has_velocities, True)
@@ -320,9 +323,9 @@ class TestStk(unittest.TestCase):
         f.time=1
         m.frame(f)
         m.close()
-        with open('junk.stk', 'w') as f:
-            print('3.dtr', file=f)
-        r=molfile.dtr.read('junk.stk')
+        with open(junk, 'w') as f:
+            print('%s/3.dtr' % cwd, file=f)
+        r=molfile.dtr.read(junk)
         self.assertEqual(r.nframes, 2)
         self.assertEqual(r.natoms, 20)
         self.assertEqual(r.has_velocities, False)
@@ -332,10 +335,6 @@ class TestStk(unittest.TestCase):
     def tearDown(self):
         for dtr in '1.dtr', '2.dtr', '3.dtr': 
             SH.rmtree(dtr, ignore_errors=True)
-        try:
-            os.unlink('junk.stk')
-        except OSError:
-            pass
 
     @unittest.skipIf(os.getenv('DESRES_LOCATION')!='EN', 'Runs only from EN location')
     def testTimes(self):
