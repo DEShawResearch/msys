@@ -1,6 +1,7 @@
 #include "../ff.hxx"
 #include "../schema.hxx"
 #include <unordered_set>
+#include <cmath>
 
 using namespace desres::msys;
 
