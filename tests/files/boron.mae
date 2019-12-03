@@ -1,0 +1,119 @@
+{ 
+  s_m_m2io_version
+  :::
+  2.0.0 
+} 
+
+f_m_ct { 
+  s_m_title
+  s_m_entry_id
+  s_m_entry_name
+  r_chorus_box_ax
+  r_chorus_box_ay
+  r_chorus_box_az
+  r_chorus_box_bx
+  r_chorus_box_by
+  r_chorus_box_bz
+  r_chorus_box_cx
+  r_chorus_box_cy
+  r_chorus_box_cz
+  :::
+  boron 
+  1 
+  boron.1 
+               84.4987 
+                     0 
+                     0 
+                     0 
+               84.4987 
+                     0 
+                     0 
+                     0 
+               84.4987 
+  m_atom[9] { 
+    # First column is atom index #
+    i_m_mmod_type
+    r_m_x_coord
+    r_m_y_coord
+    r_m_z_coord
+    i_m_residue_number
+    s_m_insertion_code
+    s_m_mmod_res
+    s_m_chain_name
+    i_m_color
+    r_m_charge1
+    r_m_charge2
+    s_m_pdb_residue_name
+    s_m_pdb_atom_name
+    s_m_grow_name
+    i_m_atomic_number
+    i_m_formal_charge
+    i_m_representation
+    i_m_visibility
+    s_m_color_rgb
+    s_m_atom_name
+    i_m_template_index
+    r_ffio_x_vel
+    r_ffio_y_vel
+    r_ffio_z_vel
+    i_m_minimize_atom_index
+    s_m_pdb_segment_name
+    :::
+    1       23   10.894520    7.354201    7.437409   900 " " " " X   70   0.00000   0.00000 "UNK " " O  " "    "    8   0    0    1 FF2F2F O1 0                        0                    0                    0 1     C1 
+    2       23   10.920630    9.641665    7.711008   900 " " " " X   70   0.00000   0.00000 "UNK " " O  " "    "    8   0    0    1 FF2F2F O2 0                        0                    0                    0 2     C1 
+    3       41   12.052142    7.813896    5.053472   900 " " " " X   21   0.00000   0.00000 "UNK " " H  " "    "    1   0    0    1 FFFFFF H3 0                        0                    0                    0 3     C1 
+    4       41   10.841724    9.080646    4.801663   900 " " " " X   21   0.00000   0.00000 "UNK " "    " "    "    1   0    0    1 FFFFFF H4 0                        0                    0                    0 4     C1 
+    5        3   11.657064    8.750463    5.445299   900 " " " " X    2   0.00000   0.00000 "UNK " " C  " "    "    6   0    0    1 A0A0A0 C5 0                        0                    0                    0 5     C1 
+    6       64   11.153801    8.575679    6.917771   900 " " " " X    2   0.00000   0.00000 "UNK " " B  " "    "    5   0    0    1 A0A0A0 B6 0                        0                    0                    0 6     C1 
+    7       48   12.447841    9.499321    5.402855   900 " " " " X   21   0.00000   0.00000 "UNK " " H  " "    "    1   0    0    1 FFFFFF H7 0                        0                    0                    0 7     C1 
+    8       48   11.071261    6.671782    6.808300   900 " " " " X   21   0.00000   0.00000 "UNK " " H  " "    "    1   0    0    1 FFFFFF H8 0                        0                    0                    0 8     C1 
+    9       48   10.611120    9.352718    8.555050   900 " " " " X   21   0.00000   0.00000 "UNK " " H  " "    "    1   0    0    1 FFFFFF H9 0                        0                    0                    0 9     C1 
+    :::
+  } 
+  m_bond[16] { 
+    # First column is bond index #
+    i_m_from
+    i_m_to
+    i_m_order
+    i_m_from_rep
+    i_m_to_rep
+    :::
+    1          1      6   1 1 1 
+    2          1      8   1 1 1 
+    3          2      6   1 1 1 
+    4          2      9   1 1 1 
+    5          3      5   1 1 1 
+    6          4      5   1 1 1 
+    7          5      3   1 1 1 
+    8          5      4   1 1 1 
+    9          5      6   1 1 1 
+    10         5      7   1 1 1 
+    11         6      1   1 1 1 
+    12         6      2   1 1 1 
+    13         6      5   1 1 1 
+    14         7      5   1 1 1 
+    15         8      1   1 1 1 
+    16         9      2   1 1 1 
+    :::
+  } 
+  ffio_ff { 
+    :::
+    ffio_sites[9] { 
+      s_ffio_type
+      r_ffio_charge
+      r_ffio_mass
+      :::
+      1     atom     0.000000    15.999400 
+      2     atom     0.000000    15.999400 
+      3     atom     0.000000    14.007000 
+      4     atom     0.000000    12.011000 
+      5     atom     0.000000    12.011000 
+      6     atom     0.000000    10.811000 
+      7     atom     0.000000     1.008000 
+      8     atom     0.000000     1.008000 
+      9     atom     0.000000     1.008000 
+      :::
+    } 
+  } 
+} 
+
