@@ -9,7 +9,7 @@ the sort used in molecular simulations.  Its main features include:
 
  * C++ and Python interfaces.
 
-Msys currently supports Python 2.7 and Python 3.6+.  
+Msys currently supports Python Python 3.7+.  
 
 Building Msys
 -------------
@@ -23,7 +23,7 @@ To build Msys, you'll need at a minimum the following:
  * The numpy (http://www.numpy.org) headers for each python version you want to support.
 
  * Scons (https://scons.org), a build tool.  Note that although scons 3.0 and later support python 3,
- and msys supports both python 2.7 and python 3.5 and later, in order build msys, you must use a python
+ and msys supports python 3.5 and later, in order build msys, you must use a python
  2.7 interpreter; i.e. `python` must correspond to python2.7.
 
  * sconsutils, a set of extensions to Scons.  A copy has been placed in /external; add it to your PYTHONPATH before
@@ -45,9 +45,9 @@ Once you've obtained the necessary dependencies, build msys by running the scons
 
 This should build the msys libraries in a `build` subdirectory, placing scripts in `build/bin` and python modules in `build/lib/python`.  If anything fails at this point, check that you have a recent enough compiler, and that the boost headers are installed in a location that is normally searched by the compiler (e.g. /usr/include or /usr/local/include).
 
-At this point, the scripts in `build/bin` aren't really usable since no python bindings have been built.  In order to build the python bindings for msys, run the scons tool again, specifying which python version or versions you want to build for.  For example, to build for both Python 2.7 and Python 3.7, assuming both `python2.7` and `python3.7` are in your shell's PATH, run::
+At this point, the scripts in `build/bin` aren't really usable since no python bindings have been built.  In order to build the python bindings for msys, run the scons tool again, specifying which python version or versions you want to build for.  For example, to build for Python 3.7, assuming `python3.7` is in your shell's PATH, run::
 
-    scons -j4 PYTHONVER=27,37
+    scons -j4 PYTHONVER=37
 
 Assuming that works, you should be able to use all the scripts and programs in `build/bin`.  Try it with
 
@@ -57,7 +57,7 @@ You should get a summary of the structure and forcefield information contained i
 
 The scripts and python extensions you've just built are usable from the root of the msys source directory, but need to be installed before they can be used from other locations.  To install what you've built, specify `install` on the scons command line and add a `PREFIX` argument::
 
-    scons -j4 PYTHONVER=27,37 install PREFIX=$HOME/local
+    scons -j4 PYTHONVER=37 install PREFIX=$HOME/local
     export PATH=$HOME/local/bin:$PATH
     export PYTHONPATH=$HOME/local/lib/python:$PYTHONPATH
 
@@ -73,7 +73,7 @@ will be `INCHI-1-SRC.zip`.  Unzip the file in `external/inchi/`, which should cr
 named `INCHI-1-SRC` in that location.  If you now build msys with the `MSYS_WITH_INCHI` option,
 msys will build the inchi library from source files and link against it:
 
-    scons -j4 PYTHONVER=27,37 -D MSYS_WITH_INCHI=1
+    scons -j4 PYTHONVER=37 -D MSYS_WITH_INCHI=1
 
 Assuming the build was successful, you can generate an InChI string in msys using the python interface:
 
@@ -102,7 +102,7 @@ subdirectory named `lp_solve_5.5` containing the `lpsolve` source files.  Buildi
 `MSYS_WITH_LPSOLVE` option should now result in the lpsolve library being built from source and
 linked into msys, and bond order assignment should be enabled:
 
-    scons -j4 PYTHONVER=27,37 -D MSYS_WITH_INCHI=1 -D MSYS_WITH_LPSOLVE=1
+    scons -j4 PYTHONVER=37 -D MSYS_WITH_INCHI=1 -D MSYS_WITH_LPSOLVE=1
 
 To test that bond order assignment is available, run the following command:
 
