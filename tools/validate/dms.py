@@ -167,6 +167,36 @@ class TestBasic(TestCase):
                                        if len(tables) > 1]
         self.assertTrue(len(virtuals_in_multiple_vtables)==0, "Found virtuals that belong to multiple virtual_* tables: %s" % virtuals_in_multiple_vtables)
 
+    def testModifiedInteractionConsistency(self):
+        """ All the names in "interaction_grp" should be in "modified_interaction" and vice-versa """
+        # Inspired by https://deshawresearch.slack.com/archives/C20UMM3A9/p1576549190018900
+        mol = self.mol
+        if ("interaction_grp" in mol.atom_props) or (
+            "modified_interaction" in mol.auxtable_names):
+            # Find all the available names of "interaction_grp" 
+            interaction_grp_atoms = set([atom["interaction_grp"] for atom in mol.atoms])
+            interaction_grp_atoms = interaction_grp_atoms - set([''])  # Remove the empty string
+            self.assertTrue("modified_interaction" in mol.auxtable_names,
+                            'Found "interaction_grp" in mol.atom_props, '
+                            'but no "modified_interaction" in '
+                            'mol.auxtable_names')
+            # Find all the available name from the pairs defined in "modified_interaction"
+            table = mol.auxtable("modified_interaction")
+            modified_interaction_table = []  # start with the null value
+            for param in table.params:
+                modified_interaction_table += [param['g0'], param['g1']]
+            modified_interaction_table = set(modified_interaction_table)
+            # Make sure that the two are the same
+            only_interaction_grp = (interaction_grp_atoms - modified_interaction_table)
+            only_modified_interaction = (modified_interaction_table - interaction_grp_atoms)
+            self.assertTrue(interaction_grp_atoms == modified_interaction_table,
+                            'Group names in "modified_interaction" do not '
+                            'match the ones in "interaction_grp"\n'
+                            'Only in "interaction_grp": %s\n'
+                            'Only in "modified_interaction" table: %s'
+                            '' % (only_interaction_grp,
+                                  only_modified_interaction))
+
 
 def Validate(mol, strict=False, verbose=1, anton=True,
         all=False):
