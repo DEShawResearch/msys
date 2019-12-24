@@ -234,7 +234,7 @@ namespace desres { namespace molfile {
           return(hash);
       }
 
-      dtr::KeyMap *get_frame_map() {
+      const dtr::KeyMap *get_frame_map() const {
           return &frame_map;
       }
  
@@ -303,6 +303,9 @@ namespace desres { namespace molfile {
     }
 
     std::shared_ptr <metadata> get_meta() {
+        return metap;
+    }
+    std::shared_ptr <metadata const> get_meta() const {
         return metap;
     }
 
