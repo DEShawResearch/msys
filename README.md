@@ -9,7 +9,7 @@ the sort used in molecular simulations.  Its main features include:
 
  * C++ and Python interfaces.
 
-Msys currently supports Python Python 3.7+.  
+Msys currently supports Python 3.6+.  
 
 Building Msys
 -------------
