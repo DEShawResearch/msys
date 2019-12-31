@@ -633,6 +633,9 @@ static void build_nonbonded(SystemPtr mol, TermTablePtr table,
     } else for (unsigned i=0; i<terms.size(); i++) {
         Id id = terms[i];
         Id param = table->param(id);
+        if (bad(param)) {
+            MSYS_FAIL("Missing nonbonded param for particle " << id);
+        }
         Id atom = table->atoms(id)[0];
         sites[atom+1]["ffio_vdwtype"] = vdwtypes[param];
     }

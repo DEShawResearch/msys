@@ -58,7 +58,7 @@ VdwMap::VdwMap( const Json& ffio_ff ) {
             if (typesB.valid() && typesB.elem(i).kind()==Json::String) {
                 _vdwnamesB.push_back(typesB.elem(i).as_string());
             } else {
-                _vdwnamesB.push_back("");
+                _vdwnamesB.push_back("_MSYS_INVALID_VDWTYPE_");
             }
             if (chargeB.valid() && chargeB.elem(i).kind()==Json::Float) {
                 _chargeB.push_back(chargeB.elem(i).as_float());

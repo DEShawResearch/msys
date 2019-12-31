@@ -556,6 +556,13 @@ namespace {
         return jiffies_to_ps(tk.interval_jiffies());
     }
 
+    dict frameset_metadata(FrameSetReader& r) {
+        auto meta = r.frameset(0)->get_meta();
+        dict d;
+        py_keyvals(*meta->get_frame_map(), d.ptr());
+        return d;
+    }
+
 }
 
 void desres::molfile::export_dtrreader() {
@@ -580,6 +587,7 @@ void desres::molfile::export_dtrreader() {
         .add_property("natoms", &FrameSetReader::natoms)
         .add_property("nframes", &FrameSetReader::size)
         .add_property("nframesets", &FrameSetReader::nframesets)
+        .add_property("metadata", frameset_metadata)
 
         .def("fromTimekeys", from_timekeys, 
                 return_value_policy<manage_new_object>())

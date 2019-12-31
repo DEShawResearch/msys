@@ -49,7 +49,7 @@ namespace {
                 Id p[2]={BadId,BadId};
                 for (int j=0; j<2; j++) {
                     const VdwType& type = *types[j];
-                    if (type=="") continue;
+                    if (type=="_MSYS_INVALID_VDWTYPE_") continue;
                     TypeMap::const_iterator e = map.find(type);
                     if (e==map.end()) {
                         p[j] = map[type] = params->addParam();
