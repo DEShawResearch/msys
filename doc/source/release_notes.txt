@@ -1,3 +1,11 @@
+1.7.283 Bring tests/files back into the main repo.
+        Fixes and notes for external builds.
+        Handle empty string in mae vdwtype.
+        Add testModifiedInteractionConsistency to validate.
+        Expose metadata keyvals from Python via DtrReader.metadata.
+        Add benchmark program.
+        Add dms-restrain-dihedrals script.
+
 1.7.282 Support for compressed positions in dtr frames
         New dms-randomized-atoms and dms-diff-ff scripts
         Fix for ConvertToRdkit when vsites are present.
