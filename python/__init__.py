@@ -2121,6 +2121,42 @@ def ConvertToRdkit(mol, sanitize=True):
     Chem.AssignStereochemistry(rdmol)
     return rdmol
 
+def ConvertFromRdkit(rdmol):
+    """Construct an msys System from an RDMol
+    Args:
+        mol (rdkit.ROMol): system
+
+    Returns:
+        System
+
+    Notes:
+        All atoms will be assigned to the same Residue.
+        Only the first conformer will be used, if any.
+        There must not be any implicit hydrogens.
+        Bonds will be kekulized since msys doesn't maintain aromaticity.
+        Chiral tags will not be maintained.
+    """
+    from rdkit import Chem
+    rh = Chem.AddHs(rdmol)
+    if rh.GetNumAtoms() != rdmol.GetNumAtoms():
+        raise ValueError("input system has implicit hydrogens; use Chem.AddHs() to make them explicit")
+
+    Chem.Kekulize(rdmol)
+    mol = CreateSystem()
+    chn = mol.addChain()
+    res = chn.addResidue()
+    for a in rdmol.GetAtoms():
+        atm = res.addAtom()
+        atm.atomic_number = a.GetAtomicNum()
+        atm.name = a.GetPropsAsDict().get('_Name', a.GetSymbol())
+        atm.formal_charge = a.GetFormalCharge()
+    for b in rdmol.GetBonds():
+        bnd = mol.atom(b.GetBeginAtomIdx()).addBond(mol.atom(b.GetEndAtomIdx()))
+        bnd.order = int(b.GetBondTypeAsDouble())
+    if rdmol.GetConformers():
+        mol.setPositions(rdmol.GetConformer().GetPositions())
+    return mol
+
 def LoadMany(path, structure_only=False, error_writer=sys.stderr):
     ''' Iterate over structures in a file, if the file type supports
     iteration.  
