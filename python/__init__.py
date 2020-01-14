@@ -2157,6 +2157,7 @@ def ConvertFromRdkit(rdmol):
         bnd.order = int(b.GetBondType())
     if rdmol.GetConformers():
         mol.setPositions(rdmol.GetConformer().GetPositions())
+    mol.updateFragids()
     return mol
 
 def LoadMany(path, structure_only=False, error_writer=sys.stderr):
