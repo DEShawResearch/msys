@@ -2066,6 +2066,8 @@ def ConvertFromOEChem(oe_mol, force=False):
         msys_atom.atomic_number = oe_atom.GetAtomicNum()
         msys_atom.formal_charge = oe_atom.GetFormalCharge()
         msys_atom.pos = oe_mol.GetCoords(oe_atom)
+        if oe_atom.GetType():
+            msys_atom.name = oe_atom.GetType()
 
     msys_atoms = msys_system.atoms
     for oe_bond in oe_mol.GetBonds():
@@ -2152,7 +2154,7 @@ def ConvertFromRdkit(rdmol):
         atm.formal_charge = a.GetFormalCharge()
     for b in rdmol.GetBonds():
         bnd = mol.atom(b.GetBeginAtomIdx()).addBond(mol.atom(b.GetEndAtomIdx()))
-        bnd.order = int(b.GetBondTypeAsDouble())
+        bnd.order = int(b.GetBondType())
     if rdmol.GetConformers():
         mol.setPositions(rdmol.GetConformer().GetPositions())
     return mol
