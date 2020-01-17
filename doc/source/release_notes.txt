@@ -1,3 +1,6 @@
+1.7.284 Add msys.ConvertFromRdkit.
+        Better handling of ct properties in dms files.
+
 1.7.283 Bring tests/files back into the main repo.
         Fixes and notes for external builds.
         Handle empty string in mae vdwtype.
