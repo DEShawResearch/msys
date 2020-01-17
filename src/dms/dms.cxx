@@ -475,9 +475,9 @@ ValueType Reader::current_type(int col) const {
     int type = sqlite3_column_type(_stmt.get(),col);
     switch(type) {
         default:
-        case SQLITE_TEXT:    return StringType; 
-        case SQLITE_INTEGER: return IntType; 
-        case SQLITE_FLOAT:   return FloatType; 
+        case SQLITE_TEXT:    return StringType;
+        case SQLITE_INTEGER: return IntType;
+        case SQLITE_FLOAT:   return FloatType;
     }
     return StringType;
 }
@@ -490,6 +490,18 @@ std::string Reader::name(int col) const {
 ValueType Reader::type(int col) const {
     if (col<0 || col>=size()) MSYS_FAIL("no such column " << col);
     return _cols[col].second;
+}
+
+ValueType Reader::numeric_type(int col) const {
+    if (col<0 || col>=size()) MSYS_FAIL("no such column " << col);
+    auto type = sqlite3_value_numeric_type(sqlite3_column_value(_stmt.get(), col));
+    switch(type) {
+        default:
+        case SQLITE_TEXT:    return StringType;
+        case SQLITE_INTEGER: return IntType;
+        case SQLITE_FLOAT:   return FloatType;
+    }
+    return StringType;
 }
 
 int Reader::column(std::string const& name) const {

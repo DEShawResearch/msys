@@ -517,17 +517,28 @@ static void read_provenance( Sqlite dms, System& sys, KnownSet& known) {
 
 static void read_cts(Sqlite dms, System& sys, KnownSet& known) {
     known.insert("msys_ct");
-    Reader r = dms.fetch("msys_ct");
+    Reader r = dms.fetch("msys_ct", false);
     if (!r.size()) return;
 
-    ParamTablePtr keyvals = ParamTable::create();
-    read_params(r, keyvals);
-    while (sys.ctCount() < keyvals->paramCount()) sys.addCt();
-    for (Id i=0; i<keyvals->paramCount(); i++) {
-        for (Id j=0; j<keyvals->propCount(); j++) {
-            ValueRef val = keyvals->value(i,j);
-            sys.ct(i).add(keyvals->propName(j), val.type());
-            sys.ct(i).value(keyvals->propName(j)) = val;
+    Id idcol = r.column("id");
+    Id namecol = r.column("msys_name");
+    for (; r; r.next()) {
+        Id id = r.get_int(idcol);
+        while (!sys.hasCt(id)) sys.addCt();
+        auto& ct = sys.ct(id);
+        ct.setName(r.get_str(namecol));
+        for (Id i=0, n=r.size(); i<n; i++) {
+            if (i==idcol || i==namecol) continue;
+            auto type = r.numeric_type(i);
+            auto name = r.name(i);
+            ct.add(name, type);
+            auto val = ct.value(name);
+            switch (type) {
+            case IntType: val =r.get_int(i); break;
+            case FloatType: val = r.get_flt(i); break;
+            default:
+            case StringType: val = r.get_str(i); break;
+            }
         }
     }
 }
