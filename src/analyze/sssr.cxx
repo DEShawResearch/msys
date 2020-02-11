@@ -540,7 +540,7 @@ void desres::msys::SSSR::get_relevant_cycles(const GraphRepr& graph,
                 min_ind = j;
             }
         }
-        int right = (min_ind == int(path.size()) ? 0 : min_ind + 1);
+        int right = (min_ind == int(path.size()-1) ? 0 : min_ind + 1);
         int left = (min_ind == 0 ? path.size()-1 : min_ind - 1);
         paths[i].vertex_list.clear();
         paths[i].vertex_list.reserve(path.size());
