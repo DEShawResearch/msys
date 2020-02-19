@@ -1,3 +1,9 @@
+1.7.285 Docstring fix for findContactIds.
+        Fix very old bug in SSSR which may not have affected anyone.
+        Added dms-hmr.
+        Add metadata keyword to DtrWriter constructor.
+        Use bytearray when unicode conversion fails reading dtr keyvals.
+
 1.7.284 Add msys.ConvertFromRdkit.
         Better handling of ct properties in dms files.
 
