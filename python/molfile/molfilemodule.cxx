@@ -158,12 +158,12 @@ namespace {
                         uint32_t fpf,
                         DtrWriter::Type type,
                         double precision,
-                        dict metadata) {
+                        object metadata) {
 
         std::unique_ptr<dtr::KeyMap> keymap;
         if (!metadata.is_none()) {
             keymap.reset(new dtr::KeyMap);
-            convert_keyvals_to_keymap(metadata, *keymap);
+            convert_keyvals_to_keymap(dict(metadata), *keymap);
         }
         return new DtrWriter(path, type, natoms, DtrWriter::Mode(mode), fpf,
                 keymap.get(), precision);
@@ -208,7 +208,7 @@ namespace {
                      arg("frames_per_file")=0,
                      arg("format")=DtrWriter::Type::DTR,
                      arg("precision")=0.0,
-                     arg("metadata")=dict())))
+                     arg("metadata")=object())))
             .def("append", dtr_append,
                     (arg("time"),
                      arg("keyvals")))
