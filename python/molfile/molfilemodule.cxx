@@ -369,6 +369,10 @@ namespace {
                 case dtr::Key::TYPE_CHAR:
                     arr = py_string_from_string_size(
                         reinterpret_cast<const char*>(val.data), val.count);
+                    if (!arr) {
+                        PyErr_Clear();
+                        arr = PyByteArray_FromStringAndSize((const char*)val.data, val.count);
+                    }
                     break;
                 default:;
             }
