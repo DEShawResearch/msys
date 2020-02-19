@@ -74,6 +74,8 @@ namespace desres { namespace msys {
 
         /* Get the type actually stored for the current row */
         ValueType current_type(int col) const;
+        /* get a numeric type for the column, if possible */
+        ValueType numeric_type(int col) const;
         int column(std::string const& name) const;
         int get_int(int col) const;
         double get_flt(int col) const;

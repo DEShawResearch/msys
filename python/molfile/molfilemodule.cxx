@@ -100,16 +100,6 @@ namespace {
     void destructor(PyObject* obj) { Py_XDECREF(obj); }
     typedef std::shared_ptr<PyObject> objptr;
 
-    DtrWriter* dtr_init(std::string const& path,
-                        uint32_t natoms,
-                        int mode,
-                        uint32_t fpf,
-                        DtrWriter::Type type,
-                        double precision) {
-        return new DtrWriter(path, type, natoms, DtrWriter::Mode(mode), fpf,
-                nullptr, precision);
-    }
-
     void convert_keyvals_to_keymap(dict keyvals, dtr::KeyMap& map) {
         list items = keyvals.items();
         for (unsigned i=0, n=len(items); i<n; i++) {
@@ -162,6 +152,23 @@ namespace {
         }
     }
 
+    DtrWriter* dtr_init(std::string const& path,
+                        uint32_t natoms,
+                        int mode,
+                        uint32_t fpf,
+                        DtrWriter::Type type,
+                        double precision,
+                        object metadata) {
+
+        std::unique_ptr<dtr::KeyMap> keymap;
+        if (!metadata.is_none()) {
+            keymap.reset(new dtr::KeyMap);
+            convert_keyvals_to_keymap(dict(metadata), *keymap);
+        }
+        return new DtrWriter(path, type, natoms, DtrWriter::Mode(mode), fpf,
+                keymap.get(), precision);
+    }
+
     void dtr_append(DtrWriter& w, double time, dict keyvals) {
         dtr::KeyMap keymap;
         convert_keyvals_to_keymap(keyvals, keymap);
@@ -200,7 +207,8 @@ namespace {
                      arg("mode")=0,
                      arg("frames_per_file")=0,
                      arg("format")=DtrWriter::Type::DTR,
-                     arg("precision")=0.0)))
+                     arg("precision")=0.0,
+                     arg("metadata")=object())))
             .def("append", dtr_append,
                     (arg("time"),
                      arg("keyvals")))
@@ -361,6 +369,10 @@ namespace {
                 case dtr::Key::TYPE_CHAR:
                     arr = py_string_from_string_size(
                         reinterpret_cast<const char*>(val.data), val.count);
+                    if (!arr) {
+                        PyErr_Clear();
+                        arr = PyByteArray_FromStringAndSize((const char*)val.data, val.count);
+                    }
                     break;
                 default:;
             }

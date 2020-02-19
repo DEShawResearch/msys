@@ -1,3 +1,20 @@
+1.7.287 Docstring fix for findContactIds.
+        Fix very old bug in SSSR which may not have affected anyone.
+        Added dms-hmr.
+        Add metadata keyword to DtrWriter constructor.
+        Use bytearray when unicode conversion fails reading dtr keyvals.
+
+1.7.284 Add msys.ConvertFromRdkit.
+        Better handling of ct properties in dms files.
+
+1.7.283 Bring tests/files back into the main repo.
+        Fixes and notes for external builds.
+        Handle empty string in mae vdwtype.
+        Add testModifiedInteractionConsistency to validate.
+        Expose metadata keyvals from Python via DtrReader.metadata.
+        Add benchmark program.
+        Add dms-restrain-dihedrals script.
+
 1.7.282 Support for compressed positions in dtr frames
         New dms-randomized-atoms and dms-diff-ff scripts
         Fix for ConvertToRdkit when vsites are present.

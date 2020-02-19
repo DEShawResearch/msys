@@ -1174,6 +1174,25 @@ class Tools(unittest.TestCase):
 
 class Main(unittest.TestCase):
 
+    def testMixedCtPropertyTypes(self):
+        mol = msys.CreateSystem()
+        ct0 = mol.addCt()
+        ct1 = mol.addCt()
+        ct2 = mol.addCt()
+        ct3 = mol.addCt()
+        ct0['x'] = 1
+        ct1['x'] = 3.5
+        ct2['x'] = '1'
+        ct3['x'] = 'x'
+
+        s = msys.FormatDMS(mol)
+        m = msys.LoadDMS(buffer=s)
+
+        assert m.ct(0)['x'] == 1
+        assert m.ct(1)['x'] == 3.5
+        assert m.ct(2)['x'] == 1 # sadly, numeric conversion occurs
+        assert m.ct(3)['x'] == 'x'
+        
     def testSave(self):
         mol1 = msys.Load('tests/files/ch4.dms')
         tmp = tmpfile(suffix='.dms')

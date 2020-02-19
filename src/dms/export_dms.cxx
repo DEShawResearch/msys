@@ -344,20 +344,31 @@ static void export_view(TermTablePtr table, const std::string& name, Sqlite dms)
 }
 
 static void export_cts(System& sys, Sqlite dms) {
-    /* merge the keyvals for each ct */
-    ParamTablePtr keyvals = ParamTable::create();
-    keyvals->addProp("msys_name", StringType);
-    for (Id ct : sys.cts()) {
-        component_t& c = sys.ct(ct);
-        Id row = keyvals->addParam();
-        keyvals->value(row,0) = c.name();
-        for (String key : c.keys()) {
-            ValueRef val = c.value(key);
-            Id col = keyvals->addProp(key, val.type());
-            keyvals->value(row,col) = val;
+    std::set<std::string> cols;
+    for (Id id : sys.cts()) {
+        for (auto& key : sys.ct(id).keys()) {
+            cols.insert(key);
         }
     }
-    export_params(keyvals, "msys_ct", dms);
+    std::string sql("create table msys_ct (id integer primary key, msys_name text,");
+    for (auto& col : cols) {
+        sql += "'" + col + "' text,";
+    }
+    sql.back()=')';
+    dms.exec(sql.data());
+    dms.exec("begin");
+    auto w = dms.insert("msys_ct");
+    for (Id id : sys.cts()) {
+        auto& ct = sys.ct(id);
+        w.bind_int(0, id);
+        w.bind_str(1, ct.name());
+        int col=2;
+        for (auto& key : sys.ct(id).keys()) {
+            write(ct.value(key), col++, w);
+        }
+        w.next();
+    }
+    dms.exec("commit");
 }
 
 

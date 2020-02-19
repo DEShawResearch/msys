@@ -1553,13 +1553,15 @@ class System(object):
             ids=None, other=None, pos=None, ignore_excluded=False):
         '''
         Find atoms not bonded to each other which are within cutoff of
-        each other.  
+        each other.
         If ids is not None, consider only atoms with the given ids.  If
         other is not None, consider only atom pairs such that one is in ids
         and the other is in other.  If pos is not None, use pos as positions,
         which should be natoms x 3 regardless of the size of ids or other.
         pos may be supplied only when there are no deleted atoms in the
-        structure.  
+        structure. If ignore_excluded=True, exclusions from the exclusion
+        table are used. If ignore_excluded=False, bonds in System.bonds
+        are still excluded.
 
         Returns a list of (id 1, id 2, distance) tuples for each contact
         found.
@@ -2066,6 +2068,8 @@ def ConvertFromOEChem(oe_mol, force=False):
         msys_atom.atomic_number = oe_atom.GetAtomicNum()
         msys_atom.formal_charge = oe_atom.GetFormalCharge()
         msys_atom.pos = oe_mol.GetCoords(oe_atom)
+        if oe_atom.GetType():
+            msys_atom.name = oe_atom.GetType()
 
     msys_atoms = msys_system.atoms
     for oe_bond in oe_mol.GetBonds():
@@ -2120,6 +2124,43 @@ def ConvertToRdkit(mol, sanitize=True):
     Chem.DetectBondStereoChemistry(rdmol, conf)
     Chem.AssignStereochemistry(rdmol)
     return rdmol
+
+def ConvertFromRdkit(rdmol):
+    """Construct an msys System from an RDMol
+    Args:
+        mol (rdkit.ROMol): system
+
+    Returns:
+        System
+
+    Notes:
+        All atoms will be assigned to the same Residue.
+        Only the first conformer will be used, if any.
+        There must not be any implicit hydrogens.
+        Bonds will be kekulized since msys doesn't maintain aromaticity.
+        Chiral tags will not be maintained.
+    """
+    from rdkit import Chem
+    rh = Chem.AddHs(rdmol)
+    if rh.GetNumAtoms() != rdmol.GetNumAtoms():
+        raise ValueError("input system has implicit hydrogens; use Chem.AddHs() to make them explicit")
+
+    Chem.Kekulize(rdmol)
+    mol = CreateSystem()
+    chn = mol.addChain()
+    res = chn.addResidue()
+    for a in rdmol.GetAtoms():
+        atm = res.addAtom()
+        atm.atomic_number = a.GetAtomicNum()
+        atm.name = a.GetPropsAsDict().get('_Name', a.GetSymbol())
+        atm.formal_charge = a.GetFormalCharge()
+    for b in rdmol.GetBonds():
+        bnd = mol.atom(b.GetBeginAtomIdx()).addBond(mol.atom(b.GetEndAtomIdx()))
+        bnd.order = int(b.GetBondType())
+    if rdmol.GetConformers():
+        mol.setPositions(rdmol.GetConformer().GetPositions())
+    mol.updateFragids()
+    return mol
 
 def LoadMany(path, structure_only=False, error_writer=sys.stderr):
     ''' Iterate over structures in a file, if the file type supports
