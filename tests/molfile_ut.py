@@ -902,7 +902,7 @@ class TestDtrWriter(unittest.TestCase):
     def testMetadata(self):
         path="/f/a/jobstep/18771855/0/diagnose.atr"
         reader=molfile.DtrReader(path)
-        writer=molfile.DtrWriter(self.PATH, natoms=reader.natoms, mode=0, frames_per_file=100), metadata=reader.metadata)
+        writer=molfile.DtrWriter(self.PATH, natoms=reader.natoms, mode=0, frames_per_file=100, metadata=reader.metadata)
         for i in range(reader.nframes):
             keyvals = reader.keyvals(i)
             writer.append(float(keyvals["CHEMICALTIME"][0]), keyvals)

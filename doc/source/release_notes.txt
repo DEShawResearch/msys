@@ -1,4 +1,4 @@
-1.7.286 Docstring fix for findContactIds.
+1.7.287 Docstring fix for findContactIds.
         Fix very old bug in SSSR which may not have affected anyone.
         Added dms-hmr.
         Add metadata keyword to DtrWriter constructor.
