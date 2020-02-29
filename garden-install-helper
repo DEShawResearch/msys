@@ -25,6 +25,7 @@ loadmodules() {
     garden load \
         $GCC/bin \
         $PYTHON3/bin \
+        $PYTHON/bin \
         $SCONS/bin \
         $BOOST/lib \
         $LPSOLVE/lib \
@@ -35,7 +36,7 @@ loadmodules() {
         $TNG/lib \
         $GBENCH/lib \
 
-    export PYTHONVER=37
+    export PYTHONVER=27,37
     export MSYS_WITH_LPSOLVE=1
     export MSYS_WITH_INCHI=1
     export MSYS_WITH_TNG=1
@@ -43,6 +44,9 @@ loadmodules() {
 }
 
 genmodules() {
+    cat << EOF > $GARDENDIR/lib-python
+prepend-path PYTHONPATH $PREFIX/lib/python
+EOF
     cat << EOF > $GARDENDIR/lib-python37
 prepend-path PYTHONPATH $PREFIX/lib/python
 EOF
@@ -98,9 +102,14 @@ case $1 in
         $0 --exec scons install -j $nprocs PREFIX=$PREFIX OBJDIR=$TMPDIR
 
         ./tests/ut.py
+        ./tests/ut.py -3
         ./tests/molfile_ut.py
+
         ./tests/oechem_ut.py
+        ./tests/oechem_ut.py -3
+
         ./tests/rdkit_ut.py
+        ./tests/rdkit_ut.py -3
 
 	genhelp
 	genmodules

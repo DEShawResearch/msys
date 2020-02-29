@@ -42,6 +42,8 @@ boost_libs=[(x+bsx) for x in (
     'boost_iostreams', 'boost_filesystem', 'boost_system')]
 
 env.Append(
+        PYTHON27_LIBS=['boost_python${MSYS_BOOST_PYTHON_SUFFIX}27'],
+        PYTHON35_LIBS=['boost_python${MSYS_BOOST_PYTHON_SUFFIX}35'],
         PYTHON36_LIBS=['boost_python${MSYS_BOOST_PYTHON_SUFFIX}36'],
         PYTHON37_LIBS=['boost_python${MSYS_BOOST_PYTHON_SUFFIX}37'],
         )

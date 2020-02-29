@@ -1,6 +1,15 @@
 garden env-keep-only TMPDIR PREFIX
 source `dirname $0`/../env.sh
-garden load $PYTHON3/bin
-garden load $YAS/lib-python37
+if [ "$1" == "-3" ]
+then
+   shift
+   PYSUFFIX='3'
+   garden load $PYTHON3/bin
+   garden load $YAS/lib-python37
+else
+   PYSUFFIX=''
+   garden load $PYTHON/bin
+   garden load $YAS/lib-python
+fi
 garden in-path PATH ${PREFIX:-`dirname $0`/../build}/bin
 

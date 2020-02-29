@@ -2355,7 +2355,7 @@ def _assign(m, *args):
     return m
 
 def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge=None,
-                                   compute_resonant_charges=False, *,
+                                   compute_resonant_charges=False,
                                    timeout=None):
     """Assign bond orders and formal charges to a molecular system.
 

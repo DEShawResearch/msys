@@ -1,7 +1,8 @@
 #!/usr/bin/garden-exec
 #{
 # source `dirname $0`/pyenv.sh
-# garden load rdkit/2019.03.1-05c7/lib-python37
+### garden load rdkit/2019.03.1-05c7/lib-python37
+# garden load rdkit/2017.09.1-04c7/lib-python${PYSUFFIX}
 # exec python $0 "$@"
 #}
 from __future__ import print_function
