@@ -8,14 +8,14 @@ import argparse
 
 class HMRActions(argparse.Action):
     def __call__(self, parser, namespace, values, option_string):
-        if len(values) != 2: raise RuntimeError("I need 2 values, got: %s" % (values,))
+        if len(values) != 2: raise RuntimeError(f"I need 2 values, got: {values}")
         sel = values[0]
         mass = None
         try:
             mass = float(values[1])
         except:
             pass
-        if mass is None: raise RuntimeError("Second argument to %s must be the mass, got: %s" % (option_string, values[1]))
+        if mass is None: raise RuntimeError(f"Second argument to {option_string} must be the mass, got: {values[1]}")
         repartition = {"--repartition": True, "-r": True, "--norepartition": False, "-n": False}[option_string]
         namespace.actions.append((repartition, sel, mass))
 
@@ -72,7 +72,7 @@ def adjust_hmasses(mol, sel, hmass, repartition):
     new_mol = mol.clone()
     atomsel = 'hydrogen and (%s)' % sel
     hatoms = new_mol.select(atomsel)
-    #print(f"  * Setting mass for '{atomsel}' to {hmass} (N={len(hatoms)})")
+    print(f"  * Setting mass for '{atomsel}' to {hmass} (N={len(hatoms)})")
     warn = False
     for a in hatoms + [b for h in hatoms for b in h.bonded_atoms]:
         dev = abs(a.mass/msys.MassForElement(a.atomic_number) -1)
@@ -80,7 +80,7 @@ def adjust_hmasses(mol, sel, hmass, repartition):
             warn = True
             break
     if (warn):
-       s = '  * WARNING: It looks like the hydrogen or bonded atom masses in selection "%s" were already modified!' % sel
+       s = f'  * WARNING: It looks like the hydrogen or bonded atom masses in selection "{sel}" were already modified!'
        s += '\n    You may have overlapping selections or are modifing a file that already has hmr applied.'
        s += '\n    Please verify that the final masses are as expected'
        print(s)
@@ -91,14 +91,14 @@ def adjust_hmasses(mol, sel, hmass, repartition):
         if repartition:
             batom = a.bonded_atoms[0]
             batom.mass -= hmass - old
-            assert batom.mass > 0, "Mass for atom %s (%s) is <= 0 (%s)" % (batom.id, batom.name, batom.mass)
+            assert batom.mass > 0, f"Mass for atom {batom.id} ({batom.name}) is < 0 ({batom.mass})"
     total_mass_after = sum([a.mass for a in new_mol.atoms])
     dmass = total_mass_after - total_mass_before
     if repartition:
-        assert dmass < 0.001, "Total mass has changed too much: %s" % dmass
-        print("  * Total system mass after:", total_mass_after)
+        assert dmass < 0.001, f"Total mass has changed too much (dm={dmass})"
+        print(f"  * Total system mass before and after: {total_mass_after}")
     else:
-        print("  * Total system mass changed by", dmass)
+        print(f"  * Total system mass changed by {dmass}")
     return new_mol
 
 
@@ -107,10 +107,10 @@ def main():
     input_dms = args.input_dms
     output_dms = args.output_dms
 
-    print("Reading system", input_dms)
+    print(f"Reading system '{input_dms}'")
     mol = msys.Load(input_dms)
     for (repartition, selection, hmass) in args.actions:
         mol = adjust_hmasses(mol, selection, hmass, repartition)
-    print("Saving system", output_dms)
+    print(f"Saving system '{output_dms}'")
     msys.Save(mol, output_dms)
 
