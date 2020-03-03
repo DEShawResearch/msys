@@ -1,3 +1,5 @@
+1.7.289 Drop python2 from build and tests, again.
+
 1.7.288 Restore the python2 build, for now.
 
 1.7.287 Docstring fix for findContactIds.
