@@ -254,6 +254,10 @@ class DtrTestCase(unittest.TestCase):
 class TestStk(unittest.TestCase):
     STK='tests/files/run.stk'
 
+    def testEmptyFramesetAtStartOfStk(self):
+        s = molfile.DtrReader('/d/en/fep-6/2020/02/27/gullingj_k0kvwpri/pyanton/PA104_0/energy_globals.stk')
+        self.assertEqual(s.nframes, 10412)
+
     def testMixedAtomCount(self):
         with self.assertRaises(RuntimeError):
             s1 = molfile.DtrReader('tests/files/mixed_atom_count1.stk')

@@ -453,8 +453,8 @@ namespace desres { namespace molfile {
     }
     ~StkReader();
 
-    void append(std::vector<std::string> fnames, 
-                std::vector<Timekeys> const& timekeys);
+    void append(std::vector<std::string>& fnames,
+                std::vector<Timekeys>& timekeys);
 
     virtual bool has_velocities() const;
     virtual uint32_t natoms() const;

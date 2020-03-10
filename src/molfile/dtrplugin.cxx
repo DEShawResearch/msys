@@ -1055,8 +1055,23 @@ void StkReader::write_cachefile(std::string cachepath) const {
 }
 
 
-void StkReader::append(std::vector<std::string> fnames,
-                       std::vector<Timekeys> const& timekeys ) {
+void StkReader::append(std::vector<std::string>& fnames,
+                       std::vector<Timekeys>& timekeys ) {
+
+    // start by filtering framesets with empty timekeys.  These trajectories probably also lack
+    // metadata frames, and if that happens in the first trajectory, things get ugly.
+    {
+        std::vector<std::string> f2;
+        std::vector<Timekeys> t2;
+        for (unsigned i=0, n=fnames.size(); i<n; i++) {
+            if (timekeys[i].size() > 0) {
+                f2.emplace_back(std::move(fnames[i]));
+                t2.emplace_back(std::move(timekeys[i]));
+            }
+        }
+        fnames.swap(f2);
+        timekeys.swap(t2);
+    }
 
     uint32_t starting_framesets = framesets.size();
 
