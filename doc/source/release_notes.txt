@@ -1,3 +1,5 @@
+1.7.290 Fix reading of stks with empty framesets.
+
 1.7.289 Drop python2 from build and tests, again.
 
 1.7.288 Restore the python2 build, for now.
