@@ -1,13 +1,4 @@
-#!/usr/bin/garden-exec
-#{
-# source `dirname $0`/pyenv.sh
-# exec python $0 "$@"
-#}
-
-from __future__ import print_function
 import os, sys, unittest
-from util import *
-
 import msys
 from msys import knot, reorder, pfx, molfile
 from time import time

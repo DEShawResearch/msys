@@ -88,21 +88,13 @@ case $1 in
 	loadmodules
         "$@"
         ;;
-    --garden-help)
-        genhelp
-        ;;
     --install)
 	loadmodules
 
         nprocs=`getconf _NPROCESSORS_ONLN`
         $0 --exec scons install -j $nprocs PREFIX=$PREFIX OBJDIR=$TMPDIR
-
-        ./tests/ut.py
-        ./tests/molfile_ut.py
-        ./tests/oechem_ut.py
-        ./tests/rdkit_ut.py
-
-	genhelp
+        ./tests/run.sh
+	genhelp >> $METADIR/help.txt
 	genmodules
         gendocs
 

@@ -1,13 +1,3 @@
-#!/usr/bin/garden-exec
-#{
-# source `dirname $0`/pyenv.sh
-# garden load openeye-toolkits/2019.4.2-02c7/lib-python37
-# exec python $0 "$@"
-#}
-
-from __future__ import print_function
-from util import *
-
 import msys
 import numpy as np
 
