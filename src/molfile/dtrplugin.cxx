@@ -767,13 +767,17 @@ bool StkReader::read_stk_cache_file(const std::string &cachepath, bool verbose) 
     bool read_cache = false;
 
     /* attempt to read the cache file */
-    std::ifstream file(cachepath.c_str());
+    std::ifstream file;
+    // DESRESCode#4455: work around high latency of MAFS reads by using a large buffer.
+    char buf[32*65536];
+    file.rdbuf()->pubsetbuf(buf, sizeof(buf));
+    file.open(cachepath.c_str());
     if (file) {
         if (verbose) printf("StkReader: cache file %s found\n", cachepath.c_str());
         bio::filtering_istream in;
 #ifndef WIN32 //gzip does not currently work on windows
 #ifndef __APPLE__
-        in.push(bio::gzip_decompressor());
+        in.push(bio::gzip_decompressor(15, 65536));
 #endif
 #endif
         in.push(file);
