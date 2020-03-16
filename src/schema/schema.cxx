@@ -23,6 +23,7 @@ static char schemas_as_json[] = R"SCHEMA(
      [ "stretch_harm", "bond", 2, ["r0", "fc"],     [["constrained", 0]]],
      [ "stretch_morse", "bond", 2,["r0", "d", "a"]],
      [ "softstretch_harm", "bond", 2, ["r0", "fc", "alpha"]],
+     [ "softened_stretch_harm", "bond", 2, ["r0", "fc", "alpha", "lambda"]],
      [ "torsiontorsion_cmap", "bond", 8, [["cmapid", 2]]],
      [ "pseudopol_fermi","bond",4,["a", "b", "cutoff"]],
 
