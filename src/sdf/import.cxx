@@ -260,6 +260,20 @@ namespace {
                             }
                             mol.atom(aid-1).formal_charge = chg;
                         }
+                    } else if (!strncmp(buf+3, "ISO", 3)) {
+                        int n = parse_count(buf+6);
+                        if (n==BAD_COUNT) {
+                            MSYS_FAIL("Malformed ISO line: " << skip_to_end());
+                        }
+                        auto id = mol.addAtomProp("isotope", IntType);
+                        for (int i=0; i<n; i++) {
+                            short aid = parse_count(buf+10+8*i);
+                            short iso = parse_count(buf+14+8*i);
+                            if (aid==BAD_COUNT || iso==BAD_COUNT) {
+                                MSYS_FAIL("Malformed ISO line: " << skip_to_end());
+                            }
+                            mol.atomPropValue(aid-1, id) = iso;
+                        }
                     }
                 } else if (!strncmp(buf, "A  ", 3)) {
                     getline();

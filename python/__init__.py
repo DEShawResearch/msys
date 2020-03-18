@@ -1979,9 +1979,15 @@ def ConvertToOEChem(mol_or_atoms):
         bonds = sorted(set(bonds), key=lambda x: x.id)
         coords = numpy.array([a.pos for a in atoms])
 
+    mol = atoms[0].system
+    print("props:", mol.atom_props)
+    have_isotope = 'isotope' in mol.atom_props
+
     for idx, atm in enumerate(atoms):
         oe_atom = oe_mol.NewAtom(atm.atomic_number)
         oe_atom.SetFormalCharge(atm.formal_charge)
+        if have_isotope:
+            oe_atom.SetIsotope(atm['isotope'])
 
         # paranoia check because this isn't gauranteed by OEChem, but
         # so far it always has been true: https://docs.eyesopen.com/toolkits/python/oechemtk/atombondindices.html#indices-for-molecule-lookup-considered-harmful
@@ -2036,6 +2042,7 @@ def ConvertFromOEChem(oe_mol, force=False):
     chain_id_to_msys_chain = {}
     oe_res_to_msys_res = {}
     oe_idx_to_msys_id = {}
+    have_isotope = False
     for oe_atom in oe_mol.GetAtoms():
         if not oechem.OEHasResidue(oe_atom):
             if default_res is None:
@@ -2070,6 +2077,10 @@ def ConvertFromOEChem(oe_mol, force=False):
         msys_atom.pos = oe_mol.GetCoords(oe_atom)
         if oe_atom.GetType():
             msys_atom.name = oe_atom.GetType()
+        if oe_atom.GetIsotope():
+            if not have_isotope:
+                msys_system.addAtomProp("isotope", int)
+            msys_atom['isotope'] = oe_atom.GetIsotope()
 
     msys_atoms = msys_system.atoms
     for oe_bond in oe_mol.GetBonds():

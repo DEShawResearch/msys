@@ -906,6 +906,11 @@ class TestAtomsel(unittest.TestCase):
 
 class TestSdf(unittest.TestCase):
 
+    def testIsotopes(self):
+        mol = msys.Load('tests/files/isotope.sdf')
+        assert 'isotope' in mol.atom_props
+        for i in 1,2: assert mol.atom(i)['isotope'] == 2
+
     def testZeroBondOrder(self):
         mol = msys.CreateSystem()
         c=mol.addAtom()

@@ -72,6 +72,14 @@ class Main(unittest.TestCase):
         stereo = atom.GetStereo(v, oechem.OEAtomStereo_Tetrahedral)
         self.assertEqual(stereo, expected)
 
+    def testIsotope(self):
+        mol = msys.Load('tests/files/isotope.sdf')
+        assert [a['isotope'] for a in mol.atoms] == [0,2,2]
+        oemol = msys.ConvertToOEChem(mol)
+        assert [a.GetIsotope() for a in oemol.GetAtoms()] == [0,2,2]
+        mol = msys.ConvertFromOEChem(oemol)
+        assert [a['isotope'] for a in mol.atoms] == [0,2,2]
+
     def testChiralAtoms(self):
         mol = msys.Load('tests/files/jandor.sdf')
         oemol = msys.ConvertToOEChem(mol)
