@@ -1,3 +1,7 @@
+1.7.292 Added softened_stretch_harm schema.
+        Improve speed of reading stk cache files
+        Isotope support for sdf and to/from oechem.
+
 1.7.291 Fix bug in ct property handling introduced in 1.7.284.
 
 1.7.290 Fix reading of stks with empty framesets.
