@@ -355,47 +355,73 @@ void desres::msys::ExportPDB(SystemPtr mol, std::string const& path,
     fprintf(fd, "%6s%9.3f%9.3f%9.3f%7.2f%7.2f%7.2f %-11s%4d\n",
             "CRYST1", A,B,C,alpha,beta,gamma,space.c_str(), z);
 
-    int index=0;
-    const char* chain = NULL;
-    const char* resname = NULL;
-    int resid = 0;
     Id bfactor_index = mol->atomPropIndex("bfactor");
     Id occupancy_index = mol->atomPropIndex("occupancy");
     Id altloc_index = mol->atomPropIndex("altloc");
-    for (Id chn=0; chn<mol->maxChainId(); chn++) {
-        if (!mol->hasChain(chn)) continue;
-        const char* segid = mol->chain(chn).segid.c_str();
-        chain = mol->chain(chn).name.c_str();
-        if (chn>0 && mol->chain(chn).name == mol->chain(chn-1).name) {
-            desres_msys_write_ter_record(fd, ++index, resname, chain, resid);
-        }
-        for (Id res : mol->residuesForChain(chn)) {
-            resid = mol->residue(res).resid;
-            resname = mol->residue(res).name.c_str();
-            const char* insertion = mol->residue(res).insertion.c_str();
 
-            for (Id atm : mol->atomsForResidue(res)) {
-                int anum = mol->atom(atm).atomic_number;
-                const char* name = mol->atom(atm).name.c_str();
-                const char* elementsym = AbbreviationForElement(anum);
-                double x = mol->atom(atm).x;
-                double y = mol->atom(atm).y;
-                double z = mol->atom(atm).z;
-                double occ = bad(occupancy_index) ? 1.0 :
-                                mol->atomPropValue(atm, occupancy_index);
-                double beta = bad(bfactor_index) ? 0.0 :
-                                mol->atomPropValue(atm, bfactor_index);
-                const char* altloc = bad(altloc_index) ? " " :
-                                mol->atomPropValue(atm, altloc_index).c_str();
-                int formal_charge = mol->atom(atm).formal_charge;
+    int index=0;
+    if (flags & PDBExport::Reorder) {
+        const char* chain = NULL;
+        const char* resname = NULL;
+        int resid = 0;
+        for (Id chn=0; chn<mol->maxChainId(); chn++) {
+            if (!mol->hasChain(chn)) continue;
+            const char* segid = mol->chain(chn).segid.c_str();
+            chain = mol->chain(chn).name.c_str();
+            if (chn>0 && mol->chain(chn).name == mol->chain(chn-1).name) {
+                desres_msys_write_ter_record(fd, ++index, resname, chain, resid);
+            }
+            for (Id res : mol->residuesForChain(chn)) {
+                resid = mol->residue(res).resid;
+                resname = mol->residue(res).name.c_str();
+                const char* insertion = mol->residue(res).insertion.c_str();
 
-                ++index;
-                if (!desres_msys_write_raw_pdb_record(
-                        fd, "ATOM", index, name, resname, resid,
-                        insertion, altloc, elementsym, x, y, z,
-                        occ, beta, formal_charge, chain, segid)) {
-                    MSYS_FAIL("Failed writing PDB to " << path << " at line " << index);
+                for (Id atm : mol->atomsForResidue(res)) {
+                    int anum = mol->atom(atm).atomic_number;
+                    const char* name = mol->atom(atm).name.c_str();
+                    const char* elementsym = AbbreviationForElement(anum);
+                    double x = mol->atom(atm).x;
+                    double y = mol->atom(atm).y;
+                    double z = mol->atom(atm).z;
+                    double occ = bad(occupancy_index) ? 1.0 :
+                                    mol->atomPropValue(atm, occupancy_index);
+                    double beta = bad(bfactor_index) ? 0.0 :
+                                    mol->atomPropValue(atm, bfactor_index);
+                    const char* altloc = bad(altloc_index) ? " " :
+                                    mol->atomPropValue(atm, altloc_index).c_str();
+                    int formal_charge = mol->atom(atm).formal_charge;
+
+                    ++index;
+                    if (!desres_msys_write_raw_pdb_record(
+                            fd, "ATOM", index, name, resname, resid,
+                            insertion, altloc, elementsym, x, y, z,
+                            occ, beta, formal_charge, chain, segid)) {
+                        MSYS_FAIL("Failed writing PDB to " << path << " at line " << index);
+                    }
                 }
+            }
+        }
+    } else {
+        Id cur_ct=0;
+        for (auto aid : mol->atoms()) {
+            auto& atm = mol->atomFAST(aid);
+            double occ = bad(occupancy_index) ? 1.0 :
+                            mol->atomPropValue(aid, occupancy_index);
+            double beta = bad(bfactor_index) ? 0.0 :
+                            mol->atomPropValue(aid, bfactor_index);
+            const char* altloc = bad(altloc_index) ? " " :
+                            mol->atomPropValue(aid, altloc_index).c_str();
+            const char* elementsym = AbbreviationForElement(atm.atomic_number);
+            auto& res = mol->residueFAST(atm.residue);
+            auto& chn = mol->chainFAST(res.chain);
+            if (chn.ct > 0 && chn.ct != cur_ct) {
+                desres_msys_write_ter_record(fd, ++index, res.name.c_str(), chn.name.c_str(), res.resid);
+            }
+            if (!desres_msys_write_raw_pdb_record(
+                    fd, "ATOM", ++index, atm.name.c_str(), res.name.c_str(), res.resid,
+                    res.insertion.c_str(), altloc, elementsym, atm.x, atm.y, atm.z,
+                    occ, beta, atm.formal_charge, chn.name.c_str(), chn.segid.c_str())) {
+                MSYS_FAIL("Failed writing PDB to " << path << " at line " << index);
             }
         }
     }

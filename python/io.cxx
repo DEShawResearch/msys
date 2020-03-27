@@ -158,6 +158,7 @@ namespace desres { namespace msys {
         enum_<PDBExport::Flags>("PDBExportFlags")
             .value("Default",           PDBExport::Default)
             .value("Append",            PDBExport::Append)
+            .value("Reorder",           PDBExport::Reorder)
             ;
 
         class_<LoadIterator, LoadIteratorPtr, boost::noncopyable>("LoadIterator", no_init)

@@ -2287,11 +2287,13 @@ def SaveMAE(system, path, with_forcefield = True, append = False):
             _msys.ExportMAE(mol._ptr, path, prov, flags)
             flags |= _msys.MaeExportFlags.Append
 
-def SavePDB(system, path, append=False):
+def SavePDB(system, path, append=False, reorder=False):
     ''' Export the System to a PDB file at the given path. '''
     flags = _msys.PDBExportFlags.Default
     if append:
         flags |= _msys.PDBExportFlags.Append
+    if reorder:
+        flags |= _msys.PDBExportFlags.Reorder
     _msys.ExportPDB(system._ptr, str(path), flags)
 
 def SaveMol2(system, path, selection='none', append=False, moe=True):

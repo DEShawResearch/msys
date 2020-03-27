@@ -1106,10 +1106,67 @@ class TestPdb(unittest.TestCase):
             a.atomic_number=6
         tmp=tempfile.NamedTemporaryFile(suffix='.pdb')
         path=tmp.name
-        msys.Save(mol, path)
+        msys.SavePDB(mol, path, reorder=True)
         m2=msys.Load(path)
         self.assertEqual(m2.nchains, 2)
 
+    def testReorder(self):
+        mol=msys.Load('tests/files/order.mol2')
+        tmp=tempfile.NamedTemporaryFile(suffix='.pdb')
+        path=tmp.name
+
+        msys.SavePDB(mol, path, reorder=True)
+        pdb=msys.Load(path)
+        assert [a.name for a in mol.atoms] != [a.name for a in pdb.atoms]
+
+        msys.SavePDB(mol, path, reorder=False)
+        pdb=msys.Load(path)
+        assert [a.name for a in mol.atoms] == [a.name for a in pdb.atoms]
+
+        msys.Save(mol, path)
+        pdb=msys.Load(path)
+        assert [a.name for a in mol.atoms] == [a.name for a in pdb.atoms]
+
+    def testCell(self):
+        self.assertEqual(list(self.mol.cell.diagonal()), 
+                [42.408, 41.697, 69.9599803728577])
+
+
+class TestValidate(unittest.TestCase):
+    def testNoKnot(self):
+        mol=msys.Load('tests/files/jandor.sdf')
+        knot.FindKnots(mol,verbose=False)
+    def testPeriodicKnot(self):
+        mol=msys.Load('tests/files/knot.mae')
+        results=knot.FindKnots(mol,verbose=False)
+        self.assertEqual(len(results), 2)
+    def testExcludedKnot(self):
+        mol=msys.Load('tests/files/excluded_knot.dms')
+        without_ignoring = knot.FindKnots(mol,verbose=False)
+        self.assertEqual(len(without_ignoring),1)
+        with_ignoring = knot.FindKnots(mol, ignore_excluded_knots=True, verbose=False)
+        self.assertEqual(len(with_ignoring), 0)
+    def testUntieKnot(self):
+        mol=msys.Load('tests/files/knot.mae')
+        results=knot.FindKnots(mol,verbose=False)
+        self.assertEqual(len(results), 2)
+        success = knot.UntieKnots(mol,verbose=False)
+        results_after_untying = knot.FindKnots(mol,verbose=False)
+        self.assertEqual(len(results_after_untying),0)
+        self.assertTrue(success)
+
+class Tools(unittest.TestCase):
+    @staticmethod
+    def make_systems():
+        tmp1 = tmpfile(suffix='.dms')
+        tmp2 = tmpfile(suffix='.dms')
+        mol1 = msys.CreateSystem()
+        mol2 = msys.CreateSystem()
+        mol1.addAtom().atomic_number=1
+        mol2.addAtom().atomic_number=2
+        msys.Save(mol1, tmp1.name)
+        msys.Save(mol2, tmp2.name)
+        return tmp1, tmp2
     def testCell(self):
         self.assertEqual(list(self.mol.cell.diagonal()), 
                 [42.408, 41.697, 69.9599803728577])
