@@ -555,13 +555,12 @@ class TestMae(unittest.TestCase):
       os.unlink('out.mae')
     if os.path.isfile('out.dms'): 
       os.unlink('out.dms')
-    if os.path.isfile('bonds.mae'): 
-      os.unlink('bonds.mae')
  
   def testNoBonds(self):
     R=molfile.pdb.read('tests/files/h2o.pdb')
-    molfile.mae.write('bonds.mae', atoms=R.atoms).frame(next(R.frames())).close()
-    molfile.mae.read('bonds.mae')
+    with tempfile.NamedTemporaryFile(suffix='.mae') as tmp:
+        molfile.mae.write(tmp.name, atoms=R.atoms).frame(next(R.frames())).close()
+        molfile.mae.read(tmp.name)
 
   def testSinglePrecision(self):
       ''' mae files should preserve single precision '''

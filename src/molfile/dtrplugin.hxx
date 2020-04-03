@@ -257,8 +257,6 @@ namespace desres { namespace molfile {
     uint32_t _natoms;
     bool with_velocity;
 
-    int m_ndir1;
-    int m_ndir2;
     ssize_t m_curframe;
 
     std::shared_ptr < metadata > metap;
@@ -284,7 +282,7 @@ namespace desres { namespace molfile {
 
     // initializing 
     DtrReader(std::string const& path, unsigned access = RandomAccess) 
-    : _natoms(0), with_velocity(false), m_ndir1(-1), m_ndir2(-1), m_curframe(0),
+    : _natoms(0), with_velocity(false), m_curframe(0),
       _access(access), _last_fd(0), _last_path("")
     { 
         dtr = path;
@@ -316,19 +314,12 @@ namespace desres { namespace molfile {
 
     Timekeys keys;
 
-    // DDparams
-    int ndir1() const { return m_ndir1; }
-    int ndir2() const { return m_ndir2; }
-
     bool has_velocities() const { return with_velocity; }
     uint32_t natoms() const { return _natoms; }
 
     /* set by StkReader */
     void set_has_velocities(bool b) { with_velocity = b; }
     void set_natoms(uint32_t n) { _natoms = n; }
-
-    /* update ddparams.  Return true if they were stale and updated.  */
-    bool update_ddparams();
 
     void read_meta();
 

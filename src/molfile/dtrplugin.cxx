@@ -237,50 +237,6 @@ namespace {
       }
     }
   }
-
-
-  ////////
-  // CRC
-  ////////
-  
-  typedef uint32_t crc;
-  
-  #define POLYNOMIAL 0x04C11DB7
-  #define WIDTH  (8 * sizeof(crc))
-  #define TOPBIT (1 << (WIDTH - 1))
-  #define FINAL_XOR_VALUE 0xFFFFFFFF
-
-  crc processByte( crc remainder, char msg ) {
-        remainder ^= (msg << (WIDTH - 8));
-        for (uint8_t bit = 8; bit > 0; --bit)
-        {
-            if (remainder & TOPBIT) {
-                remainder = (remainder << 1) ^ POLYNOMIAL;
-            } else {
-                remainder = (remainder << 1);
-            }
-        }
-        return remainder;
-  }
-
-  crc processBytes(const char *message, int nBytes) {
-    crc  remainder = 0;        
-    for (int byte = 0; byte < nBytes; ++byte) {
-        remainder = processByte( remainder, message[byte] );
-    }
-    return remainder;
-  } 
-
-  int32_t cksum(const std::string &s) {
-    ssize_t len = s.size();
-    int32_t result = processBytes( s.c_str(), len );
-  
-    for ( ; len; len >>= 8) {
-      result = processByte( result, len & 0xff );
-    }
-    return result ^ FINAL_XOR_VALUE;
-  }
-
 }
 
 namespace {
@@ -526,117 +482,16 @@ static inline std::string addslash(const std::string& s){
     return (s.rbegin()[0] == '/') ? s : s + "/";
 }
 
-#define DD_RELPATH_MAXLEN (9) 
-static std::string 
-DDreldir(const std::string& fname, int ndir1, int ndir2){
-    if( fname.find('/', 0) != std::string::npos ) {
-        DTR_FAILURE("filename '" << fname << "' must not contain '/'");
-    }
-
-    uint32_t hash = cksum(fname);
-    uint32_t d1, d2;
-    char answer[DD_RELPATH_MAXLEN];
-    if(ndir1 > 0){
-        d1 = hash%ndir1;
-        if(ndir2 > 0){
-            d2 = (hash/ndir1)%ndir2;
-            sprintf(answer, "%03x/%03x/", d1, d2);
-        }else{
-            sprintf(answer, "%03x/", d1);
-        }
-    }else{
-        sprintf(answer, "./");
-    }
-    return std::string(answer);
-}
-
-namespace {
-  class DDException : public std::runtime_error{
-  public:
-      int eno;
-      DDException(const std::string &text, int _eno=0) 
-      : std::runtime_error(text + strerror(_eno)), eno(_eno){}
-  };
-}
-
-void DDmkdir(const std::string &dirpath, mode_t mode, int ndir1, int ndir2){
-    std::string dpslash(addslash(dirpath));
-
+static void create_rootdir(std::string const& path, mode_t mode) {
     mode_t openmode = mode | 0300; // make sure we can write into the directory
-    if( mkdir(dpslash.c_str(), openmode) < 0 )
-        throw DDException("mkdir", errno);
-        
-    if( mkdir((dpslash + "not_hashed").c_str(), openmode) < 0 )
-        throw DDException("mkdir not_hashed subdirectory", errno);
-
-    FILE *fp = fopen((dpslash + "not_hashed/.ddparams").c_str(), "w");
-    if(fp == NULL)
-        throw DDException("fopen( .ddparams, \"w\" )", errno);
-    if( fprintf(fp, "%d %d\n", ndir1, ndir2) < 0 ){
-        fclose(fp);
-        throw DDException("fprintf(.ddparams ...)", errno);
+    if (mkdir(path.data(), openmode) < 0) {
+        MSYS_FAIL("Creating directory '" << path << "': " << strerror(errno));
     }
-    if( fclose(fp) )
-        throw DDException("fclose(.ddparams)", errno);
-
-    for(int i=0; i<ndir1; ++i){
-        char sub[6];
-        sprintf(sub, "%03x/", i);
-        std::string dirsub = dpslash + sub;
-        {
-            if( mkdir(dirsub.c_str(), openmode) < 0 )
-                throw DDException("mkdir " + dirsub, errno);
-        }
-        for(int j=0; j<ndir2; ++j){
-            char subsub[6];
-            sprintf(subsub, "%03x", j);
-            std::string dirsubsub = dirsub + subsub;
-            if( mkdir(dirsubsub.c_str(), mode) < 0 ) // NOT openmode!
-                throw DDException("mkdir " + dirsubsub, errno);
-        }
-        if( mode != openmode ){
-            // change the mode back to what the user requested now
-            // that we're done creating stuff...
-            if( chmod(dirsub.c_str(), mode) < 0 )
-                throw DDException("chmod " + dirsub, errno);
-        }
-    }
-    if( mode != openmode ){
-        // change the mode back to what the user requested now
-        // that we're done creating stuff...
-        if( chmod(dpslash.c_str(), mode) < 0 )
-            throw DDException("chmod " + dpslash, errno);
-        if( chmod((dpslash + "not_hashed").c_str(), mode) < 0 )
-          throw DDException("chmod " + dpslash + "not_hashed", errno);
-    }
-}
-
-
-static void 
-DDgetparams(const std::string& dirpath, int *ndir1, int *ndir2) {
-  // get ddparams, or assume (0,0) and let the frame file opens fail.
-  *ndir1 = *ndir2 = 0;
-  std::string dirslash(addslash(dirpath));
-  // New convention - .ddparams is in not_hashed/.
-  FILE *fp = fopen((dirslash + "not_hashed/.ddparams").c_str(), "r");
-  // Allow the old convention of placing .ddparams in the top-level.
-  if( fp == NULL && errno == ENOENT ) {
-      fp = fopen((dirslash + ".ddparams").c_str(), "r");
-  }
-  if(fp != NULL) {
-    if( fscanf(fp, "%d%d", ndir1, ndir2) != 2 ) 
-      DTR_FAILURE("Failed to parse .ddparams");
-    if( fclose(fp) ) {
-      DTR_FAILURE("Warning: Failed to close .ddparams file: " << strerror(errno));
-    }
-  }
 }
 
 static std::string framefile( const std::string &dtr,
                               size_t frameno, 
-                              size_t frames_per_file,
-                              int ndir1,
-                              int ndir2) {
+                              size_t frames_per_file) {
   unsigned frame_file = frameno / frames_per_file;
   std::ostringstream filename;
   filename << "frame" << std::setfill('0') << std::setw(9)
@@ -645,7 +500,6 @@ static std::string framefile( const std::string &dtr,
 
   std::string fullpath(dtr);
   fullpath += "/";
-  fullpath += DDreldir(fname, ndir1, ndir2);
   fullpath += fname;
   return fullpath;
 }
@@ -814,7 +668,6 @@ void StkReader::init(int* changed) {
     if (changed) {
         *changed = 0;
     }
-    bool stale_ddparams = false;
     const bool verbose = getenv("DTRPLUGIN_VERBOSE");
     const bool use_cache = getenv("DESRES_LOCATION") && 
                           !getenv("MOLFILE_STKCACHE_DISABLE");
@@ -934,12 +787,6 @@ void StkReader::init(int* changed) {
         if (verbose) {
             printf("StkReader: Reusing dtr at %s\n", fnames[i].c_str());
         }
-
-        /* previous versions did lazy loading of the ddparams.  We now
-         * wish we hadn't done that because previously cached dtrs will
-         * never get updated.  So we force the update here, and check
-         * whether anything changed, necessitating a cache update. */
-        stale_ddparams |= framesets[i]->update_ddparams();
     }
 
     /* delete any remaining framesets */
@@ -994,7 +841,7 @@ void StkReader::init(int* changed) {
 
     append(fnames, timekeys);
 
-    if ((fnames.size() || stale_ddparams || !found_v8_cache) && use_cache) {
+    if ((fnames.size() || !found_v8_cache) && use_cache) {
 
         /* update the cache */
         if (verbose) printf("StkReader: updating cache\n");
@@ -1206,7 +1053,7 @@ StkReader::~StkReader() {
 }
 
 std::string DtrReader::framefile(ssize_t n) const {
-  return ::framefile( dtr, n, framesperfile(), ndir1(), ndir2() );
+  return ::framefile( dtr, n, framesperfile());
 }
 
 void DtrReader::initWithTimekeys(Timekeys const& tk) {
@@ -1224,8 +1071,7 @@ void DtrReader::init_common() {
 
   bool with_momentum = false;
 
-  /* update the ddparams and meta if we haven't read them already */
-  update_ddparams();
+  /* update the meta if we haven't read it already */
   read_meta();
 
   std::string format;
@@ -1243,7 +1089,7 @@ void DtrReader::init_common() {
           if (getenv("DTRPLUGIN_VERBOSE")) {
               printf("DtrReader: reading first frame to get atom count\n");
           }
-          std::string fname=::framefile(dtr, 0, keys.framesperfile(), ndir1(), ndir2());
+          std::string fname=::framefile(dtr, 0, keys.framesperfile());
 
           std::vector<char> buffer;
           // size buffer to read only the first frame, not the whole file
@@ -1292,17 +1138,6 @@ void DtrReader::init_common() {
     }
     with_velocity = false;
   }
-}
-
-bool DtrReader::update_ddparams() {
-  if (m_ndir1<0 || m_ndir2<0) {
-      if (getenv("DTRPLUGIN_VERBOSE")) {
-          printf("DtrReader: reading ddparams for %s\n", dtr.c_str());
-      }
-      DDgetparams(dtr, &m_ndir1, &m_ndir2);
-      return true;
-  }
-  return false;
 }
 
 ssize_t DtrReader::times(ssize_t start, ssize_t count, double *t) const {
@@ -1876,7 +1711,7 @@ dtr::KeyMap DtrReader::frame(ssize_t iframe, molfile_timestep_t *ts, void ** buf
     }
 
     /* get file descriptor for framefile */
-    std::string fname=::framefile(dtr, iframe, framesperfile(), ndir1(), ndir2());
+    std::string fname=::framefile(dtr, iframe, framesperfile());
     int fd = -1;
     if (_access==RandomAccess) {
         fd = open(fname.c_str(), O_RDONLY|O_BINARY);
@@ -2056,7 +1891,7 @@ DtrWriter::DtrWriter(std::string const& path, Type type, uint32_t natoms_,
             key_record_t last = tk[nwritten-1];
             last_time = last.time();
             framefile_offset = last.offset() + last.size();
-            std::string filepath=framefile(m_directory, nwritten, frames_per_file,0,0);
+            std::string filepath=framefile(m_directory, nwritten, frames_per_file);
             frame_fd = open(filepath.c_str(),O_WRONLY|O_APPEND|O_BINARY,0666);
         }
         timekeys_file = fopen(timekeys_path.c_str(), "a+b");
@@ -2112,7 +1947,7 @@ DtrWriter::DtrWriter(std::string const& path, Type type, uint32_t natoms_,
     } else {
         /* start afresh */
         recursivelyRemove(m_directory);
-        ::DDmkdir(m_directory,0777,0, 0);
+        create_rootdir(m_directory, 0777);
 
         // craft metadata frame
         {
@@ -2391,7 +2226,7 @@ void DtrWriter::append(double time, KeyMap const& map) {
           ::close(frame_fd);
       }
       framefile_offset = 0;
-      std::string filepath=framefile(m_directory, nwritten, frames_per_file, 0, 0);
+      std::string filepath=framefile(m_directory, nwritten, frames_per_file);
       frame_fd = open(filepath.c_str(),O_WRONLY|O_CREAT|O_BINARY,0666);
       if (frame_fd<0) throw std::runtime_error(strerror(errno));
     }
@@ -2474,11 +2309,13 @@ std::istream& operator>>(std::istream& in, std::vector<float> &inv_mass) {
 }
 
 std::ostream& DtrReader::dump(std::ostream &out) const {
+    // legacy ddparams, kept for stkcache backward compatibility
+    int ndir1=0, ndir2=0;
     out << dtr << ' '
         << _natoms << ' '
         << with_velocity << ' '
-        << m_ndir1 << ' '
-        << m_ndir2 << ' '
+        << ndir1 << ' '
+        << ndir2 << ' '
         << metap->get_hash() << ' ';
     
     if (jobstep_id == "") {
@@ -2489,8 +2326,6 @@ std::ostream& DtrReader::dump(std::ostream &out) const {
 
     out << ' ';
 
-    /* write raw m_ndir values so that we don't read them from .ddparams
-     * if they haven't been read yet */
     keys.dump(out);
     return out;
 }
@@ -2498,12 +2333,14 @@ std::ostream& DtrReader::dump(std::ostream &out) const {
 std::istream& DtrReader::load_v8(std::istream &in) {
     char c;
     uint64_t meta_hash;
+    // legacy ddparams, kept for stkcache backward compatibility
+    int ndir1=0, ndir2=0;
 
     in >> dtr
        >> _natoms
        >> with_velocity
-       >> m_ndir1
-       >> m_ndir2
+       >> ndir1
+       >> ndir2
        >> meta_hash
        >> jobstep_id;
 
