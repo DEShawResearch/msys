@@ -1,3 +1,7 @@
+1.7.293 Add rudimentary psf export.
+        Drop support for ddparams.
+        Maintain atom order when writing pdb files.
+
 1.7.292 Added softened_stretch_harm schema.
         Improve speed of reading stk cache files
         Isotope support for sdf and to/from oechem.
