@@ -271,6 +271,7 @@ pdb/webpdb.c
 
 pfx/graph.cxx
 psf/import.cxx
+psf/export.cxx
 
 schema.cxx
 schema/schema.cxx
