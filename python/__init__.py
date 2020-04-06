@@ -4,8 +4,6 @@ This is the high-level Python interface for msys, intended for use
 by chemists.
 '''
 
-from __future__ import print_function
-
 from . import _msys, version
 import numpy
 import sys
@@ -1980,7 +1978,6 @@ def ConvertToOEChem(mol_or_atoms):
         coords = numpy.array([a.pos for a in atoms])
 
     mol = atoms[0].system
-    print("props:", mol.atom_props)
     have_isotope = 'isotope' in mol.atom_props
 
     for idx, atm in enumerate(atoms):
