@@ -772,8 +772,10 @@ void StkReader::init(int* changed) {
     }
     input.close();
 
-    if (!fnames.size()) {
-        DTR_FAILURE("Empty stk file");
+    if (fnames.empty()) {
+        for (auto f : framesets) delete f;
+        framesets.clear();
+        return;
     }
 
     /* find which framesets have already been loaded */
