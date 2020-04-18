@@ -1,3 +1,6 @@
+1.7.294 Don't fail on empty stk.
+        Remove phi0 from dihedral_fourier schema.
+
 1.7.293 Add rudimentary psf export.
         Drop support for ddparams.
         Maintain atom order when writing pdb files.
