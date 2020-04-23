@@ -11,7 +11,7 @@ for mod in Glob('*.py'):
 for mod in Glob('validate/*.py'):
     env.AddPythonModule(mod.get_path(), prefix='msys/validate')
 
-for script in Glob('scripts/dms-*') + Glob('scripts/dtr-*'):
+for script in Glob('scripts/dms-*') + Glob('scripts/dtr-*') + Glob('scripts/compare_frames'):
     env.AddScript(script.get_path())
 
 for prog in Glob('bin/*.cxx'):
