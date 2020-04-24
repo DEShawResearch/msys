@@ -1,3 +1,5 @@
+1.7.296 Skip mae ct properties with conflicting type.
+
 1.7.295 Add compare_frames tool.
 
 1.7.294 Don't fail on empty stk.
