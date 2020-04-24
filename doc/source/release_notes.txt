@@ -1,6 +1,7 @@
+1.7.295 Add compare_frames tool.
+
 1.7.294 Don't fail on empty stk.
         Remove phi0 from dihedral_fourier schema.
-        Add compare_frames tool.
 
 1.7.293 Add rudimentary psf export.
         Drop support for ddparams.
