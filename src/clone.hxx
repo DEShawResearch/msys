@@ -13,6 +13,7 @@ namespace desres { namespace msys {
     struct CloneOption { 
         enum Flags { Default     = 0
                    , ShareParams = 1 << 0
+                   , UseIndex    = 1 << 1
         };
     };
 
