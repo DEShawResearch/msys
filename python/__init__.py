@@ -1494,6 +1494,8 @@ class System(object):
                 ptr, ids = _convert_ids(sel)
                 if ptr != self._ptr:
                     raise ValueError("Atoms in sel are not from this System")
+            else:
+                ids = [int(i) for i in ids]
         flags = _msys.CloneOption.Default
         if share_params:
             flags = _msys.CloneOption.ShareParams

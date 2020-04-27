@@ -2868,6 +2868,11 @@ class Main(unittest.TestCase):
         self.assertEqual(t1.params, m2.table('t1').params)
 
 
+    def testCloneNumpyIntegers(self):
+        m=msys.CreateSystem()
+        m.addAtom()
+        m.clone(NP.arange(1, dtype='i'))
+
     def testClone2(self):
         m=msys.CreateSystem()
         a1=m.addAtom()
