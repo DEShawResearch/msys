@@ -1,3 +1,5 @@
+1.7.298 Fix for MAE export of empty m_depend fields.
+
 1.7.297 New use_index keyword for clone().
 
 1.7.296 Skip mae ct properties with conflicting type.
