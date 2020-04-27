@@ -65,14 +65,10 @@ static void build_ct_fields( SystemPtr mol, Destro& M ) {
             }
         }
         char type = "irs"[val.type()];
-        if (!strncmp(key.c_str(), "m_depend/", 9)) {
-            m_depends[key.substr(9)] = val.asInt();
-        } else {
-            M.add_schema(type, key);
-            if (type=='i') M[key]=val.asInt();
-            if (type=='r') M[key]=val.asFloat();
-            if (type=='s') M[key]=val.asString();
-        }
+        M.add_schema(type, key);
+        if (type=='i') M[key]=val.asInt();
+        if (type=='r') M[key]=val.asFloat();
+        if (type=='s') M[key]=val.asString();
     }
     if (!m_depends.empty()) {
         DestroArray& arr = M.new_array("m_depend");
