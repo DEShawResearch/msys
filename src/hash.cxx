@@ -87,6 +87,7 @@ namespace desres { namespace msys {
 
     namespace {
         struct prop_visitor {
+            using result_type = void;
             ThreeRoe& tr;
 
             prop_visitor(ThreeRoe& t) : tr(t) {}

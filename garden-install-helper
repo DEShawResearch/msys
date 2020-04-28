@@ -34,6 +34,7 @@ loadmodules() {
         $RAPIDJSON/lib \
         $TNG/lib \
         $GBENCH/lib \
+        enscons/0.23.0-01c7/lib-python37 \
 
     export PYTHONVER=37
     export MSYS_WITH_LPSOLVE=1

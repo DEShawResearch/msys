@@ -39,7 +39,7 @@ if env.get('MSYS_WITH_TNG'):
 
 bsx=env.get('MSYS_BOOST_SUFFIX', '')
 boost_libs=[(x+bsx) for x in (
-    'boost_iostreams', 'boost_filesystem', 'boost_system')]
+    'boost_iostreams', 'boost_filesystem', 'boost_system', 'boost_regex')]
 
 env.Append(
         PYTHON36_LIBS=['boost_python${MSYS_BOOST_PYTHON_SUFFIX}36'],
@@ -105,7 +105,8 @@ sdf/export.cxx
 sdf/import.cxx
 ''')
 
-if env.get('MSYS_WITH_LPSOLVE'):
+if env.get('MSYS_WITH_LPSOLVE', False):
+    print("LPSOLVE:", env.get('MSYS_WITH_LPSOLVE'))
     lpobjs=env.AddObject(Split('''
 analyze.cxx
 analyze/bond_orders.cxx
@@ -290,7 +291,7 @@ xyz.cxx
 env.AddHeaders(Glob("*.hxx"), prefix='msys', stage=True)
 env.AddHeaders(Glob("*.hpp"), prefix='msys', stage=True)
 env.AddHeaders(Glob('atomsel/*.h*'), prefix='msys/atomsel')
-env.AddHeaders(Glob('fastjson/*.hxx'), prefix='msys/fastjson')
+env.AddHeaders(Glob('fastjson/*.hxx'), prefix='msys/fastjson', stage=True)
 env.AddHeaders(Glob('pfx/*.hxx'), prefix='msys/pfx')
 env.AddHeaders(Glob('molfile/*.h*'), prefix='msys/molfile', stage=True)
 
