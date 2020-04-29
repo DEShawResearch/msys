@@ -1986,8 +1986,8 @@ DtrWriter::DtrWriter(std::string const& path, Type type, uint32_t natoms_,
           fflush(timekeys_file);
         }
     }
+    if (!meta_written) write_metadata(KeyMap());
 }
-
 
 
 void DtrWriter::truncate(double t) {
@@ -2100,6 +2100,17 @@ void DtrWriter::next(const molfile_timestep_t *ts) {
     append(time, map);
 }
 
+void DtrWriter::write_metadata(KeyMap const& map) {
+    KeyMap tmp(map);
+    auto cwd = getcwd();
+    std::string version(MSYS_VERSION);
+    tmp["WORKDIR"].set(cwd.data(), cwd.size());
+    tmp["MSYS_VERSION"].set(version.data(), version.size());
+    auto framesize = ConstructFrame(tmp, &framebuffer);
+    rewind(meta_file);
+    fwrite(framebuffer, framesize, 1, meta_file);
+}
+
 void DtrWriter::append(double time, KeyMap const& map) {
 
     uint64_t framesize = 0;
@@ -2171,13 +2182,7 @@ void DtrWriter::append(double time, KeyMap const& map) {
 		DTR_FAILURE("malloc of etr_frame_buffer failed");
 	    }
 	}
-
-        auto cwd = getcwd();
-        std::string version(MSYS_VERSION);
-	meta_map["WORKDIR"].set(cwd.data(), cwd.size());
-        meta_map["MSYS_VERSION"].set(version.data(), version.size());
-	framesize = ConstructFrame(meta_map, &framebuffer);
-	fwrite(framebuffer, framesize, 1, meta_file);
+        write_metadata(meta_map);
 	fclose(meta_file);
 	meta_file = NULL;
 	meta_written = true;

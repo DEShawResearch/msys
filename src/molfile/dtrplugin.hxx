@@ -428,6 +428,8 @@ namespace desres { namespace molfile {
 
     // remove timekeys with times strictly greater than the given time
     void truncate(double after_time);
+
+    void write_metadata(dtr::KeyMap const& map);
   };
 
   class StkReader : public FrameSetReader {
