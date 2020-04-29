@@ -530,6 +530,7 @@ metadata::metadata(const void *bufptr, ssize_t n, std::string *jobstep_id) {
     // If jobstep_id is not NULL, then the value of the
     // key JOBSTEP_ID is stored there.
     //
+    if (n==0) return;
     bool swap;
     auto full_frame_map = dtr::ParseFrame(n, bufptr, &swap);
 
@@ -575,7 +576,7 @@ void DtrReader::read_meta() {
         read_file(metafile, file_buffer);
         metap.reset(new metadata(file_buffer.data(), file_buffer.size(), &jobstep_id));
     } catch (std::exception &e) {
-        DTR_FAILURE("unable to read metadata frame " << metafile);
+        DTR_FAILURE("unable to read metadata frame " << metafile << ": " << e.what());
     }
 }
 

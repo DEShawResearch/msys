@@ -76,6 +76,10 @@ class DtrTestCase(unittest.TestCase):
         self.natoms=10000000
         self.writer=molfile.dtr.write(self.PATH, natoms=self.natoms)
 
+    def testReadEmptyDtr(self):
+        self.writer.close()
+        assert molfile.DtrReader(self.PATH).nframes == 0
+
     def testCheckpointBytes(self):
         kv = molfile.DtrReader("/f/a/jobstep/14388415/0/checkpoint.atr").keyvals(0)
         self.assertEqual(kv["TITLE"], "ANTON")
@@ -115,7 +119,6 @@ class DtrTestCase(unittest.TestCase):
         self.writer.frame(f)
         self.writer.sync()
 
-    @unittest.skipIf(True, 'disabled')
     def testEmpty(self):
         r=molfile.DtrReader(self.PATH)
         self.assertEqual(0,r.natoms)

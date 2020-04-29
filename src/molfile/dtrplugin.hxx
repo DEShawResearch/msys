@@ -247,9 +247,9 @@ namespace desres { namespace molfile {
       }
 
   private:
-      uint32_t frame_size;
-      void *frame_data;
-      uint64_t hash;
+      uint32_t frame_size = 0;
+      void *frame_data = nullptr;
+      uint64_t hash = 0;
       dtr::KeyMap frame_map;
   };
 
