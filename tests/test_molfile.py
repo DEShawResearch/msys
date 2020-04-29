@@ -194,6 +194,13 @@ class DtrTestCase(unittest.TestCase):
         self.addFrame(1.0)
         molfile.DtrReader(self.PATH).frame(0)
 
+    def testMetadataFields(self):
+        self.addFrame(0.0)
+        meta = molfile.DtrReader(self.PATH).metadata
+        assert meta['WORKDIR'] == os.getcwd()
+        assert meta['MSYS_VERSION'] == msys.version.version
+
+
     def testTruncatedFrame(self):
         self.addFrame(0.0)
         self.addFrame(1.0)

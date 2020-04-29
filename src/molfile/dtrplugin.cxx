@@ -43,6 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "dtrplugin.hxx"
 #include "dtrframe.hxx"
 #include "dtrutil.hxx"
+#include <msys/version.hxx>
 
 using namespace desres::molfile;
 using namespace desres::molfile::dtr;
@@ -1831,6 +1832,14 @@ void write_all( int fd, const char * buf, ssize_t count ) {
     }
 }
 
+static std::string getcwd() {
+    char cwd[4096];
+    if (! ::getcwd(cwd, sizeof(cwd))) {
+        MSYS_FAIL(strerror(errno));
+    }
+    return cwd;
+}
+
 DtrWriter::DtrWriter(std::string const& path, Type type, uint32_t natoms_, 
               Mode mode, uint32_t fpf, const dtr::KeyMap* metap, double precision)
 : traj_type(type), natoms(natoms_), frame_fd(0), framefile_offset(0),
@@ -1863,17 +1872,13 @@ DtrWriter::DtrWriter(std::string const& path, Type type, uint32_t natoms_,
 
     m_directory=path;
     this->mode = mode;
-    char cwd[4096];
 
     while(m_directory.size() > 0 && m_directory[m_directory.size()-1] == s_sep) {
       m_directory.erase(m_directory.size()-1);
     }
 
     if ( m_directory[0] != s_sep) {
-      if (! ::getcwd(cwd,sizeof(cwd))) {
-        throw std::runtime_error(strerror(errno));
-      }
-      m_directory = std::string(cwd) + s_sep + m_directory;
+        m_directory = getcwd() + s_sep + m_directory;
     }
 
     std::string timekeys_path = m_directory + s_sep + "timekeys";
@@ -2167,6 +2172,10 @@ void DtrWriter::append(double time, KeyMap const& map) {
 	    }
 	}
 
+        auto cwd = getcwd();
+        std::string version(MSYS_VERSION);
+	meta_map["WORKDIR"].set(cwd.data(), cwd.size());
+        meta_map["MSYS_VERSION"].set(version.data(), version.size());
 	framesize = ConstructFrame(meta_map, &framebuffer);
 	fwrite(framebuffer, framesize, 1, meta_file);
 	fclose(meta_file);
