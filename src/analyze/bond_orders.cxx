@@ -17,7 +17,7 @@
 using namespace desres::msys;
 
 namespace lpsolve {
-    /* for solving the integer linear equations. We put this in a new 
+    /* for solving the integer linear equations. We put this in a new
        namespace since it doesn't already use one */
 #if defined DESMOND_USE_SCHRODINGER_MMSHARE
 #include "lp_lib.h"
@@ -42,7 +42,7 @@ namespace {
         typename C::const_iterator iter=container.find(key);
         if(iter == container.end()){
             std::stringstream msg;
-            msg << "BondOrderAssigner: Programming error in call to asserted_find. " 
+            msg << "BondOrderAssigner: Programming error in call to asserted_find. "
                 << "Specified key was not found in container: " << key;
             throw std::runtime_error(msg.str());
         }
@@ -70,9 +70,9 @@ namespace {
     }
 
     /* Helper function for adding a column to the integer linear program
-       Sets bounds and objective function contribution (as well as column 
+       Sets bounds and objective function contribution (as well as column
        label for debugging) */
-    int add_column_to_ilp(lpsolve::_lprec *lp, std::string const& colname, 
+    int add_column_to_ilp(lpsolve::_lprec *lp, std::string const& colname,
                                              double penalty, double lb, double ub){
         double coldata[1]={penalty};
         lpsolve::add_column(lp,coldata);
@@ -101,7 +101,7 @@ namespace {
         }
     }
 
-    double get_ilp_objective(std::vector<double> const& objf, 
+    double get_ilp_objective(std::vector<double> const& objf,
                              std::vector<int> const& solution){
         assert(solution.size()==objf.size());
         Quadsum obj=0.0;
@@ -117,10 +117,11 @@ namespace {
 namespace desres { namespace msys {
     BondOrderAssigner::BondOrderAssigner(SystemPtr sys,
                                          IdList const& fragment,
-                                         bool compute_resonant_charge)
+                                         bool compute_resonant_charge,
+                                         std::chrono::milliseconds timeout)
     : _compute_resonant_charge(compute_resonant_charge)
     {
-        _needRebuild=true; 
+        _needRebuild=true;
         _valid=false;
         atom_lone_pair_scale=0.95;
         atom_plus_charge_penalty=0.25;
@@ -133,7 +134,7 @@ namespace desres { namespace msys {
         multi_bond_scale=0.9;
         aromatic_ring_penalty=0.30;
         absmax_atom_charge=2;
-        max_component_charge=6; 
+        max_component_charge=6;
 
         BondOrderAssigner* boa = this;
         boa->_needRebuild=true;
@@ -142,10 +143,15 @@ namespace desres { namespace msys {
         boa->_total_charge=0;
         boa->_mol=sys;
         boa->_filter=new bondedVirtualsFilter(sys);
-        
+        if (timeout > std::chrono::milliseconds(0)) {
+            _deadline = std::chrono::system_clock::now() + timeout;
+        } else {
+            _deadline = std::chrono::time_point<std::chrono::system_clock>::max();
+        }
+
         for (Id aid : fragment){
             assert(boa->_mol->hasAtom(aid));
-            boa->_mol->atom(aid).formal_charge=0; 
+            boa->_mol->atom(aid).formal_charge=0;
             for (Id bid : boa->_mol->bondsForAtom(aid)){
                 msys::bond_t &bond=boa->_mol->bond(bid);
                 /* Initially, set kept bond orders=1.0, removed=0.0 */
@@ -154,14 +160,14 @@ namespace desres { namespace msys {
                     //bond.resonant_order=1.0;
                 }else{
                     bond.order=0;
-                    //bond.resonant_order=0.0;                    
+                    //bond.resonant_order=0.0;
                 }
             }
             if(boa->_mol->atom(aid).atomic_number<1)
                 continue;
             boa->_fragatoms.push_back(aid);
         }
-        
+
         MultiIdList rings = GetSSSR(boa->_mol, boa->_fragatoms, true);
         /* Keep only rings with <8 atoms and all atoms <4 bonds */
         MultiIdList keepRings;
@@ -198,7 +204,7 @@ namespace desres { namespace msys {
                 }
             }
             boa->_rings.push_back(IdList(touched.begin(),touched.end()));
-        }    
+        }
 
 
         boa->_totalValence=0;
@@ -214,14 +220,14 @@ namespace desres { namespace msys {
             if(bonds.size()!=0){
                 if(adata.nodata()){
                     std::cout << "Warning: No property information available for"
-                              << " Atomic Number "<< anum0 
+                              << " Atomic Number "<< anum0
                               <<" with "<< bonds.size()<<" bonds"<<std::endl;;
                 }
                 if(bonds.size()>adata.maxCoord){
                     std::stringstream msg;
-                    msg << "BondOrderAssigner: Something is wrong with atom " << aid0 
-                        << " - Atom has " << bonds.size() 
-                        << " connections. Max allowed for element " 
+                    msg << "BondOrderAssigner: Something is wrong with atom " << aid0
+                        << " - Atom has " << bonds.size()
+                        << " connections. Max allowed for element "
                         << AbbreviationForElement(anum0)
                         << " is "<< adata.maxCoord << std::endl;
                     throw std::runtime_error(msg.str());
@@ -263,7 +269,7 @@ namespace desres { namespace msys {
 
         IdList unsolved;
         boa->presolve_octets(unsolved);
- 
+
         /* Fill in bondinfo with presolved values */
         for (auto const& epair : boa->_bond_order){
             int val=epair.second.lb;
@@ -285,8 +291,8 @@ namespace desres { namespace msys {
             Id aid=epair.first;
             boa->_atominfo.insert(solutionMap::value_type(aid, solutionValues(val,val)));
 
-            /* Check to see if atom was completly determined and compute charge if yes. 
-             * Formal Charges are given by:  
+            /* Check to see if atom was completly determined and compute charge if yes.
+             * Formal Charges are given by:
              *    fc[i]= ValenceElectrons[i] - freeElectrons[i] - 0.5*Sum_j ( BondElectrons[j] )
              * 'val' is free electron PAIRS, so multiply by 2 */
             int qtot=DataForElement(boa->_mol->atom(aid).atomic_number).nValence - 2*val;
@@ -333,17 +339,17 @@ namespace desres { namespace msys {
     }
 
     void BondOrderAssigner::rebuild(){
-        
+
         for (ComponentAssignerPtr ca : _component_assigners){
             ca->build_integer_linear_program();
         }
-        
+
         _needRebuild=false;
     }
-    
+
     /* Cap LP counts for each atom based on group and number of bonds */
     int BondOrderAssigner::max_free_pairs(const Id aid){
-        
+
         int maxFree;
         int nbonds=_mol->filteredBondsForAtom(aid,*_filter).size();
         int anum=_mol->atom(aid).atomic_number;
@@ -362,15 +368,15 @@ namespace desres { namespace msys {
         }
         return std::max(0,maxFree);
     }
-    
+
 
     /* Cap bond orders for each bond connected to an atom */
     int BondOrderAssigner::max_bond_order(const Id aid0, const Id aid1){
-        
+
         int maxOrders[2];
         Id ids[2]={aid0,aid1};
         for(int idx=0;idx<2;++idx){
-            Id aid=ids[idx];  
+            Id aid=ids[idx];
             Id nbonds=_mol->filteredBondsForAtom(aid,*_filter).size();
             int anum=_mol->atom(aid).atomic_number;
 
@@ -413,7 +419,7 @@ namespace desres { namespace msys {
                     maxbo=2;
                 }
                 break;
-                
+
             default:
                 /* Catch all... Should be fairly conservative */
                 if(nbonds<3){
@@ -421,13 +427,13 @@ namespace desres { namespace msys {
                 }else if (nbonds<6){
                     maxbo=2;
                 }else{
-                    maxbo=1;         
+                    maxbo=1;
                 }
             }
             maxOrders[idx]=maxbo;
         }
         return std::min(maxOrders[0],maxOrders[1]);
-       
+
     }
 
     /* Function that trys to presolve for unknown bond orders / lp counts
@@ -452,25 +458,25 @@ namespace desres { namespace msys {
                     keep.push_back(aid1);
                     continue;
                 }
-                int octval=period<=1 ? 1 : 4; 
-                
+                int octval=period<=1 ? 1 : 4;
+
                 IdList bonds=_mol->filteredBondsForAtom(aid1, *_filter);
                 int unkcount=0;
                 electronMap::iterator lastatom=_atom_lp.end();
                 electronMap::iterator lastbond=_bond_order.end();
-                
+
                 electronMap::iterator aiter=_atom_lp.find(aid1);
 #if DEBUGPRINT1
                 printf("Presolving around atom %u: octval= %d   lonepair lb= %d  ub= %d\n",
                        aid1, octval, aiter->second.lb, aiter->second.ub);
-#endif      
+#endif
                 if(aiter->second.lb==aiter->second.ub){
                     octval-=aiter->second.lb;
                 }else{
                     unkcount++;
                     lastatom=aiter;
-                } 
-                
+                }
+
                 for (Id bid : bonds){
                     electronMap::iterator biter=_bond_order.find(bid);
                     if (biter->second.lb==biter->second.ub){
@@ -499,7 +505,7 @@ namespace desres { namespace msys {
 #endif
                             fixrange.lb=octval;
                             fixrange.ub=octval;
-                            
+
                             stillsolving=true;
                             nsolved+=1;
                         }else{
@@ -526,22 +532,28 @@ namespace desres { namespace msys {
             unsolved.swap(keep);
             npresolve++;
         } while (stillsolving);
-#if DEBUGPRINT 
+#if DEBUGPRINT
         printf("Performed %d presolve iterations and finalized %d variables (%lu still unsolved)\n",npresolve,nsolved,unsolved.size());
 #endif
     }
 
+    long BondOrderAssigner::seconds_until_deadline() {
+        std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+        long seconds = std::max(1L, std::chrono::duration_cast<std::chrono::seconds>(_deadline - now).count());
+        return seconds;
+    }
+
     ComponentAssigner::~ComponentAssigner() {
         lpsolve::delete_lp(_component_lp);
-        lpsolve::delete_lp(_component_lpcopy);  
+        lpsolve::delete_lp(_component_lpcopy);
         lpsolve::delete_lp(_component_reslp);
     }
 
-    ComponentAssigner::ComponentAssigner(BondOrderAssigner* b, 
-                                         IdList const& comp, 
+    ComponentAssigner::ComponentAssigner(BondOrderAssigner* b,
+                                         IdList const& comp,
                                          Id cid)
-        : _component_lp(NULL), 
-          _component_lpcopy(NULL), 
+        : _component_lp(NULL),
+          _component_lpcopy(NULL),
           _component_reslp(NULL)
     {
 
@@ -578,7 +590,7 @@ namespace desres { namespace msys {
         }
 
         if(_component_solution_valid) reset();
-        
+
         if(qTotal<0){
             lpsolve::set_bounds(_component_lp, _component_charge_col  , -qTotal,-qTotal);
             lpsolve::set_bounds(_component_lp, _component_charge_col+1, 0,      0);
@@ -622,11 +634,15 @@ namespace desres { namespace msys {
     bool ComponentAssigner::solveComponentIntegerLinearProgram(){
 
         if(_component_solution_valid) return _component_solution_valid;
-        
+
         lpsolve::delete_lp(_component_reslp);
         _component_reslp=lpsolve::copy_lp(_component_lp);
 
-        int status=lpsolve::solve(_component_lp);
+        lpsolve::set_timeout(_component_lp, _parent->seconds_until_deadline());
+        int status=lpsolve::solve(_component_lp);            
+        if ((status == SUBOPTIMAL) && (std::chrono::system_clock::now() > _parent->_deadline)) {
+            status = TIMEOUT;
+        }
         _component_solution_valid=(status==OPTIMAL || status==PRESOLVED);
 
         if(_component_solution_valid){
@@ -637,7 +653,7 @@ namespace desres { namespace msys {
 #endif
 #if DEBUGPRINT2
             lpsolve::write_LP(_component_lp,stdout);
-            lpsolve::print_objective(_component_lp);               
+            lpsolve::print_objective(_component_lp);
             lpsolve::print_solution(_component_lp,1);
 #endif
         }else{
@@ -649,8 +665,10 @@ namespace desres { namespace msys {
 #endif
         }
 
-        if(!_component_solution_valid) reset(); 
-        
+        if(!_component_solution_valid) reset();
+        if (status == TIMEOUT) {
+            throw std::runtime_error("Unable to solve ILP. Timeout elapsed");
+        }
         return _component_solution_valid;
     }
 
@@ -658,7 +676,7 @@ namespace desres { namespace msys {
     double ComponentAssigner::getSolvedComponentObjective(){
         if(!_component_solution_valid){
             std::stringstream msg;
-            msg << "Cannot getSolvedComponentObjective from component "<<_component_id<< 
+            msg << "Cannot getSolvedComponentObjective from component "<<_component_id<<
                 " with invalid integer linear program solution." <<
                 " Did you call solveIntegerLinearProgram first?";
             throw std::runtime_error(msg.str());
@@ -678,7 +696,7 @@ namespace desres { namespace msys {
 
         _component_resonant_solution.assign(nvars,0);
         std::vector<double> ones(nvars,1.0);
-        std::vector< std::vector<int> > newcons; 
+        std::vector< std::vector<int> > newcons;
 
         while(true){
             for (unsigned i=1; i<nvars;++i){
@@ -692,7 +710,7 @@ namespace desres { namespace msys {
                     if(last_solution[icol]) rowdata.push_back(icol);
                 }
             }
-            for (ilpBondMap::value_type const& kv : _component_bond_cols ){ 
+            for (ilpBondMap::value_type const& kv : _component_bond_cols ){
                 ilpBond const& ibond=kv.second;
                 for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB;++i,++icol){
                     if(last_solution[icol]) rowdata.push_back(icol);
@@ -709,7 +727,11 @@ namespace desres { namespace msys {
                 }
             }
             set_add_rowmode(resLP,false);
+            lpsolve::set_timeout(resLP, _parent->seconds_until_deadline());
             int status=lpsolve::solve(resLP);
+            if ((status == SUBOPTIMAL) && (std::chrono::system_clock::now() > _parent->_deadline)) {
+               status = TIMEOUT;
+            }
             if(status==OPTIMAL || status==PRESOLVED){
                 get_ilp_solution(resLP, last_solution);
                 double newObjf=get_ilp_objective(_component_objf,last_solution);
@@ -719,10 +741,10 @@ namespace desres { namespace msys {
 #endif
 #if DEBUGPRINT2
                 lpsolve::write_LP(resLP,stdout);
-                lpsolve::print_objective(resLP);               
+                lpsolve::print_objective(resLP);
                 lpsolve::print_solution(resLP,1);
 #endif
-                lpsolve::delete_lp(resLP); 
+                lpsolve::delete_lp(resLP);
                 if(objf != newObjf){
 #if DEBUGPRINT
                    printf("resonant solution objective is larger by %e\n",newObjf-objf);
@@ -736,8 +758,12 @@ namespace desres { namespace msys {
 #if DEBUGPRINT2
                 lpsolve::write_LP(resLP,stdout);
 #endif
-                lpsolve::delete_lp(resLP); 
+                lpsolve::delete_lp(resLP);
                 break;
+            }
+            if (status == TIMEOUT) {
+                lpsolve::delete_lp(resLP);
+                throw std::runtime_error("Unable to solve ILP. Timeout elapsed");
             }
         }
 
@@ -772,7 +798,7 @@ namespace desres { namespace msys {
             int v1=_component_solution.at(i);
             double v2=_component_resonant_solution.at(i);
             printf("Component Solution: %u %d %f %s\n",i,
-                   v1,v2, v1==v2 ? " " : "*");     
+                   v1,v2, v1==v2 ? " " : "*");
         }
 #endif
 
@@ -782,14 +808,14 @@ namespace desres { namespace msys {
             int nonres=0;
             double res=0;
             for(int icol=iatom.ilpCol, i=iatom.ilpLB; i<=iatom.ilpUB;++i,++icol){
-                nonres+=_component_solution.at(icol)*i; 
+                nonres+=_component_solution.at(icol)*i;
                 res+=_component_resonant_solution.at(icol)*i;
             }
             solutionMap::iterator iter=atominfo.lower_bound(aid);
-            if(iter==atominfo.end() || atominfo.key_comp()(aid,iter->first)){ 
-                atominfo.insert(iter, solutionMap::value_type(aid, solutionValues(nonres, res))); 
-            }else{                                                 
-                assert(nonres==iter->second.nonresonant && res==iter->second.resonant); 
+            if(iter==atominfo.end() || atominfo.key_comp()(aid,iter->first)){
+                atominfo.insert(iter, solutionMap::value_type(aid, solutionValues(nonres, res)));
+            }else{
+                assert(nonres==iter->second.nonresonant && res==iter->second.resonant);
             }
 
             if(iatom.qCol){
@@ -797,28 +823,28 @@ namespace desres { namespace msys {
                 nonres=_component_solution.at(iatom.qCol+1)-_component_solution.at(iatom.qCol);
                 res=_component_resonant_solution.at(iatom.qCol+1)-_component_resonant_solution.at(iatom.qCol);
                 iter=chargeinfo.lower_bound(aid);
-                if(iter==chargeinfo.end() || chargeinfo.key_comp()(aid,iter->first)){ 
-                    chargeinfo.insert(iter, solutionMap::value_type(aid, solutionValues(nonres, res))); 
-                }else{                                                 
-                    assert(nonres==iter->second.nonresonant && res==iter->second.resonant); 
+                if(iter==chargeinfo.end() || chargeinfo.key_comp()(aid,iter->first)){
+                    chargeinfo.insert(iter, solutionMap::value_type(aid, solutionValues(nonres, res)));
+                }else{
+                    assert(nonres==iter->second.nonresonant && res==iter->second.resonant);
                 }
-              
+
             }
         }
-        for (ilpBondMap::value_type const& kv : _component_bond_cols ){ 
+        for (ilpBondMap::value_type const& kv : _component_bond_cols ){
             Id aid=kv.first;
             ilpBond const& ibond=kv.second;
             int nonres=1;
             double res=1;
             for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB;++i,++icol){
-                nonres+=_component_solution.at(icol)*(i-1); 
+                nonres+=_component_solution.at(icol)*(i-1);
                 res+=_component_resonant_solution.at(icol)*(i-1);
             }
             solutionMap::iterator iter=bondinfo.lower_bound(aid);
-            if(iter==bondinfo.end() || bondinfo.key_comp()(aid,iter->first)){ 
-                bondinfo.insert(iter, solutionMap::value_type(aid, solutionValues(nonres, res))); 
-            }else{                                                 
-                assert(nonres==iter->second.nonresonant && res==iter->second.resonant); 
+            if(iter==bondinfo.end() || bondinfo.key_comp()(aid,iter->first)){
+                bondinfo.insert(iter, solutionMap::value_type(aid, solutionValues(nonres, res)));
+            }else{
+                assert(nonres==iter->second.nonresonant && res==iter->second.resonant);
             }
         }
     }
@@ -829,7 +855,7 @@ namespace desres { namespace msys {
         _component_atom_cols.clear();
         BondOrderAssigner* parent=_parent;
         std::ostringstream ss;
- 
+
         double lps=clamp(parent->atom_lone_pair_scale);
 
         for (Id aid1 : _component_atoms_present){
@@ -838,7 +864,7 @@ namespace desres { namespace msys {
 
             int anum1=parent->_mol->atom(aid1).atomic_number;
             double eneg=enegLP +clamp(DataForElement(anum1).eneg);
-            double objv=-lps*eneg;         
+            double objv=-lps*eneg;
 
             std::vector<int> colid;
             for(int i=1; i<=range.ub;++i){
@@ -847,9 +873,9 @@ namespace desres { namespace msys {
                 colid.push_back(add_column_to_ilp(_component_lp,ss.str(),i*objv, 0, 1));
             }
             if(colid.size())
-                _component_atom_cols.insert(ilpAtomMap::value_type(aid1,ilpAtom(colid[0],1,range.ub))); 
+                _component_atom_cols.insert(ilpAtomMap::value_type(aid1,ilpAtom(colid[0],1,range.ub)));
             else
-                _component_atom_cols.insert(ilpAtomMap::value_type(aid1,ilpAtom(0,0,0))); 
+                _component_atom_cols.insert(ilpAtomMap::value_type(aid1,ilpAtom(0,0,0)));
 
         }
     }
@@ -871,12 +897,12 @@ namespace desres { namespace msys {
                 electronRange const& range= asserted_find(parent->_bond_order, bid);
 
                 ilpBondMap::iterator iter=_component_bond_cols.lower_bound(bid);
-                // Have we already added this bond? 
-                if(!(iter==_component_bond_cols.end() || _component_bond_cols.key_comp()(bid,iter->first))) continue; 
+                // Have we already added this bond?
+                if(!(iter==_component_bond_cols.end() || _component_bond_cols.key_comp()(bid,iter->first))) continue;
                 assert(range.lb==1);
 
                 Id aid2=parent->_mol->bond(bid).other(aid1);
-                 
+
                 int anum2=parent->_mol->atom(aid2).atomic_number;
                 double hyper=(PeriodForElement(anum1)>2 || PeriodForElement(anum2)>2)? 1.01 : 1.0;
                 double objv = -(eneg1 + clamp(DataForElement(anum2).eneg));
@@ -893,7 +919,7 @@ namespace desres { namespace msys {
                     _component_bond_cols.insert(iter,ilpBondMap::value_type(bid,ilpBond(colid[0],2,range.ub)));
                 else
                     _component_bond_cols.insert(iter,ilpBondMap::value_type(bid,ilpBond(0,1,1)));
-                 
+
             }
         }
     }
@@ -903,7 +929,7 @@ namespace desres { namespace msys {
         int anum1=_mol->atom(aid1).atomic_number;
         Id nbonds=_mol->filteredBondsForAtom(aid1, *_filter).size();
         /* Allow hextets for... */
-        if ( 
+        if (
             ( (anum1==5 || anum1==13) && (nbonds<4)               ) || // Al, B
             ( (anum1==6 || anum1==14) && (nbonds<4) ) || // unsaturated carbon
             ( (anum1==7 || anum1==15) && (nbonds<3) ) || // unsaturated nitrogen
@@ -931,7 +957,7 @@ namespace desres { namespace msys {
             Id aid1=kv.first;
             /* Only set charge penalties if they havent been unambiguously determined */
             // if (parent->_chargeinfo.find(aid1) != parent->_chargeinfo.end()) continue;
-           
+
             int anum=parent->_mol->atom(aid1).atomic_number;
             double eneg=clamp(DataForElement(anum).eneg);
             double qPlus =qpp+qps*fabs(eneg-PosZero);
@@ -969,14 +995,14 @@ namespace desres { namespace msys {
 
     /* penalize rings for not being aromatic */
     void ComponentAssigner::set_aromatic_ring_penalties(){
-        
+
         _component_ring_cols.clear();
         BondOrderAssigner* parent=_parent;
 
         double objv=clamp(parent->aromatic_ring_penalty);
 
         std::ostringstream ss;
-        // Try to make rings aromatic 
+        // Try to make rings aromatic
         for(Id ridx=0; ridx<parent->_rings.size(); ++ridx){
             bool addRing=true;
             for (Id bid : parent->_rings[ridx]){
@@ -1015,16 +1041,16 @@ namespace desres { namespace msys {
 
         std::ostringstream ss;
         ss.str("");
-        ss << "qCompm_"<< _component_id; 
+        ss << "qCompm_"<< _component_id;
         /* Only need to keep track of the first column id */
-        _component_charge_col=add_column_to_ilp(_component_lp,ss.str(), 
+        _component_charge_col=add_column_to_ilp(_component_lp,ss.str(),
                clamp(parent->component_minus_charge_penalty),0,parent->max_component_charge);
-        
+
         ss.str("");
-        ss << "qCompp_"<< _component_id; 
+        ss << "qCompp_"<< _component_id;
         add_column_to_ilp(_component_lp,ss.str(),
                clamp(parent->component_plus_charge_penalty),0,parent->max_component_charge);
-        
+
     }
 
     void ComponentAssigner::add_indicator_constraints(){
@@ -1072,7 +1098,7 @@ namespace desres { namespace msys {
                 for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB; ++i,++icol){
                     rowdata.at(icol)=(i-1);
                 }
-            }        
+            }
             lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_LE,1);
         }
     }
@@ -1097,11 +1123,11 @@ namespace desres { namespace msys {
             int atomvalence= DataForElement(anum0).nValence;
             int period=PeriodForElement(anum0);
             int atomoct=period<=1 ? 1 : 4;// adata.maxOct/2;
-  
+
             for(int icol=iatom.ilpCol, i=iatom.ilpLB; i<=iatom.ilpUB;++i,++icol){
                 rowdata.at(icol)=i;
             }
-        
+
             for (Id bid : bonds){
                 ilpBond const& ibond = asserted_find(_component_bond_cols,bid);
                 for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB; ++i,++icol){
@@ -1117,17 +1143,17 @@ namespace desres { namespace msys {
                 std::vector<double> rowcopy(rowdata);
                 if(parent->allow_hextet_for_atom(aid0)){
                     /* bound constraint */
-                    lpsolve::add_constraint(_component_lp,&rowcopy[0],ROWTYPE_LE,atomoct); 
+                    lpsolve::add_constraint(_component_lp,&rowcopy[0],ROWTYPE_LE,atomoct);
                     lpsolve::add_constraint(_component_lp,&rowcopy[0],ROWTYPE_GE,std::max(atomoct-2,0));
                 }else{
                     if(iatom.hyperCol){
                         rowcopy[iatom.hyperCol]=-1;
                     }
                     /* equality constraint */
-                    lpsolve::add_constraint(_component_lp,&rowcopy[0],ROWTYPE_EQ,atomoct);               
+                    lpsolve::add_constraint(_component_lp,&rowcopy[0],ROWTYPE_EQ,atomoct);
                 }
             }
-            
+
             if ( iatom.qCol ){
                 for(int icol=iatom.ilpCol, i=iatom.ilpLB; i<=iatom.ilpUB;++i,++icol){
                     rowdata.at(icol)+=i;
@@ -1137,11 +1163,11 @@ namespace desres { namespace msys {
                 rowcopy.at(iatom.qCol)=-1;
                 rowcopy.at(iatom.qCol+1)=0;
                 lpsolve::add_constraint(_component_lp,&rowcopy[0],ROWTYPE_LE,atomvalence);
-            
+
                 /* positive charge constraint */
                 for(int k=0;k<ncols;++k) rowcopy.at(k+1)*=-1;
-                rowcopy.at(iatom.qCol)=0; 
-                rowcopy.at(iatom.qCol+1)=-1;   
+                rowcopy.at(iatom.qCol)=0;
+                rowcopy.at(iatom.qCol+1)=-1;
                 lpsolve::add_constraint(_component_lp,&rowcopy[0],ROWTYPE_LE,-atomvalence);
 
             }
@@ -1158,7 +1184,7 @@ namespace desres { namespace msys {
                     if((anum1==6 || anum1==7) && 1==parent->_mol->filteredBondsForAtom(aid1,*parent->_filter).size()){
                         sp=true;
                     }else if(anum1==1){
-                        hasHydrogen=true; 
+                        hasHydrogen=true;
                     }
                 }
                 if(sp && !hasHydrogen){
@@ -1181,7 +1207,7 @@ namespace desres { namespace msys {
         BondOrderAssigner* parent=_parent;
         int ncols=lpsolve::get_Norig_columns(_component_lp);
         std::vector<double> rowdata(ncols+1,0);
-            
+
         int valence=0;
         int extvalence=0;
         for (ilpAtomMap::value_type const& kv : _component_atom_cols){
@@ -1191,11 +1217,11 @@ namespace desres { namespace msys {
             int anum=parent->_mol->atom(aid).atomic_number;
             ChemData const& adata = DataForElement(anum);
             valence+=adata.nValence;
-            
+
             for(int icol=iatom.ilpCol, i=iatom.ilpLB; i<=iatom.ilpUB;++i,++icol){
                 rowdata.at(icol)=2*i;
             }
-            
+
             IdList bonds=parent->_mol->filteredBondsForAtom(aid, *parent->_filter);
             for (Id bid : bonds){
                 ilpBond const& ibond = asserted_find(_component_bond_cols,bid);
@@ -1213,9 +1239,9 @@ namespace desres { namespace msys {
             valence-=bonds.size();
             extvalence+=bonds.size();
         }
-        
+
         _component_valence_count=valence+extvalence;
-     
+
         /* Negative charge constraint */
         rowdata.at(_component_charge_col)=-1;
         rowdata.at(_component_charge_col+1)=0;
@@ -1224,8 +1250,8 @@ namespace desres { namespace msys {
 
         /* positive charge constraint */
         for(int k=0;k<ncols;++k) rowdata.at(k+1)*=-1;
-        rowdata.at(_component_charge_col)=0; 
-        rowdata.at(_component_charge_col+1)=-1;   
+        rowdata.at(_component_charge_col)=0;
+        rowdata.at(_component_charge_col+1)=-1;
         lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_LE,-valence);
     }
 
@@ -1244,12 +1270,12 @@ namespace desres { namespace msys {
         for (ilpRingMap::value_type const& kv : _component_ring_cols){
             Id ridx=kv.first;
             int colid =kv.second;
-            
+
             rowdata.assign(ncols+1,0);
             // pi electrons, (4*n + 2) electrons
             double target=2.0;
             rowdata.at(colid)=-4;
-            
+
             std::set<Id> ratoms;
             for ( Id bid : parent->_rings.at(ridx)){
                 msys::bond_t &bond=parent->_mol->bond(bid);
@@ -1275,16 +1301,16 @@ namespace desres { namespace msys {
                     target+=2*(3 - parent->_mol->filteredBondsForAtom(aid, *parent->_filter).size());
                 }
             }
-            
+
             /* constraint on subtracting electrons from ring */
             rowdata.at(colid+1)=-1;
-            rowdata.at(colid+2)= 0;            
+            rowdata.at(colid+2)= 0;
             lpsolve::add_constraint(_component_lp, &rowdata[0], ROWTYPE_LE, target);
-            
+
             /* constraint on adding electrons to ring */
             for(int k=0;k<ncols;++k) rowdata.at(k+1)*=-1;
             rowdata.at(colid+1)= 0;
-            rowdata.at(colid+2)=-1;     
+            rowdata.at(colid+2)=-1;
             lpsolve::add_constraint(_component_lp, &rowdata[0], ROWTYPE_LE,-target);
         }
     }
@@ -1313,7 +1339,7 @@ namespace desres { namespace msys {
         set_aromatic_ring_penalties();
         set_component_charge_penalty();
 
-        /* The objective values for presolved columns get removed, 
+        /* The objective values for presolved columns get removed,
            so we copy the total objective vector and save it here */
         _component_objf.assign(lpsolve::get_Norig_columns(_component_lp)+1,0);
         lpsolve::get_row(_component_lp,0,&_component_objf[0]);
@@ -1434,17 +1460,17 @@ namespace desres { namespace msys {
         }
 
         /* Three of 4 cases are determined
-         * 1) Invalid solution 
+         * 1) Invalid solution
          * 2) valid solution && !_total_charge_set
          * 3) valid solution && _total_charge_set && active.size() <2
          */
         if (!_valid || !_total_charge_set || (_total_charge_set && active.size() < 2)) return _valid;
-    
+
         /* If we get here then (valid solution && _total_charge_set && active.size()>=2).
          * Now we need to generate alternative solutions for the active components for use in
-         * the total charge solver 
+         * the total charge solver
          */
-        
+
         typedef Id                                      key_type;
         typedef std::pair<int,double>                   entry_type;
         typedef std::vector<entry_type>                 mapped_type;
@@ -1507,7 +1533,11 @@ namespace desres { namespace msys {
             lpsolve::add_constraint(qtotlp, &rowdata[0], ROWTYPE_EQ, 1);
         }
         lpsolve::set_add_rowmode(qtotlp, false);
+        lpsolve::set_timeout(qtotlp, seconds_until_deadline());
         int status=lpsolve::solve(qtotlp);
+        if ((status == SUBOPTIMAL) && (std::chrono::system_clock::now() > _deadline)) {
+            status = TIMEOUT;
+        }        
         _valid=(status==OPTIMAL || status==PRESOLVED);
 
         if(_valid){
@@ -1516,7 +1546,7 @@ namespace desres { namespace msys {
 #endif
 #if DEBUGPRINT2
             lpsolve::write_LP(qtotlp,stdout);
-            lpsolve::print_objective(qtotlp);               
+            lpsolve::print_objective(qtotlp);
             lpsolve::print_solution(qtotlp,1);
 #endif
             std::vector<int> solution;
@@ -1540,6 +1570,10 @@ namespace desres { namespace msys {
         }
 
         lpsolve::delete_lp(qtotlp);
+        if (status == TIMEOUT) {
+            throw std::runtime_error("Unable to solve ILP. Timeout elapsed");
+        }
+
         return _valid;
     }
 
@@ -1556,16 +1590,16 @@ namespace desres { namespace msys {
     }
 
     void BondOrderAssigner::assignSolutionToAtoms(){
-        
+
         if(!_valid){
             throw std::runtime_error("Cannot assignSolutionToAtoms with invalid integer linear program solution."
                                      " Did you call solveIntegerLinearProgram first?");
         }
-        
+
         solutionMap atominfo(_atominfo);
         solutionMap bondinfo(_bondinfo);
         solutionMap chargeinfo(_chargeinfo);
-  
+
         /* Update presolved atominfo/bondinfo/chargeinfo with solved values from componentAssigners */
         for (ComponentAssignerPtr ca : _component_assigners){
             ca->extractComponentSolution(atominfo,bondinfo,chargeinfo);
@@ -1579,7 +1613,7 @@ namespace desres { namespace msys {
                    atominfo.size(),_atom_lp.size(),bondinfo.size(),_bond_order.size(),chargeinfo.size(),atominfo.size());
             assert(false);
         };
-           
+
         /* Assign the final charges and bond orders (both formal and resonant)
            Formal Charges are given by: fc[i]= ValenceElectrons[i] - freeElectrons[i] - 0.5*Sum_j ( BondElectrons[ij] )
         */
@@ -1597,7 +1631,7 @@ namespace desres { namespace msys {
         for (solutionMap::value_type const& bpair : bondinfo){
             Id bid=bpair.first;
             solutionValues const& bdata=bpair.second;
-    
+
             bond_t & bond=_mol->bond(bid);
             Id aid1=bond.i;
             atom_t& atm1=_mol->atomFAST(aid1);
@@ -1624,7 +1658,7 @@ namespace desres { namespace msys {
         for (solutionMap::value_type const& apair : atominfo){
             Id aid=apair.first;
             solutionValues const& adata=apair.second;
-            
+
             atom_t& atm=_mol->atom(aid);
             int nValence=DataForElement(atm.atomic_number).nValence;
 

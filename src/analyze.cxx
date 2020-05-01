@@ -107,7 +107,8 @@ namespace desres { namespace msys {
     }
 
 
-    void AssignBondOrderAndFormalCharge(SystemPtr mol, unsigned flags) {
+    void AssignBondOrderAndFormalCharge(SystemPtr mol, unsigned flags, std::chrono::milliseconds timeout) {
+        auto deadline = std::chrono::system_clock::now() + timeout;
         MultiIdList fragments;
         mol->updateFragids(&fragments);
         IdList pmap(mol->maxAtomId(), BadId);
@@ -126,7 +127,7 @@ namespace desres { namespace msys {
             IdList& frags = it->second;
             /* unique formula -> unique fragment */
             if (frags.size()==1) {
-                AssignBondOrderAndFormalCharge(mol, fragments[frags[0]], INT_MAX, flags);
+                AssignBondOrderAndFormalCharge(mol, fragments[frags[0]], INT_MAX, flags, std::chrono::duration_cast<std::chrono::milliseconds>(deadline - std::chrono::system_clock::now()));
                 continue;
             }
 
@@ -136,7 +137,7 @@ namespace desres { namespace msys {
             }
             std::vector<IdPair> perm;
             while (!frags.empty()) {
-                AssignBondOrderAndFormalCharge(mol, fragments[frags[0]], INT_MAX, flags);
+                AssignBondOrderAndFormalCharge(mol, fragments[frags[0]], INT_MAX, flags, std::chrono::duration_cast<std::chrono::milliseconds>(deadline - std::chrono::system_clock::now()));
                 IdList unmatched;
                 GraphPtr ref = graphs[frags[0]];
                 for (Id i=1; i<frags.size(); i++) {
@@ -178,7 +179,8 @@ namespace desres { namespace msys {
     void AssignBondOrderAndFormalCharge(SystemPtr mol,
                                         IdList const& atoms,
                                         int total_charge,
-                                        unsigned flags) {
+                                        unsigned flags,
+                                        std::chrono::milliseconds timeout) {
 #ifdef MSYS_WITHOUT_LPSOLVE
         MSYS_FAIL("LPSOLVE functionality was not included.");
 #else
@@ -190,7 +192,7 @@ namespace desres { namespace msys {
         SystemPtr canmol = CanonicalizeMoleculeByTopids(mol, atoms, aid_to_canId, bid_to_canId);
 
         bool compute_resonant_charge = flags & AssignBondOrder::ComputeResonantCharges;
-        BondOrderAssigner boa(canmol, canmol->atoms(), compute_resonant_charge);
+        BondOrderAssigner boa(canmol, canmol->atoms(), compute_resonant_charge, timeout);
         if (total_charge != INT_MAX) {
             boa.setTotalCharge(total_charge);
         }

@@ -11,20 +11,20 @@ using namespace desres::msys;
 using namespace boost::python;
 
 namespace {
-    void assign_1(SystemPtr mol, bool compute_resonant_charges) {
+    void assign_1(SystemPtr mol, bool compute_resonant_charges, int timeout_ms) {
         unsigned flags = 0;
         if (compute_resonant_charges) flags |= AssignBondOrder::ComputeResonantCharges;
-        AssignBondOrderAndFormalCharge(mol, flags);
+        AssignBondOrderAndFormalCharge(mol, flags, std::chrono::milliseconds(timeout_ms));
     }
-    void assign_2(SystemPtr mol, list ids, bool compute_resonant_charges) {
+    void assign_2(SystemPtr mol, list ids, bool compute_resonant_charges, int timeout_ms) {
         unsigned flags = 0;
         if (compute_resonant_charges) flags |= AssignBondOrder::ComputeResonantCharges;
-        AssignBondOrderAndFormalCharge(mol, ids_from_python(ids), INT_MAX, flags);
+        AssignBondOrderAndFormalCharge(mol, ids_from_python(ids), INT_MAX, flags, std::chrono::milliseconds(timeout_ms));
     }
-    void assign_3(SystemPtr mol, list ids, int total_charge, bool compute_resonant_charges) {
+    void assign_3(SystemPtr mol, list ids, int total_charge, bool compute_resonant_charges, int timeout_ms) {
         unsigned flags = 0;
         if (compute_resonant_charges) flags |= AssignBondOrder::ComputeResonantCharges;
-        AssignBondOrderAndFormalCharge(mol, ids_from_python(ids), total_charge, flags);
+        AssignBondOrderAndFormalCharge(mol, ids_from_python(ids), total_charge, flags, std::chrono::milliseconds(timeout_ms));
     }
 
     dict find_distinct_fragments(SystemPtr mol, object keys_obj) {

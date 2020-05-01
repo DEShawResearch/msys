@@ -2369,7 +2369,7 @@ def _assign(m, *args):
 
 def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge=None,
                                    compute_resonant_charges=False, *,
-                                   timeout=None):
+                                   timeout=60.):
     """Assign bond orders and formal charges to a molecular system.
 
     Determines bond orders and formal charges by preferring neutral
@@ -2379,8 +2379,6 @@ def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge=None,
     Can assign to a subset of atoms of the system, provided these atoms
     form complete connected fragments.
 
-    WARNING: calling this function on a chemically incomplete system,
-        i.e. just protein backbone, may cause msys to hang indefinitely.
 
     Arguments:
         system_or_atoms: either a System or a list of Atoms
@@ -2388,33 +2386,23 @@ def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge=None,
         compute_resonant_charges (bool): compute and store resonant charge
             in atom property 'resonant_charge' and resonant bond order in
             bond property 'resonant_order'.
+        timeout (float): maximum time allowed, in seconds.
+            Note: calling this function on a chemically incomplete system,
+            i.e. just protein backbone, cause msys to hit the timeout.
     """
-    if timeout is not None:
-        if not isinstance(system_or_atoms, System):
-            raise ValueError("timeout supported only for System input")
-        from multiprocessing import Pool
-        pool = Pool()
-        result = pool.apply_async(_assign, args=(system_or_atoms, total_charge, compute_resonant_charges))
-        mol = result.get(timeout)
-        pool.close()
-        for src, dst in zip(mol.atoms, system_or_atoms.atoms):
-            dst.formal_charge = src.formal_charge
-        for src, dst in zip(mol.bonds, system_or_atoms.bonds):
-            dst.order = src.order
-        return
-
+    timeout_ms = int(timeout * 1000)    
     if isinstance(system_or_atoms, System):
         ptr = system_or_atoms._ptr
         if total_charge is None:
-            return _msys.AssignBondOrderAndFormalCharge(ptr, compute_resonant_charges)
+            return _msys.AssignBondOrderAndFormalCharge(ptr, compute_resonant_charges, timeout_ms)
         ids = ptr.atomsAsList()
     else:
         ptr, ids = _convert_ids(system_or_atoms)
 
     if total_charge is None:
-        _msys.AssignBondOrderAndFormalCharge(ptr, ids, compute_resonant_charges)
+        _msys.AssignBondOrderAndFormalCharge(ptr, ids, compute_resonant_charges, timeout_ms)
     else:
-        _msys.AssignBondOrderAndFormalCharge(ptr, ids, int(total_charge), compute_resonant_charges)
+        _msys.AssignBondOrderAndFormalCharge(ptr, ids, int(total_charge), compute_resonant_charges, timeout_ms)
 
 class Graph(object):
     ''' Represents the chemical topology of a System
