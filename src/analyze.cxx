@@ -7,6 +7,7 @@
 #include "clone.hxx"
 #include "contacts.hxx"
 #include "pfx/pfx.hxx"
+#include "smiles.hxx"
 #include <numeric>
 #include <queue>
 #include <stdio.h>
@@ -429,8 +430,17 @@ namespace {
     // always been slower than using Graph::match.  Go figure.
     static std::string waterhash;
     static GraphPtr watergraph;
+    static std::string ace_hash;
+    static GraphPtr ace_graph;
+    static std::string nme_hash;
+    static GraphPtr nme_graph;
     struct _ {
         _() {
+            make_watergraph();
+            make_ace_graph();
+            make_nme_graph();
+        }
+        void make_watergraph() {
             SystemPtr m = System::create();
             m->addChain();
             m->addResidue(0);
@@ -445,9 +455,40 @@ namespace {
             watergraph = Graph::create(m,m->atoms());
             waterhash = Graph::hash(m,m->atoms());
         }
+        void make_ace_graph() {
+            auto m = FromSmilesString("CC(=O)N");
+            ace_graph = Graph::create(m, {0,1,2,4,5,6});
+            ace_hash = Graph::hash(   m, {0,1,2,4,5,6});
+        }
+        void make_nme_graph() {
+            auto m = FromSmilesString("CN");
+            nme_graph = Graph::create(m, {0,1,2,3,4,5});
+            nme_hash = Graph::hash(   m, {0,1,2,3,4,5});
+        }
     } static_initializer;
 
     typedef std::map<std::string,AtomType> NameMap;
+
+    static bool is_protein_capping_group(SystemPtr mol, IdList const& atoms) {
+        std::vector<IdPair> perm;
+        GraphPtr g;
+        auto h = Graph::hash(mol, atoms);
+        if (h==ace_hash) {
+            if (!g) g = Graph::create(mol, atoms);
+            if (g->match(ace_graph, perm)) {
+                //printf("matched ACE\n");
+                return true;
+            }
+        }
+        if (h==nme_hash) {
+            if (!g) g = Graph::create(mol, atoms);
+            if (g->match(nme_graph, perm)) {
+                //printf("matched NME\n");
+                return true;
+            }
+        }
+        return false;
+    }
 
     NameMap types = {
           { "CA", AtomProBack }
@@ -499,6 +540,11 @@ namespace {
 
         /* need at least four atoms to determine protein or nucleic */
         if (atoms.size()<4) return;
+
+        if (is_protein_capping_group(self, atoms)) {
+            self->residueFAST(res).type = ResidueProtein;
+            return;
+        }
 
         int npro=0, nnuc=0;
         std::set<std::string> names;

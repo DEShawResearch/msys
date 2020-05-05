@@ -847,6 +847,13 @@ class AtomselCoverage(unittest.TestCase):
 
 class TestAtomsel(unittest.TestCase):
     
+    def testCappingResiduesACE_NME(self):
+        mol=msys.Load('tests/files/solvated_test.mol2')
+        ace = mol.selectIds("resname ACE")
+        nme = mol.selectIds("resname NME")
+        tot = sorted(ace+nme)
+        self.assertEqual(mol.selectIds("protein and resname ACE NME"), tot)
+
     def testSequence(self):
         mol=msys.Load('tests/files/2f4k.dms')
         for sel, ids in (
