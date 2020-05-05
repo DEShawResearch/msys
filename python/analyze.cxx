@@ -90,6 +90,10 @@ namespace {
         return d;
     }
 
+    bool wrap_is_closed(SystemPtr mol, list ids) {
+        return SelectionIsClosed(mol, ids_from_python(ids));
+    }
+
 }
 
 namespace desres { namespace msys { 
@@ -120,6 +124,7 @@ namespace desres { namespace msys {
         def("GuessAtomicNumber", GuessAtomicNumber);
         def("ElectronegativityForElement", elec_for_element, "Allen-scale electronegativity");
         def("GetBondsAnglesDihedrals", get_bonds_angles_dihedrals);
+        def("SelectionIsClosed", wrap_is_closed);
 
         class_<SmartsPattern>("SmartsPattern", init<std::string const&>())
             .def("atomCount", &SmartsPattern::atomCount)

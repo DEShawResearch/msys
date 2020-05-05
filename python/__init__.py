@@ -19,6 +19,8 @@ from ._msys import BadId
 from .atomsel import Atomsel
 from . import molfile
 
+class BrokenBondsError(BaseException):
+    pass
 
 class Handle(object):
     __slots__ = ('_ptr', '_id')
@@ -1473,7 +1475,7 @@ class System(object):
         atms=self._update_atoms()
         return [atms[i] for i in ids]
 
-    def clone(self, sel=None, share_params=False, use_index=False):
+    def clone(self, sel=None, share_params=False, use_index=False, forbid_broken_bonds=False):
         ''' Clone the System, returning a new System.  If selection is
         provided, it should be an atom selection string, a list of ids,
         or a list of Atoms.
@@ -1482,6 +1484,9 @@ class System(object):
         the old and new systems.  By default, copies of the ParamTables
         are made, but ParamTables shared _within_ the old system will
         also be shared in the new system.
+
+        If forbid_broken_bonds is True, an exception will be thrown if the
+        selected atoms do not include all atoms connected by bonds.
         '''
         ptr = self._ptr
         if sel is None:
@@ -1496,6 +1501,8 @@ class System(object):
                     raise ValueError("Atoms in sel are not from this System")
             else:
                 ids = [int(i) for i in ids]
+        if forbid_broken_bonds and not _msys.SelectionIsClosed(ptr, ids):
+            raise BrokenBondsError("selected atoms exclude some bonded atoms")
         flags = _msys.CloneOption.Default
         if share_params:
             flags = _msys.CloneOption.ShareParams

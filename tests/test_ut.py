@@ -1298,6 +1298,16 @@ class Main(unittest.TestCase):
         for attr in attrs:
             self.assertEqual(getattr(prov, attr), getattr(new.provenance[0], attr))
 
+    def testCloneWholeFragments(self):
+        mol = msys.FromSmilesString("CC")
+        mol.clone()
+        mol.clone(forbid_broken_bonds=True)
+        for i in range(mol.natoms):
+            with self.assertRaises(msys.BrokenBondsError):
+                mol.clone([i], forbid_broken_bonds=True)
+            mol.clone([i])
+            mol.clone([i], forbid_broken_bonds=False)
+
     def testFindDistinctFragments(self):
         import random
         random.seed(99)

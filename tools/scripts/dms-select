@@ -33,11 +33,8 @@ def main():
             help='Assign bond order and formal charge')
     parser.add_argument('--sorted', action='store_true', default=False,
             help='Write atoms in structurally sorted order')
-    #parser.add_argument('--add-hydrogens', action='store_true', default=False,
-            #help='Add missing hydrogens based on valence and formal charge')
-    #parser.add_argument('--guess-hydrogen-positions', action='store_true',
-            #default=False,
-            #help='Guess 3d coordinates for hydrogens added by --add-hydrogen')
+    parser.add_argument('-b', '--allow-broken-bonds', action='store_true',
+            help='Allow the selection to exclude some connected atoms')
 
     opts = parser.parse_args()
     def log(msg, verbose=opts.verbose):
@@ -52,22 +49,17 @@ def main():
         log("Loading %s" % path)
         mol.append(msys.Load(path))
 
-    #if opts.add_hydrogens:
-        #new = msys.AddHydrogens(mol)
-        #for i,n in enumerate(new):
-            #n.name = 'H%d' % i
-        #log("Added %d hydrogens" % len(new))
-        #if opts.guess_hydrogen_positions:
-            #log("Guessing 3d coordinates for %d hydrogens" % len(new))
-            #msys.GuessHydrogenPositions(new)
-
     if opts.assign:
         log("Assigning bond order and formal charge")
         msys.AssignBondOrderAndFormalCharge(mol)
 
     if opts.selection:
         log('Cloning "%s"' % opts.selection)
-        mol=mol.clone(opts.selection)
+        try:
+            mol=mol.clone(opts.selection, whole_fragments=not opts.allow_broken_bonds)
+        except msys.DisconnectedSelectionError as e:
+            print("ERROR:", str(e), "use -b/--allow-broken-bonds to proceed", file=sys.stderr)
+            raise
 
     log("Selected %d chain(s), %d residue(s), %d atom(s)" % (
                 len(mol.chains), len(mol.residues), len(mol.atoms)))

@@ -828,3 +828,16 @@ void desres::msys::ReplaceTablesWithSortedTerms(SystemPtr mol) {
     }
 }
 
+bool desres::msys::SelectionIsClosed(SystemPtr mol, IdList const& ids) {
+    IdList closure;
+    closure.reserve(mol->atomCount());
+    for (auto id : ids) {
+        closure.push_back(id);
+        for (auto nbr : mol->bondedAtoms(id)) {
+            closure.push_back(nbr);
+        }
+    }
+    sort_unique(closure);
+    return closure.size() == ids.size();
+}
+        

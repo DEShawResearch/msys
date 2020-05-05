@@ -75,6 +75,10 @@ namespace desres { namespace msys {
             std::vector<IdList>& angles,
             std::vector<IdList>& dihedrals);
 
+
+    /* check if the given set of atoms contains all its bonded neighbors.
+     * The input set is assumed to be unique. */
+    bool SelectionIsClosed(SystemPtr m, IdList const& ids);
 }}
 
 #endif
