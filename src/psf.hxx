@@ -6,6 +6,7 @@
 namespace desres { namespace msys {
 
     SystemPtr ImportPSF( std::string const& path );
+    void ExportPSF(SystemPtr mol, std::string const& path);
 
 }}
 

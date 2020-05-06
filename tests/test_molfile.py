@@ -1,12 +1,4 @@
-#!/usr/bin/garden-exec
-#{
-# source `dirname $0`/pyenv.sh
-# exec python $0 "$@"
-#}
-from __future__ import print_function
-
 import os, sys, unittest
-from util import *
 
 import sqlite3
 
@@ -84,6 +76,10 @@ class DtrTestCase(unittest.TestCase):
         self.natoms=10000000
         self.writer=molfile.dtr.write(self.PATH, natoms=self.natoms)
 
+    def testReadEmptyDtr(self):
+        self.writer.close()
+        assert molfile.DtrReader(self.PATH).nframes == 0
+
     def testCheckpointBytes(self):
         kv = molfile.DtrReader("/f/a/jobstep/14388415/0/checkpoint.atr").keyvals(0)
         self.assertEqual(kv["TITLE"], "ANTON")
@@ -123,7 +119,6 @@ class DtrTestCase(unittest.TestCase):
         self.writer.frame(f)
         self.writer.sync()
 
-    @unittest.skipIf(True, 'disabled')
     def testEmpty(self):
         r=molfile.DtrReader(self.PATH)
         self.assertEqual(0,r.natoms)
@@ -199,6 +194,13 @@ class DtrTestCase(unittest.TestCase):
         self.addFrame(1.0)
         molfile.DtrReader(self.PATH).frame(0)
 
+    def testMetadataFields(self):
+        self.addFrame(0.0)
+        meta = molfile.DtrReader(self.PATH).metadata
+        assert meta['WORKDIR'] == os.getcwd()
+        assert meta['MSYS_VERSION'] == msys.version.version
+
+
     def testTruncatedFrame(self):
         self.addFrame(0.0)
         self.addFrame(1.0)
@@ -253,6 +255,10 @@ class DtrTestCase(unittest.TestCase):
 
 class TestStk(unittest.TestCase):
     STK='tests/files/run.stk'
+
+    def testEmptyFramesetAtStartOfStk(self):
+        s = molfile.DtrReader('/d/en/fep-6/2020/02/27/gullingj_k0kvwpri/pyanton/PA104_0/energy_globals.stk')
+        self.assertEqual(s.nframes, 10412)
 
     def testMixedAtomCount(self):
         with self.assertRaises(RuntimeError):
@@ -559,13 +565,12 @@ class TestMae(unittest.TestCase):
       os.unlink('out.mae')
     if os.path.isfile('out.dms'): 
       os.unlink('out.dms')
-    if os.path.isfile('bonds.mae'): 
-      os.unlink('bonds.mae')
  
   def testNoBonds(self):
     R=molfile.pdb.read('tests/files/h2o.pdb')
-    molfile.mae.write('bonds.mae', atoms=R.atoms).frame(next(R.frames())).close()
-    molfile.mae.read('bonds.mae')
+    with tempfile.NamedTemporaryFile(suffix='.mae') as tmp:
+        molfile.mae.write(tmp.name, atoms=R.atoms).frame(next(R.frames())).close()
+        molfile.mae.read(tmp.name)
 
   def testSinglePrecision(self):
       ''' mae files should preserve single precision '''

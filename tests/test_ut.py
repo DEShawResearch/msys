@@ -1,13 +1,4 @@
-#!/usr/bin/garden-exec
-#{
-# source `dirname $0`/pyenv.sh
-# exec python $0 "$@"
-#}
-
-from __future__ import print_function
 import os, sys, unittest
-from util import *
-
 import msys
 from msys import knot, reorder, pfx, molfile
 from time import time
@@ -856,6 +847,13 @@ class AtomselCoverage(unittest.TestCase):
 
 class TestAtomsel(unittest.TestCase):
     
+    def testCappingResiduesACE_NME(self):
+        mol=msys.Load('tests/files/solvated_test.mol2')
+        ace = mol.selectIds("resname ACE")
+        nme = mol.selectIds("resname NME")
+        tot = sorted(ace+nme)
+        self.assertEqual(mol.selectIds("protein and resname ACE NME"), tot)
+
     def testSequence(self):
         mol=msys.Load('tests/files/2f4k.dms')
         for sel, ids in (
@@ -914,6 +912,11 @@ class TestAtomsel(unittest.TestCase):
                 self.assertEqual(old, new, "failed on '%s': oldlen %d newlen %d" % (sel, len(old), len(new)))
 
 class TestSdf(unittest.TestCase):
+
+    def testIsotopes(self):
+        mol = msys.Load('tests/files/isotope.sdf')
+        assert 'isotope' in mol.atom_props
+        for i in 1,2: assert mol.atom(i)['isotope'] == 2
 
     def testZeroBondOrder(self):
         mol = msys.CreateSystem()
@@ -1110,10 +1113,67 @@ class TestPdb(unittest.TestCase):
             a.atomic_number=6
         tmp=tempfile.NamedTemporaryFile(suffix='.pdb')
         path=tmp.name
-        msys.Save(mol, path)
+        msys.SavePDB(mol, path, reorder=True)
         m2=msys.Load(path)
         self.assertEqual(m2.nchains, 2)
 
+    def testReorder(self):
+        mol=msys.Load('tests/files/order.mol2')
+        tmp=tempfile.NamedTemporaryFile(suffix='.pdb')
+        path=tmp.name
+
+        msys.SavePDB(mol, path, reorder=True)
+        pdb=msys.Load(path)
+        assert [a.name for a in mol.atoms] != [a.name for a in pdb.atoms]
+
+        msys.SavePDB(mol, path, reorder=False)
+        pdb=msys.Load(path)
+        assert [a.name for a in mol.atoms] == [a.name for a in pdb.atoms]
+
+        msys.Save(mol, path)
+        pdb=msys.Load(path)
+        assert [a.name for a in mol.atoms] == [a.name for a in pdb.atoms]
+
+    def testCell(self):
+        self.assertEqual(list(self.mol.cell.diagonal()), 
+                [42.408, 41.697, 69.9599803728577])
+
+
+class TestValidate(unittest.TestCase):
+    def testNoKnot(self):
+        mol=msys.Load('tests/files/jandor.sdf')
+        knot.FindKnots(mol,verbose=False)
+    def testPeriodicKnot(self):
+        mol=msys.Load('tests/files/knot.mae')
+        results=knot.FindKnots(mol,verbose=False)
+        self.assertEqual(len(results), 2)
+    def testExcludedKnot(self):
+        mol=msys.Load('tests/files/excluded_knot.dms')
+        without_ignoring = knot.FindKnots(mol,verbose=False)
+        self.assertEqual(len(without_ignoring),1)
+        with_ignoring = knot.FindKnots(mol, ignore_excluded_knots=True, verbose=False)
+        self.assertEqual(len(with_ignoring), 0)
+    def testUntieKnot(self):
+        mol=msys.Load('tests/files/knot.mae')
+        results=knot.FindKnots(mol,verbose=False)
+        self.assertEqual(len(results), 2)
+        success = knot.UntieKnots(mol,verbose=False)
+        results_after_untying = knot.FindKnots(mol,verbose=False)
+        self.assertEqual(len(results_after_untying),0)
+        self.assertTrue(success)
+
+class Tools(unittest.TestCase):
+    @staticmethod
+    def make_systems():
+        tmp1 = tmpfile(suffix='.dms')
+        tmp2 = tmpfile(suffix='.dms')
+        mol1 = msys.CreateSystem()
+        mol2 = msys.CreateSystem()
+        mol1.addAtom().atomic_number=1
+        mol2.addAtom().atomic_number=2
+        msys.Save(mol1, tmp1.name)
+        msys.Save(mol2, tmp2.name)
+        return tmp1, tmp2
     def testCell(self):
         self.assertEqual(list(self.mol.cell.diagonal()), 
                 [42.408, 41.697, 69.9599803728577])
@@ -1237,6 +1297,16 @@ class Main(unittest.TestCase):
         self.assertEqual(len(new.provenance), 2)
         for attr in attrs:
             self.assertEqual(getattr(prov, attr), getattr(new.provenance[0], attr))
+
+    def testCloneWholeFragments(self):
+        mol = msys.FromSmilesString("CC")
+        mol.clone()
+        mol.clone(forbid_broken_bonds=True)
+        for i in range(mol.natoms):
+            with self.assertRaises(msys.BrokenBondsError):
+                mol.clone([i], forbid_broken_bonds=True)
+            mol.clone([i])
+            mol.clone([i], forbid_broken_bonds=False)
 
     def testFindDistinctFragments(self):
         import random
@@ -1711,7 +1781,7 @@ class Main(unittest.TestCase):
 
     def testAssignBondOrderTimeout(self):
         mol = msys.FromSmilesString('c12c3c4c5c1c6c7c8c2c9c1c3c2c3c4c4c%10c5c5c6c6c7c7c%11c8c9c8c9c1c2c1c2c3c4c3c4c%10c5c5c6c6c7c7c%11c8c8c9c1c1c2c3c2c4c5c6c3c7c8c1c23')
-        with self.assertRaises(Exception):
+        with self.assertRaises(RuntimeError):
             msys.AssignBondOrderAndFormalCharge(mol, timeout=1)
 
         mol = msys.FromSmilesString('c1ccccc1')
@@ -2814,6 +2884,11 @@ class Main(unittest.TestCase):
         m2=m.clone(share_params=True)
         self.assertEqual(t1.params, m2.table('t1').params)
 
+
+    def testCloneNumpyIntegers(self):
+        m=msys.CreateSystem()
+        m.addAtom()
+        m.clone(NP.arange(1, dtype='i'))
 
     def testClone2(self):
         m=msys.CreateSystem()

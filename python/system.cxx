@@ -744,8 +744,8 @@ namespace {
         return to_python(mol.orderedIds());
     }
 
-    SystemPtr wrap_clone(SystemPtr mol, list ids, CloneOption::Flags flags) {
-        return Clone(mol, ids_from_python(ids), flags);
+    SystemPtr wrap_clone(SystemPtr mol, list ids, unsigned flags) {
+        return Clone(mol, ids_from_python(ids), static_cast<CloneOption::Flags>(flags));
     }
     list append_system(SystemPtr dst, SystemPtr src, Id ct=BadId) {
         return to_python(AppendSystem(dst, src, ct));
@@ -860,6 +860,7 @@ namespace desres { namespace msys {
         enum_<CloneOption::Flags>("CloneOption")
             .value("Default",       CloneOption::Default)
             .value("ShareParams",   CloneOption::ShareParams)
+            .value("UseIndex",      CloneOption::UseIndex)
             ;
 
         def("TableSchemas", table_schemas);

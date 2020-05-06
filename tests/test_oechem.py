@@ -1,13 +1,3 @@
-#!/usr/bin/garden-exec
-#{
-# source `dirname $0`/pyenv.sh
-# garden load openeye-toolkits/2019.4.2-02c7/lib-python37
-# exec python $0 "$@"
-#}
-
-from __future__ import print_function
-from util import *
-
 import msys
 import numpy as np
 
@@ -81,6 +71,14 @@ class Main(unittest.TestCase):
             v.append(nbr)
         stereo = atom.GetStereo(v, oechem.OEAtomStereo_Tetrahedral)
         self.assertEqual(stereo, expected)
+
+    def testIsotope(self):
+        mol = msys.Load('tests/files/isotope.sdf')
+        assert [a['isotope'] for a in mol.atoms] == [0,2,2]
+        oemol = msys.ConvertToOEChem(mol)
+        assert [a.GetIsotope() for a in oemol.GetAtoms()] == [0,2,2]
+        mol = msys.ConvertFromOEChem(oemol)
+        assert [a['isotope'] for a in mol.atoms] == [0,2,2]
 
     def testChiralAtoms(self):
         mol = msys.Load('tests/files/jandor.sdf')

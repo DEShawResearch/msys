@@ -29,7 +29,7 @@ if "SCHRODINGER_SRC" not in os.environ:
             CCFLAGS=['-O2', '-g', '-msse4.1'],
             CFLAGS='-Wall',
             # sadly, need -Wno-deprecated-declarations because of boost.
-            CXXFLAGS="-std=c++14 -Wall -Wno-deprecated-declarations",
+            CXXFLAGS="-std=c++11 -Wall -Wno-deprecated-declarations",
             CPPDEFINES=[
                 'BOOST_SYSTEM_NO_DEPRECATED',
                 ],
@@ -51,4 +51,8 @@ env.SConscript('external/lpsolve/SConscript')
 env.AddShare('env.sh')
 env.SConscript('python/SConscript')
 env.SConscript('tools/SConscript')
+
+if 'BUILD_WHEEL' in os.environ:
+    env['WHEEL_DIR'] = 'wheel'
+    env.AddWheel('pyproject.toml', pyver='37')
 

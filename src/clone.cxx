@@ -29,10 +29,8 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms,
                                CloneOption::Flags flags) {
 
     /* check for duplicates */
-    {
-        IdList tmp(atoms);
-        if (sort_unique(tmp)) MSYS_FAIL("atoms argument contains duplicates");
-    }
+    IdList sorted_atoms(atoms);
+    if (sort_unique(sorted_atoms)) MSYS_FAIL("atoms argument contains duplicates");
     SystemPtr dst = System::create();
 
     /* Mappings from src ids to dst ids */
@@ -162,10 +160,15 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms,
             TermTablePtr dsttable = dst->addTable(name, srctable->atomCount());
             dsttable->category = srctable->category;
             dsttable->tableProps() = srctable->tableProps();
-            IdList terms = srctable->terms();
-            IdList::iterator iter = std::remove_if( 
-                    terms.begin(), terms.end(), BadTerm(srctable, atmmap));
-            terms.erase(iter, terms.end());
+            IdList terms;
+            if (flags & CloneOption::UseIndex) {
+                terms = srctable->findWithOnly(sorted_atoms);
+            } else {
+                terms = srctable->terms();
+                auto iter = std::remove_if(
+                        terms.begin(), terms.end(), BadTerm(srctable, atmmap));
+                terms.erase(iter, terms.end());
+            }
             AppendTerms( dsttable, srctable, atmmap, terms );
         }
 

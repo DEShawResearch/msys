@@ -244,6 +244,9 @@ namespace desres { namespace msys {
                     (flags & SaveOptions::StructureOnly ? JsonExport::StructureOnly : 0)
                     );
                 break;
+            case PsfFileFormat:
+                ExportPSF(mol, path);
+                break;
             default:
                 MSYS_FAIL("No support for saving file '" << path << "' of type "
                         << FileFormatAsString(format));

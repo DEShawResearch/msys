@@ -10,7 +10,7 @@ static char schemas_as_json[] = R"SCHEMA(
      [ "angle_harm",   "bond", 3, ["theta0", "fc"], [["constrained", 0]]],
      [ "angle_fbhw",   "bond", 3, ["sigma", "theta0", "fc"]],
      [ "dihedral_trig", "bond",4, ["phi0","fc0","fc1","fc2","fc3","fc4","fc5","fc6"]],
-     [ "dihedral_fourier", "bond",4, ["phi0","fc0","fc1","fc2","fc3","fc4","fc5","fc6", "fc7", "fc8", "fc9", "fc10", "fc11", "fc12"]],
+     [ "dihedral_fourier", "bond",4, ["fc0","fc1","fc2","fc3","fc4","fc5","fc6", "fc7", "fc8", "fc9", "fc10", "fc11", "fc12"]],
      [ "dihedral6_trig","bond",6, ["phi0","fc0","fc2","fc4"]],
      [ "improper_anharm", "bond",4, ["fc2","fc4"]],
      [ "improper_fbhw", "bond",4, ["sigma","phi0","fc"]],
@@ -23,6 +23,7 @@ static char schemas_as_json[] = R"SCHEMA(
      [ "stretch_harm", "bond", 2, ["r0", "fc"],     [["constrained", 0]]],
      [ "stretch_morse", "bond", 2,["r0", "d", "a"]],
      [ "softstretch_harm", "bond", 2, ["r0", "fc", "alpha"]],
+     [ "softened_stretch_harm", "bond", 2, ["r0", "fc", "alpha", "lambda"]],
      [ "torsiontorsion_cmap", "bond", 8, [["cmapid", 2]]],
      [ "pseudopol_fermi","bond",4,["a", "b", "cutoff"]],
 

@@ -1,3 +1,35 @@
+1.7.300 Add a default 60s timeout to AssignBondOrderAndFormalCharges
+
+1.7.299 Support numpy integers in System.clone()
+        Don't write zero-length metadata frames.
+
+1.7.298 Fix for MAE export of empty m_depend fields.
+
+1.7.297 New use_index keyword for clone().
+
+1.7.296 Skip mae ct properties with conflicting type.
+
+1.7.295 Add compare_frames tool.
+
+1.7.294 Don't fail on empty stk.
+        Remove phi0 from dihedral_fourier schema.
+
+1.7.293 Add rudimentary psf export.
+        Drop support for ddparams.
+        Maintain atom order when writing pdb files.
+
+1.7.292 Added softened_stretch_harm schema.
+        Improve speed of reading stk cache files
+        Isotope support for sdf and to/from oechem.
+
+1.7.291 Fix bug in ct property handling introduced in 1.7.284.
+
+1.7.290 Fix reading of stks with empty framesets.
+
+1.7.289 Drop python2 from build and tests, again.
+
+1.7.288 Restore the python2 build, for now.
+
 1.7.287 Docstring fix for findContactIds.
         Fix very old bug in SSSR which may not have affected anyone.
         Added dms-hmr.

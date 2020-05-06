@@ -4,8 +4,6 @@ This is the high-level Python interface for msys, intended for use
 by chemists.
 '''
 
-from __future__ import print_function
-
 from . import _msys, version
 import numpy
 import sys
@@ -21,6 +19,8 @@ from ._msys import BadId
 from .atomsel import Atomsel
 from . import molfile
 
+class BrokenBondsError(BaseException):
+    pass
 
 class Handle(object):
     __slots__ = ('_ptr', '_id')
@@ -1475,7 +1475,7 @@ class System(object):
         atms=self._update_atoms()
         return [atms[i] for i in ids]
 
-    def clone(self, sel=None, share_params=False):
+    def clone(self, sel=None, share_params=False, use_index=False, forbid_broken_bonds=False):
         ''' Clone the System, returning a new System.  If selection is
         provided, it should be an atom selection string, a list of ids,
         or a list of Atoms.
@@ -1484,6 +1484,9 @@ class System(object):
         the old and new systems.  By default, copies of the ParamTables
         are made, but ParamTables shared _within_ the old system will
         also be shared in the new system.
+
+        If forbid_broken_bonds is True, an exception will be thrown if the
+        selected atoms do not include all atoms connected by bonds.
         '''
         ptr = self._ptr
         if sel is None:
@@ -1496,10 +1499,15 @@ class System(object):
                 ptr, ids = _convert_ids(sel)
                 if ptr != self._ptr:
                     raise ValueError("Atoms in sel are not from this System")
+            else:
+                ids = [int(i) for i in ids]
+        if forbid_broken_bonds and not _msys.SelectionIsClosed(ptr, ids):
+            raise BrokenBondsError("selected atoms exclude some bonded atoms")
         flags = _msys.CloneOption.Default
         if share_params:
             flags = _msys.CloneOption.ShareParams
-
+        if use_index:
+            flags |= _msys.CloneOption.UseIndex
         return System(ptr.clone(ids, flags))
 
     def sorted(self):
@@ -1979,9 +1987,14 @@ def ConvertToOEChem(mol_or_atoms):
         bonds = sorted(set(bonds), key=lambda x: x.id)
         coords = numpy.array([a.pos for a in atoms])
 
+    mol = atoms[0].system
+    have_isotope = 'isotope' in mol.atom_props
+
     for idx, atm in enumerate(atoms):
         oe_atom = oe_mol.NewAtom(atm.atomic_number)
         oe_atom.SetFormalCharge(atm.formal_charge)
+        if have_isotope:
+            oe_atom.SetIsotope(atm['isotope'])
 
         # paranoia check because this isn't gauranteed by OEChem, but
         # so far it always has been true: https://docs.eyesopen.com/toolkits/python/oechemtk/atombondindices.html#indices-for-molecule-lookup-considered-harmful
@@ -2036,6 +2049,7 @@ def ConvertFromOEChem(oe_mol, force=False):
     chain_id_to_msys_chain = {}
     oe_res_to_msys_res = {}
     oe_idx_to_msys_id = {}
+    have_isotope = False
     for oe_atom in oe_mol.GetAtoms():
         if not oechem.OEHasResidue(oe_atom):
             if default_res is None:
@@ -2070,6 +2084,10 @@ def ConvertFromOEChem(oe_mol, force=False):
         msys_atom.pos = oe_mol.GetCoords(oe_atom)
         if oe_atom.GetType():
             msys_atom.name = oe_atom.GetType()
+        if oe_atom.GetIsotope():
+            if not have_isotope:
+                msys_system.addAtomProp("isotope", int)
+            msys_atom['isotope'] = oe_atom.GetIsotope()
 
     msys_atoms = msys_system.atoms
     for oe_bond in oe_mol.GetBonds():
@@ -2276,11 +2294,13 @@ def SaveMAE(system, path, with_forcefield = True, append = False):
             _msys.ExportMAE(mol._ptr, path, prov, flags)
             flags |= _msys.MaeExportFlags.Append
 
-def SavePDB(system, path, append=False):
+def SavePDB(system, path, append=False, reorder=False):
     ''' Export the System to a PDB file at the given path. '''
     flags = _msys.PDBExportFlags.Default
     if append:
         flags |= _msys.PDBExportFlags.Append
+    if reorder:
+        flags |= _msys.PDBExportFlags.Reorder
     _msys.ExportPDB(system._ptr, str(path), flags)
 
 def SaveMol2(system, path, selection='none', append=False, moe=True):
@@ -2356,7 +2376,7 @@ def _assign(m, *args):
 
 def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge=None,
                                    compute_resonant_charges=False, *,
-                                   timeout=None):
+                                   timeout=60.):
     """Assign bond orders and formal charges to a molecular system.
 
     Determines bond orders and formal charges by preferring neutral
@@ -2366,8 +2386,6 @@ def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge=None,
     Can assign to a subset of atoms of the system, provided these atoms
     form complete connected fragments.
 
-    WARNING: calling this function on a chemically incomplete system,
-        i.e. just protein backbone, may cause msys to hang indefinitely.
 
     Arguments:
         system_or_atoms: either a System or a list of Atoms
@@ -2375,33 +2393,23 @@ def AssignBondOrderAndFormalCharge(system_or_atoms, total_charge=None,
         compute_resonant_charges (bool): compute and store resonant charge
             in atom property 'resonant_charge' and resonant bond order in
             bond property 'resonant_order'.
+        timeout (float): maximum time allowed, in seconds.
+            Note: calling this function on a chemically incomplete system,
+            i.e. just protein backbone, cause msys to hit the timeout.
     """
-    if timeout is not None:
-        if not isinstance(system_or_atoms, System):
-            raise ValueError("timeout supported only for System input")
-        from multiprocessing import Pool
-        pool = Pool()
-        result = pool.apply_async(_assign, args=(system_or_atoms, total_charge, compute_resonant_charges))
-        mol = result.get(timeout)
-        pool.close()
-        for src, dst in zip(mol.atoms, system_or_atoms.atoms):
-            dst.formal_charge = src.formal_charge
-        for src, dst in zip(mol.bonds, system_or_atoms.bonds):
-            dst.order = src.order
-        return
-
+    timeout_ms = int(timeout * 1000)    
     if isinstance(system_or_atoms, System):
         ptr = system_or_atoms._ptr
         if total_charge is None:
-            return _msys.AssignBondOrderAndFormalCharge(ptr, compute_resonant_charges)
+            return _msys.AssignBondOrderAndFormalCharge(ptr, compute_resonant_charges, timeout_ms)
         ids = ptr.atomsAsList()
     else:
         ptr, ids = _convert_ids(system_or_atoms)
 
     if total_charge is None:
-        _msys.AssignBondOrderAndFormalCharge(ptr, ids, compute_resonant_charges)
+        _msys.AssignBondOrderAndFormalCharge(ptr, ids, compute_resonant_charges, timeout_ms)
     else:
-        _msys.AssignBondOrderAndFormalCharge(ptr, ids, int(total_charge), compute_resonant_charges)
+        _msys.AssignBondOrderAndFormalCharge(ptr, ids, int(total_charge), compute_resonant_charges, timeout_ms)
 
 class Graph(object):
     ''' Represents the chemical topology of a System

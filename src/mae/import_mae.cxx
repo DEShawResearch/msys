@@ -77,6 +77,10 @@ namespace {
         ValueType type = kind==Json::Int ? IntType :
                          kind==Json::Float ? FloatType :
                                              StringType;
+        if (ct.has(key) && ct.type(key) != type) {
+            MSYS_WARN("Skpping ct property '" << key << "' with type different from existing property");
+            return;
+        }
         ct.add(key,type);
         ValueRef val = ct.value(key);
         switch (kind) {

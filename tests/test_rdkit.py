@@ -1,13 +1,4 @@
-#!/usr/bin/garden-exec
-#{
-# source `dirname $0`/pyenv.sh
-# garden load rdkit/2019.03.1-05c7/lib-python37
-# exec python $0 "$@"
-#}
-from __future__ import print_function
 import os, sys, unittest
-from util import *
-
 import msys
 
 import unittest

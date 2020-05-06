@@ -34,6 +34,7 @@ loadmodules() {
         $RAPIDJSON/lib \
         $TNG/lib \
         $GBENCH/lib \
+        enscons/0.23.0-01c7/lib-python37 \
 
     export PYTHONVER=37
     export MSYS_WITH_LPSOLVE=1
@@ -88,21 +89,13 @@ case $1 in
 	loadmodules
         "$@"
         ;;
-    --garden-help)
-        genhelp
-        ;;
     --install)
 	loadmodules
 
         nprocs=`getconf _NPROCESSORS_ONLN`
         $0 --exec scons install -j $nprocs PREFIX=$PREFIX OBJDIR=$TMPDIR
-
-        ./tests/ut.py
-        ./tests/molfile_ut.py
-        ./tests/oechem_ut.py
-        ./tests/rdkit_ut.py
-
-	genhelp
+        ./tests/run.sh
+	genhelp >> $METADIR/help.txt
 	genmodules
         gendocs
 

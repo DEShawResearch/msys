@@ -15,6 +15,7 @@ namespace desres { namespace msys {
     struct PDBExport {
         enum Flags { Default            = 0 
                    , Append             = 1 << 0
+                   , Reorder            = 1 << 1
         };
     };
     void ExportPDB(SystemPtr mol, std::string const& path, unsigned flags=0);

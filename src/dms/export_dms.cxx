@@ -362,9 +362,15 @@ static void export_cts(System& sys, Sqlite dms) {
         auto& ct = sys.ct(id);
         w.bind_int(0, id);
         w.bind_str(1, ct.name());
-        int col=2;
-        for (auto& key : sys.ct(id).keys()) {
-            write(ct.value(key), col++, w);
+        auto keys = sys.ct(id).keys();
+        Id col = 2;
+        for (auto& key : cols) {
+            if (std::find(keys.begin(), keys.end(), key) == keys.end()) {
+                w.bind_str(col, "");
+            } else {
+                write(ct.value(key), col, w);
+            }
+            col++;
         }
         w.next();
     }
