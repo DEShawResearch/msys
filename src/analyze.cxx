@@ -7,6 +7,7 @@
 #include "clone.hxx"
 #include "contacts.hxx"
 #include "pfx/pfx.hxx"
+#include "smiles.hxx"
 #include <numeric>
 #include <queue>
 #include <stdio.h>
@@ -107,7 +108,8 @@ namespace desres { namespace msys {
     }
 
 
-    void AssignBondOrderAndFormalCharge(SystemPtr mol, unsigned flags) {
+    void AssignBondOrderAndFormalCharge(SystemPtr mol, unsigned flags, std::chrono::milliseconds timeout) {
+        auto deadline = std::chrono::system_clock::now() + timeout;
         MultiIdList fragments;
         mol->updateFragids(&fragments);
         IdList pmap(mol->maxAtomId(), BadId);
@@ -126,7 +128,7 @@ namespace desres { namespace msys {
             IdList& frags = it->second;
             /* unique formula -> unique fragment */
             if (frags.size()==1) {
-                AssignBondOrderAndFormalCharge(mol, fragments[frags[0]], INT_MAX, flags);
+                AssignBondOrderAndFormalCharge(mol, fragments[frags[0]], INT_MAX, flags, std::chrono::duration_cast<std::chrono::milliseconds>(deadline - std::chrono::system_clock::now()));
                 continue;
             }
 
@@ -136,7 +138,7 @@ namespace desres { namespace msys {
             }
             std::vector<IdPair> perm;
             while (!frags.empty()) {
-                AssignBondOrderAndFormalCharge(mol, fragments[frags[0]], INT_MAX, flags);
+                AssignBondOrderAndFormalCharge(mol, fragments[frags[0]], INT_MAX, flags, std::chrono::duration_cast<std::chrono::milliseconds>(deadline - std::chrono::system_clock::now()));
                 IdList unmatched;
                 GraphPtr ref = graphs[frags[0]];
                 for (Id i=1; i<frags.size(); i++) {
@@ -178,7 +180,8 @@ namespace desres { namespace msys {
     void AssignBondOrderAndFormalCharge(SystemPtr mol,
                                         IdList const& atoms,
                                         int total_charge,
-                                        unsigned flags) {
+                                        unsigned flags,
+                                        std::chrono::milliseconds timeout) {
 #ifdef MSYS_WITHOUT_LPSOLVE
         MSYS_FAIL("LPSOLVE functionality was not included.");
 #else
@@ -190,7 +193,7 @@ namespace desres { namespace msys {
         SystemPtr canmol = CanonicalizeMoleculeByTopids(mol, atoms, aid_to_canId, bid_to_canId);
 
         bool compute_resonant_charge = flags & AssignBondOrder::ComputeResonantCharges;
-        BondOrderAssigner boa(canmol, canmol->atoms(), compute_resonant_charge);
+        BondOrderAssigner boa(canmol, canmol->atoms(), compute_resonant_charge, timeout);
         if (total_charge != INT_MAX) {
             boa.setTotalCharge(total_charge);
         }
@@ -427,8 +430,17 @@ namespace {
     // always been slower than using Graph::match.  Go figure.
     static std::string waterhash;
     static GraphPtr watergraph;
+    static std::string ace_hash;
+    static GraphPtr ace_graph;
+    static std::string nme_hash;
+    static GraphPtr nme_graph;
     struct _ {
         _() {
+            make_watergraph();
+            make_ace_graph();
+            make_nme_graph();
+        }
+        void make_watergraph() {
             SystemPtr m = System::create();
             m->addChain();
             m->addResidue(0);
@@ -443,9 +455,40 @@ namespace {
             watergraph = Graph::create(m,m->atoms());
             waterhash = Graph::hash(m,m->atoms());
         }
+        void make_ace_graph() {
+            auto m = FromSmilesString("CC(=O)N");
+            ace_graph = Graph::create(m, {0,1,2,4,5,6});
+            ace_hash = Graph::hash(   m, {0,1,2,4,5,6});
+        }
+        void make_nme_graph() {
+            auto m = FromSmilesString("CN");
+            nme_graph = Graph::create(m, {0,1,2,3,4,5});
+            nme_hash = Graph::hash(   m, {0,1,2,3,4,5});
+        }
     } static_initializer;
 
     typedef std::map<std::string,AtomType> NameMap;
+
+    static bool is_protein_capping_group(SystemPtr mol, IdList const& atoms) {
+        std::vector<IdPair> perm;
+        GraphPtr g;
+        auto h = Graph::hash(mol, atoms);
+        if (h==ace_hash) {
+            if (!g) g = Graph::create(mol, atoms);
+            if (g->match(ace_graph, perm)) {
+                //printf("matched ACE\n");
+                return true;
+            }
+        }
+        if (h==nme_hash) {
+            if (!g) g = Graph::create(mol, atoms);
+            if (g->match(nme_graph, perm)) {
+                //printf("matched NME\n");
+                return true;
+            }
+        }
+        return false;
+    }
 
     NameMap types = {
           { "CA", AtomProBack }
@@ -497,6 +540,11 @@ namespace {
 
         /* need at least four atoms to determine protein or nucleic */
         if (atoms.size()<4) return;
+
+        if (is_protein_capping_group(self, atoms)) {
+            self->residueFAST(res).type = ResidueProtein;
+            return;
+        }
 
         int npro=0, nnuc=0;
         std::set<std::string> names;
@@ -780,3 +828,16 @@ void desres::msys::ReplaceTablesWithSortedTerms(SystemPtr mol) {
     }
 }
 
+bool desres::msys::SelectionIsClosed(SystemPtr mol, IdList const& ids) {
+    IdList closure;
+    closure.reserve(mol->atomCount());
+    for (auto id : ids) {
+        closure.push_back(id);
+        for (auto nbr : mol->bondedAtoms(id)) {
+            closure.push_back(nbr);
+        }
+    }
+    sort_unique(closure);
+    return closure.size() == ids.size();
+}
+        

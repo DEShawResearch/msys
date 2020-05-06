@@ -3,7 +3,7 @@
 
 #include "../system.hxx"
 #include "bondFilters.hxx"
-
+#include <chrono>
 
 /* forward declare so we dont pollute the rest of our code with lpsolves excessive #defines */
 namespace lpsolve{
@@ -28,7 +28,6 @@ namespace desres { namespace msys {
 
     class ComponentAssigner;
     typedef std::shared_ptr<ComponentAssigner> ComponentAssignerPtr;
-
 
     class BondOrderAssigner {
         friend class ComponentAssigner;
@@ -78,7 +77,7 @@ namespace desres { namespace msys {
 #undef GETSETREBUILDVAR
     public:
         BondOrderAssigner(SystemPtr sys, IdList const& fragment,
-                bool compute_resonant_charge);
+                bool compute_resonant_charge, std::chrono::milliseconds timeout);
         ~BondOrderAssigner();
 
         bool compute_resonant_charge() const {
@@ -108,6 +107,7 @@ namespace desres { namespace msys {
       
         void presolve_octets(IdList& unsolved);
         void rebuild();
+        long seconds_until_deadline();
 
         /* setup during create() */
         bool _needRebuild;      // rebuild the rings and component assigners before solving ?
@@ -134,6 +134,7 @@ namespace desres { namespace msys {
         /* filled during rebuild */
         std::vector<ComponentAssignerPtr> _component_assigners;
         std::map<Id, int> _fixed_component_charges;
+        std::chrono::system_clock::time_point _deadline;
 
     };
 

@@ -3,6 +3,7 @@
 
 #include "system.hxx"
 #include <limits.h>
+#include <chrono>
 
 namespace desres { namespace msys {
 
@@ -14,7 +15,7 @@ namespace desres { namespace msys {
     };
 
     /* Assign bond order and formal charges to all fragments */
-    void AssignBondOrderAndFormalCharge(SystemPtr mol, unsigned flags=0);
+    void AssignBondOrderAndFormalCharge(SystemPtr mol, unsigned flags=0, std::chrono::milliseconds timeout=std::chrono::milliseconds(-1));
 
     /* Assign bond order and formal charges to the given atoms, all
      * of which should belong to the same fragment (i.e. they should
@@ -23,7 +24,8 @@ namespace desres { namespace msys {
     void AssignBondOrderAndFormalCharge(SystemPtr mol,
                                         IdList const& atoms,
                                         int total_charge = INT_MAX,
-                                        unsigned flags = 0);
+                                        unsigned flags = 0,
+                                        std::chrono::milliseconds timeout=std::chrono::milliseconds(-1));
 
     /* Assign bond orders to aromatic bonds, leaving formal charges
      * and bonds between nonaromatic atoms alone.
@@ -73,6 +75,10 @@ namespace desres { namespace msys {
             std::vector<IdList>& angles,
             std::vector<IdList>& dihedrals);
 
+
+    /* check if the given set of atoms contains all its bonded neighbors.
+     * The input set is assumed to be unique. */
+    bool SelectionIsClosed(SystemPtr m, IdList const& ids);
 }}
 
 #endif

@@ -1,3 +1,5 @@
+1.7.300 Add a default 60s timeout to AssignBondOrderAndFormalCharges
+
 1.7.299 Support numpy integers in System.clone()
         Don't write zero-length metadata frames.
 
