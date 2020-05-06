@@ -52,6 +52,7 @@ env.AddShare('env.sh')
 env.SConscript('python/SConscript')
 env.SConscript('tools/SConscript')
 
-env['WHEEL_DIR'] = 'wheel'
-env.AddWheel('pyproject.toml', pyver='37')
+if 'BUILD_WHEEL' in os.environ;
+    env['WHEEL_DIR'] = 'wheel'
+    env.AddWheel('external/pyproject.toml', pyver='37')
 

@@ -6,16 +6,16 @@ build-backend = "enscons.api"
 name="msys"
 version="1.7.299"
 packages=["msys"]
-install_requires=["scons>=3.0.5", "pytoml>=0.1", "setuptools", "wheel", "attrs"]
+install_requires=["wheel"]
 description="Msys tools"
 #description_file="README.rst"
 license="BSD-3"
 classifiers=[
-  "Programming Language :: Python :: 3.6",
+  "Programming Language :: Python :: 3.7",
 ]
 keywords=["packaging", "wheel"]
 author="DESRES"
-author_email="justin.gullingsrud@deshawresearch.com"
+#author_email="justin.gullingsrud@deshawresearch.com"
 url="github.com/DEShawResearch/msys"
 
 #[tool.enscons.entry_points]

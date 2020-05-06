@@ -38,7 +38,7 @@ gendocs() {
 }
 
 loadmodules
-DESRES_LOCATION= scons "$@"
+BUILD_WHEEL=1 DESRES_LOCATION= scons "$@"
 
 version=$(src/version.py)
 auditwheel repair \
