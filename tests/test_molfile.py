@@ -574,13 +574,14 @@ class TestMae(unittest.TestCase):
       ''' mae files should preserve single precision '''
       # note - no double precision test until we have a way of writing
       # with double precision, which we don't have.
+      tmp = tempfile.NamedTemporaryFile(suffix='.mae')
       r=molfile.dms.read('tests/files/ch4.dms')
       f=r.frame(0)
       pos=f.pos
-      w=molfile.mae.write('out.mae', atoms=r.atoms)
+      w=molfile.mae.write(tmp.name, atoms=r.atoms)
       w.frame(r.frame(0))
       w.close()
-      r2=molfile.mae.read('out.mae')
+      r2=molfile.mae.read(tmp.name)
       f2=r2.frame(0)
       pos2=f2.pos
       self.assertTrue((pos==pos2).all())
@@ -627,10 +628,11 @@ class TestMae(unittest.TestCase):
     atoms[4].addbond(atoms[7])
     
     frame=molfile.Frame(8)
-    molfile.mae.write('out.mae', atoms=atoms).frame(frame).close()
+    tmp = tempfile.NamedTemporaryFile(suffix='.mae')
+    molfile.mae.write(tmp.name, atoms=atoms).frame(frame).close()
     
     # mae files reorder the particles to put pseudos in contiguous blocks
-    newatoms=molfile.mae.read('out.mae').atoms
+    newatoms=molfile.mae.read(tmp.name).atoms
     
     old=dict([(a.resid, a.anum) for a in atoms])
     new=dict([(a.resid, a.anum) for a in newatoms])
@@ -832,7 +834,8 @@ class TestFrame2(unittest.TestCase):
     my=molfile.mae.read('my1vcc.mae')
     os.unlink('my1vcc.mae')
     f=next(my.frames())
-    molfile.mae.write('out.mae', atoms=my.atoms).frame(f).close()
+    tmp = tempfile.NamedTemporaryFile(suffix='.mae')
+    molfile.mae.write(tmp.name, atoms=my.atoms).frame(f).close()
 
     # FIXME: check something!
 
