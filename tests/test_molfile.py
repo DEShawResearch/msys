@@ -197,8 +197,8 @@ class DtrTestCase(unittest.TestCase):
     def testMetadataFields(self):
         self.addFrame(0.0)
         meta = molfile.DtrReader(self.PATH).metadata
-        assert meta['WORKDIR'] == os.getcwd()
-        assert meta['MSYS_VERSION'] == msys.version.version
+        self.assertEqual(meta['WORKDIR'], os.getcwd())
+        self.assertEqual(meta['MSYS_VERSION'], msys.version.version)
 
 
     def testTruncatedFrame(self):
@@ -941,6 +941,7 @@ class TestDtrWriterEtr(unittest.TestCase):
         assert(set(kv1.keys()) == set(kv2.keys()))
         assert(kv1['FORMAT'] == 'ETR_V1')
         assert(kv1['Y'][0] == 1.0)
+        assert sorted(reader.metadata.keys()) == sorted(['FORMAT'] + list(keyvals.keys()))
 
 
 class TestQuantizedTime(unittest.TestCase):
