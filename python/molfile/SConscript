@@ -3,17 +3,14 @@ Import('libmsys')
 import sys
 env=msysenv.Clone()
 
-cxx_flags = '' if sys.platform.startswith("win32") else '-Wno-unused-local-typedefs'
+cxx_flags = '-Wno-unused-local-typedefs'
 
 env.Append( 
         CPPPATH=['../../src', '../'],
         CXXFLAGS=cxx_flags,
         LIBS=['msys'])
 
-if sys.platform != "win32":
-    env.Append(CCFLAGS='-Wno-unused-function'.split())
-else:
-    env.Append(LIBS=['python27.lib'])
+env.Append(CCFLAGS='-Wno-unused-function'.split())
 if env['PLATFORM']=='darwin':
     env.Append(CCFLAGS='-Wno-error')
 elif sys.platform.startswith("linux"):

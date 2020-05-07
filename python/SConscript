@@ -4,19 +4,15 @@ import sys, os
 env=msysenv.Clone()
 
 is_linux = sys.platform.startswith("linux")
-is_windows = sys.platform.startswith("win32")
-is_schrodinger_build = "SCHRODINGER_SRC" in os.environ
 
 env.Append( 
         CPPPATH=['../src'],
-        CXXFLAGS='' if is_windows else '-Wno-unused-local-typedefs',
+        CXXFLAGS='-Wno-unused-local-typedefs',
         LIBS=['msys', 'msys-core'],
         )
 
 if is_linux:
     env.Append(CCFLAGS='-Wno-cpp')
-elif is_windows:
-    env.Append(LIBS=["python27"])
 else:
     # MacOS
     env.Append(CCFLAGS='-Wno-error')
