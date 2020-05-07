@@ -1,3 +1,5 @@
+1.7.301 Fix dms-select
+        
 1.7.300 Add a default 60s timeout to AssignBondOrderAndFormalCharges
         No provenance in etr metadata.
         Add scripts for building binary wheel files.
