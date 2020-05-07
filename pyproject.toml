@@ -15,7 +15,6 @@ classifiers=[
 ]
 keywords=["packaging", "wheel"]
 author="DESRES"
-#author_email="justin.gullingsrud@deshawresearch.com"
 url="github.com/DEShawResearch/msys"
 
 #[tool.enscons.entry_points]
