@@ -16,21 +16,10 @@ opts.Add("MSYS_BOOST_PYTHON_SUFFIX", "suffix for boost libraries (e.g. -py)")
 
 opts.Update(env)
 
-if "SCHRODINGER_SRC" in os.environ:
-    schrod_win_libs = ['libreassign_ff', 'libdesres']
-    schrod_osx_libs = ['reassignff', 'desres']
-    schrod_only_objs = ['mae/modify_pair.cxx']
-else:
-    schrod_win_libs = []
-    schrod_osx_libs = []
-    schrod_only_objs = []
-
 if sys.platform.startswith("win32"):
-    env.AppendUnique(LIBS=['libsqlite3', 'zlib', 'snappy'] + schrod_win_libs)
+    env.AppendUnique(LIBS=['libsqlite3', 'zlib', 'snappy'])
 else:
     env.AppendUnique(LIBS=['sqlite3', 'z'])
-if env['PLATFORM'] == 'darwin':
-    env.AppendUnique(LIBS=schrod_osx_libs)
 
 if env.get('MSYS_WITH_LPSOLVE'):
     env.AppendUnique(LIBS=['lpsolve55'])
@@ -177,7 +166,7 @@ if sys.platform.startswith("darwin"):
         msys_dylib = None
     if msys_dylib:
         libmsys_env.Append(LINKFLAGS=['-dynamiclib', '-install_name', msys_dylib])
-libmsys=libmsys_env.AddLibrary('msys', lexobjs + lpobjs + sdfobjs + schrod_only_objs + [inchi] + smiles_objs + dtoaobjs + jsobjs + Split('''
+libmsys=libmsys_env.AddLibrary('msys', lexobjs + lpobjs + sdfobjs + [inchi] + smiles_objs + dtoaobjs + jsobjs + Split('''
 
 smarts.cxx
 analyze/eigensystem.cxx
