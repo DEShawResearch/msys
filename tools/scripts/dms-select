@@ -56,8 +56,8 @@ def main():
     if opts.selection:
         log('Cloning "%s"' % opts.selection)
         try:
-            mol=mol.clone(opts.selection, whole_fragments=not opts.allow_broken_bonds)
-        except msys.DisconnectedSelectionError as e:
+            mol=mol.clone(opts.selection, forbid_broken_bonds=not opts.allow_broken_bonds)
+        except msys.BrokenBondsError as e:
             print("ERROR:", str(e), "use -b/--allow-broken-bonds to proceed", file=sys.stderr)
             raise
 
