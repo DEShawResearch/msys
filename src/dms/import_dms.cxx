@@ -11,23 +11,10 @@
 #include <string.h>
 #include <stdexcept>
 
-#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
-#include <cstdio>
-#include <string>
-#include <sstream>
-#endif
-
-#if defined(WIN32) || defined(WIN64)
-#else
-#define MSYS_HAS_MMAP
-#endif
-
-#if defined(MSYS_HAS_MMAP)
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
-#endif
 
 using namespace desres::msys;
 
@@ -560,15 +547,9 @@ static void check_dms_version(Sqlite dms, KnownSet& known) {
         int minor = r.get_int(MINOR);
         if (major > msys_major_version() ||
             minor > msys_minor_version() ) {
-#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
-        MSYS_WARN("Application compiled with msys " << msys_version()
-                << " is too old to read dms file with version "
-                << major << "." << minor);
-#else
         MSYS_FAIL("Application compiled with msys " << msys_version()
                 << " is too old to read dms file with version "
                 << major << "." << minor);
-#endif
         }
     }
 }
@@ -786,7 +767,6 @@ namespace {
 }
 
 SystemPtr iterator::next() {
-#if defined(MSYS_HAS_MMAP)
     if (fd <= 0) return nullptr;
     // The first 100 bytes of an sqlite file correspond to the database header.
     char header[100];
@@ -849,9 +829,6 @@ SystemPtr iterator::next() {
         mol->name = mol->ct(0).name();
     }
     return mol;
-#else
-    MSYS_FAIL("DMS iteration without mmap support not available");
-#endif
 }
 
 SystemPtr desres::msys::ImportDMS(const std::string& path, 

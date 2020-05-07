@@ -145,16 +145,6 @@ fastjson/dtoa/fast-dtoa.cc
 
 libmsys_env = env.Clone()
 libmsys_env.Append(LIBS=['msys-core'])
-if sys.platform.startswith("darwin"):
-    if "SCHRODINGER_SRC" in os.environ:
-        msys_dylib = '@rpath/../lib/libmsys.dylib'
-    elif "DESMOND" in os.environ:
-        desmond_release = os.environ["DESMOND"]
-        msys_dylib = '@rpath/../../../{}/lib/Darwin-x86_64/libmsys.dylib'.format(desmond_release)
-    else:
-        msys_dylib = None
-    if msys_dylib:
-        libmsys_env.Append(LINKFLAGS=['-dynamiclib', '-install_name', msys_dylib])
 libmsys=libmsys_env.AddLibrary('msys', lexobjs + lpobjs + sdfobjs + [inchi] + smiles_objs + dtoaobjs + jsobjs + Split('''
 
 smarts.cxx

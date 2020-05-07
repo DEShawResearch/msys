@@ -47,12 +47,6 @@ namespace desres { namespace msys {
                            Provenance const& provenance,
                            unsigned flags=0);
 
-#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
-    void ModifyQCPair( SystemPtr h);
-    void CreateAlchemicalSoftTables(SystemPtr h);
-#endif
-
-    
 }}
 
 #endif
