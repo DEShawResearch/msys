@@ -26,12 +26,6 @@ The algorithm works as follows:
         b. Divide the ring into N triangles
         c. Check for a triangle-line intersection between the triangle and each relevant bond
 '''
-# Copyright (C) 2010 D.E. Shaw Research
-# @author Adam Lerer
-# @author Justin Gullingsrud (converted to msys)
-
-from __future__ import print_function
-
 import numpy
 import sys
 import math
