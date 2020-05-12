@@ -2104,8 +2104,10 @@ void DtrWriter::write_metadata(KeyMap const& map) {
     KeyMap tmp(map);
     auto cwd = getcwd();
     std::string version(MSYS_VERSION);
-    tmp["WORKDIR"].set(cwd.data(), cwd.size());
-    tmp["MSYS_VERSION"].set(version.data(), version.size());
+    if (traj_type != Type::ETR) {
+        tmp["WORKDIR"].set(cwd.data(), cwd.size());
+        tmp["MSYS_VERSION"].set(version.data(), version.size());
+    }
     auto framesize = ConstructFrame(tmp, &framebuffer);
     rewind(meta_file);
     fwrite(framebuffer, framesize, 1, meta_file);

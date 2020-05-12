@@ -169,7 +169,6 @@ class TestBasic(TestCase):
 
     def testModifiedInteractionConsistency(self):
         """ All the names in "interaction_grp" should be in "modified_interaction" and vice-versa """
-        # Inspired by https://deshawresearch.slack.com/archives/C20UMM3A9/p1576549190018900
         mol = self.mol
         if ("interaction_grp" in mol.atom_props) or (
             "modified_interaction" in mol.auxtable_names):

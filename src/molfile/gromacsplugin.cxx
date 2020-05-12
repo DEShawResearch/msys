@@ -277,11 +277,7 @@ static int read_g96_timestep(void *v, int natoms, molfile_timestep_t *ts) {
   if (ts) {
     memcpy(ts->coords, mdts.pos, 3 * sizeof(float) * gmx->natoms);
     if (mdts.box) {
-#ifndef DESMOND_USE_SCHRODINGER_MMSHARE
       for (int i=0; i<9; i++) ts->unit_cell[i] = mdts.box->unit_cell[i];
-#else
-      for (int i=0; i<9; i++) ts->unit_cell[i] = ANGS_PER_NM*mdts.box->unit_cell[i];
-#endif
     }
   }
   mdio_tsfree(&mdts);
@@ -360,16 +356,9 @@ static int read_trr_timestep(void *v, int natoms, molfile_timestep_t *ts) {
   if (ts) {
     memcpy(ts->coords, mdts.pos, 3 * sizeof(float) * gmx->natoms);
     if (mdts.box) {
-#ifndef DESMOND_USE_SCHRODINGER_MMSHARE
       for (int i=0; i<9; i++) ts->unit_cell[i] = mdts.box->unit_cell[i];
-#else
-      for (int i=0; i<9; i++) ts->unit_cell[i] = ANGS_PER_NM * mdts.box->unit_cell[i];
-#endif
     }
   }
-#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
-  ts->physical_time = mdts.time;
-#endif
   mdio_tsfree(&mdts);
   return MOLFILE_SUCCESS;
 }
@@ -417,10 +406,6 @@ static int write_trr_timestep(void *mydata, const molfile_timestep_t *ts)
 {
   const float nm=0.1;
       
-#ifdef DESMOND_USE_SCHRODINGER_MMSHARE
-  int size;
-  float precision = 1000.0f;
-#endif
   gmxdata *gmx = (gmxdata *)mydata;
   
   // determine and write header from structure info.
@@ -461,36 +446,8 @@ static int write_trr_timestep(void *mydata, const molfile_timestep_t *ts)
         return MOLFILE_ERROR;
     }
   } else {
-#ifndef DESMOND_USE_SCHRODINGER_MMSHARE
     fprintf(stderr, "gromacsplugin) only .trr is supported for writing\n");
     return MOLFILE_ERROR;
-#else
-    int i;
-    if ( put_trx_int(gmx->mf, XTC_MAGIC)            // ID
-         || put_trx_int(gmx->mf, gmx->natoms)       // number of atoms
-         || put_trx_int(gmx->mf, gmx->step)         // current step number
-         || put_trx_real(gmx->mf, ts->physical_time)) // current time
-      return MOLFILE_ERROR;
-
-    for (i=0; i<3; i++) {
-        for (int j=0; j<3; j++) {
-            if (put_trx_real(gmx->mf, ts->unit_cell[3*i+j]*nm)) {
-                return MOLFILE_ERROR;
-            }
-        }
-    }
-
-    // Scale coordinates
-    for (i=0; i<3*gmx->natoms; i++) {
-      ts->coords[i] *= nm;
-    }
-
-    // Write coordinates
-    size = gmx->natoms;
-    if (xtc_3dfcoord_write(gmx->mf, &ts->coords[0], &size, &precision) < 0) {
-      return MOLFILE_ERROR;
-    }
-#endif
   }
 
   ++ gmx->step;
@@ -582,7 +539,6 @@ static molfile_plugin_t trr_plugin = {
   0                             // read_rawgraphics
 };
 
-#ifndef DESMOND_USE_SCHRODINGER_MMSHARE
 static molfile_plugin_t xtc_plugin = {
   vmdplugin_ABIVERSION,                // ABI version
   MOLFILE_PLUGIN_TYPE,                 // type of plugin
@@ -606,31 +562,6 @@ static molfile_plugin_t xtc_plugin = {
   0,                                  // read_volumetric_data
   0                                   // read_rawgraphics
 };
-#else
-static molfile_plugin_t xtc_plugin = {
-  vmdplugin_ABIVERSION,                // ABI version
-  MOLFILE_PLUGIN_TYPE,                 // type of plugin
-  "xtc",                               // short name of plugin
-  "Gromacs XTC Compressed Trajectory", // pretty name of plugin
-  "David Norris, Justin Gullingsrud",  // authors
-  GROMACS_PLUGIN_MAJOR_VERSION,        // major version
-  GROMACS_PLUGIN_MINOR_VERSION,        // minor version
-  VMDPLUGIN_THREADUNSAFE,              // is not reentrant
-  "xtc",                               // filename extension
-  open_trr_read,
-  0,
-  0,
-  read_trr_timestep,
-  close_trr_read,
-  open_trr_write,                     // open_write
-  0,                                  // write_structure
-  write_trr_timestep,                 // write_timestep
-  close_trr_write,                    // close_write
-  0,                                  // read_volumetric_metadata
-  0,                                  // read_volumetric_data
-  0                                   // read_rawgraphics
-};
-#endif
 
 static molfile_plugin_t trj_plugin = {
   vmdplugin_ABIVERSION,                // ABI version

@@ -1970,7 +1970,7 @@ def ConvertToOEChem(mol_or_atoms):
     from openeye import oechem
     expdate = oechem.OEUIntArray(3)
     if not oechem.OEChemIsLicensed(None, expdate):
-        raise RuntimeError("ConvertToOEChem requires a valid OEChem license, expired %u %u %u, contact Brian.Cole@DEShawResearch.com" % tuple(reversed(expdate)))
+        raise RuntimeError("ConvertToOEChem requires a valid OEChem license, expired %u %u %u" % tuple(reversed(expdate)))
 
     oe_mol = oechem.OEMol()
     oe_atoms = dict()
@@ -2035,7 +2035,7 @@ def ConvertFromOEChem(oe_mol, force=False):
     from openeye import oechem
     expdate = oechem.OEUIntArray(3)
     if not oechem.OEChemIsLicensed(None, expdate):
-        raise RuntimeError("ConvertFromOEChem requires a valid OEChem license, expired %u %u %u, contact Brian.Cole@DEShawResearch.com" % tuple(reversed(expdate)))
+        raise RuntimeError("ConvertFromOEChem requires a valid OEChem license, expired %u %u %u" % tuple(reversed(expdate)))
 
     if not force:
         if oe_mol.GetDimension() != 3:

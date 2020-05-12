@@ -1,4 +1,10 @@
+1.7.301 Fix dms-select
+        
 1.7.300 Add a default 60s timeout to AssignBondOrderAndFormalCharges
+        No provenance in etr metadata.
+        Add scripts for building binary wheel files.
+        Detect when clone() breaks bonds.
+        Make protein" selection include ACE and NMA.
 
 1.7.299 Support numpy integers in System.clone()
         Don't write zero-length metadata frames.

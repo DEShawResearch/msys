@@ -16,21 +16,7 @@ opts.Add("MSYS_BOOST_PYTHON_SUFFIX", "suffix for boost libraries (e.g. -py)")
 
 opts.Update(env)
 
-if "SCHRODINGER_SRC" in os.environ:
-    schrod_win_libs = ['libreassign_ff', 'libdesres']
-    schrod_osx_libs = ['reassignff', 'desres']
-    schrod_only_objs = ['mae/modify_pair.cxx']
-else:
-    schrod_win_libs = []
-    schrod_osx_libs = []
-    schrod_only_objs = []
-
-if sys.platform.startswith("win32"):
-    env.AppendUnique(LIBS=['libsqlite3', 'zlib', 'snappy'] + schrod_win_libs)
-else:
-    env.AppendUnique(LIBS=['sqlite3', 'z'])
-if env['PLATFORM'] == 'darwin':
-    env.AppendUnique(LIBS=schrod_osx_libs)
+env.AppendUnique(LIBS=['sqlite3', 'z'])
 
 if env.get('MSYS_WITH_LPSOLVE'):
     env.AppendUnique(LIBS=['lpsolve55'])
@@ -85,28 +71,20 @@ env.Command('version.hxx', 'version.py', build_version_hxx )
 env.AddPythonModule('version.py', prefix='msys')
 
 # flex/bison-generated smiles parser
-if sys.platform.startswith("win32"):
-    lexobjs = []
-    smiles_objs = []
-else:
-    lexenv = env.Clone()
-    lexenv.Append(CPPDEFINES='YY_NO_INPUT')
-    lexenv.Append(CXXFLAGS='-Wno-deprecated-register')
-    lexenv.Append(CXXFLAGS='-Wno-sign-compare') # needed for docker/desres build
-    lexobjs = lexenv.AddObject('smiles/lexer.cxx')
-    smiles_objs = 'smiles/smiles.cxx smiles/parser.cxx'.split()
+lexenv = env.Clone()
+lexenv.Append(CPPDEFINES='YY_NO_INPUT')
+lexenv.Append(CXXFLAGS='-Wno-deprecated-register')
+lexenv.Append(CXXFLAGS='-Wno-sign-compare') # needed for docker/desres build
+lexobjs = lexenv.AddObject('smiles/lexer.cxx')
+smiles_objs = 'smiles/smiles.cxx smiles/parser.cxx'.split()
 
 # sdf parser
-if sys.platform.startswith("win32"):
-    sdfobjs = [] # too many posix dependencies in sdf for windows to handle
-else:
-    sdfobjs = Split('''
+sdfobjs = Split('''
 sdf/export.cxx
 sdf/import.cxx
 ''')
 
 if env.get('MSYS_WITH_LPSOLVE', False):
-    print("LPSOLVE:", env.get('MSYS_WITH_LPSOLVE'))
     lpobjs=env.AddObject(Split('''
 analyze.cxx
 analyze/bond_orders.cxx
@@ -167,17 +145,7 @@ fastjson/dtoa/fast-dtoa.cc
 
 libmsys_env = env.Clone()
 libmsys_env.Append(LIBS=['msys-core'])
-if sys.platform.startswith("darwin"):
-    if "SCHRODINGER_SRC" in os.environ:
-        msys_dylib = '@rpath/../lib/libmsys.dylib'
-    elif "DESMOND" in os.environ:
-        desmond_release = os.environ["DESMOND"]
-        msys_dylib = '@rpath/../../../{}/lib/Darwin-x86_64/libmsys.dylib'.format(desmond_release)
-    else:
-        msys_dylib = None
-    if msys_dylib:
-        libmsys_env.Append(LINKFLAGS=['-dynamiclib', '-install_name', msys_dylib])
-libmsys=libmsys_env.AddLibrary('msys', lexobjs + lpobjs + sdfobjs + schrod_only_objs + [inchi] + smiles_objs + dtoaobjs + jsobjs + Split('''
+libmsys=libmsys_env.AddLibrary('msys', lexobjs + lpobjs + sdfobjs + [inchi] + smiles_objs + dtoaobjs + jsobjs + Split('''
 
 smarts.cxx
 analyze/eigensystem.cxx

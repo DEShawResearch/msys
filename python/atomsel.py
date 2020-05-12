@@ -30,10 +30,7 @@ class Atomsel(object):
     @property
     def system(self):
         ''' parent system '''
-        if "SCHRODINGER" not in os.environ:
-            from msys import System
-        else:
-            from schrodinger.application.desmond.packages.msys import System
+        from msys import System
         return System(self._ptr)
 
     def getPositions(self):

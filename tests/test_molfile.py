@@ -197,8 +197,8 @@ class DtrTestCase(unittest.TestCase):
     def testMetadataFields(self):
         self.addFrame(0.0)
         meta = molfile.DtrReader(self.PATH).metadata
-        assert meta['WORKDIR'] == os.getcwd()
-        assert meta['MSYS_VERSION'] == msys.version.version
+        self.assertEqual(meta['WORKDIR'], os.getcwd())
+        self.assertEqual(meta['MSYS_VERSION'], msys.version.version)
 
 
     def testTruncatedFrame(self):
@@ -279,14 +279,14 @@ class TestStk(unittest.TestCase):
         There should be no issues. '''
 
         #os.environ['DTRPLUGIN_VERBOSE']='1'
-        m=molfile.dtr.write('1.dtr', natoms=10)
+        tmp=tempfile.mkdtemp()
+        m=molfile.dtr.write('%s/1.dtr' % tmp, natoms=10)
         m.frame(molfile.Frame(10, False))
         m.close()
         junkfile = tempfile.NamedTemporaryFile(suffix='.stk')
         junk = junkfile.name
-        cwd = os.getcwd()
         with open(junk, 'w') as f:
-            print('%s/1.dtr' % cwd, file=f)
+            print('%s/1.dtr' % tmp, file=f)
 
         #print "----- first read of junk.stk ------"
         r=molfile.dtr.read(junk)
@@ -304,7 +304,7 @@ class TestStk(unittest.TestCase):
 
         #print "----- modify junk.stk ------"
 
-        m=molfile.dtr.write('2.dtr', natoms=20)
+        m=molfile.dtr.write('%s/2.dtr' % tmp, natoms=20)
         f = molfile.Frame(20, True)
         f.time=0
         m.frame(f)
@@ -312,7 +312,7 @@ class TestStk(unittest.TestCase):
         m.frame(f)
         m.close()
         with open(junk, 'w') as f:
-            print('%s/2.dtr' % cwd, file=f)
+            print('%s/2.dtr' % tmp, file=f)
 
         #print "----- read modified junk.stk ------"
         r=molfile.dtr.read(junk)
@@ -322,7 +322,7 @@ class TestStk(unittest.TestCase):
         self.assertTrue(r.frame(0).vel is not None)
 
         ## remove the velocities again
-        m=molfile.dtr.write('3.dtr', natoms=20)
+        m=molfile.dtr.write('%s/3.dtr' % tmp, natoms=20)
         f = molfile.Frame(20, False)
         f.time=0
         m.frame(f)
@@ -330,17 +330,15 @@ class TestStk(unittest.TestCase):
         m.frame(f)
         m.close()
         with open(junk, 'w') as f:
-            print('%s/3.dtr' % cwd, file=f)
+            print('%s/3.dtr' % tmp, file=f)
         r=molfile.dtr.read(junk)
         self.assertEqual(r.nframes, 2)
         self.assertEqual(r.natoms, 20)
         self.assertEqual(r.has_velocities, False)
         self.assertTrue(r.frame(0).vel is None)
 
+        SH.rmtree(tmp)
 
-    def tearDown(self):
-        for dtr in '1.dtr', '2.dtr', '3.dtr': 
-            SH.rmtree(dtr, ignore_errors=True)
 
     @unittest.skipIf(os.getenv('DESRES_LOCATION')!='EN', 'Runs only from EN location')
     def testTimes(self):
@@ -576,13 +574,14 @@ class TestMae(unittest.TestCase):
       ''' mae files should preserve single precision '''
       # note - no double precision test until we have a way of writing
       # with double precision, which we don't have.
+      tmp = tempfile.NamedTemporaryFile(suffix='.mae')
       r=molfile.dms.read('tests/files/ch4.dms')
       f=r.frame(0)
       pos=f.pos
-      w=molfile.mae.write('out.mae', atoms=r.atoms)
+      w=molfile.mae.write(tmp.name, atoms=r.atoms)
       w.frame(r.frame(0))
       w.close()
-      r2=molfile.mae.read('out.mae')
+      r2=molfile.mae.read(tmp.name)
       f2=r2.frame(0)
       pos2=f2.pos
       self.assertTrue((pos==pos2).all())
@@ -600,18 +599,21 @@ class TestMae(unittest.TestCase):
     t=time()
     #print "bondorder: %f seconds" % (t-s)
     #print order
-    molfile.mae.write('out.mae', atoms=R.atoms).frame(next(R.frames())).close()
-    molfile.mae.read('out.mae')
+    with tempfile.NamedTemporaryFile(suffix='.mae') as tmp:
+        molfile.mae.write(tmp.name, atoms=R.atoms).frame(next(R.frames())).close()
+        molfile.mae.read(tmp.name)
 
   def testVirtuals(self):
     R=molfile.mae.read('tests/files/tip5p.mae')
-    molfile.mae.write('out.mae', atoms=R.atoms).frame(next(R.frames())).close()
-    molfile.mae.read('out.mae')
+    with tempfile.NamedTemporaryFile(suffix='.mae') as tmp:
+        molfile.mae.write(tmp.name, atoms=R.atoms).frame(next(R.frames())).close()
+        molfile.mae.read(tmp.name)
     
   def testMultipleCt(self):
     R=molfile.mae.read('tests/files/small.mae')
-    molfile.mae.write('out.mae', atoms=R.atoms).frame(next(R.frames())).close()
-    molfile.mae.read('out.mae')
+    with tempfile.NamedTemporaryFile(suffix='.mae') as tmp:
+        molfile.mae.write(tmp.name, atoms=R.atoms).frame(next(R.frames())).close()
+        molfile.mae.read(tmp.name)
 
   def testPseudos(self):
     atoms=[molfile.Atom(resid=i,anum=6) for i in range(8)]
@@ -626,10 +628,11 @@ class TestMae(unittest.TestCase):
     atoms[4].addbond(atoms[7])
     
     frame=molfile.Frame(8)
-    molfile.mae.write('out.mae', atoms=atoms).frame(frame).close()
+    tmp = tempfile.NamedTemporaryFile(suffix='.mae')
+    molfile.mae.write(tmp.name, atoms=atoms).frame(frame).close()
     
     # mae files reorder the particles to put pseudos in contiguous blocks
-    newatoms=molfile.mae.read('out.mae').atoms
+    newatoms=molfile.mae.read(tmp.name).atoms
     
     old=dict([(a.resid, a.anum) for a in atoms])
     new=dict([(a.resid, a.anum) for a in newatoms])
@@ -831,7 +834,8 @@ class TestFrame2(unittest.TestCase):
     my=molfile.mae.read('my1vcc.mae')
     os.unlink('my1vcc.mae')
     f=next(my.frames())
-    molfile.mae.write('out.mae', atoms=my.atoms).frame(f).close()
+    tmp = tempfile.NamedTemporaryFile(suffix='.mae')
+    molfile.mae.write(tmp.name, atoms=my.atoms).frame(f).close()
 
     # FIXME: check something!
 
@@ -941,6 +945,7 @@ class TestDtrWriterEtr(unittest.TestCase):
         assert(set(kv1.keys()) == set(kv2.keys()))
         assert(kv1['FORMAT'] == 'ETR_V1')
         assert(kv1['Y'][0] == 1.0)
+        assert sorted(reader.metadata.keys()) == sorted(['FORMAT'] + list(keyvals.keys()))
 
 
 class TestQuantizedTime(unittest.TestCase):
