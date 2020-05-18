@@ -1,3 +1,5 @@
+1.7.302 Make compare_frames output less verbose
+
 1.7.301 Fix dms-select
         
 1.7.300 Add a default 60s timeout to AssignBondOrderAndFormalCharges

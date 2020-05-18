@@ -105,9 +105,9 @@ for i in range(nframes):
                     miss_arr.append( kv1[k][mismatches] )
                     miss_arr.append( kv2[k][mismatches] )
         if miss:
-            print ('Miscompare for frame %i' % i)
             frame_miscompare = True
             if args.verbose:
+                print ('Miscompare for frame %i' % i)
                 if len(miss_arr):
                     print('%s ' % k, miss_arr[0], ' !=\n', miss_arr[1])
                 else:
