@@ -239,6 +239,15 @@ characters like parentheses::
 
 See the description of the ``Smarts`` class for more information.
 
+.. info ::
+
+    In version 1.7.303, the behavior of the r<n> pattern changed in
+    order to better conform to the Daylight smiles specification.
+    Previously, for example, '[r4]' matched a spiro atom in both a 3-
+    and 4-membered ring.  Now, such an atom would be matched by '[r3]'
+    but not by '[r4]'.  A new q<n> syntax was added which implements
+    the old r<n> behavior.
+
 
 Parameter type selections
 -------------------------
