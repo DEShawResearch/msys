@@ -113,6 +113,12 @@ namespace desres { namespace msys {
                 if (_rings.at(ring).atoms.size() == size) return true;
             return false;
         }
+        bool atomInSmallestRingSize(Id atom, unsigned size) const {
+            size_t ring_size = BadId;
+            for (Id ring : _atoms.at(atom).rings_idx)
+                ring_size = std::min(ring_size, _rings.at(ring).atoms.size());
+            return ring_size == size;
+        }
         /* SSSR rings containing this atom */
         void atomRings(Id atom, MultiIdList& rings) const {
             rings.clear();
