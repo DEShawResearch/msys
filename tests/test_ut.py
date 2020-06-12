@@ -931,6 +931,11 @@ class TestAtomsel(unittest.TestCase):
 
 class TestSdf(unittest.TestCase):
 
+    def testFailedOpenWrite(self):
+        mol = msys.Load('tests/files/isotope.sdf')
+        with self.assertRaises(RuntimeError):
+            mol.save('/this/will/not/work.sdf')
+
     def testIsotopes(self):
         mol = msys.Load('tests/files/isotope.sdf')
         assert 'isotope' in mol.atom_props

@@ -209,11 +209,12 @@ namespace desres { namespace msys {
 
     void ExportSdf( SystemPtr mol, std::string const& path, unsigned flags) {
         const char* mode = flags & SdfExport::Append ? "a" : "w";
-        std::shared_ptr<FILE> fp(fopen(path.c_str(), mode), fclose);
-        if (!fp) {
+        auto h = fopen(path.data(), mode);
+        if (!h) {
             MSYS_FAIL("Error opening " << path << " for writing: " 
                     << strerror(errno));
         }
+        std::shared_ptr<FILE> fp(h, fclose);
         auto sdf = FormatSdf(mol);
         if (fwrite(sdf.data(), sdf.size(), 1, fp.get()) != 1) {
             MSYS_FAIL("Error writing " << path << ": " << strerror(errno));
