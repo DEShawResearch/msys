@@ -754,6 +754,10 @@ static void write_ct(Maeff& M, SystemPtr mol,
     if (flags & MaeExport::StructureOnly) return;
 
     Destro& ffio_ff = ct.new_block("ffio_ff");
+    ffio_ff.add_schema('s', "ffio_name");
+    ffio_ff.add_schema('i', "ffio_version");
+    ffio_ff["ffio_name"] = "msys";
+    ffio_ff["ffio_version"] = 1;
 
     IdList compress;
 
