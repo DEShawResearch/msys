@@ -1,5 +1,4 @@
 Import('msysenv')
-Import('libmsys')
 import os
 
 env=msysenv.Clone()
@@ -7,7 +6,7 @@ opts=Variables()
 opts.Add("MSYS_WITH_BENCHMARK", "include gbench support?", os.getenv('MSYS_WITH_BENCHMARK'))
 opts.Update(env)
 
-env.Prepend(LIBS=[libmsys, 'msys-core', 'pthread'])
+env.Prepend(LIBS=['msys', 'msys-core', 'pthread'])
 env.Append(CPPPATH='../src')
 
 for p in Glob('test_*.cxx'):

@@ -145,7 +145,7 @@ fastjson/dtoa/fast-dtoa.cc
 
 libmsys_env = env.Clone()
 libmsys_env.Append(LIBS=['msys-core'])
-libmsys=libmsys_env.AddLibrary('msys', lexobjs + lpobjs + sdfobjs + [inchi] + smiles_objs + dtoaobjs + jsobjs + Split('''
+libmsys_env.AddLibrary('msys', lexobjs + lpobjs + sdfobjs + [inchi] + smiles_objs + dtoaobjs + jsobjs + Split('''
 
 smarts.cxx
 analyze/eigensystem.cxx
@@ -268,4 +268,3 @@ prgenv.Append(LIBS=['msys', 'msys-core'])
 prgenv.AddProgram('fstime', 'molfile/fstime.cxx')
 prgenv.AddProgram('fsdump', 'molfile/fsdump.cxx')
 
-Export("libmsys")
