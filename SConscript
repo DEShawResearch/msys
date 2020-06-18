@@ -52,5 +52,5 @@ env.SConscript('tools/SConscript')
 
 if 'BUILD_WHEEL' in os.environ:
     env['WHEEL_DIR'] = 'wheel'
-    env.AddWheel('pyproject.toml', pyver='37')
+    env.AddWheel('pyproject.toml', pyver=os.getenv('BUILD_WHEEL_VERSION'))
 

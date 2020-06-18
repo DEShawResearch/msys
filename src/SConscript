@@ -111,7 +111,7 @@ else:
 jsobjs = jsenv.AddObject(['json/import.cxx', 'json/export.cxx'])
 
 def get_shlib_version():
-    if env['PLATFORM'] == 'darwin':
+    if env['PLATFORM'] == 'darwin' or os.getenv('BUILD_WHEEL'):
         # See https://www.sicpers.info/2013/03/how-to-version-a-mach-o-library/
         # When using env.InstallVersionedLib:
         #   On OSX, the minor/micro version number cannot be above 256. With
