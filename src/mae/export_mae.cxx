@@ -34,6 +34,27 @@ static std::string pad( const std::string &s, unsigned pad ) {
     return result;
 }
 
+static std::string pad_name(std::string s) {
+    char buf[5];
+    switch (s.size()) {
+        case 0:
+            return "";
+        case 1:
+            sprintf(buf, " %c  ", s[0]);
+            return buf;
+        case 2:
+            sprintf(buf, " %c%c ", s[0], s[1]);
+            return buf;
+        case 3:
+            sprintf(buf, " %c%c%c", s[0], s[1], s[2]);
+            return buf;
+        default:
+            ;
+    }
+    trim(s);
+    return s;
+}
+
 static void build_ct_fields( SystemPtr mol, Destro& M ) {
     /* global cell */
     for (int i=0; i<3; i++) {
@@ -152,7 +173,7 @@ static IdList build_m_atom( SystemPtr mol, Destro& M ) {
         const residue_t& res = mol->residue(atm.residue);
         const chain_t& chn = mol->chain(res.chain);
 
-        rec["m_pdb_atom_name"] = pad(atm.name, 4);
+        rec["m_pdb_atom_name"] = pad_name(atm.name);
         rec["m_pdb_residue_name"] = pad(res.name, 4);
         rec["m_chain_name"] = pad(chn.name, 1);
         rec["m_residue_number"] = res.resid;
