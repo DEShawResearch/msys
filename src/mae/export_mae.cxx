@@ -57,12 +57,22 @@ static std::string pad_name(std::string s) {
 
 static void build_ct_fields( SystemPtr mol, Destro& M ) {
     /* global cell */
-    for (int i=0; i<3; i++) {
-        for (int j=0; j<3; j++) {
-            char schema[32];
-            sprintf(schema, "chorus_box_%c%c", 'a'+i, 'x'+j);
-            M.add_schema( 'r', schema );
-            M[schema] = mol->global_cell[i][j];
+    const double* cell = mol->global_cell[0];
+    bool all_zero = true;
+    for (int i=0; i<9; i++) {
+        if (cell[i] != 0) {
+            all_zero = false;
+            break;
+        }
+    }
+    if (!all_zero) {
+        for (int i=0; i<3; i++) {
+            for (int j=0; j<3; j++) {
+                char schema[32];
+                sprintf(schema, "chorus_box_%c%c", 'a'+i, 'x'+j);
+                M.add_schema( 'r', schema );
+                M[schema] = mol->global_cell[i][j];
+            }
         }
     }
     /* msys_name -> m_title */
