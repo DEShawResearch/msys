@@ -1,3 +1,9 @@
+1.7.303 Make smarts "r<n>" conform to standards.
+        Use new, nonstandard "q<n>" to get old behavior.
+        Don't segfault when open fails on sdf write.
+        Right align 3 character mae atom names.
+        Don't write all zeros for mae box.
+
 1.7.302 Make compare_frames output less verbose
 
 1.7.301 Fix dms-select
