@@ -1,3 +1,5 @@
+1.7.304 dms-validate findKnots now ignores pseudos (DESRESCode#4555)
+
 1.7.303 Make smarts "r<n>" conform to standards.
         Use new, nonstandard "q<n>" to get old behavior.
         Don't segfault when open fails on sdf write.

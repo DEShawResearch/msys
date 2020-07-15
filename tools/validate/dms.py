@@ -129,7 +129,7 @@ class TestStrict(TestCase):
 class TestBasic(TestCase):
     def testKnots(self):
         ''' the system must not contain knots for rings of size <= 10 '''
-        knots = knot.FindKnots(self.mol, max_cycle_size=10, ignore_excluded_knots=True)
+        knots = knot.FindKnots(self.mol, selection="atomicnumber > 0", max_cycle_size=10, ignore_excluded_knots=True)
         self.assertTrue(len(knots)==0, "The system has %d bonds passing through small rings: %s" % (len(knots), knots))
 
     def testHasNonbonded(self):
