@@ -352,7 +352,7 @@ struct SMARTS_grammar : qi::grammar<Iterator, smarts_pattern_(), ascii::space_ty
         element %= double_sym | raw_double_sym | single_sym | raw_single_sym;
 
         atomic_number %= qi::char_("#") >> qi::uint_;
-        optional_numeric_property %= qi::char_("XHxvRr^") >> -qi::uint_;
+        optional_numeric_property %= qi::char_("XHxvRrq^") >> -qi::uint_;
         charge %= qi::char_('+') >> qi::uint_ | qi::char_('-') >> qi::uint_
             | +qi::char_('+') | +qi::char_('-');
 
@@ -538,12 +538,18 @@ bool match_atom_spec(Id atom, AnnotatedSystem const& sys, const atom_spec_&
                     return sys.atomRingCount(atom);
                 else
                     return sys.atomRingCount(atom) == val;
-            case 'r':
+            case 'q':
                 /* In ring of given size */
                 if (val == -1)
                     return sys.atomRingCount(atom);
                 else
                     return sys.atomInRingSize(atom, val);
+            case 'r':
+                /* In SMALLEST ring of given size */
+                if (val == -1)
+                    return sys.atomRingCount(atom);
+                else
+                    return sys.atomInSmallestRingSize(atom, val);
             case '^':
                 if (val == -1) val = 1;
                 return sys.atomHybridization(atom) == val;

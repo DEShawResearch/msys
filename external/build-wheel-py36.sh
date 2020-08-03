@@ -26,8 +26,10 @@ loadmodules() {
         auditwheel/3.1.1-01c7/bin \
         patchelf/0.9-01c7/bin \
 
+    garden load desres-python/3.6.6-04c7/bin
+
     garden prepend-path DESRES_MODULE_CXXFLAGS -fpermissive
-    export PYTHONVER=37
+    export PYTHONVER=36
     export MSYS_WITH_INCHI=1
 }
 
@@ -38,11 +40,11 @@ gendocs() {
 }
 
 loadmodules
-BUILD_WHEEL=1 BUILD_WHEEL_VERSION=37 DESRES_LOCATION= scons "$@"
+BUILD_WHEEL=1 BUILD_WHEEL_VERSION=36 DESRES_LOCATION= scons "$@"
 
 version=$(src/version.py)
 auditwheel repair \
     --plat manylinux2014_x86_64 \
     -w build/wheel \
-    build/wheel/msys-${version}-cp37-cp37m-linux_x86_64.whl
+    build/wheel/msys-${version}-cp36-cp36m-linux_x86_64.whl
 

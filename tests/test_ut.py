@@ -721,6 +721,24 @@ class AtomselCoverage(unittest.TestCase):
             a.atomic_number = n
         self.assertEqual(m.selectIds('ion'), [])
 
+    def testSmallestRing(self):
+        """check that r<n> conforms to spec, and test q<n> for legacy behavior"""
+        m = msys.FromSmilesString('C1CC12CC(C2)')
+        a = msys.AnnotatedSystem(m)
+
+        # q<n> replaces r<n> from previous versions
+        # matches "atom in ring of size n"
+        p3 = msys.SmartsPattern("[C;X4;H0;q3;v4]")
+        p4 = msys.SmartsPattern("[C;X4;H0;q4;v4]")
+        self.assertTrue(p3.match(a))
+        self.assertTrue(p4.match(a))
+
+        # r<n> matches "atom in *smallest* ring of size n"
+        p3 = msys.SmartsPattern("[C;X4;H0;r3;v4]")
+        p4 = msys.SmartsPattern("[C;X4;H0;r4;v4]")
+        self.assertTrue(p3.match(a))
+        self.assertFalse(p4.match(a))
+
     def testDegree(self):
         m = msys.CreateSystem()
         a0 = m.addAtom()
@@ -912,6 +930,11 @@ class TestAtomsel(unittest.TestCase):
                 self.assertEqual(old, new, "failed on '%s': oldlen %d newlen %d" % (sel, len(old), len(new)))
 
 class TestSdf(unittest.TestCase):
+
+    def testFailedOpenWrite(self):
+        mol = msys.Load('tests/files/isotope.sdf')
+        with self.assertRaises(RuntimeError):
+            mol.save('/this/will/not/work.sdf')
 
     def testIsotopes(self):
         mol = msys.Load('tests/files/isotope.sdf')

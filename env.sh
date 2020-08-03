@@ -1,5 +1,5 @@
-PYTHON3=desres-python/3.7.6-03c7
-YAS=yas/0.143c7
+PYTHON3=desres-python/3.7.7-02c7
+YAS=yas/0.161c7
 
 garden prepend-path PYTHONPATH $(dirname $0)/../lib/python
 garden load $PYTHON3/bin

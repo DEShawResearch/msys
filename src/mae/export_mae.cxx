@@ -34,14 +34,45 @@ static std::string pad( const std::string &s, unsigned pad ) {
     return result;
 }
 
+static std::string pad_name(std::string s) {
+    char buf[5];
+    switch (s.size()) {
+        case 0:
+            return "";
+        case 1:
+            sprintf(buf, " %c  ", s[0]);
+            return buf;
+        case 2:
+            sprintf(buf, " %c%c ", s[0], s[1]);
+            return buf;
+        case 3:
+            sprintf(buf, " %c%c%c", s[0], s[1], s[2]);
+            return buf;
+        default:
+            ;
+    }
+    trim(s);
+    return s;
+}
+
 static void build_ct_fields( SystemPtr mol, Destro& M ) {
     /* global cell */
-    for (int i=0; i<3; i++) {
-        for (int j=0; j<3; j++) {
-            char schema[32];
-            sprintf(schema, "chorus_box_%c%c", 'a'+i, 'x'+j);
-            M.add_schema( 'r', schema );
-            M[schema] = mol->global_cell[i][j];
+    const double* cell = mol->global_cell[0];
+    bool all_zero = true;
+    for (int i=0; i<9; i++) {
+        if (cell[i] != 0) {
+            all_zero = false;
+            break;
+        }
+    }
+    if (!all_zero) {
+        for (int i=0; i<3; i++) {
+            for (int j=0; j<3; j++) {
+                char schema[32];
+                sprintf(schema, "chorus_box_%c%c", 'a'+i, 'x'+j);
+                M.add_schema( 'r', schema );
+                M[schema] = mol->global_cell[i][j];
+            }
         }
     }
     /* msys_name -> m_title */
@@ -152,7 +183,7 @@ static IdList build_m_atom( SystemPtr mol, Destro& M ) {
         const residue_t& res = mol->residue(atm.residue);
         const chain_t& chn = mol->chain(res.chain);
 
-        rec["m_pdb_atom_name"] = pad(atm.name, 4);
+        rec["m_pdb_atom_name"] = pad_name(atm.name);
         rec["m_pdb_residue_name"] = pad(res.name, 4);
         rec["m_chain_name"] = pad(chn.name, 1);
         rec["m_residue_number"] = res.resid;
@@ -754,6 +785,10 @@ static void write_ct(Maeff& M, SystemPtr mol,
     if (flags & MaeExport::StructureOnly) return;
 
     Destro& ffio_ff = ct.new_block("ffio_ff");
+    ffio_ff.add_schema('s', "ffio_name");
+    ffio_ff.add_schema('i', "ffio_version");
+    ffio_ff["ffio_name"] = "msys";
+    ffio_ff["ffio_version"] = 1;
 
     IdList compress;
 

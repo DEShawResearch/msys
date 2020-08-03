@@ -1,5 +1,4 @@
 Import('msysenv')
-Import('libmsys')
 import sys, os
 env=msysenv.Clone()
 
@@ -49,7 +48,6 @@ env.AddPythonModule('ff.py', prefix='msys')
 pfxenv=env.Clone()
 pfxenv.Append(CXXFLAGS='-fno-strict-aliasing')
 pfxext = pfxenv.AddPythonExtension('pfx', 'pfx.cxx', prefix='msys')
-pfxenv.Requires(pfxext, libmsys)
 
 env.AddHeaders(['capsule.hxx'], prefix='msys/python')
 env.SConscript('molfile/SConscript')

@@ -1,5 +1,4 @@
 Import('msysenv')
-Import('libmsys')
 import sys
 env=msysenv.Clone()
 
