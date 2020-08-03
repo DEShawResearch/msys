@@ -4,7 +4,7 @@ build-backend = "enscons.api"
 
 [tool.enscons]
 name="msys"
-version="1.7.301"
+version="1.7.304"
 packages=["msys"]
 install_requires=["numpy", "wheel"]
 description="Msys tools"
