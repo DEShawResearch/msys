@@ -16,8 +16,6 @@ file will be restrained using the newly provided force constraints::
   ## or:
   dms-posre input.dms output.dms -s none --replace
 '''
-from __future__ import print_function
-
 import msys
 import math
 import sys

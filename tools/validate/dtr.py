@@ -4,8 +4,6 @@ dtr-validate input.{dtr,atr,etr,stk}
 Check that each frame in each input file is readable and provides
 position and box data.
 '''
-from __future__ import print_function
-
 import sys, os, fnmatch
 from msys import molfile
 import numpy

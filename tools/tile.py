@@ -2,7 +2,6 @@
 '''
 Tile a system system by nx, ny, nz
 '''
-from __future__ import print_function
 import msys
 import numpy
 import itertools

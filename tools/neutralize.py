@@ -2,8 +2,6 @@
 Replace water molecules with ions
 """
 
-from __future__ import print_function
-
 import msys, math
 import random
 

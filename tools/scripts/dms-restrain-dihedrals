@@ -5,12 +5,9 @@
 # exec python $0 "$@"
 #}
 
-from __future__ import absolute_import
-from __future__ import print_function
 import msys
 import numpy as np
 import sys, os.path, argparse
-import IPython
 
 ########################################################################
 
@@ -23,8 +20,6 @@ has been freshly run through viparr. Dihedrals to be restrained can be
 specified in several ways for different applications, and can often
 be specified using the current dihedral angle in the structure file or
 a specified angle (i.e. restrain to current or desired angle).  
-
-Author: Jack Greisman (based on Morten and Angar's script)
 ========================================================================
 '''
 

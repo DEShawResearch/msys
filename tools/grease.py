@@ -19,10 +19,6 @@ y dimensions given by the specified size of the membrane, and z dimension
 given by the input structure or the lipid membrane template, whichever is
 greater.
 '''
-
-from __future__ import division
-from __future__ import print_function
-
 import sys, os, msys
 
 def Grease(mol, tile, thickness=0.0, xsize=None, ysize=None,

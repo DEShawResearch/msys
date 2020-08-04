@@ -1,4 +1,3 @@
-from __future__ import print_function
 import msys
 
 # convert residue name to one-letter code

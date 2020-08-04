@@ -5,8 +5,6 @@ Assign Boltzmann-sampled velocities to the atoms.  Atoms with zero mass
 will get zero velocity.
 
 '''
-from __future__ import print_function
-
 import msys
 import random, math
 import numpy

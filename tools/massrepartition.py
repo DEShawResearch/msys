@@ -1,7 +1,6 @@
 '''
    Repartition hydrogen masses
 '''
-from __future__ import print_function
 import msys
 import argparse
 
