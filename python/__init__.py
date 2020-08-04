@@ -1423,9 +1423,9 @@ class System(object):
 
     def select(self, seltext):
         ''' return a list of Atoms satisfying the given VMD atom selection. '''
-        ids=self._ptr.selectAsList(seltext)
-        atms=self._update_atoms()
-        return [atms[i] for i in ids]
+        ptr = self._ptr
+        ids = ptr.selectAsList(seltext)
+        return [Atom(ptr, i) for i in ids]
 
     def selectIds(self, seltext, pos=None, box=None):
         ''' Return the ids of the Atoms satisfying the given VMD atom
@@ -1472,8 +1472,7 @@ class System(object):
         '''
         p=self._ptr
         ids=p.append(system._ptr, BadId)
-        atms=self._update_atoms()
-        return [atms[i] for i in ids]
+        return [Atom(p,i) for i in ids]
 
     def clone(self, sel=None, share_params=False, use_index=False, forbid_broken_bonds=False):
         ''' Clone the System, returning a new System.  If selection is
