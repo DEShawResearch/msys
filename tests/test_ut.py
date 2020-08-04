@@ -546,8 +546,7 @@ class TestSpatialHash(unittest.TestCase):
         new2 = sph.findWithin(23.0, pos, wat)
         old2 = mol.selectArr('water and pbwithin 23.0 of fragid 0')
         self.assertTrue((old2==new2).all())
-        # why does this return a bool in this case instead of an array???
-        self.assertFalse(old1==old2)
+        self.assertFalse(old1.tolist()==old2.tolist())
 
     def testEmptyWithin(self):
         mol=msys.CreateSystem()
