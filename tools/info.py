@@ -5,7 +5,6 @@ Write a human-readable summary of the contents of a structure file to stdout.
 
 '''
 
-from __future__ import print_function
 import sys, os
 
 import msys
@@ -22,6 +21,7 @@ def print_info(mol, ct=None):
     print("%12s: %8d" % ("Bonds", mol.nbonds))
     print("%12s: %8d" % ("Residues", mol.nresidues))
     print("%12s: %8d" % ("Chains", mol.nchains))
+    print("%12s: %8d" % ("Components", mol.ncts))
     print()
     print("%12s: %10s %10s %10s"  % ("Global cell", ax,ay,az))
     print("%12s  %10s %10s %10s"  % ("", bx,by,bz))
