@@ -6,5 +6,5 @@
 #}
 
 import msys.massrepartition
-msys.massrepartition.main()
 
+msys.massrepartition.main()

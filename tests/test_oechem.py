@@ -7,35 +7,42 @@ from time import time
 from contextlib import contextmanager
 import tempfile
 
+
 class Timer(object):
     def __init__(self):
         self.start()
+
     def start(self):
         self.bgn = time()
+
     def elapsed(self):
         return time() - self.bgn
+
 
 @contextmanager
 def TimedLogMessage(*args):
     t = Timer()
     yield
-    #print("%.2f seconds to run:" % t.elapsed(), *args)
+    # print("%.2f seconds to run:" % t.elapsed(), *args)
+
 
 class Main(unittest.TestCase):
-
     def testFindDistinctBigFragments(self):
-        mol = msys.Load('tests/files/1vcc.mae')
-        mol.append(msys.Load('tests/files/2f4k.dms'))
+        mol = msys.Load("tests/files/1vcc.mae")
+        mol.append(msys.Load("tests/files/2f4k.dms"))
         self.assertEqual(mol.ncts, 2)
-        result = msys.FindDistinctFragments(mol, key='oechem_smiles')
+        result = msys.FindDistinctFragments(mol, key="oechem_smiles")
 
     def testSmall(self):
-        mol = msys.Load('tests/files/jandor-bad.sdf')
+        mol = msys.Load("tests/files/jandor-bad.sdf")
 
         # by default ConvertToOEChem doesn't assign the formal charges, should it?!
         contains_radicals = "C[C@H]([C@@H]1[C@H]2[C@H](C(=C(N2C1=O)C(=O)OCc3ccc(cc3)[N](=O)[O])Sc4ncccn4)OC)O"
         oemol = msys.ConvertToOEChem(mol)
-        assert oemol.GetTitle() == '/u/nyc/gullingj/pub/examples/MMFF94_hypervalent/JANDOR.mae'
+        assert (
+            oemol.GetTitle()
+            == "/u/nyc/gullingj/pub/examples/MMFF94_hypervalent/JANDOR.mae"
+        )
         self.assertEqual(oechem.OEMolToSmiles(oemol), contains_radicals)
 
         # Using OEChem to assign the formal charges
@@ -54,7 +61,7 @@ class Main(unittest.TestCase):
             self.assertEqual(amol.valence(matm), ratm.GetExplicitValence())
 
     def testBig(self):
-        mol = msys.Load('tests/files/2f4k.dms')
+        mol = msys.Load("tests/files/2f4k.dms")
         msys.AssignBondOrderAndFormalCharge(mol)
         t = -time()
         oemol = msys.ConvertToOEChem(mol)
@@ -73,18 +80,18 @@ class Main(unittest.TestCase):
         self.assertEqual(stereo, expected)
 
     def testIsotope(self):
-        mol = msys.Load('tests/files/isotope.sdf')
-        assert [a['isotope'] for a in mol.atoms] == [0,2,2]
+        mol = msys.Load("tests/files/isotope.sdf")
+        assert [a["isotope"] for a in mol.atoms] == [0, 2, 2]
         oemol = msys.ConvertToOEChem(mol)
-        assert [a.GetIsotope() for a in oemol.GetAtoms()] == [0,2,2]
+        assert [a.GetIsotope() for a in oemol.GetAtoms()] == [0, 2, 2]
         mol = msys.ConvertFromOEChem(oemol)
-        assert [a['isotope'] for a in mol.atoms] == [0,2,2]
+        assert [a["isotope"] for a in mol.atoms] == [0, 2, 2]
 
     def testChiralAtoms(self):
-        mol = msys.Load('tests/files/jandor.sdf')
+        mol = msys.Load("tests/files/jandor.sdf")
         oemol = msys.ConvertToOEChem(mol)
         for r in oemol.GetAtoms():
-            if r.GetIdx() in (0,4,7):
+            if r.GetIdx() in (0, 4, 7):
                 self.checkStereo(r, oechem.OEAtomStereo_RightHanded)
             elif r.GetIdx() in (5,):
                 self.checkStereo(r, oechem.OEAtomStereo_LeftHanded)
@@ -103,7 +110,7 @@ class Main(unittest.TestCase):
         self.assertEqual(stereo, expected)
 
     def testBondStereo(self):
-        sdf = 'tests/files/34106.sdf'
+        sdf = "tests/files/34106.sdf"
         mol = msys.Load(sdf)
         oemol = msys.ConvertToOEChem(mol)
         for bond in oemol.GetBonds():
@@ -117,9 +124,9 @@ class Main(unittest.TestCase):
                 self.checkBondStereo(bond, oechem.OEBondStereo_Undefined)
 
     def testOmega(self):
-        sdf = 'tests/files/methotrexate.sdf'
+        sdf = "tests/files/methotrexate.sdf"
         mol = msys.Load(sdf)
-        dmstmp = tempfile.NamedTemporaryFile(suffix='.dms')
+        dmstmp = tempfile.NamedTemporaryFile(suffix=".dms")
         dms = dmstmp.name
         msys.Save(mol, dms)
         mol = msys.Load(dms)
@@ -127,6 +134,7 @@ class Main(unittest.TestCase):
         oemol = msys.ConvertToOEChem(mol)
 
         from openeye import oeomega
+
         opts = oeomega.OEOmegaOptions()
         opts.SetMaxConfs(1)
         opts.SetStrictStereo(False)
@@ -144,7 +152,12 @@ class Main(unittest.TestCase):
 
         for conf in oemol.GetConfs():
             coords = conf.GetCoords()
-            npcrds = np.array([coords[orig_idx_to_new_idx[orig_idx]] for orig_idx in sorted(orig_idx_to_new_idx)])
+            npcrds = np.array(
+                [
+                    coords[orig_idx_to_new_idx[orig_idx]]
+                    for orig_idx in sorted(orig_idx_to_new_idx)
+                ]
+            )
             break
 
         cmol = mol.clone()
@@ -155,18 +168,20 @@ class Main(unittest.TestCase):
             vec = bond.first.pos - bond.second.pos
             avg_length += np.sqrt(vec.dot(vec))
         avg_length /= cmol.nbonds
-        assert avg_length < 2.5, "average bond length is %.2f, atom order is likely screwed up!" % avg_length
+        assert avg_length < 2.5, (
+            "average bond length is %.2f, atom order is likely screwed up!" % avg_length
+        )
 
-        #msys.Save(cmol, 'meth_confs.sdf')
+        # msys.Save(cmol, 'meth_confs.sdf')
 
     def testConvertFromOEChem(self):
         testfiles = [
-            'tests/files/jandor.sdf',
-            'tests/files/test_UID_corrected.mol2',
-            'tests/files/fused.sdf',
-            'tests/files/3RYZ.pdb',
-            'tests/files/1DUF.pdb',
-            ]
+            "tests/files/jandor.sdf",
+            "tests/files/test_UID_corrected.mol2",
+            "tests/files/fused.sdf",
+            "tests/files/3RYZ.pdb",
+            "tests/files/1DUF.pdb",
+        ]
 
         for testfile in testfiles:
             with oechem.oemolistream()(testfile) as ifs:
@@ -174,15 +189,15 @@ class Main(unittest.TestCase):
                 with TimedLogMessage("OEReadMolecule"):
                     assert oechem.OEReadMolecule(ifs, mol)
 
-                if 'pdb' in testfile:
+                if "pdb" in testfile:
                     oechem.OEAddExplicitHydrogens(mol)
 
                 with TimedLogMessage("ConvertFromOEChem"):
                     system = msys.ConvertFromOEChem(mol)
 
-                if 'pdb' in testfile:
+                if "pdb" in testfile:
                     assert len(system.residues) > 1
-                    if '1DUF' in testfile:
+                    if "1DUF" in testfile:
                         assert len(system.chains) > 1
 
                 with TimedLogMessage("ConvertToOEChem"):
@@ -196,21 +211,23 @@ class Main(unittest.TestCase):
                 assert oechem.OEMolToSmiles(new_oemol) == oechem.OEMolToSmiles(mol)
 
     def testConvertAtoms(self):
-        mol = msys.Load('tests/files/jandor.sdf')
+        mol = msys.Load("tests/files/jandor.sdf")
         omol = msys.ConvertToOEChem(mol.atoms)
         assert omol.GetDimension() == 3
         new = msys.ConvertFromOEChem(omol)
         assert mol.positions.tolist() == new.positions.tolist()
-        assert [a.atomic_number for a in mol.atoms] == [a.atomic_number for a in new.atoms]
+        assert [a.atomic_number for a in mol.atoms] == [
+            a.atomic_number for a in new.atoms
+        ]
 
         ifs = oechem.oemolistream()
-        assert ifs.open('tests/files/jandor.sdf')
+        assert ifs.open("tests/files/jandor.sdf")
         oechem_mol = oechem.OEGraphMol()
         assert oechem.OEReadMolecule(ifs, oechem_mol)
         assert oechem.OEMolToSmiles(omol) == oechem.OEMolToSmiles(oechem_mol)
 
         # testing disconnected components
-        atoms = mol.select('withinbonds 1 of hydrogen')
+        atoms = mol.select("withinbonds 1 of hydrogen")
         omol = msys.ConvertToOEChem(atoms)
         new = msys.ConvertFromOEChem(omol)
         assert [a.pos.tolist() for a in atoms] == new.positions.tolist()
@@ -220,16 +237,16 @@ class Main(unittest.TestCase):
         mol = oechem.OEMol()
 
         # SMILES has no coordinates or hydrogens
-        assert oechem.OESmilesToMol(mol, 'C1NCC[NH2+]C1')
+        assert oechem.OESmilesToMol(mol, "C1NCC[NH2+]C1")
         self.assertRaises(ValueError, msys.ConvertFromOEChem, mol)
 
         # This is a 2D SDF file
-        with oechem.oemolistream()('tests/files/methotrexate.sdf') as ifs:
+        with oechem.oemolistream()("tests/files/methotrexate.sdf") as ifs:
             assert oechem.OEReadMolecule(ifs, mol)
         self.assertRaises(ValueError, msys.ConvertFromOEChem, mol)
 
         # Suppressing hydrogens should cause ConvertFromOEChem to fail
-        with oechem.oemolistream()('tests/files/fused.sdf') as ifs:
+        with oechem.oemolistream()("tests/files/fused.sdf") as ifs:
             assert oechem.OEReadMolecule(ifs, mol)
         assert oechem.OESuppressHydrogens(mol)
         self.assertRaises(ValueError, msys.ConvertFromOEChem, mol)
@@ -244,11 +261,12 @@ class Main(unittest.TestCase):
 
     def testLinearMoleculesWithNoHydrogens(self):
         from openeye import oeomega
+
         opts = oeomega.OEOmegaOptions()
         opts.SetMaxConfs(1)
         omega = oeomega.OEOmega(opts)
 
-        for smi in ['O=S=O', 'c12c(onn1)onn2', 'C#N']:
+        for smi in ["O=S=O", "c12c(onn1)onn2", "C#N"]:
             oemol = oechem.OEMol()
             assert oechem.OESmilesToMol(oemol, smi)
             assert omega(oemol)
@@ -260,5 +278,5 @@ class Main(unittest.TestCase):
             self.assertEqual(oechem.OEMolToSmiles(new_oemol), smi)
 
 
-if __name__=="__main__":
-  unittest.main(verbosity=2)
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

@@ -10,14 +10,16 @@ import msys
 from msys.neutralize import Neutralize
 import os
 
+
 def parse_args():
     from argparse import ArgumentParser
+
     parser = ArgumentParser(description=__doc__)
     arg = parser.add_argument
     arg("input_file", help="solvated input file")
     arg("output", help="output file")
     arg("-A", "--assign", action="store_true", help="Assign formal charges")
-    arg('--structure-only', action='store_true', help='Load no forcefield information or pseudos')
+    arg("--structure-only", action="store_true", help="Load no forcefield information or pseudos")
     arg("--cation", default="Na", help="element for cation species")
     arg("--anion", default="Cl", help="element for anion species")
     arg("--charge", default="formal_charge", help="atom charge attribute; or value")
@@ -42,31 +44,33 @@ def parse_args():
         args.anion = msys.Load(args.anion)
     return args
 
+
 def main():
     args = parse_args()
     mol = msys.Load(args.input_file)
     if args.assign:
         msys.AssignBondOrderAndFormalCharge(mol)
 
-
-    new = Neutralize(mol,
-            cation=args.cation,
-            anion=args.anion,
-            charge=args.charge,
-            chain=args.chain,
-            chain2=args.chain2,
-            solute_pad=args.solute_pad,
-            ion_pad=args.ion_pad,
-            water_pad=args.water_pad,
-            concentration=args.concentration,
-            keep=args.keep,
-            random_seed=args.seed,
-            verbose=args.verbose,
-            )
+    new = Neutralize(
+        mol,
+        cation=args.cation,
+        anion=args.anion,
+        charge=args.charge,
+        chain=args.chain,
+        chain2=args.chain2,
+        solute_pad=args.solute_pad,
+        ion_pad=args.ion_pad,
+        water_pad=args.water_pad,
+        concentration=args.concentration,
+        keep=args.keep,
+        random_seed=args.seed,
+        verbose=args.verbose,
+    )
 
     msys.Save(new, args.output, structure_only=args.structure_only)
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     main()
 
 # vim: filetype=python

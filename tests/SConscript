@@ -1,25 +1,26 @@
-Import('msysenv')
+Import("msysenv")
 import os
 
-env=msysenv.Clone()
-opts=Variables()
-opts.Add("MSYS_WITH_BENCHMARK", "include gbench support?", os.getenv('MSYS_WITH_BENCHMARK'))
+env = msysenv.Clone()
+opts = Variables()
+opts.Add(
+    "MSYS_WITH_BENCHMARK", "include gbench support?", os.getenv("MSYS_WITH_BENCHMARK")
+)
 opts.Update(env)
 
-env.Prepend(LIBS=['msys', 'msys-core', 'pthread'])
-env.Append(CPPPATH='../src')
+env.Prepend(LIBS=["msys", "msys-core", "pthread"])
+env.Append(CPPPATH="../src")
 
-for p in Glob('test_*.cxx'):
-    env.AddExampleProgram(p.name[:-4],p.name)
+for p in Glob("test_*.cxx"):
+    env.AddExampleProgram(p.name[:-4], p.name)
 
-env.Prepend(LIBS=['msys-core'])
-env.Append(CPPPATH='../src')
+env.Prepend(LIBS=["msys-core"])
+env.Append(CPPPATH="../src")
 
-for p in Glob('core_test_*.cxx'):
-    env.AddExampleProgram(p.name[:-4],p.name)
+for p in Glob("core_test_*.cxx"):
+    env.AddExampleProgram(p.name[:-4], p.name)
 
-if env.get('MSYS_WITH_BENCHMARK'):
+if env.get("MSYS_WITH_BENCHMARK"):
     benv = env.Clone()
-    benv.Append(LIBS=['benchmark'])
-    benv.AddExampleProgram('benchmark', Glob('bench*.cxx'))
-
+    benv.Append(LIBS=["benchmark"])
+    benv.AddExampleProgram("benchmark", Glob("bench*.cxx"))

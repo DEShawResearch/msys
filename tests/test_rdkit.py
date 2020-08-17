@@ -5,9 +5,10 @@ import unittest
 from rdkit import Chem
 from time import time
 
+
 class Main(unittest.TestCase):
     def testSmall(self):
-        mol = msys.Load('tests/files/jandor-bad.sdf')
+        mol = msys.Load("tests/files/jandor-bad.sdf")
         with self.assertRaises(ValueError):
             rdmol = msys.ConvertToRdkit(mol)
         msys.AssignBondOrderAndFormalCharge(mol)
@@ -19,33 +20,34 @@ class Main(unittest.TestCase):
             self.assertEqual(amol.valence(matm), ratm.GetExplicitValence())
 
     def testBig(self):
-        mol = msys.Load('tests/files/2f4k.dms')
+        mol = msys.Load("tests/files/2f4k.dms")
         msys.AssignBondOrderAndFormalCharge(mol)
-        t=-time()
+        t = -time()
         rdmol = msys.ConvertToRdkit(mol)
-        t+=time()
+        t += time()
         print("%s: %d atoms, %d bonds in %.3fs" % (mol.name, mol.natoms, mol.nbonds, t))
 
     def testChiralAtoms(self):
-        mol = msys.Load('tests/files/jandor.sdf')
+        mol = msys.Load("tests/files/jandor.sdf")
         rdmol = msys.ConvertToRdkit(mol)
         for r in rdmol.GetAtoms():
-            if r.GetIdx() in (0,4,7):
+            if r.GetIdx() in (0, 4, 7):
                 self.assertEqual(r.GetChiralTag(), Chem.ChiralType.CHI_TETRAHEDRAL_CW)
             elif r.GetIdx() in (5,):
                 self.assertEqual(r.GetChiralTag(), Chem.ChiralType.CHI_TETRAHEDRAL_CCW)
 
     def testBondStereo(self):
-        sdf = 'tests/files/34106.sdf'
+        sdf = "tests/files/34106.sdf"
         mol = msys.Load(sdf)
         rdmol = msys.ConvertToRdkit(mol)
         for i, r in enumerate(rdmol.GetBonds()):
             ai = r.GetBeginAtomIdx()
             aj = r.GetEndAtomIdx()
-            if ai==16 and aj==17:
+            if ai == 16 and aj == 17:
                 self.assertEqual(r.GetStereo(), Chem.BondStereo.STEREOZ)
             else:
                 self.assertEqual(r.GetStereo(), Chem.BondStereo.STEREONONE)
 
-if __name__=="__main__":
-  unittest.main(verbosity=2)
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

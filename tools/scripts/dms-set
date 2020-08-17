@@ -5,7 +5,7 @@
 # exec python $0 "$@"
 #}
 
-'''
+"""
 dms-set input.dms output.dms [-s selection] [ options ] atomprop=FOO residue.resprop=BAR chain.chainprop=BAZ box.[xyzd]=LENGTH
 
 Updates the atom, residue, and/or chain properties of the particles
@@ -35,43 +35,46 @@ both atoms.
 
    ``dms-set input.dms output.dms -s "index 32 42" stretch_harm.fc=0.0``
 
-'''
+"""
 
 import sys, os
 import msys
 from msys import update
 
+
 def main():
     import optparse
+
     parser = optparse.OptionParser(__doc__)
 
-    parser.add_option('-s', '--selection', default=None,
-            help="select of atoms to update")
-    parser.add_option('-v', '--verbose', action='store_true', default=False,
-            help="Be chatty")
+    parser.add_option("-s", "--selection", default=None, help="select of atoms to update")
+    parser.add_option("-v", "--verbose", action="store_true", default=False, help="Be chatty")
 
     opts, args = parser.parse_args()
-    if len(args)<2: parser.error("incorrect number of arguments")
+    if len(args) < 2:
+        parser.error("incorrect number of arguments")
     ifile, ofile = args[:2]
 
-    mol=msys.Load(ifile)
+    mol = msys.Load(ifile)
     if opts.selection:
-        atoms=mol.select(opts.selection)
+        atoms = mol.select(opts.selection)
     else:
-        atoms=mol.atoms
+        atoms = mol.atoms
 
     for arg in args[2:]:
         try:
-            lhs, rhs = arg.split('=')
+            lhs, rhs = arg.split("=")
         except:
-            #print >> sys.stderr, "'%s' is not of the form FOO=BAR" % arg
-            #exit(1)
+            # print >> sys.stderr, "'%s' is not of the form FOO=BAR" % arg
+            # exit(1)
             parser.error("'%s' is not of the form FOO=BAR" % arg)
 
         update.Update(mol, atoms, lhs, rhs)
 
-    msys.Save(mol.clone(),ofile)
+    msys.Save(mol.clone(), ofile)
 
-if __name__=="__main__": exit(main())
+
+if __name__ == "__main__":
+    exit(main())
 
 # vim: filetype=python

@@ -6,5 +6,5 @@
 #}
 
 import msys.tile
-msys.tile.main()
 
+msys.tile.main()
