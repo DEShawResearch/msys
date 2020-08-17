@@ -1,14 +1,13 @@
 #!/usr/bin/garden-exec
-# {
+#{
 # garden env-keep-only
 # . `dirname $0`/../share/env.sh
 # exec python $0 "$@"
-# }
+#}
 
-
-# Copyright (c) 2015,2019 D.E.Shaw Research
-#
-# Compare two DTR or ETR trajectories
+"""
+Compare two DTR or ETR trajectories
+"""
 
 
 import sys
