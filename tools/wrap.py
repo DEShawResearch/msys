@@ -4,6 +4,7 @@ Tools for periodic wraping
 
 import numpy as NP
 from msys.pfx import Pfx
+import msys
 
 
 class Wrapper(object):
