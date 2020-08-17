@@ -30,23 +30,23 @@ created.
 A `System` has the following settable attributes:
 
 * `name`: When a file is loaded, the name attribute is taken from the filename.  The name isn't
-preserved when reading and writing files, so setting it isn't all that useful.
+    preserved when reading and writing files, so setting it isn't all that useful.
 
 * `positions`, `velocities`, and `cell`:  Msys stores positions and velocities for each particle,
-and three vectors, each with three components, for the periodic global cell. It's best to use
-the dedicated accessor methods to get and set these values::
+    and three vectors, each with three components, for the periodic global cell. It's best to use
+    the dedicated accessor methods to get and set these values::
 
-    mol = msys.Load('system.dms')
-    pos = mol.getPositions()  # Nx3 array
-    vel = mol.getVelocities()  # Nx3 array
-    box = mol.getCell()  # 3x3 array
-    
-    mol.setPositions(pos)
-    mol.setVelocities(vel)
-    mol.setCell(box)
+        mol = msys.Load('system.dms')
+        pos = mol.getPositions()  # Nx3 array
+        vel = mol.getVelocities()  # Nx3 array
+        box = mol.getCell()  # 3x3 array
+        
+        mol.setPositions(pos)
+        mol.setVelocities(vel)
+        mol.setCell(box)
 
 * `nonbonded_info`: This structure holds meta-information about the type of nonbonded interactions
-used in the forcefield. It is described more fully in the section on nonbonded parameters.
+    used in the forcefield. It is described more fully in the section on nonbonded parameters.
 
 There may be one or more auxiliary tables in each System, indexed by name, which hold arbitrary
 additional forcefield data or other user-defined information. The main use for auxiliary tables
@@ -66,7 +66,7 @@ each entry gets placed in its own `Ct`.
 A Ct has the following settable attributes:
 
 * `name`: which is settable and preserved by many file formats on read and write, including mae,
-dms, sdf, and mol2.
+    dms, sdf, and mol2.
 
 A Ct also stores key/value pairs, which can be either integers, floats, or strings::
 
@@ -143,11 +143,46 @@ including real atoms as well as virtual and dummy particles.  Each `Atom`
 has an atomic number, position, mass, and a number of other built-in
 properties.
 
+User-defined Atom properties
+============================
+
+Msys supports the creation of custom atom properties, whose name and
+type (either `int`, `float`, or `string`) you specify.  These properties
+are preserved by the DMS file format, but not other formats.
+
+.. code-block::
+
+  mol = msys.LoadDMS('input.dms')
+  # find all distinct values of the 'grp_energy' atom property, if it exists
+  grp_energy_vals = set()
+  if 'grp_energy' in mol.atom_props:
+    for atm in mol.atoms:
+      grp_energy_vals.add( atm['grp_energy'] )
+
+  # add a new property 'foo' of type 'float'
+  mol.addAtomProp('foo', float)
+  # Set the value of foo to the z coordinate of the atom
+  for a in mol.atoms: a['foo'] = a.pos[2]
+
+When you add a property to a set of elements, the initial value will be 0
+for `int` and `float` types, and the empty string for `str` types.  If a
+property with the same name and type already exists, no action is taken.
+An exception is thrown if you try to add a property with the same name 
+but different type from an existing property.
+
+
 Msys ids
 ========
 
 In msys, every Atom, Residue, Chain, and Ct has an immutable, 0-based index called an id. This
 id never changes, even if you remove or add atoms, or change other properties of the system.
+Two such objects of the same type will compare equal to each other if and only if they belong
+the same `System` and possess the same ``id``.
+
+When you load a system from a file, or create one from scratch, these
+``ids`` will be numbered consecutively, starting at zero.  Deleting
+`Atoms`, `Bonds`, etc. from the `System` can introduce gaps in the set of
+``ids``, but, once created, the ``id`` of an object never changes.
 
 For example, a Residue has both an id (unchanging msys id) and a resid, which in a PDB file
 is the number associated with that Residue. You can change the resid to anything you want,
@@ -175,6 +210,12 @@ but the id of a Residue is for msys internal bookkeeping and stays the same:
     >>> res5.resid = 99
     >>>
 
+When Msys writes a DMS file, the primary keys of the particles will
+be contiguous starting at 0, and will appear in the order in which the
+particles appear in the `System`, even if the ``ids`` of the atoms in the
+`System` are noncontiguous due to deletions.  When Msys loads a DMS file,
+if the primary keys happen to be noncontiguous, Msys will still create a
+`System` with the usual contiguous ids.
 
 Reading Files
 =============
@@ -183,16 +224,54 @@ Given this hierarchical representation of chemical structure, Msys makes
 a best effort attempt to map the information in a chemical file format
 to its own data structures.
 
-Files with multiple structure
------------------------------
+Files with multiple components
+------------------------------
 
 Many chemical file formats, including MAE, MOL2, SDF, as well as DMS, can contain multiple,
 logically distinct chemical groups or components.  In some contexts, such as an MD simulation,
 it makes sense to consider all the components as part of a single system.  In other contexts,
 such as processing a large batch of ligand structures, one wants to consider the components one
-at a time.  The `msys.Load` function loads all the components into a single system, with each
-component assigned to its own `Ct`.  Iteratng over systems with `msys.LoadMany` will return
-one single-`Ct` `System` for each component.
+at a time.  
+
+To examine every structure in a multi-component file without having to
+load them all into memory at once, use **LoadMany**.  Unlike the **Load**
+function, which always returns one System, **LoadMany** is a generator
+which iterates over molecular structures in the input file::
+
+  for mol in msys.LoadMany('input.mol2'):
+     print mol.name
+
+Not every file format supports LoadMany; in cases where it doesn't, LoadMany
+will stop after a single iteration, yielding just one `System`.
+
+If you use LoadMany to load a file, each `System` will have only one
+`Ct`.  However, if you use Load to import an MAE or DMS file, and the
+file contains multiple components, the new `System` will contain `Ct`
+elements corresponding to those components::
+
+  mol = msys.Load('small_vancomycin_complex.mae')
+  for ct in mol.cts:
+     print ct.name
+
+  # prints:
+  # vancomycin_diala_complex
+  # SPC water box
+
+The ct information wil be preserved when saving the System back to an MAE
+or DMS file.  
+
+You can create a multi-ct system from existing `Systems` using the
+``append`` method::
+
+  pro = msys.Load('protein.dms')
+  pro.ct(0).name = 'protein'
+  wat = msys.Load('water.dms')
+  wat.ct(0).name = 'water'
+  pro.append(wat)
+  assert pro.ncts == 2     # assuming there was 1 ct in protein.dms and wat.dms
+  assert pro.ct(1).name == 'water'
+  msys.Save(pro, 'combined.dms')
+
 
 Mapping of residues and chains
 ------------------------------

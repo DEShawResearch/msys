@@ -108,6 +108,30 @@ the existing atom data and applying a centering operation on the coordinates:
 Here, `system.dms` and `system-relax.dms` are the input and output chemical system files, and
 `relax.dtr` holds trajectory data.
 
+
+Reading and writing chemical systems from Python is easy::
+
+  import msys
+
+  # Load the entire contents of a DMS file
+  dms=msys.LoadDMS('system.dms')
+
+  # Import an MAE file, performing conversions on its forcefield data
+  mae=msys.LoadMAE('system.mae')
+
+You can also create a new `System` from scratch::
+
+  # mol = msys.CreateSystem()
+
+A `System` resides entirely in memory; changes to the `System` will not
+persist until/unless you write it back out to a file::
+
+  # Save the system as a DMS file
+  msys.SaveDMS(dms, 'output.dms')
+
+  # Export to MAE file
+  msys.SaveMAE(dms, 'output.mae')
+
 The rest of this guide goes into more detail on the atom selection language, how msys represents
 forcefields, tools for working with trajectories and coordinates, and more.
 
@@ -116,8 +140,9 @@ forcefields, tools for working with trajectories and coordinates, and more.
 
    overview
    selections
+   forcefield
+   wrapping
    python
-   nonbonded
    tools
    recipes
    dms

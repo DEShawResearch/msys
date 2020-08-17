@@ -8,8 +8,74 @@ of a ``System``, using the ``select``, ``selectIds``, or ``clone``
 methods of ``System``.  In C++, the ``Atomselect`` function provides
 all atom selection functionality.
 
+For example, suppose you need to perform an operation on only the atoms named CA in residues
+named PRO.
+
+Using the Python interface:
+
+.. code-block::
+
+    mol = msys.Load('system.pdb')
+    pro_ca_atoms_1 = [a for a in mol.atoms if a.name=="CA" and a.residue.name=="PRO"]
+
+Since this is such a common operation, msys provides an atom selection language to make this
+easier. Here is how you would select the same set of atoms using an msys atom selection:
+
+.. code-block::
+
+    pro_ca_atoms_2 = mol.select("name CA and resname PRO")
+
+The atom selection keyword "name" corresponds to the 'name' property of an Atom, and "resname"
+corresponds to the 'name' property of a Residue.
+
+Note that the atoms returned by ``select`` refer back to the original
+system.  
+
+Creating Systems from selections
+================================
+
+Msys provides the means to create a new `System` independent
+of the original, using either the ``CloneSystem`` function or the 
+``clone`` method of System.  When you clone a subset of a `System`, the 
+`Terms` in the forcefield whose atoms are completely contained in the 
+selection will be copied to the new `System`::
+
+  # get the list of protein atoms
+  pro_atoms = mol.select('protein')
+
+  # construct a new system containing just the protein
+  protein = msys.CloneSystem(pro_atoms)
+
+  # Atoms in the cloned system have the same attributes as the originals,
+  # but modifications to one do not affect the other
+  assert pro_atoms[0].charge == protein.atoms[0].charge
+  pro_atoms[0].charge += 3
+  assert pro_atoms[0].charge != protein.atoms[0].charge
+
+The ``clone`` method of `System` is a more concise way of selecting a
+set of atoms, then immediately creating a new `System` from it::
+
+  # create a new System with all the hydrogens removed
+  hless = mol.clone('not hydrogen')
+
+  # create a copy of the original
+  dup = mol.clone()
+
+You can append the structure and associated forcefield from one `System`
+onto another using System's ``append`` method::
+
+  # duplicate the protein by appending to itself
+  protein.append(protein)
+
+  # load a water system and append it to the protein system.  Just as for
+  # CloneSystem, after appending water to protein, modifications to water
+  # will not affect any atoms in protein.
+  water = msy.LoadDMS('water.dms')
+  protein.append(water)
+
+
 Grammar
---------
+=======
 
 The Msys atom selection grammar supports several primitive types which 
 can be combined in various ways using logical operators.  Primitive
@@ -80,46 +146,8 @@ In comparisons, expressions can be formed in the following ways.
     sqr(x)/36 + sqr(z)/125 < 1  # an ellipsoidal cylinder
 
 
-Differences with VMD
----------------------
-
-Although the atom selection language in msys is similar to VMD's, there
-are some important differences to bear in mind if you switch between
-them:
-
-* Element matching: In Msys, the atom selections "carbon", "hydrogen",
-  "oxygen", etc. are based on the atomic number of the atoms.  In VMD,
-  these atom selections are computed using a regular expression based
-  on the atom name::
-
-    vmd > atomselect macro oxygen name "O.*"
-
-    vmd > atomselect macro hydrogen name "[0-9]?H.*"
-
-    vmd > atomselect macro nitrogen name "N.*"
-
-    vmd > atomselect macro carbon name "C.*" and not ion
-
-* Implicit 'and': in VMD, selections can sometimes be concatenated with
-  an implicit 'and'; e.g. "water within 3 of protein" will be parsed by
-  VMD as "water and within 3 of protein".  In Msys, omitting the 'and' will
-  result in a parse error.
-
-* Field size: DMS and MAE files can hold chain, segment, and residue names
-  of arbitrary length.  In Msys, these values are used as-is.  In VMD,
-  the values are truncated; in particular, chain will be truncated to
-  a single character in VMD, but not by Msys.
-
-* Data representation: Msys has no concept of secondary structure, so the
-  "sheet", helix", etc. atom selection keywords are not implemented in 
-  msys.
-  
-* Floating-point roundoff: There may occasionally be differences in the
-  results of distance based atom selections simply due the fact that Msys
-  stores positions as doubles, while VMD stores them as floats.  
-
 Built-in selections
-*******************
+-------------------
 
 The following selection keywords are available:
 
@@ -227,6 +255,7 @@ The following are implemented as macros.
 
 Smarts pattern selections
 -------------------------
+
 A SMARTS pattern is like a regular expression for molecular structures;
 it's a concise way of specifying what sort of atom types and topology
 you are looking for.  SMARTS patterns can be embedded in an atom selection
@@ -239,7 +268,7 @@ characters like parentheses::
 
 See the description of the ``Smarts`` class for more information.
 
-.. info ::
+.. note::
 
     In version 1.7.303, the behavior of the r<n> pattern changed in
     order to better conform to the Daylight smiles specification.
@@ -252,6 +281,7 @@ See the description of the ``Smarts`` class for more information.
 Parameter type selections
 -------------------------
 
+
 If a ParamTable contains a column named 'type', you can query for
 atoms which participate in an interaction involving that type using the
 'paramtype' keyword.  For example::
@@ -262,6 +292,7 @@ atoms which participate in an interaction involving that type using the
 
 Comparison selections
 ---------------------
+
 
 Comparisons are formed from two expressions and a binary comparison
 operator.  The available comparison operators are the usual inequality
@@ -296,8 +327,41 @@ also be used as an atom selection keyword.  For example::
   assert mol.select('foo jrg') == mol.select('name CA')
 
 
-User-defined atom selection macros
-----------------------------------
+Differences with VMD
+--------------------
 
-This feature was removed in msys 1.7.7.
+Although the atom selection language in msys is similar to VMD's, there
+are some important differences to bear in mind if you switch between
+them:
+
+* Element matching: In Msys, the atom selections "carbon", "hydrogen",
+  "oxygen", etc. are based on the atomic number of the atoms.  In VMD,
+  these atom selections are computed using a regular expression based
+  on the atom name::
+
+    vmd > atomselect macro oxygen name "O.*"
+
+    vmd > atomselect macro hydrogen name "[0-9]?H.*"
+
+    vmd > atomselect macro nitrogen name "N.*"
+
+    vmd > atomselect macro carbon name "C.*" and not ion
+
+* Implicit 'and': in VMD, selections can sometimes be concatenated with
+  an implicit 'and'; e.g. "water within 3 of protein" will be parsed by
+  VMD as "water and within 3 of protein".  In Msys, omitting the 'and' will
+  result in a parse error.
+
+* Field size: DMS and MAE files can hold chain, segment, and residue names
+  of arbitrary length.  In Msys, these values are used as-is.  In VMD,
+  the values are truncated; in particular, chain will be truncated to
+  a single character in VMD, but not by Msys.
+
+* Data representation: Msys has no concept of secondary structure, so the
+  "sheet", helix", etc. atom selection keywords are not implemented in 
+  msys.
+  
+* Floating-point roundoff: There may occasionally be differences in the
+  results of distance based atom selections simply due the fact that Msys
+  stores positions as doubles, while VMD stores them as floats.  
 
