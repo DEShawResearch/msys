@@ -21,8 +21,9 @@ namespace {
     auto py_as_bytes = PyString_FromStringAndSize;
 #endif
 
-    std::string format_json(SystemPtr mol) {
-        return FormatJson(mol, Provenance());
+    std::string format_json(SystemPtr mol, int maxDecimals) {
+        unsigned flags = 0;
+        return FormatJson(mol, Provenance(), flags, maxDecimals);
     }
 
     PyObject* format_dms(SystemPtr mol) {

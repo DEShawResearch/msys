@@ -17,9 +17,10 @@ namespace desres { namespace msys {
     };
 
     void ExportJson(SystemPtr mol, std::string const& path, Provenance const& provenance,
-            unsigned flags=0);
+            unsigned flags=0, int maxDecimals=-1);
 
-    std::string FormatJson(SystemPtr mol, Provenance const& provenance, unsigned flags=0);
+    std::string FormatJson(SystemPtr mol, Provenance const& provenance, unsigned flags=0,
+            int maxDecimals=-1);
 
 }}
 

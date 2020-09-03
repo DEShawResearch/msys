@@ -357,7 +357,7 @@ static void export_json(Document& d, System& mol, Provenance const& provenance, 
 namespace desres { namespace msys {
 
     void ExportJson(SystemPtr mol, std::string const& path, Provenance const& provenance,
-            unsigned flags) {
+            unsigned flags, int maxDecimals) {
 
         char writeBuffer[65536];
         auto fp = std::shared_ptr<FILE>(fopen(path.data(), "wb"), fclose);
@@ -371,23 +371,35 @@ namespace desres { namespace msys {
         FileWriteStream os(fp.get(), writeBuffer, sizeof(writeBuffer));
         if (flags & JsonExport::Whitespace) {
             PrettyWriter<FileWriteStream> writer(os);
+            if (maxDecimals >= 0) {
+                writer.SetMaxDecimalPlaces(maxDecimals);
+            }
             d.Accept(writer);
         } else {
             Writer<FileWriteStream> writer(os);
+            if (maxDecimals >= 0) {
+                writer.SetMaxDecimalPlaces(maxDecimals);
+            }
             d.Accept(writer);
         }
     }
 
-    std::string FormatJson(SystemPtr mol, Provenance const& provenance, unsigned flags) {
+    std::string FormatJson(SystemPtr mol, Provenance const& provenance, unsigned flags, int maxDecimals) {
 
         Document d;
         export_json(d, *mol, provenance, flags);
         StringBuffer buffer;
         if (flags & JsonExport::Whitespace) {
             PrettyWriter<StringBuffer> writer(buffer);
+            if (maxDecimals >= 0) {
+                writer.SetMaxDecimalPlaces(maxDecimals);
+            }
             d.Accept(writer);
         } else {
             Writer<StringBuffer> writer(buffer);
+            if (maxDecimals >= 0) {
+                writer.SetMaxDecimalPlaces(maxDecimals);
+            }
             d.Accept(writer);
         }
         return buffer.GetString();
@@ -400,13 +412,13 @@ namespace desres { namespace msys {
 namespace desres { namespace msys {
 
     void ExportJson(SystemPtr mol, std::string const& path, Provenance const& provenance,
-            unsigned flags) {
+            unsigned flags, int maxDecimals) {
         MSYS_FAIL("rapidjson not available; no json export support");
             }
 
 
 
-    std::string FormatJson(SystemPtr mol, Provenance const& provenance, unsigned flags) {
+    std::string FormatJson(SystemPtr mol, Provenance const& provenance, unsigned flags, int maxDecimals) {
          MSYS_FAIL("rapidjson not available; no json export support");
     }
 

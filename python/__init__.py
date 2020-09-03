@@ -2422,9 +2422,9 @@ def FormatDMS(system):
     return _msys.FormatDMS(system._ptr)
 
 
-def FormatJson(system):
+def FormatJson(system, maxDecimals=-1):
     """Json formatted system (EXPERIMENTAL)"""
-    return _msys.FormatJson(system._ptr)
+    return _msys.FormatJson(system._ptr, maxDecimals)
 
 
 def ParseJson(text):
