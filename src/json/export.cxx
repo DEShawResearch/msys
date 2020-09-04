@@ -130,18 +130,23 @@ static Value export_params(msys::ParamTablePtr params, Document& d, NameMap& map
     for (Id i=0, n=params->propCount(); i<n; i++) {
         Value prop(kObjectType);
         Value vals(kArrayType);
+        bool nonzero = false;
 
         switch (params->propType(i)) {
             case msys::IntType:
                 prop.AddMember("type", "i", alloc);
                 for (Id j=0, m=params->paramCount(); j<m; j++) {
-                    vals.PushBack(params->value(j,i).asInt(), alloc);
+                    auto v = params->value(j,i).asInt();
+                    if (v != 0) nonzero = true;
+                    vals.PushBack(v, alloc);
                 }
                 break;
             case msys::FloatType:
                 prop.AddMember("type", "f", alloc);
                 for (Id j=0, m=params->paramCount(); j<m; j++) {
-                    vals.PushBack(params->value(j,i).asFloat(), alloc);
+                    auto v = params->value(j,i).asFloat();
+                    if (v != 0.0) nonzero = true;
+                    vals.PushBack(v, alloc);
                 }
                 break;
             case msys::StringType:
@@ -149,10 +154,11 @@ static Value export_params(msys::ParamTablePtr params, Document& d, NameMap& map
                 for (Id j=0, m=params->paramCount(); j<m; j++) {
                     auto s = params->value(j,i).c_str();
                     vals.PushBack(register_name(s, strlen(s), map, d), alloc);
+                    nonzero = true;
                 }
                 break;
         };
-        prop.AddMember("vals", vals, alloc);
+        if (nonzero) prop.AddMember("vals", vals, alloc);
 
         Value s;
         auto name = params->propName(i);

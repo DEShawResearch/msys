@@ -229,24 +229,47 @@ static void read_params(Value const& val, Value const& names, ParamTablePtr para
     for (Id i=0; i<nparams; i++) params->addParam();
     for (auto const& m : val["props"].GetObject()) {
         auto type = parse_type(m.value["type"].GetString());
-        auto vals = m.value["vals"].GetArray();
+
         Id j=params->addProp(m.name.GetString(), type);
-        switch (type) {
-            case msys::IntType:
-                for (Id i=0; i<nparams; i++) {
-                    params->value(i,j) = vals[i].GetInt();
-                }
-                break;
-            case msys::FloatType:
-                for (Id i=0; i<nparams; i++) {
-                    params->value(i,j) = vals[i].GetDouble();
-                }
-                break;
-            case msys::StringType:
-                for (Id i=0; i<nparams; i++) {
-                    params->value(i,j) = names[vals[i].GetInt()].GetString();
-                }
-                break;
+
+        auto const& valm = m.value.FindMember("vals");
+        if (valm == m.value.MemberEnd()) {
+            switch (type) {
+                case msys::IntType:
+                    for (Id i=0; i<nparams; i++) {
+                        params->value(i,j) = 0;
+                    }
+                    break;
+                case msys::FloatType:
+                    for (Id i=0; i<nparams; i++) {
+                        params->value(i,j) = 0.0;
+                    }
+                    break;
+                case msys::StringType:
+                    for (Id i=0; i<nparams; i++) {
+                        params->value(i,j) = "";
+                    }
+                    break;
+            }
+        } else {
+            auto vals = m.value["vals"].GetArray();
+            switch (type) {
+                case msys::IntType:
+                    for (Id i=0; i<nparams; i++) {
+                        params->value(i,j) = vals[i].GetInt();
+                    }
+                    break;
+                case msys::FloatType:
+                    for (Id i=0; i<nparams; i++) {
+                        params->value(i,j) = vals[i].GetDouble();
+                    }
+                    break;
+                case msys::StringType:
+                    for (Id i=0; i<nparams; i++) {
+                        params->value(i,j) = names[vals[i].GetInt()].GetString();
+                    }
+                    break;
+            }
         }
     }
 }
