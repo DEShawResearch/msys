@@ -22,6 +22,12 @@ def vsize():
         s = p.read()
     return int(s)
 
+def SaveJson(system, path, transform=None):
+    data = msys.FormatJson(system).encode()
+    if transform is not None:
+        data = transform(data)
+    with open(path, 'wb') as ofs:
+        ofs.write(data)
 
 class TestJson(unittest.TestCase):
     def test2f4k(self):
@@ -70,11 +76,98 @@ class TestJson(unittest.TestCase):
         js = msys.FormatJson(mol)
         print(len(js), js)
         d = json.loads(js)
+        self.assertFalse("cell" in d)
+        self.assertFalse("names" in d)
+        self.assertFalse("chains" in d)
+        self.assertFalse("residues" in d)
         self.assertFalse("pos" in d["particles"])
         self.assertFalse("vel" in d["particles"])
         self.assertFalse("res" in d["particles"])
-        self.assertTrue("name" in d["particles"])
+        self.assertFalse("name" in d["particles"])
+        self.assertFalse("tags" in d["particles"])
+        self.assertFalse("tags" in d["bonds"])
 
+    def testJsonSizes(self):
+        import gzip
+        import zlib
+        import lzma
+        import bz2
+        
+        compressors = [
+            (None  ,  lambda d : d),
+            ('.gz',  lambda d : gzip.compress(d, compresslevel=9)),
+            ('.z',   lambda d : zlib.compress(d, level=9)),
+            ('.bz2', lambda d : bz2.compress(d, compresslevel=9)),
+        ]
+
+        try:
+            import zstandard
+            def zstd(data):
+                cctx = zstandard.ZstdCompressor(level=19)
+                return cctx.compress(data)
+            compressors.append(('.zst', zstd))
+        except ImportError:
+            pass
+
+        compressors.append(('.xz',  lambda d : lzma.compress(d, format=lzma.FORMAT_XZ, preset=9)))
+
+        try:
+            import brotli
+            def br(data):
+                return brotli.compress(data, quality=11)
+            compressors.append(('.br', br))
+        except ImportError:
+            pass
+
+        sizes = []
+
+        def test_all(name, mol):
+            these = [name]
+            for ext, transform in compressors:
+                fname = "build/" + name + '.json'
+                if ext is not None:
+                    fname += ext
+                SaveJson(mol, fname, transform=transform)
+                these.append(os.path.getsize(fname))
+            sizes.append(these)
+
+        mol = msys.Load("tests/files/cdk2-ligand-Amber14EHT.dms")
+        test_all('default', mol)
+        mol.positions = NP.zeros(mol.positions.shape)
+        test_all('no-pos', mol)
+        mol.table('exclusion').remove()
+        mol.table('pair_12_6_es').remove()
+        test_all('no-excl', mol)
+
+        def remove_bond_orders(mol):
+            for atom in mol.atoms:
+                atom.atomic_number = 0
+                atom.formal_charge = 0
+                atom.name = ''
+            for bond in mol.bonds:
+                bond.order = 0
+                
+        remove_bond_orders(mol)
+        test_all('borders', mol)
+
+        def delete_zero_force_constants(system):
+            for msys_table in system.tables:
+                for prop_name in msys_table.params.props:
+                    values = set()
+                    for msys_term in msys_table.terms:
+                        values.add(msys_term[prop_name])
+
+                    if values == {0.0}:
+                        msys_table.params.delProp(prop_name)
+                        print('deleting prop', msys_table.name, prop_name)
+
+        delete_zero_force_constants(mol)
+        test_all('no-zfc', mol)
+
+        print()
+        print('name', *(e for e, t in compressors), sep='\t')
+        for these in sizes:
+            print(*these, sep='\t')
 
 class TestNeutralize(unittest.TestCase):
     def test1(self):

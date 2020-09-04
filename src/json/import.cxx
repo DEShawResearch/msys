@@ -68,19 +68,20 @@ static std::shared_ptr<char> slurp(const char* path) {
 }
 
 static void read_chains(Document const& d, SystemPtr mol) {
-    auto& names = d["names"];
-    auto& chains = d["chains"];
-    if (chains.ObjectEmpty()) {
+    auto const& m = d.FindMember("chains");
+    if (m == d.MemberEnd() || m->value.ObjectEmpty()) {
         mol->addChain();
         return;
     }
-    
+    auto& chains = m->value;
+
     // required fields
     auto& name = chains["name"];
 
     // optional fields
     auto const& segid = chains.FindMember("segid");
 
+    auto& names = d["names"];
     for (Id i=0, n=chains["count"].GetInt(); i<n; i++) {
         auto& chn = mol->chainFAST(mol->addChain());
         chn.name = names[name[i].GetInt()].GetString();
@@ -91,13 +92,13 @@ static void read_chains(Document const& d, SystemPtr mol) {
 }
 
 static void read_residues(Document const& d, SystemPtr mol) {
-    auto& names = d["names"];
-    auto& residues = d["residues"];
-    if (residues.ObjectEmpty()) {
+    auto const &m = d.FindMember("residues");
+    if (m == d.MemberEnd() || m->value.ObjectEmpty()) {
         mol->addResidue(0);
         return;
     }
-    
+    auto& residues = m->value;
+
     // required fields
     auto& chain = residues["chain"];
     auto& resid = residues["resid"];
@@ -106,6 +107,7 @@ static void read_residues(Document const& d, SystemPtr mol) {
     // optional fields
     auto const& insertion = residues.FindMember("insertion");
 
+    auto& names = d["names"];
     for (Id i=0, n=residues["count"].GetInt(); i<n; i++) {
         auto& res = mol->residueFAST(mol->addResidue(chain[i].GetInt()));
         res.name = names[name[i].GetInt()].GetString();
@@ -169,11 +171,12 @@ static void read_particles(Document const& d, SystemPtr mol) {
     auto& particles = d["particles"];
     const Id natoms = particles["count"].GetInt();
     // required fields
-    auto& anum = particles["atomic_number"];
-    auto& fc = particles["formal_charge"];
-    auto& name = particles["name"];
 
     // optional fields
+    auto const& anum = particles.FindMember("atomic_number");
+    auto const& name = particles.FindMember("name");
+    auto const& fc = particles.FindMember("formal_charge");
+
     auto const& pos = particles.FindMember("position");
     auto const& vel = particles.FindMember("velocity");
     auto const& residue = particles.FindMember("residue");
@@ -184,7 +187,8 @@ static void read_particles(Document const& d, SystemPtr mol) {
     for (Id i=0; i<natoms; i++) {
         Id res = residue != particles.MemberEnd() ? residue->value[i].GetInt() : 0;
         auto& atm = mol->atomFAST(mol->addAtom(res));
-        atm.name = names[name[i].GetInt()].GetString();
+        if (name != particles.MemberEnd()) atm.name = names[name->value[i].GetInt()].GetString();
+
         if (pos != particles.MemberEnd()) {
             atm.x = pos->value[3*i  ].GetDouble();
             atm.y = pos->value[3*i+1].GetDouble();
@@ -195,9 +199,9 @@ static void read_particles(Document const& d, SystemPtr mol) {
             atm.vy = vel->value[3*i+1].GetDouble();
             atm.vz = vel->value[3*i+2].GetDouble();
         }
-        atm.atomic_number = anum[i].GetInt();
-        atm.formal_charge = fc[i].GetInt();
 
+        if (anum != particles.MemberEnd()) atm.atomic_number = anum->value[i].GetInt();
+        if (fc != particles.MemberEnd()) atm.formal_charge = fc->value[i].GetInt();
         if (mass != particles.MemberEnd()) atm.mass = mass->value[i].GetDouble();
         if (charge != particles.MemberEnd()) atm.charge = charge->value[i].GetDouble();
     }
@@ -248,9 +252,9 @@ static void read_params(Value const& val, Value const& names, ParamTablePtr para
 }
 
 static void read_aux(Document const& d, SystemPtr mol) {
-    auto& names = d["names"];
     auto const& tables = d.FindMember("aux");
     if (tables == d.MemberEnd()) return;
+    auto& names = d["names"];
     for (auto& m : tables->value.GetObject()) {
         auto params = ParamTable::create();
         read_params(m.value, names, params);
@@ -290,8 +294,11 @@ static void read_tables(Document const& d, SystemPtr mol) {
             }
             table->addTerm(atoms, params[i].GetInt());
         }
-        auto& tags = m.value["tags"];
-        read_tags(tags, table->props(), names);
+
+        auto const &tags = m.value.FindMember("tags");
+        if (tags != m.value.MemberEnd()) {
+            read_tags(tags->value, table->props(), names);
+        }
     }
 }
 
