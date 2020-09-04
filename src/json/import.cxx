@@ -67,6 +67,23 @@ static std::shared_ptr<char> slurp(const char* path) {
     return std::shared_ptr<char>(tmpbuf, free);
 }
 
+template<typename T>
+void check_sizes(const char *fname, T const &a1, const char *name1, T const &a2, const char *name2) {
+    if (a1.Size() != a2.Size()) {
+        MSYS_FAIL("function " << fname << " expected " << name1 << " and " << name2 << " arrays to be the same size, found " << a1.Size() << " and " << a2.Size());
+    }
+}
+
+template<typename T, typename S>
+void check_size(const char *fname, T const &a1, const char *name1, S s) {
+    if (a1.Size() != s) {
+        MSYS_FAIL("function " << fname << " expected " << name1 << " arrays to be the size " << s << " found " << a1.Size());
+    }
+}
+
+#define CHECK_SIZES(a1, name1, a2, name2) check_sizes(__FUNCTION__, a1, name1, a2, name2)
+#define CHECK_SIZE(a1, name1, s) check_size(__FUNCTION__, a1, name1, s)
+
 static void read_chains(Document const& d, SystemPtr mol) {
     auto const& m = d.FindMember("chains");
     if (m == d.MemberEnd() || m->value.ObjectEmpty()) {
@@ -80,9 +97,10 @@ static void read_chains(Document const& d, SystemPtr mol) {
 
     // optional fields
     auto const& segid = chains.FindMember("segid");
+    if (segid != chains.MemberEnd()) CHECK_SIZES(name, "name", segid->value, "segid");
 
     auto& names = d["names"];
-    for (Id i=0, n=chains["count"].GetInt(); i<n; i++) {
+    for (Id i=0, n=name.Size(); i<n; i++) {
         auto& chn = mol->chainFAST(mol->addChain());
         chn.name = names[name[i].GetInt()].GetString();
         if (segid != chains.MemberEnd()) {
@@ -102,13 +120,16 @@ static void read_residues(Document const& d, SystemPtr mol) {
     // required fields
     auto& chain = residues["chain"];
     auto& resid = residues["resid"];
+    CHECK_SIZES(chain, "chain", resid, "resid");
     auto& name = residues["name"];
+    CHECK_SIZES(chain, "chain", resid, "name");
 
     // optional fields
     auto const& insertion = residues.FindMember("insertion");
+    if (insertion != residues.MemberEnd()) CHECK_SIZES(chain, "chain", insertion->value, "insertion");
 
     auto& names = d["names"];
-    for (Id i=0, n=residues["count"].GetInt(); i<n; i++) {
+    for (Id i=0, n=chain.Size(); i<n; i++) {
         auto& res = mol->residueFAST(mol->addResidue(chain[i].GetInt()));
         res.name = names[name[i].GetInt()].GetString();
         res.resid = resid[i].GetInt();
@@ -138,7 +159,8 @@ static void read_tags(Value const& tags, ParamTablePtr params, Value const& name
         Id propid = params->addProp(m.name.GetString(), type);
         Value const& ids = m.value["ids"];
         Value const& vals = m.value["vals"];
-        for (Id i=0, n=m.value["count"].GetInt(); i<n; i++) {
+        CHECK_SIZES(ids, "ids", vals, "vals");
+        for (Id i=0, n=ids.Size(); i<n; i++) {
             Id id = ids[i].GetInt();
             while (params->paramCount() < id) params->addParam();
             auto ref = params->value(id, propid);
@@ -169,20 +191,58 @@ static void read_cell(Document const& d, SystemPtr mol) {
 static void read_particles(Document const& d, SystemPtr mol) {
     auto& names = d["names"];
     auto& particles = d["particles"];
-    const Id natoms = particles["count"].GetInt();
-    // required fields
+    Id natoms = msys::BadId;
 
     // optional fields
     auto const& anum = particles.FindMember("atomic_number");
+    if (anum != particles.MemberEnd()) {
+        natoms = anum->value.Size();
+    }
+
     auto const& name = particles.FindMember("name");
+    if (name != particles.MemberEnd()) {
+        if (natoms == msys::BadId) natoms = name->value.Size();
+        CHECK_SIZE(name->value, "name", natoms);
+    }
+
     auto const& fc = particles.FindMember("formal_charge");
+    if (fc != particles.MemberEnd()) {
+        if (natoms == msys::BadId) natoms = fc->value.Size();
+        CHECK_SIZE(fc->value, "formal_charge", natoms);
+    }
 
     auto const& pos = particles.FindMember("position");
+    if (pos != particles.MemberEnd()) {
+        if (natoms == msys::BadId) natoms = pos->value.Size() / 3;
+        CHECK_SIZE(pos->value, "position", natoms * 3);
+    }
+
     auto const& vel = particles.FindMember("velocity");
+    if (vel != particles.MemberEnd()) {
+        if (natoms == msys::BadId) natoms = vel->value.Size() / 3;
+        CHECK_SIZE(vel->value, "velocity", natoms * 3);
+    }
+
     auto const& residue = particles.FindMember("residue");
+    if (residue != particles.MemberEnd()) {
+        if (natoms == msys::BadId) natoms = residue->value.Size();
+        CHECK_SIZE(residue->value, "residue", natoms);
+    }
+
     auto const& mass = particles.FindMember("mass");
+    if (mass != particles.MemberEnd()) {
+        if (natoms == msys::BadId) natoms = mass->value.Size();
+        CHECK_SIZE(mass->value, "mass", natoms);
+    }
+
     auto const& charge = particles.FindMember("charge");
-    
+    if (charge != particles.MemberEnd()) {
+        if (natoms == msys::BadId) natoms = charge->value.Size();
+        CHECK_SIZE(charge->value, "charge", natoms);
+    }
+
+    if (natoms == msys::BadId)
+        MSYS_FAIL("Unable to find any atoms in the particles object!");
 
     for (Id i=0; i<natoms; i++) {
         Id res = residue != particles.MemberEnd() ? residue->value[i].GetInt() : 0;
@@ -215,18 +275,42 @@ static void read_particles(Document const& d, SystemPtr mol) {
 static void read_bonds(Document const& d, SystemPtr mol) {
     auto& bonds = d["bonds"];
     auto& p = bonds["particles"];
-    auto& order = bonds["order"];
-    for (Id i=0, n=bonds["count"].GetInt(); i<n; i++) {
+    Id nbonds = p.Size() / 2;
+
+    auto const& order = bonds.FindMember("order");
+    if (order != bonds.MemberEnd()) CHECK_SIZE(order->value, "order", nbonds);
+    
+    for (Id i=0, n=nbonds; i<n; i++) {
         auto& bond = mol->bondFAST(mol->addBond(
             p[2*i].GetInt(),
             p[2*i+1].GetInt()));
-        bond.order = order[i].GetInt();
+
+        if (order != bonds.MemberEnd()) {
+            bond.order = order->value[i].GetInt();
+        }
     }
 }
 
 static void read_params(Value const& val, Value const& names, ParamTablePtr params) {
-    const Id nparams = val["count"].GetInt();
-    for (Id i=0; i<nparams; i++) params->addParam();
+    Id nparams = msys::BadId;
+
+    // search for the number of parameters
+    auto const& count = val.FindMember("count");
+    if (count != val.MemberEnd()) {
+        nparams = count->value.GetInt();
+    } else {
+        for (auto const& m : val["props"].GetObject()) {
+            auto const& valm = m.value.FindMember("vals");
+            if (valm == m.value.MemberEnd()) continue; // no vals, skip along
+
+            nparams = m.value["vals"].GetArray().Size(); // use the first one we find
+            break;
+        }
+    }
+    // instantiate the parameters
+    for (Id i=0; i<nparams; i++)  params->addParam();
+
+    // now populate them with the appropriate values
     for (auto const& m : val["props"].GetObject()) {
         auto type = parse_type(m.value["type"].GetString());
 
@@ -253,6 +337,7 @@ static void read_params(Value const& val, Value const& names, ParamTablePtr para
             }
         } else {
             auto vals = m.value["vals"].GetArray();
+            CHECK_SIZE(vals, "vals", nparams);
             switch (type) {
                 case msys::IntType:
                     for (Id i=0; i<nparams; i++) {
@@ -307,11 +392,14 @@ static void read_tables(Document const& d, SystemPtr mol) {
         }
         read_params(m.value["param"], names, table->params());
         auto& terms = m.value["terms"];
+
         auto& particles = terms["particles"];
         auto& params = terms["params"];
+        CHECK_SIZE(params, "params", particles.Size() / table->atomCount());
+
         msys::IdList atoms(table->atomCount());
         Id particle_index = 0;
-        for (Id i=0, n=terms["count"].GetInt(); i<n; i++) {
+        for (Id i=0, n=params.Size(); i<n; i++) {
             for (Id j=0, m=table->atomCount(); j<m; j++) {
                 atoms[j] = particles[particle_index++].GetInt();
             }

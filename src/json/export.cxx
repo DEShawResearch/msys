@@ -108,7 +108,6 @@ static Value export_tags(msys::ParamTablePtr params, Document& d, NameMap& map) 
                 break;
         };
         if (true) { // vals.Size() > 0) {
-            tag.AddMember("count", ids.Size(), alloc); 
             tag.AddMember("ids", ids, alloc);
             tag.AddMember("vals", vals, alloc);
 
@@ -125,8 +124,8 @@ static Value export_params(msys::ParamTablePtr params, Document& d, NameMap& map
     auto& alloc = d.GetAllocator();
     Value param(kObjectType);
     Value props(kObjectType);
-    param.AddMember("count", params->paramCount(), alloc);
 
+    bool wrotevals = false;
     for (Id i=0, n=params->propCount(); i<n; i++) {
         Value prop(kObjectType);
         Value vals(kArrayType);
@@ -158,7 +157,10 @@ static Value export_params(msys::ParamTablePtr params, Document& d, NameMap& map
                 }
                 break;
         };
-        if (nonzero) prop.AddMember("vals", vals, alloc);
+        if (nonzero) {
+            prop.AddMember("vals", vals, alloc);
+            wrotevals = true;
+        }
 
         Value s;
         auto name = params->propName(i);
@@ -166,6 +168,11 @@ static Value export_params(msys::ParamTablePtr params, Document& d, NameMap& map
         props.AddMember(s, prop, alloc);
     }
     param.AddMember("props", props, alloc);
+
+    if (!wrotevals) {
+        param.AddMember("count", params->paramCount(), alloc);
+    }
+
     return param;
 }
 
@@ -223,7 +230,6 @@ static Value export_particles(Document& d, NameMap& map, System& mol) {
         if (a.x!=0  || a.y!=0  || a.z!=0)  nonzero_pos=true;
         if (a.vx!=0 || a.vy!=0 || a.vz!=0) nonzero_vel=true;
     }
-    p.AddMember("count", mol.atomCount(), alloc);
     if (nonzero_nam) p.AddMember("name", names, alloc);
     if (nonzero_anm) p.AddMember("atomic_number", anums, alloc);
     if (nonzero_fch) p.AddMember("formal_charge", fc, alloc);
@@ -253,7 +259,6 @@ static Value export_bonds(Document& d, NameMap& map, System& mol) {
         o.PushBack(a.order, alloc);
         if (a.order!=0) nonzero_order=true;
     }
-    b.AddMember("count", o.Size(), alloc);
     b.AddMember("particles", p, alloc);
     if (nonzero_order) b.AddMember("order", o, alloc);
     Value tags = export_tags(mol.bondProps(), d, map);
@@ -280,7 +285,6 @@ static Value export_residues(Document& d, NameMap& map, System const& mol) {
         }
     }
     if (nonzero || mol.residueCount() > 1) {
-        residues.AddMember("count", mol.residueCount(), alloc);
         residues.AddMember("chain", chain, alloc);
         residues.AddMember("resid", resid, alloc);
         residues.AddMember("name", name, alloc);
@@ -304,7 +308,6 @@ static Value export_chains(Document& d, NameMap& map, System const& mol) {
     if (nonzero || mol.chainCount()>1) {
         chains.AddMember("name", name, alloc);
         chains.AddMember("segid", segid, alloc);
-        chains.AddMember("count", mol.chainCount(), alloc);
     }
     return chains;
 }
@@ -321,7 +324,6 @@ static void export_terms(Value& obj, TermTablePtr table, Document& d) {
         }
         params.PushBack(int32_t(term.param()), alloc);
     }
-    terms.AddMember("count", table->termCount(), alloc);
     terms.AddMember("particles", particles, alloc);
     terms.AddMember("params", params, alloc);
     obj.AddMember("arity", table->atomCount(), alloc);
