@@ -150,20 +150,6 @@ class TestJson(unittest.TestCase):
         remove_bond_orders(mol)
         test_all('borders', mol)
 
-        def delete_zero_force_constants(system):
-            for msys_table in system.tables:
-                for prop_name in msys_table.params.props:
-                    values = set()
-                    for msys_term in msys_table.terms:
-                        values.add(msys_term[prop_name])
-
-                    if values == {0.0}:
-                        msys_table.params.delProp(prop_name)
-                        print('deleting prop', msys_table.name, prop_name)
-
-        delete_zero_force_constants(mol)
-        test_all('no-zfc', mol)
-
         print()
         print('name', *(e for e, t in compressors), sep='\t')
         for these in sizes:
