@@ -22,8 +22,8 @@ def vsize():
         s = p.read()
     return int(s)
 
-def SaveJson(system, path, transform=None):
-    data = msys.FormatJson(system).encode()
+def SaveJson(system, path, transform=None, maxDecimals=-1):
+    data = msys.FormatJson(system, maxDecimals=maxDecimals).encode()
     if transform is not None:
         data = transform(data)
     with open(path, 'wb') as ofs:
@@ -121,13 +121,13 @@ class TestJson(unittest.TestCase):
 
         sizes = []
 
-        def test_all(name, mol):
+        def test_all(name, mol, maxDecimals=-1):
             these = [name]
             for ext, transform in compressors:
                 fname = "build/" + name + '.json'
                 if ext is not None:
                     fname += ext
-                SaveJson(mol, fname, transform=transform)
+                SaveJson(mol, fname, transform=transform, maxDecimals=maxDecimals)
                 these.append(os.path.getsize(fname))
             sizes.append(these)
 
@@ -158,6 +158,8 @@ class TestJson(unittest.TestCase):
 
         remove_all_zero_term_properties(mol)
         test_all('rmtprop', mol)
+
+        test_all('maxdec', mol, maxDecimals=7)
 
         print()
         print('name', *(e for e, t in compressors), sep='\t')
