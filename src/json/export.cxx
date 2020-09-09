@@ -77,7 +77,7 @@ static Value export_tags(msys::ParamTablePtr params, Document& d, NameMap& map) 
 
         switch (params->propType(i)) {
             case msys::IntType:
-                tag.AddMember("type", "i", alloc);
+                tag.AddMember("t", "i", alloc);
                 for (Id j=0, m=params->paramCount(); j<m; j++) {
                     auto v = params->value(j,i).asInt();
                     if (v!=0) {
@@ -87,7 +87,7 @@ static Value export_tags(msys::ParamTablePtr params, Document& d, NameMap& map) 
                 }
                 break;
             case msys::FloatType:
-                tag.AddMember("type", "f", alloc);
+                tag.AddMember("t", "f", alloc);
                 for (Id j=0, m=params->paramCount(); j<m; j++) {
                     auto v = params->value(j,i).asFloat();
                     if (v!=0) {
@@ -97,7 +97,7 @@ static Value export_tags(msys::ParamTablePtr params, Document& d, NameMap& map) 
                 }
                 break;
             case msys::StringType:
-                tag.AddMember("type", "s", alloc);
+                tag.AddMember("t", "s", alloc);
                 for (Id j=0, m=params->paramCount(); j<m; j++) {
                     auto v = params->value(j,i).c_str();
                     if (*v) {
@@ -108,8 +108,8 @@ static Value export_tags(msys::ParamTablePtr params, Document& d, NameMap& map) 
                 break;
         };
         if (true) { // vals.Size() > 0) {
-            tag.AddMember("ids", ids, alloc);
-            tag.AddMember("vals", vals, alloc);
+            tag.AddMember("i", ids, alloc);
+            tag.AddMember("v", vals, alloc);
 
             Value s;
             auto name = params->propName(i);
@@ -133,7 +133,7 @@ static Value export_params(msys::ParamTablePtr params, Document& d, NameMap& map
 
         switch (params->propType(i)) {
             case msys::IntType:
-                prop.AddMember("type", "i", alloc);
+                prop.AddMember("t", "i", alloc);
                 for (Id j=0, m=params->paramCount(); j<m; j++) {
                     auto v = params->value(j,i).asInt();
                     if (v != 0) nonzero = true;
@@ -141,7 +141,7 @@ static Value export_params(msys::ParamTablePtr params, Document& d, NameMap& map
                 }
                 break;
             case msys::FloatType:
-                prop.AddMember("type", "f", alloc);
+                prop.AddMember("t", "f", alloc);
                 for (Id j=0, m=params->paramCount(); j<m; j++) {
                     auto v = params->value(j,i).asFloat();
                     if (v != 0.0) nonzero = true;
@@ -149,7 +149,7 @@ static Value export_params(msys::ParamTablePtr params, Document& d, NameMap& map
                 }
                 break;
             case msys::StringType:
-                prop.AddMember("type", "s", alloc);
+                prop.AddMember("t", "s", alloc);
                 for (Id j=0, m=params->paramCount(); j<m; j++) {
                     auto s = params->value(j,i).c_str();
                     vals.PushBack(register_name(s, strlen(s), map, d), alloc);
@@ -158,7 +158,7 @@ static Value export_params(msys::ParamTablePtr params, Document& d, NameMap& map
                 break;
         };
         if (nonzero) {
-            prop.AddMember("vals", vals, alloc);
+            prop.AddMember("v", vals, alloc);
             wrotevals = true;
         }
 
@@ -167,10 +167,10 @@ static Value export_params(msys::ParamTablePtr params, Document& d, NameMap& map
         s.SetString(name.data(), name.size(), alloc);
         props.AddMember(s, prop, alloc);
     }
-    param.AddMember("props", props, alloc);
+    param.AddMember("p", props, alloc);
 
     if (!wrotevals) {
-        param.AddMember("count", params->paramCount(), alloc);
+        param.AddMember("c", params->paramCount(), alloc);
     }
 
     return param;
@@ -233,8 +233,8 @@ static Value export_particles(Document& d, NameMap& map, System& mol) {
     if (nonzero_nam) p.AddMember("name", names, alloc);
     if (nonzero_anm) p.AddMember("atomic_number", anums, alloc);
     if (nonzero_fch) p.AddMember("formal_charge", fc, alloc);
-    p.AddMember("mass", mass, alloc);
-    p.AddMember("charge", charge, alloc);
+    p.AddMember("m", mass, alloc);
+    p.AddMember("c", charge, alloc);
     if (nonzero_pos) p.AddMember("position", pos, alloc);
     if (nonzero_vel) p.AddMember("velocity", vel, alloc);
     if (nonzero_res) p.AddMember("residue", residues, alloc);
@@ -259,7 +259,7 @@ static Value export_bonds(Document& d, NameMap& map, System& mol) {
         o.PushBack(a.order, alloc);
         if (a.order!=0) nonzero_order=true;
     }
-    b.AddMember("particles", p, alloc);
+    b.AddMember("i", p, alloc);
     if (nonzero_order) b.AddMember("order", o, alloc);
     Value tags = export_tags(mol.bondProps(), d, map);
     if (!tags.ObjectEmpty()) b.AddMember("tags", tags, alloc);
@@ -324,10 +324,10 @@ static void export_terms(Value& obj, TermTablePtr table, Document& d) {
         }
         params.PushBack(int32_t(term.param()), alloc);
     }
-    terms.AddMember("particles", particles, alloc);
-    terms.AddMember("params", params, alloc);
-    obj.AddMember("arity", table->atomCount(), alloc);
-    obj.AddMember("terms", terms, alloc);
+    terms.AddMember("i", particles, alloc);
+    terms.AddMember("p", params, alloc);
+    obj.AddMember("n", table->atomCount(), alloc);
+    obj.AddMember("t", terms, alloc);
 }
 
 static Value export_aux(Document& d, NameMap& map, System const& mol) {
@@ -351,20 +351,20 @@ static Value export_tables(Document& d, NameMap& map, System const& mol) {
         Value s;
 
         export_terms(tableobj, table, d);
-        tableobj.AddMember("param", export_params(table->params(), d, map), alloc);
+        tableobj.AddMember("p", export_params(table->params(), d, map), alloc);
         Value tags = export_tags(table->props(), d, map);
         if (!tags.ObjectEmpty()) tableobj.AddMember("tags", tags, alloc);
 
         Value attrs(kObjectType);
         auto category = msys::print(table->category);
         s.SetString(category.data(), category.size(), alloc);
-        attrs.AddMember("category", s, alloc);
+        attrs.AddMember("c", s, alloc);
         if (table_name == "nonbonded") {
             auto rule = mol.nonbonded_info.vdw_rule;
             s.SetString(rule.data(), rule.size(), alloc);
             attrs.AddMember("vdw_rule", s, alloc);
         }
-        tableobj.AddMember("attrs", attrs, alloc);
+        tableobj.AddMember("a", attrs, alloc);
 
         s.SetString(table_name.data(), table_name.size(), alloc);
         tables.AddMember(s, tableobj, alloc);
@@ -380,14 +380,14 @@ static void export_json(Document& d, System& mol, Provenance const& provenance, 
     NameMap map;
     Value cell = export_cell(d, map, mol);
     if (cell.Size() != 0) d.AddMember("cell", cell, alloc);
-    d.AddMember("particles", export_particles(d, map, mol), alloc);
-    d.AddMember("bonds", export_bonds(d, map, mol), alloc);
+    d.AddMember("i", export_particles(d, map, mol), alloc);
+    d.AddMember("b", export_bonds(d, map, mol), alloc);
     Value residues = export_residues(d, map, mol);
     if (!residues.ObjectEmpty()) d.AddMember("residues", residues, alloc);
     Value chains = export_chains(d, map, mol);
     if (!chains.ObjectEmpty()) d.AddMember("chains", chains, alloc);
     if (!(flags & desres::msys::JsonExport::StructureOnly)) {
-        d.AddMember("tables", export_tables(d, map, mol), alloc);
+        d.AddMember("t", export_tables(d, map, mol), alloc);
 
         Value aux = export_aux(d, map, mol);
         if (!aux.ObjectEmpty()) d.AddMember("aux", aux, alloc);

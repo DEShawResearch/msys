@@ -80,12 +80,12 @@ class TestJson(unittest.TestCase):
         self.assertFalse("names" in d)
         self.assertFalse("chains" in d)
         self.assertFalse("residues" in d)
-        self.assertFalse("pos" in d["particles"])
-        self.assertFalse("vel" in d["particles"])
-        self.assertFalse("res" in d["particles"])
-        self.assertFalse("name" in d["particles"])
-        self.assertFalse("tags" in d["particles"])
-        self.assertFalse("tags" in d["bonds"])
+        self.assertFalse("pos" in d["i"])
+        self.assertFalse("vel" in d["i"])
+        self.assertFalse("res" in d["i"])
+        self.assertFalse("name" in d["i"])
+        self.assertFalse("tags" in d["i"])
+        self.assertFalse("tags" in d["b"])
 
     def testJsonSizes(self):
         import gzip

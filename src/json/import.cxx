@@ -155,11 +155,11 @@ static void read_tags(Value const& tags, ParamTablePtr params, Value const& name
     using msys::FloatType;
     using msys::StringType;
     for (auto& m : tags.GetObject()) {
-        auto type = parse_type(m.value["type"].GetString());
+        auto type = parse_type(m.value["t"].GetString());
         Id propid = params->addProp(m.name.GetString(), type);
-        Value const& ids = m.value["ids"];
-        Value const& vals = m.value["vals"];
-        CHECK_SIZES(ids, "ids", vals, "vals");
+        Value const& ids = m.value["i"];
+        Value const& vals = m.value["v"];
+        CHECK_SIZES(ids, "i", vals, "v");
         for (Id i=0, n=ids.Size(); i<n; i++) {
             Id id = ids[i].GetInt();
             while (params->paramCount() < id) params->addParam();
@@ -190,7 +190,7 @@ static void read_cell(Document const& d, SystemPtr mol) {
 
 static void read_particles(Document const& d, SystemPtr mol) {
     auto& names = d["names"];
-    auto& particles = d["particles"];
+    auto& particles = d["i"];
     Id natoms = msys::BadId;
 
     // optional fields
@@ -229,16 +229,16 @@ static void read_particles(Document const& d, SystemPtr mol) {
         CHECK_SIZE(residue->value, "residue", natoms);
     }
 
-    auto const& mass = particles.FindMember("mass");
+    auto const& mass = particles.FindMember("m");
     if (mass != particles.MemberEnd()) {
         if (natoms == msys::BadId) natoms = mass->value.Size();
-        CHECK_SIZE(mass->value, "mass", natoms);
+        CHECK_SIZE(mass->value, "m", natoms);
     }
 
-    auto const& charge = particles.FindMember("charge");
+    auto const& charge = particles.FindMember("c");
     if (charge != particles.MemberEnd()) {
         if (natoms == msys::BadId) natoms = charge->value.Size();
-        CHECK_SIZE(charge->value, "charge", natoms);
+        CHECK_SIZE(charge->value, "c", natoms);
     }
 
     if (natoms == msys::BadId)
@@ -273,8 +273,8 @@ static void read_particles(Document const& d, SystemPtr mol) {
 }
 
 static void read_bonds(Document const& d, SystemPtr mol) {
-    auto& bonds = d["bonds"];
-    auto& p = bonds["particles"];
+    auto& bonds = d["b"];
+    auto& p = bonds["i"];
     Id nbonds = p.Size() / 2;
 
     auto const& order = bonds.FindMember("order");
@@ -295,15 +295,15 @@ static void read_params(Value const& val, Value const& names, ParamTablePtr para
     Id nparams = msys::BadId;
 
     // search for the number of parameters
-    auto const& count = val.FindMember("count");
+    auto const& count = val.FindMember("c");
     if (count != val.MemberEnd()) {
         nparams = count->value.GetInt();
     } else {
-        for (auto const& m : val["props"].GetObject()) {
-            auto const& valm = m.value.FindMember("vals");
+        for (auto const& m : val["p"].GetObject()) {
+            auto const& valm = m.value.FindMember("v");
             if (valm == m.value.MemberEnd()) continue; // no vals, skip along
 
-            nparams = m.value["vals"].GetArray().Size(); // use the first one we find
+            nparams = m.value["v"].GetArray().Size(); // use the first one we find
             break;
         }
     }
@@ -311,12 +311,12 @@ static void read_params(Value const& val, Value const& names, ParamTablePtr para
     for (Id i=0; i<nparams; i++)  params->addParam();
 
     // now populate them with the appropriate values
-    for (auto const& m : val["props"].GetObject()) {
-        auto type = parse_type(m.value["type"].GetString());
+    for (auto const& m : val["p"].GetObject()) {
+        auto type = parse_type(m.value["t"].GetString());
 
         Id j=params->addProp(m.name.GetString(), type);
 
-        auto const& valm = m.value.FindMember("vals");
+        auto const& valm = m.value.FindMember("v");
         if (valm == m.value.MemberEnd()) {
             switch (type) {
                 case msys::IntType:
@@ -336,8 +336,8 @@ static void read_params(Value const& val, Value const& names, ParamTablePtr para
                     break;
             }
         } else {
-            auto vals = m.value["vals"].GetArray();
-            CHECK_SIZE(vals, "vals", nparams);
+            auto vals = m.value["v"].GetArray();
+            CHECK_SIZE(vals, "v", nparams);
             switch (type) {
                 case msys::IntType:
                     for (Id i=0; i<nparams; i++) {
@@ -372,13 +372,13 @@ static void read_aux(Document const& d, SystemPtr mol) {
 
 static void read_tables(Document const& d, SystemPtr mol) {
     auto& names = d["names"];
-    auto const& tables = d.FindMember("tables");
+    auto const& tables = d.FindMember("t");
     if (tables == d.MemberEnd()) return;
     for (auto& m : tables->value.GetObject()) {
-        auto table = mol->addTable(m.name.GetString(), m.value["arity"].GetInt());
-        auto attrs = m.value.FindMember("attrs");
+        auto table = mol->addTable(m.name.GetString(), m.value["n"].GetInt());
+        auto attrs = m.value.FindMember("a");
         if (attrs != m.value.MemberEnd()) {
-            auto const& category = attrs->value.FindMember("category");
+            auto const& category = attrs->value.FindMember("c");
             if (category != attrs->value.MemberEnd()) {
                 table->category = msys::parse(category->value.GetString());
             }
@@ -390,12 +390,12 @@ static void read_tables(Document const& d, SystemPtr mol) {
                 }
             }
         }
-        read_params(m.value["param"], names, table->params());
-        auto& terms = m.value["terms"];
+        read_params(m.value["p"], names, table->params());
+        auto& terms = m.value["t"];
 
-        auto& particles = terms["particles"];
-        auto& params = terms["params"];
-        CHECK_SIZE(params, "params", particles.Size() / table->atomCount());
+        auto& particles = terms["i"];
+        auto& params = terms["p"];
+        CHECK_SIZE(params, "p", particles.Size() / table->atomCount());
 
         msys::IdList atoms(table->atomCount());
         Id particle_index = 0;
