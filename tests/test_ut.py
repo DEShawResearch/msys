@@ -150,6 +150,15 @@ class TestJson(unittest.TestCase):
         remove_bond_orders(mol)
         test_all('borders', mol)
 
+        def remove_all_zero_term_properties(mol):
+            for table in mol.tables:
+                for name in table.term_props:
+                    if all(t[name]==0 for t in table.terms):
+                        table.delTermProp(name)
+
+        remove_all_zero_term_properties(mol)
+        test_all('rmtprop', mol)
+
         print()
         print('name', *(e for e, t in compressors), sep='\t')
         for these in sizes:
