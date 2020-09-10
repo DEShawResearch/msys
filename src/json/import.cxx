@@ -7,6 +7,7 @@
 #  if __has_include (<rapidjson/document.h>)
 #    include <rapidjson/document.h>
 #    include <rapidjson/reader.h>
+#    include <rapidjson/error/en.h>
 #    define MSYS_WITH_RAPID_JSON
 using namespace rapidjson;
 #  endif
@@ -85,8 +86,9 @@ void check_size(const char *fname, T const &a1, const char *name1, S s) {
 #define CHECK_SIZE(a1, name1, s) check_size(__FUNCTION__, a1, name1, s)
 
 static void read_chains(Document const& d, SystemPtr mol) {
-    auto const& m = d.FindMember("chains");
-    if (m == d.MemberEnd() || m->value.ObjectEmpty()) {
+    auto o = d.GetObject();
+    auto const& m = o.FindMember("chains");
+    if (m == o.MemberEnd() || m->value.ObjectEmpty()) {
         mol->addChain();
         return;
     }
@@ -180,8 +182,12 @@ static void read_tags(Value const& tags, ParamTablePtr params, Value const& name
 }
 
 static void read_cell(Document const& d, SystemPtr mol) {
-    auto& cell = d["cell"];
-    if (cell.Empty()) return;
+    auto const &m = d.FindMember("cell");
+    if (m == d.MemberEnd() || m->value.Empty()) {
+        return;
+    }
+    auto& cell = m->value;
+
     double* dst = mol->global_cell[0];
     for (int i=0; i<9; i++) {
         dst[i] = cell[i].GetDouble();
@@ -189,7 +195,8 @@ static void read_cell(Document const& d, SystemPtr mol) {
 }
 
 static void read_particles(Document const& d, SystemPtr mol) {
-    auto& names = d["names"];
+    auto const &names = d.FindMember("names");
+
     auto& particles = d["i"];
     Id natoms = msys::BadId;
 
@@ -247,7 +254,9 @@ static void read_particles(Document const& d, SystemPtr mol) {
     for (Id i=0; i<natoms; i++) {
         Id res = residue != particles.MemberEnd() ? residue->value[i].GetInt() : 0;
         auto& atm = mol->atomFAST(mol->addAtom(res));
-        if (name != particles.MemberEnd()) atm.name = names[name->value[i].GetInt()].GetString();
+        if (name != particles.MemberEnd()) {
+            atm.name = names->value[name->value[i].GetInt()].GetString();
+        }
 
         if (pos != particles.MemberEnd()) {
             atm.x = pos->value[3*i  ].GetDouble();
@@ -267,7 +276,7 @@ static void read_particles(Document const& d, SystemPtr mol) {
     }
     auto const& tags = particles.FindMember("tags");
     if (tags != particles.MemberEnd()) {
-        read_tags(tags->value, mol->atomProps(), names);
+        read_tags(tags->value, mol->atomProps(), names->value);
     }
 
 }
@@ -371,7 +380,7 @@ static void read_aux(Document const& d, SystemPtr mol) {
 }
 
 static void read_tables(Document const& d, SystemPtr mol) {
-    auto& names = d["names"];
+    auto const& names = d.FindMember("names");
     auto const& tables = d.FindMember("t");
     if (tables == d.MemberEnd()) return;
     for (auto& m : tables->value.GetObject()) {
@@ -390,7 +399,7 @@ static void read_tables(Document const& d, SystemPtr mol) {
                 }
             }
         }
-        read_params(m.value["p"], names, table->params());
+        read_params(m.value["p"], names->value, table->params());
         auto& terms = m.value["t"];
 
         auto& particles = terms["i"];
@@ -408,7 +417,7 @@ static void read_tables(Document const& d, SystemPtr mol) {
 
         auto const &tags = m.value.FindMember("tags");
         if (tags != m.value.MemberEnd()) {
-            read_tags(tags->value, table->props(), names);
+            read_tags(tags->value, table->props(), names->value);
         }
     }
 }
@@ -432,14 +441,22 @@ namespace desres { namespace msys {
     SystemPtr ImportJson(std::string const& path) {
         Document d;
         auto json = slurp(path.data());
-        d.Parse<kParseFullPrecisionFlag>(json.get());
+        ParseResult ok = d.Parse<kParseFullPrecisionFlag>(json.get());
+        if (!ok) {
+            MSYS_FAIL("Failed to parse JSON at " << ok.Offset() << ":" << GetParseError_En(ok.Code()));
+            return nullptr;
+        }
         SystemPtr mol = import_json(d);
         return mol;
     }
 
     SystemPtr ParseJson(const char* text) {
         Document d;
-        d.Parse<kParseFullPrecisionFlag>(text);
+        ParseResult ok = d.Parse<kParseFullPrecisionFlag>(text);
+        if (!ok) {
+            MSYS_FAIL("Failed to parse JSON at " << ok.Offset() << ":" << GetParseError_En(ok.Code()));
+            return nullptr;
+        }
         SystemPtr mol = import_json(d);
         return mol;
     }

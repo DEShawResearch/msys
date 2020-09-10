@@ -87,6 +87,9 @@ class TestJson(unittest.TestCase):
         self.assertFalse("tags" in d["i"])
         self.assertFalse("tags" in d["b"])
 
+    def testJsonIsReadable(self):
+        mol = msys.ParseJson(open("tests/files/lig.json").read())
+
     def testJsonSizes(self):
         import gzip
         import zlib
@@ -94,10 +97,10 @@ class TestJson(unittest.TestCase):
         import bz2
         
         compressors = [
-            (None  ,  lambda d : d),
-            ('.gz',  lambda d : gzip.compress(d, compresslevel=9)),
-            ('.z',   lambda d : zlib.compress(d, level=9)),
-            ('.bz2', lambda d : bz2.compress(d, compresslevel=9)),
+            (None ,  lambda d : d,                                 lambda d : d),
+            ('.gz',  lambda d : gzip.compress(d, compresslevel=9), gzip.decompress),
+            ('.z',   lambda d : zlib.compress(d, level=9),         zlib.decompress),
+            ('.bz2', lambda d : bz2.compress(d, compresslevel=9),  bz2.decompress),
         ]
 
         try:
@@ -105,30 +108,44 @@ class TestJson(unittest.TestCase):
             def zstd(data):
                 cctx = zstandard.ZstdCompressor(level=19)
                 return cctx.compress(data)
-            compressors.append(('.zst', zstd))
+            def unzstd(data):
+                dctx = zstandard.ZstdDecompressor()
+                return dctx.decompress(data)
+            compressors.append(('.zst', zstd, unzstd))
         except ImportError:
             pass
 
-        compressors.append(('.xz',  lambda d : lzma.compress(d, format=lzma.FORMAT_XZ, preset=9)))
+        compressors.append(('.xz',  lambda d : lzma.compress(d, format=lzma.FORMAT_XZ, preset=9), lzma.decompress))
 
         try:
             import brotli
             def br(data):
                 return brotli.compress(data, quality=11)
-            compressors.append(('.br', br))
+            compressors.append(('.br', br, brotli.decompress))
         except ImportError:
             pass
 
         sizes = []
 
         def test_all(name, mol, maxDecimals=-1):
+            ref_dms = "build/" + name + ".dms"
+            msys.SaveDMS(mol, ref_dms)
             these = [name]
-            for ext, transform in compressors:
+            #print(name)
+            for ext, transform, decompress in compressors:
+                #print('\t', ext)
                 fname = "build/" + name + '.json'
                 if ext is not None:
                     fname += ext
                 SaveJson(mol, fname, transform=transform, maxDecimals=maxDecimals)
                 these.append(os.path.getsize(fname))
+                new = msys.ParseJson(decompress(open(fname, 'rb').read()).decode())
+                round_trip = "build/" + name + "_from_" + str(ext) + ".dms"
+                msys.SaveDMS(mol, round_trip)
+
+                # these are slow and will ultimately fail once bond orders are removed since that relies on them
+                #subprocess.check_call(['build/bin/dms-diff-ff', ref_dms, round_trip])
+                #subprocess.check_call(['build/bin/dms-diff', ref_dms, round_trip])
             sizes.append(these)
 
         mol = msys.Load("tests/files/cdk2-ligand-Amber14EHT.dms")
@@ -162,7 +179,7 @@ class TestJson(unittest.TestCase):
         test_all('maxdec', mol, maxDecimals=7)
 
         print()
-        print('name', *(e for e, t in compressors), sep='\t')
+        print('name', *(e for e, t, u in compressors), sep='\t')
         for these in sizes:
             print(*these, sep='\t')
 
