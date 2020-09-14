@@ -372,6 +372,56 @@ static Value export_tables(Document& d, NameMap& map, System const& mol) {
     return tables;
 }
 
+static Value export_cts(Document& d, System& mol) {
+    auto& alloc = d.GetAllocator();
+    Value arr(kArrayType);
+
+    for (Id ctid : mol.cts()) {
+        Value ctobj(kObjectType);
+        
+        // ct name
+        auto &ct = mol.ct(ctid);
+        Value str;
+        if (ct.name() != "") {
+            str.SetString(ct.name().data(), ct.name().size(), alloc);
+            ctobj.AddMember("n", str, alloc);
+        }
+
+        // ct key-values
+        Value kvobj(kObjectType);
+        for (auto &key : ct.keys()) {
+            // convert key to RapidJson string
+            Value k;
+            k.SetString(key.data(), key.size(), alloc);
+
+            // convert ValueRef to RapidJson string
+            auto const &val = ct.value(key);
+            if (val.type() != msys::StringType) {
+                MSYS_FAIL("Only StringType ct key-value metadata supported in JSON output.");
+            }
+            Value v;
+            auto s = val.asString();
+            v.SetString(s.data(), s.size(), alloc);
+
+            kvobj.AddMember(k, v, alloc);
+        }
+        if (!kvobj.ObjectEmpty()) ctobj.AddMember("k", kvobj, alloc);
+
+        // ct chains
+        if (mol.chainCount() > 1) {
+            Value chains(kArrayType);
+            for (Id const& chn : mol.chainsForCt(ctid)) {
+                chains.PushBack(chn, alloc);
+            }
+            ctobj.AddMember("c", chains, alloc);
+        }
+
+        if (!ctobj.ObjectEmpty()) arr.PushBack(ctobj, alloc);
+    }
+    return arr;
+}
+
+
 static void export_json(Document& d, System& mol, Provenance const& provenance, unsigned flags) {
 
     auto& alloc = d.GetAllocator();
@@ -392,6 +442,9 @@ static void export_json(Document& d, System& mol, Provenance const& provenance, 
         Value aux = export_aux(d, map, mol);
         if (!aux.ObjectEmpty()) d.AddMember("aux", aux, alloc);
     }
+
+    Value cts = export_cts(d, mol);
+    if (!cts.Empty()) d.AddMember("c", cts, alloc);
 }
 
 namespace desres { namespace msys {

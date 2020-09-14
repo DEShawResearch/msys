@@ -73,6 +73,7 @@ class TestJson(unittest.TestCase):
         res.addAtom()
         res.addAtom()
         res.addAtom()
+        mol.ct(0)['some'] = 'data'
         js = msys.FormatJson(mol)
         print(len(js), js)
         d = json.loads(js)
@@ -86,6 +87,12 @@ class TestJson(unittest.TestCase):
         self.assertFalse("name" in d["i"])
         self.assertFalse("tags" in d["i"])
         self.assertFalse("tags" in d["b"])
+        self.assertTrue("c" in d)
+        self.assertTrue("k" in d["c"][0])
+        self.assertTrue("some" in d["c"][0]["k"])
+
+        new = msys.ParseJson(js)
+        assert new.ct(0)['some'] =='data'
 
     def testJsonIsReadable(self):
         mol = msys.ParseJson(open("tests/files/lig.json").read())
@@ -140,6 +147,7 @@ class TestJson(unittest.TestCase):
                 SaveJson(mol, fname, transform=transform, maxDecimals=maxDecimals)
                 these.append(os.path.getsize(fname))
                 new = msys.ParseJson(decompress(open(fname, 'rb').read()).decode())
+                assert new.ct(0)['oesmi'] == 'C[NH2](C)C[C@@H](COc1ccc(cc1)Nc2cc(ncn2)Nc3c(cccc3F)F)O'
                 round_trip = "build/" + name + "_from_" + str(ext) + ".dms"
                 msys.SaveDMS(mol, round_trip)
 
@@ -149,6 +157,10 @@ class TestJson(unittest.TestCase):
             sizes.append(these)
 
         mol = msys.Load("tests/files/cdk2-ligand-Amber14EHT.dms")
+
+        from openeye import oechem
+        mol.ct(0)['oesmi'] = oechem.OEMolToSmiles(msys.ConvertToOEChem(mol))
+
         test_all('default', mol)
         mol.positions = NP.zeros(mol.positions.shape)
         test_all('no-pos', mol)

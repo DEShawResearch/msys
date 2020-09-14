@@ -422,6 +422,44 @@ static void read_tables(Document const& d, SystemPtr mol) {
     }
 }
 
+static void read_cts(Document const& d, SystemPtr mol) {
+    auto const& cts = d.FindMember("c");
+    if (cts == d.MemberEnd()) return;
+
+    Id ctid = 0;
+    for (auto& ct : cts->value.GetArray()) {
+        if (!ct.IsObject()) MSYS_FAIL("Object not found in ct array!");
+
+        if (ctid != 0) {
+            Id newctid = mol->addCt();
+            if (ctid != newctid) MSYS_FAIL("Unexpected ct id encountered!");
+        }
+        auto &newct = mol->ct(ctid);
+
+        // ct name
+        auto const &name = ct.FindMember("n");
+        if (name != ct.MemberEnd()) newct.setName(name->value.GetString());
+           
+        // ct key-values
+        auto const &kv = ct.FindMember("k");
+        if (kv != ct.MemberEnd()) {
+            for (auto& m : kv->value.GetObject()) {
+                Id id = newct.add(m.name.GetString(), msys::ValueType::StringType);
+                newct.value(id) = m.value.GetString();
+            }
+        }
+
+        // chain ct associations
+        auto const &chains = ct.FindMember("c");
+        if (chains != ct.MemberEnd()) {
+            for (auto &chain_id : chains->value.GetArray()) {
+                mol->setChain(chain_id.GetInt(), ctid);
+            }
+        }
+
+        ctid += 1;
+    }
+}
 
 static SystemPtr import_json(Document const& d) {
     auto mol = System::create();
@@ -432,6 +470,7 @@ static SystemPtr import_json(Document const& d) {
     read_bonds(d, mol);
     read_tables(d, mol);
     read_aux(d, mol);
+    read_cts(d, mol);
     msys::Analyze(mol);
     return mol;
 }
