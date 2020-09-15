@@ -97,6 +97,12 @@ class TestJson(unittest.TestCase):
     def testJsonIsReadable(self):
         mol = msys.ParseJson(open("tests/files/lig.json").read())
 
+    def testJsonDeletedTermIsHandled(self):
+        mol = msys.ParseJson(open("tests/files/lig.json").read())
+        mol.table('exclusion').delTermsWithAtom(mol.atom(0))
+        js = msys.FormatJson(mol)
+        assert msys.ParseJson(js) is not None
+
     def testJsonSizes(self):
         import gzip
         import zlib

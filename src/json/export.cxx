@@ -319,8 +319,11 @@ static void export_terms(Value& obj, TermTablePtr table, Document& d) {
     Value params(kArrayType);
 
     for (auto const& term : *table) {
+        if (term.atom(0) == msys::BadId) continue; // skip deleted terms
         for (Id i=0, n=table->atomCount(); i<n; i++) {
-            particles.PushBack(term.atom(i), alloc);
+            Id atomid = term.atom(i);
+            assert(atomid != msys::BadId);
+            particles.PushBack(atomid, alloc);
         }
         params.PushBack(int32_t(term.param()), alloc);
     }
