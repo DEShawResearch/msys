@@ -43,7 +43,7 @@ pyext = env.AddPythonExtension("_msys", pymodfiles, prefix="msys")
 env.AddPythonModule("__init__.py", prefix="msys")
 env.AddPythonModule("atomsel.py", prefix="msys")
 
-env.AddPythonExtension("_ff", ["ff.cxx"], prefix="msys")
+env.AddPythonExtension("_ff", ["ff.cxx", "wrap_obj.cxx"], prefix="msys")
 env.AddPythonModule("ff.py", prefix="msys")
 
 pfxenv = env.Clone()

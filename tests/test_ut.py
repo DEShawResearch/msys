@@ -1,6 +1,6 @@
 import os, sys, unittest
 import msys
-from msys import knot, reorder, pfx, molfile
+from msys import knot, reorder, pfx, molfile, ff
 from time import time
 import numpy as NP
 import json
@@ -141,6 +141,7 @@ class TestJson(unittest.TestCase):
         sizes = []
 
         def test_all(name, mol, maxDecimals=-1):
+            ref_terms = msys.Load("tests/files/cdk2-ligand-Amber14EHT.dms")
             ref_dms = "build/" + name + ".dms"
             msys.SaveDMS(mol, ref_dms)
             these = [name]
@@ -156,6 +157,13 @@ class TestJson(unittest.TestCase):
                 assert new.ct(0)['oesmi'] == 'C[NH2](C)C[C@@H](COc1ccc(cc1)Nc2cc(ncn2)Nc3c(cccc3F)F)O'
                 round_trip = "build/" + name + "_from_" + str(ext) + ".dms"
                 msys.SaveDMS(mol, round_trip)
+
+                if 'exclusion' not in new.table_names:
+                    ff.experimental.build_pairs_and_exclusions(new)
+                    places = 7
+                    if maxDecimals != -1:
+                        places = 0
+                    assert_equal_nonbonded_terms(self, ref_terms, new, places=places)
 
                 # these are slow and will ultimately fail once bond orders are removed since that relies on them
                 #subprocess.check_call(['build/bin/dms-diff-ff', ref_dms, round_trip])
@@ -182,8 +190,8 @@ class TestJson(unittest.TestCase):
             for bond in mol.bonds:
                 bond.order = 0
                 
-        remove_bond_orders(mol)
-        test_all('borders', mol)
+        #remove_bond_orders(mol)
+        #test_all('borders', mol)
 
         def remove_all_zero_term_properties(mol):
             for table in mol.tables:
@@ -200,6 +208,39 @@ class TestJson(unittest.TestCase):
         print('name', *(e for e, t, u in compressors), sep='\t')
         for these in sizes:
             print(*these, sep='\t')
+
+def assert_equal_nonbonded_terms(self, mol, cpy, places=7):
+    assert len(cpy.table('exclusion').terms) == len(mol.table('exclusion').terms)
+    for term in cpy.table('exclusion').terms:
+        atoms = [mol.atoms[a.id] for a in term.atoms]
+        terms = mol.table('exclusion').findWithOnly(atoms)
+        assert terms is not None
+        assert len(terms) == 1
+        assert [a.id for a in terms[0].atoms] == [a.id for a in term.atoms]
+
+    keys = ['aij', 'bij', 'qij']
+    assert len(cpy.table('pair_12_6_es').terms) == len(mol.table('pair_12_6_es').terms)
+    for term in cpy.table('pair_12_6_es').terms:
+        atoms = [mol.atoms[a.id] for a in term.atoms]
+        terms = mol.table('pair_12_6_es').findWithOnly(atoms)
+        assert terms is not None
+        assert len(terms) == 1
+        assert [a.id for a in terms[0].atoms] == [a.id for a in term.atoms]
+        
+        for k in keys:
+            self.assertAlmostEqual(term[k], terms[0][k], places=places)
+
+class TestFF(unittest.TestCase):
+    def test_build_pairs_and_exclusions(self):
+        mol = msys.Load("tests/files/cdk2-ligand-Amber14EHT.dms")
+
+        cpy = mol.clone()
+        cpy.table('exclusion').remove()
+        cpy.table('pair_12_6_es').remove()
+
+        ff.experimental.build_pairs_and_exclusions(cpy)
+        assert_equal_nonbonded_terms(self, mol, cpy)
+
 
 class TestNeutralize(unittest.TestCase):
     def test1(self):
