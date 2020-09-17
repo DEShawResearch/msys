@@ -56,7 +56,6 @@ static std::unordered_map<std::string,std::string> macros = {
     {"purine","resname ADE A GUA G"},
     {"pyrimidine","resname CYT C THY T URA U"},
     {"surface","protein and not buried"},
-    {"lipid","resname DLPE DMPC DPPC GPC LPPC PALM PC PGCL POPC POPE POPS"},
     {"lipids","lipid"},
     {"legacy_ion","resname AL BA CA Ca CAL CD CES CLA CL Cl 'Cl-' CO CS CU Cu CU1 CUA HG IN IOD K 'K+' MG MN3 MO3 MO4 MO5 MO6 NA Na NAW OC7 PB POT PT RB SOD TB TL WO4 YB ZN ZN1 ZN2"},
     // there are too many possible atomic numbers to list.  both amber and charmm have parameters

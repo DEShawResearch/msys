@@ -61,6 +61,12 @@ static void eval_water(Selection& s, System* mol) {
     }
 }
 
+static void eval_lipid(Selection& s, System* mol) {
+    for (Id i=0, n=s.size(); i<n; i++) {
+        s[i]=s[i] && mol->residueFAST(mol->atomFAST(i).residue).type==ResidueLipid;
+    }
+}
+
 static const std::unordered_map<std::string,eval_t> map = {
     {"all", eval_all},
     {"none", eval_none},
@@ -72,6 +78,7 @@ static const std::unordered_map<std::string,eval_t> map = {
     {"protein", eval_protein},
     {"nucleic", eval_nucleic},
     {"water", eval_water},
+    {"lipid", eval_lipid},
 };
 
 void BoolPredicate::eval(Selection& s) {
