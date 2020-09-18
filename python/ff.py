@@ -26,7 +26,7 @@ class experimental:
             This is checked.
 
         """
-        if mol.selectIds("atomicnumber 0"):
+        if mol.selectIds("mass <= 0"):
             raise ValueError("Systems with pseudos not yet supported")
 
         tuples = _ff.Tuples()

@@ -190,8 +190,8 @@ class TestJson(unittest.TestCase):
             for bond in mol.bonds:
                 bond.order = 0
                 
-        #remove_bond_orders(mol)
-        #test_all('borders', mol)
+        remove_bond_orders(mol)
+        test_all('borders', mol)
 
         def remove_all_zero_term_properties(mol):
             for table in mol.tables:
