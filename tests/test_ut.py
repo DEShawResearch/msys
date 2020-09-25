@@ -140,22 +140,24 @@ class TestJson(unittest.TestCase):
 
         sizes = []
 
+        tmpdir = tempfile.TemporaryDirectory(prefix='msys_json')
+
         def test_all(name, mol, maxDecimals=-1):
             ref_terms = msys.Load("tests/files/cdk2-ligand-Amber14EHT.dms")
-            ref_dms = "build/" + name + ".dms"
+            ref_dms = tmpdir.name + "/" + name + ".dms"
             msys.SaveDMS(mol, ref_dms)
             these = [name]
             #print(name)
             for ext, transform, decompress in compressors:
                 #print('\t', ext)
-                fname = "build/" + name + '.json'
+                fname = tmpdir.name + "/" + name + '.json'
                 if ext is not None:
                     fname += ext
                 SaveJson(mol, fname, transform=transform, maxDecimals=maxDecimals)
                 these.append(os.path.getsize(fname))
                 new = msys.ParseJson(decompress(open(fname, 'rb').read()).decode())
                 assert new.ct(0)['oesmi'] == 'C[NH2](C)C[C@@H](COc1ccc(cc1)Nc2cc(ncn2)Nc3c(cccc3F)F)O'
-                round_trip = "build/" + name + "_from_" + str(ext) + ".dms"
+                round_trip = tmpdir.name + "/" + name + "_from_" + str(ext) + ".dms"
                 msys.SaveDMS(mol, round_trip)
 
                 if 'exclusion' not in new.table_names:
