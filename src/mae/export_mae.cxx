@@ -811,7 +811,11 @@ namespace {
             if (ids.empty()) continue;
             auto minmax = std::minmax_element(ids.begin(), ids.end());
             if (*minmax.second - *minmax.first + 1 != ids.size()) {
-                MSYS_FAIL("atom ids in ct " << ct << " are noncontiguous; writing to MAE will reorder the atoms");
+                if (flags & MaeExport::AllowReorderAtoms) {
+                    MSYS_WARN("atom ids in ct " << ct << " are noncontiguous; writing to MAE will reorder the atoms");
+                } else {
+                    MSYS_FAIL("atom ids in ct " << ct << " are noncontiguous; writing to MAE will reorder the atoms");
+                }
             }
             write_ct(M, Clone(h, ids), p, flags);
         }

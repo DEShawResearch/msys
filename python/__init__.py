@@ -2431,17 +2431,22 @@ def ParseJson(text):
     return System(_msys.ParseJson(text))
 
 
-def SerializeMAE(system, with_forcefield=True):
+def SerializeMAE(system, with_forcefield=True, allow_reorder_atoms=False):
     """ Return the MAE form of the System as bytes. """
     prov = _msys.Provenance.fromArgs(sys.argv)
     ff = bool(with_forcefield)
     flags = _msys.MaeExportFlags.Default
     if not with_forcefield:
         flags |= _msys.MaeExportFlags.StructureOnly
+    if allow_reorder_atoms:
+        flags |= _msys.MaeExportFlags.AllowReorderAtoms
+
     return _msys.ExportMAEContents(system._ptr, prov, flags).encode()
 
 
-def SaveMAE(system, path, with_forcefield=True, append=False):
+def SaveMAE(
+    system, path, with_forcefield=True, append=False, allow_reorder_atoms=False
+):
     """Export the System (or list of systems) to an MAE file at the
     given path."""
     prov = _msys.Provenance.fromArgs(sys.argv)
@@ -2451,6 +2456,8 @@ def SaveMAE(system, path, with_forcefield=True, append=False):
         flags |= _msys.MaeExportFlags.StructureOnly
     if append:
         flags |= _msys.MaeExportFlags.Append
+    if allow_reorder_atoms:
+        flags |= _msys.MaeExportFlags.AllowReorderAtoms
 
     if isinstance(system, System):
         _msys.ExportMAE(system._ptr, path, prov, flags)

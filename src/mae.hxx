@@ -35,7 +35,8 @@ namespace desres { namespace msys {
             Default             = 0,
             StructureOnly       = 1 << 0,
             //CompressForcefield  = 1 << 1, /* deprecated */
-            Append              = 1 << 2
+            Append              = 1 << 2,
+            AllowReorderAtoms   = 1 << 3,
         };
     };
 

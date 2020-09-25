@@ -1773,6 +1773,8 @@ class Main(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             msys.SerializeMAE(m)
 
+        msys.SerializeMAE(m, allow_reorder_atoms=True)
+
     def testMaeBonds(self):
         m = msys.CreateSystem()
         o = m.addAtom()
