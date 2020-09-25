@@ -41,7 +41,10 @@ namespace {
 
 }
 
-BOOST_PYTHON_MODULE(_ff) {
+
+namespace desres { namespace msys { 
+
+void export_ff() {
     using namespace desres::msys::ff;
 
     class_<Rules>("Rules", init<>())
@@ -67,3 +70,5 @@ BOOST_PYTHON_MODULE(_ff) {
         ;
 
 }
+
+}}
