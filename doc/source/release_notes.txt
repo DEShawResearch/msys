@@ -1,4 +1,4 @@
-1.7.305 Disallow MAE export when it would reorder atoms
+1.7.306 Disallow MAE export when it would reorder atoms
         Prevent lipid residues from being identified also as protein
         Shrink the size of the json format
         Documentation updates
