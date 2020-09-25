@@ -1,4 +1,4 @@
-from . import _ff
+from . import _msys
 
 
 class experimental:
@@ -29,10 +29,10 @@ class experimental:
         if mol.selectIds("mass <= 0"):
             raise ValueError("Systems with pseudos not yet supported")
 
-        tuples = _ff.Tuples()
+        tuples = _msys.Tuples()
         for frag in mol.updateFragids():
             tuples.build(mol._ptr, [a.id for a in frag])
 
-        ff = _ff.Forcefield()
+        ff = _msys.Forcefield()
         experimental.make_rules(ff.rules, flavor)
-        ff.build_component(_ff.Component.exclusions, mol._ptr, tuples)
+        ff.build_component(_msys.Component.exclusions, mol._ptr, tuples)

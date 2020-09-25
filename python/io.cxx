@@ -148,6 +148,7 @@ namespace desres { namespace msys {
             .value("StructureOnly",     MaeExport::StructureOnly)
             //.value("CompressForcefield",MaeExport::CompressForcefield)
             .value("Append",            MaeExport::Append)
+            .value("AllowReorderAtoms", MaeExport::AllowReorderAtoms)
             ;
 
         enum_<Mol2Export::Flags>("Mol2ExportFlags")

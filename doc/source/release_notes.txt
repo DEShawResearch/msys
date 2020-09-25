@@ -1,3 +1,10 @@
+1.7.305 Disallow MAE export when it would reorder atoms
+        Prevent lipid residues from being identified also as protein
+        Shrink the size of the json format
+        Documentation updates
+        Make select() faster for the common case
+        Add a components line to dms-info
+
 1.7.304 dms-validate findKnots now ignores pseudos (DESRESCode#4555)
         Add license and copyright notices.
 
