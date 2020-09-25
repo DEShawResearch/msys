@@ -1732,6 +1732,30 @@ class Main(unittest.TestCase):
         tst = msys.ApplyDihedralGeometry(a, b, c, rad, theta, phi)
         NP.testing.assert_almost_equal(tst, d)
 
+    def testMaeNoncontiguous(self):
+        """disallow writing mae when it would change atom order
+        """
+        m = msys.CreateSystem()
+        ct0 = m.addCt()
+        ct1 = m.addCt()
+        a0 = m.addAtom()
+        a1 = m.addAtom()
+        a2 = m.addAtom()
+        a0.name = "a0"
+        a1.name = "a1"
+        a2.name = "a2"
+
+        self.assertEqual(ct0.natoms, 3)
+        self.assertEqual(ct1.natoms, 0)
+        msys.SerializeMAE(m)
+
+        a1.residue.chain.ct = ct1
+        self.assertEqual(ct0.natoms, 2)
+        self.assertEqual(ct1.natoms, 1)
+        with self.assertRaises(RuntimeError):
+            msys.SerializeMAE(m)
+
+
     def testMaeBonds(self):
         m = msys.CreateSystem()
         o = m.addAtom()
