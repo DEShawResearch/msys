@@ -22,12 +22,14 @@ def vsize():
         s = p.read()
     return int(s)
 
+
 def SaveJson(system, path, transform=None, maxDecimals=-1):
     data = msys.FormatJson(system, maxDecimals=maxDecimals).encode()
     if transform is not None:
         data = transform(data)
-    with open(path, 'wb') as ofs:
+    with open(path, "wb") as ofs:
         ofs.write(data)
+
 
 class TestJson(unittest.TestCase):
     def test2f4k(self):
@@ -73,7 +75,7 @@ class TestJson(unittest.TestCase):
         res.addAtom()
         res.addAtom()
         res.addAtom()
-        mol.ct(0)['some'] = 'data'
+        mol.ct(0)["some"] = "data"
         js = msys.FormatJson(mol)
         print(len(js), js)
         d = json.loads(js)
@@ -92,14 +94,14 @@ class TestJson(unittest.TestCase):
         self.assertTrue("some" in d["c"][0]["k"])
 
         new = msys.ParseJson(js)
-        assert new.ct(0)['some'] =='data'
+        assert new.ct(0)["some"] == "data"
 
     def testJsonIsReadable(self):
         mol = msys.ParseJson(open("tests/files/lig.json").read())
 
     def testJsonDeletedTermIsHandled(self):
         mol = msys.ParseJson(open("tests/files/lig.json").read())
-        mol.table('exclusion').delTermsWithAtom(mol.atom(0))
+        mol.table("exclusion").delTermsWithAtom(mol.atom(0))
         js = msys.FormatJson(mol)
         assert msys.ParseJson(js) is not None
 
@@ -108,33 +110,44 @@ class TestJson(unittest.TestCase):
         import zlib
         import lzma
         import bz2
-        
+
         compressors = [
-            (None ,  lambda d : d,                                 lambda d : d),
-            ('.gz',  lambda d : gzip.compress(d, compresslevel=9), gzip.decompress),
-            ('.z',   lambda d : zlib.compress(d, level=9),         zlib.decompress),
-            ('.bz2', lambda d : bz2.compress(d, compresslevel=9),  bz2.decompress),
+            (None, lambda d: d, lambda d: d),
+            (".gz", lambda d: gzip.compress(d, compresslevel=9), gzip.decompress),
+            (".z", lambda d: zlib.compress(d, level=9), zlib.decompress),
+            (".bz2", lambda d: bz2.compress(d, compresslevel=9), bz2.decompress),
         ]
 
         try:
             import zstandard
+
             def zstd(data):
                 cctx = zstandard.ZstdCompressor(level=19)
                 return cctx.compress(data)
+
             def unzstd(data):
                 dctx = zstandard.ZstdDecompressor()
                 return dctx.decompress(data)
-            compressors.append(('.zst', zstd, unzstd))
+
+            compressors.append((".zst", zstd, unzstd))
         except ImportError:
             pass
 
-        compressors.append(('.xz',  lambda d : lzma.compress(d, format=lzma.FORMAT_XZ, preset=9), lzma.decompress))
+        compressors.append(
+            (
+                ".xz",
+                lambda d: lzma.compress(d, format=lzma.FORMAT_XZ, preset=9),
+                lzma.decompress,
+            )
+        )
 
         try:
             import brotli
+
             def br(data):
                 return brotli.compress(data, quality=11)
-            compressors.append(('.br', br, brotli.decompress))
+
+            compressors.append((".br", br, brotli.decompress))
         except ImportError:
             pass
 
@@ -145,20 +158,23 @@ class TestJson(unittest.TestCase):
             ref_dms = "build/" + name + ".dms"
             msys.SaveDMS(mol, ref_dms)
             these = [name]
-            #print(name)
+            # print(name)
             for ext, transform, decompress in compressors:
-                #print('\t', ext)
-                fname = "build/" + name + '.json'
+                # print('\t', ext)
+                fname = "build/" + name + ".json"
                 if ext is not None:
                     fname += ext
                 SaveJson(mol, fname, transform=transform, maxDecimals=maxDecimals)
                 these.append(os.path.getsize(fname))
-                new = msys.ParseJson(decompress(open(fname, 'rb').read()).decode())
-                assert new.ct(0)['oesmi'] == 'C[NH2](C)C[C@@H](COc1ccc(cc1)Nc2cc(ncn2)Nc3c(cccc3F)F)O'
+                new = msys.ParseJson(decompress(open(fname, "rb").read()).decode())
+                assert (
+                    new.ct(0)["oesmi"]
+                    == "C[NH2](C)C[C@@H](COc1ccc(cc1)Nc2cc(ncn2)Nc3c(cccc3F)F)O"
+                )
                 round_trip = "build/" + name + "_from_" + str(ext) + ".dms"
                 msys.SaveDMS(mol, round_trip)
 
-                if 'exclusion' not in new.table_names:
+                if "exclusion" not in new.table_names:
                     ff.experimental.build_pairs_and_exclusions(new)
                     places = 7
                     if maxDecimals != -1:
@@ -166,77 +182,80 @@ class TestJson(unittest.TestCase):
                     assert_equal_nonbonded_terms(self, ref_terms, new, places=places)
 
                 # these are slow and will ultimately fail once bond orders are removed since that relies on them
-                #subprocess.check_call(['build/bin/dms-diff-ff', ref_dms, round_trip])
-                #subprocess.check_call(['build/bin/dms-diff', ref_dms, round_trip])
+                # subprocess.check_call(['build/bin/dms-diff-ff', ref_dms, round_trip])
+                # subprocess.check_call(['build/bin/dms-diff', ref_dms, round_trip])
             sizes.append(these)
 
         mol = msys.Load("tests/files/cdk2-ligand-Amber14EHT.dms")
 
         from openeye import oechem
-        mol.ct(0)['oesmi'] = oechem.OEMolToSmiles(msys.ConvertToOEChem(mol))
 
-        test_all('default', mol)
+        mol.ct(0)["oesmi"] = oechem.OEMolToSmiles(msys.ConvertToOEChem(mol))
+
+        test_all("default", mol)
         mol.positions = NP.zeros(mol.positions.shape)
-        test_all('no-pos', mol)
-        mol.table('exclusion').remove()
-        mol.table('pair_12_6_es').remove()
-        test_all('no-excl', mol)
+        test_all("no-pos", mol)
+        mol.table("exclusion").remove()
+        mol.table("pair_12_6_es").remove()
+        test_all("no-excl", mol)
 
         def remove_bond_orders(mol):
             for atom in mol.atoms:
                 atom.atomic_number = 0
                 atom.formal_charge = 0
-                atom.name = ''
+                atom.name = ""
             for bond in mol.bonds:
                 bond.order = 0
-                
+
         remove_bond_orders(mol)
-        test_all('borders', mol)
+        test_all("borders", mol)
 
         def remove_all_zero_term_properties(mol):
             for table in mol.tables:
                 for name in table.term_props:
-                    if all(t[name]==0 for t in table.terms):
+                    if all(t[name] == 0 for t in table.terms):
                         table.delTermProp(name)
 
         remove_all_zero_term_properties(mol)
-        test_all('rmtprop', mol)
+        test_all("rmtprop", mol)
 
-        test_all('maxdec', mol, maxDecimals=7)
+        test_all("maxdec", mol, maxDecimals=7)
 
         print()
-        print('name', *(e for e, t, u in compressors), sep='\t')
+        print("name", *(e for e, t, u in compressors), sep="\t")
         for these in sizes:
-            print(*these, sep='\t')
+            print(*these, sep="\t")
+
 
 def assert_equal_nonbonded_terms(self, mol, cpy, places=7):
-    assert len(cpy.table('exclusion').terms) == len(mol.table('exclusion').terms)
-    for term in cpy.table('exclusion').terms:
+    assert len(cpy.table("exclusion").terms) == len(mol.table("exclusion").terms)
+    for term in cpy.table("exclusion").terms:
         atoms = [mol.atoms[a.id] for a in term.atoms]
-        terms = mol.table('exclusion').findWithOnly(atoms)
+        terms = mol.table("exclusion").findWithOnly(atoms)
         assert terms is not None
         assert len(terms) == 1
         assert [a.id for a in terms[0].atoms] == [a.id for a in term.atoms]
 
-    keys = ['aij', 'bij', 'qij']
-    assert len(cpy.table('pair_12_6_es').terms) == len(mol.table('pair_12_6_es').terms)
-    for term in cpy.table('pair_12_6_es').terms:
+    keys = ["aij", "bij", "qij"]
+    assert len(cpy.table("pair_12_6_es").terms) == len(mol.table("pair_12_6_es").terms)
+    for term in cpy.table("pair_12_6_es").terms:
         atoms = [mol.atoms[a.id] for a in term.atoms]
-        terms = mol.table('pair_12_6_es').findWithOnly(atoms)
+        terms = mol.table("pair_12_6_es").findWithOnly(atoms)
         assert terms is not None
         assert len(terms) == 1
         assert [a.id for a in terms[0].atoms] == [a.id for a in term.atoms]
-        
+
         for k in keys:
             self.assertAlmostEqual(term[k], terms[0][k], places=places)
+
 
 class TestFF(unittest.TestCase):
     def test_build_pairs_and_exclusions(self):
         mol = msys.Load("tests/files/cdk2-ligand-Amber14EHT.dms")
 
         cpy = mol.clone()
-        cpy.table('exclusion').remove()
-        cpy.table('pair_12_6_es').remove()
+        cpy.table("exclusion").remove()
+        cpy.table("pair_12_6_es").remove()
 
         ff.experimental.build_pairs_and_exclusions(cpy)
         assert_equal_nonbonded_terms(self, mol, cpy)
@@ -1733,8 +1752,7 @@ class Main(unittest.TestCase):
         NP.testing.assert_almost_equal(tst, d)
 
     def testMaeNoncontiguous(self):
-        """disallow writing mae when it would change atom order
-        """
+        """disallow writing mae when it would change atom order"""
         m = msys.CreateSystem()
         ct0 = m.addCt()
         ct1 = m.addCt()
@@ -1754,7 +1772,6 @@ class Main(unittest.TestCase):
         self.assertEqual(ct1.natoms, 1)
         with self.assertRaises(RuntimeError):
             msys.SerializeMAE(m)
-
 
     def testMaeBonds(self):
         m = msys.CreateSystem()
