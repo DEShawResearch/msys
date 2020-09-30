@@ -87,7 +87,8 @@ namespace desres { namespace msys {
         ResidueOther    = 0,
         ResidueProtein  = 1,
         ResidueNucleic  = 2,
-        ResidueWater    = 3
+        ResidueWater    = 3,
+        ResidueLipid    = 4
     };
 
     struct residue_t {

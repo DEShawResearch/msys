@@ -5,38 +5,40 @@
 # exec python $0 "$@"
 #}
 
-'''
+"""
 Write or append a selection from input_file to an output file.
-'''
+"""
 
 import sys, os
 import msys
 
+
 def main():
     import argparse
+
     parser = argparse.ArgumentParser(description=__doc__)
 
-    parser.add_argument('files', nargs='+', help='input files')
-    parser.add_argument('-s', '--selection',
-            help="Atom selection text")
-    parser.add_argument('-o', '--output', required=True,
-            help="Write new system to given file")
-    parser.add_argument('-v', '--verbose', action='store_true', default=True,
-            help="Be chatty")
-    parser.add_argument('-q', '--quiet', action='store_false', dest='verbose',
-            help="Don't be chatty")
-    parser.add_argument('-c', '--coalesce', action='store_true', default=False,
-            help='Coalesce input file parameters before saving')
-    parser.add_argument('--structure-only', action='store_true', default=False,
-            help='Write no forcefield information or pseudos')
-    parser.add_argument('-A', '--assign', action='store_true', default=False,
-            help='Assign bond order and formal charge')
-    parser.add_argument('--sorted', action='store_true', default=False,
-            help='Write atoms in structurally sorted order')
-    parser.add_argument('-b', '--allow-broken-bonds', action='store_true',
-            help='Allow the selection to exclude some connected atoms')
+    parser.add_argument("files", nargs="+", help="input files")
+    parser.add_argument("-s", "--selection", help="Atom selection text")
+    parser.add_argument("-o", "--output", required=True, help="Write new system to given file")
+    parser.add_argument("-v", "--verbose", action="store_true", default=True, help="Be chatty")
+    parser.add_argument("-q", "--quiet", action="store_false", dest="verbose", help="Don't be chatty")
+    parser.add_argument(
+        "-c", "--coalesce", action="store_true", default=False, help="Coalesce input file parameters before saving"
+    )
+    parser.add_argument(
+        "--structure-only", action="store_true", default=False, help="Write no forcefield information or pseudos"
+    )
+    parser.add_argument(
+        "-A", "--assign", action="store_true", default=False, help="Assign bond order and formal charge"
+    )
+    parser.add_argument("--sorted", action="store_true", default=False, help="Write atoms in structurally sorted order")
+    parser.add_argument(
+        "-b", "--allow-broken-bonds", action="store_true", help="Allow the selection to exclude some connected atoms"
+    )
 
     opts = parser.parse_args()
+
     def log(msg, verbose=opts.verbose):
         if verbose:
             print(msg, file=sys.stderr)
@@ -56,13 +58,12 @@ def main():
     if opts.selection:
         log('Cloning "%s"' % opts.selection)
         try:
-            mol=mol.clone(opts.selection, forbid_broken_bonds=not opts.allow_broken_bonds)
+            mol = mol.clone(opts.selection, forbid_broken_bonds=not opts.allow_broken_bonds)
         except msys.BrokenBondsError as e:
             print("ERROR:", str(e), "use -b/--allow-broken-bonds to proceed", file=sys.stderr)
             raise
 
-    log("Selected %d chain(s), %d residue(s), %d atom(s)" % (
-                len(mol.chains), len(mol.residues), len(mol.atoms)))
+    log("Selected %d chain(s), %d residue(s), %d atom(s)" % (len(mol.chains), len(mol.residues), len(mol.atoms)))
 
     if opts.coalesce:
         log("Coalescing tables")
@@ -77,6 +78,8 @@ def main():
         log("Saving %s" % opts.output)
         msys.Save(mol, opts.output, structure_only=opts.structure_only)
 
-if __name__=="__main__": main()
+
+if __name__ == "__main__":
+    main()
 
 # vim: filetype=python

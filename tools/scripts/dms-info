@@ -6,5 +6,5 @@
 #}
 
 import msys.info
-msys.info.main()
 
+msys.info.main()

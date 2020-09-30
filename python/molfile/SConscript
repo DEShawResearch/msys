@@ -1,29 +1,29 @@
-Import('msysenv')
+Import("msysenv")
 import sys
-env=msysenv.Clone()
 
-cxx_flags = '-Wno-unused-local-typedefs'
+env = msysenv.Clone()
 
-env.Append( 
-        CPPPATH=['../../src', '../'],
-        CXXFLAGS=cxx_flags,
-        LIBS=['msys'])
+cxx_flags = "-Wno-unused-local-typedefs"
 
-env.Append(CCFLAGS='-Wno-unused-function'.split())
-if env['PLATFORM']=='darwin':
-    env.Append(CCFLAGS='-Wno-error')
+env.Append(CPPPATH=["../../src", "../"], CXXFLAGS=cxx_flags, LIBS=["msys"])
+
+env.Append(CCFLAGS="-Wno-unused-function".split())
+if env["PLATFORM"] == "darwin":
+    env.Append(CCFLAGS="-Wno-error")
 elif sys.platform.startswith("linux"):
-    env.Append(CCFLAGS='-Wno-cpp')
+    env.Append(CCFLAGS="-Wno-cpp")
 
-srcs = Split('''
+srcs = Split(
+    """
 plugin.cxx
 reader.cxx
 atom.cxx
 frame.cxx
 writer.cxx
 molfilemodule.cxx
-''')
+"""
+)
 
-ext=env.AddPythonExtension('_molfile', srcs, prefix='msys/molfile')
-ext=env.AddPythonExtension('findframe','findframemodule.cxx', prefix='msys/molfile')
-env.AddPythonModule('__init__.py',prefix='msys/molfile')
+ext = env.AddPythonExtension("_molfile", srcs, prefix="msys/molfile")
+ext = env.AddPythonExtension("findframe", "findframemodule.cxx", prefix="msys/molfile")
+env.AddPythonModule("__init__.py", prefix="msys/molfile")

@@ -5,71 +5,85 @@
 # exec python $0 "$@"
 #}
 
-'''
+"""
 dms-fix-mass system.dms [ options ]
 
 Find inconsistent masses among elements in a system, and optionally replace 
 them by their median value.
-'''
+"""
 
 import sys, os
 
 import msys
 import numpy
 
+
 def fixmass(atoms):
-    m=dict()
+    m = dict()
     for a in atoms:
-        d=m.setdefault(a.atomic_number, dict())
+        d = m.setdefault(a.atomic_number, dict())
         d.setdefault(a.mass, []).append(a)
-    
-    elems=list()
+
+    elems = list()
     inconsistent = list()
     for anum, d in m.items():
-        if anum==0: continue
+        if anum == 0:
+            continue
         # make sure the masses are consistent with the atomic number.
         for mass, atoms in d.items():
             if msys.GuessAtomicNumber(mass) != anum:
                 inconsistent.extend(atoms)
-        if len(d)==1: continue
+        if len(d) == 1:
+            continue
         elems.append(anum)
         print("Found %d distinct masses for atomic number %d" % (len(d), anum))
-        all=[]
+        all = []
         for mass, atoms in d.items():
             print("\t%f (%d)" % (mass, len(atoms)))
             all.extend(a.mass for a in atoms)
-        M=numpy.median(numpy.array(all))
+        M = numpy.median(numpy.array(all))
         print("===> Replacing with median value", M)
         for atoms in d.values():
             for a in atoms:
                 a.mass = M
     if inconsistent:
-        print("Found %d atoms whose masses are inconsistent with their atomic numbers:" % len(inconsistent), file=sys.stderr)
+        print(
+            "Found %d atoms whose masses are inconsistent with their atomic numbers:" % len(inconsistent),
+            file=sys.stderr,
+        )
         for a in inconsistent:
-            print('%8d "%s" anum %2d mass %5.3f (expected anum %2d or mass %5.3f)' % (
-                    a.id, a.name, a.atomic_number, a.mass,
+            print(
+                '%8d "%s" anum %2d mass %5.3f (expected anum %2d or mass %5.3f)'
+                % (
+                    a.id,
+                    a.name,
+                    a.atomic_number,
+                    a.mass,
                     msys.GuessAtomicNumber(a.mass),
-                    msys.MassForElement(a.atomic_number)), file=sys.stderr)
+                    msys.MassForElement(a.atomic_number),
+                ),
+                file=sys.stderr,
+            )
 
     return elems
 
+
 def main():
     import optparse
+
     parser = optparse.OptionParser(__doc__)
 
-    parser.add_option('-s', '--selection', default='all',
-            help='consider only atoms in the selection')
-    parser.add_option('-o', '--output', default=None,
-            help='path of output file with corrected masses')
+    parser.add_option("-s", "--selection", default="all", help="consider only atoms in the selection")
+    parser.add_option("-o", "--output", default=None, help="path of output file with corrected masses")
 
     opts, args = parser.parse_args()
-    if len(args)!=1:
+    if len(args) != 1:
         parser.error("incorrect number of arguments")
 
     print("Reading input file", args[0])
-    mol=msys.Load(args[0])
+    mol = msys.Load(args[0])
 
-    atoms=mol.select(opts.selection)
+    atoms = mol.select(opts.selection)
     print("Checking %d atoms" % len(atoms))
 
     elems = fixmass(atoms)
@@ -84,6 +98,8 @@ def main():
             print("Inconsistent masses were found, but no output file was written.")
         sys.exit(len(elems))
 
-if __name__=="__main__": exit(main())
+
+if __name__ == "__main__":
+    exit(main())
 
 # vim: filetype=python

@@ -6,5 +6,5 @@
 #}
 
 import msys.grease
-msys.grease.main()
 
+msys.grease.main()

@@ -5,12 +5,13 @@
 # exec python $0 "$@"
 #}
 
-'''
+"""
 Tile solvent box around system
-'''
+"""
 
 import msys
 from msys import solvate
+
 
 def main():
     args = solvate.parser().parse_args()
@@ -19,15 +20,21 @@ def main():
     wat = msys.Load(args.solvent, args.structure_only)
     dims = solvate.parse_dims(args, mol)
 
-    mol = solvate.solvate(mol, wat, dims,
-            min_solvent_dist=args.solvent_dist,
-            min_solute_dist=args.solute_dist,
-            solvent_selection=args.solvent_selection,
-            center_selection=args.center_selection,
-            verbose=args.verbose)
+    mol = solvate.solvate(
+        mol,
+        wat,
+        dims,
+        min_solvent_dist=args.solvent_dist,
+        min_solute_dist=args.solute_dist,
+        solvent_selection=args.solvent_selection,
+        center_selection=args.center_selection,
+        verbose=args.verbose,
+    )
 
     msys.Save(mol, args.output)
 
-if __name__=="__main__": main()
+
+if __name__ == "__main__":
+    main()
 
 # vim: filetype=python

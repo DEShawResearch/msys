@@ -5,7 +5,7 @@
 # exec python $0 "$@"
 #}
 
-'''
+"""
 dms-reorder-atoms reference target output [--refsel all] [--targetsel all]
 
 Reorder atoms in each residue in target to match topologically the atoms in 
@@ -16,7 +16,7 @@ Use refsel and targetsel to consider only selected residues.
 
 The order of selected residues in reference is assumed to match the order
 in target.
-'''
+"""
 
 import sys, os
 
@@ -24,25 +24,27 @@ import msys
 from msys import reorder
 import numpy as NP
 
+
 def main():
     import optparse
+
     parser = optparse.OptionParser(__doc__)
-    parser.add_option('--refsel', default='all', 
-            help='selected atoms in reference structure')
-    parser.add_option('--targetsel', default='all', 
-            help='selected atoms in target structure')
+    parser.add_option("--refsel", default="all", help="selected atoms in reference structure")
+    parser.add_option("--targetsel", default="all", help="selected atoms in target structure")
 
     opts, args = parser.parse_args()
-    if len(args)!=3:
+    if len(args) != 3:
         parser.error("incorrect number of arguments")
 
     rfile, ifile, ofile = args
-    
+
     ref = msys.Load(rfile)
     tgt = msys.Load(ifile)
     out = reorder.Reorder(ref, tgt, **opts.__dict__)
     msys.SaveDMS(out, ofile)
 
-if __name__=="__main__": main()
+
+if __name__ == "__main__":
+    main()
 
 # vim: filetype=python

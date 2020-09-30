@@ -1,29 +1,31 @@
-Import('msysenv')
+Import("msysenv")
 import sys, os
-env=msysenv.Clone()
+
+env = msysenv.Clone()
 
 is_linux = sys.platform.startswith("linux")
 
-env.Append( 
-        CPPPATH=['../src'],
-        CXXFLAGS='-Wno-unused-local-typedefs',
-        LIBS=['msys', 'msys-core'],
-        )
+env.Append(
+    CPPPATH=["../src"],
+    CXXFLAGS="-Wno-unused-local-typedefs",
+    LIBS=["msys", "msys-core"],
+)
 
 if is_linux:
-    env.Append(CCFLAGS='-Wno-cpp')
+    env.Append(CCFLAGS="-Wno-cpp")
 else:
     # MacOS
-    env.Append(CCFLAGS='-Wno-error')
+    env.Append(CCFLAGS="-Wno-error")
 if env.get("MSYS_WITHOUT_INCHI"):
-    env.Append(CPPDEFINES='MSYS_WITHOUT_INCHI')
+    env.Append(CPPDEFINES="MSYS_WITHOUT_INCHI")
 
-pymodfiles='''
+pymodfiles = """
 analyze.cxx
 annotated_system.cxx
 atom.cxx
 bond.cxx
 chain.cxx
+ff.cxx
 graph.cxx
 inchi.cxx
 io.cxx
@@ -36,19 +38,16 @@ spatial_hash.cxx
 term.cxx
 wrap_obj.cxx
 variant.cxx
-'''.split()
+""".split()
 
-pyext=env.AddPythonExtension('_msys', pymodfiles, prefix='msys')
-env.AddPythonModule('__init__.py', prefix='msys')
-env.AddPythonModule('atomsel.py', prefix='msys')
+pyext = env.AddPythonExtension("_msys", pymodfiles, prefix="msys")
+env.AddPythonModule("__init__.py", prefix="msys")
+env.AddPythonModule("atomsel.py", prefix="msys")
+env.AddPythonModule("ff.py", prefix="msys")
 
-env.AddPythonExtension('_ff', ['ff.cxx'], prefix='msys')
-env.AddPythonModule('ff.py', prefix='msys')
+pfxenv = env.Clone()
+pfxenv.Append(CXXFLAGS="-fno-strict-aliasing")
+pfxext = pfxenv.AddPythonExtension("pfx", "pfx.cxx", prefix="msys")
 
-pfxenv=env.Clone()
-pfxenv.Append(CXXFLAGS='-fno-strict-aliasing')
-pfxext = pfxenv.AddPythonExtension('pfx', 'pfx.cxx', prefix='msys')
-
-env.AddHeaders(['capsule.hxx'], prefix='msys/python')
-env.SConscript('molfile/SConscript')
-
+env.AddHeaders(["capsule.hxx"], prefix="msys/python")
+env.SConscript("molfile/SConscript")

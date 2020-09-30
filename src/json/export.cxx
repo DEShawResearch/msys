@@ -31,6 +31,20 @@ using msys::Id;
 /* mapping from hash of string to index in document's names array */
 typedef std::unordered_map<uint64_t, uint64_t> NameMap;
 static uint64_t register_name(const char* ptr, size_t sz, NameMap& map, Document& d) {
+    // Elide empty strings from the JSON output
+    if (sz == 0)
+        return 0;
+
+    // Then need to register the empty string as the first name if any names are given
+    if (d.FindMember("names") == d.MemberEnd()) {
+        Value names(kArrayType);
+        auto& alloc = d.GetAllocator();
+        Value s;
+        s.SetString("", 0, alloc);
+        names.PushBack(s, alloc);
+        d.AddMember("names", names, alloc);
+    }
+
     ThreeRoe tr;
     tr.Update(ptr, sz);
     auto id = tr.Final().first;
@@ -63,7 +77,7 @@ static Value export_tags(msys::ParamTablePtr params, Document& d, NameMap& map) 
 
         switch (params->propType(i)) {
             case msys::IntType:
-                tag.AddMember("type", "i", alloc);
+                tag.AddMember("t", "i", alloc);
                 for (Id j=0, m=params->paramCount(); j<m; j++) {
                     auto v = params->value(j,i).asInt();
                     if (v!=0) {
@@ -73,7 +87,7 @@ static Value export_tags(msys::ParamTablePtr params, Document& d, NameMap& map) 
                 }
                 break;
             case msys::FloatType:
-                tag.AddMember("type", "f", alloc);
+                tag.AddMember("t", "f", alloc);
                 for (Id j=0, m=params->paramCount(); j<m; j++) {
                     auto v = params->value(j,i).asFloat();
                     if (v!=0) {
@@ -83,7 +97,7 @@ static Value export_tags(msys::ParamTablePtr params, Document& d, NameMap& map) 
                 }
                 break;
             case msys::StringType:
-                tag.AddMember("type", "s", alloc);
+                tag.AddMember("t", "s", alloc);
                 for (Id j=0, m=params->paramCount(); j<m; j++) {
                     auto v = params->value(j,i).c_str();
                     if (*v) {
@@ -94,9 +108,8 @@ static Value export_tags(msys::ParamTablePtr params, Document& d, NameMap& map) 
                 break;
         };
         if (true) { // vals.Size() > 0) {
-            tag.AddMember("count", ids.Size(), alloc); 
-            tag.AddMember("ids", ids, alloc);
-            tag.AddMember("vals", vals, alloc);
+            tag.AddMember("i", ids, alloc);
+            tag.AddMember("v", vals, alloc);
 
             Value s;
             auto name = params->propName(i);
@@ -111,41 +124,55 @@ static Value export_params(msys::ParamTablePtr params, Document& d, NameMap& map
     auto& alloc = d.GetAllocator();
     Value param(kObjectType);
     Value props(kObjectType);
-    param.AddMember("count", params->paramCount(), alloc);
 
+    bool wrotevals = false;
     for (Id i=0, n=params->propCount(); i<n; i++) {
         Value prop(kObjectType);
         Value vals(kArrayType);
+        bool nonzero = false;
 
         switch (params->propType(i)) {
             case msys::IntType:
-                prop.AddMember("type", "i", alloc);
+                prop.AddMember("t", "i", alloc);
                 for (Id j=0, m=params->paramCount(); j<m; j++) {
-                    vals.PushBack(params->value(j,i).asInt(), alloc);
+                    auto v = params->value(j,i).asInt();
+                    if (v != 0) nonzero = true;
+                    vals.PushBack(v, alloc);
                 }
                 break;
             case msys::FloatType:
-                prop.AddMember("type", "f", alloc);
+                prop.AddMember("t", "f", alloc);
                 for (Id j=0, m=params->paramCount(); j<m; j++) {
-                    vals.PushBack(params->value(j,i).asFloat(), alloc);
+                    auto v = params->value(j,i).asFloat();
+                    if (v != 0.0) nonzero = true;
+                    vals.PushBack(v, alloc);
                 }
                 break;
             case msys::StringType:
-                prop.AddMember("type", "s", alloc);
+                prop.AddMember("t", "s", alloc);
                 for (Id j=0, m=params->paramCount(); j<m; j++) {
                     auto s = params->value(j,i).c_str();
                     vals.PushBack(register_name(s, strlen(s), map, d), alloc);
+                    nonzero = true;
                 }
                 break;
         };
-        prop.AddMember("vals", vals, alloc);
+        if (nonzero) {
+            prop.AddMember("v", vals, alloc);
+            wrotevals = true;
+        }
 
         Value s;
         auto name = params->propName(i);
         s.SetString(name.data(), name.size(), alloc);
         props.AddMember(s, prop, alloc);
     }
-    param.AddMember("props", props, alloc);
+    param.AddMember("p", props, alloc);
+
+    if (!wrotevals) {
+        param.AddMember("c", params->paramCount(), alloc);
+    }
+
     return param;
 }
 
@@ -174,13 +201,17 @@ static Value export_particles(Document& d, NameMap& map, System& mol) {
     Value mass(kArrayType);
     Value charge(kArrayType);
 
+    bool nonzero_nam=false;
+    bool nonzero_anm=false;
+    bool nonzero_fch=false;
     bool nonzero_pos=false;
     bool nonzero_vel=false;
     bool nonzero_res=false;
 
     for (auto i=mol.atomBegin(), e=mol.atomEnd(); i!=e; ++i) {
         auto const& a = mol.atomFAST(*i);
-        names.PushBack(register_name(a.name,map,d), alloc);
+        uint64_t name = register_name(a.name, map, d);
+        names.PushBack(name, alloc);
         anums.PushBack(a.atomic_number, alloc);
         residues.PushBack(a.residue, alloc);
         pos.PushBack(a.x, alloc);
@@ -192,20 +223,24 @@ static Value export_particles(Document& d, NameMap& map, System& mol) {
         fc.PushBack(a.formal_charge, alloc);
         mass.PushBack(a.mass, alloc);
         charge.PushBack(a.charge, alloc);
+        if (name!=0) nonzero_nam=true;
+        if (a.atomic_number!=0) nonzero_anm=true;
+        if (a.formal_charge!=0) nonzero_fch=true;
         if (a.residue!=0) nonzero_res=true;
         if (a.x!=0  || a.y!=0  || a.z!=0)  nonzero_pos=true;
         if (a.vx!=0 || a.vy!=0 || a.vz!=0) nonzero_vel=true;
     }
-    p.AddMember("count", mol.atomCount(), alloc);
-    p.AddMember("name", names, alloc);
-    p.AddMember("atomic_number", anums, alloc);
-    p.AddMember("formal_charge", fc, alloc);
-    p.AddMember("mass", mass, alloc);
-    p.AddMember("charge", charge, alloc);
+    if (nonzero_nam) p.AddMember("name", names, alloc);
+    if (nonzero_anm) p.AddMember("atomic_number", anums, alloc);
+    if (nonzero_fch) p.AddMember("formal_charge", fc, alloc);
+    p.AddMember("m", mass, alloc);
+    p.AddMember("c", charge, alloc);
     if (nonzero_pos) p.AddMember("position", pos, alloc);
     if (nonzero_vel) p.AddMember("velocity", vel, alloc);
     if (nonzero_res) p.AddMember("residue", residues, alloc);
-    p.AddMember("tags", export_tags(mol.atomProps(), d, map), alloc);
+    
+    Value tags = export_tags(mol.atomProps(), d, map);
+    if (!tags.ObjectEmpty()) p.AddMember("tags", tags, alloc);
     return p;
 }
 
@@ -214,16 +249,20 @@ static Value export_bonds(Document& d, NameMap& map, System& mol) {
     Value b(kObjectType);
     Value p(kArrayType);
     Value o(kArrayType);
+
+    bool nonzero_order=false;
+
     for (auto i=mol.bondBegin(), e=mol.bondEnd(); i!=e; ++i) {
         auto const& a = mol.bondFAST(*i);
         p.PushBack(a.i, alloc);
         p.PushBack(a.j, alloc);
         o.PushBack(a.order, alloc);
+        if (a.order!=0) nonzero_order=true;
     }
-    b.AddMember("count", o.Size(), alloc);
-    b.AddMember("particles", p, alloc);
-    b.AddMember("order", o, alloc);
-    b.AddMember("tags", export_tags(mol.bondProps(), d, map), alloc);
+    b.AddMember("i", p, alloc);
+    if (nonzero_order) b.AddMember("order", o, alloc);
+    Value tags = export_tags(mol.bondProps(), d, map);
+    if (!tags.ObjectEmpty()) b.AddMember("tags", tags, alloc);
     return b;
 }
 
@@ -246,7 +285,6 @@ static Value export_residues(Document& d, NameMap& map, System const& mol) {
         }
     }
     if (nonzero || mol.residueCount() > 1) {
-        residues.AddMember("count", mol.residueCount(), alloc);
         residues.AddMember("chain", chain, alloc);
         residues.AddMember("resid", resid, alloc);
         residues.AddMember("name", name, alloc);
@@ -270,7 +308,6 @@ static Value export_chains(Document& d, NameMap& map, System const& mol) {
     if (nonzero || mol.chainCount()>1) {
         chains.AddMember("name", name, alloc);
         chains.AddMember("segid", segid, alloc);
-        chains.AddMember("count", mol.chainCount(), alloc);
     }
     return chains;
 }
@@ -282,16 +319,18 @@ static void export_terms(Value& obj, TermTablePtr table, Document& d) {
     Value params(kArrayType);
 
     for (auto const& term : *table) {
+        if (term.atom(0) == msys::BadId) continue; // skip deleted terms
         for (Id i=0, n=table->atomCount(); i<n; i++) {
-            particles.PushBack(term.atom(i), alloc);
+            Id atomid = term.atom(i);
+            assert(atomid != msys::BadId);
+            particles.PushBack(atomid, alloc);
         }
         params.PushBack(int32_t(term.param()), alloc);
     }
-    terms.AddMember("count", table->termCount(), alloc);
-    terms.AddMember("particles", particles, alloc);
-    terms.AddMember("params", params, alloc);
-    obj.AddMember("arity", table->atomCount(), alloc);
-    obj.AddMember("terms", terms, alloc);
+    terms.AddMember("i", particles, alloc);
+    terms.AddMember("p", params, alloc);
+    obj.AddMember("n", table->atomCount(), alloc);
+    obj.AddMember("t", terms, alloc);
 }
 
 static Value export_aux(Document& d, NameMap& map, System const& mol) {
@@ -315,19 +354,20 @@ static Value export_tables(Document& d, NameMap& map, System const& mol) {
         Value s;
 
         export_terms(tableobj, table, d);
-        tableobj.AddMember("param", export_params(table->params(), d, map), alloc);
-        tableobj.AddMember("tags", export_tags(table->props(), d, map), alloc);
+        tableobj.AddMember("p", export_params(table->params(), d, map), alloc);
+        Value tags = export_tags(table->props(), d, map);
+        if (!tags.ObjectEmpty()) tableobj.AddMember("tags", tags, alloc);
 
         Value attrs(kObjectType);
         auto category = msys::print(table->category);
         s.SetString(category.data(), category.size(), alloc);
-        attrs.AddMember("category", s, alloc);
+        attrs.AddMember("c", s, alloc);
         if (table_name == "nonbonded") {
             auto rule = mol.nonbonded_info.vdw_rule;
             s.SetString(rule.data(), rule.size(), alloc);
             attrs.AddMember("vdw_rule", s, alloc);
         }
-        tableobj.AddMember("attrs", attrs, alloc);
+        tableobj.AddMember("a", attrs, alloc);
 
         s.SetString(table_name.data(), table_name.size(), alloc);
         tables.AddMember(s, tableobj, alloc);
@@ -335,29 +375,85 @@ static Value export_tables(Document& d, NameMap& map, System const& mol) {
     return tables;
 }
 
+static Value export_cts(Document& d, System& mol) {
+    auto& alloc = d.GetAllocator();
+    Value arr(kArrayType);
+
+    for (Id ctid : mol.cts()) {
+        Value ctobj(kObjectType);
+        
+        // ct name
+        auto &ct = mol.ct(ctid);
+        Value str;
+        if (ct.name() != "") {
+            str.SetString(ct.name().data(), ct.name().size(), alloc);
+            ctobj.AddMember("n", str, alloc);
+        }
+
+        // ct key-values
+        Value kvobj(kObjectType);
+        for (auto &key : ct.keys()) {
+            // convert key to RapidJson string
+            Value k;
+            k.SetString(key.data(), key.size(), alloc);
+
+            // convert ValueRef to RapidJson string
+            auto const &val = ct.value(key);
+            if (val.type() != msys::StringType) {
+                MSYS_FAIL("Only StringType ct key-value metadata supported in JSON output.");
+            }
+            Value v;
+            auto s = val.asString();
+            v.SetString(s.data(), s.size(), alloc);
+
+            kvobj.AddMember(k, v, alloc);
+        }
+        if (!kvobj.ObjectEmpty()) ctobj.AddMember("k", kvobj, alloc);
+
+        // ct chains
+        if (mol.chainCount() > 1) {
+            Value chains(kArrayType);
+            for (Id const& chn : mol.chainsForCt(ctid)) {
+                chains.PushBack(chn, alloc);
+            }
+            ctobj.AddMember("c", chains, alloc);
+        }
+
+        if (!ctobj.ObjectEmpty()) arr.PushBack(ctobj, alloc);
+    }
+    return arr;
+}
+
+
 static void export_json(Document& d, System& mol, Provenance const& provenance, unsigned flags) {
 
     auto& alloc = d.GetAllocator();
     d.SetObject();
-    Value names(kArrayType);
-    d.AddMember("names", names, alloc);
 
     NameMap map;
-    d.AddMember("cell", export_cell(d, map, mol), alloc);
-    d.AddMember("particles", export_particles(d, map, mol), alloc);
-    d.AddMember("bonds", export_bonds(d, map, mol), alloc);
-    d.AddMember("residues", export_residues(d, map, mol), alloc);
-    d.AddMember("chains", export_chains(d, map, mol), alloc);
+    Value cell = export_cell(d, map, mol);
+    if (cell.Size() != 0) d.AddMember("cell", cell, alloc);
+    d.AddMember("i", export_particles(d, map, mol), alloc);
+    d.AddMember("b", export_bonds(d, map, mol), alloc);
+    Value residues = export_residues(d, map, mol);
+    if (!residues.ObjectEmpty()) d.AddMember("residues", residues, alloc);
+    Value chains = export_chains(d, map, mol);
+    if (!chains.ObjectEmpty()) d.AddMember("chains", chains, alloc);
     if (!(flags & desres::msys::JsonExport::StructureOnly)) {
-        d.AddMember("tables", export_tables(d, map, mol), alloc);
-        d.AddMember("aux", export_aux(d, map, mol), alloc);
+        d.AddMember("t", export_tables(d, map, mol), alloc);
+
+        Value aux = export_aux(d, map, mol);
+        if (!aux.ObjectEmpty()) d.AddMember("aux", aux, alloc);
     }
+
+    Value cts = export_cts(d, mol);
+    if (!cts.Empty()) d.AddMember("c", cts, alloc);
 }
 
 namespace desres { namespace msys {
 
     void ExportJson(SystemPtr mol, std::string const& path, Provenance const& provenance,
-            unsigned flags) {
+            unsigned flags, int maxDecimals) {
 
         char writeBuffer[65536];
         auto fp = std::shared_ptr<FILE>(fopen(path.data(), "wb"), fclose);
@@ -371,23 +467,35 @@ namespace desres { namespace msys {
         FileWriteStream os(fp.get(), writeBuffer, sizeof(writeBuffer));
         if (flags & JsonExport::Whitespace) {
             PrettyWriter<FileWriteStream> writer(os);
+            if (maxDecimals >= 0) {
+                writer.SetMaxDecimalPlaces(maxDecimals);
+            }
             d.Accept(writer);
         } else {
             Writer<FileWriteStream> writer(os);
+            if (maxDecimals >= 0) {
+                writer.SetMaxDecimalPlaces(maxDecimals);
+            }
             d.Accept(writer);
         }
     }
 
-    std::string FormatJson(SystemPtr mol, Provenance const& provenance, unsigned flags) {
+    std::string FormatJson(SystemPtr mol, Provenance const& provenance, unsigned flags, int maxDecimals) {
 
         Document d;
         export_json(d, *mol, provenance, flags);
         StringBuffer buffer;
         if (flags & JsonExport::Whitespace) {
             PrettyWriter<StringBuffer> writer(buffer);
+            if (maxDecimals >= 0) {
+                writer.SetMaxDecimalPlaces(maxDecimals);
+            }
             d.Accept(writer);
         } else {
             Writer<StringBuffer> writer(buffer);
+            if (maxDecimals >= 0) {
+                writer.SetMaxDecimalPlaces(maxDecimals);
+            }
             d.Accept(writer);
         }
         return buffer.GetString();
@@ -400,13 +508,13 @@ namespace desres { namespace msys {
 namespace desres { namespace msys {
 
     void ExportJson(SystemPtr mol, std::string const& path, Provenance const& provenance,
-            unsigned flags) {
+            unsigned flags, int maxDecimals) {
         MSYS_FAIL("rapidjson not available; no json export support");
             }
 
 
 
-    std::string FormatJson(SystemPtr mol, Provenance const& provenance, unsigned flags) {
+    std::string FormatJson(SystemPtr mol, Provenance const& provenance, unsigned flags, int maxDecimals) {
          MSYS_FAIL("rapidjson not available; no json export support");
     }
 

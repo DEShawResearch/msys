@@ -6,5 +6,5 @@
 #}
 
 import msys.validate.dms
-msys.validate.dms.main()
 
+msys.validate.dms.main()

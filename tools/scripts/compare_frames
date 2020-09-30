@@ -4,27 +4,60 @@
 # . `dirname $0`/../share/env.sh
 # exec python $0 "$@"
 #}
-#
-# Copyright (c) 2015,2019 D.E.Shaw Research
-#
-# Compare two DTR or ETR trajectories
-#
+
+"""
+Compare two DTR or ETR trajectories
+"""
+
 
 import sys
 import argparse
 from msys import molfile
 from numpy import isnan, dtype
 
-parser = argparse.ArgumentParser(description='Compare ETR or DTR framesets')
-parser.add_argument('frameset', type=str, nargs=2, help='framesets to compare')
-parser.add_argument('-p', '--precision', type=float, default=0.0, help='max precision difference for float/double values')
-parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output')
-parser.add_argument('-n', '--no-match-keys', action='store_true', help='Do not make sure keys of both framesets match')
-parser.add_argument('--field-precision', metavar=('FIELD_NAME', 'FIELD_PRECISION'), nargs=2, action='append', default=[], help='Precision for specific field (option may be used multiple times to specify precision for multiple fields)')
+parser = argparse.ArgumentParser(description="Compare ETR or DTR framesets")
+parser.add_argument("frameset", type=str, nargs=2, help="framesets to compare")
+parser.add_argument(
+    "-p",
+    "--precision",
+    type=float,
+    default=0.0,
+    help="max precision difference for float/double values",
+)
+parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
+parser.add_argument(
+    "-n",
+    "--no-match-keys",
+    action="store_true",
+    help="Do not make sure keys of both framesets match",
+)
+parser.add_argument(
+    "--field-precision",
+    metavar=("FIELD_NAME", "FIELD_PRECISION"),
+    nargs=2,
+    action="append",
+    default=[],
+    help=(
+        "Precision for specific field (option may be used multiple times to specify"
+        " precision for multiple fields)"
+    ),
+)
 # The '-allow_different_numbers_of_frames' option is only supported for
 # backwards compatibity; '--allow-different-number-of-frames' is preferred.
-parser.add_argument('--allow-different-numbers-of-frames', '-allow_different_numbers_of_frames', action='store_true', default=False, help='Single dash option is for backwards compatibility')
-parser.add_argument('--ignore', type=str, action='append', default=[], help='Names of fields to ignore in comparison')
+parser.add_argument(
+    "--allow-different-numbers-of-frames",
+    "-allow_different_numbers_of_frames",
+    action="store_true",
+    default=False,
+    help="Single dash option is for backwards compatibility",
+)
+parser.add_argument(
+    "--ignore",
+    type=str,
+    action="append",
+    default=[],
+    help="Names of fields to ignore in comparison",
+)
 
 args = parser.parse_args()
 
@@ -33,9 +66,12 @@ r1 = molfile.DtrReader(args.frameset[0], sequential=True)
 r2 = molfile.DtrReader(args.frameset[1], sequential=True)
 
 if r1.nframes != r2.nframes:
-    print ('WARNING: Different number of frames in %s (%d) and %s (%d)' % (args.frameset[0], r1.nframes, args.frameset[1], r2.nframes))
+    print(
+        "WARNING: Different number of frames in %s (%d) and %s (%d)"
+        % (args.frameset[0], r1.nframes, args.frameset[1], r2.nframes)
+    )
     if not args.allow_different_numbers_of_frames:
-        print ('Exiting')
+        print("Exiting")
         sys.exit(3)
 
 nframes = min(r1.nframes, r2.nframes)
@@ -51,7 +87,10 @@ last_time = 0.0
 times = r1.times()
 for i in range(nframes):
     if i == report:
-        print('%4d frames examined so far (time %10.4f ps), %d are mismatches.' % (i, last_time, miscompares))
+        print(
+            "%4d frames examined so far (time %10.4f ps), %d are mismatches."
+            % (i, last_time, miscompares)
+        )
         report *= 2
     kv1 = r1.keyvals(i)
     kv2 = r2.keyvals(i)
@@ -60,11 +99,11 @@ for i in range(nframes):
     keys = (set(kv1.keys()) & set(kv2.keys())) - set(args.ignore)
     # Check the that keys match in the first and second set
     if not args.no_match_keys and set(kv1.keys()) - set(args.ignore) != keys:
-        print ('Different keys found in frame %d' % i)
-        print ('Keys for frameset 1:')
-        print (kv1.keys())
-        print ('Keys for frameset 2:')
-        print (kv2.keys())
+        print("Different keys found in frame %d" % i)
+        print("Keys for frameset 1:")
+        print(kv1.keys())
+        print("Keys for frameset 2:")
+        print(kv2.keys())
         sys.exit(1)
     # Now check the actual values, look at the intersections of the sets of keys
     frame_miscompare = False
@@ -73,17 +112,23 @@ for i in range(nframes):
         miss_arr = []
         if len(kv1[k]) != len(kv2[k]):
             if args.verbose:
-                print ('Different number of elements in field %s (%d != %d)' % (k, len(kv1[k]), len(kv2[k])))
+                print(
+                    "Different number of elements in field %s (%d != %d)"
+                    % (k, len(kv1[k]), len(kv2[k]))
+                )
             miss = True
         # Compare strings directly
         elif type(kv1[k]) == str or type(kv1[k]) == bytearray:
-            miss = (kv1[k] != kv2[k])
+            miss = kv1[k] != kv2[k]
         # First test if there are any differences (faster than always doing the NaN check below)
         elif (kv1[k] != kv2[k]).any():
             # If there are, mask out NaNs because they always compare to false
-            if not ( (kv1[k] == kv2[k]) | (isnan(kv1[k]) & isnan(kv2[k])) ).all():
+            if not ((kv1[k] == kv2[k]) | (isnan(kv1[k]) & isnan(kv2[k]))).all():
                 # If we're comparing the fields to a given precision, and they're floats
-                if (args.precision or k in field_precision) and kv1[k].dtype in (dtype('float32'), dtype('float64')):
+                if (args.precision or k in field_precision) and kv1[k].dtype in (
+                    dtype("float32"),
+                    dtype("float64"),
+                ):
                     precision = field_precision.get(k, args.precision)
                     if (abs(kv1[k] - kv2[k]) <= precision).all():
                         continue
@@ -91,38 +136,38 @@ for i in range(nframes):
                     precision = 0
                 # Sigh. A special case for positions wrapped around the box
                 mismatches = abs(kv1[k] - kv2[k]) > precision
-                if k == 'POSITION' and 'UNITCELL' in kv1:
-                    box = kv1['UNITCELL'][[0,4,8]]
-                    pr1 = kv1[k].reshape(len(kv1[k])//3, 3)
-                    pr2 = kv2[k].reshape(len(kv2[k])//3, 3)
-                    mis_res = mismatches.reshape(len(kv1[k])//3, 3)
+                if k == "POSITION" and "UNITCELL" in kv1:
+                    box = kv1["UNITCELL"][[0, 4, 8]]
+                    pr1 = kv1[k].reshape(len(kv1[k]) // 3, 3)
+                    pr2 = kv2[k].reshape(len(kv2[k]) // 3, 3)
+                    mis_res = mismatches.reshape(len(kv1[k]) // 3, 3)
                     # take diff between positions, subtract the box size, and index out only the elements
                     # where we found a large difference last time, and check that it's less than precision
-                    if (abs( (abs(pr1-pr2) - box)[mis_res] ) <= precision).all():
+                    if (abs((abs(pr1 - pr2) - box)[mis_res]) <= precision).all():
                         continue
                 miss = True
                 if args.verbose:
-                    miss_arr.append( kv1[k][mismatches] )
-                    miss_arr.append( kv2[k][mismatches] )
+                    miss_arr.append(kv1[k][mismatches])
+                    miss_arr.append(kv2[k][mismatches])
         if miss:
             frame_miscompare = True
             if args.verbose:
-                print ('Miscompare for frame %i' % i)
+                print("Miscompare for frame %i" % i)
                 if len(miss_arr):
-                    print('%s ' % k, miss_arr[0], ' !=\n', miss_arr[1])
+                    print("%s " % k, miss_arr[0], " !=\n", miss_arr[1])
                 else:
                     print(k, kv1[k])
                     print(k, kv2[k])
-            else:     # for non-verbose output, remaining keys do not matter
+            else:  # for non-verbose output, remaining keys do not matter
                 break
     if frame_miscompare:
         miscompares += 1
 
 if miscompares > 0:
-    print ('%d of %d frames miscompared' % (miscompares, nframes))
+    print("%d of %d frames miscompared" % (miscompares, nframes))
     sys.exit(2)
 
-print ('%d frames matched' % nframes)
+print("%d frames matched" % nframes)
 
 sys.exit(0)
 
@@ -130,3 +175,4 @@ sys.exit(0)
 # mode: python
 # indent-tabs-mode: nil
 # End:
+# vim: filetype=python

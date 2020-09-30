@@ -12,6 +12,7 @@
 #include <queue>
 #include <stdio.h>
 #include <tuple>
+#include <unordered_set>
 
 #if defined(WIN32) && !defined(drand48)
 #define drand48() ((double)rand()/(double)RAND_MAX)
@@ -434,6 +435,13 @@ namespace {
     static GraphPtr ace_graph;
     static std::string nme_hash;
     static GraphPtr nme_graph;
+    static std::unordered_set<std::string> lipid_residue_set {
+        "DLPE", "DMPC", "DPPC", "GPC", "LPPC", "PALM", "PC", "PGCL", "POPC", "POPE", "POPS"
+    };
+
+    bool has_lipid_residue_name(std::string const& name) {
+        return lipid_residue_set.count(name) > 0;
+    }
     struct _ {
         _() {
             make_watergraph();
@@ -540,6 +548,11 @@ namespace {
 
         /* need at least four atoms to determine protein or nucleic */
         if (atoms.size()<4) return;
+
+        if (has_lipid_residue_name(self->residueFAST(res).name)) {
+            self->residueFAST(res).type = ResidueLipid;
+            return;
+        }
 
         if (is_protein_capping_group(self, atoms)) {
             self->residueFAST(res).type = ResidueProtein;

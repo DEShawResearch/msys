@@ -1,13 +1,11 @@
 '''
 DESRES extensions for SCons
 '''
-from __future__ import print_function
-
 from SCons.Script import *
 import os
 import subprocess
 
-EnsurePythonVersion(2,7)
+EnsurePythonVersion(3,6)
 EnsureSConsVersion(2,4)
 
 _wheel_targets = dict(platlib=[], purelib=[], data=[], scripts=[])
@@ -66,7 +64,6 @@ def munge_header(env, source, target):
         lines = fp.readlines()
     with open(dst, 'w') as fp:
         print('#!/usr/bin/env python', file=fp)
-        print('from __future__ import print_function', file=fp)
         print('import os, sys', file=fp)
         print('sys.path.insert(0,os.path.dirname(__file__)+"/../lib/python")', file=fp)
 

@@ -6,5 +6,5 @@
 #}
 
 import msys.sequence
-msys.sequence.main()
 
+msys.sequence.main()

@@ -6,5 +6,5 @@
 #}
 
 import msys.dump
-exit(msys.dump.main())
 
+exit(msys.dump.main())

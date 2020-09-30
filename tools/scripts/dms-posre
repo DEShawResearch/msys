@@ -6,5 +6,5 @@
 #}
 
 import msys.posre
-msys.posre.main()
 
+msys.posre.main()

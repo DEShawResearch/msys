@@ -7,12 +7,16 @@
 
 from msys.molfile import DtrReader, DtrWriter
 
+
 def parse_args():
     from argparse import ArgumentParser
+
     parser = ArgumentParser(description=__doc__)
     parser.add_argument("input_trj")
     parser.add_argument("output_trj")
-    parser.add_argument("-p", "--precision", type=float, default=1e-3, help="coordinate precision")
+    parser.add_argument(
+        "-p", "--precision", type=float, default=1e-3, help="coordinate precision"
+    )
     parser.add_argument("-n", type=int, help="write up to n frames")
     return parser.parse_args()
 
@@ -22,18 +26,20 @@ def main():
     # if output is dtr, write all input frames to that dtr and don't generate an stk or cache file
     # if output is stk, treat input as list of dtrs and write new dtrs to directory formed by
     # stripping the .stk suffix from the name.
-    if args.output_trj.endswith('.dtr'):
+    if args.output_trj.endswith(".dtr"):
         r = DtrReader(args.input_trj)
         w = DtrWriter(args.output_trj, natoms=r.natoms, precision=args.precision)
         times = r.times
         print(f"reading {r.nframes} frames with {r.natoms} atoms from {args.input_trj}")
         for i, time in enumerate(r.times()):
-            if args.n is not None and i==args.n: break
+            if args.n is not None and i == args.n:
+                break
             kv = r.keyvals(i)
             w.append(time, kv)
         w.close()
     else:
         pass
+
 
 main()
 

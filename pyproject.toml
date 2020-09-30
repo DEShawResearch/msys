@@ -24,3 +24,7 @@ url="github.com/DEShawResearch/msys"
 #doc = ["sphinx"]
 #cli = ["click"]
 
+[tool.black]
+include = 'python/|tools/scripts/|tools/validate/|tools/|tests/.*.py'
+exclude = '.*\.cxx|.*\.hxx|.*.dms'
+
