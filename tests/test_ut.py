@@ -1621,6 +1621,18 @@ class Main(unittest.TestCase):
         for attr in attrs:
             self.assertEqual(getattr(prov, attr), getattr(new.provenance[0], attr))
 
+    def testReplaceProvenance(self):
+        mol = msys.Load("tests/files/pseudo.dms")
+        prov = mol.provenance
+        prov = prov[1:3]
+        assert len(prov)==2
+        mol.provenance = prov
+        attrs = "version", "timestamp", "user", "workdir", "cmdline", "executable"
+        assert len(prov) == len(mol.provenance)
+        for old, new in zip(prov, mol.provenance):
+            for attr in attrs:
+                assert getattr(old, attr) == getattr(new, attr)
+
     def testCloneWholeFragments(self):
         mol = msys.FromSmilesString("CC")
         mol.clone()

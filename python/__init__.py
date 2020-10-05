@@ -1659,6 +1659,9 @@ class System(object):
     def provenance(self):
         """ return a list of Provenance entries for this system """
         return self._ptr.provenance()
+    @provenance.setter
+    def provenance(self, provenance_list):
+        self._ptr.setProvenance(provenance_list)
 
     def findContactIds(
         self, cutoff, ids=None, other=None, pos=None, ignore_excluded=False

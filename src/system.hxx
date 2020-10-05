@@ -200,9 +200,8 @@ namespace desres { namespace msys {
         NonbondedInfo   nonbonded_info;
 
         /* get the provenance history */
-        std::vector<Provenance> const& provenance() const {
-            return _provenance;
-        }
+        std::vector<Provenance>& provenance() { return _provenance; }
+        std::vector<Provenance> const& provenance() const { return _provenance; }
 
         /* add a provenance entry.  Should be used only by ImportDMS! */
         void addProvenance(Provenance const& p) {

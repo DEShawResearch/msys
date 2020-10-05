@@ -119,6 +119,13 @@ namespace {
         }
         return L;
     }
+    void sys_set_provenance(System& sys, list prov_list) {
+        std::vector<Provenance> prov;
+        for (int i=0, n=len(prov_list); i<n; i++) {
+            prov.emplace_back(extract<Provenance>(prov_list[i]));
+        }
+        sys.provenance().swap(prov);
+    }
 
     void destructor(PyObject* obj) { 
         Py_XDECREF(obj); 
@@ -1016,6 +1023,7 @@ namespace desres { namespace msys {
             .def("updateFragids", update_fragids)
             .def("findBond",    &System::findBond)
             .def("provenance",      sys_provenance)
+            .def("setProvenance", sys_set_provenance)
             .def("coalesceTables",    &System::coalesceTables)
             .def("translate",       sys_translate)
             .def("findContactIds",  sys_find_contact_ids)
