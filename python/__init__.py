@@ -2839,7 +2839,11 @@ def ApplyDihedralGeometry(a, b, c, r, theta, phi):
 
 
 def CalcPlanarity(pos_or_atoms):
-    """ Planarity of positions or atoms """
+    """ Planarity of positions or atoms
+
+    Planarity is computed as fabs(v[0]-(v[1]+v[2])) where v are the
+    eigenvalues of the geometric inertia tensor.
+    """
     if isinstance(pos_or_atoms, numpy.ndarray):
         return _msys.calc_planarity(pos_or_atoms)
     n = len(pos_or_atoms)
