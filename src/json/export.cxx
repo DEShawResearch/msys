@@ -152,8 +152,9 @@ static Value export_params(msys::ParamTablePtr params, Document& d, NameMap& map
                 prop.AddMember("t", "s", alloc);
                 for (Id j=0, m=params->paramCount(); j<m; j++) {
                     auto s = params->value(j,i).c_str();
-                    vals.PushBack(register_name(s, strlen(s), map, d), alloc);
-                    nonzero = true;
+                    int64_t name = register_name(s, strlen(s), map, d);
+                    vals.PushBack(name, alloc);
+                    if (name != 0) nonzero = true;
                 }
                 break;
         };

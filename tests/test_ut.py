@@ -32,6 +32,12 @@ def SaveJson(system, path, transform=None, maxDecimals=-1):
 
 
 class TestJson(unittest.TestCase):
+    def testExportJSONWithAllEmptyStringParameterTypeShouldNotProduceNamesField(self):
+        s = msys.Load("tests/files/memo.dms")
+        js = msys.FormatJson(s)
+        assert "names" not in json.loads(js)
+        new = msys.ParseJson(js)
+
     def test2f4k(self):
         tmp = tmpfile(suffix=".json")
         old = msys.Load("tests/files/2f4k.dms")

@@ -300,7 +300,7 @@ static void read_bonds(Document const& d, SystemPtr mol) {
     }
 }
 
-static void read_params(Value const& val, Value const& names, ParamTablePtr params) {
+static void read_params(Value const& val, Value const& names, ParamTablePtr params, const std::string &name) {
     Id nparams = msys::BadId;
 
     // search for the number of parameters
@@ -315,6 +315,9 @@ static void read_params(Value const& val, Value const& names, ParamTablePtr para
             nparams = m.value["v"].GetArray().Size(); // use the first one we find
             break;
         }
+    }
+    if (nparams == msys::BadId) {
+        MSYS_FAIL("Failed to determine number of parameters for " << name);
     }
     // instantiate the parameters
     for (Id i=0; i<nparams; i++)  params->addParam();
@@ -374,7 +377,7 @@ static void read_aux(Document const& d, SystemPtr mol) {
     auto& names = d["names"];
     for (auto& m : tables->value.GetObject()) {
         auto params = ParamTable::create();
-        read_params(m.value, names, params);
+        read_params(m.value, names, params, "aux params");
         mol->addAuxTable(m.name.GetString(), params);
     }
 }
@@ -399,7 +402,7 @@ static void read_tables(Document const& d, SystemPtr mol) {
                 }
             }
         }
-        read_params(m.value["p"], names->value, table->params());
+        read_params(m.value["p"], names->value, table->params(), table->name());
         auto& terms = m.value["t"];
 
         auto& particles = terms["i"];
