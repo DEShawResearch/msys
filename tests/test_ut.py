@@ -38,6 +38,9 @@ class TestJson(unittest.TestCase):
         assert "names" not in json.loads(js)
         new = msys.ParseJson(js)
 
+    def testParsingJsonShouldNotCrash(self):
+        msys.ParseJson(open("tests/files/crash.json").read())
+
     def test2f4k(self):
         tmp = tmpfile(suffix=".json")
         old = msys.Load("tests/files/2f4k.dms")
