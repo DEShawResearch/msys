@@ -590,6 +590,19 @@ class ParamTable(object):
     def __hash__(self):
         return self._ptr.__hash__()
 
+    def asCapsule(self):
+        """Return a capsule wrapper of the internal ParamTablePtr.
+
+        The capsule holds a bare pointer and therefore must not outlive self.
+        """
+        return self._ptr.asCapsule(self._ptr)
+
+    @classmethod
+    def fromCapsule(cls, cap):
+        """Construct from a capsule wrapper of a ParamTablePtr."""
+        return cls(_msys.ParamTablePtr.fromCapsule(cap))
+
+
     def addParam(self, **kwds):
         """add and return a new Param().
 
@@ -805,6 +818,19 @@ class TermTable(object):
 
     def __hash__(self):
         return self._ptr.__hash__()
+
+    def asCapsule(self):
+        """Return a capsule wrapper of the internal TermTablePtr.
+
+        The capsule holds a bare pointer and therefore must not outlive self.
+        """
+        return self._ptr.asCapsule(self._ptr)
+
+    @classmethod
+    def fromCapsule(cls, cap):
+        """Construct from a capsule wrapper of a SystemPtr."""
+        return cls(_msys.TermTablePtr.fromCapsule(cap))
+
 
     def remove(self):
         """ Remove this table from its parent system """

@@ -1,5 +1,6 @@
 #include "wrap_obj.hxx"
 #include "param_table.hxx"
+#include "capsule.hxx"
 
 using namespace desres::msys;
 
@@ -62,6 +63,10 @@ namespace desres { namespace msys {
             .def("findInt",    find_int)
             .def("findFloat",  find_float)
             .def("findString", find_string)
+            .def("asCapsule", python::paramtable_as_capsule)
+            .staticmethod("asCapsule")
+            .def("fromCapsule", python::paramtable_from_capsule)
+            .staticmethod("fromCapsule")
             ;
     }
 

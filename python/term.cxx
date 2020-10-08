@@ -1,6 +1,7 @@
 #include "wrap_obj.hxx"
 #include "term_table.hxx"
 #include "override.hxx"
+#include "capsule.hxx"
 
 using namespace desres::msys;
 
@@ -135,6 +136,10 @@ namespace desres { namespace msys {
             /* misc */
             .def("resetParams", &TermTable::resetParams)
             .def("replaceWithSortedTerms", ReplaceTableWithSortedTerms)
+            .def("asCapsule", python::termtable_as_capsule)
+            .staticmethod("asCapsule")
+            .def("fromCapsule", python::termtable_from_capsule)
+            .staticmethod("fromCapsule")
             ;
     }
 
