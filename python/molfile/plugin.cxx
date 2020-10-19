@@ -1,11 +1,9 @@
 #include "molfilemodule.hxx"
-#include <boost/python.hpp>
 #include <vector>
 #include <map>
-
+#include <algorithm>
 
 using namespace desres::molfile;
-using namespace boost::python;
 
 namespace {
 
@@ -15,8 +13,8 @@ namespace {
     }
 
     /* convert from Python representation of bonds/atoms to the C++ rep */
-    int assemble_atoms( object& atoms, std::vector<atom_t>& atomlist,
-                                       std::vector<bond_t>& bondlist ) {
+    int assemble_atoms( list atoms, std::vector<atom_t>& atomlist,
+                                    std::vector<bond_t>& bondlist ) {
         int optflags=0;
         if (atoms.is_none()) {
             atomlist.resize(0);
@@ -28,8 +26,8 @@ namespace {
         typedef std::map<PyObject *, Py_ssize_t> AtomHash;
         AtomHash atom_hash;
         atomlist.resize(len(atoms));
-        for (Py_ssize_t i=0; i<len(atoms); i++) {
-            object obj = atoms[i];
+        for (size_t i=0; i<len(atoms); i++) {
+            handle obj = atoms[i];
             PyObject * ptr = obj.ptr();
             if (ptr->ob_type != &AtomType) {
                 PyErr_Format(PyExc_ValueError,
@@ -43,7 +41,7 @@ namespace {
         }
 
         /* second pass: assemble the bonds */
-        for (Py_ssize_t i=0; i<len(atoms); i++) {
+        for (size_t i=0; i<len(atoms); i++) {
             object obj=atoms[i];
             Atom_t *atom = reinterpret_cast<Atom_t*>(obj.ptr());
             /* iterate over keyvals in bond dict */
@@ -51,7 +49,7 @@ namespace {
             PyObject * key, * val;
             while (PyDict_Next(atom->bonds, &pos, &key, &val)) {
                 AtomHash::const_iterator j=atom_hash.find(key);
-                if (j!=atom_hash.end() && i<j->second) {
+                if (j!=atom_hash.end() && ssize_t(i)<j->second) {
                     float order = PyFloat_AsDouble(val);
                     if (PyErr_Occurred()) throw error_already_set();
                     bondlist.push_back(bond_t(i,j->second,order));
@@ -75,9 +73,9 @@ namespace {
         }
 
         /* get natoms from either atoms list or specified natoms */
-        Py_ssize_t natoms=-1;
+        ssize_t natoms=-1;
         if (!atomsobj.is_none())       natoms = len(atomsobj);
-        else if (!natomsobj.is_none()) natoms = extract<Py_ssize_t>(natomsobj);
+        else if (!natomsobj.is_none()) natoms = natomsobj.cast<ssize_t>();
         else if (self.write_structure) {
             PyErr_Format(PyExc_ValueError, "Provide either atoms or natoms>0");
             throw error_already_set();
@@ -114,7 +112,7 @@ namespace {
     }
 
     object plugin_repr(const molfile_plugin_t& p) {
-        return "<Plugin for %s>" % make_tuple(p.prettyname);
+        return str("<Plugin for %s>").format(p.prettyname);
     }
 
     Reader * plugin_read(const molfile_plugin_t& p, 
@@ -124,29 +122,28 @@ namespace {
     }
 }
 
-void desres::molfile::export_plugin() {
+void desres::molfile::export_plugin(module m) {
 
-    class_<molfile_plugin_t>("Plugin", "Interface to readers and writers", init<>())
-        .add_property("name", &molfile_plugin_t::name)
-        .add_property("prettyname", &molfile_plugin_t::prettyname)
-        .add_property("version", plugin_version)
-        .add_property("filename_extensions", plugin_extensions)
-        .add_property("can_read", plugin_can_read)
-        .add_property("can_write", plugin_can_write)
+    class_<molfile_plugin_t>(m, "Plugin", "Interface to readers and writers")
+        .def(init<>())
+        .def_readonly("name", &molfile_plugin_t::name)
+        .def_readonly("prettyname", &molfile_plugin_t::prettyname)
+        .def_property_readonly("version", plugin_version)
+        .def_property_readonly("filename_extensions", plugin_extensions)
+        .def_property_readonly("can_read", plugin_can_read)
+        .def_property_readonly("can_write", plugin_can_write)
         .def("__repr__", plugin_repr)
         .def("read", plugin_read, 
-                (arg("path")
-                ,arg("double_precision")=false),
-                "Open a file for reading",
-                return_value_policy<manage_new_object,
-                return_internal_reference<1> >())
+                return_value_policy::reference,
+                 arg("path")
+                ,arg("double_precision")=false,
+                "Open a file for reading")
         .def("write", plugin_write,
-                (arg("path"),
-                 arg("atoms")=object(),
-                 arg("natoms")=object()),
-                 "write(path,atoms=None,natoms=None)",
-                return_value_policy<manage_new_object,
-                return_internal_reference<1> >())
+                return_value_policy::reference,
+                 arg("path"),
+                 arg("atoms")=none(),
+                 arg("natoms")=none(),
+                 "write(path,atoms=None,natoms=None)")
         ;
 }
 

@@ -20,10 +20,9 @@ if env.get("MSYS_WITHOUT_INCHI"):
     env.Append(CPPDEFINES="MSYS_WITHOUT_INCHI")
 
 pymodfiles = """
+pymod.cxx
 analyze.cxx
 annotated_system.cxx
-atom.cxx
-bond.cxx
 chain.cxx
 ff.cxx
 graph.cxx
@@ -31,13 +30,9 @@ inchi.cxx
 io.cxx
 override.cxx
 param.cxx
-pymod.cxx
-residue.cxx
 system.cxx
 spatial_hash.cxx
 term.cxx
-wrap_obj.cxx
-variant.cxx
 """.split()
 
 pyext = env.AddPythonExtension("_msys", pymodfiles, prefix="msys")
@@ -47,7 +42,7 @@ env.AddPythonModule("ff.py", prefix="msys")
 
 pfxenv = env.Clone()
 pfxenv.Append(CXXFLAGS="-fno-strict-aliasing")
-pfxext = pfxenv.AddPythonExtension("pfx", "pfx.cxx", prefix="msys")
+pfxenv.AddPythonExtension("pfx", "pfx.cxx", prefix="msys")
 
 env.AddHeaders(["capsule.hxx"], prefix="msys/python")
 env.SConscript("molfile/SConscript")

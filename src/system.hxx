@@ -276,6 +276,16 @@ namespace desres { namespace msys {
         }
 
         template <typename T>
+        void getVelocities(T setter) const {
+            for (iterator i=atomBegin(), e=atomEnd(); i!=e; ++i) {
+                atom_t const& a = atomFAST(*i);
+                *setter++ = a.vx;
+                *setter++ = a.vy;
+                *setter++ = a.vz;
+            }
+        }
+
+        template <typename T>
         void setPositions(T getter) {
             for (iterator i=atomBegin(), e=atomEnd(); i!=e; ++i) {
                 atom_t& a = atomFAST(*i);

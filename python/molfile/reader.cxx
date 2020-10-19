@@ -1,27 +1,19 @@
 #include "molfilemodule.hxx"
-#include "molfile/findframe.hxx"
+#include <msys/molfile/findframe.hxx>
 #include <vector>
 #include <stdexcept>
 #include <numpy/arrayobject.h>
 
-#include <boost/python.hpp>
-
 using namespace desres::molfile;
 typedef ssize_t (Reader::*findfunc)(double T) const;
 
-using namespace boost::python;
-
 namespace {
-#if PY_MAJOR_VERSION >= 3
     auto py_from_long = PyLong_FromLong;
-#else
-    auto py_from_long = PyInt_FromLong;
-#endif
 }
 
 namespace {
 
-    object reader_atoms(const Reader& self) {
+    handle reader_atoms(const Reader& self) {
         // build the atom list
         const std::vector<atom_t> &atoms = self.atoms();
         if (!atoms.size()) {
@@ -57,10 +49,10 @@ namespace {
             PyDict_SetItem( jatom->bonds, data[ai], orderobj );
             Py_DECREF(orderobj);
         }
-        return object(handle<>(result));
+        return result;
     }
 
-    object reader_topology(const Reader& self) {
+    handle reader_topology(const Reader& self) {
         const std::vector<bond_t> &bonds = self.bonds();
         int n = self.natoms();
         PyObject * result = NULL;
@@ -75,10 +67,10 @@ namespace {
                 PyTuple_SET_ITEM(data[from], oldsize, py_from_long(to));
             }
         }
-        return object(handle<>(result));
+        return result;
     }
 
-    object reader_bondorders(const Reader& self) {
+    handle reader_bondorders(const Reader& self) {
         const std::vector<bond_t> &bonds = self.bonds();
         int n = self.natoms();
         PyObject * result = NULL;
@@ -93,11 +85,11 @@ namespace {
                 PyTuple_SET_ITEM(data[from], oldsize, PyFloat_FromDouble(order));
             }
         }
-        return object(handle<>(result));
+        return result;
     }
 
 
-    object reader_times(const Reader& self) {
+    handle reader_times(const Reader& self) {
         Py_ssize_t n = self.nframes();
         if (n<0) {
             PyErr_Format(PyExc_ValueError, 
@@ -112,7 +104,7 @@ namespace {
             PyErr_Format(PyExc_RuntimeError, "Error reading times");
             throw error_already_set();
         }
-        return object(handle<>(arr));
+        return arr;
     }
 
     template <findfunc f>
@@ -160,41 +152,26 @@ namespace {
     }
 }
 
-void desres::molfile::export_reader() {
+void desres::molfile::export_reader(module m) {
 
-    class_<Reader>("Reader", "Structure or trajectory open for reading", no_init)
-        .add_property("natoms", &Reader::natoms, "number of atoms")
-        .add_property("nframes",&Reader::nframes, "number of frames")
-        .add_property("ngrids", reader_ngrids, "number of grids")
-        .add_property("has_velocities", &Reader::has_velocities, "reads velocities")
-        .add_property("atoms", reader_atoms, "list of Atoms")
-        .add_property("topology", reader_topology, "bond adjacency graph")
-        .add_property("bondorders", reader_bondorders, "list of bond orders")
-        .add_property("times", reader_times, "all times for frames in trajectory")
-        .def("reopen", &Reader::reopen, "reopen file for reading",
-                return_value_policy<manage_new_object>())
-        .def("frame", &Reader::frame,
-                return_value_policy<manage_new_object>())
-        .def("next", reader_next, "Return the next frame",
-                return_value_policy<manage_new_object>())
+    class_<Reader>(m, "Reader", "Structure or trajectory open for reading")
+        .def_property_readonly("natoms", &Reader::natoms, "number of atoms")
+        .def_property_readonly("nframes",&Reader::nframes, "number of frames")
+        .def_property_readonly("ngrids", reader_ngrids, "number of grids")
+        .def_property_readonly("has_velocities", &Reader::has_velocities, "reads velocities")
+        .def_property_readonly("atoms", reader_atoms, "list of Atoms")
+        .def_property_readonly("topology", reader_topology, "bond adjacency graph")
+        .def_property_readonly("bondorders", reader_bondorders, "list of bond orders")
+        .def_property_readonly("times", reader_times, "all times for frames in trajectory")
+        .def("reopen", &Reader::reopen, "reopen file for reading")
+        .def("frame", &Reader::frame)
+        .def("next", reader_next, "Return the next frame")
         .def("skip", &Reader::skip, "Skip the next frame")
-#ifndef WIN32 //Doesn't link under windows
-        .def("at_time_near", &wrap<&Reader::at_time_near>,
-                arg("time"),
-                return_value_policy<manage_new_object>())
-#endif
-        .def("at_time_gt", &wrap<&Reader::at_time_gt>,
-                arg("time"),
-                return_value_policy<manage_new_object>())
-        .def("at_time_ge", &wrap<&Reader::at_time_ge>,
-                arg("time"),
-                return_value_policy<manage_new_object>())
-        .def("at_time_lt", &wrap<&Reader::at_time_lt>,
-                arg("time"),
-                return_value_policy<manage_new_object>())
-        .def("at_time_le", &wrap<&Reader::at_time_le>,
-                arg("time"),
-                return_value_policy<manage_new_object>())
+        .def("at_time_near", &wrap<&Reader::at_time_near>, arg("time"))
+        .def("at_time_gt", &wrap<&Reader::at_time_gt>, arg("time"))
+        .def("at_time_ge", &wrap<&Reader::at_time_ge>, arg("time"))
+        .def("at_time_lt", &wrap<&Reader::at_time_lt>, arg("time"))
+        .def("at_time_le", &wrap<&Reader::at_time_le>, arg("time"))
         .def("grid_meta", reader_grid_meta)
         .def("grid_data", reader_grid_data)
         ;

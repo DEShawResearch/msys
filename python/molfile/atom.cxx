@@ -3,19 +3,11 @@
 using namespace desres::molfile;
 
 namespace {
-#if PY_MAJOR_VERSION >= 3
     auto py_as_long = PyLong_AsLong;
     auto py_from_long = PyLong_FromLong;
     auto py_as_string = PyUnicode_AsUTF8;
     auto py_from_string = PyUnicode_FromString;
     auto py_from_format = PyUnicode_FromFormat;
-#else
-    auto py_as_long = PyInt_AsLong;
-    auto py_from_long = PyInt_FromLong;
-    auto py_as_string = PyString_AsString;
-    auto py_from_string = PyString_FromString;
-    auto py_from_format = PyString_FromFormat;
-#endif
 }
 
 #define GETSET_INT(ATTR, FLAG) \

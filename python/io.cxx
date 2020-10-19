@@ -1,4 +1,6 @@
-#include "wrap_obj.hxx"
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
 #include "schema.hxx"
 #include "mae.hxx"
 #include "dms.hxx"
@@ -13,62 +15,32 @@
 #include "amber.hxx"
 #include "json.hxx"
 
-namespace {
+using namespace pybind11;
+using namespace desres::msys;
 
-#if PY_MAJOR_VERSION >= 3
-    auto py_as_bytes = PyBytes_FromStringAndSize;
-#else
-    auto py_as_bytes = PyString_FromStringAndSize;
-#endif
+namespace {
 
     std::string format_json(SystemPtr mol, int maxDecimals) {
         unsigned flags = 0;
         return FormatJson(mol, Provenance(), flags, maxDecimals);
     }
 
-    PyObject* format_dms(SystemPtr mol) {
-        std::string contents = FormatDMS(mol, Provenance());
-        return py_as_bytes(contents.data(), contents.size());
+    bytes format_dms(SystemPtr mol) {
+        return FormatDMS(mol, Provenance());
     }
 
-    SystemPtr import_mae_from_buffer(PyObject* obj, bool ignore_unrecognized,
-                                                    bool structure_only) {
-        Py_buffer view[1];
-        if (PyObject_GetBuffer(obj, view, PyBUF_ND)) {
-            throw_error_already_set();
-        }
-        std::shared_ptr<Py_buffer> ptr(view, PyBuffer_Release);
-        const char* bytes = reinterpret_cast<const char *>(view->buf);
-        return ImportMAEFromBytes(bytes, view->len, 
+    SystemPtr import_mae_from_buffer(buffer buf, bool ignore_unrecognized,
+                                                 bool structure_only) {
+
+        auto req = buf.request();
+        return ImportMAEFromBytes((const char*)req.ptr, req.size,
                                   ignore_unrecognized,
                                   structure_only);
     }
 
-    SystemPtr import_dms_from_buffer( PyObject* obj, bool structure_only ) {
-        Py_buffer view[1];
-        if (PyObject_GetBuffer(obj, view, PyBUF_ND)) {
-            throw_error_already_set();
-        }
-        std::shared_ptr<Py_buffer> ptr(view, PyBuffer_Release);
-        char* bytes = reinterpret_cast<char *>(view->buf);
-        return ImportDMSFromBytes(bytes, view->len, structure_only);
-    }
-
-    list import_mol2_many(std::string const& path) {
-        std::vector<SystemPtr> mols = ImportMol2Many(path);
-        list L;
-        for (unsigned i=0; i<mols.size(); i++) {
-            L.append(object(mols[i]));
-        }
-        return L;
-    }
-
-    LoadIteratorPtr load_iterator_create(std::string const& path,
-                                         bool structure_only) {
-        return LoadIterator::create(path, structure_only);
-    }
-    SystemPtr load_iterator_next(LoadIterator& iter) {
-        return iter.next();
+    SystemPtr import_dms_from_buffer(buffer buf, bool structure_only ) {
+        auto req = buf.request();
+        return ImportDMSFromBytes((const char*)req.ptr, req.size, structure_only);
     }
 
     void save(SystemPtr mol, std::string const& path, Provenance const& prov,
@@ -95,25 +67,6 @@ namespace {
         return Load(path, NULL, structure_only, without_tables);
     }
 
-    std::string indexed_file_path(IndexedFileLoader const& L) {
-        return L.path();
-    }
-    size_t indexed_file_size(IndexedFileLoader const& L) {
-        return L.size();
-    }
-    SystemPtr indexed_file_at(IndexedFileLoader const& L, size_t i) {
-        return L.at(i);
-    }
-
-    void export_mol2(SystemPtr mol, std::string const& path,
-                     Provenance const& prov, object _ids,
-                     unsigned flags) {
-        IdList ids;
-        for (unsigned i=0, n=len(_ids); i<n; i++) {
-            ids.push_back(extract<Id>(_ids[i]));
-        }
-        ExportMol2(mol, path, prov, ids, flags);
-    }
 
     list import_pdb_unit_cell(double A, double B, double C,
                               double alpha, double beta, double gamma) {
@@ -123,7 +76,7 @@ namespace {
         for (int i=0; i<3; i++) {
             list sub;
             for (int j=0; j<3; j++) {
-                sub.append(cell[3*i+j]);
+                sub.append(cast(cell[3*i+j]));
             }
             L.append(sub);
         }
@@ -134,16 +87,16 @@ namespace {
 
 namespace desres { namespace msys { 
 
-    void export_io() {
+    void export_io(module m) {
         
-        enum_<DMSExport::Flags>("DMSExportFlags")
+        enum_<DMSExport::Flags>(m, "DMSExportFlags", arithmetic())
             .value("Default",           DMSExport::Default)
             .value("Append",            DMSExport::Append)
             .value("StructureOnly",     DMSExport::StructureOnly)
             .value("Unbuffered",        DMSExport::Unbuffered)
             ;
 
-        enum_<MaeExport::Flags>("MaeExportFlags")
+        enum_<MaeExport::Flags>(m, "MaeExportFlags", arithmetic())
             .value("Default",           MaeExport::Default)
             .value("StructureOnly",     MaeExport::StructureOnly)
             //.value("CompressForcefield",MaeExport::CompressForcefield)
@@ -151,59 +104,55 @@ namespace desres { namespace msys {
             .value("AllowReorderAtoms", MaeExport::AllowReorderAtoms)
             ;
 
-        enum_<Mol2Export::Flags>("Mol2ExportFlags")
+        enum_<Mol2Export::Flags>(m, "Mol2ExportFlags", arithmetic())
             .value("Default",           Mol2Export::Default)
             .value("Append",            Mol2Export::Append)
             .value("MOE",               Mol2Export::MOE)
             ;
 
-        enum_<PDBExport::Flags>("PDBExportFlags")
+        enum_<PDBExport::Flags>(m, "PDBExportFlags", arithmetic())
             .value("Default",           PDBExport::Default)
             .value("Append",            PDBExport::Append)
             .value("Reorder",           PDBExport::Reorder)
             ;
 
-        class_<LoadIterator, LoadIteratorPtr, boost::noncopyable>("LoadIterator", no_init)
-            .def("create", load_iterator_create).staticmethod("create")
-            .def("next", load_iterator_next)
+        class_<LoadIterator, LoadIteratorPtr>(m, "LoadIterator")
+            .def_static("create", [](std::string const& path, bool structure_only) { return LoadIterator::create(path, structure_only); })
+            .def("next", [](LoadIterator& li) { return li.next(); })
             ;
 
-        class_<IndexedFileLoader, std::shared_ptr<IndexedFileLoader>,
-            boost::noncopyable>("IndexedFileLoader", no_init)
-            .def("create", IndexedFileLoader::create)
-            .staticmethod("create")
-            .def("path", indexed_file_path)
-            .def("size", indexed_file_size)
-            .def("at",   indexed_file_at)
+        class_<IndexedFileLoader, std::shared_ptr<IndexedFileLoader>>(m, "IndexedFileLoader")
+            .def_static("create", &IndexedFileLoader::create)
+            .def("path", [](IndexedFileLoader& self) { return self.path(); })
+            .def("size", [](IndexedFileLoader& self) { return self.size(); })
+            .def("at", [](IndexedFileLoader& self, size_t entry) { return self.at(entry); })
             ;
 
-        def("ImportDMS", import_dms);
-        def("ImportDMSFromBuffer", import_dms_from_buffer);
-        def("ExportDMS", ExportDMS);
-        def("FormatDMS", format_dms);
-        def("ImportMAE", import_mae);
-        def("ImportMAEFromBuffer", import_mae_from_buffer);
-        def("ExportMAE", ExportMAE);
-        def("ExportMAEContents", ExportMAEContents);
-        def("ImportPDB", ImportPDB);
-        def("ExportPDB", ExportPDB);
-        def("FetchPDB",  FetchPDB);
-        def("ImportPrmTop", import_prmtop);
-        def("ImportCrdCoordinates", ImportCrdCoordinates);
-        def("ImportPDBCoordinates", ImportPDBCoordinates);
-        def("ImportPDBUnitCell", import_pdb_unit_cell);
-        def("ImportMOL2", ImportMol2);
-        def("ImportMOL2Many", import_mol2_many);
-        def("ExportMOL2", export_mol2);
-        def("ImportXYZ", ImportXYZ);
-        def("Load", load);
-        def("Save", save);
-#ifndef _MSC_VER
-        def("FromSmilesString", FromSmilesString);
-        def("ParseSDF", SdfTextIterator);
-        def("FormatSDF", FormatSdf);
-#endif
-        def("FormatJson", format_json);
-        def("ParseJson", ParseJson);
+        m.def("ImportDMS", import_dms);
+        m.def("ImportDMSFromBuffer", import_dms_from_buffer);
+        m.def("ExportDMS", ExportDMS);
+        m.def("FormatDMS", format_dms);
+        m.def("ImportMAE", import_mae);
+        m.def("ImportMAEFromBuffer", import_mae_from_buffer);
+        m.def("ExportMAE", ExportMAE);
+        m.def("ExportMAEContents", ExportMAEContents);
+        m.def("ImportPDB", ImportPDB);
+        m.def("ExportPDB", ExportPDB);
+        m.def("FetchPDB",  FetchPDB);
+        m.def("ImportPrmTop", import_prmtop);
+        m.def("ImportCrdCoordinates", ImportCrdCoordinates);
+        m.def("ImportPDBCoordinates", ImportPDBCoordinates);
+        m.def("ImportPDBUnitCell", import_pdb_unit_cell);
+        m.def("ImportMOL2", ImportMol2);
+        m.def("ImportMOL2Many", ImportMol2Many);
+        m.def("ExportMOL2", ExportMol2);
+        m.def("ImportXYZ", ImportXYZ);
+        m.def("Load", load);
+        m.def("Save", save);
+        m.def("FromSmilesString", FromSmilesString);
+        m.def("ParseSDF", SdfTextIterator);
+        m.def("FormatSDF", FormatSdf);
+        m.def("FormatJson", format_json);
+        m.def("ParseJson", ParseJson);
     }
 }}

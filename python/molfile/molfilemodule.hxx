@@ -1,9 +1,11 @@
 #ifndef MOLFILE_MODULE_HXX
 #define MOLFILE_MODULE_HXX
 
-#include <Python.h>
-#include "molfile/libmolfile_plugin.h"
-#include "molfile/molfile.hxx"
+#include <pybind11/pybind11.h>
+#include <msys/molfile/libmolfile_plugin.h>
+#include <msys/molfile/molfile.hxx>
+
+using namespace pybind11;
 
 // This python module exposes the VMD plugin API through a custom 
 // type called 'plugin'.  Instances of this type correspond to the
@@ -11,11 +13,11 @@
 
 namespace desres { namespace molfile {
 
-    void export_plugin();
-    void export_reader();
-    void export_frame();
-    void export_writer();
-    void export_dtrreader();
+
+    void export_plugin(module m);
+    void export_reader(module m);
+    void export_frame(module m);
+    void export_writer(module m);
 
     struct Atom_t {
         PyObject_HEAD

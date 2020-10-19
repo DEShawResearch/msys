@@ -52,7 +52,7 @@ class Atomsel(object):
             raise TypeError("Require either msys.Atomsel or numpy.ndarray")
         if len(self) != len(opos):
             raise ValueError(
-                "Size mismatch: self (%d) != other (%d)" % (len(self), len(other))
+                "Size mismatch: self (%d) != other (%d)" % (len(self), len(opos))
             )
         return opos
 

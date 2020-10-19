@@ -1,22 +1,24 @@
-#include "wrap_obj.hxx"
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 #include "inchi.hxx"
+
+using namespace pybind11;
 
 namespace desres { namespace msys { 
 
-    void export_inchi() {
+    void export_inchi(module m) {
 
 #ifndef MSYS_WITHOUT_INCHI
-        scope cls = class_<InChI>("InChI", no_init)
-            .def("create", &InChI::create).staticmethod("create")
-            .def("string",  &InChI::string, return_const())
-            .def("auxinfo", &InChI::auxinfo, return_const())
-            .def("message", &InChI::message, return_const())
+        auto cls = class_<InChI>(m, "InChI")
+            .def_static("create", &InChI::create)
+            .def("string",  &InChI::string)
+            .def("auxinfo", &InChI::auxinfo)
+            .def("message", &InChI::message)
             .def("key",     &InChI::key)
             .def("ok",      &InChI::ok)
             ;
 
-        // since we assigned cls to a scope above, this enum is in class scope
-        enum_<InChI::Flags>("Flags")
+        enum_<InChI::Flags>(cls, "Flags", arithmetic())
             .value("DoNotAddH", InChI::DoNotAddH)
             .value("SNon",      InChI::SNon)
             .value("FixedH",    InChI::FixedH)

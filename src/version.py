@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-version = "1.7.307"
+version = "1.7.308"
 major_version, minor_version, micro_version = [int(_x) for _x in version.split('.')]
 hexversion = (major_version << 16) | \
              (minor_version << 8)  | \

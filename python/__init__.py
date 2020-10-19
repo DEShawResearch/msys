@@ -501,16 +501,16 @@ class PropertyMap(object):
         self._ptr = ptr
 
     def keys(self):
-        return list(self._ptr.keys())
+        return self._ptr.tablePropsKeys()
 
     def __getitem__(self, key):
-        return self._ptr.get(str(key))
+        return self._ptr.tablePropsGet(str(key))
 
     def __setitem__(self, key, val):
-        self._ptr.set(str(key), type(val), val)
+        self._ptr.tablePropsSet(str(key), val)
 
     def __delitem__(self, key):
-        self._ptr._del(str(key))
+        self._ptr.tablePropsDel(str(key))
 
 
 class Param(Handle):
@@ -601,7 +601,6 @@ class ParamTable(object):
     def fromCapsule(cls, cap):
         """Construct from a capsule wrapper of a ParamTablePtr."""
         return cls(_msys.ParamTablePtr.fromCapsule(cap))
-
 
     def addParam(self, **kwds):
         """add and return a new Param().
@@ -831,7 +830,6 @@ class TermTable(object):
         """Construct from a capsule wrapper of a SystemPtr."""
         return cls(_msys.TermTablePtr.fromCapsule(cap))
 
-
     def remove(self):
         """ Remove this table from its parent system """
         self._ptr.destroy()
@@ -851,7 +849,7 @@ class TermTable(object):
     @property
     def props(self):
         """ Table properties """
-        return PropertyMap(self._ptr.tableProps())
+        return PropertyMap(self._ptr)
 
     @property
     def name(self):
@@ -1286,7 +1284,7 @@ class System(object):
     def atoms(self):
         """ return list of all atoms in the system """
         atms = self._update_atoms()
-        return [atms[i] for i in self._ptr.atomsAsList()]
+        return [atms[i] for i in self._ptr.atoms()]
 
     @property
     def bonds(self):
@@ -1546,7 +1544,7 @@ class System(object):
     def select(self, seltext):
         """ return a list of Atoms satisfying the given VMD atom selection. """
         ptr = self._ptr
-        ids = ptr.selectAsList(seltext)
+        ids = ptr.selectAsList(seltext, None, None)
         return [Atom(ptr, i) for i in ids]
 
     def selectIds(self, seltext, pos=None, box=None):
@@ -1565,7 +1563,7 @@ class System(object):
         """Return the ids of the Atoms satisfying the given VMD atom
         selection as a numpy array of type uint32.
         """
-        return self._ptr.selectAsArray(seltext)
+        return self._ptr.selectAsArray(seltext, None, None)
 
     def selectChain(self, name=None, segid=None):
         """Returns a single Chain with the matching name and/or segid,
@@ -1619,9 +1617,9 @@ class System(object):
         """
         ptr = self._ptr
         if sel is None:
-            ids = ptr.atomsAsList()
+            ids = ptr.atoms()
         elif isinstance(sel, str):
-            ids = ptr.selectAsList(sel)
+            ids = ptr.selectAsList(sel, None, None)
         else:
             ids = list(sel)
             if isinstance(ids[0], Atom):
@@ -1685,6 +1683,7 @@ class System(object):
     def provenance(self):
         """ return a list of Provenance entries for this system """
         return self._ptr.provenance()
+
     @provenance.setter
     def provenance(self, provenance_list):
         self._ptr.setProvenance(provenance_list)
@@ -2614,7 +2613,7 @@ def AssignBondOrderAndFormalCharge(
             return _msys.AssignBondOrderAndFormalCharge(
                 ptr, compute_resonant_charges, timeout_ms
             )
-        ids = ptr.atomsAsList()
+        ids = ptr.atoms()
     else:
         ptr, ids = _convert_ids(system_or_atoms)
 
@@ -2656,7 +2655,7 @@ class Graph(object):
 
         if isinstance(system_or_atoms, System):
             ptr = system_or_atoms._ptr
-            ids = ptr.atomsAsList()
+            ids = ptr.atoms()
         else:
             ptr, ids = _convert_ids(system_or_atoms)
         if colors is None:
@@ -2698,9 +2697,9 @@ class Graph(object):
         if not isinstance(graph, Graph):
             raise TypeError("graph argument must be an instance of msys.Graph")
         t = self._ptr.match(graph._ptr)
-        if t is not None:
-            t = dict((Atom(self._sys, i), Atom(graph._sys, j)) for i, j in t)
-        return t
+        if not t:
+            return None
+        return dict((Atom(self._sys, i), Atom(graph._sys, j)) for i, j in t)
 
     def matchAll(self, graph, substructure=False):
         """Find all graph isomorphisms between self and the given Graph.
@@ -2865,7 +2864,7 @@ def ApplyDihedralGeometry(a, b, c, r, theta, phi):
 
 
 def CalcPlanarity(pos_or_atoms):
-    """ Planarity of positions or atoms
+    """Planarity of positions or atoms
 
     Planarity is computed as fabs(v[0]-(v[1]+v[2])) where v are the
     eigenvalues of the geometric inertia tensor.

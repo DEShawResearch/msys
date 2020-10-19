@@ -292,7 +292,7 @@ class TestStk(unittest.TestCase):
     STK = "tests/files/run.stk"
 
     def testEmptyFramesetAtStartOfStk(self):
-        if os.environ['DESRES_LOCATION'] not in {'nyc', 'en'}:
+        if os.environ["DESRES_LOCATION"] not in {"nyc", "en"}:
             return
 
         s = molfile.DtrReader(

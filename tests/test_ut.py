@@ -162,7 +162,7 @@ class TestJson(unittest.TestCase):
 
         sizes = []
 
-        tmpdir = tempfile.TemporaryDirectory(prefix='msys_json')
+        tmpdir = tempfile.TemporaryDirectory(prefix="msys_json")
 
         def test_all(name, mol, maxDecimals=-1):
             ref_terms = msys.Load("tests/files/cdk2-ligand-Amber14EHT.dms")
@@ -172,7 +172,7 @@ class TestJson(unittest.TestCase):
             # print(name)
             for ext, transform, decompress in compressors:
                 # print('\t', ext)
-                fname = tmpdir.name + "/" + name + '.json'
+                fname = tmpdir.name + "/" + name + ".json"
                 if ext is not None:
                     fname += ext
                 SaveJson(mol, fname, transform=transform, maxDecimals=maxDecimals)
@@ -1634,7 +1634,7 @@ class Main(unittest.TestCase):
         mol = msys.Load("tests/files/pseudo.dms")
         prov = mol.provenance
         prov = prov[1:3]
-        assert len(prov)==2
+        assert len(prov) == 2
         mol.provenance = prov
         attrs = "version", "timestamp", "user", "workdir", "cmdline", "executable"
         assert len(prov) == len(mol.provenance)
@@ -1724,7 +1724,7 @@ class Main(unittest.TestCase):
         ptr = mol._ptr
         cap = msys._msys.SystemPtr.asCapsule(ptr)
         ptr2 = msys._msys.SystemPtr.fromCapsule(cap)
-        self.assertFalse(ptr is ptr2)
+        self.assertTrue(ptr is ptr2)
         self.assertEqual(ptr, ptr2)
 
     def testCapsule2(self):
