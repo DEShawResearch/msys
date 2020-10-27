@@ -31,7 +31,8 @@ static object hash_find(SpatialHash& hash,
         }
     }
     IdList result = (hash.*func)(r, pos, n, ids);
-    auto arr = ids_t({result.size()});
+    ssize_t sz = result.size();
+    auto arr = ids_t(sz);
     if (!result.empty()) {
         memcpy(arr.mutable_data(), result.data(), result.size()*sizeof(result[0]));
     }

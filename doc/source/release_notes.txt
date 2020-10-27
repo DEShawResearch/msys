@@ -1,3 +1,5 @@
+1.7.310 OSX build fixes.
+
 1.7.309 Update license file.
 
 1.7.308 Convert to pybind11.
