@@ -10,7 +10,6 @@ opts.Add("MSYS_WITH_INCHI", "include inchi support?", os.getenv('MSYS_WITH_INCHI
 opts.Add("MSYS_WITH_TNG", "include TNG support?", os.getenv('MSYS_WITH_TNG'))
 opts.Add("MSYS_WITHOUT_RAPIDJSON", "include rapidjson support?", os.getenv('MSYS_WITHOUT_RAPIDJSON'))
 opts.Add("MSYS_BOOST_SUFFIX", "suffix for boost libraries (e.g. -mt)")
-opts.Add("MSYS_BOOST_PYTHON_SUFFIX", "suffix for boost libraries (e.g. -py)")
 
 opts.Update(env)
 
@@ -24,11 +23,6 @@ if env.get('MSYS_WITH_TNG'):
 bsx=env.get('MSYS_BOOST_SUFFIX', '')
 boost_libs=[(x+bsx) for x in (
     'boost_iostreams', 'boost_filesystem', 'boost_system', 'boost_regex')]
-
-env.Append(
-        PYTHON36_LIBS=['boost_python${MSYS_BOOST_PYTHON_SUFFIX}36'],
-        PYTHON37_LIBS=['boost_python${MSYS_BOOST_PYTHON_SUFFIX}37'],
-        )
 
 coreenv = env.Clone()
 coreenv.AddLibrary('msys-core', Split('''

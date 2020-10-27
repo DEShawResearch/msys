@@ -200,9 +200,8 @@ namespace desres { namespace msys {
         NonbondedInfo   nonbonded_info;
 
         /* get the provenance history */
-        std::vector<Provenance> const& provenance() const {
-            return _provenance;
-        }
+        std::vector<Provenance>& provenance() { return _provenance; }
+        std::vector<Provenance> const& provenance() const { return _provenance; }
 
         /* add a provenance entry.  Should be used only by ImportDMS! */
         void addProvenance(Provenance const& p) {
@@ -273,6 +272,16 @@ namespace desres { namespace msys {
                 *setter++ = a.x;
                 *setter++ = a.y;
                 *setter++ = a.z;
+            }
+        }
+
+        template <typename T>
+        void getVelocities(T setter) const {
+            for (iterator i=atomBegin(), e=atomEnd(); i!=e; ++i) {
+                atom_t const& a = atomFAST(*i);
+                *setter++ = a.vx;
+                *setter++ = a.vy;
+                *setter++ = a.vz;
             }
         }
 

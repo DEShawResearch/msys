@@ -1,9 +1,8 @@
-#include <Python.h>
+#include "pymod.hxx"
 #include <numpy/ndarrayobject.h>
 #include <pfx/pfx.hxx>
-#include <boost/python.hpp>
 
-using namespace boost::python;
+using namespace pybind11;
 
 typedef desres::msys::pfx::Pfx pfx_t;
 typedef desres::msys::pfx::Graph graph_t;
@@ -14,13 +13,8 @@ typedef struct {
 } PfxObject;
 
 namespace {
-#if PY_MAJOR_VERSION >= 3
     auto py_as_long = PyLong_AsLong;
     auto py_from_long = PyLong_FromLong;
-#else
-    auto py_as_long = PyInt_AsLong;
-    auto py_from_long = PyInt_FromLong;
-#endif
 }
 
 static PyTypeObject ptype;
@@ -42,10 +36,9 @@ static PyObject* pfx_new(PyTypeObject* type, PyObject* args, PyObject* kwds) {
     fixbonds = PyObject_IsTrue(fixobj);
     if (fixbonds<0) return NULL;
 
-    extract<graph_t*> get_graph(topobj);
-    if (get_graph.check()) {
-        g = get_graph();
-    } else {
+    try {
+        g = cast<graph_t*>(topobj);
+    } catch(cast_error) {
         if (!PySequence_Check(topobj)) {
             PyErr_Format(PyExc_TypeError, "argument must be a sequence");
             return NULL;
@@ -410,10 +403,9 @@ static PyObject* extract_3x3(PyObject* Aobj) {
 
 PyDoc_STRVAR(inverse_doc,
 "inverse_3x3(A) -> Ainv\n");
-static PyObject* wrap_inverse(PyObject* self, PyObject* args) {
+static handle wrap_inverse(object obj) {
     PyObject *Aobj, *Aarr;
-    if (!PyArg_ParseTuple(args, "O", &Aobj))
-        return NULL;
+    Aobj = obj.ptr();
     if (!(Aarr = extract_3x3(Aobj)))
         return NULL;
     const double* src = (const double*)PyArray_DATA(Aarr);
@@ -430,14 +422,14 @@ PyDoc_STRVAR(svd_doc,
 "\n"
 "svd_3x3 computes the singular value decomposition of the 3x3 matrix A.\n"
 "The result is always calculated and returned in double precision.\n");
-static PyObject* wrap_svd(PyObject* self, PyObject* args, PyObject* kwds) {
+static handle wrap_svd(args _args, kwargs kwds) {
     static char *kwlist[] = {(char *)"A", 0};
     PyObject* Aobj, *Aarr, *U, *W, *V, *result;
     double u[9], w[3], v[9];
     npy_intp mdims[2] = {3,3};
     npy_intp vdims[1] = {3};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist, &Aobj))
+    if (!PyArg_ParseTupleAndKeywords(_args.ptr(), kwds.ptr(), "O", kwlist, &Aobj))
         return NULL;
     if (!(Aarr = extract_3x3(Aobj)))
         return NULL;
@@ -466,11 +458,11 @@ PyDoc_STRVAR(aligned_rmsd_doc,
 );
 
 static 
-PyObject* wrap_aligned_rmsd(PyObject* self, PyObject* args, PyObject* kwds) {
+handle wrap_aligned_rmsd(args _args, kwargs kwds) {
     static char *kwlist[] = {(char *)"X", (char *)"Y", (char *)"weight", 0};
     PyObject *Xobj, *Yobj, *Wobj=NULL;
     PyObject *Xarr, *Yarr, *Marr, *Warr=NULL;
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO|O", kwlist, &Xobj, &Yobj, &Wobj))
+    if (!PyArg_ParseTupleAndKeywords(_args.ptr(), kwds.ptr(), "OO|O", kwlist, &Xobj, &Yobj, &Wobj))
         return NULL;
     if (!(Xarr = PyArray_FromAny(
                     Xobj,
@@ -538,42 +530,10 @@ PyDoc_STRVAR(module_doc,
 "trajectories of systems with connected atoms and periodic boundary\n"
 "conditions.");
 
-static PyMethodDef module_methods[] = {
-    { "svd_3x3", 
-      (PyCFunction)wrap_svd, 
-      METH_VARARGS | METH_KEYWORDS,
-      svd_doc },
-    { "inverse_3x3", 
-      (PyCFunction)wrap_inverse, 
-      METH_VARARGS,
-      inverse_doc },
-    { "aligned_rmsd",
-      (PyCFunction)wrap_aligned_rmsd,
-      METH_VARARGS | METH_KEYWORDS,
-      aligned_rmsd_doc },
-    { NULL, NULL }
-};
 
-#if PY_MAJOR_VERSION >= 3
-
-static struct PyModuleDef pfxmodule = {
-   PyModuleDef_HEAD_INIT,
-   "pfx",   /* name of module */
-   module_doc, /* module documentation, may be NULL */
-   -1,       /* size of per-interpreter state of the module,
-                or -1 if the module keeps state in global variables. */
-   module_methods
-};
-
-PyMODINIT_FUNC
-PyInit_pfx(void) {
-    PyObject *m;
-
+PYBIND11_MODULE(pfx, m) {
     _import_array();
-    if (PyErr_Occurred()) return NULL;
-
-    m = PyModule_Create(&pfxmodule);
-    if (!m) return NULL;
+    if (PyErr_Occurred()) throw error_already_set();
 
     Py_TYPE(&ptype) = &PyType_Type;
     ptype.tp_name = "pfx.Pfx";
@@ -585,40 +545,13 @@ PyInit_pfx(void) {
     ptype.tp_flags = Py_TPFLAGS_DEFAULT;
     ptype.tp_getset = pfx_getset;
     ptype.tp_methods = pfx_methods;
-    if (PyType_Ready(&ptype)) return NULL;
+    if (PyType_Ready(&ptype)) throw error_already_set();
 
     Py_INCREF((PyObject *)&ptype);
-    PyModule_AddObject(m, "Pfx", (PyObject *)&ptype);
-
-    return m;
+    PyModule_AddObject(m.ptr(), "Pfx", (PyObject *)&ptype);
+    m.def("svd_3x3", wrap_svd, svd_doc);
+    m.def("inverse_3x3", wrap_inverse, inverse_doc);
+    m.def("aligned_rmsd", wrap_aligned_rmsd, aligned_rmsd_doc);
+    m.attr("__doc__") = module_doc;
 }
 
-#else
-
-extern "C"
-void initpfx(void) {
-    PyObject *m;
-
-    _import_array();
-    if (PyErr_Occurred()) return;
-
-    m = Py_InitModule3("pfx", module_methods, module_doc);
-    if (!m) return;
-
-    Py_TYPE(&ptype) = &PyType_Type;
-    ptype.tp_name = "pfx.Pfx";
-    ptype.tp_doc = pfx_doc;
-    ptype.tp_basicsize = sizeof(PfxObject);
-    ptype.tp_alloc = PyType_GenericAlloc;
-    ptype.tp_new = pfx_new;
-    ptype.tp_dealloc = pfx_dealloc;
-    ptype.tp_flags = Py_TPFLAGS_DEFAULT;
-    ptype.tp_getset = pfx_getset;
-    ptype.tp_methods = pfx_methods;
-    if (PyType_Ready(&ptype)) return;
-
-    Py_INCREF((PyObject *)&ptype);
-    PyModule_AddObject(m, "Pfx", (PyObject *)&ptype);
-}
-
-#endif

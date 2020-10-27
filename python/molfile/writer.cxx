@@ -1,54 +1,50 @@
 #include "molfilemodule.hxx"
-#include <boost/python.hpp>
 #include <numpy/arrayobject.h>
-
-using namespace boost::python;
 
 namespace {
     using namespace desres::molfile;
-    void write_grid(Writer& w, dict d, PyObject* data) {
+    void write_grid(Writer& w, dict d, object data) {
         grid_t g;
         memset(&g,0,sizeof(g));
 
         /* dataname */
-        strncpy(g.dataname, extract<const char *>(d["name"]), sizeof(g.dataname));
+        strncpy(g.dataname, d["name"].cast<std::string>().data(), sizeof(g.dataname));
         g.dataname[sizeof(g.dataname)-1]='\0';
 
         /* origin */
-        object origin = d["origin"];
-        for (int i=0; i<3; i++) g.origin[i] = extract<float>(origin[i]);
+        list origin = d["origin"];
+        for (int i=0; i<3; i++) g.origin[i] = origin[i].cast<float>();
 
         /* axis */
-        object xaxis = d["xaxis"];
-        object yaxis = d["yaxis"];
-        object zaxis = d["zaxis"];
+        list xaxis = d["xaxis"];
+        list yaxis = d["yaxis"];
+        list zaxis = d["zaxis"];
         for (int i=0; i<3; i++) {
-            g.xaxis[i] = extract<float>(xaxis[i]);
-            g.yaxis[i] = extract<float>(yaxis[i]);
-            g.zaxis[i] = extract<float>(zaxis[i]);
+            g.xaxis[i] = xaxis[i].cast<float>();
+            g.yaxis[i] = yaxis[i].cast<float>();
+            g.zaxis[i] = zaxis[i].cast<float>();
         }
 
         /* dims -> size */
-        object size = d["dims"];
-        g.xsize = extract<int>(size[0]);
-        g.ysize = extract<int>(size[1]);
-        g.zsize = extract<int>(size[2]);
+        list size = d["dims"];
+        g.xsize = size[0].cast<int>();
+        g.ysize = size[1].cast<int>();
+        g.zsize = size[2].cast<int>();
 
-        w.write_grid(g, (const float *)PyArray_DATA(data));
+        w.write_grid(g, (const float *)PyArray_DATA(data.ptr()));
     }
 }
 
-void desres::molfile::export_writer() {
+void desres::molfile::export_writer(module m) {
 
-    class_<Writer>("Writer", "Structure or trajectory open for writing",no_init)
-        .add_property("natoms", &Writer::natoms)
-        .add_property("path", &Writer::path)
-        .add_property("can_sync", &Writer::can_sync)
+    class_<Writer>(m, "Writer", "Structure or trajectory open for writing")
+        .def_property_readonly("natoms", &Writer::natoms)
+        .def_property_readonly("path", &Writer::path)
+        .def_property_readonly("can_sync", &Writer::can_sync)
         .def("sync", &Writer::sync)
         .def("truncate", &Writer::truncate)
         .def("close", &Writer::close)
-        .def("frame", &Writer::write_frame,
-                return_internal_reference<1>())
+        .def("frame", &Writer::write_frame, return_value_policy::reference)
         .def("_grid", write_grid)
         ;
 }

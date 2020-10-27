@@ -1,34 +1,26 @@
-#include "wrap_obj.hxx"
-#include "term_table.hxx"
-#include "override.hxx"
+#include "pymod.hxx"
+#include <pybind11/stl.h>
+#include "capsule.hxx"
 
-using namespace desres::msys;
+#include <msys/term_table.hxx>
+#include <msys/override.hxx>
+#include <boost/variant/get.hpp>
 
 namespace {
 
-    list list_terms(TermTable& table) {
-        return to_python(table.terms());
-    }
-    list list_atoms(TermTable& table, Id i) {
-        return to_python(table.atoms(i));
-    }
-
-    Id add_term(TermTable& table, object atoms, object param) {
+    Id add_term(TermTable& table, IdList const&ids, object param) {
         Id id=BadId;
-        if (param.ptr()!=Py_None) id=extract<Id>(param);
-        list L(atoms);
-        IdList ids(len(L));
-        for (unsigned i=0; i<ids.size(); i++) ids[i]=extract<Id>(L[i]);
+        if (!param.is_none()) id = param.cast<Id>();
         return table.addTerm(ids, id);
     }
 
     void set_param(TermTable& table, Id term, object param) {
         Id id=BadId;
-        if (param.ptr()!=Py_None) id=extract<Id>(param);
-        table.setParam(term,id);
+        if (!param.is_none()) id = param.cast<Id>();
+        table.setParam(term, id);
     }
 
-    PyObject* term_prop_type(TermTable& table, Id col) {
+    handle term_prop_type(TermTable& table, Id col) {
         return from_value_type(table.termPropType(col));
     }
     Id add_term_prop( TermTable& table, String const& name, object type ) {
@@ -50,25 +42,33 @@ namespace {
         to_value_ref(newval, p.propValue(row,col));
     }
 
-    list find_all(TermTable& p, list ids) {
-        return to_python(p.findWithAll(ids_from_python(ids)));
-    }
-    list find_any(TermTable& p, list ids) {
-        return to_python(p.findWithAny(ids_from_python(ids)));
-    }
-    list find_only(TermTable& p, list ids) {
-        return to_python(p.findWithOnly(ids_from_python(ids)));
-    }
-    list find_exact(TermTable& p, list ids) {
-        return to_python(p.findExact(ids_from_python(ids)));
-    }
 }
+
+namespace pybind11 { namespace detail {
+    template <> struct type_caster<Variant> {
+    public:
+        PYBIND11_TYPE_CASTER(Variant, _("Variant"));
+        bool load(handle src, bool) {
+            if (int_::check_(src)) value = src.cast<Int>();
+            else if (float_::check_(src)) value = src.cast<Float>();
+            else if (str::check_(src)) value = src.cast<String>();
+            else return false;
+            return true;
+        }
+        static handle cast(Variant const& src, return_value_policy, handle) {
+            if (src.which()==0) return PyLong_FromLong(boost::get<Int>(src));
+            if (src.which()==1) return PyFloat_FromDouble(boost::get<Float>(src));
+            if (src.which()==2) return PyUnicode_FromString(boost::get<String>(src).data());
+            return none();
+        }
+    };
+}}
 
 namespace desres { namespace msys { 
 
-    void export_term() {
+    void export_term(module m) {
 
-        enum_<Category>("Category")
+        enum_<Category>(m, "Category")
             .value("none", NO_CATEGORY)
             .value("bond", BOND)
             .value("constraint", CONSTRAINT)
@@ -78,13 +78,13 @@ namespace desres { namespace msys {
             .value("exclusion", EXCLUSION)
             ;
 
-        def("parse_category", parse);
-        def("print_category", print);
+        m.def("parse_category", parse);
+        m.def("print_category", print);
 
-        class_<TermTable, TermTablePtr>("TermTablePtr", no_init)
-            .def("__eq__",      list_eq<TermTablePtr>)
-            .def("__ne__",      list_ne<TermTablePtr>)
-            .def("__hash__",    obj_hash<TermTablePtr>)
+        class_<TermTable, TermTablePtr>(m, "TermTablePtr")
+            .def("__eq__", [](TermTable* self, TermTable* other) { return self==other; })
+            .def("__ne__", [](TermTable* self, TermTable* other) { return self!=other; })
+            .def("__hash__", [](TermTable* g) { return size_t(g); })
             .def("destroy",     &TermTable::destroy)
             .def("system",      &TermTable::system)
             .def("atomCount",   &TermTable::atomCount)
@@ -92,18 +92,21 @@ namespace desres { namespace msys {
             .def_readwrite("category", &TermTable::category)
             .def("name",        &TermTable::name)
             .def("rename",      &TermTable::rename)
-            .def("terms",       list_terms)
+            .def("terms",       &TermTable::terms)
             .def("addTerm",     add_term)
             .def("hasTerm",     &TermTable::hasTerm)
             .def("delTerm",     &TermTable::delTerm)
-            .def("atoms",       list_atoms)
+            .def("atoms",       &TermTable::atoms)
             .def("atom",        &TermTable::atom)
             .def("params",      &TermTable::params)
             .def("param",       &TermTable::param)
             .def("setParam",    set_param)
 
             /* Table properties */
-            .def("tableProps",  &TermTable::tableProps, return_ptr())
+            .def("tablePropsKeys", [](TermTable& t) { list L; for (auto& p : t.tableProps()) L.append(cast(p.first)); return L; })
+            .def("tablePropsGet",  [](TermTable& t, std::string const& key) -> Variant { return t.tableProps().at(key); })
+            .def("tablePropsSet",  [](TermTable& t, std::string const& key, Variant v) { t.tableProps()[key]=v; })
+            .def("tablePropsDel",  [](TermTable& t, std::string const& key) { t.tableProps().erase(key); })
 
             /* param properties */
             .def("getProp",     get_prop)
@@ -121,10 +124,10 @@ namespace desres { namespace msys {
 
             /* lookup terms based on atom */
             .def("delTermsWithAtom",    &TermTable::delTermsWithAtom)
-            .def("findWithAll", find_all)
-            .def("findWithAny", find_any)
-            .def("findWithOnly",find_only)
-            .def("findExact"  , find_exact)
+            .def("findWithAll", &TermTable::findWithAll)
+            .def("findWithAny", &TermTable::findWithAny)
+            .def("findWithOnly",&TermTable::findWithOnly)
+            .def("findExact"  , &TermTable::findExact)
 
             /* coalesce */
             .def("coalesce",    &TermTable::coalesce)
@@ -135,7 +138,8 @@ namespace desres { namespace msys {
             /* misc */
             .def("resetParams", &TermTable::resetParams)
             .def("replaceWithSortedTerms", ReplaceTableWithSortedTerms)
+            .def_static("asCapsule", python::termtable_as_capsule)
+            .def_static("fromCapsule", python::termtable_from_capsule)
             ;
     }
-
 }}

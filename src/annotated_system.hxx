@@ -120,10 +120,11 @@ namespace desres { namespace msys {
             return ring_size == size;
         }
         /* SSSR rings containing this atom */
-        void atomRings(Id atom, MultiIdList& rings) const {
-            rings.clear();
+        MultiIdList atomRings(Id atom) const {
+            MultiIdList rings;
             for (Id ring : _atoms.at(atom).rings_idx)
                 rings.push_back(_rings.at(ring).atoms);
+            return rings;
         }
 
         /* Is bond aromatic */
@@ -138,19 +139,22 @@ namespace desres { namespace msys {
             return false;
         }
         /* SSSR rings containing this bond */
-        void bondRings(Id bond, MultiIdList& rings) const {
-            rings.clear();
+        MultiIdList bondRings(Id bond) const {
+            MultiIdList rings;
             for (Id ring : _bonds.at(bond).rings_idx)
                 rings.push_back(_rings.at(ring).atoms);
+            return rings;
         }
 
         /* All SSSR rings */
         int ringCount() const {
-            return _rings.size(); }
-        void rings(MultiIdList& rings) const {
-            rings.clear();
+            return _rings.size();
+        }
+        MultiIdList rings() const {
+            MultiIdList rings;
             for (const ring_t& ring : _rings)
                 rings.push_back(ring.atoms);
+            return rings;
         }
     };
 }}

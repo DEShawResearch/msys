@@ -1,71 +1,43 @@
-#include "wrap_obj.hxx"
-#include "../src/ff.hxx"
+#include "pymod.hxx"
+#include <pybind11/stl.h>
+#include <msys/ff.hxx>
 
-namespace {
-    using namespace desres::msys;
+using namespace desres::msys::ff;
 
-    list get_es_scale(ff::Rules const& rules) {
-        list L;
-        for (auto s : rules.es_scale) L.append(object(s));
-        return L;
-    }
-    void set_es_scale(ff::Rules& rules, list L) {
-        Id i,n = len(L);
-        rules.es_scale.resize(n);
-        for (i=0; i<n; i++) rules.es_scale[i] = extract<double>(L[i]);
-    }
-    list get_lj_scale(ff::Rules const& rules) {
-        list L;
-        for (auto s : rules.lj_scale) L.append(object(s));
-        return L;
-    }
-    void set_lj_scale(ff::Rules& rules, list L) {
-        Id i,n = len(L);
-        rules.lj_scale.resize(n);
-        for (i=0; i<n; i++) rules.lj_scale[i] = extract<double>(L[i]);
-    }
+namespace desres { namespace msys {
 
-    void build_tuples(ff::Tuples& self, SystemPtr mol, list ids) {
-        ff::build(self, mol, ids_from_python(ids));
-    }
+void export_ff(module m) {
 
-    void build_component(ff::Forcefield const& self, ff::Component p, SystemPtr mol, ff::Tuples const& t) {
-        switch(p) {
-            case ff::Component::exclusions:
-                ff::build<ff::Component::exclusions>(mol, self, t);
-                break;
-            default:
-                MSYS_FAIL("Unsupported component");
-        };
-    }
-
-}
-
-
-namespace desres { namespace msys { 
-
-void export_ff() {
-    using namespace desres::msys::ff;
-
-    class_<Rules>("Rules", init<>())
+    class_<Rules>(m, "Rules")
+        .def(init<>())
         .def_readwrite("vdw_func", &Rules::vdw_func)
         .def_readwrite("vdw_rule", &Rules::vdw_rule)
         .def_readwrite("exclusions", &Rules::exclusions)
-        .add_property("es_scale", get_es_scale, set_es_scale)
-        .add_property("lj_scale", get_lj_scale, set_lj_scale)
+        .def_readwrite("es_scale", &Rules::es_scale)
+        .def_readwrite("lj_scale", &Rules::lj_scale)
         ;
 
-    class_<Tuples>("Tuples", init<>())
-        .def("build", build_tuples)
+    class_<Tuples>(m, "Tuples")
+        .def(init<>())
+        .def("build", [](Tuples& self, SystemPtr mol, IdList const& fragment) { build(self, mol, fragment); })
         ;
     
-    class_<Forcefield>("Forcefield", init<>())
+    class_<Forcefield>(m, "Forcefield")
+        .def(init<>())
         .def_readwrite("name", &Forcefield::name)
         .def_readonly("rules", &Forcefield::rules)
-        .def("build_component", build_component)
+        .def("build_component", [](Forcefield const& self, Component p, SystemPtr mol, Tuples const& t) {
+            switch(p) {
+                case Component::exclusions:
+                    build<Component::exclusions>(mol, self, t);
+                    break;
+                default:
+                    MSYS_FAIL("Unsupported component");
+            };
+            })
         ;
 
-    enum_<Component>("Component")
+    enum_<Component>(m, "Component")
         .value("exclusions", Component::exclusions)
         ;
 

@@ -96,7 +96,7 @@ def FindKnots(
     # cache bonds
     bonds = []
     ptr = mol._ptr
-    for i, ai in enumerate(ptr.atomsAsList()):
+    for i, ai in enumerate(ptr.atoms()):
         bonds.append([aj for aj in ptr.bondedAtoms(ai) if aj < ai])
 
     t2 = time()

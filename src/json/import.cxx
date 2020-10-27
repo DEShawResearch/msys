@@ -85,6 +85,16 @@ void check_size(const char *fname, T const &a1, const char *name1, S s) {
 #define CHECK_SIZES(a1, name1, a2, name2) check_sizes(__FUNCTION__, a1, name1, a2, name2)
 #define CHECK_SIZE(a1, name1, s) check_size(__FUNCTION__, a1, name1, s)
 
+static const char* get_name(Value const& names, int64_t nameid) {
+    if (!names.IsArray()) {
+        if (nameid != 0) {
+            MSYS_FAIL("Unable to translate non-zero nameid to string without 'names' array");
+        }
+        return "";
+    }
+    return names[nameid].GetString();
+}
+
 static void read_chains(Document const& d, SystemPtr mol) {
     auto o = d.GetObject();
     auto const& m = o.FindMember("chains");
@@ -104,9 +114,9 @@ static void read_chains(Document const& d, SystemPtr mol) {
     auto& names = d["names"];
     for (Id i=0, n=name.Size(); i<n; i++) {
         auto& chn = mol->chainFAST(mol->addChain());
-        chn.name = names[name[i].GetInt()].GetString();
+        chn.name = get_name(names, name[i].GetInt());
         if (segid != chains.MemberEnd()) {
-            chn.segid = names[segid->value[i].GetInt()].GetString();
+            chn.segid = get_name(names, segid->value[i].GetInt());
         }
     }
 }
@@ -133,11 +143,11 @@ static void read_residues(Document const& d, SystemPtr mol) {
     auto& names = d["names"];
     for (Id i=0, n=chain.Size(); i<n; i++) {
         auto& res = mol->residueFAST(mol->addResidue(chain[i].GetInt()));
-        res.name = names[name[i].GetInt()].GetString();
+        res.name = get_name(names, name[i].GetInt());
         res.resid = resid[i].GetInt();
 
         if (insertion != residues.MemberEnd()) {
-            res.insertion = names[insertion->value[i].GetInt()].GetString();
+            res.insertion = get_name(names, insertion->value[i].GetInt());
         }
     }
 }
@@ -174,7 +184,7 @@ static void read_tags(Value const& tags, ParamTablePtr params, Value const& name
                     ref = vals[i].GetDouble();
                     break;
                 case StringType:
-                    ref = names[vals[i].GetInt()].GetString();
+                    ref = get_name(names, vals[i].GetInt());
                     break;
             }
         }
@@ -255,7 +265,7 @@ static void read_particles(Document const& d, SystemPtr mol) {
         Id res = residue != particles.MemberEnd() ? residue->value[i].GetInt() : 0;
         auto& atm = mol->atomFAST(mol->addAtom(res));
         if (name != particles.MemberEnd()) {
-            atm.name = names->value[name->value[i].GetInt()].GetString();
+            atm.name = get_name(names->value, name->value[i].GetInt());
         }
 
         if (pos != particles.MemberEnd()) {
@@ -300,7 +310,7 @@ static void read_bonds(Document const& d, SystemPtr mol) {
     }
 }
 
-static void read_params(Value const& val, Value const& names, ParamTablePtr params) {
+static void read_params(Value const& val, Value const& names, ParamTablePtr params, const std::string &name) {
     Id nparams = msys::BadId;
 
     // search for the number of parameters
@@ -315,6 +325,9 @@ static void read_params(Value const& val, Value const& names, ParamTablePtr para
             nparams = m.value["v"].GetArray().Size(); // use the first one we find
             break;
         }
+    }
+    if (nparams == msys::BadId) {
+        MSYS_FAIL("Failed to determine number of parameters for " << name);
     }
     // instantiate the parameters
     for (Id i=0; i<nparams; i++)  params->addParam();
@@ -360,7 +373,7 @@ static void read_params(Value const& val, Value const& names, ParamTablePtr para
                     break;
                 case msys::StringType:
                     for (Id i=0; i<nparams; i++) {
-                        params->value(i,j) = names[vals[i].GetInt()].GetString();
+                        params->value(i,j) = get_name(names, vals[i].GetInt());
                     }
                     break;
             }
@@ -374,7 +387,7 @@ static void read_aux(Document const& d, SystemPtr mol) {
     auto& names = d["names"];
     for (auto& m : tables->value.GetObject()) {
         auto params = ParamTable::create();
-        read_params(m.value, names, params);
+        read_params(m.value, names, params, "aux params");
         mol->addAuxTable(m.name.GetString(), params);
     }
 }
@@ -399,7 +412,7 @@ static void read_tables(Document const& d, SystemPtr mol) {
                 }
             }
         }
-        read_params(m.value["p"], names->value, table->params());
+        read_params(m.value["p"], names->value, table->params(), table->name());
         auto& terms = m.value["t"];
 
         auto& particles = terms["i"];

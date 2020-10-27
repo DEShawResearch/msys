@@ -1,67 +1,37 @@
-#include "wrap_obj.hxx"
-#include "param_table.hxx"
-
-using namespace desres::msys;
-
-namespace {
-
-    Id param_add_prop(ParamTable& p, const std::string& name, object typeobj) {
-        return p.addProp(name, as_value_type(typeobj));
-    }
-    object param_get_value(ParamTable& p, Id row, Id col) {
-        return from_value_ref(p.value(row,col));
-    }
-    void param_set_value(ParamTable& p, Id row, Id col, object newval) {
-        to_value_ref(newval, p.value(row,col));
-    }
-
-    PyObject* param_prop_type(ParamTable& p, Id col) {
-        return from_value_type(p.propType(col));
-    }
-
-    list find_int(ParamTable& p, Id col, Int val) {
-        return to_python(p.findInt(col,val));
-    }
-    list find_float(ParamTable& p, Id col, Float val) {
-        return to_python(p.findFloat(col,val));
-    }
-    list find_string(ParamTable& p, Id col, String const& val) {
-        return to_python(p.findString(col,val));
-    }
-
-    list wrap_params(ParamTable& p) {
-        return to_python(p.params());
-    }
-
-}
+#include "pymod.hxx"
+#include <pybind11/stl.h>
+#include <msys/param_table.hxx>
+#include "capsule.hxx"
 
 namespace desres { namespace msys { 
 
-    void export_param() {
+    void export_param(module m) {
 
-        class_<ParamTable, ParamTablePtr>("ParamTablePtr", no_init)
-            .def("__eq__",      list_eq<ParamTablePtr>)
-            .def("__ne__",      list_ne<ParamTablePtr>)
-            .def("__hash__",   obj_hash<ParamTablePtr>)
-            .def("create",     &ParamTable::create).staticmethod("create")
+        class_<ParamTable, ParamTablePtr>(m, "ParamTablePtr")
+            .def("__eq__", [](ParamTable* self, ParamTable* other) { return self==other; })
+            .def("__ne__", [](ParamTable* self, ParamTable* other) { return self!=other; })
+            .def("__hash__", [](ParamTable* g) { return size_t(g); })
+            .def_static("create", &ParamTable::create)
             .def("paramCount", &ParamTable::paramCount)
             .def("addParam",   &ParamTable::addParam)
             .def("hasParam",   &ParamTable::hasParam)
             .def("propCount",  &ParamTable::propCount)
             .def("propName",   &ParamTable::propName)
-            .def("propType",   param_prop_type)
+            .def("propType",   [](ParamTable& p, Id id) { return from_value_type(p.propType(id)); })
             .def("propIndex",  &ParamTable::propIndex)
-            .def("addProp",    param_add_prop)
+            .def("addProp",    [](ParamTable& t, String const& name, object type) { t.addProp(name, as_value_type(type)); })
             .def("delProp",    &ParamTable::delProp)
-            .def("params",     wrap_params)
-            .def("getProp",    param_get_value)
-            .def("setProp",    param_set_value)
+            .def("params",     &ParamTable::params)
+            .def("getProp",    [](ParamTable& t, Id row, Id col) { return from_value_ref(t.value(row,col)); })
+            .def("setProp",    [](ParamTable& t, Id row, Id col, object val) { to_value_ref(val, t.value(row,col)); })
             .def("duplicate",  &ParamTable::duplicate)
             .def("refcount",   &ParamTable::refcount)
             .def("compare",    &ParamTable::compare)
-            .def("findInt",    find_int)
-            .def("findFloat",  find_float)
-            .def("findString", find_string)
+            .def("findInt",    &ParamTable::findInt)
+            .def("findFloat",  &ParamTable::findFloat)
+            .def("findString", &ParamTable::findString)
+            .def_static("asCapsule", [](ParamTablePtr p) { return handle(python::paramtable_as_capsule(p)); })
+            .def_static("fromCapsule", [](handle h) { return python::paramtable_from_capsule(h.ptr()); })
             ;
     }
 

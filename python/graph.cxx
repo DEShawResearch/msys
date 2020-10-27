@@ -1,72 +1,28 @@
-#include "wrap_obj.hxx"
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/operators.h>
 #include "graph.hxx"
 
 using namespace desres::msys;
-
-namespace {
-
-    GraphPtr create(SystemPtr mol, list atoms) {
-        return Graph::create(mol, ids_from_python(atoms));
-    }
-
-    GraphPtr create_with_colors(SystemPtr mol, list atoms, list colors) {
-        return Graph::create(mol, ids_from_python(atoms), ids_from_python(colors));
-    }
-
-    std::string hash(Graph const& self) {
-        return Graph::hash(self.system(), self.atoms());
-    }
-
-    std::string hash_atoms(SystemPtr mol, IdList const& ids) {
-        return Graph::hash(mol, ids);
-    }
-
-    object match(Graph const& self, GraphPtr other) {
-        std::vector<IdPair> matches;
-        if (self.match(other, matches)) {
-            list L;
-            for (IdPair const& p : matches) {
-                L.append(make_tuple(p.first, p.second));
-            }
-            return std::move(L);
-        }
-        return object();
-    }
-
-    object matchAll(Graph const& self, GraphPtr other, bool substructure) {
-        std::vector<std::vector<IdPair> > matches;
-        self.matchAll(other, matches, substructure);
-        list outer_L;
-        for (std::vector<IdPair> const& v : matches) {
-            list L;
-            for (IdPair const& p : v)
-                L.append(make_tuple(p.first, p.second));
-            outer_L.append(L);
-        }
-        return std::move(outer_L);
-    }
-    list graph_atoms(Graph const& g) {
-        return to_python(g.atoms());
-    }
-}
+using namespace pybind11;
 
 namespace desres { namespace msys { 
 
-    void export_graph() {
+    void export_graph(module m) {
 
-        class_<Graph, GraphPtr, boost::noncopyable>("GraphPtr", no_init)
-            .def("__eq__",      list_eq<GraphPtr>)
-            .def("__ne__",      list_ne<GraphPtr>)
-            .def("__hash__",    obj_hash<GraphPtr>)
-            .def("create",  create).staticmethod("create")
-            .def("create_with_colors",  create_with_colors).staticmethod("create_with_colors")
-            .def("hash", hash)
-            .def("hash_atoms", hash_atoms).staticmethod("hash_atoms")
+        class_<Graph, GraphPtr>(m, "GraphPtr")
+            .def("__eq__", [](Graph* self, Graph* other) { return self==other; })
+            .def("__ne__", [](Graph* self, Graph* other) { return self!=other; })
+            .def("__hash__", [](Graph* g) { return size_t(g); })
+            .def_static("create",  [](SystemPtr mol, IdList const& atoms) { return Graph::create(mol, atoms); })
+            .def_static("create_with_colors",  [](SystemPtr mol, IdList const& atoms, IdList const& colors) { return Graph::create(mol, atoms, colors); })
+            .def("hash", [](Graph const& g) { return Graph::hash(g.system(), g.atoms()); })
+            .def_static("hash_atoms", &Graph::hash)
             .def("size", &Graph::size)
-            .def("atoms", graph_atoms)
+            .def("atoms", &Graph::atoms)
             .def("system", &Graph::system)
-            .def("match", match)
-            .def("matchAll", matchAll)
+            .def("match", [](GraphPtr self, GraphPtr other) { Graph::MatchList m; self->match(other, m); return m; })
+            .def("matchAll", [](GraphPtr self, GraphPtr other, bool sub) { std::vector<Graph::MatchList> m; self->matchAll(other, m, sub); return m; })
             ;
     }
 }}

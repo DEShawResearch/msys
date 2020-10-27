@@ -1,46 +1,25 @@
-#include "unique_symbol.hxx"
-#include "wrap_obj.hxx"
+#include "pymod.hxx"
+#include <pybind11/numpy.h>
+#include <pybind11/stl.h>
 #include "capsule.hxx"
-#include "import.hxx"
 
-#include "schema.hxx"
-#include "atomsel.hxx"
-#include "append.hxx"
-#include "clone.hxx"
-#include "geom.hxx"
-#include "dms.hxx"
-#include "hbond.hxx"
-#include "contacts.hxx"
-
+#include <msys/import.hxx>
+#include <msys/schema.hxx>
+#include <msys/atomsel.hxx>
+#include <msys/append.hxx>
+#include <msys/clone.hxx>
+#include <msys/geom.hxx>
+#include <msys/dms.hxx>
+#include <msys/hbond.hxx>
+#include <msys/contacts.hxx>
 #include <msys/hash.hxx>
 
-#include <numpy/ndarrayobject.h>
 #include <pfx/graph.hxx>
 #include <pfx/cell.hxx>
 
-#include <boost/python/import.hpp>
-
-using namespace desres::msys;
-
-namespace {
-#if PY_MAJOR_VERSION >= 3
-    auto py_from_long = PyLong_FromLong;
-    auto py_as_bytes = PyBytes_FromStringAndSize;
-#else
-    auto py_from_long = PyInt_FromLong;
-    auto py_as_bytes = PyString_FromStringAndSize;
-#endif
-}
-
 namespace {
 
-    atom_t& system_atom(System& m, Id id) { return m.atom(id); }
-    bond_t& system_bond(System& m, Id id) { return m.bond(id); }
-    residue_t& system_residue(System& m, Id id) { return m.residue(id); }
-    chain_t& system_chain(System& m, Id id) { return m.chain(id); }
-    component_t& system_ct(System& m, Id id) { return m.ct(id); }
-
-    PyObject* atom_prop_type(System& sys, Id col) {
+    handle atom_prop_type(System& sys, Id col) {
         return from_value_type(sys.atomPropType(col));
     }
     Id add_atom_prop( System& sys, String const& name, object type ) {
@@ -51,7 +30,7 @@ namespace {
         if (bad(col)) {
             PyErr_Format(PyExc_KeyError, 
                     "No such atom property '%s", name.c_str());
-            throw_error_already_set();
+            throw error_already_set();
         }
         return from_value_ref(p.atomPropValue(row,col));
     }
@@ -60,12 +39,12 @@ namespace {
         if (bad(col)) {
             PyErr_Format(PyExc_KeyError, 
                     "No such atom property '%s", name.c_str());
-            throw_error_already_set();
+            throw error_already_set();
         }
         to_value_ref(newval, p.atomPropValue(row,col));
     }
 
-    PyObject* bond_prop_type(System& sys, Id col) {
+    handle bond_prop_type(System& sys, Id col) {
         return from_value_type(sys.bondPropType(col));
     }
     Id add_bond_prop( System& sys, String const& name, object type ) {
@@ -76,7 +55,7 @@ namespace {
         if (bad(col)) {
             PyErr_Format(PyExc_KeyError, 
                     "No such bond property '%s", name.c_str());
-            throw_error_already_set();
+            throw error_already_set();
         }
         return from_value_ref(p.bondPropValue(row,col));
     }
@@ -85,16 +64,16 @@ namespace {
         if (bad(col)) {
             PyErr_Format(PyExc_KeyError, 
                     "No such bond property '%s", name.c_str());
-            throw_error_already_set();
+            throw error_already_set();
         }
         to_value_ref(newval, p.bondPropValue(row,col));
     }
 
 
-    list update_fragids(System& p) {
+    MultiIdList update_fragids(System& p) {
         MultiIdList fragments;
         p.updateFragids(&fragments);
-        return to_python(fragments);
+        return fragments;
     }
 
     Provenance prov_from_args( object o ) {
@@ -103,7 +82,7 @@ namespace {
         std::vector<std::string> strings;
         std::vector<char *> argv;
         for (int i=0; i<argc; i++) {
-            strings.push_back(extract<std::string>(o[i]));
+            strings.push_back(o.str());
         }
         for (int i=0; i<argc; i++) {
             argv.push_back(const_cast<char *>(strings[i].c_str()));
@@ -111,145 +90,93 @@ namespace {
         return Provenance::fromArgs(argc, &argv[0]);
     }
 
-    list sys_provenance( System const& sys ) {
-        list L;
-        std::vector<Provenance> const& prov = sys.provenance();
-        for (unsigned i=0; i<prov.size(); i++) {
-            L.append(object(prov[i]));
+    std::vector<Provenance> sys_provenance( System const& sys ) {
+        return sys.provenance();
+    }
+    void sys_set_provenance(System& sys, std::vector<Provenance>& prov) {
+        sys.provenance().swap(prov);
+    }
+
+    array global_cell(object sysobj) {
+        auto sys = sysobj.cast<System*>();
+        return array_t<double>({3,3}, sys->global_cell[0], sysobj);
+    }
+
+    array getpos3(object x, double **p) {
+        auto arr = array_t<double, array::c_style | array::forcecast>::ensure(x);
+        if (!arr) throw error_already_set();
+        if (arr.shape(0)!=3) {
+            PyErr_Format(PyExc_ValueError, "expected vector of length 3, got %ld", arr.shape(0));
+            throw error_already_set();
         }
-        return L;
-    }
-
-    void destructor(PyObject* obj) { 
-        Py_XDECREF(obj); 
-    }
-    typedef std::shared_ptr<PyObject> objptr;
-
-    PyObject* global_cell(object sysobj) {
-        System& sys = extract<System&>(sysobj);
-        npy_intp dims[2] = {3,3};
-        PyObject* arr = PyArray_SimpleNewFromData(2,dims,NPY_FLOAT64,
-                sys.global_cell[0]);
-        Py_INCREF(PyArray_BASE(arr)=reinterpret_cast<PyObject*>(sysobj.ptr()));
+        if (p) *p = arr.mutable_data();
         return arr;
     }
-
-    PyObject* getpos3(object x, double **p) {
-        PyObject* arr = PyArray_FromAny(
-                x.ptr(), 
-                PyArray_DescrFromType(NPY_FLOAT64),
-                1, 1, NPY_C_CONTIGUOUS | NPY_ALIGNED,
-                NULL);
-        if (!arr) throw_error_already_set();
-        if (PyArray_DIM(arr, 0) != 3) {
-            PyErr_Format(PyExc_ValueError, "expected vector of length 3, got %ld", PyArray_DIM(arr, 0));
-            throw_error_already_set();
-        }
-        if (p) *p = (double *)PyArray_DATA(arr);
-        return arr;
-    }
-
-    PyObject* make_projection(object cell) {
-        npy_intp dims[2] = {3,3};
-        PyObject* proj = PyArray_SimpleNew(2, dims, NPY_FLOAT64);
-        pfx::make_projection((double*)PyArray_DATA(cell.ptr()),
-                             (double*)PyArray_DATA(proj));
-        return proj;
-    }
-
-    object wrap_vector(object cell, object proj, object pos) {
-        pfx::wrap_vector<double>((double*)PyArray_DATA(cell.ptr()),
-                                 (double*)PyArray_DATA(proj.ptr()),
-                                 (double*)PyArray_DATA(pos.ptr()));
-        return pos;
-    }
-
-    object wrap_vector_array(object cell, object proj, object pos) {
-        pfx::wrap_vector_array<double>((double*)PyArray_DATA(cell.ptr()),
-                                       (double*)PyArray_DATA(proj.ptr()),
-                                       (double*)PyArray_DATA(pos.ptr()),
-                                       extract<unsigned>(pos.attr("size")) / 3
-                                       );
-        return pos;
-    }
-
 
     double py_calc_distance(object A, object B) {
         double *a, *b;
-        objptr pa(getpos3(A, &a), destructor);
-        objptr pb(getpos3(B, &b), destructor);
+        auto pa = getpos3(A, &a);
+        auto pb = getpos3(B, &b);
         return calc_distance(a,b);
     }
     double py_calc_vec_angle(object A, object B) {
         double *a, *b;
-        objptr pa(getpos3(A, &a), destructor);
-        objptr pb(getpos3(B, &b), destructor);
+        auto pa = getpos3(A, &a);
+        auto pb = getpos3(B, &b);
         return calc_vec_angle(a,b);
     }
     double py_calc_angle(object A, object B, object C) {
         double *a, *b, *c;
-        objptr pa(getpos3(A, &a), destructor);
-        objptr pb(getpos3(B, &b), destructor);
-        objptr pc(getpos3(C, &c), destructor);
+        auto pa = getpos3(A, &a);
+        auto pb = getpos3(B, &b);
+        auto pc = getpos3(C, &c);
         return calc_angle(a,b,c);
     }
     double py_calc_vec_dihedral(object A, object B, object C) {
         double *a, *b, *c;
-        objptr pa(getpos3(A, &a), destructor);
-        objptr pb(getpos3(B, &b), destructor);
-        objptr pc(getpos3(C, &c), destructor);
+        auto pa = getpos3(A, &a);
+        auto pb = getpos3(B, &b);
+        auto pc = getpos3(C, &c);
         return calc_vec_dihedral(a,b,c);
     }
     double py_calc_dihedral(object A, object B, object C, object D) {
         double *a, *b, *c, *d;
-        objptr pa(getpos3(A, &a), destructor);
-        objptr pb(getpos3(B, &b), destructor);
-        objptr pc(getpos3(C, &c), destructor);
-        objptr pd(getpos3(D, &d), destructor);
+        auto pa = getpos3(A, &a);
+        auto pb = getpos3(B, &b);
+        auto pc = getpos3(C, &c);
+        auto pd = getpos3(D, &d);
         return calc_dihedral(a,b,c,d);
     }
 
-    PyObject* py_apply_dihedral_geometry(object A, object B, object C,
+    array py_apply_dihedral_geometry(object A, object B, object C,
                                       double r, double theta, double phi) {
         double *a, *b, *c;
-        objptr pa(getpos3(A, &a), destructor);
-        objptr pb(getpos3(B, &b), destructor);
-        objptr pc(getpos3(C, &c), destructor);
-        npy_intp dim = 3;
-        PyObject* arr = PyArray_SimpleNew(1,&dim,NPY_FLOAT64);
-        double *d = (double *)PyArray_DATA(arr);
-        apply_dihedral_geometry(d,a,b,c,r,theta,phi);
+        auto pa = getpos3(A, &a);
+        auto pb = getpos3(B, &b);
+        auto pc = getpos3(C, &c);
+        auto arr = array_t<double>(3);
+        apply_dihedral_geometry(arr.mutable_data(),a,b,c,r,theta,phi);
         return arr;
     }
 
-    double py_calc_planarity(PyObject* obj) {
-        PyObject* arr = PyArray_FromAny(
-                obj,
-                PyArray_DescrFromType(NPY_FLOAT64),
-                2, 2,   /* must be 2-dimensional */
-                NPY_C_CONTIGUOUS | NPY_ALIGNED,
-                NULL);
-        if (!arr) throw_error_already_set();
-        std::shared_ptr<PyObject> _(arr, destructor);
-        Id n = PyArray_DIM(arr,0);
-        if (PyArray_DIM(arr,1)!=3) {
+    double py_calc_planarity(array_t<double, array::c_style | array::forcecast> arr) {
+        if (arr.ndim()!=2 || arr.shape(1)!=3) {
             PyErr_Format(PyExc_ValueError, 
                     "Supplied %ld-d positions, expected 3-d", 
-                    PyArray_DIM(arr,1));
-            throw_error_already_set();
+                    arr.shape(1));
+            throw error_already_set();
         }
-        const double* pos = (const double *)PyArray_DATA(arr);
-        return calc_planarity(n, pos);
+        return calc_planarity(arr.shape(0), arr.data());
     }
 
     bool py_line_intersects_tri(object A, object B, object C, 
                                 object R, object S) {
         double *a, *b, *c, *r, *s;
-        objptr pa(getpos3(A,&a), destructor);
-        objptr pb(getpos3(B,&b), destructor);
-        objptr pc(getpos3(C,&c), destructor);
-        objptr pr(getpos3(R,&r), destructor);
-        objptr ps(getpos3(S,&s), destructor);
+        auto pa = getpos3(A, &a);
+        auto pb = getpos3(B, &b);
+        auto pc = getpos3(C, &c);
+        auto pr = getpos3(R, &r);
+        auto ps = getpos3(S, &s);
         return line_intersects_tri(a,b,c,r,s);
     }
 
@@ -283,62 +210,43 @@ namespace {
 
         if (sys.atomCount()==0) return list();
 
-        Id* idptr=NULL, *otherptr=NULL;
+        const Id* idptr=NULL, *otherptr=NULL;
         unsigned nids=0, nother=0;
         const double* posptr=NULL;
         std::vector<double> posdata;
         IdList ids;
-        objptr idarr, otherarr, posarr;
+        array_t<unsigned> idarr, otherarr;
+        array_t<double> posarr;
         bool skip_symmetric = true;
 
-        if (idobj.ptr()==Py_None) {
-            ids=sys.atoms();
-            idptr = &ids[0];
-            nids=ids.size();
+        if (idobj.is_none()) {
+            ids = sys.atoms();
+            idptr = ids.data();
+            nids = ids.size();
         } else {
-            idarr.reset(PyArray_FromAny(
-                        idobj.ptr(),
-                        PyArray_DescrFromType(NPY_UINT32),
-                        1,1, NPY_C_CONTIGUOUS | NPY_FORCECAST, NULL),
-                    destructor);
-            if (!idarr) throw_error_already_set();
-            idptr=(Id *)PyArray_DATA(idarr.get());
-            nids=PyArray_DIM(idarr.get(), 0);
+            idarr = array_t<unsigned>::ensure(idobj);
+            if (!idarr) throw error_already_set();
+            idptr = idarr.data();
+            nids = idarr.size();
         }
 
-        if (otherobj.ptr()==Py_None) {
+        if (otherobj.is_none()) {
             otherptr = idptr;
             nother=nids;
         } else {
             skip_symmetric = false;
-            otherarr.reset(PyArray_FromAny(
-                        otherobj.ptr(),
-                        PyArray_DescrFromType(NPY_UINT32),
-                        1,1, NPY_C_CONTIGUOUS | NPY_FORCECAST, NULL),
-                    destructor);
-            if (!otherarr) throw_error_already_set();
-            otherptr = (Id *)PyArray_DATA(otherarr.get());
-            nother = PyArray_DIM(otherarr.get(), 0);
+            otherarr = array_t<unsigned>::ensure(otherobj);
+            if (!otherarr) throw error_already_set();
+            otherptr = otherarr.data();
+            nother = otherarr.size();
         }
 
-        if (posobj.ptr()==Py_None) {
-            posdata.reserve(3*sys.atomCount());
-            for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
-                if (!sys.hasAtom(i)) continue;
-                atom_t const& atm = sys.atom(i);
-                posdata.push_back(atm.x);
-                posdata.push_back(atm.y);
-                posdata.push_back(atm.z);
-            }
-            posptr= &posdata[0];
+        if (posobj.is_none()) {
+            sys.getPositions(std::back_inserter(posdata));
+            posptr = posdata.data();
         } else {
-            posarr.reset(PyArray_FromAny(
-                        posobj.ptr(),
-                        PyArray_DescrFromType(NPY_FLOAT64),
-                        2,2,NPY_C_CONTIGUOUS, NULL),
-                    destructor);
-            if (!posarr) throw_error_already_set();
-            posptr = (double *)PyArray_DATA(posarr.get());
+            posarr = array_t<double>::ensure(posobj);
+            posptr = posarr.data();
         }
 
         list result;
@@ -350,49 +258,26 @@ namespace {
     }
 
 
-    PyObject* sys_getpos(System const& sys, object idobj) {
-        npy_intp dims[2];
-        dims[1] = 3;
-        PyObject* arr=NULL;
-        if (idobj.ptr()==Py_None) {
-            dims[0] = sys.atomCount();
-            arr = PyArray_SimpleNew(2,dims,NPY_FLOAT64);
-            if (!arr) throw_error_already_set();
-            double* ptr = (double *)PyArray_DATA(arr);
-            for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
-                if (!sys.hasAtom(i)) continue;
-                atom_t const& atm = sys.atom(i);
-                ptr[0] = atm.x;
-                ptr[1] = atm.y;
-                ptr[2] = atm.z;
-                ptr += 3;
-            }
+    array sys_getpos(System const& sys, object idobj) {
+        array_t<double> arr;
+        if (idobj.is_none()) {
+            size_t dims[] = {sys.atomCount(), 3};
+            arr = array_t<double>(dims);
+            sys.getPositions(arr.mutable_data());
         } else {
-            /* convert to int64 */
-            PyObject* idarr = PyArray_FromAny(
-                idobj.ptr(),
-                PyArray_DescrFromType(NPY_INT64),
-                1, 1,   /* must be 1-dimensional */
-                NPY_C_CONTIGUOUS | NPY_ALIGNED,
-                NULL);
-            if (!idarr) throw_error_already_set();
-            const int64_t* ids = (const int64_t *)PyArray_DATA(idarr);
-            std::shared_ptr<PyObject> _(idarr, destructor);
-
-            /* allocate return array */
-            dims[0] = PyArray_DIM(idarr,0);
-            arr = PyArray_SimpleNew(2,dims,NPY_FLOAT64);
-            if (!arr) throw_error_already_set();
-            double* ptr = (double *)PyArray_DATA(arr);
-            Py_ssize_t i,n = dims[0];
-            for (i=0; i<n; i++) {
-                Id id = ids[i];
+            auto idarr = array_t<unsigned>::ensure(idobj);
+            if (!idarr) throw error_already_set();
+            ssize_t dims[] = {idarr.size(), 3};
+            arr = array_t<double>(dims);
+            auto ids = idarr.data();
+            auto ptr = arr.mutable_data();
+            for (int i=0, n=idarr.size(); i<n; i++) {
+                auto id = ids[i];
                 if (!sys.hasAtom(id)) {
-                    Py_DECREF(arr);
                     PyErr_Format(PyExc_ValueError, "Invalid id %u", id);
-                    throw_error_already_set();
+                    throw error_already_set();
                 }
-                atom_t const& atm = sys.atom(id);
+                atom_t const& atm = sys.atomFAST(id);
                 ptr[0] = atm.x;
                 ptr[1] = atm.y;
                 ptr[2] = atm.z;
@@ -402,49 +287,26 @@ namespace {
         return arr;
     }
 
-    PyObject* sys_getvel(System const& sys, object idobj) {
-        npy_intp dims[2];
-        dims[1] = 3;
-        PyObject* arr=NULL;
-        if (idobj.ptr()==Py_None) {
-            dims[0] = sys.atomCount();
-            arr = PyArray_SimpleNew(2,dims,NPY_FLOAT64);
-            if (!arr) throw_error_already_set();
-            double* ptr = (double *)PyArray_DATA(arr);
-            for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
-                if (!sys.hasAtom(i)) continue;
-                atom_t const& atm = sys.atom(i);
-                ptr[0] = atm.vx;
-                ptr[1] = atm.vy;
-                ptr[2] = atm.vz;
-                ptr += 3;
-            }
+    array sys_getvel(System const& sys, object idobj) {
+        array_t<double> arr;
+        if (idobj.is_none()) {
+            size_t dims[] = {sys.atomCount(), 3};
+            arr = array_t<double>(dims);
+            sys.getVelocities(arr.mutable_data());
         } else {
-            /* convert to int64 */
-            PyObject* idarr = PyArray_FromAny(
-                idobj.ptr(),
-                PyArray_DescrFromType(NPY_INT64),
-                1, 1,   /* must be 1-dimensional */
-                NPY_C_CONTIGUOUS | NPY_ALIGNED,
-                NULL);
-            if (!idarr) throw_error_already_set();
-            const int64_t* ids = (const int64_t *)PyArray_DATA(idarr);
-            std::shared_ptr<PyObject> _(idarr, destructor);
-
-            /* allocate return array */
-            dims[0] = PyArray_DIM(idarr,0);
-            arr = PyArray_SimpleNew(2,dims,NPY_FLOAT64);
-            if (!arr) throw_error_already_set();
-            double* ptr = (double *)PyArray_DATA(arr);
-            Py_ssize_t i,n = dims[0];
-            for (i=0; i<n; i++) {
-                Id id = ids[i];
+            auto idarr = array_t<unsigned>::ensure(idobj);
+            if (!idarr) throw error_already_set();
+            size_t dims[] = {sys.atomCount(), 3};
+            arr = array_t<double>(dims);
+            auto ids = idarr.data();
+            auto ptr = arr.mutable_data();
+            for (int i=0, n=idarr.size(); i<n; i++) {
+                auto id = ids[i];
                 if (!sys.hasAtom(id)) {
-                    Py_DECREF(arr);
                     PyErr_Format(PyExc_ValueError, "Invalid id %u", id);
-                    throw_error_already_set();
+                    throw error_already_set();
                 }
-                atom_t const& atm = sys.atom(id);
+                atom_t const& atm = sys.atomFAST(id);
                 ptr[0] = atm.vx;
                 ptr[1] = atm.vy;
                 ptr[2] = atm.vz;
@@ -454,63 +316,42 @@ namespace {
         return arr;
     }
 
-    void sys_setpos(System& sys, PyObject* obj, PyObject* idobj) {
-        PyObject* arr = PyArray_FromAny(
-                obj,
-                PyArray_DescrFromType(NPY_FLOAT64),
-                2, 2,   /* must be 2-dimensional */
-                NPY_C_CONTIGUOUS | NPY_ALIGNED,
-                NULL);
-        if (!arr) throw_error_already_set();
-        std::shared_ptr<PyObject> _(arr, destructor);
-        Id n = PyArray_DIM(arr,0);
-        if (PyArray_DIM(arr,1)!=3) {
+    void sys_setpos(System& sys, array_t<double> arr, object idobj) {
+        if (arr.ndim()!=2 || arr.shape(1)!=3) {
             PyErr_Format(PyExc_ValueError, 
                     "Supplied %ld-d positions, expected 3-d", 
-                    PyArray_DIM(arr,1));
-            throw_error_already_set();
+                    arr.shape(1));
+            throw error_already_set();
         }
-        const double* pos = (const double *)PyArray_DATA(arr);
+        auto pos = arr.data();
+        auto n = arr.shape(0);
 
-        if (idobj==Py_None) {
-            if (n!=sys.atomCount()) {
+        if (idobj.is_none()) {
+            if (n != sys.atomCount()) {
                 PyErr_Format(PyExc_ValueError, 
                         "Supplied %u positions, but system has %u atoms", 
                         n, sys.atomCount());
-                throw_error_already_set();
+                throw error_already_set();
             }
-            for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
-                if (!sys.hasAtom(i)) continue;
-                atom_t& atm = sys.atom(i);
-                atm.x = pos[0];
-                atm.y = pos[1];
-                atm.z = pos[2];
-                pos += 3;
-            }
+            sys.setPositions(pos);
         } else {
-            PyObject* idarr = PyArray_FromAny(
-                    idobj,
-                    PyArray_DescrFromType(NPY_INT64),
-                    1,1,
-                    NPY_C_CONTIGUOUS | NPY_ALIGNED,
-                    NULL);
-            if (!idarr) throw_error_already_set();
-            std::shared_ptr<PyObject> _(idarr, destructor);
-            if (n != (Id)PyArray_DIM(idarr,0)) {
+            auto idarr = array_t<unsigned>::ensure(idobj);
+            if (!idarr) throw error_already_set();
+            if (n != idarr.shape(0)) {
                 PyErr_Format(PyExc_ValueError,
                         "Supplied %u positions != %u ids",
-                        n, (Id)PyArray_DIM(idarr,0));
-                throw_error_already_set();
+                        n, idarr.shape(0));
+                throw error_already_set();
             }
-            const Id* ids = (const Id*)PyArray_DATA(idarr);
-            for (Py_ssize_t i=0; i<n; i++) {
+            auto ids = idarr.data();
+            for (int i=0; i<n; i++) {
                 Id id = ids[i];
                 if (!sys.hasAtom(id)) {
                     PyErr_Format(PyExc_ValueError,
                             "Id %u at position %ld is invalid", id, i);
-                    throw_error_already_set();
+                    throw error_already_set();
                 }
-                atom_t& atm = sys.atom(id);
+                atom_t& atm = sys.atomFAST(id);
                 atm.x = pos[0];
                 atm.y = pos[1];
                 atm.z = pos[2];
@@ -519,63 +360,42 @@ namespace {
         }
     }
 
-    void sys_setvel(System& sys, PyObject* obj, PyObject* idobj) {
-        PyObject* arr = PyArray_FromAny(
-                obj,
-                PyArray_DescrFromType(NPY_FLOAT64),
-                2, 2,   /* must be 2-dimensional */
-                NPY_C_CONTIGUOUS | NPY_ALIGNED,
-                NULL);
-        if (!arr) throw_error_already_set();
-        std::shared_ptr<PyObject> _(arr, destructor);
-        Id n = PyArray_DIM(arr,0);
-        if (PyArray_DIM(arr,1)!=3) {
+    void sys_setvel(System& sys, array_t<double> arr, object idobj) {
+        if (arr.ndim()!=2 || arr.shape(1)!=3) {
             PyErr_Format(PyExc_ValueError, 
                     "Supplied %ld-d velocities, expected 3-d", 
-                    PyArray_DIM(arr,1));
-            throw_error_already_set();
+                    arr.shape(1));
+            throw error_already_set();
         }
-        const double* pos = (const double *)PyArray_DATA(arr);
+        auto pos = arr.data();
+        auto n = arr.shape(0);
 
-        if (idobj==Py_None) {
-            if (n!=sys.atomCount()) {
+        if (idobj.is_none()) {
+            if (n != sys.atomCount()) {
                 PyErr_Format(PyExc_ValueError, 
                         "Supplied %u velocities, but system has %u atoms", 
                         n, sys.atomCount());
-                throw_error_already_set();
+                throw error_already_set();
             }
-            for (Id i=0, n=sys.maxAtomId(); i<n; i++) {
-                if (!sys.hasAtom(i)) continue;
-                atom_t& atm = sys.atom(i);
-                atm.vx = pos[0];
-                atm.vy = pos[1];
-                atm.vz = pos[2];
-                pos += 3;
-            }
+            sys.setVelocities(pos);
         } else {
-            PyObject* idarr = PyArray_FromAny(
-                    idobj,
-                    PyArray_DescrFromType(NPY_INT64),
-                    1,1,
-                    NPY_C_CONTIGUOUS | NPY_ALIGNED,
-                    NULL);
-            if (!idarr) throw_error_already_set();
-            std::shared_ptr<PyObject> _(idarr, destructor);
-            if (n != (Id)PyArray_DIM(idarr,0)) {
+            auto idarr = array_t<unsigned>::ensure(idobj);
+            if (!idarr) throw error_already_set();
+            if (n != idarr.shape(0)) {
                 PyErr_Format(PyExc_ValueError,
                         "Supplied %u velocities != %u ids",
-                        n, (Id)PyArray_DIM(idarr,0));
-                throw_error_already_set();
+                        n, idarr.shape(0));
+                throw error_already_set();
             }
-            const Id* ids = (const Id*)PyArray_DATA(idarr);
-            for (Py_ssize_t i=0; i<n; i++) {
+            auto ids = idarr.data();
+            for (int i=0; i<n; i++) {
                 Id id = ids[i];
                 if (!sys.hasAtom(id)) {
                     PyErr_Format(PyExc_ValueError,
-                            "Id %u at position %ld is invalid", id, i);
-                    throw_error_already_set();
+                            "Id %u at velocity %ld is invalid", id, i);
+                    throw error_already_set();
                 }
-                atom_t& atm = sys.atom(id);
+                atom_t& atm = sys.atomFAST(id);
                 atm.vx = pos[0];
                 atm.vy = pos[1];
                 atm.vz = pos[2];
@@ -584,261 +404,132 @@ namespace {
         }
     }
 
-    /* FIXME: use a struct holding a member function implementing operator() */
-    list table_names(System const& sys) {
-        std::vector<std::string> names = sys.tableNames();
-        list L;
-        for (unsigned i=0; i<names.size(); i++) L.append(object(names[i]));
-        return L;
-    }
-    list aux_table_names(System const& sys) {
-        std::vector<std::string> names = sys.auxTableNames();
-        list L;
-        for (unsigned i=0; i<names.size(); i++) L.append(object(names[i]));
-        return L;
-    }
-    list table_schemas() {
-        std::vector<std::string> names = TableSchemas();
-        list L;
-        for (unsigned i=0; i<names.size(); i++) L.append(object(names[i]));
-        return L;
-    }
-    list nonbonded_schemas() {
-        std::vector<std::string> names = NonbondedSchemas();
-        list L;
-        for (unsigned i=0; i<names.size(); i++) L.append(object(names[i]));
-        return L;
-    }
-
     IdList wrap_atomselect(SystemPtr mol, std::string const& sel,
-                           PyObject* posobj, PyObject* boxobj) {
-        objptr posarr, boxarr;
-        float* pos = NULL;
-        double* box = NULL;
-        if (posobj != Py_None) {
-            posarr.reset(PyArray_FromAny(
-                        posobj, PyArray_DescrFromType(NPY_FLOAT32),
-                        2,2, NPY_C_CONTIGUOUS, NULL), destructor);
-            if (!posarr) throw_error_already_set();
-            if (PyArray_DIM(posarr.get(),0)!=mol->atomCount() ||
-                PyArray_DIM(posarr.get(),1)!=3) {
+                           object posobj, object boxobj) {
+        array_t<float> posarr;
+        array_t<double> boxarr;
+        const float* pos = NULL;
+        const double* box = NULL;
+        if (!posobj.is_none()) {
+            posarr = array_t<float>::ensure(posobj);
+            if (!posarr) throw error_already_set();
+            if (posarr.ndim()!=2 || posarr.shape(0)!=mol->atomCount() || posarr.shape(1)!=3) {
                 PyErr_Format(PyExc_ValueError, "pos has wrong shape");
-                throw_error_already_set();
+                throw error_already_set();
             }
-            pos = static_cast<float*>(PyArray_DATA(posarr.get()));
+            pos = posarr.data();
         }
-        if (boxobj != Py_None) {
-            boxarr.reset(PyArray_FromAny(
-                        boxobj, PyArray_DescrFromType(NPY_FLOAT64),
-                        2,2, NPY_C_CONTIGUOUS, NULL), destructor);
-            if (!boxarr) throw_error_already_set();
-            if (PyArray_DIM(boxarr.get(),0)!=3 ||
-                PyArray_DIM(boxarr.get(),1)!=3) {
+        if (!boxobj.is_none()) {
+            boxarr = array_t<double>::ensure(boxobj);
+            if (!boxarr) throw error_already_set();
+            if (boxarr.ndim()!=2 || boxarr.shape(0)!=3 || boxarr.shape(1)!=3) {
                 PyErr_Format(PyExc_ValueError, "box has wrong shape");
-                throw_error_already_set();
+                throw error_already_set();
             }
-            box = static_cast<double*>(PyArray_DATA(boxarr.get()));
+            box = boxarr.data();
         }
         return Atomselect(mol, sel, pos, box);
     }
 
-    PyObject* list_Atomselect(SystemPtr mol, std::string const& sel,
-                               PyObject* pos, PyObject* box) {
-        IdList ids = wrap_atomselect(mol,sel, pos, box);
-        PyObject *L = PyList_New(ids.size());
-        if (!L) throw_error_already_set();
-        for (unsigned i=0; i<ids.size(); i++) {
-            PyList_SET_ITEM(L,i,py_from_long(ids[i]));
-        }
-        return L;
-    }
-
-    PyObject* array_Atomselect(SystemPtr mol, std::string const& sel,
-                               PyObject* pos, PyObject* box) {
-        IdList ids = wrap_atomselect(mol,sel, pos, box);
-        npy_intp dims[1];
-        dims[0] = ids.size();
-        PyObject *arr = PyArray_SimpleNew(1,dims,NPY_UINT32);
-        if (!arr) throw_error_already_set();
-        if (!ids.empty()) memcpy(PyArray_DATA(arr), &ids[0],
-                ids.size()*sizeof(Id));
+    object array_Atomselect(SystemPtr mol, std::string const& sel,
+                               object pos, object box) {
+        auto ids = wrap_atomselect(mol,sel, pos, box);
+        auto arr = array_t<unsigned>(ids.size());
+        memcpy(arr.mutable_data(), ids.data(), ids.size()*sizeof(ids[0]));
         return arr;
     }
 
-    PyObject* list_atoms(SystemPtr mol) {
-        Id i,n = mol->atomCount(), m = mol->maxAtomId();
-        PyObject *L = PyList_New(n);
-        if (!L) throw_error_already_set();
-        if (n==m) for (i=0; i<m; i++) {
-            PyList_SET_ITEM(L,i,py_from_long(i));
-        } else    for (i=0, n=0; i<m; i++) {
-            if (!mol->hasAtom(i)) continue;
-            PyList_SET_ITEM(L,n++, py_from_long(i));
-        }
-        return L;
-    }
-
-    list list_bonds(System& mol) { return to_python(mol.bonds()); }
-    list list_residues(System& mol) { return to_python(mol.residues()); }
-    list list_chains(System& mol) { return to_python(mol.chains()); }
-    list list_cts(System& mol) { return to_python(mol.cts()); }
-
-    list bonded_atoms(System& mol,Id i) { return to_python(mol.bondedAtoms(i));}
-    list residue_atoms(System& mol,Id i) { return to_python(mol.atomsForResidue(i)); }
-    list atom_bonds(System& mol,Id i) { return to_python(mol.bondsForAtom(i)); }
-    list chain_residues(System& mol,Id i) { return to_python(mol.residuesForChain(i)); }
-    list ct_chains(System& mol,Id i) { return to_python(mol.chainsForCt(i)); }
-    list ct_atoms(System& mol,Id i) { return to_python(mol.atomsForCt(i)); }
-    list ct_bonds(System& mol,Id i) { return to_python(mol.bondsForCt(i)); }
-
-    objptr get_vec3d(PyObject* obj) {
-        if (obj==Py_None) return objptr();
-        PyObject* arr = PyArray_FromAny(
-                obj,
-                PyArray_DescrFromType(NPY_FLOAT64),
-                1,1,
-                NPY_C_CONTIGUOUS,
-                NULL);
-        if (!arr) throw_error_already_set();
-        objptr ptr(arr, destructor);
-        if (PyArray_DIM(arr,0)!=3) {
+    array_t<double> get_vec3d(object obj) {
+        if (obj.is_none()) return obj;
+        auto arr = array_t<double>::ensure(obj);
+        if (!arr) throw error_already_set();
+        if (arr.size()!=3) {
             PyErr_Format(PyExc_ValueError,
                     "Expected 3 elements in vector, got %ld",
-                    PyArray_DIM(arr,0));
-            throw_error_already_set();
+                    arr.size());
+            throw error_already_set();
         }
-        return ptr;
+        return arr;
     }
 
     HydrogenBond *init_hbond(
-            PyObject* dobj,
-            PyObject* aobj,
-            PyObject* hobj,
-            PyObject* cobj,
-            PyObject* caobj) {
+            object dobj,
+            object aobj,
+            object hobj,
+            object cobj,
+            object caobj) {
 
-        objptr darr = get_vec3d(dobj);
-        objptr aarr = get_vec3d(aobj);
-        objptr harr = get_vec3d(hobj);
-        objptr carr = get_vec3d(cobj);
-        objptr caarr = get_vec3d(caobj);
+        auto darr = get_vec3d(dobj);
+        auto aarr = get_vec3d(aobj);
+        auto harr = get_vec3d(hobj);
+        auto carr = get_vec3d(cobj);
+        auto caarr = get_vec3d(caobj);
         return new HydrogenBond(
-                darr ? (const double *)PyArray_DATA(darr.get()) : NULL,
-                aarr ? (const double *)PyArray_DATA(aarr.get()) : NULL,
-                harr ? (const double *)PyArray_DATA(harr.get()) : NULL,
-                carr ? (const double *)PyArray_DATA(carr.get()) : NULL,
-                caarr? (const double *)PyArray_DATA(caarr.get()): NULL);
+                !darr.is_none() ? darr.data() : nullptr,
+                !aarr.is_none() ? aarr.data() : nullptr,
+                !harr.is_none() ? harr.data() : nullptr,
+                !carr.is_none() ? carr.data() : nullptr,
+                !caarr.is_none()? caarr.data() : nullptr);
     }
 
     pfx::Graph* sys_topology(SystemPtr mol) { return new pfx::Graph(mol); }
 
-    TermTablePtr wrap_system_add_table(SystemPtr mol, std::string const& name,
-            Id natoms, PyObject* obj) {
+    TermTablePtr wrap_system_add_table(SystemPtr mol, std::string const& name, Id natoms, object obj) {
         ParamTablePtr params;
-        if (obj!=Py_None) {
-            params = extract<ParamTablePtr>(obj);
-        }
+        if (!obj.is_none()) params = obj.cast<ParamTablePtr>();
         return mol->addTable(name, natoms, params);
     }
-    list ordered_ids(System& mol) {
-        return to_python(mol.orderedIds());
-    }
 
-    SystemPtr wrap_clone(SystemPtr mol, list ids, unsigned flags) {
-        return Clone(mol, ids_from_python(ids), static_cast<CloneOption::Flags>(flags));
-    }
-    list append_system(SystemPtr dst, SystemPtr src, Id ct=BadId) {
-        return to_python(AppendSystem(dst, src, ct));
-    }
-
-    struct system_pickle_suite : pickle_suite {
-        static tuple getinitargs(SystemPtr mol) {
-            std::string contents = FormatDMS(mol, Provenance());
-            PyObject* bytes = py_as_bytes(contents.data(), contents.size());
-            object bobj = object(handle<>(bytes));
-            object compress = import("zlib").attr("compress");
-            // in my experiments across a range of file sizes,
-            // compression level 1 achieved compression levels
-            // within 10% of levels 6-9, while running as much
-            // as twice as fast as level 6.  Speed of compression
-            // is not an insignificant consideration here, so
-            // we'll go with level 1 for now.  
-            object zobj = compress(bobj, 1);
-
-            return boost::python::make_tuple("dmscontents", zobj);
-        }
-        static tuple getstate(SystemPtr mol) {
-            return tuple();
-        }
-        static void setstate(SystemPtr mol, tuple s) {
-        }
-    };
-
-    SystemPtr init_from_pickle(std::string const& format, std::string const& contents) {
+    SystemPtr init_from_pickle(std::string const& format, buffer bobj) {
         if (format=="dmscontents") {
-            if (contents.size() < 100) {
-                throw std::runtime_error("pickle contents are too short: len = " + std::to_string(contents.size()));
+            auto r = bobj.request();
+            if (r.size < 100) {
+                throw std::runtime_error("pickle contents are too short: len = " + std::to_string(r.size));
             }
+            auto buf = reinterpret_cast<unsigned char *>(r.ptr);
             // check for zlib-compressed data.  
-            if ((unsigned char)contents[0] == 0x78 && (
+            if (buf[0] == 0x78 && (
                         // alternatives based on possible zlib compression levels
-                        (unsigned char)contents[1] == 0x01 ||
-                        (unsigned char)contents[1] == 0x5e ||
-                        (unsigned char)contents[1] == 0x9c ||
-                        (unsigned char)contents[1] == 0xda)) {
+                        buf[1] == 0x01 ||
+                        buf[1] == 0x5e ||
+                        buf[1] == 0x9c ||
+                        buf[1] == 0xda)) {
 
-                PyObject* bytes = py_as_bytes(contents.data(), contents.size());
-                object bobj = object(handle<>(bytes));
-                object decompress = import("zlib").attr("decompress");
-                object zobj = decompress(bobj);
-
-                Py_buffer view[1];
-                if (PyObject_GetBuffer(zobj.ptr(), view, PyBUF_ND)) {
-                    throw error_already_set();
-                }
-                std::shared_ptr<Py_buffer> ptr(view, PyBuffer_Release); // ensure destruction
-                return ImportDMSFromBytes((const char *)view->buf, view->len);
+                auto decompress = module::import("zlib").attr("decompress");
+                auto dobj = decompress(bobj);
+                auto dbuf = buffer(dobj);
+                auto dreq = dbuf.request();
+                return ImportDMSFromBytes((const char *)dreq.ptr, dreq.size);
             }
-            return ImportDMSFromBytes(contents.data(), contents.size());
+            return ImportDMSFromBytes((const char *)r.ptr, r.size);
         }
         throw std::runtime_error("Unsupported pickle format " + format);
     }
 
-    void importer_initialize(SystemImporter& imp, list ids) {
-        imp.initialize(ids_from_python(ids));
-    }
 }
 
 namespace desres { namespace msys { 
 
-    void export_system() {
-        _import_array();
-        if (PyErr_Occurred()) {
-            PyErr_Print();
-            MSYS_FAIL("incompatible numpy version detected");
-        }
-        
-        def("bad", bad);
-        scope().attr("BadId") = (Id)BadId;
+    void export_system(module m) {
+        m.def("bad", bad);
+        m.attr("BadId") = cast((Id)BadId);
 
-        def("make_projection", make_projection);
-        def("wrap_vector", wrap_vector);
-        def("wrap_vector_array", wrap_vector_array);
-        def("calc_distance", py_calc_distance);
-        def("calc_vec_angle", py_calc_vec_angle);
-        def("calc_angle", py_calc_angle);
-        def("calc_vec_dihedral", py_calc_vec_dihedral);
-        def("calc_dihedral", py_calc_dihedral);
-        def("calc_planarity", py_calc_planarity);
-        def("line_intersects_tri", py_line_intersects_tri);
-        def("apply_dihedral_geometry", py_apply_dihedral_geometry);
+        m.def("calc_distance", py_calc_distance);
+        m.def("calc_vec_angle", py_calc_vec_angle);
+        m.def("calc_angle", py_calc_angle);
+        m.def("calc_vec_dihedral", py_calc_vec_dihedral);
+        m.def("calc_dihedral", py_calc_dihedral);
+        m.def("calc_planarity", py_calc_planarity);
+        m.def("line_intersects_tri", py_line_intersects_tri);
+        m.def("apply_dihedral_geometry", py_apply_dihedral_geometry);
 
-        class_<pfx::Graph>("Topology", init<unsigned>())
-            .add_property("nverts", &pfx::Graph::nverts)
-            .add_property("nedges", &pfx::Graph::nedges)
+        class_<pfx::Graph>(m, "Topology")
+            .def(init<unsigned>())
+            .def_property_readonly("nverts", &pfx::Graph::nverts)
+            .def_property_readonly("nedges", &pfx::Graph::nedges)
             ;
 
-        class_<NonbondedInfo>("NonbondedInfo", no_init)
+        class_<NonbondedInfo>(m, "NonbondedInfo")
             .def_readwrite("vdw_funct", &NonbondedInfo::vdw_funct,
                     "Name of the vdw functional form; e.g., 'vdw_12_6'")
             .def_readwrite("vdw_rule", &NonbondedInfo::vdw_rule,
@@ -847,8 +538,9 @@ namespace desres { namespace msys {
                     "Name of the electrostatic functional form")
             ;
 
-        class_<Provenance>("Provenance", init<>())
-            .def("fromArgs", prov_from_args).staticmethod("fromArgs")
+        class_<Provenance>(m, "Provenance")
+            .def(init<>())
+            .def_static("fromArgs", prov_from_args)
             .def_readwrite("version", &Provenance::version)
             .def_readwrite("timestamp", &Provenance::timestamp)
             .def_readwrite("user", &Provenance::user)
@@ -857,34 +549,44 @@ namespace desres { namespace msys {
             .def_readwrite("executable", &Provenance::executable)
             ;
 
-        enum_<CloneOption::Flags>("CloneOption")
+        enum_<CloneOption::Flags>(m, "CloneOption")
             .value("Default",       CloneOption::Default)
             .value("ShareParams",   CloneOption::ShareParams)
             .value("UseIndex",      CloneOption::UseIndex)
             ;
 
-        def("TableSchemas", table_schemas);
-        def("NonbondedSchemas", nonbonded_schemas);
+        m.def("TableSchemas", TableSchemas);
+        m.def("NonbondedSchemas", NonbondedSchemas);
 
-        class_<System,SystemPtr>("SystemPtr", no_init)
-            .def("__eq__",      list_eq<SystemPtr>)
-            .def("__ne__",      list_ne<SystemPtr>)
-            .def("__hash__",    obj_hash<SystemPtr>)
-            .def("create",  &System::create).staticmethod("create")
+        class_<System,SystemPtr>(m, "SystemPtr")
+            .def("__eq__", [](System* self, System* other) { return self==other; })
+            .def("__ne__", [](System* self, System* other) { return self!=other; })
+            .def("__hash__", [](System* g) { return size_t(g); })
+            .def_static("create",  &System::create)
             .def_readwrite("name", &System::name)
-            .add_property("global_cell", global_cell)
+            .def_property_readonly("global_cell", global_cell)
             .def_readwrite("nonbonded_info", &System::nonbonded_info)
 
             /* pickle support */
-            .def_pickle(system_pickle_suite())
-            .def("__init__", make_constructor(init_from_pickle))
+            .def(pickle(
+                [](SystemPtr mol) { // __getstate__
+                    auto bobj = bytes(FormatDMS(mol, Provenance()));
+                    auto compress = module::import("zlib").attr("compress");
+                    auto zobj = compress(bobj, 1);
+                    return make_tuple("dmscontents", zobj);
+                },
+                [](tuple t) { // __setstate__
+                    if (t.size() != 2) throw std::runtime_error("Invalid state!");
+                    return init_from_pickle(t[0].str(), object(t[1]));
+                    }
+                ))
 
             /* accessor */
-            .def("atom",        system_atom, return_ptr())
-            .def("bond",        system_bond, return_ptr())
-            .def("residue",     system_residue, return_ptr())
-            .def("chain",       system_chain, return_ptr())
-            .def("ct",          system_ct, return_ptr())
+            .def("atom",        [](System& m, Id i) { return &m.atom(i); }, return_value_policy::reference)
+            .def("bond",        [](System& m, Id i) { return &m.bond(i); }, return_value_policy::reference)
+            .def("residue",     [](System& m, Id i) { return &m.residue(i); }, return_value_policy::reference)
+            .def("chain",       [](System& m, Id i) { return &m.chain(i); }, return_value_policy::reference)
+            .def("ct",          [](System& m, Id i) { return &m.ct(i); }, return_value_policy::reference)
 
             /* add element */
             .def("addAtom",     &System::addAtom)
@@ -915,13 +617,11 @@ namespace desres { namespace msys {
             .def("maxCtId",     &System::maxCtId)
 
             /* list of element ids */
-            .def("atoms",       list_atoms)
-            .def("atomsAsList", list_atoms)
-            .def("bonds",       list_bonds)
-            .def("residues",    list_residues)
-            .def("chains",      list_chains)
-            .def("cts",         list_cts)
-
+            .def("atoms",       &System::atoms)
+            .def("bonds",       &System::bonds)
+            .def("residues",    &System::residues)
+            .def("chains",      &System::chains)
+            .def("cts",         &System::cts)
 
             /* count of elements */
             .def("atomCount",   &System::atomCount)
@@ -938,15 +638,15 @@ namespace desres { namespace msys {
             .def("atomCountForCt",      &System::atomCountForCt)
             
             /* list of subelements */
-            .def("atomsForResidue", residue_atoms)
-            .def("bondsForAtom",    atom_bonds)
-            .def("residuesForChain",chain_residues)
-            .def("chainsForCt",     ct_chains)
-            .def("atomsForCt",      ct_atoms)
-            .def("bondsForCt",      ct_bonds)
+            .def("atomsForResidue", &System::atomsForResidue)
+            .def("bondsForAtom",    &System::bondsForAtom)
+            .def("residuesForChain",&System::residuesForChain)
+            .def("chainsForCt",     &System::chainsForCt)
+            .def("atomsForCt",      &System::atomsForCt)
+            .def("bondsForCt",      &System::bondsForCt)
 
             /* tables */
-            .def("tableNames",  table_names)
+            .def("tableNames",  &System::tableNames)
             .def("tableName",   &System::tableName)
             .def("table",       &System::table)
             .def("addTable",    wrap_system_add_table)
@@ -956,7 +656,7 @@ namespace desres { namespace msys {
 
             /* atom props */
             .def("setResidue",  &System::setResidue)
-            .def("bondedAtoms", bonded_atoms)
+            .def("bondedAtoms", &System::bondedAtoms)
 
             /* residue props */
             .def("setChain",    &System::setChain)
@@ -985,7 +685,7 @@ namespace desres { namespace msys {
             .def("setBondProp",  set_bond_prop)
 
             /* auxiliary tables */
-            .def("auxTableNames",aux_table_names)
+            .def("auxTableNames",&System::auxTableNames)
             .def("auxTable",     &System::auxTable)
             .def("addAuxTable",  &System::addAuxTable)
             .def("delAuxTable",  &System::delAuxTable)
@@ -996,70 +696,51 @@ namespace desres { namespace msys {
             .def("addNonbondedFromSchema", AddNonbonded)
 
             /* atom selection */
-            .def("selectAsList", list_Atomselect,
-                    (arg("mol"),
-                     arg("sel"),
-                     arg("pos")=object(),
-                     arg("box")=object()))
-            .def("selectAsArray", array_Atomselect,
-                    (arg("mol"),
-                     arg("sel"),
-                     arg("pos")=object(),
-                     arg("box")=object()))
+            .def("selectAsList", wrap_atomselect, arg("sel"), arg("pos")=none(), arg("box")=none())
+            .def("selectAsArray", array_Atomselect, arg("sel"), arg("pos")=none(), arg("box")=none())
 
             /* append */
-            .def("append", append_system)
-            .def("clone",  wrap_clone)
+            .def("append", AppendSystem)
+            .def("clone",  Clone)
 
             /* miscellaneous */
-            .def("orderedIds",    ordered_ids)
+            .def("orderedIds",    &System::orderedIds)
             .def("updateFragids", update_fragids)
             .def("findBond",    &System::findBond)
             .def("provenance",      sys_provenance)
+            .def("setProvenance", sys_set_provenance)
             .def("coalesceTables",    &System::coalesceTables)
             .def("translate",       sys_translate)
             .def("findContactIds",  sys_find_contact_ids)
-            .def("topology",        sys_topology,
-                    return_value_policy<manage_new_object>())
-            .def("getPositions", sys_getpos,
-                    (arg("ids")=object()))
-            .def("setPositions",    sys_setpos,
-                    (arg("pos"),
-                     arg("ids")=object()))
-            .def("getVelocities", sys_getvel,
-                    (arg("ids")=object()))
-            .def("setVelocities",    sys_setvel,
-                    (arg("vel"),
-                     arg("ids")=object()))
+            .def("topology",        sys_topology)
+            .def("getPositions", sys_getpos, arg("ids")=none())
+            .def("setPositions",    sys_setpos, arg("pos"), arg("ids")=none())
+            .def("getVelocities", sys_getvel, arg("ids")=none())
+            .def("setVelocities",    sys_setvel, arg("vel"), arg("ids")=none())
 
             /* PyCapsule conversion */
-            .def("asCapsule", python::system_as_capsule)
-            .staticmethod("asCapsule")
-            .def("fromCapsule", python::system_from_capsule)
-            .staticmethod("fromCapsule")
-
+            .def_static("asCapsule", [](SystemPtr ptr) -> handle { return python::system_as_capsule(ptr); })
+            .def_static("fromCapsule", [](handle h) { return python::system_from_capsule(h.ptr()); })
             .def("addProvenance", &System::addProvenance)
             ;
-    def("HashSystem", HashSystem);
+    m.def("HashSystem", HashSystem);
 
-    class_<SystemImporter>("SystemImporter", init<SystemPtr>())
-        .def("initialize", importer_initialize)
+    class_<SystemImporter>(m, "SystemImporter")
+        .def(init<SystemPtr>())
+        .def("initialize", &SystemImporter::initialize)
         .def("terminateChain", &SystemImporter::terminateChain)
         .def("addAtom", &SystemImporter::addAtom)
         ;
 
 
-    class_<HydrogenBond>("HydrogenBond", no_init)
-        .def("__init__", make_constructor(
-                      init_hbond
-                    , default_call_policies()
-                    , (arg("d"),
-                       arg("a"),
-                       arg("h")=object(),
-                       arg("c")=object(),
-                       arg("ca")=object())),
-                "Constructor: supply donor, acceptor and hydrogen positions")
-        .add_property("energy", &HydrogenBond::energy,
+    class_<HydrogenBond>(m, "HydrogenBond", dynamic_attr())
+        .def(init(&init_hbond), 
+                    arg("d"),
+                    arg("a"),
+                    arg("h")=none(),
+                    arg("c")=none(),
+                    arg("ca")=none())
+        .def_property_readonly("energy", &HydrogenBond::energy,
                 "Stride hbond energy function")
         .def_readwrite("r", &HydrogenBond::r,
                 "donor-acceptor distance")

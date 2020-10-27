@@ -1,47 +1,23 @@
-#if _MSC_VER
-#define BOOST_NO_CXX11_TEMPLATE_ALIASES
-#endif
-
+#include <pybind11/pybind11.h>
 #include "molfilemodule.hxx"
 #include "numpy/arrayobject.h"
 #include <map>
 #include <string>
 #include <sstream>
-#include <boost/python.hpp>
 
-#ifdef WIN32
-#define ssize_t boost::python::ssize_t
-#endif
-
-#include "molfile/findframe.hxx"
-#include "molfile/dtrplugin.hxx"
-#include "molfile/dtrframe.hxx"
-
-#ifdef WIN32
-#undef ssize_t
-#endif
-#include <boost/python/docstring_options.hpp>
+#include <msys/molfile/findframe.hxx>
+#include <msys/molfile/dtrplugin.hxx>
+#include <msys/molfile/dtrframe.hxx>
 
 using namespace desres::molfile;
-using namespace boost::python;
+using namespace pybind11;
 namespace ff=findframe;
 
-using boost::python::ssize_t;
-
 namespace {
-#if PY_MAJOR_VERSION >= 3
     auto py_string_check = [](PyObject* o) { return PyUnicode_Check(o); };
     auto py_string_from_string_size = PyUnicode_FromStringAndSize;
     auto py_as_string = PyUnicode_AsUTF8;
     auto py_as_string_size = PyBytes_AsStringAndSize;
-    auto py_as_bytes = PyBytes_FromStringAndSize;
-#else
-    auto py_string_check = [](PyObject* o) { return PyString_Check(o); };
-    auto py_string_from_string_size = PyString_FromStringAndSize;
-    auto py_as_string = PyString_AsString;
-    auto py_as_string_size = PyString_AsStringAndSize;
-    auto py_as_bytes = PyString_FromStringAndSize;
-#endif
 }
 
 // all the numpy stuff has to live in this file!
@@ -101,12 +77,9 @@ namespace {
     typedef std::shared_ptr<PyObject> objptr;
 
     void convert_keyvals_to_keymap(dict keyvals, dtr::KeyMap& map) {
-        list items = keyvals.items();
-        for (unsigned i=0, n=len(items); i<n; i++) {
-            object item = items[i];
-            std::string key = extract<std::string>(item[0]);
-            object val = item[1];
-            PyObject* ptr = val.ptr();
+        for (auto item : keyvals) {
+            auto key = item.first.cast<std::string>();
+            PyObject* ptr = item.second.ptr();
             dtr::Key keyval;
             if (py_string_check(ptr)) {
                 const char* s = py_as_string(ptr);
@@ -116,7 +89,7 @@ namespace {
             } else if (PyArray_Check(ptr)) {
                 if (PyArray_NDIM(ptr)!=1) {
                     PyErr_Format(PyExc_ValueError, "array for key %s must be 1d", key.c_str());
-                    throw_error_already_set();
+                    throw error_already_set();
                 }
                 int npytype = PyArray_TYPE(ptr);
                 const void* data = PyArray_DATA(ptr);
@@ -142,7 +115,7 @@ namespace {
                         break;
                     default:
                         PyErr_Format(PyExc_ValueError, "unsupported array type for key %s", key.c_str());
-                        throw_error_already_set();
+                        throw error_already_set();
                 }
             } else {
                 PyErr_Format(PyExc_ValueError, "values must be string, bytearray, or numpy array");
@@ -152,134 +125,20 @@ namespace {
         }
     }
 
-    DtrWriter* dtr_init(std::string const& path,
-                        uint32_t natoms,
-                        int mode,
-                        uint32_t fpf,
-                        DtrWriter::Type type,
-                        double precision,
-                        object metadata) {
-
-        std::unique_ptr<dtr::KeyMap> keymap;
-        if (!metadata.is_none()) {
-            keymap.reset(new dtr::KeyMap);
-            convert_keyvals_to_keymap(dict(metadata), *keymap);
-        }
-        return new DtrWriter(path, type, natoms, DtrWriter::Mode(mode), fpf,
-                keymap.get(), precision);
-    }
-
-    void dtr_append(DtrWriter& w, double time, dict keyvals) {
-        dtr::KeyMap keymap;
-        convert_keyvals_to_keymap(keyvals, keymap);
-        w.append(time, keymap);
-    }
-
-    PyObject* py_frame_as_bytes(dict keyvals, bool use_padding, double precision) {
+    bytes py_frame_as_bytes(dict keyvals, bool use_padding, double precision) {
         dtr::KeyMap keymap;
         convert_keyvals_to_keymap(keyvals, keymap);
         void* buf = nullptr;
         size_t len = dtr::ConstructFrame(keymap, &buf, use_padding, precision);
         char* ptr = static_cast<char *>(buf);
-        PyObject* bytes = py_as_bytes(ptr, len);
+        auto obj = bytes(ptr, len);
         free(buf);
-        return bytes;
+        return obj;
     }
 
-    void export_dtrwriter() {
-
-        auto writer = class_<DtrWriter, boost::noncopyable>("DtrWriter", no_init);
-        scope the_scope = writer;
-
-        enum_<DtrWriter::Type>("Type")
-            .value("DTR", DtrWriter::Type::DTR)
-            .value("ETR", DtrWriter::Type::ETR)
-            .export_values()
-            ;
-
-        writer
-            .def("__init__",
-                make_constructor( 
-                    dtr_init,
-                    default_call_policies(),
-                    (arg("path"),
-                     arg("natoms"),
-                     arg("mode")=0,
-                     arg("frames_per_file")=0,
-                     arg("format")=DtrWriter::Type::DTR,
-                     arg("precision")=0.0,
-                     arg("metadata")=object())))
-            .def("append", dtr_append,
-                    (arg("time"),
-                     arg("keyvals")))
-            .def("sync", &DtrWriter::sync)
-            .def("close", &DtrWriter::close)
-            ;
-    }
-
-}
-
-BOOST_PYTHON_MODULE(_molfile) {
-
-    _import_array();
-    if (PyErr_Occurred()) return;
-
-    docstring_options doc_options;
-    doc_options.enable_user_defined();
-    doc_options.enable_signatures();
-    doc_options.disable_cpp_signatures();
-
-    export_plugin();
-    export_reader();
-    export_frame();
-    export_writer();
-    export_dtrreader();
-    export_dtrwriter();
-
-    // I could use a static to initialize these types on first access,
-    // but then the type objects wouldn't be present in the module
-    // until first use.  This would cause help(molfile) to be incomplete.
-    if (initialize_atom()) return;
-
-    static PyObject *pyAtom = reinterpret_cast<PyObject *>(&AtomType);
-    Py_INCREF(pyAtom);
-    scope().attr("Atom")=object(handle<>(pyAtom));
-
-    MOLFILE_INIT_ALL;
-    def("register_all", register_all);
 }
 
 namespace {
-
-    FrameSetReader * dtr_from_path( object& pathobj, bool sequential ) {
-        std::string path = extract<std::string>(pathobj);
-        FrameSetReader * reader = NULL;
-        if (StkReader::recognizes(path)) {
-            reader = new StkReader(path,
-                                sequential ? DtrReader::SequentialAccess : 0);
-        } else {
-            reader = new DtrReader(path, 
-                                sequential ? DtrReader::SequentialAccess : 0);
-        }
-        try {
-            reader->init();
-        }
-        catch (std::exception &e) {
-            delete reader;
-            throw;
-        }
-        return reader;
-    }
-
-    FrameSetReader * dtrreader_init( object& path, bool sequential ) {
-        if (!path.is_none()) {
-            return dtr_from_path(path, sequential);
-        } else {
-            PyErr_Format(PyExc_ValueError, "Must supply path");
-            throw error_already_set();
-        }
-        return NULL;
-    }
 
     const char * fileinfo_doc = 
         "fileinfo(index) -> path, time, offset, framesize, first, last, filesize, dtrpath, dtrsize\n"
@@ -380,19 +239,15 @@ namespace {
             char* key = const_cast<char*>(it->first.c_str());
             int rc = PyMapping_SetItemString(dict, key, arr);
             Py_DECREF(arr);
-            if (rc==-1) throw_error_already_set();
+            if (rc==-1) throw error_already_set();
         }
     }
 
-    dict py_frame_from_bytes(PyObject* bufferobj) {
-        Py_buffer view[1];
-        if (PyObject_GetBuffer(bufferobj, view, PyBUF_ND)) {
-            throw error_already_set();
-        }
-        std::shared_ptr<Py_buffer> ptr(view, PyBuffer_Release);
+    dict py_frame_from_bytes(buffer buf) {
+        auto req = buf.request();
         bool swap_endian = false;   // FIXME ignored
         void* allocated = nullptr;  // allocated when buffer contains compressed positions
-        auto keymap = dtr::ParseFrame(view->len, view->buf, &swap_endian, &allocated);
+        auto keymap = dtr::ParseFrame(req.size, req.ptr, &swap_endian, &allocated);
         dict d;
         py_keyvals(keymap, d.ptr());
         free(allocated);    // py_keyvals makes a copy
@@ -450,7 +305,7 @@ namespace {
                         global_index, comp->path().c_str(),
                         index, comp->framefile(index).c_str(),
                         e.what());
-                throw_error_already_set();
+                throw error_already_set();
             }
             PyEval_RestoreThread(_save);
 
@@ -468,12 +323,12 @@ namespace {
             catch (std::exception &e) {
                 delete frame;
                 PyErr_Format(PyExc_RuntimeError, "Failed parsing frame data of size %ld: %s", size, e.what());
-                throw_error_already_set();
+                throw error_already_set();
             }
         }
         py_keyvals(keymap, keyvals.ptr());
 
-        return object(frame);
+        return cast(frame);
     }
 
     const char reload_doc[] =
@@ -484,7 +339,7 @@ namespace {
         return changed;
     }
 
-    object get_times(const FrameSetReader& self) {
+    handle get_times(const FrameSetReader& self) {
         Py_ssize_t n = self.size();
         Py_ssize_t dims[1] = { n };
         PyObject * arr = backed_vector( 1, dims, DOUBLE, NULL, NULL );
@@ -494,9 +349,9 @@ namespace {
             PyErr_Format(PyExc_RuntimeError, "Error reading times");
             throw error_already_set();
         }
-        return object(handle<>(arr));
+        return handle(arr);
     }
-    Py_ssize_t frameset_size(const FrameSetReader& self, Py_ssize_t n) {
+    ssize_t frameset_size(const FrameSetReader& self, Py_ssize_t n) {
         return self.frameset(n)->size();
     }
     std::string frameset_path(const FrameSetReader& self, Py_ssize_t n) {
@@ -509,59 +364,42 @@ namespace {
     struct Oracle {
         const FrameSetReader& self;
         Oracle( const FrameSetReader& f ) : self(f) {}
-        double operator[](boost::python::ssize_t i) const {
+        double operator[](ssize_t i) const {
             double x;
             self.times(i,1,&x);
             return x;
         }
     };
 
-    boost::python::ssize_t index_near( const FrameSetReader& self, double T ) {
+    ssize_t index_near( const FrameSetReader& self, double T ) {
         return ff::at_time_near(self.size(), Oracle(self), T);
     }
-    boost::python::ssize_t index_le( const FrameSetReader& self, double T ) {
+    ssize_t index_le( const FrameSetReader& self, double T ) {
         return ff::at_time_le(self.size(), Oracle(self), T);
     }
-    boost::python::ssize_t index_lt( const FrameSetReader& self, double T ) {
+    ssize_t index_lt( const FrameSetReader& self, double T ) {
         return ff::at_time_lt(self.size(), Oracle(self), T);
     }
-    boost::python::ssize_t index_ge( const FrameSetReader& self, double T ) {
+    ssize_t index_ge( const FrameSetReader& self, double T ) {
         return ff::at_time_ge(self.size(), Oracle(self), T);
     }
-    boost::python::ssize_t index_gt( const FrameSetReader& self, double T ) {
+    ssize_t index_gt( const FrameSetReader& self, double T ) {
         return ff::at_time_gt(self.size(), Oracle(self), T);
-    }
-    boost::python::ssize_t total_bytes( const FrameSetReader& self ) {
-        return (self.total_bytes());
     }
 
     std::string my_path(FrameSetReader const& self) {
         return self.path();
     }
 
-    FrameSetReader* from_timekeys(std::string const& path,
-                                  list lfnames, list ltimekeys) {
-        if (len(lfnames) != len(ltimekeys)) {
+    std::unique_ptr<FrameSetReader> from_timekeys(std::string const& path,
+            std::vector<std::string> fnames, std::vector<Timekeys> timekeys) {
+        if (fnames.size() != timekeys.size()) {
             PyErr_Format(PyExc_ValueError, "fnames and timekeys must be the same length");
-            throw_error_already_set();
+            throw error_already_set();
         }
-        unsigned i,n = len(lfnames);
-        std::vector<std::string> fnames(n);
-        std::vector<Timekeys> timekeys(n);
-        for (i=0; i<n; i++) {
-            fnames[i] = extract<std::string>(lfnames[i]);
-            timekeys[i] = extract<Timekeys>(ltimekeys[i]);
-        }
-        StkReader* stk = new StkReader(path);
+        std::unique_ptr<StkReader> stk(new StkReader(path));
         stk->append(fnames, timekeys);
         return stk;
-    }
-
-    void tk_init(Timekeys& tk, std::string const& path) {
-        PyThreadState *_save;
-        _save = PyEval_SaveThread();
-        std::shared_ptr<PyThreadState> rst(_save, PyEval_RestoreThread);
-        tk.init(path);
     }
 
     double tk_interval(Timekeys const& tk) {
@@ -577,35 +415,83 @@ namespace {
 
 }
 
-void desres::molfile::export_dtrreader() {
+PYBIND11_MODULE(_molfile, m) {
+    _import_array();
+    if (PyErr_Occurred()) throw error_already_set();
 
-    class_<Timekeys>("Timekeys", init<>())
-        .def("init", tk_init)
-        .def("size",                    &Timekeys::size)
-        .add_property("framesperfile",  &Timekeys::framesperfile)
-        .add_property("framesize",      &Timekeys::framesize)
-        .add_property("interval",       tk_interval)
+    export_plugin(m);
+    export_reader(m);
+    export_frame(m);
+    export_writer(m);
+
+    // I could use a static to initialize these types on first access,
+    // but then the type objects wouldn't be present in the module
+    // until first use.  This would cause help(molfile) to be incomplete.
+    if (initialize_atom()) return;
+
+    static PyObject *pyAtom = reinterpret_cast<PyObject *>(&AtomType);
+    Py_INCREF(pyAtom);
+    m.attr("Atom")=handle(pyAtom);
+
+    MOLFILE_INIT_ALL;
+    m.def("register_all", register_all);
+
+    auto writer = class_<DtrWriter>(m, "DtrWriter");
+    enum_<DtrWriter::Type>(writer, "Type")
+        .value("DTR", DtrWriter::Type::DTR)
+        .value("ETR", DtrWriter::Type::ETR)
+        .export_values()
         ;
 
-    class_<FrameSetReader, boost::noncopyable>("DtrReader", no_init)
-        .def("__init__", 
-                make_constructor( 
-                    dtrreader_init,
-                    default_call_policies(),
-                    (arg("path")=object(), 
-                     /* WARNING: use sequential=True only from one thread! */
-                     arg("sequential")=false )))
-        .add_property("path", my_path)
-        .add_property("natoms", &FrameSetReader::natoms)
-        .add_property("nframes", &FrameSetReader::size)
-        .add_property("nframesets", &FrameSetReader::nframesets)
-        .add_property("metadata", frameset_metadata)
+    writer
+        .def(init([](std::string const& path, uint32_t natoms, int mode, uint32_t fpf,
+                     DtrWriter::Type type, double precision, object metadata) {
+                std::unique_ptr<dtr::KeyMap> keymap;
+                if (!metadata.is_none()) {
+                    keymap.reset(new dtr::KeyMap);
+                    convert_keyvals_to_keymap(dict(metadata), *keymap);
+                }
+                return new DtrWriter(path, type, natoms, DtrWriter::Mode(mode), fpf, keymap.get(), precision);
+            }), arg("path"), arg("natoms"), arg("mode")=0, arg("frames_per_file")=0,
+                arg("format")=DtrWriter::Type::DTR, arg("precision")=0.0, arg("metadata")=none())
+        .def("append", [](DtrWriter& w, double time, dict keyvals) {
+            dtr::KeyMap keymap;
+            convert_keyvals_to_keymap(keyvals, keymap);
+            w.append(time, keymap);
+            }, arg("time"), arg("keyvals"))
+        .def("sync", &DtrWriter::sync)
+        .def("close", &DtrWriter::close)
+        ;
 
-        .def("fromTimekeys", from_timekeys, 
-                return_value_policy<manage_new_object>())
-        .staticmethod("fromTimekeys")
 
-        .def("total_bytes", total_bytes)
+    class_<Timekeys>(m, "Timekeys")
+        .def(init<>())
+        .def("init", &Timekeys::init)
+        .def("size", &Timekeys::size)
+        .def_property_readonly("framesperfile",  &Timekeys::framesperfile)
+        .def_property_readonly("framesize",      &Timekeys::framesize)
+        .def_property_readonly("interval",       tk_interval)
+        ;
+
+    class_<FrameSetReader>(m, "DtrReader")
+        .def(init([](std::string const& path, bool sequential) {
+            std::unique_ptr<FrameSetReader> r;
+            if (StkReader::recognizes(path)) {
+                r.reset(new StkReader(path, sequential ? DtrReader::SequentialAccess : 0));
+            } else {
+                r.reset(new DtrReader(path, sequential ? DtrReader::SequentialAccess : 0));
+            }
+            r->init();
+            return r;
+        }), arg("path"), arg("sequential")=false)
+        .def_property_readonly("path", &FrameSetReader::path)
+        .def_property_readonly("natoms", &FrameSetReader::natoms)
+        .def_property_readonly("nframes", &FrameSetReader::size)
+        .def_property_readonly("nframesets", &FrameSetReader::nframesets)
+        .def_property_readonly("metadata", frameset_metadata)
+
+        .def_static("fromTimekeys", from_timekeys)
+        .def("total_bytes", &FrameSetReader::total_bytes)
         .def("index_near", index_near)
         .def("index_le", index_le)
         .def("index_lt", index_lt)
@@ -616,18 +502,19 @@ void desres::molfile::export_dtrreader() {
         .def("frameset_is_compact", frameset_is_compact)
         .def("fileinfo", fileinfo, fileinfo_doc)
         .def("frame", frame, frame_doc,
-                (arg("index") 
-                ,arg("bytes")=object()
-                ,arg("keyvals")=object()))
+                arg("index") 
+               ,arg("bytes")=none()
+               ,arg("keyvals")=none())
         .def("keyvals", wrap_keyvals, keyvals_doc)
         .def("reload", reload, reload_doc)
         .def("times", get_times)
         ;
 
-    def("dtr_frame_from_bytes", py_frame_from_bytes);
-    def("dtr_frame_as_bytes", py_frame_as_bytes,
-            (arg("keyvals"), arg("use_padding")=false, arg("precision")=0.0));
+    m.def("dtr_frame_from_bytes", py_frame_from_bytes);
+    m.def("dtr_frame_as_bytes", py_frame_as_bytes,
+            arg("keyvals"), arg("use_padding")=false, arg("precision")=0.0);
                 
-    scope().attr("dtr_serialized_version")=dtr_serialized_version();
+    m.attr("dtr_serialized_version")=dtr_serialized_version();
+
 }
 
