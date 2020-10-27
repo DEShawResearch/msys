@@ -1,3 +1,5 @@
+1.7.309 Update license file.
+
 1.7.308 Convert to pybind11.
 
 1.7.307 Fixing json bug with StringType parameter handling when all the strings are empty
