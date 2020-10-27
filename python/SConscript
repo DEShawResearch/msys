@@ -11,11 +11,20 @@ env.Append(
     LIBS=["msys", "msys-core"],
 )
 
+try:
+    import pybind11
+except ImportError:
+    pass
+else:
+    inc = pybind11.get_include()
+    print("found pybind11 include files at", inc)
+    env.Prepend(CPPPATH=inc)
+
 if is_linux:
     env.Append(CCFLAGS="-Wno-cpp")
 else:
     # MacOS
-    env.Append(CCFLAGS="-Wno-error")
+    env.Append(CCFLAGS="-Wno-error -Wno-return-std-move")
 if env.get("MSYS_WITHOUT_INCHI"):
     env.Append(CPPDEFINES="MSYS_WITHOUT_INCHI")
 
