@@ -23,6 +23,7 @@ namespace desres { namespace msys {
         .def("__lt__", [](Atom& lhs, Atom& rhs) { return (lhs.mol < rhs.mol) || (lhs.id < rhs.id); })
         .def_readonly("_ptr", &Atom::mol)
         .def_readonly("id", &Atom::id)
+        .def_readonly("_id", &Atom::id) // backward compatability
         .def_property("x", [](Atom& a) { return a.mol->atom(a.id).x; },
                 [](Atom& a, double val) { a.mol->atom(a.id).x = val; },
                 "x component of position")
