@@ -1,27 +1,66 @@
 #include "pymod.hxx"
 #include <pybind11/stl.h>
+#include <pybind11/operators.h>
 #include <msys/system.hxx>
 
 namespace desres { namespace msys { 
 
+    struct Atom {
+        SystemPtr mol;
+        Id id;
+
+        bool operator==(Atom const& rhs) const { return mol==rhs.mol && id==rhs.id; }
+        bool operator!=(Atom const& rhs) const { return mol!=rhs.mol || id!=rhs.id; }
+    };
+
     void export_chain(module m) {
 
-        class_<atom_t>(m, "atom_t")
-            .def_readwrite("fragid",    &atom_t::fragid)
-            .def_readonly("residue",    &atom_t::residue)
-            .def_readwrite("x",         &atom_t::x)
-            .def_readwrite("y",         &atom_t::y)
-            .def_readwrite("z",         &atom_t::z)
-            .def_readwrite("charge",    &atom_t::charge)
-            .def_readwrite("vx",        &atom_t::vx)
-            .def_readwrite("vy",        &atom_t::vy)
-            .def_readwrite("vz",        &atom_t::vz)
-            .def_readwrite("mass",      &atom_t::mass)
-            .def_readwrite("atomic_number", &atom_t::atomic_number)
-            .def_readwrite("formal_charge", &atom_t::formal_charge)
-            .def_readwrite("aromatic",  &atom_t::aromatic)
-            .def_property("name", [](atom_t& a) { return a.name.c_str(); }, [](atom_t& a, std::string const& s) { a.name=s; })
-            ;
+        class_<Atom>(m, "Atom")
+        .def(init<SystemPtr, Id>())
+        .def(self == self)
+        .def(self != self)
+        .def("__hash__", [](Atom const& a) { return hash(make_tuple(a.mol.get(), a.id)); })
+        .def("__lt__", [](Atom& lhs, Atom& rhs) { return (lhs.mol < rhs.mol) || (lhs.id < rhs.id); })
+        .def_readonly("_ptr", &Atom::mol)
+        .def_readonly("id", &Atom::id)
+        .def_property("x", [](Atom& a) { return a.mol->atom(a.id).x; },
+                [](Atom& a, double val) { a.mol->atom(a.id).x = val; },
+                "x component of position")
+        .def_property("y", [](Atom& a) { return a.mol->atom(a.id).y; },
+                [](Atom& a, double val) { a.mol->atom(a.id).y = val; },
+                "y component of position")
+        .def_property("z", [](Atom& a) { return a.mol->atom(a.id).z; },
+                [](Atom& a, double val) { a.mol->atom(a.id).z = val; },
+                "z component of position")
+        .def_property("vx", [](Atom& a) { return a.mol->atom(a.id).vx; },
+                [](Atom& a, double val) { a.mol->atom(a.id).vx = val; },
+                "x component of velocity")
+        .def_property("vy", [](Atom& a) { return a.mol->atom(a.id).vy; },
+                [](Atom& a, double val) { a.mol->atom(a.id).vy = val; },
+                "y component of velocity")
+        .def_property("vz", [](Atom& a) { return a.mol->atom(a.id).vz; },
+                [](Atom& a, double val) { a.mol->atom(a.id).vz = val; },
+                "z component of velocity")
+        .def_property("mass", [](Atom& a) { return a.mol->atom(a.id).mass; },
+                [](Atom& a, double val) { a.mol->atom(a.id).mass = val; },
+                "mass")
+        .def_property("charge", [](Atom& a) { return a.mol->atom(a.id).charge; },
+                [](Atom& a, double val) { a.mol->atom(a.id).charge= val; },
+                "charge")
+        .def_property("atomic_number", [](Atom& a) { return a.mol->atom(a.id).atomic_number; },
+                [](Atom& a, int val) { a.mol->atom(a.id).atomic_number = val; },
+                "atomic number")
+        .def_property("formal_charge", [](Atom& a) { return a.mol->atom(a.id).formal_charge; },
+                [](Atom& a, int val) { a.mol->atom(a.id).formal_charge = val; },
+                "formal charge")
+        .def_property("name", [](Atom& a) { return str(a.mol->atom(a.id).name); },
+                [](Atom& a, std::string const& val) { a.mol->atom(a.id).name = val; },
+                "name")
+        .def_property_readonly("fragid", [](Atom& a) { return a.mol->atom(a.id).fragid; },
+                "fragment id")
+        .def_property_readonly("resid", [](Atom& a) { return a.mol->atom(a.id).residue; },
+                "residue id")
+        ;
 
         class_<bond_t>(m, "bond_t")
             .def_readonly("i",      &bond_t::i)

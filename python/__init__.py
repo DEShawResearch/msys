@@ -131,13 +131,21 @@ class Bond(Handle):
         self.data().order = val
 
 
-class Atom(Handle):
+class Atom(_msys.Atom):
     """ Represents an atom (or pseudoparticle) in a chemical system """
 
     __slots__ = ()
 
+    def __init__(self, ptr, id):
+        super().__init__(ptr, id)
+
     def __repr__(self):
-        return "<Atom %d>" % self._id
+        return "<Atom %d>" % self.id
+
+    @property
+    def system(self):
+        """ parent System """
+        return System(self._ptr)
 
     @property
     def fullname(self):
@@ -145,37 +153,26 @@ class Atom(Handle):
         chn = res.chain
         return "%s:%s%d:%s" % (chn.name, res.name, res.resid, self.name)
 
-    def data(self):
-        return self._ptr.atom(self._id)
-
     def remove(self):
         """ remove this Atom from the System """
-        self._ptr.delAtom(self._id)
+        self._ptr.delAtom(self.id)
 
     def __setitem__(self, key, val):
         """ set atom property key to val """
-        self._ptr.setAtomProp(self._id, key, val)
+        self._ptr.setAtomProp(self.id, key, val)
 
     def __getitem__(self, key):
         """ get atom property key """
-        return self._ptr.getAtomProp(self._id, key)
+        return self._ptr.getAtomProp(self.id, key)
 
     def __contains__(self, key):
         """ does atom property key exist? """
         return not _msys.bad(self._ptr.atomPropIndex(key))
 
-    def __lt__(self, that):
-        if not isinstance(that, Atom):
-            raise TypeError(
-                "comparison not supported between instances of '%s' and '%s'"
-                % (Atom, type(that))
-            )
-        return (self._ptr, self._id) < (that._ptr, that._id)
-
     def addBond(self, other):
         """ create and return a Bond from self to other """
         assert self._ptr == other._ptr
-        return Bond(self._ptr, self._ptr.addBond(self._id, other.id))
+        return Bond(self._ptr, self._ptr.addBond(self.id, other.id))
 
     def findBond(self, other):
         """ Find the bond between self and Atom other; None if not found """
@@ -201,26 +198,26 @@ class Atom(Handle):
 
     @property
     def residue(self):
-        return Residue(self._ptr, self.data().residue)
+        return Residue(self._ptr, self.resid)
 
     @residue.setter
     def residue(self, res):
-        self._ptr.setResidue(self._id, res.id)
+        self._ptr.setResidue(self.id, res.id)
 
     @property
     def bonds(self):
         """ Bonds connected to this atom """
-        return [Bond(self._ptr, i) for i in self._ptr.bondsForAtom(self._id)]
+        return [Bond(self._ptr, i) for i in self._ptr.bondsForAtom(self.id)]
 
     @property
     def bonded_atoms(self):
         """ Atoms bonded to this atom """
-        return [Atom(self._ptr, i) for i in self._ptr.bondedAtoms(self._id)]
+        return [Atom(self._ptr, i) for i in self._ptr.bondedAtoms(self.id)]
 
     @property
     def nbonds(self):
         """ number of bonds to this atom """
-        return self._ptr.bondCountForAtom(self._id)
+        return self._ptr.bondCountForAtom(self.id)
 
     @property
     def nhydrogens(self):
@@ -231,24 +228,6 @@ class Atom(Handle):
     def valence(self):
         """ sum of bond orders """
         return sum([b.order for b in self.bonds if b.other(self).atomic_number > 0])
-
-
-__add_properties(
-    Atom,
-    "fragid",
-    "x",
-    "y",
-    "z",
-    "charge",
-    "vx",
-    "vy",
-    "vz",
-    "mass",
-    "atomic_number",
-    "formal_charge",
-    "name",
-    "aromatic",
-)
 
 
 class Residue(Handle):

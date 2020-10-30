@@ -28,9 +28,9 @@ PYBIND11_MODULE(_msys, m) {
     }
     desres::msys::export_analyze(m);
     desres::msys::export_annotated_system(m);
+    desres::msys::export_system(m);
     desres::msys::export_chain(m);
     desres::msys::export_param(m);
-    desres::msys::export_system(m);
     desres::msys::export_term(m);
     desres::msys::export_override(m);
     desres::msys::export_io(m);

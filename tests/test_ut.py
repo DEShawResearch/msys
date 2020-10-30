@@ -1873,7 +1873,7 @@ class Main(unittest.TestCase):
             m.chain("A")
         with self.assertRaises(ValueError):
             m.residue("A")
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             m.atom("A")
 
     def testTermSystem(self):
