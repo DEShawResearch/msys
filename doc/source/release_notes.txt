@@ -1,3 +1,6 @@
+1.7.311 More efficient Atom attribute access.
+        Fix provenance python bindings.
+
 1.7.310 OSX build fixes.
 
 1.7.309 Update license file.
