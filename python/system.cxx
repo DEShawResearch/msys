@@ -76,18 +76,11 @@ namespace {
         return fragments;
     }
 
-    Provenance prov_from_args( object o ) {
-        int argc=len(o);
-        if (!argc) return Provenance();
-        std::vector<std::string> strings;
+    Provenance prov_from_args(std::vector<std::string> args) {
+        if (args.empty()) return Provenance();
         std::vector<char *> argv;
-        for (int i=0; i<argc; i++) {
-            strings.push_back(o.str());
-        }
-        for (int i=0; i<argc; i++) {
-            argv.push_back(const_cast<char *>(strings[i].c_str()));
-        }
-        return Provenance::fromArgs(argc, &argv[0]);
+        for (auto& s : args) argv.push_back(const_cast<char *>(s.data()));
+        return Provenance::fromArgs(argv.size(), argv.data());
     }
 
     std::vector<Provenance> sys_provenance( System const& sys ) {
