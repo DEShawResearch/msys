@@ -1,3 +1,5 @@
+1.7.312 Fix dms-info.
+
 1.7.311 More efficient Atom attribute access.
         Fix provenance python bindings.
 
