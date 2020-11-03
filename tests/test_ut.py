@@ -1567,6 +1567,12 @@ class Tools(unittest.TestCase):
 
 
 class Main(unittest.TestCase):
+    def testInfo(self):
+        from msys.info import print_info
+        mol = msys.Load("tests/files/ww.dms")
+        print_info(mol)
+
+
     def testMixedCtPropertyTypes(self):
         mol = msys.CreateSystem()
         ct0 = mol.addCt()

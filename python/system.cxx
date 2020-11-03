@@ -575,7 +575,6 @@ namespace desres { namespace msys {
                 ))
 
             /* accessor */
-            .def("atom",        [](System& m, Id i) { return &m.atom(i); }, return_value_policy::reference)
             .def("bond",        [](System& m, Id i) { return &m.bond(i); }, return_value_policy::reference)
             .def("residue",     [](System& m, Id i) { return &m.residue(i); }, return_value_policy::reference)
             .def("chain",       [](System& m, Id i) { return &m.chain(i); }, return_value_policy::reference)
