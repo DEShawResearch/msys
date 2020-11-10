@@ -30,9 +30,6 @@ namespace desres { namespace msys {
   public:
     //! \brief The maximum precision we allow (>75 can segv sprintf)
     static const short s_max_precision;
-    static int s_default_float_precision;
-    static int s_default_double_precision;
-
     class Tokenizer;
 
   /*!

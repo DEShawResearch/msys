@@ -1782,6 +1782,20 @@ class Main(unittest.TestCase):
         tst = msys.ApplyDihedralGeometry(a, b, c, rad, theta, phi)
         NP.testing.assert_almost_equal(tst, d)
 
+    def testMaePrecision(self):
+        """ensure mae doesn't truncate coordinate precision"""
+        mol = msys.CreateSystem()
+        atm = mol.addAtom()
+        atm.atomic_number = 17
+        pos = [1.0000001, 20.447919, -550.12999]
+        atm.pos = pos
+        assert atm.pos.tolist() == pos
+        dms = msys.LoadDMS(buffer=msys.FormatDMS(mol))
+        assert dms.atom(0).pos.tolist() == pos
+        mae = msys.LoadMAE(buffer=msys.SerializeMAE(mol))
+        assert mae.atom(0).pos.tolist() == pos
+
+
     def testMaeNoncontiguous(self):
         """disallow writing mae when it would change atom order"""
         m = msys.CreateSystem()

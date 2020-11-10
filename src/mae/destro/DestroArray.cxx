@@ -4,6 +4,9 @@
 #include "dessert/dessert.hpp"
 #include <sstream>
 #include <cstdio>
+#include <msys/fastjson/print.hxx>
+
+using desres::msys::fastjson::floatify;
 
 // -----------------------------------------------
 //  P R O T E C T E D
@@ -615,12 +618,9 @@ static std::string precision_string(const bool* val,char type, int precision) {
 }
 static std::string precision_string(const double* val,char type, int precision) {
   if (type != 'r') throw desres::msys::dessert("cannot store a double here",DESSERT_LOC);
-
-  //char string[32+desres::msys::Destro::s_max_precision];
-  char string[1024];
-  if (precision < 0) precision = desres::msys::Destro::s_default_double_precision;
-  ::sprintf(string,"%.*g",precision,*val);
-  return string;
+  char buf[32];
+  floatify(*val, buf);
+  return buf;
 }
 
 template<class T>
@@ -658,14 +658,10 @@ static std::string precision_string(const unsigned long* val,char type, int prec
 }
 static std::string precision_string(const float* val,char type, int precision) {
   if (type != 'r') throw desres::msys::dessert("cannot store a float here",DESSERT_LOC);
-
-  //char string[32+desres::msys::Destro::s_max_precision];
-  char string[1024];
-  if (precision < 0) precision = desres::msys::Destro::s_default_float_precision;
-  ::sprintf(string,"%.*g",precision,*val);
-  return string;
+  char buf[32];
+  floatify(*val, buf);
+  return buf;
 }
-
 
 template<class T>
 void desres::msys::DestroArray::set_column(const std::string& attr, const T* begin, size_t n, size_t stride) {

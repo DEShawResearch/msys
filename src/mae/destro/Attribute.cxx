@@ -4,6 +4,9 @@
 #include "dessert/dessert.hpp"
 #include <sstream>
 #include <cstdio>
+#include <msys/fastjson/print.hxx>
+
+using desres::msys::fastjson::floatify;
 
 desres::msys::Destro::Attribute
 desres::msys::Destro::Attribute::s_empty_attribute;
@@ -116,28 +119,16 @@ void desres::msys::Destro::Attribute::compatible_schema(char desired) {
 
 void desres::msys::Destro::Attribute::assign(double value) {
   compatible_schema('r');
-
-  int precision = m_block->get_precision(m_attr);
-
-  //char string[32+s_max_precision];
-  char string[1024];
-  if (precision < 0) precision = desres::msys::Destro::s_default_double_precision;
-  ::sprintf(string,"%.*g",precision,value);
-
-  update(string);
+  char buf[32];
+  floatify(value, buf);
+  update(buf);
 }
 
 void desres::msys::Destro::Attribute::assign(float value) {
   compatible_schema('r');
-
-  int precision = m_block->get_precision(m_attr);
-
-  //char string[32+s_max_precision];
-  char string[1024];
-  if (precision < 0) precision = desres::msys::Destro::s_default_float_precision;
-  ::sprintf(string,"%.*g",precision,value);
-
-  update(string);
+  char buf[32];
+  floatify(value, buf);
+  update(buf);
 }
 
 desres::msys::Destro::Attribute&

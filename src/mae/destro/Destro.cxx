@@ -270,8 +270,6 @@ desres::msys::Zing desres::msys::Destro::zingify(const std::string& value, ZingP
 //  P U B L I C
 // -----------------------------------------------
 const short desres::msys::Destro::s_max_precision = 75;
-int desres::msys::Destro::s_default_float_precision = 7;
-int desres::msys::Destro::s_default_double_precision = 7;
 
 void desres::msys::Destro::test_private_parts() {
   ZingPool pool;
