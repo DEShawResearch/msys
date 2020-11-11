@@ -1,3 +1,6 @@
+1.7.313 Fix truncation of floats in mae output.
+        Use libc's realpath instead of boost::filesystem calls.
+
 1.7.312 Fix dms-info.
 
 1.7.311 More efficient Atom attribute access.
