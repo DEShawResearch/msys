@@ -1795,6 +1795,10 @@ class Main(unittest.TestCase):
         mae = msys.LoadMAE(buffer=msys.SerializeMAE(mol))
         assert mae.atom(0).pos.tolist() == pos
 
+    def testNonexistentAtomPropThrowsValueError(self):
+        mol = msys.FromSmilesString("O")
+        with self.assertRaises(ValueError):
+            mol.atomPropType("nothing")
 
     def testMaeNoncontiguous(self):
         """disallow writing mae when it would change atom order"""

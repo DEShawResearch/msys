@@ -1306,8 +1306,11 @@ class System(object):
         return [p.atomPropName(i) for i in range(p.atomPropCount())]
 
     def atomPropType(self, name):
-        """ type of the given atom property """
-        return self._ptr.atomPropType(self._ptr.atomPropIndex(name))
+        """ type of the given atom property; None if not present """
+        index = self._ptr.atomPropIndex(name)
+        if _msys.bad(index):
+            raise ValueError(f"No such atom property '{name}'")
+        return self._ptr.atomPropType(index)
 
     def atomsGroupedBy(self, prop):
         """Return dictionary mapping representative values of the given
