@@ -5,13 +5,17 @@
 
 namespace desres { namespace msys { 
 
-    struct Atom {
+    template <typename T>
+    struct Handle {
         SystemPtr mol;
         Id id;
 
-        bool operator==(Atom const& rhs) const { return mol==rhs.mol && id==rhs.id; }
-        bool operator!=(Atom const& rhs) const { return mol!=rhs.mol || id!=rhs.id; }
+        bool operator==(T const& rhs) const { return mol==rhs.mol && id==rhs.id; }
+        bool operator!=(T const& rhs) const { return mol!=rhs.mol || id!=rhs.id; }
     };
+
+    struct Atom : Handle<Atom> { Atom(SystemPtr m, Id i) : Handle{m,i} {} };
+    struct Bond : Handle<Bond> { Bond(SystemPtr m, Id i) : Handle{m,i} {} };
 
     void export_chain(module m) {
 
@@ -63,12 +67,42 @@ namespace desres { namespace msys {
                 "residue id")
         ;
 
-        class_<bond_t>(m, "bond_t")
-            .def_readonly("i",      &bond_t::i)
-            .def_readonly("j",      &bond_t::j)
-            .def_readwrite("order", &bond_t::order)
-            .def("other",           &bond_t::other);
+        class_<Bond>(m, "Bond")
+            .def(init<SystemPtr, Id>())
+            .def(self == self)
+            .def(self != self)
+            .def("__hash__", [](Bond const& a) { return hash(make_tuple(a.mol.get(), a.id)); })
+            .def("__lt__", [](Bond& lhs, Bond& rhs) { return (lhs.mol < rhs.mol) || (lhs.id < rhs.id); })
+            .def_readonly("_ptr", &Bond::mol)
+            .def_readonly("id", &Bond::id, "unique id")
+            .def_readonly("_id", &Bond::id) // backward compatability
+            .def("remove", [](Bond& b) { b.mol->delBond(b.id); }, "remove this Bond from the System")
+            .def("otherId", [](Bond& b, Id i) { return b.mol->bond(b.id).other(i); })
+            .def_property_readonly("i", [](Bond& b) { return b.mol->bond(b.id).i; }, "unique id of first atom")
+            .def_property_readonly("j", [](Bond& b) { return b.mol->bond(b.id).j; }, "unique id of second atom")
+            .def_property("order", [](Bond& b) { return b.mol->bond(b.id).order; },
+                                   [](Bond& b, int o) { b.mol->bond(b.id).order=o; },
+                                   "bond order (integer)")
+            .def("__contains__", [](Bond& b, std::string const& key) { return BadId != b.mol->bondPropIndex(key); },
+                    arg("key"), "does given custom Bond property exist?")
+            .def("__getitem__", [](Bond& b, std::string const& key) {
+                    Id col = b.mol->bondPropIndex(key);
+                    if (bad(col)) {
+                        PyErr_Format(PyExc_KeyError, "No such bond property '%s", key.data());
+                        throw error_already_set();
+                    }
+                    return from_value_ref(b.mol->bondPropValue(b.id,col)); },
+                    arg("key"), "get custom Bond property")
+            .def("__setitem__", [](Bond& b, std::string const& key, object val) {
+                    Id col = b.mol->bondPropIndex(key);
+                    if (bad(col)) {
+                        PyErr_Format(PyExc_KeyError, "No such bond property '%s", key.data());
+                        throw error_already_set();
+                    }
+                    to_value_ref(val, b.mol->bondPropValue(b.id,col)); },
+                    arg("key"), arg("val"), "set custom Bond property")
             ;
+
 
         class_<residue_t>(m, "residue_t")
             .def_property("name", [](residue_t& a) { return a.name.c_str(); }, [](residue_t& a, std::string const& s) { a.name=s; })

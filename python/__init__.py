@@ -63,7 +63,7 @@ def __add_properties(cls, *names):
         )
 
 
-class Bond(Handle):
+class Bond(_msys.Bond):
     """ Represents a bond in a System """
 
     __slots__ = ()
@@ -71,64 +71,29 @@ class Bond(Handle):
     def __repr__(self):
         return "<Bond %d>" % self._id
 
-    def data(self):
-        return self._ptr.bond(self._id)
-
-    def remove(self):
-        """ remove this Bond from the System """
-        self._ptr.delBond(self._id)
+    @property
+    def system(self):
+        """ parent System """
+        return System(self._ptr)
 
     @property
     def first(self):
         """ first Atom in the bond (the one with lower id) """
-        return Atom(self._ptr, self.data().i)
+        return Atom(self._ptr, self.i)
 
     @property
     def second(self):
         """ second Atom in the bond (the one with higher id) """
-        return Atom(self._ptr, self.data().j)
+        return Atom(self._ptr, self.j)
 
     def other(self, atom):
         """ atom in bond not the same as given atom """
-        return Atom(self._ptr, self.data().other(atom.id))
-
-    def __lt__(self, that):
-        if not isinstance(that, Bond):
-            raise TypeError(
-                "comparison not supported between instances of '%s' and '%s'"
-                % (Bond, type(that))
-            )
-        return (self._ptr, self.data().i, self.data().j) < (
-            that._ptr,
-            that.data().i,
-            that.data().j,
-        )
+        return Atom(self._ptr, self.otherId(atom.id))
 
     @property
     def atoms(self):
         """ Atoms in this Bond """
         return self.first, self.second
-
-    def __setitem__(self, key, val):
-        """ set custom Bond property """
-        self._ptr.setBondProp(self._id, key, val)
-
-    def __getitem__(self, key):
-        """ get custom Bond property """
-        return self._ptr.getBondProp(self._id, key)
-
-    def __contains__(self, key):
-        """ does custom Bond property exist? """
-        return not _msys.bad(self._ptr.bondPropIndex(key))
-
-    @property
-    def order(self):
-        """ bond order (int) """
-        return self.data().order
-
-    @order.setter
-    def order(self, val):
-        self.data().order = val
 
 
 class Atom(_msys.Atom):

@@ -50,25 +50,6 @@ namespace {
     Id add_bond_prop( System& sys, String const& name, object type ) {
         return sys.addBondProp(name, as_value_type(type));
     }
-    object get_bond_prop(System& p, Id row, String const& name) {
-        Id col = p.bondPropIndex(name);
-        if (bad(col)) {
-            PyErr_Format(PyExc_KeyError, 
-                    "No such bond property '%s", name.c_str());
-            throw error_already_set();
-        }
-        return from_value_ref(p.bondPropValue(row,col));
-    }
-    void set_bond_prop(System& p, Id row, String const& name, object newval) {
-        Id col = p.bondPropIndex(name);
-        if (bad(col)) {
-            PyErr_Format(PyExc_KeyError, 
-                    "No such bond property '%s", name.c_str());
-            throw error_already_set();
-        }
-        to_value_ref(newval, p.bondPropValue(row,col));
-    }
-
 
     MultiIdList update_fragids(System& p) {
         MultiIdList fragments;
@@ -575,7 +556,6 @@ namespace desres { namespace msys {
                 ))
 
             /* accessor */
-            .def("bond",        [](System& m, Id i) { return &m.bond(i); }, return_value_policy::reference)
             .def("residue",     [](System& m, Id i) { return &m.residue(i); }, return_value_policy::reference)
             .def("chain",       [](System& m, Id i) { return &m.chain(i); }, return_value_policy::reference)
             .def("ct",          [](System& m, Id i) { return &m.ct(i); }, return_value_policy::reference)
@@ -673,8 +653,6 @@ namespace desres { namespace msys {
             .def("bondPropType", bond_prop_type)
             .def("addBondProp",  add_bond_prop)
             .def("delBondProp",  &System::delBondProp)
-            .def("getBondProp",  get_bond_prop)
-            .def("setBondProp",  set_bond_prop)
 
             /* auxiliary tables */
             .def("auxTableNames",&System::auxTableNames)
