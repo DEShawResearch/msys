@@ -1043,7 +1043,7 @@ class System(object):
 
     """
 
-    __slots__ = ("_ptr", "_atoms")
+    __slots__ = ("_ptr")
 
     def __getinitargs__(self):
         """ Pickle support (requires cPickle.HIGHEST_PROTOCOL) """
@@ -1054,7 +1054,6 @@ class System(object):
         Do not invoke directly; use CreateSystem() instead.
         """
         self._ptr = _ptr
-        self._atoms = []
 
     def __eq__(self, x):
         return self.__class__ == type(x) and self._ptr == x._ptr
@@ -1227,8 +1226,8 @@ class System(object):
     @property
     def atoms(self):
         """ return list of all atoms in the system """
-        atms = self._update_atoms()
-        return [atms[i] for i in self._ptr.atoms()]
+        ptr = self._ptr
+        return [Atom(ptr, i) for i in ptr.atoms()]
 
     @property
     def bonds(self):
@@ -1289,8 +1288,7 @@ class System(object):
             getter = lambda x: x[prop]
         else:
             return d
-        atms = self._update_atoms()
-        for a in atms:
+        for a in self.atoms:
             key = getter(a)
             d.setdefault(key, []).append(a)
         return d
@@ -1462,15 +1460,6 @@ class System(object):
         A nonbonded table is returned.
         """
         return TermTable(self._ptr.addNonbondedFromSchema(funct, rule))
-
-    def _update_atoms(self):
-        p = self._ptr
-        atms = self._atoms
-        n = len(atms)
-        A = Atom
-        for i in range(n, p.maxAtomId()):
-            atms.append(A(p, i))
-        return atms
 
     def atomsel(self, sel):
         """Create and return an atom selection object (Atomsel).

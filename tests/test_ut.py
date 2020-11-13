@@ -1744,6 +1744,8 @@ class Main(unittest.TestCase):
         import pickle as pkl
 
         old = msys.Load("tests/files/2f4k.dms")
+        # auto-vivify System._atoms
+        old.atoms
         s = pkl.dumps(old, pkl.HIGHEST_PROTOCOL)
         new = pkl.loads(s)
         self.assertEqual(old.natoms, new.natoms)
