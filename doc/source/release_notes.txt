@@ -1,3 +1,5 @@
+1.7.316 Better fix for case insensitive columns in DMS.
+
 1.7.315 Fix pickling.
 
 1.7.314 Handle case insensitive columns in DMS for ct properties.

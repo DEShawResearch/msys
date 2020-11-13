@@ -354,13 +354,14 @@ static void export_cts(System& sys, Sqlite dms) {
 
     std::map<std::string, std::string> cols;    // orioginal key -> converted key
     std::set<std::string> lowercase_cols;       // original key in lowercase
+    Id salt = 0;
     for (Id id : sys.cts()) {
         for (auto& key : sys.ct(id).keys()) {
             std::string lowercase_key(key);
             std::string converted_key(key);
             to_lower(lowercase_key);
             if (lowercase_cols.find(lowercase_key) != lowercase_cols.end()) {
-                converted_key = key + "_msys_converted_" + std::to_string(cols.size());
+                converted_key = key + "_msys_converted_" + std::to_string(salt++);
             } else {
                 lowercase_cols.insert(lowercase_key);
             }
