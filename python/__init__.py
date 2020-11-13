@@ -69,7 +69,7 @@ class Bond(_msys.Bond):
     __slots__ = ()
 
     def __repr__(self):
-        return "<Bond %d>" % self._id
+        return "<Bond %d>" % self.id
 
     @property
     def system(self):
@@ -195,77 +195,45 @@ class Atom(_msys.Atom):
         return sum([b.order for b in self.bonds if b.other(self).atomic_number > 0])
 
 
-class Residue(Handle):
+class Residue(_msys.Residue):
     """ Represents a residue (group of Atoms) in a System """
 
     __slots__ = ()
 
+    def __init__(self, ptr, id):
+        super().__init__(ptr, id)
+
     def __repr__(self):
-        d = self.data()
-        return "<Residue %s %d%s>" % (d.name, d.resid, d.insertion)
+        return "<Residue %s %d%s>" % (self.name, self.resid, self.insertion)
 
-    def data(self):
-        return self._ptr.residue(self._id)
-
-    def remove(self):
-        """ remove this Residue from the System """
-        self._ptr.delResidue(self._id)
+    @property
+    def system(self):
+        """ parent System """
+        return System(self._ptr)
 
     def addAtom(self):
         """ append a new Atom to this Residue and return it """
-        return Atom(self._ptr, self._ptr.addAtom(self._id))
+        return Atom(self._ptr, super().addAtom())
 
     @property
     def atoms(self):
         """ list of Atoms in this Residue """
-        return [Atom(self._ptr, i) for i in self._ptr.atomsForResidue(self._id)]
-
-    @property
-    def natoms(self):
-        """ number of atoms in this residue """
-        return self._ptr.atomCountForResidue(self._id)
+        return [Atom(self._ptr, i) for i in super().atoms()]
 
     @property
     def chain(self):
         """ parent chain """
-        return Chain(self._ptr, self.data().chain)
+        return Chain(self._ptr, self.chainId())
 
     @chain.setter
     def chain(self, chn):
-        self._ptr.setChain(self._id, chn.id)
+        self.setChainId(chn.id)
 
-    @property
-    def resid(self):
-        """ the PDB residue identifier """
-        return self.data().resid
-
-    @resid.setter
-    def resid(self, val):
-        self.data().resid = val
-
-    @property
-    def name(self):
-        """ residue name """
-        return self.data().name
-
-    @name.setter
-    def name(self, val):
-        self.data().name = val
-
-    @property
-    def insertion(self):
-        """ insertion code """
-        return self.data().insertion
-
-    @insertion.setter
-    def insertion(self, val):
-        self.data().insertion = val
-
-    @property
-    def center(self):
-        """ return geometric center of positions of atoms in residue """
-        pos = self._ptr.getPositions(self._ptr.atomsForResidue(self._id))
-        return numpy.mean(pos, axis=0)
+    #@property
+    #def center(self):
+        #""" return geometric center of positions of atoms in residue """
+        #pos = self._ptr.getPositions(self._ptr.atomsForResidue(self._id))
+        #return numpy.mean(pos, axis=0)
 
     def selectAtom(self, name=None):
         """Returns a single Atom from this residue with the given name,

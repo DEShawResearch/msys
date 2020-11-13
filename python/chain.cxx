@@ -16,6 +16,22 @@ namespace desres { namespace msys {
 
     struct Atom : Handle<Atom> { Atom(SystemPtr m, Id i) : Handle{m,i} {} };
     struct Bond : Handle<Bond> { Bond(SystemPtr m, Id i) : Handle{m,i} {} };
+    struct Residue : Handle<Residue> {
+        residue_t& data() { return mol->residue(id); }
+        Residue(SystemPtr m, Id i) : Handle{m,i} {}
+        const char* name() { return data().name.c_str(); }
+        void setName(std::string const& s) { data().name=s; }
+        const char* insertion() { return data().insertion.c_str(); }
+        void setInsertion(std::string const& s) { data().insertion=s; }
+        int resid() { return data().resid; }
+        void setResid(int i) { data().resid=i; }
+        void remove() { mol->delResidue(id); }
+        Id addAtom() { return mol->addAtom(id); }
+        IdList atoms() { return mol->atomsForResidue(id); }
+        Id natoms() { return mol->atomCountForResidue(id); }
+        Id chainId() { return data().chain; }
+        void setChainId(Id chn) { mol->setChain(id, chn); }
+    };
 
     void export_chain(module m) {
 
@@ -75,7 +91,6 @@ namespace desres { namespace msys {
             .def("__lt__", [](Bond& lhs, Bond& rhs) { return (lhs.mol < rhs.mol) || (lhs.id < rhs.id); })
             .def_readonly("_ptr", &Bond::mol)
             .def_readonly("id", &Bond::id, "unique id")
-            .def_readonly("_id", &Bond::id) // backward compatability
             .def("remove", [](Bond& b) { b.mol->delBond(b.id); }, "remove this Bond from the System")
             .def("otherId", [](Bond& b, Id i) { return b.mol->bond(b.id).other(i); })
             .def_property_readonly("i", [](Bond& b) { return b.mol->bond(b.id).i; }, "unique id of first atom")
@@ -103,13 +118,25 @@ namespace desres { namespace msys {
                     arg("key"), arg("val"), "set custom Bond property")
             ;
 
-
-        class_<residue_t>(m, "residue_t")
-            .def_property("name", [](residue_t& a) { return a.name.c_str(); }, [](residue_t& a, std::string const& s) { a.name=s; })
-            .def_property("insertion", [](residue_t& a) { return a.insertion.c_str(); }, [](residue_t& a, std::string const& s) { a.insertion=s; })
-            .def_readwrite("resid", &residue_t::resid)
-            .def_readonly("chain",  &residue_t::chain)
+        class_<Residue>(m, "Residue")
+            .def(init<SystemPtr, Id>())
+            .def(self == self)
+            .def(self != self)
+            .def("__hash__", [](Residue const& a) { return hash(make_tuple(a.mol.get(), a.id)); })
+            .def("__lt__", [](Residue& lhs, Residue& rhs) { return (lhs.mol < rhs.mol) || (lhs.id < rhs.id); })
+            .def_readonly("_ptr", &Residue::mol)
+            .def_readonly("id", &Residue::id, "unique id")
+            .def_property("name", &Residue::name, &Residue::setName, "residue name")
+            .def_property("insertion", &Residue::insertion, &Residue::setInsertion, "insertion code")
+            .def_property("resid", &Residue::resid, &Residue::setResid, "PDB residue identifier")
+            .def("remove", &Residue::remove, "remove this Residue from the System")
+            .def("addAtom", &Residue::addAtom)
+            .def("atoms", &Residue::atoms)
+            .def_property_readonly("natoms", &Residue::natoms, "number of atoms in this residue")
+            .def("chainId", &Residue::chainId, "id of parent Chain")
+            .def("setChainId", &Residue::setChainId, "move residue to new Chain")
             ;
+
 
         class_<chain_t>(m, "chain_t")
             .def_readonly("ct", &chain_t::ct)

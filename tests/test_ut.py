@@ -1752,12 +1752,6 @@ class Main(unittest.TestCase):
         self.assertEqual(old.nbonds, new.nbonds)
         self.assertEqual(old.table_names, new.table_names)
 
-        # can pickle residues
-        oldres = old.residues[:10]
-        s = pkl.dumps(oldres, pkl.HIGHEST_PROTOCOL)
-        newres = pkl.loads(s)
-        self.assertEqual([a.resid for a in oldres], [a.resid for a in newres])
-
     def testPickleProvenance(self):
         import copy
 
@@ -1912,7 +1906,7 @@ class Main(unittest.TestCase):
         m = msys.CreateSystem()
         with self.assertRaises(ValueError):
             m.chain("A")
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             m.residue("A")
         with self.assertRaises(TypeError):
             m.atom("A")
