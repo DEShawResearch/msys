@@ -1800,6 +1800,21 @@ class Main(unittest.TestCase):
         with self.assertRaises(ValueError):
             mol.atomPropType("nothing")
 
+    def testDmsHandlesDuplicateFields(self):
+        """Handle ct properties which overlap when duplicated"""
+        mol = msys.FromSmilesString("O")
+        mol.ct(0)["Abc"] = 123
+        mol.ct(0)["abc"] = 42
+        mol.addCt()["abC"] = 456
+        dms = msys.LoadDMS(buffer=msys.FormatDMS(mol))
+        assert dms.ct(0).keys() == ["Abc", "abC", "abc"]
+        assert dms.ct(1).keys() == ["Abc", "abC", "abc"]
+        assert dms.ct(0)["Abc"] == 123
+        assert dms.ct(0)["abc"] == 42
+        assert dms.ct(1)["abC"] == 456
+        assert dms.ct(1)["Abc"] == ""
+
+
     def testMaeNoncontiguous(self):
         """disallow writing mae when it would change atom order"""
         m = msys.CreateSystem()

@@ -517,7 +517,11 @@ static void read_cts(Sqlite dms, System& sys, KnownSet& known) {
         for (Id i=0, n=r.size(); i<n; i++) {
             if (i==idcol || i==namecol) continue;
             auto type = r.numeric_type(i);
-            auto name = r.name(i);
+            std::string name = r.name(i);
+            auto pos = name.find("_msys_converted_");   // see dms/export.cxx
+            if (pos != std::string::npos) {
+                name = name.substr(0, pos);
+            }
             ct.add(name, type);
             auto val = ct.value(name);
             switch (type) {
