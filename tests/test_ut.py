@@ -1904,7 +1904,7 @@ class Main(unittest.TestCase):
 
     def testBadId(self):
         m = msys.CreateSystem()
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             m.chain("A")
         with self.assertRaises(TypeError):
             m.residue("A")

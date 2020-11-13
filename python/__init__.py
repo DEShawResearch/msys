@@ -50,19 +50,6 @@ class Handle(object):
         return System(self._ptr)
 
 
-def __add_properties(cls, *names):
-    for attr in names:
-        setattr(
-            cls,
-            attr,
-            property(
-                lambda self, x=attr: getattr(self.data(), x),
-                lambda self, val, x=attr: setattr(self.data(), x, val),
-                doc=attr,
-            ),
-        )
-
-
 class Bond(_msys.Bond):
     """ Represents a bond in a System """
 
@@ -229,12 +216,6 @@ class Residue(_msys.Residue):
     def chain(self, chn):
         self.setChainId(chn.id)
 
-    #@property
-    #def center(self):
-        #""" return geometric center of positions of atoms in residue """
-        #pos = self._ptr.getPositions(self._ptr.atomsForResidue(self._id))
-        #return numpy.mean(pos, axis=0)
-
     def selectAtom(self, name=None):
         """Returns a single Atom from this residue with the given name,
         or None if no such atom is present.  If multiple atoms in the
@@ -247,34 +228,31 @@ class Residue(_msys.Residue):
         raise ValueError("Found %d atoms with given name" % (len(atoms)))
 
 
-class Chain(Handle):
+class Chain(_msys.Chain):
     """ Represents a chain (of Residues) in a System """
 
     __slots__ = ()
 
+    def __init__(self, ptr, id):
+        super().__init__(ptr, id)
+
     def __repr__(self):
         return "<Chain %s>" % self.name
 
-    def data(self):
-        return self._ptr.chain(self._id)
+    @property
+    def system(self):
+        """ parent System """
+        return System(self._ptr)
 
-    def remove(self):
-        """ remove this Chain from the System """
-        self._ptr.delChain(self._id)
 
     def addResidue(self):
         """ append a new Residue to this Chain and return it """
-        return Residue(self._ptr, self._ptr.addResidue(self._id))
+        return Residue(self._ptr, super().addResidue())
 
     @property
     def residues(self):
         """ list of Residues in this Chain """
-        return [Residue(self._ptr, i) for i in self._ptr.residuesForChain(self._id)]
-
-    @property
-    def nresidues(self):
-        """ number of residues in this chain """
-        return self._ptr.residueCountForChain(self._id)
+        return [Residue(self._ptr, i) for i in super().residues()]
 
     def selectResidue(self, resid=None, name=None, insertion=None):
         """Returns a single Residue with the given resid, name, and/or
@@ -299,14 +277,11 @@ class Chain(Handle):
     @property
     def ct(self):
         """ Return the Ct for this chain """
-        return Ct(self._ptr, self.data().ct)
+        return Ct(self._ptr, self.ctId())
 
     @ct.setter
     def ct(self, ct):
-        self._ptr.setCt(self._id, ct.id)
-
-
-__add_properties(Chain, "name", "segid")
+        self.setCtId(ct.id)
 
 
 class Ct(Handle):

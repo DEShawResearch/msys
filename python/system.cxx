@@ -556,7 +556,6 @@ namespace desres { namespace msys {
                 ))
 
             /* accessor */
-            .def("chain",       [](System& m, Id i) { return &m.chain(i); }, return_value_policy::reference)
             .def("ct",          [](System& m, Id i) { return &m.ct(i); }, return_value_policy::reference)
 
             /* add element */

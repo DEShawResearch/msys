@@ -17,8 +17,8 @@ namespace desres { namespace msys {
     struct Atom : Handle<Atom> { Atom(SystemPtr m, Id i) : Handle{m,i} {} };
     struct Bond : Handle<Bond> { Bond(SystemPtr m, Id i) : Handle{m,i} {} };
     struct Residue : Handle<Residue> {
-        residue_t& data() { return mol->residue(id); }
         Residue(SystemPtr m, Id i) : Handle{m,i} {}
+        residue_t& data() { return mol->residue(id); }
         const char* name() { return data().name.c_str(); }
         void setName(std::string const& s) { data().name=s; }
         const char* insertion() { return data().insertion.c_str(); }
@@ -31,6 +31,21 @@ namespace desres { namespace msys {
         Id natoms() { return mol->atomCountForResidue(id); }
         Id chainId() { return data().chain; }
         void setChainId(Id chn) { mol->setChain(id, chn); }
+    };
+
+    struct Chain : Handle<Chain> {
+        Chain(SystemPtr m, Id i) : Handle{m,i} {}
+        chain_t& data() { return mol->chain(id); }
+        const char* name() { return data().name.c_str(); }
+        void setName(std::string const& s) { data().name=s; }
+        const char* segid() { return data().segid.c_str(); }
+        void setSegid(std::string const& s) { data().segid=s; }
+        Id ctId() { return data().ct; }
+        void setCtId(Id ct) { mol->setCt(id, ct); }
+        IdList residues() { return mol->residuesForChain(id); }
+        Id nresidues() { return mol->residueCountForChain(id); }
+        Id addResidue() { return mol->addResidue(id); }
+        void remove() { mol->delChain(id); }
     };
 
     void export_chain(module m) {
@@ -137,11 +152,22 @@ namespace desres { namespace msys {
             .def("setChainId", &Residue::setChainId, "move residue to new Chain")
             ;
 
-
-        class_<chain_t>(m, "chain_t")
-            .def_readonly("ct", &chain_t::ct)
-            .def_readwrite("name", &chain_t::name)
-            .def_readwrite("segid", &chain_t::segid)
+        class_<Chain>(m, "Chain")
+            .def(init<SystemPtr, Id>())
+            .def(self == self)
+            .def(self != self)
+            .def("__hash__", [](Chain const& a) { return hash(make_tuple(a.mol.get(), a.id)); })
+            .def("__lt__", [](Chain& lhs, Chain& rhs) { return (lhs.mol < rhs.mol) || (lhs.id < rhs.id); })
+            .def_readonly("_ptr", &Chain::mol)
+            .def_readonly("id", &Chain::id, "unique id")
+            .def_property("name", &Chain::name, &Chain::setName, "chain name")
+            .def_property("segid", &Chain::segid, &Chain::setSegid, "segment name")
+            .def_property_readonly("nresidues", &Chain::nresidues, "number of residues in chain")
+            .def("ctId", &Chain::ctId, "id of parent Ct")
+            .def("setCtId", &Chain::setCtId, "move Chain to new Ct")
+            .def("remove", &Chain::remove, "remove this Chain from the Ct")
+            .def("addResidue", &Chain::addResidue)
+            .def("residues", &Chain::residues)
             ;
 
         class_<component_t>(m, "component_t")
