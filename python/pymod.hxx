@@ -9,7 +9,7 @@ namespace desres { namespace msys {
 
     object from_value_ref(const ValueRef& val);
     void to_value_ref(object obj, ValueRef val);
-    ValueType as_value_type(object typeobj);
+    ValueType as_value_type(handle typeobj);
     handle from_value_type(ValueType type);
 
 }}

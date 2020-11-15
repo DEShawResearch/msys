@@ -284,7 +284,7 @@ class Chain(_msys.Chain):
         self.setCtId(ct.id)
 
 
-class Ct(Handle):
+class Ct(_msys.Ct):
     """Represents a list of Chains in a System
 
     The Ct class exists mainly to provide a separate namespace for chains.
@@ -297,43 +297,33 @@ class Ct(Handle):
 
     __slots__ = ()
 
-    def data(self):
-        return self._ptr.ct(self._id)
+    def __init__(self, ptr, id):
+        super().__init__(ptr, id)
 
-    def remove(self):
-        """ remove this Ct from the System """
-        self._ptr.delCt(self._id)
+    @property
+    def system(self):
+        """ parent System """
+        return System(self._ptr)
 
     def addChain(self):
         """ append a new Chain to this Ct and return it """
-        return Chain(self._ptr, self._ptr.addChain(self._id))
+        return Chain(self._ptr, super().addChain())
 
     @property
     def chains(self):
         """ list of Chains in this Ct """
-        return [Chain(self._ptr, i) for i in self._ptr.chainsForCt(self._id)]
-
-    @property
-    def nchains(self):
-        """ number of Chains in this Ct """
-        return self._ptr.chainCountForCt(self._id)
-
-    @property
-    def natoms(self):
-        """ number of Atoms in the Ct """
-        return self._ptr.atomCountForCt(self._id)
+        return [Chain(self._ptr, i) for i in super().chains()]
 
     @property
     def atoms(self):
         """ list of Atoms in this Ct """
-        ptr = self._ptr
-        return [Atom(ptr, i) for i in ptr.atomsForCt(self._id)]
+        return [Atom(self._ptr, i) for i in super().atoms()]
 
     @property
     def bonds(self):
         """ list of Bonds in this Ct """
-        ptr = self._ptr
-        return [Bond(ptr, i) for i in ptr.bondsForCt(self._id)]
+        return [Bond(self._ptr, i) for i in super().bonds()]
+
 
     def append(self, system):
         """Appends atoms and forcefield from system to self.  Returns
@@ -341,46 +331,7 @@ class Ct(Handle):
         identical nonbonded_info.vdw_funct.  Does not overwrite the
         global cell information in self."""
         p = self._ptr
-        ids = p.append(system._ptr, self.id)
-        return [Atom(p, i) for i in ids]
-
-    ### TODO: selectChain()
-
-    @property
-    def name(self):
-        """ Name of Ct """
-        return self.data().name
-
-    @name.setter
-    def name(self, s):
-        self.data().name = s
-
-    def keys(self):
-        """ available Ct properties """
-        return list(self.data().keys())
-
-    def __setitem__(self, key, val):
-        """ set ct property key to val """
-        t = self.data().type(key)
-        if t is None:
-            t = type(val)
-            self.data().add(key, t)
-        self.data().set(str(key), t(val))
-
-    def __getitem__(self, key):
-        """ get ct property key """
-        return self.data().get(str(key))
-
-    def __delitem__(self, key):
-        """ remove property key """
-        self.data().remove(str(key))
-
-    def get(self, key, d=None):
-        """ get ct property key, else d, which defaults to None """
-        try:
-            return self.data().get(str(key))
-        except KeyError:
-            return d
+        return [Atom(p, i) for i in super().append(system._ptr)]
 
 
 class PropertyMap(object):

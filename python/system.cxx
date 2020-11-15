@@ -555,9 +555,6 @@ namespace desres { namespace msys {
                     }
                 ))
 
-            /* accessor */
-            .def("ct",          [](System& m, Id i) { return &m.ct(i); }, return_value_policy::reference)
-
             /* add element */
             .def("addAtom",     &System::addAtom)
             .def("addBond",     &System::addBond)

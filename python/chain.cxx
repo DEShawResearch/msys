@@ -2,6 +2,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/operators.h>
 #include <msys/system.hxx>
+#include <msys/append.hxx>
 
 namespace desres { namespace msys { 
 
@@ -47,6 +48,27 @@ namespace desres { namespace msys {
         Id addResidue() { return mol->addResidue(id); }
         void remove() { mol->delChain(id); }
     };
+
+    struct Ct : Handle<Ct> {
+        Ct(SystemPtr m, Id i) : Handle{m,i} {}
+        component_t& data() { return mol->ct(id); }
+        String name() { return data().name(); }
+        void setName(std::string const& s) { data().setName(s); }
+        void remove() { mol->delCt(id); }
+        Id nchains() { return mol->chainCountForCt(id); }
+        Id natoms() { return mol->atomCountForCt(id); }
+        Id addChain() { return mol->addChain(id); }
+        IdList chains() { return mol->chainsForCt(id); }
+        IdList atoms() { return mol->atomsForCt(id); }
+        IdList bonds() { return mol->bondsForCt(id); }
+        IdList append(SystemPtr src) { return AppendSystem(mol, src, id); }
+        std::vector<String> keys() { return data().keys(); }
+        bool has(String const& key) { return data().has(key); }
+        void del(String const& key) { data().del(key); }
+        ValueRef value(String const& key) { return data().value(key); }
+        Id add(String const& key, ValueType type) { return data().add(key, type); }
+    };
+
 
     void export_chain(module m) {
 
@@ -170,17 +192,35 @@ namespace desres { namespace msys {
             .def("residues", &Chain::residues)
             ;
 
-        class_<component_t>(m, "component_t")
-            .def_property("name", &component_t::name, &component_t::setName)
-            .def("keys", &component_t::keys)
-            .def("get",  [](component_t& ct, String const& key) {
+        class_<Ct>(m, "Ct")
+            .def(init<SystemPtr, Id>())
+            .def(self == self)
+            .def(self != self)
+            .def("__hash__", [](Ct const& a) { return hash(make_tuple(a.mol.get(), a.id)); })
+            .def("__lt__", [](Ct& lhs, Ct& rhs) { return (lhs.mol < rhs.mol) || (lhs.id < rhs.id); })
+            .def_readonly("_ptr", &Ct::mol)
+            .def_readonly("id", &Ct::id, "unique id")
+            .def_property("name", &Ct::name, &Ct::setName, "ct name")
+            .def("remove", &Ct::remove, "remove this Ct from the System")
+            .def("addChain", &Ct::addChain)
+            .def("chains", &Ct::chains)
+            .def("atoms", &Ct::atoms)
+            .def("bonds", &Ct::bonds)
+            .def("append", &Ct::append)
+            .def("keys", &Ct::keys, "Available Ct properties")
+            .def("get", [](Ct& ct, String const& key, object d = none()) -> object {
+                    if (ct.has(key)) return d;
+                    return from_value_ref(ct.value(key)); },
+                "get Ct property for key, else d, which defaults to None", arg("key"), arg("d")=none())
+            .def("__setitem__", [](Ct& ct, String const& key, object val) {
+                    if (!ct.has(key)) ct.add(key, as_value_type(val.get_type()));
+                    to_value_ref(val, ct.value(key)); })
+            .def("__getitem__", [](Ct& ct, String const& key) {
                     if (!ct.has(key)) { PyErr_SetString(PyExc_KeyError, key.data()); throw error_already_set(); }
-                    return from_value_ref(ct.value(key));
-                })
-            .def("add",  [](component_t& ct, String const& key, object t) { ct.add(key, as_value_type(t)); })
-            .def("set",  [](component_t& ct, String const& key, object val) { to_value_ref(val, ct.value(key)); })
-            .def("type", [](component_t& ct, String const& key) -> handle { return ct.has(key) ? from_value_type(ct.type(key)) : none(); })
-            .def("remove", &component_t::del)
+                    return from_value_ref(ct.value(key)); })
+            .def("__delitem__", &Ct::del)
+            .def_property_readonly("nchains", &Ct::nchains, "number of chains in ct")
+            .def_property_readonly("natoms", &Ct::natoms, "number of atoms in ct")
             ;
     }
 }}
