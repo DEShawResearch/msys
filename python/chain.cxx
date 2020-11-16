@@ -15,7 +15,12 @@ namespace desres { namespace msys {
         bool operator!=(T const& rhs) const { return mol!=rhs.mol || id!=rhs.id; }
     };
 
-    struct Atom : Handle<Atom> { Atom(SystemPtr m, Id i) : Handle{m,i} {} };
+    struct Atom : Handle<Atom> {
+        Atom(SystemPtr m, Id i) : Handle{m,i} {}
+        atom_t& data() { return mol->atom(id); }
+        void remove() { mol->delAtom(id); }
+    };
+
     struct Bond : Handle<Bond> { Bond(SystemPtr m, Id i) : Handle{m,i} {} };
     struct Residue : Handle<Residue> {
         Residue(SystemPtr m, Id i) : Handle{m,i} {}
@@ -81,6 +86,25 @@ namespace desres { namespace msys {
         .def_readonly("_ptr", &Atom::mol)
         .def_readonly("id", &Atom::id)
         .def_readonly("_id", &Atom::id) // backward compatability
+        .def("remove", &Atom::remove, "remove this Atom from the System")
+        .def("__contains__", [](Atom& b, std::string const& key) { return BadId != b.mol->atomPropIndex(key); },
+                arg("key"), "does given Atom property exist?")
+        .def("__getitem__", [](Atom& b, std::string const& key) {
+                Id col = b.mol->atomPropIndex(key);
+                if (bad(col)) {
+                    PyErr_Format(PyExc_KeyError, "No such atom property '%s", key.data());
+                    throw error_already_set();
+                }
+                return from_value_ref(b.mol->atomPropValue(b.id,col)); },
+                arg("key"), "get Atom property")
+        .def("__setitem__", [](Atom& b, std::string const& key, object val) {
+                Id col = b.mol->atomPropIndex(key);
+                if (bad(col)) {
+                    PyErr_Format(PyExc_KeyError, "No such atom property '%s", key.data());
+                    throw error_already_set();
+                }
+                to_value_ref(val, b.mol->atomPropValue(b.id,col)); },
+                arg("key"), arg("val"), "set Atom property")
         .def_property("x", [](Atom& a) { return a.mol->atom(a.id).x; },
                 [](Atom& a, double val) { a.mol->atom(a.id).x = val; },
                 "x component of position")

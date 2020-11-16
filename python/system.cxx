@@ -25,24 +25,6 @@ namespace {
     Id add_atom_prop( System& sys, String const& name, object type ) {
         return sys.addAtomProp(name, as_value_type(type));
     }
-    object get_atom_prop(System& p, Id row, String const& name) {
-        Id col = p.atomPropIndex(name);
-        if (bad(col)) {
-            PyErr_Format(PyExc_KeyError, 
-                    "No such atom property '%s", name.c_str());
-            throw error_already_set();
-        }
-        return from_value_ref(p.atomPropValue(row,col));
-    }
-    void set_atom_prop(System& p, Id row, String const& name, object newval) {
-        Id col = p.atomPropIndex(name);
-        if (bad(col)) {
-            PyErr_Format(PyExc_KeyError, 
-                    "No such atom property '%s", name.c_str());
-            throw error_already_set();
-        }
-        to_value_ref(newval, p.atomPropValue(row,col));
-    }
 
     handle bond_prop_type(System& sys, Id col) {
         return from_value_type(sys.bondPropType(col));
@@ -638,8 +620,6 @@ namespace desres { namespace msys {
             .def("atomPropType", atom_prop_type)
             .def("addAtomProp",  add_atom_prop)
             .def("delAtomProp",  &System::delAtomProp)
-            .def("getAtomProp",  get_atom_prop)
-            .def("setAtomProp",  set_atom_prop)
 
             /* extended bond props */
             .def("bondPropCount",&System::bondPropCount)

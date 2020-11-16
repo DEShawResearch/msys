@@ -105,22 +105,6 @@ class Atom(_msys.Atom):
         chn = res.chain
         return "%s:%s%d:%s" % (chn.name, res.name, res.resid, self.name)
 
-    def remove(self):
-        """ remove this Atom from the System """
-        self._ptr.delAtom(self.id)
-
-    def __setitem__(self, key, val):
-        """ set atom property key to val """
-        self._ptr.setAtomProp(self.id, key, val)
-
-    def __getitem__(self, key):
-        """ get atom property key """
-        return self._ptr.getAtomProp(self.id, key)
-
-    def __contains__(self, key):
-        """ does atom property key exist? """
-        return not _msys.bad(self._ptr.atomPropIndex(key))
-
     def addBond(self, other):
         """ create and return a Bond from self to other """
         assert self._ptr == other._ptr
