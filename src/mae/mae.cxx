@@ -209,7 +209,7 @@ static inline const char * tokenizer_token(tokenizer * tk, int ignore_single) {
   
   c = tokenizer_peek(tk);
   good = 0;
-  while(state != DONE && c >= 0) {
+  while(state != DONE && c != 0 && c != -1) {
     /* make sure we have space in m_token for 2 more characters */
     if ((diff = ptr-tk->m_token) >= tk->max_token_size-1) {
       tk->m_token = (char *)realloc( tk->m_token, 2*tk->max_token_size );

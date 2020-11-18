@@ -579,7 +579,7 @@ void Writer::bind_flt(int col, double v) {
 }
 
 void Writer::bind_str(int col, std::string const& v) {
-    sqlite3_bind_text(_stmt.get(), col+1, v.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(_stmt.get(), col+1, v.data(), v.size(), SQLITE_TRANSIENT);
 }
 
 void Writer::next() {
