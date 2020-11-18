@@ -488,6 +488,7 @@ static void predict_arraybody( Json& js, tokenizer * tk ) {
     tokenizer_next(tk);
     if (*tok != '}') {
         // got start of a new array body
+        MSYS_WARN("WARNING: Skipping nested array '" << tok << "'");
         Json subblock;
         subblock.to_object();
         predict_arraybody( subblock, tk );
