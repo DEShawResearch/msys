@@ -1778,6 +1778,9 @@ class Main(unittest.TestCase):
         tst = msys.ApplyDihedralGeometry(a, b, c, rad, theta, phi)
         NP.testing.assert_almost_equal(tst, d)
 
+    def testMaeNestedArray(self):
+        msys.Load("tests/files/t2-original.cms.gz")
+
     def testMaePrecision(self):
         """ensure mae doesn't truncate coordinate precision"""
         mol = msys.CreateSystem()

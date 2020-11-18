@@ -483,7 +483,16 @@ static void predict_arraybody( Json& js, tokenizer * tk ) {
         ++nrows;
     }
     tokenizer_predict(tk, ":::");
-    tokenizer_predict(tk, "}");
+    // DESRESCode#4634 - allow one level of nested array
+    const char* tok = tokenizer_token(tk, false);
+    tokenizer_next(tk);
+    if (*tok != '}') {
+        // got start of a new array body
+        Json subblock;
+        subblock.to_object();
+        predict_arraybody( subblock, tk );
+        tokenizer_predict(tk, "}");
+    }
     /* add row count as __size__ member of js */
     Json size;
     size.to_int(nrows);
