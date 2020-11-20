@@ -470,6 +470,7 @@ namespace desres { namespace molfile {
     }
 
     static bool recognizes(const std::string &path);
+    static std::string filename_to_cache_location_v8(std::string const& stk);
 
     bool read_stk_cache_file(const std::string &cachepath, bool verbose);
 

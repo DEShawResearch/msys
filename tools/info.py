@@ -37,12 +37,9 @@ def print_info(mol, ct=None):
         ("not (protein or lipid or nucleic or ions or water)", "Other"),
     ):
 
-        # using the raw ids to count unique items is faster than
-        # making sets out of the high level objects.
-        ptr = mol._ptr
-        atoms = ptr.selectAsList(sel)
-        residues = set(ptr.atom(a).residue for a in atoms)
-        chains = set(ptr.residue(r).chain for r in residues)
+        atoms = mol.select(sel)
+        residues = set(a.residue for a in atoms)
+        chains = set(r.chain for r in residues)
         print(
             "%12s: %8d atoms, %8d residues, %8d chains"
             % (title, len(atoms), len(residues), len(chains))

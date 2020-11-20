@@ -344,15 +344,33 @@ static void export_view(TermTablePtr table, const std::string& name, Sqlite dms)
 }
 
 static void export_cts(System& sys, Sqlite dms) {
-    std::set<std::string> cols;
+    /*
+     * sqlite is case preserving but case insensitive, so that, e.g., if we hae
+     * two ct fields which are the same when converted to lowercase, table
+     * construction will fail with a "duplicate column" error.   To work around
+     * this, detect names which would collide and give them an unlikely suffix
+     * which we will remove on load.
+     */
+
+    std::map<std::string, std::string> cols;    // orioginal key -> converted key
+    std::set<std::string> lowercase_cols;       // original key in lowercase
+    Id salt = 0;
     for (Id id : sys.cts()) {
         for (auto& key : sys.ct(id).keys()) {
-            cols.insert(key);
+            std::string lowercase_key(key);
+            std::string converted_key(key);
+            to_lower(lowercase_key);
+            if (lowercase_cols.find(lowercase_key) != lowercase_cols.end()) {
+                converted_key = key + "_msys_converted_" + std::to_string(salt++);
+            } else {
+                lowercase_cols.insert(lowercase_key);
+            }
+            cols[key] = converted_key;
         }
     }
     std::string sql("create table msys_ct (id integer primary key, msys_name text,");
-    for (auto& col : cols) {
-        sql += "'" + col + "' text,";
+    for (auto& p : cols) {
+        sql += "'" + p.second + "' text,";  // create table using the converted column name
     }
     sql.back()=')';
     dms.exec(sql.data());
@@ -364,11 +382,11 @@ static void export_cts(System& sys, Sqlite dms) {
         w.bind_str(1, ct.name());
         auto keys = sys.ct(id).keys();
         Id col = 2;
-        for (auto& key : cols) {
-            if (std::find(keys.begin(), keys.end(), key) == keys.end()) {
+        for (auto& p: cols) {
+            if (std::find(keys.begin(), keys.end(), p.first) == keys.end()) {
                 w.bind_str(col, "");
             } else {
-                write(ct.value(key), col, w);
+                write(ct.value(p.first), col, w);
             }
             col++;
         }

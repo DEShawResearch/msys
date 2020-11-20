@@ -1,3 +1,22 @@
+1.7.317 Support unicode in MAE files.
+        Skip over unexpected nested arrays in MAE files.
+
+1.7.316 Better fix for case insensitive columns in DMS.
+
+1.7.315 Fix pickling.
+
+1.7.314 Handle case insensitive columns in DMS for ct properties.
+        Better wrapper class for Bond.
+        Better error message for nonexistent atom property
+
+1.7.313 Fix truncation of floats in mae output.
+        Use libc's realpath instead of boost::filesystem calls.
+
+1.7.312 Fix dms-info.
+
+1.7.311 More efficient Atom attribute access.
+        Fix provenance python bindings.
+
 1.7.310 OSX build fixes.
 
 1.7.309 Update license file.

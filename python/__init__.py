@@ -50,94 +50,54 @@ class Handle(object):
         return System(self._ptr)
 
 
-def __add_properties(cls, *names):
-    for attr in names:
-        setattr(
-            cls,
-            attr,
-            property(
-                lambda self, x=attr: getattr(self.data(), x),
-                lambda self, val, x=attr: setattr(self.data(), x, val),
-                doc=attr,
-            ),
-        )
-
-
-class Bond(Handle):
+class Bond(_msys.Bond):
     """ Represents a bond in a System """
 
     __slots__ = ()
 
     def __repr__(self):
-        return "<Bond %d>" % self._id
+        return "<Bond %d>" % self.id
 
-    def data(self):
-        return self._ptr.bond(self._id)
-
-    def remove(self):
-        """ remove this Bond from the System """
-        self._ptr.delBond(self._id)
+    @property
+    def system(self):
+        """ parent System """
+        return System(self._ptr)
 
     @property
     def first(self):
         """ first Atom in the bond (the one with lower id) """
-        return Atom(self._ptr, self.data().i)
+        return Atom(self._ptr, self.i)
 
     @property
     def second(self):
         """ second Atom in the bond (the one with higher id) """
-        return Atom(self._ptr, self.data().j)
+        return Atom(self._ptr, self.j)
 
     def other(self, atom):
         """ atom in bond not the same as given atom """
-        return Atom(self._ptr, self.data().other(atom.id))
-
-    def __lt__(self, that):
-        if not isinstance(that, Bond):
-            raise TypeError(
-                "comparison not supported between instances of '%s' and '%s'"
-                % (Bond, type(that))
-            )
-        return (self._ptr, self.data().i, self.data().j) < (
-            that._ptr,
-            that.data().i,
-            that.data().j,
-        )
+        return Atom(self._ptr, self.otherId(atom.id))
 
     @property
     def atoms(self):
         """ Atoms in this Bond """
         return self.first, self.second
 
-    def __setitem__(self, key, val):
-        """ set custom Bond property """
-        self._ptr.setBondProp(self._id, key, val)
 
-    def __getitem__(self, key):
-        """ get custom Bond property """
-        return self._ptr.getBondProp(self._id, key)
-
-    def __contains__(self, key):
-        """ does custom Bond property exist? """
-        return not _msys.bad(self._ptr.bondPropIndex(key))
-
-    @property
-    def order(self):
-        """ bond order (int) """
-        return self.data().order
-
-    @order.setter
-    def order(self, val):
-        self.data().order = val
-
-
-class Atom(Handle):
+class Atom(_msys.Atom):
     """ Represents an atom (or pseudoparticle) in a chemical system """
 
     __slots__ = ()
 
+    def __init__(self, ptr, id):
+        super().__init__(ptr, id)
+
     def __repr__(self):
-        return "<Atom %d>" % self._id
+        return "<Atom %d>" % self.id
+
+    @property
+    def system(self):
+        """ parent System """
+        return System(self._ptr)
 
     @property
     def fullname(self):
@@ -145,37 +105,10 @@ class Atom(Handle):
         chn = res.chain
         return "%s:%s%d:%s" % (chn.name, res.name, res.resid, self.name)
 
-    def data(self):
-        return self._ptr.atom(self._id)
-
-    def remove(self):
-        """ remove this Atom from the System """
-        self._ptr.delAtom(self._id)
-
-    def __setitem__(self, key, val):
-        """ set atom property key to val """
-        self._ptr.setAtomProp(self._id, key, val)
-
-    def __getitem__(self, key):
-        """ get atom property key """
-        return self._ptr.getAtomProp(self._id, key)
-
-    def __contains__(self, key):
-        """ does atom property key exist? """
-        return not _msys.bad(self._ptr.atomPropIndex(key))
-
-    def __lt__(self, that):
-        if not isinstance(that, Atom):
-            raise TypeError(
-                "comparison not supported between instances of '%s' and '%s'"
-                % (Atom, type(that))
-            )
-        return (self._ptr, self._id) < (that._ptr, that._id)
-
     def addBond(self, other):
         """ create and return a Bond from self to other """
         assert self._ptr == other._ptr
-        return Bond(self._ptr, self._ptr.addBond(self._id, other.id))
+        return Bond(self._ptr, self._ptr.addBond(self.id, other.id))
 
     def findBond(self, other):
         """ Find the bond between self and Atom other; None if not found """
@@ -201,26 +134,26 @@ class Atom(Handle):
 
     @property
     def residue(self):
-        return Residue(self._ptr, self.data().residue)
+        return Residue(self._ptr, self.resid)
 
     @residue.setter
     def residue(self, res):
-        self._ptr.setResidue(self._id, res.id)
+        self._ptr.setResidue(self.id, res.id)
 
     @property
     def bonds(self):
         """ Bonds connected to this atom """
-        return [Bond(self._ptr, i) for i in self._ptr.bondsForAtom(self._id)]
+        return [Bond(self._ptr, i) for i in self._ptr.bondsForAtom(self.id)]
 
     @property
     def bonded_atoms(self):
         """ Atoms bonded to this atom """
-        return [Atom(self._ptr, i) for i in self._ptr.bondedAtoms(self._id)]
+        return [Atom(self._ptr, i) for i in self._ptr.bondedAtoms(self.id)]
 
     @property
     def nbonds(self):
         """ number of bonds to this atom """
-        return self._ptr.bondCountForAtom(self._id)
+        return self._ptr.bondCountForAtom(self.id)
 
     @property
     def nhydrogens(self):
@@ -233,95 +166,39 @@ class Atom(Handle):
         return sum([b.order for b in self.bonds if b.other(self).atomic_number > 0])
 
 
-__add_properties(
-    Atom,
-    "fragid",
-    "x",
-    "y",
-    "z",
-    "charge",
-    "vx",
-    "vy",
-    "vz",
-    "mass",
-    "atomic_number",
-    "formal_charge",
-    "name",
-    "aromatic",
-)
-
-
-class Residue(Handle):
+class Residue(_msys.Residue):
     """ Represents a residue (group of Atoms) in a System """
 
     __slots__ = ()
 
+    def __init__(self, ptr, id):
+        super().__init__(ptr, id)
+
     def __repr__(self):
-        d = self.data()
-        return "<Residue %s %d%s>" % (d.name, d.resid, d.insertion)
+        return "<Residue %s %d%s>" % (self.name, self.resid, self.insertion)
 
-    def data(self):
-        return self._ptr.residue(self._id)
-
-    def remove(self):
-        """ remove this Residue from the System """
-        self._ptr.delResidue(self._id)
+    @property
+    def system(self):
+        """ parent System """
+        return System(self._ptr)
 
     def addAtom(self):
         """ append a new Atom to this Residue and return it """
-        return Atom(self._ptr, self._ptr.addAtom(self._id))
+        return Atom(self._ptr, super().addAtom())
 
     @property
     def atoms(self):
         """ list of Atoms in this Residue """
-        return [Atom(self._ptr, i) for i in self._ptr.atomsForResidue(self._id)]
-
-    @property
-    def natoms(self):
-        """ number of atoms in this residue """
-        return self._ptr.atomCountForResidue(self._id)
+        return [Atom(self._ptr, i) for i in super().atoms()]
 
     @property
     def chain(self):
         """ parent chain """
-        return Chain(self._ptr, self.data().chain)
+        return Chain(self._ptr, self.chainId())
 
     @chain.setter
     def chain(self, chn):
-        self._ptr.setChain(self._id, chn.id)
-
-    @property
-    def resid(self):
-        """ the PDB residue identifier """
-        return self.data().resid
-
-    @resid.setter
-    def resid(self, val):
-        self.data().resid = val
-
-    @property
-    def name(self):
-        """ residue name """
-        return self.data().name
-
-    @name.setter
-    def name(self, val):
-        self.data().name = val
-
-    @property
-    def insertion(self):
-        """ insertion code """
-        return self.data().insertion
-
-    @insertion.setter
-    def insertion(self, val):
-        self.data().insertion = val
-
-    @property
-    def center(self):
-        """ return geometric center of positions of atoms in residue """
-        pos = self._ptr.getPositions(self._ptr.atomsForResidue(self._id))
-        return numpy.mean(pos, axis=0)
+        self.setChainId(chn.id)
 
     def selectAtom(self, name=None):
         """Returns a single Atom from this residue with the given name,
@@ -335,34 +212,31 @@ class Residue(Handle):
         raise ValueError("Found %d atoms with given name" % (len(atoms)))
 
 
-class Chain(Handle):
+class Chain(_msys.Chain):
     """ Represents a chain (of Residues) in a System """
 
     __slots__ = ()
 
+    def __init__(self, ptr, id):
+        super().__init__(ptr, id)
+
     def __repr__(self):
         return "<Chain %s>" % self.name
 
-    def data(self):
-        return self._ptr.chain(self._id)
+    @property
+    def system(self):
+        """ parent System """
+        return System(self._ptr)
 
-    def remove(self):
-        """ remove this Chain from the System """
-        self._ptr.delChain(self._id)
 
     def addResidue(self):
         """ append a new Residue to this Chain and return it """
-        return Residue(self._ptr, self._ptr.addResidue(self._id))
+        return Residue(self._ptr, super().addResidue())
 
     @property
     def residues(self):
         """ list of Residues in this Chain """
-        return [Residue(self._ptr, i) for i in self._ptr.residuesForChain(self._id)]
-
-    @property
-    def nresidues(self):
-        """ number of residues in this chain """
-        return self._ptr.residueCountForChain(self._id)
+        return [Residue(self._ptr, i) for i in super().residues()]
 
     def selectResidue(self, resid=None, name=None, insertion=None):
         """Returns a single Residue with the given resid, name, and/or
@@ -387,17 +261,14 @@ class Chain(Handle):
     @property
     def ct(self):
         """ Return the Ct for this chain """
-        return Ct(self._ptr, self.data().ct)
+        return Ct(self._ptr, self.ctId())
 
     @ct.setter
     def ct(self, ct):
-        self._ptr.setCt(self._id, ct.id)
+        self.setCtId(ct.id)
 
 
-__add_properties(Chain, "name", "segid")
-
-
-class Ct(Handle):
+class Ct(_msys.Ct):
     """Represents a list of Chains in a System
 
     The Ct class exists mainly to provide a separate namespace for chains.
@@ -410,43 +281,33 @@ class Ct(Handle):
 
     __slots__ = ()
 
-    def data(self):
-        return self._ptr.ct(self._id)
+    def __init__(self, ptr, id):
+        super().__init__(ptr, id)
 
-    def remove(self):
-        """ remove this Ct from the System """
-        self._ptr.delCt(self._id)
+    @property
+    def system(self):
+        """ parent System """
+        return System(self._ptr)
 
     def addChain(self):
         """ append a new Chain to this Ct and return it """
-        return Chain(self._ptr, self._ptr.addChain(self._id))
+        return Chain(self._ptr, super().addChain())
 
     @property
     def chains(self):
         """ list of Chains in this Ct """
-        return [Chain(self._ptr, i) for i in self._ptr.chainsForCt(self._id)]
-
-    @property
-    def nchains(self):
-        """ number of Chains in this Ct """
-        return self._ptr.chainCountForCt(self._id)
-
-    @property
-    def natoms(self):
-        """ number of Atoms in the Ct """
-        return self._ptr.atomCountForCt(self._id)
+        return [Chain(self._ptr, i) for i in super().chains()]
 
     @property
     def atoms(self):
         """ list of Atoms in this Ct """
-        ptr = self._ptr
-        return [Atom(ptr, i) for i in ptr.atomsForCt(self._id)]
+        return [Atom(self._ptr, i) for i in super().atoms()]
 
     @property
     def bonds(self):
         """ list of Bonds in this Ct """
-        ptr = self._ptr
-        return [Bond(ptr, i) for i in ptr.bondsForCt(self._id)]
+        return [Bond(self._ptr, i) for i in super().bonds()]
+
 
     def append(self, system):
         """Appends atoms and forcefield from system to self.  Returns
@@ -454,46 +315,7 @@ class Ct(Handle):
         identical nonbonded_info.vdw_funct.  Does not overwrite the
         global cell information in self."""
         p = self._ptr
-        ids = p.append(system._ptr, self.id)
-        return [Atom(p, i) for i in ids]
-
-    ### TODO: selectChain()
-
-    @property
-    def name(self):
-        """ Name of Ct """
-        return self.data().name
-
-    @name.setter
-    def name(self, s):
-        self.data().name = s
-
-    def keys(self):
-        """ available Ct properties """
-        return list(self.data().keys())
-
-    def __setitem__(self, key, val):
-        """ set ct property key to val """
-        t = self.data().type(key)
-        if t is None:
-            t = type(val)
-            self.data().add(key, t)
-        self.data().set(str(key), t(val))
-
-    def __getitem__(self, key):
-        """ get ct property key """
-        return self.data().get(str(key))
-
-    def __delitem__(self, key):
-        """ remove property key """
-        self.data().remove(str(key))
-
-    def get(self, key, d=None):
-        """ get ct property key, else d, which defaults to None """
-        try:
-            return self.data().get(str(key))
-        except KeyError:
-            return d
+        return [Atom(p, i) for i in super().append(system._ptr)]
 
 
 class PropertyMap(object):
@@ -1099,7 +921,7 @@ class System(object):
 
     """
 
-    __slots__ = ("_ptr", "_atoms")
+    __slots__ = ("_ptr")
 
     def __getinitargs__(self):
         """ Pickle support (requires cPickle.HIGHEST_PROTOCOL) """
@@ -1110,7 +932,6 @@ class System(object):
         Do not invoke directly; use CreateSystem() instead.
         """
         self._ptr = _ptr
-        self._atoms = []
 
     def __eq__(self, x):
         return self.__class__ == type(x) and self._ptr == x._ptr
@@ -1283,8 +1104,8 @@ class System(object):
     @property
     def atoms(self):
         """ return list of all atoms in the system """
-        atms = self._update_atoms()
-        return [atms[i] for i in self._ptr.atoms()]
+        ptr = self._ptr
+        return [Atom(ptr, i) for i in ptr.atoms()]
 
     @property
     def bonds(self):
@@ -1327,8 +1148,11 @@ class System(object):
         return [p.atomPropName(i) for i in range(p.atomPropCount())]
 
     def atomPropType(self, name):
-        """ type of the given atom property """
-        return self._ptr.atomPropType(self._ptr.atomPropIndex(name))
+        """ type of the given atom property; None if not present """
+        index = self._ptr.atomPropIndex(name)
+        if _msys.bad(index):
+            raise ValueError(f"No such atom property '{name}'")
+        return self._ptr.atomPropType(index)
 
     def atomsGroupedBy(self, prop):
         """Return dictionary mapping representative values of the given
@@ -1342,8 +1166,7 @@ class System(object):
             getter = lambda x: x[prop]
         else:
             return d
-        atms = self._update_atoms()
-        for a in atms:
+        for a in self.atoms:
             key = getter(a)
             d.setdefault(key, []).append(a)
         return d
@@ -1515,15 +1338,6 @@ class System(object):
         A nonbonded table is returned.
         """
         return TermTable(self._ptr.addNonbondedFromSchema(funct, rule))
-
-    def _update_atoms(self):
-        p = self._ptr
-        atms = self._atoms
-        n = len(atms)
-        A = Atom
-        for i in range(n, p.maxAtomId()):
-            atms.append(A(p, i))
-        return atms
 
     def atomsel(self, sel):
         """Create and return an atom selection object (Atomsel).

@@ -28,9 +28,9 @@ PYBIND11_MODULE(_msys, m) {
     }
     desres::msys::export_analyze(m);
     desres::msys::export_annotated_system(m);
+    desres::msys::export_system(m);
     desres::msys::export_chain(m);
     desres::msys::export_param(m);
-    desres::msys::export_system(m);
     desres::msys::export_term(m);
     desres::msys::export_override(m);
     desres::msys::export_io(m);
@@ -65,7 +65,7 @@ namespace desres { namespace msys {
         }
     }
 
-    ValueType as_value_type(object typeobj) {
+    ValueType as_value_type(handle typeobj) {
         auto ptr = reinterpret_cast<char *>(typeobj.ptr());
         if (ptr == (char *)&PyFloat_Type) return FloatType;
         if (ptr == (char *)&PyLong_Type) return IntType;

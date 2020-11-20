@@ -209,7 +209,7 @@ static inline const char * tokenizer_token(tokenizer * tk, int ignore_single) {
   
   c = tokenizer_peek(tk);
   good = 0;
-  while(state != DONE && c >= 0) {
+  while(state != DONE && c != 0 && c != -1) {
     /* make sure we have space in m_token for 2 more characters */
     if ((diff = ptr-tk->m_token) >= tk->max_token_size-1) {
       tk->m_token = (char *)realloc( tk->m_token, 2*tk->max_token_size );
@@ -483,7 +483,17 @@ static void predict_arraybody( Json& js, tokenizer * tk ) {
         ++nrows;
     }
     tokenizer_predict(tk, ":::");
-    tokenizer_predict(tk, "}");
+    // DESRESCode#4634 - allow one level of nested array
+    const char* tok = tokenizer_token(tk, false);
+    tokenizer_next(tk);
+    if (*tok != '}') {
+        // got start of a new array body
+        MSYS_WARN("WARNING: Skipping nested array '" << tok << "'");
+        Json subblock;
+        subblock.to_object();
+        predict_arraybody( subblock, tk );
+        tokenizer_predict(tk, "}");
+    }
     /* add row count as __size__ member of js */
     Json size;
     size.to_int(nrows);

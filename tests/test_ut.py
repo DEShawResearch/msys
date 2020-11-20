@@ -1567,6 +1567,12 @@ class Tools(unittest.TestCase):
 
 
 class Main(unittest.TestCase):
+    def testInfo(self):
+        from msys.info import print_info
+        mol = msys.Load("tests/files/ww.dms")
+        print_info(mol)
+
+
     def testMixedCtPropertyTypes(self):
         mol = msys.CreateSystem()
         ct0 = mol.addCt()
@@ -1738,17 +1744,13 @@ class Main(unittest.TestCase):
         import pickle as pkl
 
         old = msys.Load("tests/files/2f4k.dms")
+        # auto-vivify System._atoms
+        old.atoms
         s = pkl.dumps(old, pkl.HIGHEST_PROTOCOL)
         new = pkl.loads(s)
         self.assertEqual(old.natoms, new.natoms)
         self.assertEqual(old.nbonds, new.nbonds)
         self.assertEqual(old.table_names, new.table_names)
-
-        # can pickle residues
-        oldres = old.residues[:10]
-        s = pkl.dumps(oldres, pkl.HIGHEST_PROTOCOL)
-        newres = pkl.loads(s)
-        self.assertEqual([a.resid for a in oldres], [a.resid for a in newres])
 
     def testPickleProvenance(self):
         import copy
@@ -1775,6 +1777,42 @@ class Main(unittest.TestCase):
         phi = msys.CalcDihedral(a, b, c, d)
         tst = msys.ApplyDihedralGeometry(a, b, c, rad, theta, phi)
         NP.testing.assert_almost_equal(tst, d)
+
+    def testMaeNestedArray(self):
+        msys.Load("tests/files/t2-original.cms.gz")
+
+    def testMaePrecision(self):
+        """ensure mae doesn't truncate coordinate precision"""
+        mol = msys.CreateSystem()
+        atm = mol.addAtom()
+        atm.atomic_number = 17
+        pos = [1.0000001, 20.447919, -550.12999]
+        atm.pos = pos
+        assert atm.pos.tolist() == pos
+        dms = msys.LoadDMS(buffer=msys.FormatDMS(mol))
+        assert dms.atom(0).pos.tolist() == pos
+        mae = msys.LoadMAE(buffer=msys.SerializeMAE(mol))
+        assert mae.atom(0).pos.tolist() == pos
+
+    def testNonexistentAtomPropThrowsValueError(self):
+        mol = msys.FromSmilesString("O")
+        with self.assertRaises(ValueError):
+            mol.atomPropType("nothing")
+
+    def testDmsHandlesDuplicateFields(self):
+        """Handle ct properties which overlap when duplicated"""
+        mol = msys.FromSmilesString("O")
+        mol.ct(0)["Abc"] = 123
+        mol.ct(0)["abc"] = 42
+        mol.addCt()["abC"] = 456
+        dms = msys.LoadDMS(buffer=msys.FormatDMS(mol))
+        assert dms.ct(0).keys() == ["Abc", "abC", "abc"]
+        assert dms.ct(1).keys() == ["Abc", "abC", "abc"]
+        assert dms.ct(0)["Abc"] == 123
+        assert dms.ct(0)["abc"] == 42
+        assert dms.ct(1)["abC"] == 456
+        assert dms.ct(1)["Abc"] == ""
+
 
     def testMaeNoncontiguous(self):
         """disallow writing mae when it would change atom order"""
@@ -1869,11 +1907,11 @@ class Main(unittest.TestCase):
 
     def testBadId(self):
         m = msys.CreateSystem()
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             m.chain("A")
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             m.residue("A")
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             m.atom("A")
 
     def testTermSystem(self):

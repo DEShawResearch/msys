@@ -66,6 +66,7 @@ using namespace desres::molfile::dtr;
 #include <sys/stat.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <libgen.h>
 
 #include "vmddir.h"
 #include "../types.hxx"
@@ -587,21 +588,17 @@ bool StkReader::recognizes(const std::string &path) {
              isfile(path);
 }
 
-static std::string filename_to_cache_location_v8(std::string const& stk) {
-  std::stringstream ss;
-  bfs::path fullpath = bfs::system_complete(stk);
+std::string StkReader::filename_to_cache_location_v8(std::string const& stk) {
+    char buf[1024], sdir[1024], sbase[1024];
+    if (nullptr == realpath(stk.data(), buf)) {
+        MSYS_FAIL("Resolving absolute path to " << stk << " failed: " << strerror(errno));
+    }
+    strcpy(sdir, buf);
+    strcpy(sbase, buf);
 
-  //
-  // Lots of chemists create symlinks to stk files in the
-  // workdir, but we want to reuse stk cache info for all
-  // users regardless of where their respective symlinks
-  // live, so traverse all symlinks to get to the real
-  // file.
-  //
-  bfs::path canonicalpath = bfs::canonical(fullpath);
-
-  ss << canonicalpath.parent_path().string() << "/." << canonicalpath.filename().string() << ".cache.0008";
-  return ss.str();
+    auto dname = dirname(sdir);
+    auto bname = basename(sbase);
+    return std::string(dname) + "/." + bname + ".cache.0008";
 }
 
  

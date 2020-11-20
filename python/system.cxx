@@ -25,24 +25,6 @@ namespace {
     Id add_atom_prop( System& sys, String const& name, object type ) {
         return sys.addAtomProp(name, as_value_type(type));
     }
-    object get_atom_prop(System& p, Id row, String const& name) {
-        Id col = p.atomPropIndex(name);
-        if (bad(col)) {
-            PyErr_Format(PyExc_KeyError, 
-                    "No such atom property '%s", name.c_str());
-            throw error_already_set();
-        }
-        return from_value_ref(p.atomPropValue(row,col));
-    }
-    void set_atom_prop(System& p, Id row, String const& name, object newval) {
-        Id col = p.atomPropIndex(name);
-        if (bad(col)) {
-            PyErr_Format(PyExc_KeyError, 
-                    "No such atom property '%s", name.c_str());
-            throw error_already_set();
-        }
-        to_value_ref(newval, p.atomPropValue(row,col));
-    }
 
     handle bond_prop_type(System& sys, Id col) {
         return from_value_type(sys.bondPropType(col));
@@ -50,25 +32,6 @@ namespace {
     Id add_bond_prop( System& sys, String const& name, object type ) {
         return sys.addBondProp(name, as_value_type(type));
     }
-    object get_bond_prop(System& p, Id row, String const& name) {
-        Id col = p.bondPropIndex(name);
-        if (bad(col)) {
-            PyErr_Format(PyExc_KeyError, 
-                    "No such bond property '%s", name.c_str());
-            throw error_already_set();
-        }
-        return from_value_ref(p.bondPropValue(row,col));
-    }
-    void set_bond_prop(System& p, Id row, String const& name, object newval) {
-        Id col = p.bondPropIndex(name);
-        if (bad(col)) {
-            PyErr_Format(PyExc_KeyError, 
-                    "No such bond property '%s", name.c_str());
-            throw error_already_set();
-        }
-        to_value_ref(newval, p.bondPropValue(row,col));
-    }
-
 
     MultiIdList update_fragids(System& p) {
         MultiIdList fragments;
@@ -76,18 +39,11 @@ namespace {
         return fragments;
     }
 
-    Provenance prov_from_args( object o ) {
-        int argc=len(o);
-        if (!argc) return Provenance();
-        std::vector<std::string> strings;
+    Provenance prov_from_args(std::vector<std::string> args) {
+        if (args.empty()) return Provenance();
         std::vector<char *> argv;
-        for (int i=0; i<argc; i++) {
-            strings.push_back(o.str());
-        }
-        for (int i=0; i<argc; i++) {
-            argv.push_back(const_cast<char *>(strings[i].c_str()));
-        }
-        return Provenance::fromArgs(argc, &argv[0]);
+        for (auto& s : args) argv.push_back(const_cast<char *>(s.data()));
+        return Provenance::fromArgs(argv.size(), argv.data());
     }
 
     std::vector<Provenance> sys_provenance( System const& sys ) {
@@ -581,13 +537,6 @@ namespace desres { namespace msys {
                     }
                 ))
 
-            /* accessor */
-            .def("atom",        [](System& m, Id i) { return &m.atom(i); }, return_value_policy::reference)
-            .def("bond",        [](System& m, Id i) { return &m.bond(i); }, return_value_policy::reference)
-            .def("residue",     [](System& m, Id i) { return &m.residue(i); }, return_value_policy::reference)
-            .def("chain",       [](System& m, Id i) { return &m.chain(i); }, return_value_policy::reference)
-            .def("ct",          [](System& m, Id i) { return &m.ct(i); }, return_value_policy::reference)
-
             /* add element */
             .def("addAtom",     &System::addAtom)
             .def("addBond",     &System::addBond)
@@ -671,8 +620,6 @@ namespace desres { namespace msys {
             .def("atomPropType", atom_prop_type)
             .def("addAtomProp",  add_atom_prop)
             .def("delAtomProp",  &System::delAtomProp)
-            .def("getAtomProp",  get_atom_prop)
-            .def("setAtomProp",  set_atom_prop)
 
             /* extended bond props */
             .def("bondPropCount",&System::bondPropCount)
@@ -681,8 +628,6 @@ namespace desres { namespace msys {
             .def("bondPropType", bond_prop_type)
             .def("addBondProp",  add_bond_prop)
             .def("delBondProp",  &System::delBondProp)
-            .def("getBondProp",  get_bond_prop)
-            .def("setBondProp",  set_bond_prop)
 
             /* auxiliary tables */
             .def("auxTableNames",&System::auxTableNames)
