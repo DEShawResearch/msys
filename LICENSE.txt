@@ -1,6 +1,6 @@
                             MSYS LICENSE AGREEMENT
 
-Copyright 2018, D. E. Shaw Research. All rights reserved.
+Copyright 2018-2020, D. E. Shaw Research. All rights reserved.
 
 Redistribution and use of (1) the MSYS software in source and binary forms
 and (2) the associated chemical system data released with the software,
