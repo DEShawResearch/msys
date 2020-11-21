@@ -29,12 +29,6 @@ loadmodules() {
     export MSYS_WITH_INCHI=1
 }
 
-gendocs() {
-    prefix=${PREFIX:-$PWD/build}
-    (cd doc && BINDIR=$prefix/bin garden with -m $PYTHON3/bin make clean genhelp html )
-    cp -r doc/build/html $PREFIX/doc/
-}
-
 build() {
     export PYTHONVER=$(python -c 'import sys; print("".join(map(str, sys.version_info[:2])))')
     rm -rf build/wheel/msys*
@@ -45,7 +39,7 @@ build() {
 
 main() {
     loadmodules
-    for py in desres-python/3.6.6-04c7 desres-python/3.7.7-06c7 desres-python-devel/3.8.6-01c7; do
+    for py in desres-python/3.6.6-04c7 desres-python/3.7.7-06c7 desres-python-devel/3.8.6-02c7; do
         garden load $py/bin
         build
     done
