@@ -399,7 +399,7 @@ namespace {
         }
         std::unique_ptr<StkReader> stk(new StkReader(path));
         stk->append(fnames, timekeys);
-        return stk;
+        return std::move(stk);
     }
 
     double tk_interval(Timekeys const& tk) {
