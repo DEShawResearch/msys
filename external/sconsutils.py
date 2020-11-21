@@ -218,7 +218,8 @@ def _AddWheel(env, tomlfile, pyver='36'):
     # obtain wheel tag using specified python version
     wmod = 'wheel' if pyver.startswith('2') else 'setuptools'
     exe = 'python%s' % '.'.join(pyver)
-    tag = subprocess.check_output([exe, '-c', 'import %s.pep425tags as wp; tags=wp.get_supported(); best=[t for t in tags if "manylinux" not in "".join(t)][0]; print("-".join(best))' % wmod], universal_newlines=True).strip()
+    #tag = subprocess.check_output([exe, '-c', 'import %s.pep425tags as wp; tags=wp.get_supported(); best=[t for t in tags if "manylinux" not in "".join(t)][0]; print("-".join(best))' % wmod], universal_newlines=True).strip()
+    tag = "cp%s-cp%sm-linux_x86_64" % (pyver, pyver)
 
     # set things up for enscons.
     env.Replace(
