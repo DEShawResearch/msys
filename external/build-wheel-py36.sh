@@ -13,6 +13,7 @@ BOOST=boost/1.57.0-02c7
 INCHI=inchi/1.05-01c7
 SQLITE=sqlite/3.24.0-02c7
 SCONSUTILS=sconsutils/1.51c7
+PYBIND11=pybind11/2.3.0-01c7
 
 loadmodules() {
     garden load \
@@ -21,6 +22,7 @@ loadmodules() {
         $BOOST/lib \
         $INCHI/lib \
         $SQLITE/lib \
+        $PYBIND11/lib \
         $SCONSUTILS/lib-python37 \
         enscons/0.23.0-01c7/lib-python37 \
         auditwheel/3.1.1-01c7/bin \
