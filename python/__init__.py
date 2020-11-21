@@ -207,7 +207,7 @@ class Residue(_msys.Residue):
         atoms = [a for a in self.atoms if (name is None or a.name == name)]
         if not atoms:
             return None
-        if len(atoms) is 1:
+        if len(atoms) == 1:
             return atoms[0]
         raise ValueError("Found %d atoms with given name" % (len(atoms)))
 
@@ -252,7 +252,7 @@ class Chain(_msys.Chain):
         ]
         if not residues:
             return None
-        if len(residues) is 1:
+        if len(residues) == 1:
             return residues[0]
         raise ValueError(
             "Found %d residues with given resid, name or insertion" % (len(residues))
@@ -1390,7 +1390,7 @@ class System(object):
         ]
         if not chains:
             return None
-        if len(chains) is 1:
+        if len(chains) == 1:
             return chains[0]
         raise ValueError("Found %d chains with given name and segid" % (len(chains)))
 
@@ -1400,7 +1400,7 @@ class System(object):
         cts = [c for c in self.cts if (name is None or c.name == name)]
         if not cts:
             return None
-        if len(cts) is 1:
+        if len(cts) == 1:
             return cts[0]
         raise ValueError("Found %d cts with given name" % (len(cts)))
 
