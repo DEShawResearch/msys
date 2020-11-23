@@ -38,10 +38,17 @@ build() {
 }
 
 main() {
+    exit
     loadmodules
     for py in desres-python/3.6.6-04c7 desres-python/3.7.7-06c7 desres-python-devel/3.8.6-02c7; do
         garden load $py/bin
         build
+    done
+    # FIXME: python3.8 drops the 'm' from the ABI tag, but enscons still generates an ABI tag of 38m.
+    for x in build/wheel/dist/*cp38m*.whl; do
+        y=${x//cp38m/cp38}
+        echo "rename $x -> $y"
+        mv $x $y
     done
 }
 
