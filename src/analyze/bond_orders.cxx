@@ -5,28 +5,41 @@
 #include <cstdio>
 #include <deque>
 #include <iostream>
+#include <memory>
+#include <unordered_map>
 
 #include "bond_orders.hxx"
 #include "../sssr.hxx"
 #include "get_fragments.hxx"
-#include "../quadsum.hxx"
 #include "eigensystem.hxx"
 #include "../elements.hxx"
-#include <memory>
 
 using namespace desres::msys;
 
 namespace lpsolve {
     /* for solving the integer linear equations. We put this in a new
        namespace since it doesn't already use one */
-#include <lp_solve/lp_lib.h>
+#if defined __has_include
+    #if __has_include(<lp_solve/lp_lib.h>)
+        // on some systems, the lp_solve headers are dumped right in /usr/lib/include
+        // or equivalent, rather than all being inside a directory called lp_solve
+        #include <lp_solve/lp_lib.h>
+    #else
+        #include <lp_lib.h>
+    #endif
+#else
+    //if the compiler doesn't have __has_include, then just hope that the lpsolve
+    // header is in its own directory.
+    #include <lp_solve/lp_lib.h>
+#endif
 }
 
 
 namespace {
+    static const double CLAMP_INCREMENT = pow(2,20); // 20 binary digits = 1048576
+
     double clamp(double v){
-        static const double increment=pow(2,20); // 20 binary digits = 1048576
-        return nearbyint(v*increment)/increment;
+        return nearbyint(v*CLAMP_INCREMENT) / CLAMP_INCREMENT;
     }
 
     /* "Natural" electronegativity for lp */
@@ -51,7 +64,6 @@ namespace {
             std::cout << s.c_str() << ": " << p.first << " " << p.second << std::endl;
         }
     }
-
 
     static inline int double_to_int(double dval) {
         int ival=static_cast<int>(dval+(dval<0 ? -0.5 : 0.5));
@@ -99,15 +111,13 @@ namespace {
 
     double get_ilp_objective(std::vector<double> const& objf,
                              std::vector<int> const& solution){
-        assert(solution.size()==objf.size());
-        Quadsum obj=0.0;
-        for (unsigned idx=1; idx<solution.size();++idx){
-            obj += objf[idx]*solution[idx];
+        assert(solution.size() >= objf.size());
+        int64_t obj = 0.0;
+        for (unsigned idx=1; idx<objf.size();++idx){
+            obj += (nearbyint(objf[idx] * CLAMP_INCREMENT) * solution[idx]);
         }
-        return obj.result();
+        return obj / CLAMP_INCREMENT;
     }
-
-
 }
 
 namespace desres { namespace msys {
@@ -193,13 +203,18 @@ namespace desres { namespace msys {
         rings=RingSystems(boa->_mol, keepRings);
         for (IdList const& ring : rings){
             if(ring.size()==1) continue;
-            std::set<Id> touched;
+            std::map<Id, Id> touched;
             for (Id rid : ring){
                 for (Id bid : boa->_rings[rid]){
-                    touched.insert(bid);
+                    ++touched[bid];
                 }
             }
-            boa->_rings.push_back(IdList(touched.begin(),touched.end()));
+            boa->_rings.push_back(IdList());
+            IdList &rbonds=boa->_rings.back();
+            for (auto item: touched){
+                if (item.second > 1) continue;
+                rbonds.push_back(item.first);
+            }
         }
 
 
@@ -635,7 +650,7 @@ namespace desres { namespace msys {
         _component_reslp=lpsolve::copy_lp(_component_lp);
 
         lpsolve::set_timeout(_component_lp, _parent->seconds_until_deadline());
-        int status=lpsolve::solve(_component_lp);            
+        int status=lpsolve::solve(_component_lp);
         if ((status == SUBOPTIMAL) && (std::chrono::system_clock::now() > _parent->_deadline)) {
             status = TIMEOUT;
         }
@@ -680,97 +695,297 @@ namespace desres { namespace msys {
         return lpsolve::get_objective(_component_lp);
     }
 
+#ifdef MSYS_WITHOUT_BLISS
+    std::vector<std::vector<int>> ComponentAssigner::generate_resonance_ilp_permutations(
+        lpsolve::_lprec* lp,
+        const std::vector<int>& solution
+    ) {
+        throw std::runtime_error("msys was not compiled with BLISS support");
+    }
+#endif
 
+    void ComponentAssigner::generate_resonance_forms_old() {
+        int ncols = lpsolve::get_Norig_columns(_component_lp);
+        unsigned nvars = ncols + 1;
+        std::vector<double> ones(nvars, 1.0);
 
-    void ComponentAssigner::generate_resonance_forms(){
+        generate_resonance_forms_core([&](
+            std::vector<ilp_resonance_constraint>& newcons,
+            const std::vector<int>& lastSolution,
+            std::vector<double>& sumResonantSolution,
+            lpsolve::_lprec* resLP
+        ) {
+            ilp_resonance_constraint cons;
+
+            for (ilpAtomMap::value_type const& kv : _component_atom_cols) {
+                ilpAtom const& iatom=kv.second;
+                for(int icol=iatom.ilpCol, i=iatom.ilpLB; i<=iatom.ilpUB;++i,++icol){
+                    if (lastSolution[icol]) {
+                        cons.colno.push_back(icol);
+                    }
+                }
+            }
+
+            for (ilpBondMap::value_type const& kv : _component_bond_cols ){
+                ilpBond const& ibond=kv.second;
+                for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB;++i,++icol){
+                    if (lastSolution[icol]) {
+                        cons.colno.push_back(icol);
+                    }
+                }
+            }
+
+            cons.coeff.assign(cons.colno.size(), 1.0);
+            cons.rhs = cons.colno.size() - 1.0;
+            cons.rowtype = ROWTYPE_LE;
+
+            if (cons.colno.size() == 0) {
+                // work around bug
+                cons.colno.resize(nvars);
+                cons.coeff.resize(nvars);
+                cons.rhs = -1;
+                for (auto i=0u; i < nvars; i++) {
+                    cons.colno[i] = i;
+                    cons.coeff[i] = 1.0;
+                }
+            }
+
+            newcons.push_back(cons);
+            for (auto i = 0u; i < lastSolution.size(); i++) {
+                sumResonantSolution[i] += lastSolution[i];
+            }
+
+            return 1;
+        });
+    }
+
+    void ComponentAssigner::generate_resonance_forms_old1() {
+        generate_resonance_forms_core([&](
+            std::vector<ilp_resonance_constraint>& newcons,
+            const std::vector<int>& lastSolution,
+            std::vector<double>& sumResonantSolution,
+            lpsolve::_lprec* resLP
+        ) {
+            // http://yetanothermathprogrammingconsultant.blogspot.com/2011/10/integer-cuts.html
+            ilp_resonance_constraint cons;
+
+            int numOnes = 0;
+
+            for (ilpAtomMap::value_type const& kv : _component_atom_cols) {
+                ilpAtom const& iatom=kv.second;
+                for(int icol=iatom.ilpCol, i=iatom.ilpLB; i<=iatom.ilpUB;++i,++icol){
+                    if (icol > 0) {
+                        numOnes += (lastSolution[icol] == 1);
+                        cons.colno.push_back(icol);
+                        cons.coeff.push_back(lastSolution[icol] == 1 ? 1.0 : -1.0);
+                    }
+                }
+            }
+
+            for (ilpBondMap::value_type const& kv : _component_bond_cols ){
+                ilpBond const& ibond=kv.second;
+                for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB;++i,++icol){
+                    if (icol > 0) {
+                        numOnes += (lastSolution[icol] == 1);
+                        cons.colno.push_back(icol);
+                        cons.coeff.push_back(lastSolution[icol] == 1 ? 1.0 : -1.0);
+                    }
+                }
+            }
+
+            cons.rhs = numOnes - 1;
+            cons.rowtype = ROWTYPE_LE;
+            newcons.push_back(cons);
+
+            for (auto i = 0u; i < lastSolution.size(); i++) {
+                sumResonantSolution[i] += lastSolution[i];
+            }
+
+            return 1;
+        });
+    }
+
+    void ComponentAssigner::generate_resonance_forms_new2() {
+        generate_resonance_forms_core([&](
+            std::vector<ilp_resonance_constraint>& newcons,
+            const std::vector<int>& lastSolution,
+            std::vector<double>& sumResonantSolution,
+            lpsolve::_lprec* resLP
+        ) {
+            std::vector<std::vector<int>> permutations = generate_resonance_ilp_permutations(_component_lp, lastSolution);
+            for (auto const& solution: permutations) {
+                // http://yetanothermathprogrammingconsultant.blogspot.com/2011/10/integer-cuts.html
+                ilp_resonance_constraint cons;
+
+                int numOnes = 0;
+
+                for (ilpAtomMap::value_type const& kv : _component_atom_cols) {
+                    ilpAtom const& iatom=kv.second;
+                    for(int icol=iatom.ilpCol, i=iatom.ilpLB; i<=iatom.ilpUB;++i,++icol){
+                        if (icol > 0) {
+                            numOnes += (solution[icol] == 1);
+                            cons.colno.push_back(icol);
+                            cons.coeff.push_back(solution[icol] == 1 ? 1.0 : -1.0);
+                        }
+                    }
+                }
+
+                for (ilpBondMap::value_type const& kv : _component_bond_cols ){
+                    ilpBond const& ibond=kv.second;
+                    for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB;++i,++icol){
+                        if (icol > 0) {
+                            numOnes += (solution[icol] == 1);
+                            cons.colno.push_back(icol);
+                            cons.coeff.push_back(solution[icol] == 1 ? 1.0 : -1.0);
+                        }
+                    }
+                }
+
+                cons.rhs = numOnes - 1;
+                cons.rowtype = ROWTYPE_LE;
+                newcons.push_back(cons);
+
+                for (auto i = 0u; i < solution.size(); i++) {
+                    sumResonantSolution[i] += solution[i];
+                }
+            }
+            assert(permutations.size() > 0);
+            return permutations.size();
+        });
+    }
+
+    void ComponentAssigner::generate_resonance_forms_core(
+        std::function<int(
+            std::vector<ilp_resonance_constraint>&,
+            const std::vector<int>&,
+            std::vector<double>&,
+            lpsolve::_lprec*
+        )>
+        build_resonance_constraints_from_soln
+    ) {
+        using lprec_ptr = std::unique_ptr<lpsolve::_lprec, void(*)(lpsolve::_lprec*)>;
         int ncols=lpsolve::get_Norig_columns(_component_lp);
         unsigned nvars=ncols+1;
 
         std::vector<int> last_solution;
         get_ilp_solution(_component_lp, last_solution);
-        double objf=get_ilp_objective(_component_objf,last_solution);
+        double objf = get_ilp_objective(_component_objf,last_solution);
 
-        _component_resonant_solution.assign(nvars,0);
-        std::vector<double> ones(nvars,1.0);
-        std::vector< std::vector<int> > newcons;
+        std::vector<ilp_resonance_constraint> newcons;
+        std::vector<double> sumResonantSolution(nvars, 0);
+        int numSolves = 1;
+        int numResonanceForms = 0;
 
-        while(true){
-            for (unsigned i=1; i<nvars;++i){
-                _component_resonant_solution[i]+=last_solution[i];
+        while (true) {
+            lprec_ptr resLP(lpsolve::copy_lp(_component_reslp), lpsolve::delete_lp);
+            numResonanceForms += build_resonance_constraints_from_soln(
+                newcons, last_solution, sumResonantSolution, resLP.get());
+            build_acceleration_resonance_constraints(last_solution, newcons);
+            add_ilp_resonance_constraints(resLP.get(), newcons);
+
+            lpsolve::set_timeout(resLP.get(), _parent->seconds_until_deadline());
+            int status = lpsolve::solve(resLP.get());
+
+            numSolves++;
+            /*
+            if (numSolves > 1024) {
+                fprintf(stderr, "infinite loop detected. logic error numResonanceForms=%d", numResonanceForms);
+                exit(1);
             }
-            newcons.push_back(std::vector<int>());
-            std::vector<int> &rowdata = newcons.back();
-            for (ilpAtomMap::value_type const& kv : _component_atom_cols ){
-                ilpAtom const& iatom=kv.second;
-                for(int icol=iatom.ilpCol, i=iatom.ilpLB; i<=iatom.ilpUB;++i,++icol){
-                    if(last_solution[icol]) rowdata.push_back(icol);
-                }
-            }
-            for (ilpBondMap::value_type const& kv : _component_bond_cols ){
-                ilpBond const& ibond=kv.second;
-                for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB;++i,++icol){
-                    if(last_solution[icol]) rowdata.push_back(icol);
-                }
-            }
-            /* FIXME: replace with unique_ptr + custom deleter */
-            lpsolve::_lprec *resLP=lpsolve::copy_lp(_component_reslp);
-            set_add_rowmode(resLP,true);
-            for (std::vector<int> &rowdata : newcons){
-                int nactive=rowdata.size();
-                if (!add_constraintex(resLP, nactive, ones.data(), rowdata.data(), ROWTYPE_LE, nactive-1)){
-                    printf("Couldnt add new constraint\n");
-                    assert(false);
-                }
-            }
-            set_add_rowmode(resLP,false);
-            lpsolve::set_timeout(resLP, _parent->seconds_until_deadline());
-            int status=lpsolve::solve(resLP);
+            */
+
             if ((status == SUBOPTIMAL) && (std::chrono::system_clock::now() > _parent->_deadline)) {
-               status = TIMEOUT;
+                status = TIMEOUT;
+                throw std::runtime_error("Timeout reached");
             }
-            if(status==OPTIMAL || status==PRESOLVED){
-                get_ilp_solution(resLP, last_solution);
-                double newObjf=get_ilp_objective(_component_objf,last_solution);
+            if (status==OPTIMAL || status==PRESOLVED){
+                get_ilp_solution(resLP.get(), last_solution);
+                last_solution.resize(nvars);
+                double newObjf = get_ilp_objective(_component_objf, last_solution);
 #if DEBUGPRINT
                 printf("Resonance Solution was found for component %u objf= %6.3f\n",
-                       _component_id, newObjf);
+                    _component_id, newObjf);
 #endif
 #if DEBUGPRINT2
-                lpsolve::write_LP(resLP,stdout);
-                lpsolve::print_objective(resLP);
-                lpsolve::print_solution(resLP,1);
+                lpsolve::write_LP(resLP.get(), stdout);
+                if (status == OPTIMAL || status == PRESOLVED) {
+                    lpsolve::print_objective(resLP.get());
+                    lpsolve::print_solution(resLP.get(), 1);
+                }
 #endif
-                lpsolve::delete_lp(resLP);
                 if(objf != newObjf){
 #if DEBUGPRINT
-                   printf("resonant solution objective is larger by %e\n",newObjf-objf);
+                printf("resonant solution objective is larger by %e\n",newObjf-objf);
 #endif
-                   break;
+                break;
                 }
             }else{
 #if DEBUGPRINT
                 printf("No resonance Solution found for component %u\n",_component_id);
 #endif
 #if DEBUGPRINT2
-                lpsolve::write_LP(resLP,stdout);
+                lpsolve::write_LP(resLP.get(), stdout);
 #endif
-                lpsolve::delete_lp(resLP);
                 break;
             }
             if (status == TIMEOUT) {
-                lpsolve::delete_lp(resLP);
                 throw std::runtime_error("Unable to solve ILP. Timeout elapsed");
             }
         }
-
-        double nforms=newcons.size();
 #if DEBUGPRINT
-        printf("Found %d resonance forms\n",(int)nforms);
+        printf("Found %d resonance forms with %d ILP solutions\n", numResonanceForms, numSolves-1);
 #endif
-        for (unsigned i=1; i<nvars;++i){
-            _component_resonant_solution[i]/=nforms;
+        _component_resonant_solution.assign(nvars, 0);
+        for (auto i = 0u; i < nvars; i++) {
+            _component_resonant_solution[i] = sumResonantSolution[i] / numResonanceForms;
+        }
+    }
+
+    void ComponentAssigner::build_acceleration_resonance_constraints(const std::vector<int> solution, std::vector<ilp_resonance_constraint>& newcons) {
+        // Add constraints to enforce the correct objective value
+        // These are not essential for correctness, but have been observed to speed up the process
+        // of finding distinct resonance solutions
+
+        /* 1) group by variables that have the same contribution to the objective */
+        std::unordered_map<int, std::vector<int> > unique_envs;
+        for (unsigned i=1; i<_component_objf.size(); ++i){
+            int key = nearbyint(_component_objf[i] * CLAMP_INCREMENT);
+            unique_envs[key].push_back(static_cast<int>(i));
         }
 
+        /* 2) add a constraint that enforces the same number of active variables within
+           each group of equivalent objective contributions. There is no way to get the same
+           objective if this is violated */
+        for (auto & kv: unique_envs){
+            std::vector<int> & colno=kv.second;
+            int sum = 0;
+            for (int icol: colno){
+                sum += solution[icol];
+            }
+            std::vector<double> coeff(colno.size(), 1.0);
+            newcons.push_back(ilp_resonance_constraint{
+                colno,
+                coeff,
+                static_cast<double>(sum),
+                ROWTYPE_EQ
+            });
+        }
+    }
+
+    void ComponentAssigner::add_ilp_resonance_constraints(
+        lpsolve::_lprec* lp,
+        const std::vector<ilp_resonance_constraint>& constraints)
+    {
+        lpsolve::set_add_rowmode(lp, true);
+        for (auto i = 0u; i < constraints.size(); i++) {
+            auto const& c = constraints[i];
+            assert(c.colno.size() == c.coeff.size());
+            if (!lpsolve::add_constraintex(lp, c.colno.size(), const_cast<double*>(&c.coeff[0]), const_cast<int*>(&c.colno[0]), c.rowtype, c.rhs)) {
+                fprintf(stderr, "Failed to add new constraint\n");
+                assert(false);
+            }
+        }
+        lpsolve::set_add_rowmode(lp, false);
     }
 
     void ComponentAssigner::extractComponentSolution(solutionMap &atominfo,
@@ -781,7 +996,15 @@ namespace desres { namespace msys {
 
         get_ilp_solution(_component_lp,_component_solution);
         if (_parent->compute_resonant_charge()) {
-            generate_resonance_forms();
+            if (std::string(getenv("GENERATE_RESONANCE_FORMS_NEW")) == "0") {
+                generate_resonance_forms_old();
+            } else if (std::string(getenv("GENERATE_RESONANCE_FORMS_NEW")) == "1") {
+                generate_resonance_forms_old1();
+            }else if (std::string(getenv("GENERATE_RESONANCE_FORMS_NEW")) == "2") {
+                generate_resonance_forms_new2();
+            } else {
+                assert(false);
+            }
         } else {
             _component_resonant_solution.resize(_component_solution.size());
             for (Id i=0; i<_component_solution.size(); ++i){
@@ -852,20 +1075,20 @@ namespace desres { namespace msys {
         BondOrderAssigner* parent=_parent;
         std::ostringstream ss;
 
-        double lps=clamp(parent->atom_lone_pair_scale);
+        double lps = parent->atom_lone_pair_scale;
 
         for (Id aid1 : _component_atoms_present){
             electronRange const& range= asserted_find(parent->_atom_lp,aid1);
             assert(range.lb==0);
 
             int anum1=parent->_mol->atom(aid1).atomic_number;
-            double eneg=enegLP +clamp(DataForElement(anum1).eneg);
-            double objv=-lps*eneg;
+            double eneg = enegLP + DataForElement(anum1).eneg;
+            double objv = clamp(-lps*eneg);
 
             std::vector<int> colid;
             for(int i=1; i<=range.ub;++i){
                 ss.str("");
-                ss << "a_"<<aid1 << ":"<<i;
+                ss << "a_"<<aid1 << "_"<<i;
                 colid.push_back(add_column_to_ilp(_component_lp,ss.str(),i*objv, 0, 1));
             }
             if(colid.size())
@@ -907,7 +1130,7 @@ namespace desres { namespace msys {
                 double factor=1.0*hyper;
                 for(int i=2; i<=range.ub;++i){
                     ss.str("");
-                    ss << "b_"<<aid1<<"_"<<aid2<<":"<<i;
+                    ss << "b_"<<aid1<<"_"<<aid2<<"_"<<i;
                     colid.push_back(add_column_to_ilp(_component_lp,ss.str(),factor*objv, 0, 1));
                     factor+=clamp(hyper*boscale);
                 }
@@ -1533,7 +1756,7 @@ namespace desres { namespace msys {
         int status=lpsolve::solve(qtotlp);
         if ((status == SUBOPTIMAL) && (std::chrono::system_clock::now() > _deadline)) {
             status = TIMEOUT;
-        }        
+        }
         _valid=(status==OPTIMAL || status==PRESOLVED);
 
         if(_valid){
