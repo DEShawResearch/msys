@@ -2240,6 +2240,12 @@ class Main(unittest.TestCase):
         msys.AssignBondOrderAndFormalCharge(mol.atoms, compute_resonant_charges=True)
         msys.AssignBondOrderAndFormalCharge(mol.atoms, 0, compute_resonant_charges=True)
 
+    def testResonantChargeNitro(self):
+        system = msys.FromSmilesString("c1ccc([N+](=O)[O-])nn1")
+        msys.AssignBondOrderAndFormalCharge(system, compute_resonant_charges=True)
+        q = [a["resonant_charge"] for a in system.atoms]
+        self.assertEqual(q, [0.0, 0.0, 0.0, 0.0, 1.0, -0.5, -0.5, 0.0, 0.0, 0.0, 0.0, 0.0])
+
     def testMemoryLeakPosVel(self):
         mol = msys.CreateSystem()
         for i in range(1000):

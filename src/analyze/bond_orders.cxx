@@ -24,9 +24,10 @@ namespace lpsolve {
 
 
 namespace {
-    double clamp(double v){
-        static const double increment=pow(2,20); // 20 binary digits = 1048576
-        return nearbyint(v*increment)/increment;
+    static const double CLAMP_INCREMENT = pow(2,20); // 20 binary digits = 1048576
+
+    double clamp(double v) {
+        return nearbyint(v*CLAMP_INCREMENT) / CLAMP_INCREMENT;
     }
 
     /* "Natural" electronegativity for lp */
@@ -98,13 +99,13 @@ namespace {
     }
 
     double get_ilp_objective(std::vector<double> const& objf,
-                             std::vector<int> const& solution){
+                             std::vector<int> const& solution) {
         assert(solution.size()==objf.size());
-        Quadsum obj=0.0;
-        for (unsigned idx=1; idx<solution.size();++idx){
-            obj += objf[idx]*solution[idx];
+        int64_t obj = 0;
+        for (unsigned idx=1; idx<solution.size(); ++idx) {
+            obj += (nearbyint(objf[idx] * CLAMP_INCREMENT) * solution[idx]);
         }
-        return obj.result();
+        return obj / CLAMP_INCREMENT;
     }
 
 
@@ -852,15 +853,15 @@ namespace desres { namespace msys {
         BondOrderAssigner* parent=_parent;
         std::ostringstream ss;
 
-        double lps=clamp(parent->atom_lone_pair_scale);
+        double lps = parent->atom_lone_pair_scale;
 
         for (Id aid1 : _component_atoms_present){
             electronRange const& range= asserted_find(parent->_atom_lp,aid1);
             assert(range.lb==0);
 
-            int anum1=parent->_mol->atom(aid1).atomic_number;
-            double eneg=enegLP +clamp(DataForElement(anum1).eneg);
-            double objv=-lps*eneg;
+            int anum1 = parent->_mol->atom(aid1).atomic_number;
+            double eneg = enegLP + DataForElement(anum1).eneg;
+            double objv = clamp(-lps*eneg);
 
             std::vector<int> colid;
             for(int i=1; i<=range.ub;++i){
