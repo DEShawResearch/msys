@@ -35,6 +35,7 @@ namespace desres { namespace msys { namespace smiles {
         atm.atomic_number = 1;
         atm.name = "H";
         mol->addBond(id, idH);
+        hcount.push_back(0);
     }
 
     int Smiles::addh(Id atm, int v1, int v2, int v3) {
@@ -112,7 +113,6 @@ namespace desres { namespace msys { namespace smiles {
         atm.stereo_parity = a->chiral;
         for (int i=0; i<a->hcount; i++) {
             addh(a->id);
-            hcount.push_back(0);
         }
     }
 
