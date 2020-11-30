@@ -77,7 +77,9 @@ Provenance Provenance::fromArgs(int argc, char *argv[]) {
     }
 
     /* executable */
-    prov.executable = executable_path(argv[0]);
+    if (argc > 0) {
+        prov.executable = executable_path(argv[0]);
+    }
 
     return prov;
 }
