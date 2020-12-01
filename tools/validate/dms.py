@@ -43,21 +43,6 @@ class TestAnton(TestCase):
             "Found %d hydrogens that are unconstrained: \n\t[%s]" % (num, formatted_results),
         )
 
-    def testConsistentMasses(self):
-        """Particles with equal atomic number must have equal mass.
-        Pseudos excluded."""
-        m = dict()
-        for a in self.mol.atoms:
-            m.setdefault(a.atomic_number, set()).add(a.mass)
-        for anum, masses in m.items():
-            if anum == 0:
-                continue
-            self.assertEqual(
-                len(masses),
-                1,
-                "Use dms-fix-mass to fix multiple masses for atomic number %s: \n\t%s" % (anum, list(masses)),
-            )
-
     def testOrthorhombicCell(self):
         """ Unit cell must be diagonal """
         cell = self.mol.getCell()
@@ -97,6 +82,22 @@ class TestAnton(TestCase):
 
 
 class TestStrict(TestCase):
+
+    def testConsistentMasses(self):
+        """Particles with equal atomic number must have equal mass.
+        Pseudos excluded."""
+        m = dict()
+        for a in self.mol.atoms:
+            m.setdefault(a.atomic_number, set()).add(a.mass)
+        for anum, masses in m.items():
+            if anum == 0:
+                continue
+            self.assertEqual(
+                len(masses),
+                1,
+                "Use dms-fix-mass to fix multiple masses for atomic number %s: \n\t%s" % (anum, list(masses)),
+            )
+
     def testSplitWaterResids(self):
         """every water molecule must have its own resid"""
         water_atoms = self.mol.select("water and atomicnumber 8")
