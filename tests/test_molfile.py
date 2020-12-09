@@ -484,7 +484,7 @@ class TestBonds(unittest.TestCase):
         self.assertTrue(a0 in a1.bonds)
         self.assertTrue(a1 in a0.bonds)
         orders = [(4,), ()]
-        self.assertTrue((r.bondorders == orders).all())
+        self.assertTrue(r.bondorders.tolist() == orders)
 
     def tearDown(self):
         try:
