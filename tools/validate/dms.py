@@ -81,68 +81,6 @@ class TestAnton(TestCase):
         self.assertEqual(len(bad), 0, "Found atoms with periodic contacts less than 1A: %s" % str(bad))
 
 
-class TestStrict(TestCase):
-
-    def testConsistentMasses(self):
-        """Particles with equal atomic number must have equal mass.
-        Pseudos excluded."""
-        m = dict()
-        for a in self.mol.atoms:
-            m.setdefault(a.atomic_number, set()).add(a.mass)
-        for anum, masses in m.items():
-            if anum == 0:
-                continue
-            self.assertEqual(
-                len(masses),
-                1,
-                "Use dms-fix-mass to fix multiple masses for atomic number %s: \n\t%s" % (anum, list(masses)),
-            )
-
-    def testSplitWaterResids(self):
-        """every water molecule must have its own resid"""
-        water_atoms = self.mol.select("water and atomicnumber 8")
-
-        help_string = "Use dms-fix-water-residues to put each water in its own residue."
-
-        for water_atom in water_atoms:
-            res = water_atom.residue
-            heavy = [a for a in res.atoms if a.atomic_number > 0]
-            self.assertEqual(len(heavy), 3, help_string)
-            fragids = set([x.fragid for x in res.atoms])
-            self.assertEqual(len(fragids), 1, help_string)
-
-    def testSparsify(self):
-        """ molecule must have all 1-4 exclusions.  """
-        # hash the exclusions and pairs
-        excls = set()
-        if not "exclusion" in self.mol.table_names:
-            return
-        ptr = self.mol.table("exclusion")._ptr
-        for t in ptr.terms():
-            ai, aj = ptr.atoms(t)
-            excls.add((ai, aj))
-        p14 = set()
-        mol = self.mol._ptr
-        for bi in mol.bonds():
-            bnd = mol.bond(bi)
-            b0 = bnd.i
-            b1 = bnd.j
-            for n0 in mol.bondedAtoms(b0):
-                if n0 == b1:
-                    continue
-                for n1 in mol.bondedAtoms(b1):
-                    if n1 == b0:
-                        continue
-                    if n1 == n0:
-                        continue
-                    pair = [n0, n1]
-                    pair.sort()
-                    p14.add(tuple(pair))
-
-        ediff = p14.difference(excls)
-        self.assertFalse(ediff, "%d 1-4 bonds not found in exclusions - is the file sparsified?" % len(ediff))
-
-
 class TestBasic(TestCase):
     def testKnots(self):
         """ the system must not contain knots for rings of size <= 10 """
@@ -226,17 +164,12 @@ def Validate(mol, strict=False, verbose=1, anton=True, all=False):
     else:
         verbosity = 2 if verbose else 1
 
-    if all:
-        strict = True
-    if strict:
+    if strict or all:
         anton = True
 
     tests = [UT.TestLoader().loadTestsFromTestCase(TestBasic)]
     if anton:
         tests.append(UT.TestLoader().loadTestsFromTestCase(TestAnton))
-
-    if strict:
-        tests.append(UT.TestLoader().loadTestsFromTestCase(TestStrict))
 
     suite = UT.TestSuite(tests)
     result = UT.TextTestRunner(verbosity=verbosity).run(suite)
