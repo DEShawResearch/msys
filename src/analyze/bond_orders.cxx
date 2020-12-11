@@ -194,15 +194,20 @@ namespace desres { namespace msys {
         rings=RingSystems(boa->_mol, keepRings);
         for (IdList const& ring : rings){
             if(ring.size()==1) continue;
-            std::set<Id> touched;
+            
+            std::map<Id, Id> touched;
             for (Id rid : ring){
                 for (Id bid : boa->_rings[rid]){
-                    touched.insert(bid);
+                    ++touched[bid];
                 }
             }
-            boa->_rings.push_back(IdList(touched.begin(),touched.end()));
+            boa->_rings.push_back(IdList());
+            IdList &rbonds=boa->_rings.back();
+            for (auto item: touched){
+                if (item.second > 1) continue;
+                rbonds.push_back(item.first);
+            }
         }
-
 
         boa->_totalValence=0;
         electronRange tmprange;
