@@ -696,10 +696,34 @@ namespace desres { namespace msys {
         get_ilp_solution(_component_lp, last_solution);
         double objf=get_ilp_objective(_component_objf,last_solution);
 
-        _component_resonant_solution.assign(nvars,0);
         std::vector<double> ones(nvars,1.0);
-        std::vector< std::vector<int> > newcons;
 
+        /* Add initial constraints to enforce the correct objective value 
+           1) group by variables that have the same contribution to the objective */
+        std::map<int, std::vector<int> > unique_envs;
+        for (unsigned i=1; i<nvars;++i){
+            int key = nearbyint(_component_objf[i] * CLAMP_INCREMENT);
+            unique_envs[key].push_back(static_cast<int>(i));
+        }
+        /* 2) add a constraint that enforces the same number of active variables within
+           each group of equivalent objective contributions. There is no way to get the same
+           objective if this is violated */
+        for (auto & kv: unique_envs){
+            std::vector<int> & rowdata=kv.second;
+            int nactive=rowdata.size();
+            int sum=0;
+            for (int icol: rowdata){
+                sum += last_solution[icol];
+            }              
+            if (!add_constraintex(_component_reslp, nactive, ones.data(), rowdata.data(), ROWTYPE_EQ, sum)){
+                printf("Couldnt add new constraint\n");
+                assert(false);
+            }
+        }
+
+        /* Now, add in additional constraints that exclude previously found solutions */
+        _component_resonant_solution.assign(nvars,0);
+        std::vector< std::vector<int> > newcons;
         while(true){
             for (unsigned i=1; i<nvars;++i){
                 _component_resonant_solution[i]+=last_solution[i];
