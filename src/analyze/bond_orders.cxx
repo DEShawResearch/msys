@@ -557,18 +557,11 @@ namespace desres { namespace msys {
         return seconds;
     }
 
-    ComponentAssigner::~ComponentAssigner() {
-        lpsolve::delete_lp(_component_lp);
-        lpsolve::delete_lp(_component_lpcopy);
-        lpsolve::delete_lp(_component_reslp);
-    }
-
     ComponentAssigner::ComponentAssigner(BondOrderAssigner* b,
                                          IdList const& comp,
                                          Id cid)
-        : _component_lp(NULL),
-          _component_lpcopy(NULL),
-          _component_reslp(NULL)
+        : _component_lp(nullptr, [](lpsolve::_lprec* p) {})
+        , _component_lpcopy(nullptr, [](lpsolve::_lprec* p) {})
     {
 
         ComponentAssigner* ca = this;
@@ -589,8 +582,7 @@ namespace desres { namespace msys {
     }
 
     void ComponentAssigner::reset(){
-        lpsolve::delete_lp(_component_lp);
-        _component_lp=lpsolve::copy_lp(_component_lpcopy);
+        _component_lp = unique_lp(lpsolve::copy_lp(_component_lpcopy.get()), lpsolve::delete_lp);
         _component_solution_valid=false;
     }
 
@@ -606,15 +598,15 @@ namespace desres { namespace msys {
         if(_component_solution_valid) reset();
 
         if(qTotal<0){
-            lpsolve::set_bounds(_component_lp, _component_charge_col  , -qTotal,-qTotal);
-            lpsolve::set_bounds(_component_lp, _component_charge_col+1, 0,      0);
-            lpsolve::set_constr_type(_component_lp,_component_charge_row  , ROWTYPE_EQ);
-            lpsolve::set_constr_type(_component_lp,_component_charge_row+1, ROWTYPE_LE);
+            lpsolve::set_bounds(_component_lp.get(), _component_charge_col  , -qTotal,-qTotal);
+            lpsolve::set_bounds(_component_lp.get(), _component_charge_col+1, 0,      0);
+            lpsolve::set_constr_type(_component_lp.get(),_component_charge_row  , ROWTYPE_EQ);
+            lpsolve::set_constr_type(_component_lp.get(),_component_charge_row+1, ROWTYPE_LE);
         }else{
-            lpsolve::set_bounds(_component_lp, _component_charge_col  , 0,      0);
-            lpsolve::set_bounds(_component_lp, _component_charge_col+1, qTotal, qTotal);
-            lpsolve::set_constr_type(_component_lp,_component_charge_row  , ROWTYPE_LE);
-            lpsolve::set_constr_type(_component_lp,_component_charge_row+1, ROWTYPE_EQ);
+            lpsolve::set_bounds(_component_lp.get(), _component_charge_col  , 0,      0);
+            lpsolve::set_bounds(_component_lp.get(), _component_charge_col+1, qTotal, qTotal);
+            lpsolve::set_constr_type(_component_lp.get(),_component_charge_row  , ROWTYPE_LE);
+            lpsolve::set_constr_type(_component_lp.get(),_component_charge_row+1, ROWTYPE_EQ);
         }
         _component_charge_set=true;
     }
@@ -622,11 +614,11 @@ namespace desres { namespace msys {
     void ComponentAssigner::unsetComponentCharge(){
         if(_component_solution_valid) reset();
         BondOrderAssigner* parent=_parent;
-        lpsolve::set_bounds(_component_lp, _component_charge_col,  0, parent->max_component_charge);
-        lpsolve::set_bounds(_component_lp, _component_charge_col+1,0, parent->max_component_charge);
+        lpsolve::set_bounds(_component_lp.get(), _component_charge_col,  0, parent->max_component_charge);
+        lpsolve::set_bounds(_component_lp.get(), _component_charge_col+1,0, parent->max_component_charge);
 
-        lpsolve::set_constr_type(_component_lp,_component_charge_row  , ROWTYPE_LE);
-        lpsolve::set_constr_type(_component_lp,_component_charge_row+1, ROWTYPE_LE);
+        lpsolve::set_constr_type(_component_lp.get(),_component_charge_row  , ROWTYPE_LE);
+        lpsolve::set_constr_type(_component_lp.get(),_component_charge_row+1, ROWTYPE_LE);
         _component_charge_set=false;
     }
 
@@ -638,10 +630,10 @@ namespace desres { namespace msys {
                 " Did you call solveIntegerLinearProgram first?";
             throw std::runtime_error(msg.str());
         }
-        int nrows=lpsolve::get_Norig_rows(_component_lp);
+        int nrows=lpsolve::get_Norig_rows(_component_lp.get());
         int qTotal=
-            - double_to_int(lpsolve::get_var_primalresult(_component_lp, nrows + _component_charge_col))
-            + double_to_int(lpsolve::get_var_primalresult(_component_lp, nrows + _component_charge_col+1));
+            - double_to_int(lpsolve::get_var_primalresult(_component_lp.get(), nrows + _component_charge_col))
+            + double_to_int(lpsolve::get_var_primalresult(_component_lp.get(), nrows + _component_charge_col+1));
         return qTotal;
     }
 
@@ -649,11 +641,8 @@ namespace desres { namespace msys {
 
         if(_component_solution_valid) return _component_solution_valid;
 
-        lpsolve::delete_lp(_component_reslp);
-        _component_reslp=lpsolve::copy_lp(_component_lp);
-
-        lpsolve::set_timeout(_component_lp, _parent->seconds_until_deadline());
-        int status=lpsolve::solve(_component_lp);
+        lpsolve::set_timeout(_component_lp.get(), _parent->seconds_until_deadline());
+        int status=lpsolve::solve(_component_lp.get());
         if ((status == SUBOPTIMAL) && (std::chrono::system_clock::now() > _parent->_deadline)) {
             status = TIMEOUT;
         }
@@ -663,19 +652,19 @@ namespace desres { namespace msys {
 #if DEBUGPRINT
             int qTotal=getSolvedComponentCharge();
             printf("Solution was found for component %u with Charge= %d   objf= %6.3f\n",
-                   _component_id, qTotal, lpsolve::get_objective(_component_lp));
+                   _component_id, qTotal, lpsolve::get_objective(_component_lp.get()));
 #endif
 #if DEBUGPRINT2
-            lpsolve::write_LP(_component_lp,stdout);
-            lpsolve::print_objective(_component_lp);
-            lpsolve::print_solution(_component_lp,1);
+            lpsolve::write_LP(_component_lp.get(), stdout);
+            lpsolve::print_objective(_component_lp.get());
+            lpsolve::print_solution(_component_lp.get(), 1);
 #endif
         }else{
 #if DEBUGPRINT
             printf("No solution found for component %u\n",_component_id);
 #endif
 #if DEBUGPRINT2
-            lpsolve::write_LP(_component_lp,stdout);
+            lpsolve::write_LP(_component_lp.get(), stdout);
 #endif
         }
 
@@ -695,7 +684,7 @@ namespace desres { namespace msys {
                 " Did you call solveIntegerLinearProgram first?";
             throw std::runtime_error(msg.str());
         }
-        return lpsolve::get_objective(_component_lp);
+        return lpsolve::get_objective(_component_lp.get());
     }
 
 #ifdef MSYS_WITHOUT_BLISS
@@ -708,7 +697,7 @@ namespace desres { namespace msys {
 #endif
 
     void ComponentAssigner::generate_resonance_forms_old() {
-        int ncols = lpsolve::get_Norig_columns(_component_lp);
+        int ncols = lpsolve::get_Norig_columns(_component_lp.get());
         unsigned nvars = ncols + 1;
         std::vector<double> ones(nvars, 1.0);
 
@@ -762,74 +751,25 @@ namespace desres { namespace msys {
         });
     }
 
-    void ComponentAssigner::generate_resonance_forms_old1() {
+    void ComponentAssigner::generate_resonance_forms_new() {
         generate_resonance_forms_core([&](
             std::vector<ilp_resonance_constraint>& newcons,
             const std::vector<int>& lastSolution,
             std::vector<double>& sumResonantSolution,
             lpsolve::_lprec* resLP
         ) {
-            // http://yetanothermathprogrammingconsultant.blogspot.com/2011/10/integer-cuts.html
-            ilp_resonance_constraint cons;
-
-            int numOnes = 0;
-
-            for (ilpAtomMap::value_type const& kv : _component_atom_cols) {
-                ilpAtom const& iatom=kv.second;
-                for(int icol=iatom.ilpCol, i=iatom.ilpLB; i<=iatom.ilpUB;++i,++icol){
-                    if (icol > 0) {
-                        numOnes += (lastSolution[icol] == 1);
-                        cons.colno.push_back(icol);
-                        cons.coeff.push_back(lastSolution[icol] == 1 ? 1.0 : -1.0);
-                    }
-                }
-            }
-
-            for (ilpBondMap::value_type const& kv : _component_bond_cols ){
-                ilpBond const& ibond=kv.second;
-                for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB;++i,++icol){
-                    if (icol > 0) {
-                        numOnes += (lastSolution[icol] == 1);
-                        cons.colno.push_back(icol);
-                        cons.coeff.push_back(lastSolution[icol] == 1 ? 1.0 : -1.0);
-                    }
-                }
-            }
-
-            cons.rhs = numOnes - 1;
-            cons.rowtype = ROWTYPE_LE;
-            newcons.push_back(cons);
-
-            for (auto i = 0u; i < lastSolution.size(); i++) {
-	      sumResonantSolution[i] += lastSolution[i];
-            }
-	    
-            return 1;
-				      });
-	}
-
-
-    void ComponentAssigner::generate_resonance_forms_new2() {
-        generate_resonance_forms_core([&](
-            std::vector<ilp_resonance_constraint>& newcons,
-            const std::vector<int>& lastSolution,
-            std::vector<double>& sumResonantSolution,
-            lpsolve::_lprec* resLP
-        ) {
-            std::vector<std::vector<int>> permutations = generate_resonance_ilp_permutations(_component_lp, lastSolution);
+            std::vector<std::vector<int>> permutations = generate_resonance_ilp_permutations(_component_lp.get(), lastSolution);
             for (auto const& solution: permutations) {
                 // http://yetanothermathprogrammingconsultant.blogspot.com/2011/10/integer-cuts.html
                 ilp_resonance_constraint cons;
-
-                int numOnes = 0;
+                cons.rowtype = ROWTYPE_LE;
 
                 for (ilpAtomMap::value_type const& kv : _component_atom_cols) {
                     ilpAtom const& iatom=kv.second;
                     for(int icol=iatom.ilpCol, i=iatom.ilpLB; i<=iatom.ilpUB;++i,++icol){
-                        if (icol > 0) {
-                            numOnes += (solution[icol] == 1);
+                        if (icol > 0 && solution[icol] == 1) {
                             cons.colno.push_back(icol);
-                            cons.coeff.push_back(solution[icol] == 1 ? 1.0 : -1.0);
+                            cons.coeff.push_back(1.0);
                         }
                     }
                 }
@@ -837,18 +777,28 @@ namespace desres { namespace msys {
                 for (ilpBondMap::value_type const& kv : _component_bond_cols ){
                     ilpBond const& ibond=kv.second;
                     for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB;++i,++icol){
-                        if (icol > 0) {
-                            numOnes += (solution[icol] == 1);
+                        if (icol > 0 && solution[icol] == 1) {
                             cons.colno.push_back(icol);
-                            cons.coeff.push_back(solution[icol] == 1 ? 1.0 : -1.0);
+                            cons.coeff.push_back(1.0);
                         }
                     }
                 }
 
-                cons.rhs = numOnes - 1;
-                cons.rowtype = ROWTYPE_LE;
+                if (cons.colno.size() > 0) {
+                    cons.coeff.assign(cons.colno.size(), 1.0);
+                    cons.rhs = cons.colno.size() - 1.0;
+                } else {
+                    int ncols = lpsolve::get_Norig_columns(_component_lp.get());
+                    unsigned nvars = ncols + 1;
+                    cons.colno.resize(nvars);
+                    cons.coeff.resize(nvars);
+                    cons.rhs = -1;
+                    for (auto i=0u; i < nvars; i++) {
+                        cons.colno[i] = i;
+                        cons.coeff[i] = 1.0;
+                    }
+                }
                 newcons.push_back(cons);
-
                 for (auto i = 0u; i < solution.size(); i++) {
                     sumResonantSolution[i] += solution[i];
                 }
@@ -867,28 +817,42 @@ namespace desres { namespace msys {
         )>
         build_resonance_constraints_from_soln
     ) {
-        using lprec_ptr = std::unique_ptr<lpsolve::_lprec, void(*)(lpsolve::_lprec*)>;
-        int ncols=lpsolve::get_Norig_columns(_component_lp);
+        int ncols=lpsolve::get_Norig_columns(_component_lp.get());
         unsigned nvars=ncols+1;
 
         std::vector<int> last_solution;
-        get_ilp_solution(_component_lp, last_solution);
+        get_ilp_solution(_component_lp.get(), last_solution);
         double objf = get_ilp_objective(_component_objf,last_solution);
 
         std::vector<ilp_resonance_constraint> newcons;
         std::vector<ilp_resonance_constraint> accelcons;
+        // these constraints are built in the original indexing, before any
+        // presolves. but _component_lp might have some presolved columns, so
+        // when we apply them we need to apply them to a copy of _component_lpcopy,
+        // since that one was never (pre)solved
         build_acceleration_resonance_constraints(last_solution, accelcons);
         std::vector<double> sumResonantSolution(nvars, 0);
         int numSolves = 1;
         int numResonanceForms = 0;
 
         while (true) {
-            lprec_ptr resLP(lpsolve::copy_lp(_component_reslp), lpsolve::delete_lp);
+            auto resLP = unique_lp(lpsolve::copy_lp(_component_lpcopy.get()), lpsolve::delete_lp);
+            assert(1 + lpsolve::get_Norig_columns(resLP.get()) == static_cast<int>(_component_objf.size()));
+            assert(lpsolve::get_Ncolumns(resLP.get()) == lpsolve::get_Norig_columns(resLP.get()));
+            assert(lpsolve::get_Nrows(resLP.get()) == lpsolve::get_Norig_rows(resLP.get()));
+
             numResonanceForms += build_resonance_constraints_from_soln(
                 newcons, last_solution, sumResonantSolution, resLP.get());
-            add_ilp_resonance_constraints(resLP.get(), newcons);
+	        assert(lpsolve::set_add_rowmode(resLP.get(), true));
             add_ilp_resonance_constraints(resLP.get(), accelcons);
+            add_ilp_resonance_constraints(resLP.get(), newcons);
+	        assert(lpsolve::set_add_rowmode(resLP.get(), false));
 
+#if DEBUGPRINT2
+            // better to print before solving, since presolving changes the structure
+            // of the problem a bit
+            lpsolve::write_LP(resLP.get(), stdout);
+#endif
             lpsolve::set_timeout(resLP.get(), _parent->seconds_until_deadline());
             int status = lpsolve::solve(resLP.get());
             numSolves++;
@@ -906,7 +870,6 @@ namespace desres { namespace msys {
                     _component_id, newObjf);
 #endif
 #if DEBUGPRINT2
-                lpsolve::write_LP(resLP.get(), stdout);
                 if (status == OPTIMAL || status == PRESOLVED) {
                     lpsolve::print_objective(resLP.get());
                     lpsolve::print_solution(resLP.get(), 1);
@@ -921,9 +884,6 @@ namespace desres { namespace msys {
             }else{
 #if DEBUGPRINT
                 printf("No resonance Solution found for component %u\n",_component_id);
-#endif
-#if DEBUGPRINT2
-                lpsolve::write_LP(resLP.get(), stdout);
 #endif
                 break;
             }
@@ -940,7 +900,10 @@ namespace desres { namespace msys {
         }
     }
 
-    void ComponentAssigner::build_acceleration_resonance_constraints(const std::vector<int> solution, std::vector<ilp_resonance_constraint>& newcons) {
+    void ComponentAssigner::build_acceleration_resonance_constraints(
+        const std::vector<int> solution,
+        std::vector<ilp_resonance_constraint>& newcons
+    ) {
         // Add constraints to enforce the correct objective value
         // These are not essential for correctness, but have been observed to speed up the process
         // of finding distinct resonance solutions
@@ -956,14 +919,16 @@ namespace desres { namespace msys {
            each group of equivalent objective contributions. There is no way to get the same
            objective if this is violated */
         for (auto & kv: unique_envs){
-            std::vector<int> & colno=kv.second;
-	    if (colno.size() < 2) {
-	      continue;
-	    }
+            std::vector<int> colno=kv.second;
+            if (colno.size() < 2) {
+                continue;
+            }
+
             int sum = 0;
             for (int icol: colno){
                 sum += solution[icol];
             }
+
             std::vector<double> coeff(colno.size(), 1.0);
             newcons.push_back(ilp_resonance_constraint{
                 colno,
@@ -978,16 +943,21 @@ namespace desres { namespace msys {
         lpsolve::_lprec* lp,
         const std::vector<ilp_resonance_constraint>& constraints)
     {
-        lpsolve::set_add_rowmode(lp, true);
+        assert (lpsolve::get_Norig_columns(lp) == lpsolve::get_Ncolumns(lp));
         for (auto i = 0u; i < constraints.size(); i++) {
             auto const& c = constraints[i];
             assert(c.colno.size() == c.coeff.size());
+            for (auto colid : c.colno) {
+                if (!(colid > 0 && colid <= lpsolve::get_Norig_columns(lp)+1)) {
+                    printf("bad colno=%d %d\n", colid, lpsolve::get_Norig_columns(lp));
+                    assert(false);
+                }
+            }
             if (!lpsolve::add_constraintex(lp, c.colno.size(), const_cast<double*>(&c.coeff[0]), const_cast<int*>(&c.colno[0]), c.rowtype, c.rhs)) {
                 fprintf(stderr, "Failed to add new constraint\n");
                 assert(false);
             }
         }
-        lpsolve::set_add_rowmode(lp, false);
     }
 
     void ComponentAssigner::extractComponentSolution(solutionMap &atominfo,
@@ -996,17 +966,13 @@ namespace desres { namespace msys {
 
         assert(_component_solution_valid);
 
-        get_ilp_solution(_component_lp,_component_solution);
+        get_ilp_solution(_component_lp.get(), _component_solution);
         if (_parent->compute_resonant_charge()) {
-            if (std::string(getenv("GENERATE_RESONANCE_FORMS_NEW")) == "0") {
+            #ifdef MSYS_WITHOUT_BLISS
                 generate_resonance_forms_old();
-            } else if (std::string(getenv("GENERATE_RESONANCE_FORMS_NEW")) == "1") {
-                generate_resonance_forms_old1();
-            }else if (std::string(getenv("GENERATE_RESONANCE_FORMS_NEW")) == "2") {
-                generate_resonance_forms_new2();
-            } else {
-                assert(false);
-            }
+            #else
+                generate_resonance_forms_new();
+            #endif
         } else {
             _component_resonant_solution.resize(_component_solution.size());
             for (Id i=0; i<_component_solution.size(); ++i){
@@ -1091,7 +1057,7 @@ namespace desres { namespace msys {
             for(int i=1; i<=range.ub;++i){
                 ss.str("");
                 ss << "a_"<<aid1 << "_"<<i;
-                colid.push_back(add_column_to_ilp(_component_lp,ss.str(),i*objv, 0, 1));
+                colid.push_back(add_column_to_ilp(_component_lp.get(), ss.str(),i*objv, 0, 1));
             }
             if(colid.size())
                 _component_atom_cols.insert(ilpAtomMap::value_type(aid1,ilpAtom(colid[0],1,range.ub)));
@@ -1133,7 +1099,7 @@ namespace desres { namespace msys {
                 for(int i=2; i<=range.ub;++i){
                     ss.str("");
                     ss << "b_"<<aid1<<"_"<<aid2<<"_"<<i;
-                    colid.push_back(add_column_to_ilp(_component_lp,ss.str(),factor*objv, 0, 1));
+                    colid.push_back(add_column_to_ilp(_component_lp.get(), ss.str(), factor*objv, 0, 1));
                     factor+=clamp(hyper*boscale);
                 }
                 if(colid.size())
@@ -1189,9 +1155,9 @@ namespace desres { namespace msys {
             /* Only need to keep track of the first column id */
             if(GroupForElement(anum)==18){
                 /* nobel gases shouldnt be negative */
-                kv.second.qCol=add_column_to_ilp(_component_lp,ss.str(),qMinus+shift,0, 0);
+                kv.second.qCol=add_column_to_ilp(_component_lp.get(), ss.str(),qMinus+shift,0, 0);
             }else{
-                kv.second.qCol=add_column_to_ilp(_component_lp,ss.str(),qMinus+shift,0,parent->absmax_atom_charge);
+                kv.second.qCol=add_column_to_ilp(_component_lp.get(), ss.str(),qMinus+shift,0,parent->absmax_atom_charge);
             }
 
 
@@ -1199,16 +1165,16 @@ namespace desres { namespace msys {
             ss << "qP_"<<aid1;
             if(GroupForElement(anum)>16){
                 /* halogens and nobel gases shouldnt be positive */
-                add_column_to_ilp(_component_lp,ss.str(), qPlus ,0, 0);
+                add_column_to_ilp(_component_lp.get(), ss.str(), qPlus ,0, 0);
             }else{
-                add_column_to_ilp(_component_lp,ss.str(), qPlus ,0,parent->absmax_atom_charge);
+                add_column_to_ilp(_component_lp.get(), ss.str(), qPlus ,0,parent->absmax_atom_charge);
             }
 
             if (PeriodForElement(anum)>2){
                 ss.str("");
                 ss << "hyper_"<<aid1;
                 int maxHyper=std::max(0,GroupForElement(anum)-14);
-                kv.second.hyperCol=add_column_to_ilp(_component_lp,ss.str(), hyper,0,maxHyper);
+                kv.second.hyperCol=add_column_to_ilp(_component_lp.get(), ss.str(), hyper,0,maxHyper);
             }
 
         }
@@ -1239,18 +1205,18 @@ namespace desres { namespace msys {
 
             ss.str("");
             ss << "rn_"<<ridx; // 'n' in 4n+2 pi electrons for aromaticity
-            int colid=add_column_to_ilp(_component_lp,ss.str(),0,0,1000);
+            int colid=add_column_to_ilp(_component_lp.get(),ss.str(),0,0,1000);
 
             /* Only need to keep track of the first column id */
             _component_ring_cols.insert(ilpRingMap::value_type(ridx,colid));
 
             ss.str("");
             ss << "rs_"<<ridx; // do we need to subtract electrons from ring to make it aromatic?
-            add_column_to_ilp(_component_lp,ss.str(), objv, 0, 2);
+            add_column_to_ilp(_component_lp.get(), ss.str(), objv, 0, 2);
 
             ss.str("");
             ss << "ra_"<<ridx; // or add electrons to ring to make it aromatic?
-            add_column_to_ilp(_component_lp,ss.str(), objv, 0, 2);
+            add_column_to_ilp(_component_lp.get(), ss.str(), objv, 0, 2);
 
         }
     }
@@ -1264,12 +1230,12 @@ namespace desres { namespace msys {
         ss.str("");
         ss << "qCompm_"<< _component_id;
         /* Only need to keep track of the first column id */
-        _component_charge_col=add_column_to_ilp(_component_lp,ss.str(),
+        _component_charge_col=add_column_to_ilp(_component_lp.get(), ss.str(),
                clamp(parent->component_minus_charge_penalty),0,parent->max_component_charge);
 
         ss.str("");
         ss << "qCompp_"<< _component_id;
-        add_column_to_ilp(_component_lp,ss.str(),
+        add_column_to_ilp(_component_lp.get(), ss.str(),
                clamp(parent->component_plus_charge_penalty),0,parent->max_component_charge);
 
     }
@@ -1277,7 +1243,7 @@ namespace desres { namespace msys {
     void ComponentAssigner::add_indicator_constraints(){
         BondOrderAssigner* parent=_parent;
 
-        int ncols=lpsolve::get_Norig_columns(_component_lp);
+        int ncols=lpsolve::get_Norig_columns(_component_lp.get());
         std::vector<double> rowdata;
 
         MultiIdList strained;
@@ -1297,8 +1263,8 @@ namespace desres { namespace msys {
             for(int icol=iatom.ilpCol, i=iatom.ilpLB; i<=iatom.ilpUB;++i,++icol){
                 rowdata.at(icol)=1;
             }
-            lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_GE,0);
-            lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_LE,1);
+            lpsolve::add_constraint(_component_lp.get(), &rowdata[0],ROWTYPE_GE,0);
+            lpsolve::add_constraint(_component_lp.get(), &rowdata[0],ROWTYPE_LE,1);
 
         }
         for (ilpBondMap::value_type const& kv : _component_bond_cols){
@@ -1309,8 +1275,8 @@ namespace desres { namespace msys {
             for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB; ++i,++icol){
                 rowdata.at(icol)=1;
             }
-            lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_GE,0);
-            lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_LE,1);
+            lpsolve::add_constraint(_component_lp.get(), &rowdata[0],ROWTYPE_GE,0);
+            lpsolve::add_constraint(_component_lp.get(), &rowdata[0],ROWTYPE_LE,1);
         }
 
         /* adjacent bonds cant both have bo > 1 in rings */
@@ -1323,7 +1289,7 @@ namespace desres { namespace msys {
                     rowdata.at(icol)=(i-1);
                 }
             }
-            lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_LE,1);
+            lpsolve::add_constraint(_component_lp.get(), &rowdata[0],ROWTYPE_LE,1);
         }
     }
 
@@ -1332,7 +1298,7 @@ namespace desres { namespace msys {
 
         BondOrderAssigner* parent=_parent;
 
-        int ncols=lpsolve::get_Norig_columns(_component_lp);
+        int ncols=lpsolve::get_Norig_columns(_component_lp.get());
         std::vector<double> rowdata;
 
         for (ilpAtomMap::value_type const& kv : _component_atom_cols){
@@ -1367,14 +1333,14 @@ namespace desres { namespace msys {
                 std::vector<double> rowcopy(rowdata);
                 if(parent->allow_hextet_for_atom(aid0)){
                     /* bound constraint */
-                    lpsolve::add_constraint(_component_lp,&rowcopy[0],ROWTYPE_LE,atomoct);
-                    lpsolve::add_constraint(_component_lp,&rowcopy[0],ROWTYPE_GE,std::max(atomoct-2,0));
+                    lpsolve::add_constraint(_component_lp.get(), &rowcopy[0],ROWTYPE_LE,atomoct);
+                    lpsolve::add_constraint(_component_lp.get(), &rowcopy[0],ROWTYPE_GE,std::max(atomoct-2,0));
                 }else{
                     if(iatom.hyperCol){
                         rowcopy[iatom.hyperCol]=-1;
                     }
                     /* equality constraint */
-                    lpsolve::add_constraint(_component_lp,&rowcopy[0],ROWTYPE_EQ,atomoct);
+                    lpsolve::add_constraint(_component_lp.get(), &rowcopy[0],ROWTYPE_EQ,atomoct);
                 }
             }
 
@@ -1386,13 +1352,13 @@ namespace desres { namespace msys {
                 /* Negative charge constraint */
                 rowcopy.at(iatom.qCol)=-1;
                 rowcopy.at(iatom.qCol+1)=0;
-                lpsolve::add_constraint(_component_lp,&rowcopy[0],ROWTYPE_LE,atomvalence);
+                lpsolve::add_constraint(_component_lp.get(), &rowcopy[0],ROWTYPE_LE,atomvalence);
 
                 /* positive charge constraint */
                 for(int k=0;k<ncols;++k) rowcopy.at(k+1)*=-1;
                 rowcopy.at(iatom.qCol)=0;
                 rowcopy.at(iatom.qCol+1)=-1;
-                lpsolve::add_constraint(_component_lp,&rowcopy[0],ROWTYPE_LE,-atomvalence);
+                lpsolve::add_constraint(_component_lp.get(), &rowcopy[0],ROWTYPE_LE,-atomvalence);
 
             }
 
@@ -1419,7 +1385,7 @@ namespace desres { namespace msys {
                             rowdata.at(icol)=i-1;
                         }
                     }
-                    lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_EQ,2);
+                    lpsolve::add_constraint(_component_lp.get(), &rowdata[0],ROWTYPE_EQ,2);
                 }
             }
         }
@@ -1429,7 +1395,7 @@ namespace desres { namespace msys {
     void ComponentAssigner::add_component_electron_constraint(){
 
         BondOrderAssigner* parent=_parent;
-        int ncols=lpsolve::get_Norig_columns(_component_lp);
+        int ncols=lpsolve::get_Norig_columns(_component_lp.get());
         std::vector<double> rowdata(ncols+1,0);
 
         int valence=0;
@@ -1469,14 +1435,14 @@ namespace desres { namespace msys {
         /* Negative charge constraint */
         rowdata.at(_component_charge_col)=-1;
         rowdata.at(_component_charge_col+1)=0;
-        lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_LE,valence);
-         _component_charge_row=lpsolve::get_Norig_rows(_component_lp);
+        lpsolve::add_constraint(_component_lp.get(), &rowdata[0],ROWTYPE_LE,valence);
+         _component_charge_row=lpsolve::get_Norig_rows(_component_lp.get());
 
         /* positive charge constraint */
         for(int k=0;k<ncols;++k) rowdata.at(k+1)*=-1;
         rowdata.at(_component_charge_col)=0;
         rowdata.at(_component_charge_col+1)=-1;
-        lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_LE,-valence);
+        lpsolve::add_constraint(_component_lp.get(), &rowdata[0],ROWTYPE_LE,-valence);
     }
 
 
@@ -1484,7 +1450,7 @@ namespace desres { namespace msys {
 
         BondOrderAssigner* parent=_parent;
 
-        int ncols=lpsolve::get_Norig_columns(_component_lp);
+        int ncols=lpsolve::get_Norig_columns(_component_lp.get());
         std::vector<double> rowdata;
 
         /* colid   : n in 4n+2 pi electrons
@@ -1529,31 +1495,31 @@ namespace desres { namespace msys {
             /* constraint on subtracting electrons from ring */
             rowdata.at(colid+1)=-1;
             rowdata.at(colid+2)= 0;
-            lpsolve::add_constraint(_component_lp, &rowdata[0], ROWTYPE_LE, target);
+            lpsolve::add_constraint(_component_lp.get(), &rowdata[0], ROWTYPE_LE, target);
 
             /* constraint on adding electrons to ring */
             for(int k=0;k<ncols;++k) rowdata.at(k+1)*=-1;
             rowdata.at(colid+1)= 0;
             rowdata.at(colid+2)=-1;
-            lpsolve::add_constraint(_component_lp, &rowdata[0], ROWTYPE_LE,-target);
+            lpsolve::add_constraint(_component_lp.get(), &rowdata[0], ROWTYPE_LE,-target);
         }
     }
 
     void ComponentAssigner::build_integer_linear_program(){
 
-        lpsolve::delete_lp(_component_lp);
-        lpsolve::delete_lp(_component_lpcopy);
-        _component_lp = lpsolve::make_lp(0,0);
-        lpsolve::set_scaling(_component_lp,SCALE_NONE);
+        // lpsolve::delete_lp(_component_lp);
+        // lpsolve::delete_lp(_component_lpcopy);
+        _component_lp = unique_lp(lpsolve::make_lp(0,0), lpsolve::delete_lp);
+        lpsolve::set_scaling(_component_lp.get(), SCALE_NONE);
         /* NOTE: *ALWAYS* use at least PRESOLVE_COLS. It allows for simple determination of
            possibly resonant systems, and significantly reduces the model size. */
         int presolvetype=PRESOLVE_ROWS | PRESOLVE_COLS | PRESOLVE_LINDEP | PRESOLVE_MERGEROWS;
         presolvetype |= PRESOLVE_IMPLIEDSLK | PRESOLVE_REDUCEGCD | PRESOLVE_BOUNDS;
         //presolvetype=PRESOLVE_NONE;
-        lpsolve::set_presolve(_component_lp,presolvetype, lpsolve::get_presolveloops(_component_lp) );
+        lpsolve::set_presolve(_component_lp.get(),presolvetype, lpsolve::get_presolveloops(_component_lp.get()) );
 
 #if DEBUGPRINT==0
-        lpsolve::set_verbose(_component_lp,0);
+        lpsolve::set_verbose(_component_lp.get(),0);
 #endif
 
         // Step 1) Add columns and set objective function to minimize
@@ -1565,24 +1531,24 @@ namespace desres { namespace msys {
 
         /* The objective values for presolved columns get removed,
            so we copy the total objective vector and save it here */
-        _component_objf.assign(lpsolve::get_Norig_columns(_component_lp)+1,0);
-        lpsolve::get_row(_component_lp,0,&_component_objf[0]);
+        _component_objf.assign(lpsolve::get_Norig_columns(_component_lp.get())+1,0);
+        lpsolve::get_row(_component_lp.get(),0,&_component_objf[0]);
         _component_objf[0]=0.0;
 
         // Step 2) Add rows (constraints/equalities)
-        lpsolve::set_add_rowmode(_component_lp, true );
+        assert(lpsolve::set_add_rowmode(_component_lp.get(), true));
 
         add_indicator_constraints();
         add_atom_octet_and_charge_constraints();
         add_aromatic_ring_constraints();
         add_component_electron_constraint();
 
-        lpsolve::set_add_rowmode(_component_lp, false);
+        assert(lpsolve::set_add_rowmode(_component_lp.get(), false));
 
         /* after calling lpsolve::solve when presolve is in effect, its impossible to change
            any of the constraints (eg total charge) and re-solve. Therefore, we copy the model
            and update the constraints before (re)solving the model */
-        _component_lpcopy=lpsolve::copy_lp(_component_lp);
+        _component_lpcopy = unique_lp(lpsolve::copy_lp(_component_lp.get()), lpsolve::delete_lp);
     }
 
 
@@ -1766,6 +1732,7 @@ namespace desres { namespace msys {
 
         if(_valid){
 #if DEBUGPRINT
+
             printf("Solution was found for Total Charge= %d\n", _total_charge);
 #endif
 #if DEBUGPRINT2

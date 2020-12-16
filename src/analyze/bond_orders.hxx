@@ -29,6 +29,7 @@ namespace desres { namespace msys {
 
     class ComponentAssigner;
     typedef std::shared_ptr<ComponentAssigner> ComponentAssignerPtr;
+    typedef std::unique_ptr<lpsolve::_lprec, void(*)(lpsolve::_lprec*)> unique_lp;
 
     class BondOrderAssigner {
         friend class ComponentAssigner;
@@ -143,7 +144,6 @@ namespace desres { namespace msys {
     public:
 
         ComponentAssigner(BondOrderAssigner* boa, IdList const& comp, Id cid);
-        ~ComponentAssigner();
 
         void build_integer_linear_program();
         void reset();
@@ -213,9 +213,8 @@ namespace desres { namespace msys {
         std::vector<int> _component_solution;
         std::vector<double> _component_resonant_solution;
 
-        lpsolve::_lprec *_component_lp;
-        lpsolve::_lprec *_component_lpcopy;
-        lpsolve::_lprec *_component_reslp;
+        unique_lp _component_lp;
+        unique_lp _component_lpcopy;
 
         void set_atom_charge_penalties();
         void set_atom_lonepair_penalties();
@@ -230,8 +229,7 @@ namespace desres { namespace msys {
 
         /* Resonance Generation */
         void generate_resonance_forms_old();
-        void generate_resonance_forms_old1();
-        void generate_resonance_forms_new2();
+        void generate_resonance_forms_new();
         void add_ilp_resonance_constraints(lpsolve::_lprec* lp, const std::vector<ilp_resonance_constraint>& constraints);
 
         std::vector<std::vector<int>> generate_resonance_ilp_permutations(
