@@ -875,6 +875,8 @@ namespace desres { namespace msys {
         double objf = get_ilp_objective(_component_objf,last_solution);
 
         std::vector<ilp_resonance_constraint> newcons;
+        std::vector<ilp_resonance_constraint> accelcons;
+        build_acceleration_resonance_constraints(last_solution, accelcons);
         std::vector<double> sumResonantSolution(nvars, 0);
         int numSolves = 1;
         int numResonanceForms = 0;
@@ -883,14 +885,14 @@ namespace desres { namespace msys {
             lprec_ptr resLP(lpsolve::copy_lp(_component_reslp), lpsolve::delete_lp);
             numResonanceForms += build_resonance_constraints_from_soln(
                 newcons, last_solution, sumResonantSolution, resLP.get());
-            build_acceleration_resonance_constraints(last_solution, newcons);
             add_ilp_resonance_constraints(resLP.get(), newcons);
+            add_ilp_resonance_constraints(resLP.get(), accelcons);
 
             lpsolve::set_timeout(resLP.get(), _parent->seconds_until_deadline());
             int status = lpsolve::solve(resLP.get());
             numSolves++;
 
-            if ((status == SUBOPTIMAL) && (std::chrono::system_clock::now() > _parent->_deadline)) {
+            if ((status == SUBOPTIMAL) || (std::chrono::system_clock::now() > _parent->_deadline)) {
                 status = TIMEOUT;
                 throw std::runtime_error("Timeout reached");
             }
@@ -954,6 +956,9 @@ namespace desres { namespace msys {
            objective if this is violated */
         for (auto & kv: unique_envs){
             std::vector<int> & colno=kv.second;
+	    if (colno.size() < 2) {
+	      continue;
+	    }
             int sum = 0;
             for (int icol: colno){
                 sum += solution[icol];

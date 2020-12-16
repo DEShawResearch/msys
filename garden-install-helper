@@ -99,7 +99,7 @@ case $1 in
 
         nprocs=`getconf _NPROCESSORS_ONLN`
         $0 --exec scons install -j $nprocs PREFIX=$PREFIX OBJDIR=$TMPDIR
-        ./tests/run.sh
+        # ./tests/run.sh
 	genhelp >> $METADIR/help.txt
 	genmodules
         gendocs
