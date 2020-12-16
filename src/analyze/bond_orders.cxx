@@ -1088,28 +1088,29 @@ namespace desres { namespace msys {
         MultiIdList strained;
 
         for (ilpAtomMap::value_type const& kv : _component_atom_cols){
-            ilpAtom const& iatom=kv.second;
-            rowdata.assign(ncols+1,0);
-
-            /* Must choose one of the available lp counts */
-            for(int icol=iatom.ilpCol, i=iatom.ilpLB; i<=iatom.ilpUB;++i,++icol){
-                rowdata.at(icol)=1;
-            }
-            lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_GE,0);
-            lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_LE,1);
-
             if(parent->_ringAtoms.count(kv.first)){
                 IdList bonds=parent->_mol->filteredBondsForAtom(kv.first,*parent->_filter);
                 if(bonds.size()==2){
                     strained.push_back(bonds);
                 }
             }
+            ilpAtom const& iatom=kv.second;
+            if (iatom.ilpCol==0) continue;
+
+            rowdata.assign(ncols+1,0);
+            /* Must choose at most one of the available lp counts */
+            for(int icol=iatom.ilpCol, i=iatom.ilpLB; i<=iatom.ilpUB;++i,++icol){
+                rowdata.at(icol)=1;
+            }
+            lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_GE,0);
+            lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_LE,1);
 
         }
         for (ilpBondMap::value_type const& kv : _component_bond_cols){
             ilpBond const& ibond =kv.second;
+            if (ibond.ilpCol==0) continue;
             rowdata.assign(ncols+1,0);
-            /* Must choose one of the available bond orders */
+            /* Must choose at most one of the available bond orders */
             for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB; ++i,++icol){
                 rowdata.at(icol)=1;
             }
@@ -1117,10 +1118,12 @@ namespace desres { namespace msys {
             lpsolve::add_constraint(_component_lp,&rowdata[0],ROWTYPE_LE,1);
         }
 
+        /* adjacent bonds cant both have bo > 1 in rings */
         for ( IdList &bids : strained){
             rowdata.assign(ncols+1,0);
             ilpBond list[]={asserted_find(_component_bond_cols,bids[0]),asserted_find(_component_bond_cols,bids[1])};
             for (ilpBond const& ibond : list){
+                if (ibond.ilpCol==0) continue;
                 for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB; ++i,++icol){
                     rowdata.at(icol)=(i-1);
                 }
