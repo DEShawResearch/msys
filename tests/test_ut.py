@@ -1140,6 +1140,15 @@ class TestAtomsel(unittest.TestCase):
             self.assertEqual(id1, id3)
             self.assertEqual(id2, id4)
 
+    def testSmartsQuotes(self):
+        """smarts can be single or double quoted"""
+        mol = msys.Load("tests/files/jandor.sdf")
+        a = mol.select("smarts 'CC'")
+        b = mol.select('smarts "CC"')
+        c = mol.select('smarts CC')
+        self.assertEqual(a,b)
+        self.assertEqual(a,c)
+
     def testBaselines(self):
         with open("tests/atomsel_tests.json") as f:
             d = json.load(f)

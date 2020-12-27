@@ -373,7 +373,9 @@ void KeyExpr::eval(Selection const& s, std::vector<double>& v) {
 void KeyPredicate::eval(Selection& s) {
     auto f = strfuncs.find(name);
     if (f!=strfuncs.end()) {
-        f->second(q->mol, va->sval, s);
+        auto vals(va->sval);
+        vals.insert(vals.end(), va->regex.begin(), va->regex.end());
+        f->second(q->mol, vals, s);
         return;
     }
 
