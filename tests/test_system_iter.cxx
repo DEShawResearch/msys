@@ -1,6 +1,6 @@
 #include "dms.hxx"
 #include <cstdio>
-#include <boost/foreach.hpp>
+#include <cassert>
 
 using namespace desres::msys;
 
@@ -39,8 +39,7 @@ int main(int argc, char *argv[]) {
 
     {
         IdList ids;
-        BOOST_FOREACH(Id id, std::make_pair(mol->atomBegin(), mol->atomEnd()))
-            ids.push_back(id);
+        for (auto id : mol->atoms()) ids.push_back(id);
         assert(ids.at(0)==1);
         assert(ids.at(1)==3);
         assert(ids.size()==2);

@@ -13,6 +13,7 @@
 #include "eigensystem.hxx"
 #include "../elements.hxx"
 #include <memory>
+#include <cassert>
 
 using namespace desres::msys;
 

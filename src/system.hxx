@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <map>
+#include <cstddef>
 
 #include "term_table.hxx"
 #include "provenance.hxx"

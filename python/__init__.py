@@ -318,23 +318,6 @@ class Ct(_msys.Ct):
         return [Atom(p, i) for i in super().append(system._ptr)]
 
 
-class PropertyMap(object):
-    def __init__(self, ptr):
-        self._ptr = ptr
-
-    def keys(self):
-        return self._ptr.tablePropsKeys()
-
-    def __getitem__(self, key):
-        return self._ptr.tablePropsGet(str(key))
-
-    def __setitem__(self, key, val):
-        self._ptr.tablePropsSet(str(key), val)
-
-    def __delitem__(self, key):
-        self._ptr.tablePropsDel(str(key))
-
-
 class Param(Handle):
     """
     A `Param` instance is a reference to a row in a `ParamTable`.  Use the
@@ -667,11 +650,6 @@ class TermTable(object):
         by atom ids.
         """
         return TermTable(self._ptr.replaceWithSortedTerms())
-
-    @property
-    def props(self):
-        """ Table properties """
-        return PropertyMap(self._ptr)
 
     @property
     def name(self):

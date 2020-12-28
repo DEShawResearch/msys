@@ -5,6 +5,7 @@
 #include <sstream>
 #include <iostream>
 #include <algorithm>
+#include <cassert>
 
 using namespace desres::msys;
 

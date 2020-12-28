@@ -11,19 +11,10 @@
 #include <fstream>
 #include <cerrno>
 #include <iomanip>
+#include <unistd.h>
 
 #include <sys/stat.h>
 #include <fcntl.h>
-
-#ifdef WIN32
-#include <io.h>
-#ifdef _WIN64
- typedef __int64 ssize_t;
-#else
- typedef int ssize_t;
-#endif
-
-#endif
 
 using namespace desres::msys;
 

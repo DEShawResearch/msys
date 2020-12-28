@@ -3,7 +3,6 @@
 
 #include "types.hxx"
 #include <map>
-#include <boost/variant/variant.hpp>
 
 namespace desres { namespace msys {
 
@@ -19,9 +18,6 @@ namespace desres { namespace msys {
         char *  s;
     };
 
-    typedef boost::variant<Int,Float,String> Variant;
-    typedef std::map<String,Variant> VariantMap;
-    
     struct ValueCallback {
         /* let holders of the values know about mutations.  This interface
          * could be refined to hold some sort of id about which value

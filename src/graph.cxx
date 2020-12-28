@@ -5,6 +5,7 @@
 #include <iostream> // for debugging
 #include <unordered_set>
 #include <unordered_map>
+#include <cassert>
 
 using namespace desres::msys;
 

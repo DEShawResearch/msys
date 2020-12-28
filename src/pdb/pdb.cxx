@@ -11,6 +11,7 @@
 #include <string>
 #include <math.h>
 #include <errno.h>
+#include <unistd.h>
 #include "../io.hxx"
 
 using namespace desres::msys;

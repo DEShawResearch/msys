@@ -635,91 +635,6 @@ class Contacts(unittest.TestCase):
             self.assertTrue(abs(v1 - v2) < 1e-6)
 
 
-class TestPropmap(unittest.TestCase):
-
-    TABLE_NAME = "stretch_harm"
-
-    def addprops(self, p):
-        p["s"] = "32"
-        p["i"] = -425
-        p["f"] = 1.5
-
-    def checkprops(self, p):
-        self.assertEqual(type(p["s"]), str)
-        self.assertEqual(type(p["i"]), int)
-        self.assertEqual(type(p["f"]), float)
-
-    def setUp(self):
-        self.m = msys.CreateSystem()
-        self.table = self.m.addTableFromSchema(self.TABLE_NAME)
-
-    def testKeys(self):
-        p = self.table.props
-        self.assertEqual(list(p.keys()), [])
-        p["foo"] = 1
-        self.assertEqual(list(p.keys()), ["foo"])
-        del p["foo"]
-        self.assertEqual(list(p.keys()), [])
-
-    def testTypes(self):
-        p = self.table.props
-        self.addprops(p)
-        self.checkprops(p)
-
-    def testChangeType(self):
-        p = self.table.props
-        p["foo"] = 32
-        self.assertEqual(p["foo"], 32)
-        p["foo"] = 32.1
-        self.assertEqual(p["foo"], 32.1)
-        p["foo"] = "32.1"
-        self.assertEqual(p["foo"], "32.1")
-        p["foo"] = 32
-        self.assertEqual(p["foo"], 32)
-
-    def testClone(self):
-        p = self.table.props
-        self.addprops(p)
-        m2 = self.m.clone()
-        p = m2.table(self.TABLE_NAME).props
-        self.checkprops(p)
-
-    def testAppend(self):
-        self.addprops(self.table.props)
-        m = msys.CreateSystem()
-        m.append(self.m)
-        self.checkprops(m.table(self.TABLE_NAME).props)
-
-    def testNonbonded(self):
-        t = self.m.addTable("nonbonded", 1)
-        t.category = "nonbonded"
-        self.m.addAtom().atomic_number = 6
-        t.addTerm([self.m.atom(0)], t.params.addParam())
-        self.addprops(t.props)
-        with tempfile.NamedTemporaryFile(suffix=".dms") as tmp:
-            msys.Save(self.m, tmp.name)
-            m2 = msys.Load(tmp.name)
-        self.checkprops(m2.table("nonbonded").props)
-
-    def testDms(self):
-        p = self.table.props
-        mol = self.table.system
-        mol.addAtom().atomic_number = 8
-        mol.addAtom().atomic_number = 1
-        mol.addAtom().atomic_number = 1
-        param = self.table.params.addParam()
-        self.table.addTerm([mol.atom(0), mol.atom(1)], param)
-        self.table.addTerm([mol.atom(0), mol.atom(2)], param)
-
-        self.addprops(p)
-        self.checkprops(p)
-        with tempfile.NamedTemporaryFile(suffix=".dms") as tmp:
-            msys.Save(mol, tmp.name)
-            mol2 = msys.Load(tmp.name)
-            table = mol2.table(self.TABLE_NAME)
-            self.checkprops(table.props)
-
-
 class TestSpatialHash(unittest.TestCase):
     def testNearest(self):
         mol = msys.Load("tests/files/small.mae")
@@ -1865,22 +1780,6 @@ class Main(unittest.TestCase):
         self.assertEqual(mol.bond(0).first.id, 0)
         self.assertEqual(mol.bond(0).second.id, 1)
         self.assertEqual(mol.atom(2).atomic_number, 0)
-
-    def testTableProps(self):
-        m = msys.CreateSystem()
-        a = m.addAtom()
-        t = m.addTable("foo", 1)
-        t.category = "nonbonded"
-        p = t.params.addParam()
-        t.addTerm([a], p)
-        t.props["foo"] = 1.0
-        t.props["bar"] = 1.0
-
-        with tempfile.NamedTemporaryFile(suffix=".dms") as fp:
-            dst = fp.name
-            msys.Save(m, dst)
-            m2 = msys.Load(dst)
-            msys.Save(m2, dst)
 
     def testSave(self):
         import operator as op
