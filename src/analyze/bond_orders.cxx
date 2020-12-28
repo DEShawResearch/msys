@@ -166,23 +166,45 @@ namespace desres { namespace msys {
         }
 
         MultiIdList rings = GetSSSR(boa->_mol, boa->_fragatoms, true);
+        /* get exocyclic bonds for each ring */
+        std::vector<std::set<Id> > exoBonds;
+        for (IdList & ring : rings){
+            exoBonds.push_back(std::set<Id>());
+            std::set<Id> &current=exoBonds.back();
+            for (Id aid : ring){
+                for (Id bid: boa->_mol->filteredBondsForAtom(aid, *boa->_filter)) {
+                    msys::bond_t &bond=boa->_mol->bond(bid);
+                    if (std::find(ring.begin(), ring.end(), bond.other(aid)) == ring.end()) {
+                        current.insert(bid);
+                    }
+                }
+            }
+        }
+        /* now find overlapping exocyclic bonds (bonds that join two rings together) */
+        for (unsigned idx=0; idx+1<exoBonds.size();++idx) {
+            for (unsigned jdx=idx+1; jdx<exoBonds.size();++jdx) {
+               std::set_intersection(std::begin(exoBonds[idx]), std::end(exoBonds[idx]),
+                              std::begin(exoBonds[jdx]), std::end(exoBonds[jdx]),
+                              std::inserter(boa->_exoOverlap, std::begin(boa->_exoOverlap)));
+            }
+        }
+
         /* Keep only rings with <8 atoms and all atoms <4 bonds */
         MultiIdList keepRings;
-        std::vector<std::set<Id> > keepBonds;
-        for (IdList & ring : rings){
-            if(ring.size()>7)continue;
+        for (IdList & ring : rings) {
+            if (ring.size()>7) continue;
             bool good=true;
             for (Id aid : ring){
-                if(boa->_mol->filteredBondedAtoms(aid, *boa->_filter).size()>3){
+                if (boa->_mol->filteredBondedAtoms(aid, *boa->_filter).size()>3) {
                     good=false;
                     break;
                 }
             }
-            if(good){
+            if (good) {
                 keepRings.push_back(ring);
                 boa->_rings.push_back(IdList());
                 IdList &rbonds=boa->_rings.back();
-                for (unsigned i = 0; i < ring.size(); ++i){
+                for (unsigned i = 0; i < ring.size(); ++i) {
                     boa->_ringAtoms.insert(ring[i]);
                     Id bond = boa->_mol->findBond(ring[i],ring[(i+1)%ring.size()]);
                     if (bond == msys::BadId) MSYS_FAIL("Ring bond not found in system");
@@ -192,8 +214,8 @@ namespace desres { namespace msys {
         }
         /* this is now a MultiIdList of [rings[keepRingIds]] */
         rings=RingSystems(boa->_mol, keepRings);
-        for (IdList const& ring : rings){
-            if(ring.size()==1) continue;
+        for (IdList const& ring : rings) {
+            if (ring.size()==1) continue;
             
             std::map<Id, Id> touched;
             for (Id rid : ring){
@@ -935,6 +957,9 @@ namespace desres { namespace msys {
 
                 std::vector<int> colid;
                 double factor=1.0*hyper;
+                if (parent->_exoOverlap.count(bid) > 0){
+                    factor *= 0.90;
+                }
                 for(int i=2; i<=range.ub;++i){
                     ss.str("");
                     ss << "b_"<<aid1<<"_"<<aid2<<":"<<i;

@@ -29,9 +29,9 @@ env.Append(
         CFLAGS='-Wall',
         # sadly, need -Wno-deprecated-declarations because of boost.
         CXXFLAGS="-std=c++11 -Wall -Wno-deprecated-declarations",
-        CPPDEFINES=[
-            'BOOST_SYSTEM_NO_DEPRECATED',
-            ],
+        #CPPDEFINES=[
+            #'BOOST_SYSTEM_NO_DEPRECATED',
+            #],
         LINKFLAGS='-g'
         )
 
