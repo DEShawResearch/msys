@@ -22,6 +22,7 @@ namespace {
     struct dms_file : sqlite3_file {
         char * contents;
         sqlite3_int64 size;
+        sqlite3_int64 capacity;
         char * path;
 
         void write() const {
@@ -87,11 +88,11 @@ namespace {
     int dms_xWrite(sqlite3_file*file, const void*pBuf, int iAmt, sqlite3_int64 offset) {
         dms_file *dms = (dms_file *)file;
         sqlite3_int64 last=offset+iAmt;
-        if (dms->size < last) {
-            last *= 1.5;
-            dms->contents = (char *)realloc(dms->contents, last);
-            dms->size = last;
+        if (dms->capacity < last) {
+            dms->capacity = last * 1.5;
+            dms->contents = (char *)realloc(dms->contents, dms->capacity);
         }
+        dms->size = std::max(dms->size, offset + iAmt);
         memcpy(dms->contents+offset, pBuf, iAmt);
         return SQLITE_OK;
     }

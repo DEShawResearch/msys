@@ -2924,10 +2924,7 @@ class Main(unittest.TestCase):
             s = fp.read()
         msys.LoadDMS(buffer=s)
 
-    @unittest.skipIf(True, "unsupported feature")
     def testLoadDmsMany(self):
-        # FIXME this broken relatively recently, but concatenated DMS files
-        # aren't actually used by anyone, are they?
         tmp = tempfile.NamedTemporaryFile(suffix=".dms")
         for mol in (
             msys.Load("tests/files/%s" % m)
