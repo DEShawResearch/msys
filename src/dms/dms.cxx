@@ -88,6 +88,7 @@ namespace {
         dms_file *dms = (dms_file *)file;
         sqlite3_int64 last=offset+iAmt;
         if (dms->size < last) {
+            last *= 1.5;
             dms->contents = (char *)realloc(dms->contents, last);
             dms->size = last;
         }
