@@ -1,3 +1,11 @@
+1.7.319 Handle empty argv in Provenance.fromArgs
+        Fix bug in system construction from smiles
+        Avoid floating imprecision in bond order assigner; changes some resonance structures
+        Get rid of "strict" dms tests; now irrelevant
+        Faster resonant charge calculations
+        Fix and speedup for writing large DMS files
+        Remove support for table properties.
+
 1.7.318 Build wheel files for python 3.{6,7,8}.
 
 1.7.317 Support unicode in MAE files.
