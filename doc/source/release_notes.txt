@@ -1,3 +1,5 @@
+1.7.320 Avoid writing extra padding at the end of DMS files.
+
 1.7.319 Handle empty argv in Provenance.fromArgs
         Fix bug in system construction from smiles
         Avoid floating imprecision in bond order assigner; changes some resonance structures
