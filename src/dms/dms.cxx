@@ -36,7 +36,7 @@ namespace {
             char* ptr = contents;
             while (sz) {
                 errno = 0;
-                ssize_t rc = ::write(fd, contents, sz);
+                ssize_t rc = ::write(fd, ptr, sz);
                 if (rc<0 || (rc==0 && errno!=0)) {
                     std::string errmsg = strerror(errno);
                     close(fd);
