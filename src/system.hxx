@@ -45,7 +45,12 @@ namespace desres { namespace msys {
         AtomProSide = 3
     };
 
-    struct atom_t {
+    template <typename T>
+    struct pod {    // Plain Old Data
+        pod() { memset(this,0,sizeof(T)); }
+    };
+
+    struct atom_t : pod<atom_t> {
         Id  fragid;
         Id  residue;
 
@@ -62,10 +67,6 @@ namespace desres { namespace msys {
         SmallString<30> name;
         AtomType type;
     
-        atom_t() {
-            memset(this,0,sizeof(*this));
-        }
-
         /* Don't abuse these.  In particular, bear in mind that that an atom's
          * memory location will move around if atoms are added.  */
         double       *pos()       { return &x; }
