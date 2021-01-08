@@ -891,22 +891,24 @@ class TestFrame2(unittest.TestCase):
         ### writing interface
         input = molfile.mae.read("tests/files/1vcc.mae")
         atoms = input.atoms
-        molfile.psf.write("output.psf", atoms=atoms[:10]).close()
+        psf = tempfile.NamedTemporaryFile(suffix=".psf")
+        pdb = tempfile.NamedTemporaryFile(suffix=".pdb")
+        mae = tempfile.NamedTemporaryFile(suffix=".mae")
+        molfile.psf.write(psf.name, atoms=atoms[:10]).close()
 
         vcc = molfile.mae.read("tests/files/1vcc.mae")
         atoms = vcc.atoms
-        molfile.psf.write("1vcc.psf", atoms[:5]).close()
+        molfile.psf.write(psf.name, atoms[:5]).close()
 
         atoms = vcc.atoms
 
         f = next(vcc.frames())
         f.box[:] = numpy.eye(3) * 57
         # FIXME: need some assertions here!
-        molfile.pdb.write("out.pdb", atoms[:1]).frame(f.select([3])).close()
-        os.unlink("out.pdb")
+        molfile.pdb.write(pdb.name, atoms[:1]).frame(f.select([3])).close()
         # FIMXE: here too!
 
-        molfile.mae.write("my1vcc.mae", atoms=atoms).frame(f).close()
+        molfile.mae.write(mae.name, atoms=atoms).frame(f).close()
 
         inds = [1, 2, 3, 10, 20, 30, 40, 50]
         f5 = f.select(inds)
@@ -918,19 +920,11 @@ class TestFrame2(unittest.TestCase):
         frame = molfile.Frame(natoms)
         atoms[3].anum = 0
         frame.pos[:, 0] = numpy.arange(natoms)
-        try:
-            molfile.mae.write("10.mae", atoms).frame(frame).close()
-        finally:
-            os.unlink("10.mae")
+        molfile.mae.write(mae.name, atoms).frame(frame).close()
 
-        os.unlink("1vcc.psf")
-        os.unlink("output.psf")
-
-        my = molfile.mae.read("my1vcc.mae")
-        os.unlink("my1vcc.mae")
+        my = molfile.mae.read(mae.name)
         f = next(my.frames())
-        tmp = tempfile.NamedTemporaryFile(suffix=".mae")
-        molfile.mae.write(tmp.name, atoms=my.atoms).frame(f).close()
+        molfile.mae.write(mae.name, atoms=my.atoms).frame(f).close()
 
         # FIXME: check something!
 

@@ -11,15 +11,6 @@ env.Append(
     LIBS=["msys", "msys-core"],
 )
 
-try:
-    import pybind11
-except ImportError:
-    pass
-else:
-    inc = pybind11.get_include()
-    print("found pybind11 include files at", inc)
-    env.Prepend(CPPPATH=inc)
-
 if is_linux:
     env.Append(CCFLAGS="-Wno-cpp")
 else:
