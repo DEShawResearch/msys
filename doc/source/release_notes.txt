@@ -1,3 +1,6 @@
+1.7.322 Roll back to older pybind11 and gcc
+        Revert addition of python/3.9 build.
+
 1.7.321 Build for python/3.9.
 
 1.7.320 Avoid writing extra padding at the end of DMS files.
