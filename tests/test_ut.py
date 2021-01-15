@@ -1944,6 +1944,11 @@ class Main(unittest.TestCase):
         self.assertEqual(m.ct(1).chains[0].name, "x")
         self.assertEqual(m.ct(1).chains[1].name, "c")
 
+    def testCloneUseIndex(self):
+        m = msys.CreateSystem()
+        m.addAtom().atomic_number = 6
+        m = m.clone(m.atoms, use_index=True)
+
     def testCtClone(self):
         m1 = msys.CreateSystem()
         m2 = msys.CreateSystem()

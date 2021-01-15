@@ -1427,7 +1427,7 @@ class System(object):
             flags = _msys.CloneOption.ShareParams
         if use_index:
             flags |= _msys.CloneOption.UseIndex
-        return System(ptr.clone(ids, flags))
+        return System(ptr.clone(ids, _msys.CloneOption(flags)))
 
     def sorted(self):
         """Return a clone of the system with atoms reordered based on their
