@@ -1,3 +1,21 @@
+1.7.323 Resurrect dms-override-vdw
+        Fix for clone(..., use_index=True)
+
+1.7.322 Roll back to older pybind11 and gcc
+        Revert addition of python/3.9 build.
+
+1.7.321 Build for python/3.9.
+
+1.7.320 Avoid writing extra padding at the end of DMS files.
+
+1.7.319 Handle empty argv in Provenance.fromArgs
+        Fix bug in system construction from smiles
+        Avoid floating imprecision in bond order assigner; changes some resonance structures
+        Get rid of "strict" dms tests; now irrelevant
+        Faster resonant charge calculations
+        Fix and speedup for writing large DMS files
+        Remove support for table properties.
+
 1.7.318 Build wheel files for python 3.{6,7,8}.
 
 1.7.317 Support unicode in MAE files.

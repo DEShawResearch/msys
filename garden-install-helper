@@ -14,7 +14,7 @@ BOOST=boost/1.67.0-02c7
 LPSOLVE=lp-solve/5.5.2.0-01c7
 INCHI=inchi/1.05-01c7
 SQLITE=sqlite/3.32.2-02c7
-SCONSUTILS=sconsutils/1.51c7
+SCONSUTILS=sconsutils/1.52c7
 RAPIDJSON=rapidjson/1.1.0-01c7
 TNG=tng/1.8.2-03c7
 GBENCH=gbench/1.5.0-02c7
@@ -22,12 +22,11 @@ PYBIND11=pybind11/2.3.0-01c7
 BLISS=bliss/0.73-02c7
 
 loadmodules() {
-    # load $PYTHON last so that we use python2 for sphinx, since
-    # our conf.py points to the python2 install dir.
     garden load \
         $GCC/bin \
         $PYTHON3/bin \
         $SCONS/bin \
+        $SCONS/lib-python37 \
         $BOOST/lib \
         $LPSOLVE/lib \
         $INCHI/lib \
@@ -50,6 +49,9 @@ loadmodules() {
 
 genmodules() {
     cat << EOF > $GARDENDIR/lib-python37
+prepend-path PYTHONPATH $PREFIX/lib/python
+EOF
+    cat << EOF > $GARDENDIR/lib-python39
 prepend-path PYTHONPATH $PREFIX/lib/python
 EOF
 
@@ -99,7 +101,7 @@ case $1 in
 
         nprocs=`getconf _NPROCESSORS_ONLN`
         $0 --exec scons install -j $nprocs PREFIX=$PREFIX OBJDIR=$TMPDIR
-        # ./tests/run.sh
+        ./tests/run.sh -n `nproc`
 	genhelp >> $METADIR/help.txt
 	genmodules
         gendocs

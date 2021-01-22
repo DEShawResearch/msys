@@ -505,7 +505,7 @@ namespace desres { namespace msys {
             .def_readwrite("executable", &Provenance::executable)
             ;
 
-        enum_<CloneOption::Flags>(m, "CloneOption")
+        enum_<CloneOption::Flags>(m, "CloneOption", arithmetic())
             .value("Default",       CloneOption::Default)
             .value("ShareParams",   CloneOption::ShareParams)
             .value("UseIndex",      CloneOption::UseIndex)

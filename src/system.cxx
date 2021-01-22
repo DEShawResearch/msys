@@ -506,16 +506,10 @@ void System::renameTable(String const& oldname, String const& newname) {
 
 
 String System::tableName(std::shared_ptr<TermTable const> table) const {
-    if (table->system() != shared_from_this()) {
-        throw std::runtime_error(
-                "tableName: table does not belong to this System");
-    }
     for (TableMap::const_iterator i=_tables.begin(), e=_tables.end(); i!=e; ++i) {
         if (i->second==table) return i->first;
     }
-    /* um, that's bad. */
-    assert(false);
-    return "";
+    MSYS_FAIL("table does not belong to this System");
 }
 
 TermTablePtr System::table(const String& name) const {

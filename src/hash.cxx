@@ -107,11 +107,6 @@ namespace desres { namespace msys {
             for (auto term : *table) {
                 tr.Update(term.atoms(), (term.size()+1)*sizeof(Id));
             }
-            for (auto& prop : table->tableProps()) {
-                tr.Update(prop.first.data(), prop.first.size());
-                boost::apply_visitor(prop_visitor(tr), prop.second);
-            }
-
             if (table->overrides()) {
                 auto ov = table->overrides();
                 hash_params(tr, ov->params());

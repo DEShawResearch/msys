@@ -2,6 +2,7 @@
 #include <map>
 #include <cstdio>
 #include <stack>
+#include <cassert>
 
 //#include <profiler/profiler.hxx>
 

@@ -2,6 +2,7 @@
 #include "../analyze.hxx"
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #if defined __has_include
 #  if __has_include (<rapidjson/document.h>)

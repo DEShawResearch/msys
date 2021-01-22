@@ -64,8 +64,7 @@ namespace desres { namespace msys {
          * delTerm if an index has already been created.  */
         void update_index();
 
-        /* table properties */
-        VariantMap _tableprops;
+        std::map<String, String> _unused_keep_for_binary_compatibility;
 
     public:
         TermTable( SystemPtr system, Id natoms, 
@@ -84,9 +83,6 @@ namespace desres { namespace msys {
 
         /* name of this table in the parent system */
         String name() const;
-
-        /* table properties */
-        VariantMap& tableProps() { return _tableprops; }
 
         /* rename table */
         void rename(String const& name);

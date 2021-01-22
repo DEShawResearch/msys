@@ -10,5 +10,5 @@ garden load zstandard/0.11.1-01c7/lib-python37
 garden load brotli/1.0.9-01c7/lib-python37
 garden load valgrind/3.15.0-01c7/bin
 
-exec pytest $(dirname $0) -p no:azurepipelines "$@"
+garden with -m $PYTHON3/bin  pytest $(dirname $0) -p no:azurepipelines "$@"
 

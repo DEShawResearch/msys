@@ -2,6 +2,7 @@
 #include <deque>
 #include <sstream>
 #include <cstdio>
+#include <cassert>
 
 #include "../param_table.hxx"
 #include "../analyze.hxx"

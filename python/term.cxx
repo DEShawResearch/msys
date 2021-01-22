@@ -4,7 +4,6 @@
 
 #include <msys/term_table.hxx>
 #include <msys/override.hxx>
-#include <boost/variant/get.hpp>
 
 namespace {
 
@@ -44,26 +43,6 @@ namespace {
 
 }
 
-namespace pybind11 { namespace detail {
-    template <> struct type_caster<Variant> {
-    public:
-        PYBIND11_TYPE_CASTER(Variant, _("Variant"));
-        bool load(handle src, bool) {
-            if (int_::check_(src)) value = src.cast<Int>();
-            else if (float_::check_(src)) value = src.cast<Float>();
-            else if (str::check_(src)) value = src.cast<String>();
-            else return false;
-            return true;
-        }
-        static handle cast(Variant const& src, return_value_policy, handle) {
-            if (src.which()==0) return PyLong_FromLong(boost::get<Int>(src));
-            if (src.which()==1) return PyFloat_FromDouble(boost::get<Float>(src));
-            if (src.which()==2) return PyUnicode_FromString(boost::get<String>(src).data());
-            return none();
-        }
-    };
-}}
-
 namespace desres { namespace msys { 
 
     void export_term(module m) {
@@ -101,12 +80,6 @@ namespace desres { namespace msys {
             .def("params",      &TermTable::params)
             .def("param",       &TermTable::param)
             .def("setParam",    set_param)
-
-            /* Table properties */
-            .def("tablePropsKeys", [](TermTable& t) { list L; for (auto& p : t.tableProps()) L.append(cast(p.first)); return L; })
-            .def("tablePropsGet",  [](TermTable& t, std::string const& key) -> Variant { return t.tableProps().at(key); })
-            .def("tablePropsSet",  [](TermTable& t, std::string const& key, Variant v) { t.tableProps()[key]=v; })
-            .def("tablePropsDel",  [](TermTable& t, std::string const& key) { t.tableProps().erase(key); })
 
             /* param properties */
             .def("getProp",     get_prop)

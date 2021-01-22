@@ -132,6 +132,7 @@ namespace desres { namespace msys {
 
         MultiIdList _rings;
         std::set<Id> _ringAtoms;
+        std::set<Id> _exoOverlap;
 
         /* filled during rebuild */
         std::vector<ComponentAssignerPtr> _component_assigners;

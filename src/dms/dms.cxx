@@ -11,19 +11,10 @@
 #include <fstream>
 #include <cerrno>
 #include <iomanip>
+#include <unistd.h>
 
 #include <sys/stat.h>
 #include <fcntl.h>
-
-#ifdef WIN32
-#include <io.h>
-#ifdef _WIN64
- typedef __int64 ssize_t;
-#else
- typedef int ssize_t;
-#endif
-
-#endif
 
 using namespace desres::msys;
 
@@ -31,6 +22,7 @@ namespace {
     struct dms_file : sqlite3_file {
         char * contents;
         sqlite3_int64 size;
+        sqlite3_int64 capacity;
         char * path;
 
         void write() const {
@@ -45,7 +37,7 @@ namespace {
             char* ptr = contents;
             while (sz) {
                 errno = 0;
-                ssize_t rc = ::write(fd, contents, sz);
+                ssize_t rc = ::write(fd, ptr, sz);
                 if (rc<0 || (rc==0 && errno!=0)) {
                     std::string errmsg = strerror(errno);
                     close(fd);
@@ -96,10 +88,11 @@ namespace {
     int dms_xWrite(sqlite3_file*file, const void*pBuf, int iAmt, sqlite3_int64 offset) {
         dms_file *dms = (dms_file *)file;
         sqlite3_int64 last=offset+iAmt;
-        if (dms->size < last) {
-            dms->contents = (char *)realloc(dms->contents, last);
-            dms->size = last;
+        if (dms->capacity < last) {
+            dms->capacity = last * 1.5;
+            dms->contents = (char *)realloc(dms->contents, dms->capacity);
         }
+        dms->size = std::max(dms->size, offset + iAmt);
         memcpy(dms->contents+offset, pBuf, iAmt);
         return SQLITE_OK;
     }

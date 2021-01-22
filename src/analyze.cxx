@@ -806,7 +806,6 @@ TermTablePtr desres::msys::ReplaceTableWithSortedTerms(TermTablePtr src) {
     auto dst = sys->addTable(tmpname, src->atomCount(), src->params());
     // copy basic properties
     dst->category = src->category;
-    dst->tableProps() = src->tableProps();
     // same atom ids
     IdList amap(sys->maxAtomId());
     std::iota(amap.begin(), amap.end(), 0);

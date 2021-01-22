@@ -239,26 +239,6 @@ static void read_metatables(Sqlite dms, System& sys, KnownSet& known) {
     }
 }
 
-static void read_table_properties(Sqlite dms, System& sys, KnownSet& known) {
-    std::string proptable = "msys_table_properties";
-    known.insert(proptable);
-    if (dms.has(proptable)) {
-        Reader r = dms.fetch(proptable, false);
-        for (; r; r.next()) {
-            const char* name = r.get_str(0);
-            TermTablePtr table = sys.table(name);
-            if (!table) continue;
-            Variant& v = table->tableProps()[r.get_str(1)];
-            switch ((ValueType)r.get_int(2)) {
-                case IntType:   v = (int64_t)r.get_int(3); break;
-                case FloatType: v =          r.get_flt(3); break;
-                case StringType:v =          r.get_str(3); break;
-                default:;
-            }
-        }
-    }
-}
-
 static void 
 read_nonbonded( Sqlite dms, System& sys, 
         IdList const& nbtypes, KnownSet& known ) {
@@ -707,7 +687,6 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only,
         read_combined(dms, sys, known);
         read_exclusions(dms, sys, known);
         read_nbinfo(dms, sys, known);
-        read_table_properties(dms, sys, known);
         read_extra(dms, sys, known);
     }
 
