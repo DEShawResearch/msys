@@ -248,7 +248,6 @@ namespace desres { namespace msys {
         )>);
     };
 }}
-#define GENRESFORMS 0
 
 #define DEBUGPRINT  0
 #define DEBUGPRINT1 0
