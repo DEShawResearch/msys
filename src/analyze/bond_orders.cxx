@@ -464,13 +464,13 @@ namespace desres { namespace msys {
             for (Id aid1 : unsolved){
                 atom_t const& atm1=_mol->atom(aid1);
                 int period=PeriodForElement(atm1.atomic_number);
-                if(period>2){
+                IdList bonds=_mol->filteredBondsForAtom(aid1, *_filter);
+                if(period>2 && bonds.size()>0){
                     keep.push_back(aid1);
                     continue;
                 }
                 int octval=period<=1 ? 1 : 4;
 
-                IdList bonds=_mol->filteredBondsForAtom(aid1, *_filter);
                 int unkcount=0;
                 electronMap::iterator lastatom=_atom_lp.end();
                 electronMap::iterator lastbond=_bond_order.end();
