@@ -1,3 +1,5 @@
+1.7.324 Bond order assignment improvements.
+
 1.7.323 Resurrect dms-override-vdw
         Fix for clone(..., use_index=True)
 
