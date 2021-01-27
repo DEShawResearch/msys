@@ -83,6 +83,18 @@ namespace {
         return L;
     }
 
+    object format_sdf(SystemPtr mol, bool as_bytes) {
+        std::string s(FormatSdf(mol));
+        if (as_bytes) {
+            return bytes(s);
+        }
+        auto ptr = PyUnicode_FromStringAndSize(s.data(), s.size());
+        if (!ptr) {
+            PyErr_SetString(PyExc_ValueError, "system could not be UTF8-encoded; try calling with as_bytes=True");
+            throw error_already_set();
+        }
+        return reinterpret_steal<str>(ptr);
+    }
 }
 
 namespace desres { namespace msys { 
@@ -151,7 +163,7 @@ namespace desres { namespace msys {
         m.def("Save", save);
         m.def("FromSmilesString", FromSmilesString);
         m.def("ParseSDF", SdfTextIterator);
-        m.def("FormatSDF", FormatSdf);
+        m.def("FormatSDF", format_sdf, arg("system"), arg("as_bytes")=false);
         m.def("FormatJson", format_json);
         m.def("ParseJson", ParseJson);
     }

@@ -2188,9 +2188,9 @@ def Save(mol, path, append=False, structure_only=False):
     )
 
 
-def FormatSDF(mol):
+def FormatSDF(mol, as_bytes=False):
     """ Return System in sdf format """
-    return _msys.FormatSDF(mol._ptr)
+    return _msys.FormatSDF(mol._ptr, bool(as_bytes))
 
 
 def ParseSDF(text):
