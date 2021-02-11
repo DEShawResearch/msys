@@ -1,3 +1,5 @@
+1.7.325 Added as_bytes option to FormatSDF
+
 1.7.324 Bond order assignment improvements.
 
 1.7.323 Resurrect dms-override-vdw
