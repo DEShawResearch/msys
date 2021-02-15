@@ -1,6 +1,7 @@
 #include "pymod.hxx"
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
+#include <numpy/ndarrayobject.h>
 #include "capsule.hxx"
 
 #include <msys/import.hxx>
@@ -58,58 +59,59 @@ namespace {
         return array_t<double>({3,3}, sys->global_cell[0], sysobj);
     }
 
-    array getpos3(object x, double **p) {
-        auto arr = array_t<double, array::c_style | array::forcecast>::ensure(x);
+    void getpos3(object x, double *a) {
+        auto arr = PyArray_FromAny(
+                x.ptr(),
+                PyArray_DescrFromType(NPY_DOUBLE),
+                1, 1,
+                NPY_ARRAY_C_CONTIGUOUS | NPY_FORCECAST,
+                nullptr);
         if (!arr) throw error_already_set();
-        if (arr.shape(0)!=3) {
-            PyErr_Format(PyExc_ValueError, "expected vector of length 3, got %ld", arr.shape(0));
-            throw error_already_set();
-        }
-        if (p) *p = arr.mutable_data();
-        return arr;
+        memcpy(a, PyArray_DATA(arr), 3*sizeof(double));
+        Py_DECREF(arr);
     }
 
     double py_calc_distance(object A, object B) {
-        double *a, *b;
-        auto pa = getpos3(A, &a);
-        auto pb = getpos3(B, &b);
+        double a[3], b[3];
+        getpos3(A, a);
+        getpos3(B, b);
         return calc_distance(a,b);
     }
     double py_calc_vec_angle(object A, object B) {
-        double *a, *b;
-        auto pa = getpos3(A, &a);
-        auto pb = getpos3(B, &b);
+        double a[3], b[3];
+        getpos3(A, a);
+        getpos3(B, b);
         return calc_vec_angle(a,b);
     }
     double py_calc_angle(object A, object B, object C) {
-        double *a, *b, *c;
-        auto pa = getpos3(A, &a);
-        auto pb = getpos3(B, &b);
-        auto pc = getpos3(C, &c);
+        double a[3], b[3], c[3];
+        getpos3(A, a);
+        getpos3(B, b);
+        getpos3(C, c);
         return calc_angle(a,b,c);
     }
     double py_calc_vec_dihedral(object A, object B, object C) {
-        double *a, *b, *c;
-        auto pa = getpos3(A, &a);
-        auto pb = getpos3(B, &b);
-        auto pc = getpos3(C, &c);
+        double a[3], b[3], c[3];
+        getpos3(A, a);
+        getpos3(B, b);
+        getpos3(C, c);
         return calc_vec_dihedral(a,b,c);
     }
     double py_calc_dihedral(object A, object B, object C, object D) {
-        double *a, *b, *c, *d;
-        auto pa = getpos3(A, &a);
-        auto pb = getpos3(B, &b);
-        auto pc = getpos3(C, &c);
-        auto pd = getpos3(D, &d);
+        double a[3], b[3], c[3], d[3];
+        getpos3(A, a);
+        getpos3(B, b);
+        getpos3(C, c);
+        getpos3(D, d);
         return calc_dihedral(a,b,c,d);
     }
 
     array py_apply_dihedral_geometry(object A, object B, object C,
                                       double r, double theta, double phi) {
-        double *a, *b, *c;
-        auto pa = getpos3(A, &a);
-        auto pb = getpos3(B, &b);
-        auto pc = getpos3(C, &c);
+        double a[3], b[3], c[3];
+        getpos3(A, a);
+        getpos3(B, b);
+        getpos3(C, c);
         auto arr = array_t<double>(3);
         apply_dihedral_geometry(arr.mutable_data(),a,b,c,r,theta,phi);
         return arr;
@@ -127,12 +129,12 @@ namespace {
 
     bool py_line_intersects_tri(object A, object B, object C, 
                                 object R, object S) {
-        double *a, *b, *c, *r, *s;
-        auto pa = getpos3(A, &a);
-        auto pb = getpos3(B, &b);
-        auto pc = getpos3(C, &c);
-        auto pr = getpos3(R, &r);
-        auto ps = getpos3(S, &s);
+        double a[3], b[3], c[3], r[3], s[3];
+        getpos3(A, a);
+        getpos3(B, b);
+        getpos3(C, c);
+        getpos3(R, r);
+        getpos3(S, s);
         return line_intersects_tri(a,b,c,r,s);
     }
 
@@ -467,6 +469,9 @@ namespace {
 namespace desres { namespace msys { 
 
     void export_system(module m) {
+        _import_array();
+        if (PyErr_Occurred()) throw error_already_set();
+
         m.def("bad", bad);
         m.attr("BadId") = cast((Id)BadId);
 

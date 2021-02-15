@@ -1695,7 +1695,10 @@ class Main(unittest.TestCase):
 
     def testGeometry(self):
         p = NP.array(((1, 0, 0), (2, 3, 1), (3, 1, 0), (2, 2, 2)), "d")
+        p.flags.writeable = False
         a, b, c, d = p
+        c.flags.writeable = False
+        d.flags.writeable = False
         rad = msys.CalcDistance(c, d)
         theta = msys.CalcAngle(b, c, d)
         phi = msys.CalcDihedral(a, b, c, d)
