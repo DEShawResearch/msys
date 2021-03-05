@@ -75,11 +75,45 @@ def getMappedTerm(term, mapping, pnames):
     return aid, params
 
 
+def map_virtuals(mol0, mol1, matches):
+    # matches is a mapping from mol1 atoms to mol0 atoms
+    from collections import defaultdict
+    hostmap0=defaultdict(list)
+    for a in mol0.atoms:
+        if a.atomic_number != 0: continue
+        b = a.bonded_atoms
+        assert len(b)==1
+        hostmap0[b[0]].append(a)
+    hostmap1 = defaultdict(list)
+    for a in mol1.atoms:
+        if a.atomic_number != 0: continue
+        b = a.bonded_atoms
+        if len(b)!=1 or b[0] not in matches:
+            raise RuntimeError("Invalid virtual site or vsite host map")
+        hostmap1[matches[b[0]]].append(a)
+
+    if hostmap0.keys() != hostmap1.keys():
+        raise RuntimeError("Vsite hosts are not consistent across molecules")
+
+    for host0, virtuals0 in hostmap0.items():
+        virtuals1 = hostmap1[host0]
+        # This is potentially wrong if there are multiple types of hosted virtuals per atom.
+        # Really would need to compare and map across specific virtual types
+        if len(virtuals0) != len(virtuals1):
+            raise RuntimeError(f"Number of hosted virtuals is inconsistent for mapped real atom {host.id} of mol0")
+        for v0, v1 in zip(virtuals0, virtuals1):
+            matches[v1] = v0
+
 def compareForcefields(mol0, mol1, rtol=0.001, prefix="", verbose=False):
     # mapping from mol1 atoms to mol0 atoms
     matches = msys.MatchFragments(mol1, mol0)
-    if matches is None or len(matches) != len(mol1.atoms):
-        raise RuntimeError("The provided systems do not have the same composition")
+    nreal = len([a for a in mol1.atoms if a.atomic_number>0])
+    if matches is None or len(matches) != nreal:
+        raise RuntimeError("The provided systems do not have the same real atom composition")
+    if len(matches) != mol1.natoms:
+        # We have to attempt to map the virtuals
+        map_virtuals(mol0, mol1, matches)
+
     matches = {k.id: v.id for k, v in matches.items()}
     # print(f"Atoms matched are: {matches}")
 
@@ -89,7 +123,7 @@ def compareForcefields(mol0, mol1, rtol=0.001, prefix="", verbose=False):
     forms0 = set(allterms0.keys())
     forms1 = set(allterms1.keys())
     if forms0 != forms1:
-        s.append(
+        print(
             f"inconsistent forcefield tables detected. extra tables are: mol0= {forms0-forms1} mol1={forms1-forms0}"
         )
 
