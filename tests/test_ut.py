@@ -1582,6 +1582,23 @@ class Main(unittest.TestCase):
             mol.clone([i])
             mol.clone([i], forbid_broken_bonds=False)
 
+    def testCloneStructureOnly(self):
+        mol = msys.CreateSystem()
+        mol.addAtom().atomic_number = 8  
+        mol.addAtom().atomic_number = 0  
+        mol.addAtom().atomic_number = 8  
+        t = mol.addTableFromSchema("stretch_harm")
+        t.addTerm([mol.atom(0), mol.atom(2)], t.params.addParam())
+
+        new = mol.clone(structure_only=False)
+        assert new.natoms == 3
+        assert new.getTable("stretch_harm").nterms == 1
+
+        new = mol.clone(structure_only=True)
+        assert new.natoms == 2
+        assert new.getTable("stretch_harm") is None
+
+
     def testFindDistinctFragments(self):
         import random
 

@@ -514,6 +514,7 @@ namespace desres { namespace msys {
             .value("Default",       CloneOption::Default)
             .value("ShareParams",   CloneOption::ShareParams)
             .value("UseIndex",      CloneOption::UseIndex)
+            .value("StructureOnly", CloneOption::StructureOnly)
             ;
 
         m.def("TableSchemas", TableSchemas);

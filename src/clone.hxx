@@ -14,6 +14,7 @@ namespace desres { namespace msys {
         enum Flags { Default     = 0
                    , ShareParams = 1 << 0
                    , UseIndex    = 1 << 1
+                   , StructureOnly = 1 << 2
         };
     };
 

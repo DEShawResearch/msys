@@ -1393,7 +1393,8 @@ class System(object):
         return [Atom(p, i) for i in ids]
 
     def clone(
-        self, sel=None, share_params=False, use_index=False, forbid_broken_bonds=False
+        self, sel=None, share_params=False, use_index=False, forbid_broken_bonds=False,
+        structure_only=False
     ):
         """Clone the System, returning a new System.  If selection is
         provided, it should be an atom selection string, a list of ids,
@@ -1427,6 +1428,8 @@ class System(object):
             flags = _msys.CloneOption.ShareParams
         if use_index:
             flags |= _msys.CloneOption.UseIndex
+        if structure_only:
+            flags |= _msys.CloneOption.StructureOnly
         return System(ptr.clone(ids, _msys.CloneOption(flags)))
 
     def sorted(self):

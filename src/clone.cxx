@@ -65,6 +65,9 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms,
         if (!src->hasAtom(srcatm)) {
             MSYS_FAIL("atoms argument contains deleted atom id " << srcatm);
         }
+        if ((flags & CloneOption::StructureOnly) && src->atomFAST(srcatm).atomic_number < 1) {
+            continue;
+        }
 
         Id dstct  = ctmap[srcct];
         Id dstchn = chnmap[srcchn];
@@ -121,7 +124,10 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms,
         }
     }
 
-    if (flags & CloneOption::ShareParams) {
+    if (flags & CloneOption::StructureOnly) {
+        // skip term tables
+        //
+    } else if (flags & CloneOption::ShareParams) {
         TermTablePtr srctable, dsttable;
         for (String name : src->tableNames()) {
             srctable = src->table(name);
