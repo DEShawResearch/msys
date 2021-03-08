@@ -28,9 +28,6 @@ namespace {
 SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms,
                                CloneOption::Flags flags) {
 
-    /* check for duplicates */
-    IdList sorted_atoms(atoms);
-    if (sort_unique(sorted_atoms)) MSYS_FAIL("atoms argument contains duplicates");
     SystemPtr dst = System::create();
 
     /* Mappings from src ids to dst ids */
@@ -56,18 +53,22 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms,
     }
 
     /* Build structure for subset of atoms */
-    for (Id i=0; i<atoms.size(); i++) {
-        Id srcatm = atoms[i];
-        Id srcres = src->atom(srcatm).residue;
-        Id srcchn = src->residue(srcres).chain;
-        Id srcct  = src->chain(srcchn).ct;
+    for (Id srcatm : atoms) {
 
         if (!src->hasAtom(srcatm)) {
             MSYS_FAIL("atoms argument contains deleted atom id " << srcatm);
         }
-        if ((flags & CloneOption::StructureOnly) && src->atomFAST(srcatm).atomic_number < 1) {
+        if (atmmap[srcatm] != BadId) {
+            MSYS_FAIL("duplicate atom id " << srcatm);
+        }
+        auto& atm = src->atomFAST(srcatm);
+        if ((flags & CloneOption::StructureOnly) && atm.atomic_number < 1) {
             continue;
         }
+
+        Id srcres = atm.residue;
+        Id srcchn = src->residue(srcres).chain;
+        Id srcct  = src->chain(srcchn).ct;
 
         Id dstct  = ctmap[srcct];
         Id dstchn = chnmap[srcchn];
@@ -90,7 +91,7 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms,
         Id dstatm = dst->addAtom(dstres);
         atmmap[srcatm] = dstatm;
         /* Copy built-in properties */
-        dst->atom(dstatm) = src->atom(srcatm);
+        dst->atom(dstatm) = atm;
         /* Restore the overwritten residue id */
         dst->atom(dstatm).residue = dstres;
         /* Copy additional atom properties */
@@ -101,8 +102,8 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms,
     }
 
     /* Build bonds whose atoms are fully within the subset */
-    for (Id i=0; i<atoms.size(); i++) {
-        Id srcatm = atoms[i];
+    for (Id srcatm=0, n=atmmap.size(); srcatm<n; srcatm++) {
+        if (bad(atmmap[srcatm])) continue;
         IdList const& bonds = src->bondsForAtom(srcatm);
         for (Id j=0; j<bonds.size(); j++) {
             bond_t const& srcbond = src->bond(bonds[j]);
@@ -166,7 +167,7 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms,
             dsttable->category = srctable->category;
             IdList terms;
             if (flags & CloneOption::UseIndex) {
-                terms = srctable->findWithOnly(sorted_atoms);
+                terms = srctable->findWithOnly(atoms);
             } else {
                 terms = srctable->terms();
                 auto iter = std::remove_if(

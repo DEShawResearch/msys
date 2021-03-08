@@ -1407,6 +1407,9 @@ class System(object):
 
         If forbid_broken_bonds is True, an exception will be thrown if the
         selected atoms do not include all atoms connected by bonds.
+
+        If structure_only is True, no pseudo-atoms (those with atomic number
+        less than 1), tables or auxTables will be present in the new system.
         """
         ptr = self._ptr
         if sel is None:
@@ -1421,7 +1424,7 @@ class System(object):
                     raise ValueError("Atoms in sel are not from this System")
             else:
                 ids = [int(i) for i in ids]
-        if forbid_broken_bonds and not _msys.SelectionIsClosed(ptr, ids):
+        if forbid_broken_bonds and not _msys.SelectionIsClosed(ptr, ids, structure_only=structure_only):
             raise BrokenBondsError("selected atoms exclude some bonded atoms")
         flags = _msys.CloneOption.Default
         if share_params:

@@ -84,7 +84,7 @@ namespace desres { namespace msys {
         m.def("GuessAtomicNumber", GuessAtomicNumber);
         m.def("ElectronegativityForElement", elec_for_element, "Allen-scale electronegativity");
         m.def("GetBondsAnglesDihedrals", get_bonds_angles_dihedrals);
-        m.def("SelectionIsClosed", SelectionIsClosed);
+        m.def("SelectionIsClosed", SelectionIsClosed, arg("mol"), arg("ids"), arg("structure_only")=false);
 
         class_<SmartsPattern>(m, "SmartsPattern")
             .def(init<std::string const&>())

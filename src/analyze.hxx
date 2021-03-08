@@ -78,7 +78,7 @@ namespace desres { namespace msys {
 
     /* check if the given set of atoms contains all its bonded neighbors.
      * The input set is assumed to be unique. */
-    bool SelectionIsClosed(SystemPtr m, IdList const& ids);
+    bool SelectionIsClosed(SystemPtr m, IdList const& ids, bool structure_only=false);
 }}
 
 #endif

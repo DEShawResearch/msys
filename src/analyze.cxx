@@ -840,12 +840,15 @@ void desres::msys::ReplaceTablesWithSortedTerms(SystemPtr mol) {
     }
 }
 
-bool desres::msys::SelectionIsClosed(SystemPtr mol, IdList const& ids) {
+bool desres::msys::SelectionIsClosed(SystemPtr mol, IdList const& ids, bool structure_only) {
     IdList closure;
     closure.reserve(mol->atomCount());
     for (auto id : ids) {
         closure.push_back(id);
         for (auto nbr : mol->bondedAtoms(id)) {
+            if (structure_only && mol->atomFAST(nbr).atomic_number < 1) {
+                continue;
+            }
             closure.push_back(nbr);
         }
     }

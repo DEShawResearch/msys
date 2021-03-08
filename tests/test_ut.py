@@ -1598,6 +1598,9 @@ class Main(unittest.TestCase):
         assert new.natoms == 2
         assert new.getTable("stretch_harm") is None
 
+        mol = msys.Load("tests/files/tip5p.mae")
+        new = mol.clone(structure_only=True)
+
 
     def testFindDistinctFragments(self):
         import random

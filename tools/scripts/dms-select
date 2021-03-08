@@ -55,10 +55,10 @@ def main():
         log("Assigning bond order and formal charge")
         msys.AssignBondOrderAndFormalCharge(mol)
 
-    if opts.selection:
+    if opts.selection or opts.structure_only:
         log('Cloning "%s"' % opts.selection)
         try:
-            mol = mol.clone(opts.selection, forbid_broken_bonds=not opts.allow_broken_bonds)
+            mol = mol.clone(opts.selection, forbid_broken_bonds=not opts.allow_broken_bonds, structure_only=opts.structure_only)
         except msys.BrokenBondsError as e:
             print("ERROR:", str(e), "use -b/--allow-broken-bonds to proceed", file=sys.stderr)
             raise
