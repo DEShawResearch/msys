@@ -1,3 +1,7 @@
+1.7.326 Add structure_only option to clone().
+        Make dms-select -bb ignore pseudos when structure_only is specified.
+        Make msys.Calc*** accept read-only arrays.
+
 1.7.325 Added as_bytes option to FormatSDF
 
 1.7.324 Bond order assignment improvements.
