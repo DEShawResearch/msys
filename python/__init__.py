@@ -469,6 +469,11 @@ class ParamTable(object):
             f = self._ptr.findString
         return [self.param(x) for x in f(col, value)]
 
+    def values(self, prop):
+        """ all values for the given property """
+        col = self._ptr.propIndex(prop)
+        return self._ptr.valuesForColumn(col)
+
 
 class Term(Handle):
     """

@@ -113,8 +113,39 @@ namespace desres { namespace msys {
         IdList findFloat(Id col, Float const& val);
         IdList findString(Id col, String const& val);
         IdList findValue(Id col, ValueRef const& v);
+
+        template <typename T>
+        std::vector<T> valuesForColumn(Id col) const;
     };
     typedef std::shared_ptr<ParamTable> ParamTablePtr;
+
+    template<> inline std::vector<Int>
+    ParamTable::valuesForColumn(Id col) const {
+        auto& prop = _props.at(col);
+        if (prop.type != IntType) MSYS_FAIL("Int values requested for non-Int column");
+        std::vector<Int> vals;
+        vals.reserve(_nrows);
+        for (auto& v : prop.vals) vals.push_back(v.i);
+        return vals;
+    }
+    template<> inline std::vector<Float>
+    ParamTable::valuesForColumn(Id col) const {
+        auto& prop = _props.at(col);
+        if (prop.type != FloatType) MSYS_FAIL("Float values requested for non-Float column");
+        std::vector<Float> vals;
+        vals.reserve(_nrows);
+        for (auto& v : prop.vals) vals.push_back(v.f);
+        return vals;
+    }
+    template<> inline std::vector<String>
+    ParamTable::valuesForColumn(Id col) const {
+        auto& prop = _props.at(col);
+        if (prop.type != StringType) MSYS_FAIL("String values requested for non-String column");
+        std::vector<String> vals;
+        vals.reserve(_nrows);
+        for (auto& v : prop.vals) vals.push_back(v.s);
+        return vals;
+    }
 }}
 
 #endif

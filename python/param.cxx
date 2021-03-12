@@ -32,7 +32,13 @@ namespace desres { namespace msys {
             .def("findString", &ParamTable::findString)
             .def_static("asCapsule", [](ParamTablePtr p) { return handle(python::paramtable_as_capsule(p)); })
             .def_static("fromCapsule", [](handle h) { return python::paramtable_from_capsule(h.ptr()); })
-            ;
+            .def("valuesForColumn", [](ParamTablePtr p, Id col) {
+                switch (p->propType(col)) {
+                case IntType: return cast(p->valuesForColumn<Int>(col));
+                case FloatType: return cast(p->valuesForColumn<Float>(col));
+                default:
+                case StringType: return cast(p->valuesForColumn<String>(col));
+                }; });
     }
 
 }}

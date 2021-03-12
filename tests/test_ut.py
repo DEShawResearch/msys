@@ -2589,6 +2589,18 @@ class Main(unittest.TestCase):
         self.assertEqual(T.params, P)
         T.term(0).param = p
 
+    def testParamValues(self):
+        p = msys.CreateParamTable()
+        p.addProp("i", int)
+        p.addProp("f", float)
+        p.addProp("s", str)
+        p.addParam(i=4, f=1.2, s="xyz")
+        p.addParam(i=2, f=2.2, s="abc")
+        self.assertEqual(p.values("i"), [4, 2])
+        self.assertEqual(p.values("f"), [1.2, 2.2])
+        self.assertEqual(p.values("s"), ["xyz", "abc"])
+
+
     def testTermTable(self):
         m = msys.CreateSystem()
         a1 = m.addAtom()
