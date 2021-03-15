@@ -502,6 +502,43 @@ static void read_cts(Sqlite dms, System& sys, KnownSet& known) {
             if (pos != std::string::npos) {
                 name = name.substr(0, pos);
             }
+            if (ct.has(name)) {
+                // the _msys_convert trick was introduced in msys/3.7.313-316, but some DMS files
+                // show up with a mixture of the old method and the method, so you can have, e.g.
+                // both 'foobar_msys_converted_34' and 'foobar', which map to the same key.  which
+                // to use?  failure is not an option.  Our basic tenet is not to throw away
+                // information that the chemist might need.
+                //
+                // We have 4 cases, corresponding to the new and existing value being an empty string
+                // or not.  If either value is empty string, the other value is preferred.  We can
+                // use the non-empty value without issuing a warning.
+                // Otherwise, if both are non-empty, we can't just drop one of them.  Convert them
+                // both to a string, and concatenate with '|', issuing a warning.
+
+                // empty string has lowest priority
+                if (ct.type(name) == StringType && ct.value(name).c_str()[0] == '\0') {
+                    ct.del(name);
+                }  else if (type == StringType && r.get_str(i)[0] == '\0') {
+                    // ignore this entry, keeping existing
+                    continue;
+                } else {
+                    // concatenate old and new values
+                    std::string newval;
+                    switch (ct.type(name)) {
+                        case IntType: newval = std::to_string(ct.value(name).asInt()); break;
+                        case FloatType: newval = std::to_string(ct.value(name).asFloat()); break;
+                        default:
+                        case StringType: newval = ct.value(name).c_str(); break;
+                    }
+                    newval += "|";
+                    newval += r.get_str(i);
+                    MSYS_WARN("input system has both '" << r.name(i) << "' and '" << name << "' in ct " << id << "; constructed concatenated value '" << newval);
+                    ct.del(name);
+                    ct.add(name, StringType);
+                    ct.value(name) = newval;
+                    continue;
+                }
+            }
             ct.add(name, type);
             auto val = ct.value(name);
             switch (type) {

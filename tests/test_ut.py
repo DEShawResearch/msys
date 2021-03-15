@@ -2601,6 +2601,9 @@ class Main(unittest.TestCase):
         self.assertEqual(p.values("s"), ["xyz", "abc"])
 
 
+    def testMixedUpCtProperties(self):
+        msys.Load("/f/a/job/12658090/no_water.dms")
+
     def testTermTable(self):
         m = msys.CreateSystem()
         a1 = m.addAtom()
