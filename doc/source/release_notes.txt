@@ -1,3 +1,6 @@
+1.7.327 Added ParamTable::valuesForColumn.
+        Read DMS files with conflicting ct properties.
+
 1.7.326 Add structure_only option to clone().
         Make dms-select -bb ignore pseudos when structure_only is specified.
         Make msys.Calc*** accept read-only arrays.
