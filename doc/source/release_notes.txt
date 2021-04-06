@@ -1,3 +1,6 @@
+1.7.328 Enhance compare_frames to compare trajectories starting at different timestamps
+        Show indices of mismatches in verbose mode
+
 1.7.327 Added ParamTable::valuesForColumn.
         Read DMS files with conflicting ct properties.
 

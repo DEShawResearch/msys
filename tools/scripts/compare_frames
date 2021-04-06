@@ -14,6 +14,7 @@ import sys
 import argparse
 from msys import molfile
 from numpy import isnan, dtype
+import numpy
 
 parser = argparse.ArgumentParser(description="Compare ETR or DTR framesets")
 parser.add_argument("frameset", type=str, nargs=2, help="framesets to compare")
@@ -74,7 +75,16 @@ if r1.nframes != r2.nframes:
         print("Exiting")
         sys.exit(3)
 
-nframes = min(r1.nframes, r2.nframes)
+if args.allow_different_numbers_of_frames:
+    # Mismatched trajectories, try to find an overlapping set of times to check
+    (times, r1idx, r2idx) = numpy.intersect1d(r1.times(), r2.times(), assume_unique=True, return_indices=True)
+    if len(times) == 0:
+        print("WARNING: no matching time indexes found between the two framesets")
+        sys.exit(0)
+else:
+    # Regular comparison assumes that the two frameset have the same number of frames
+    # at the same time indexes
+    (times, r1idx, r2idx) = r1.times(), range(r1.nframes), range(r2.nframes)
 
 # Convert precision tuples into string->float dict
 field_precision = dict(map(lambda a: (a[0], float(a[1])), args.field_precision))
@@ -84,16 +94,15 @@ kv2 = {}
 miscompares = 0
 report = 1
 last_time = 0.0
-times = r1.times()
-for i in range(nframes):
+for i in range(len(times)):
     if i == report:
         print(
             "%4d frames examined so far (time %10.4f ps), %d are mismatches."
             % (i, last_time, miscompares)
         )
         report *= 2
-    kv1 = r1.keyvals(i)
-    kv2 = r2.keyvals(i)
+    kv1 = r1.keyvals(r1idx[i])
+    kv2 = r2.keyvals(r2idx[i])
     last_time = times[i]
     # set of keys is intersections of both sides, with ignored keys taken out
     keys = (set(kv1.keys()) & set(kv2.keys())) - set(args.ignore)
@@ -155,6 +164,7 @@ for i in range(nframes):
                 print("Miscompare for frame %i" % i)
                 if len(miss_arr):
                     print("%s " % k, miss_arr[0], " !=\n", miss_arr[1])
+                    print("Indices: %s" % numpy.nonzero(mismatches))
                 else:
                     print(k, kv1[k])
                     print(k, kv2[k])
@@ -164,10 +174,10 @@ for i in range(nframes):
         miscompares += 1
 
 if miscompares > 0:
-    print("%d of %d frames miscompared" % (miscompares, nframes))
+    print("%d of %d frames miscompared" % (miscompares, len(times)))
     sys.exit(2)
 
-print("%d frames matched" % nframes)
+print("%d frames matched" % len(times))
 
 sys.exit(0)
 
