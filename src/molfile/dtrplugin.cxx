@@ -932,6 +932,10 @@ void StkReader::append(std::vector<std::string>& fnames,
         DtrReader *reader = new DtrReader(fnames[i], _access);
         framesets.push_back(reader);
     }
+    if (framesets.size()==0) {
+        // happens if we get an stk with only empty dtrs
+        return;
+    }
 
     process_meta_frames();
 

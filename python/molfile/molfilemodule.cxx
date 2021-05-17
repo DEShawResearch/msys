@@ -407,9 +407,11 @@ namespace {
     }
 
     dict frameset_metadata(FrameSetReader& r) {
-        auto meta = r.frameset(0)->get_meta();
         dict d;
-        py_keyvals(*meta->get_frame_map(), d.ptr());
+        if (r.nframesets()>0) {
+            auto meta = r.frameset(0)->get_meta();
+            py_keyvals(*meta->get_frame_map(), d.ptr());
+        }
         return d;
     }
 
