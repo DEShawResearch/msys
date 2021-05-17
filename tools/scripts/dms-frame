@@ -72,6 +72,17 @@ def main():
     mol = msys.Load(opts.ifile)
     print("Input file contains %d atoms, %d bonds" % (mol.natoms, mol.nbonds))
 
+    if (opts.index is not None or opts.time is not None) and opts.input_path is None:
+        # if a frame was specified but no stk, maybe we were given a jobid, in which
+        # case we can get the stk from that.
+        # TODO: handle filtered trajectories (match number of atoms in the input system)
+        try:
+            jobid = int(opts.ifile)
+        except ValueError:
+            pass
+        else:
+            opts.input_path = f"/f/a/job/{jobid}/run.stk"
+
     if opts.input_path is not None:
         if opts.input_type is None:
             plugin = molfile.guess_filetype(opts.input_path)
