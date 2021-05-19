@@ -291,6 +291,10 @@ class DtrTestCase(unittest.TestCase):
 class TestStk(unittest.TestCase):
     STK = "tests/files/run.stk"
 
+    def testAnotherEmptyFramesetStk(self):
+        stk = '/f/r/runfep/hare-vanadium-scheat-622ce00cebbc5e35b5f3/852.0//1/run.stk'
+        molfile.DtrReader(stk)
+
     def testEmptyFramesetAtStartOfStk(self):
         if os.environ["DESRES_LOCATION"] not in {"nyc", "en"}:
             return
