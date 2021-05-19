@@ -1,4 +1,4 @@
-1.7.329 Handle stks with only empty dtrs.
+1.7.330 Handle stks with only empty dtrs.
 
 1.7.328 Enhance compare_frames to compare trajectories starting at different timestamps
         Show indices of mismatches in verbose mode

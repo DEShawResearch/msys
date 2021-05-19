@@ -10,6 +10,7 @@ import numpy
 import shutil as SH
 import subprocess
 import tempfile
+import getpass
 
 # we import pands here because it maybe imported later during a
 # test, which results in a weird, spurious error involving importlib.
@@ -291,6 +292,7 @@ class DtrTestCase(unittest.TestCase):
 class TestStk(unittest.TestCase):
     STK = "tests/files/run.stk"
 
+    @unittest.skipIf(getpass.getuser() != 'gullingj', "can't run this from the garden installer")
     def testAnotherEmptyFramesetStk(self):
         stk = '/f/r/runfep/hare-vanadium-scheat-622ce00cebbc5e35b5f3/852.0//1/run.stk'
         molfile.DtrReader(stk)
