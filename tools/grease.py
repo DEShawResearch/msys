@@ -132,13 +132,13 @@ def Grease(
         print("removing overlap with solute")
     headgroup_dist = 2.0
     mol = mol.clone(
-        "not (ctnumber %d and same residue as (atomicnumber 8 15 and pbwithin %f of"
+        "not (ctnumber %d and same fragment as (atomicnumber 8 15 and pbwithin %f of"
         " (noh and not ctnumber %d)))"
         % (ctnum, headgroup_dist, ctnum)
     )
     dist = 1.0
     mol = mol.clone(
-        "not (ctnumber %d and same residue as (pbwithin %f of (noh and not ctnumber"
+        "not (ctnumber %d and same fragment as (pbwithin %f of (noh and not ctnumber"
         " %d)))"
         % (ctnum, dist, ctnum)
     )
@@ -148,7 +148,7 @@ def Grease(
     if verbose:
         print("removing outer lipids and water")
     mol = mol.clone(
-        "not (ctnumber %d and same residue as (atomicnumber 8 15 and (abs(x)>%f or"
+        "not (ctnumber %d and same fragment as (atomicnumber 8 15 and (abs(x)>%f or"
         " abs(y)>%f)))"
         % (ctnum, xmax, ymax)
     )
