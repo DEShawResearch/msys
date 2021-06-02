@@ -98,11 +98,3 @@ void desres::msys::Maeff::write(std::ostream& os, int level) const {
   }
 }
 
-size_t desres::msys::Maeff::footprint() const {
-  return DestroTop::footprint() + m_meta.footprint();
-}
-
-void desres::msys::Maeff::touch(ZingPool& zpool) const {
-  m_meta.touch(zpool);
-  desres::msys::DestroTop::touch(zpool);
-}

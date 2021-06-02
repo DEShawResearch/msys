@@ -51,27 +51,6 @@ desres::msys::Destro& desres::msys::DestroBlock::add_block(const std::string& na
   }
 }
 
-void desres::msys::DestroBlock::touch(ZingPool& zpool) const {
-  // Touch my name
-  DestroNamedBlock::touch(zpool);
-
-  // Touch my subblocks
-  for(std::vector<Destro*>::const_iterator p = m_subblocks.begin(),
-        en = m_subblocks.end(); p != en; ++p) {
-    (*p)->touch(zpool);
-  }
-
-  // Touch my data
-  for(std::vector<key_value_t>::const_iterator p = m_data.begin(),
-        en = m_data.end(); p != en; ++p) {
-    const key_value_t data = *p;
-    data.key.touch(zpool);
-    data.value.touch(zpool);
-    data.doc.touch(zpool);
-  }
-
-}
-
 // -----------------------------------------------
 //  P U B L I C
 // -----------------------------------------------
@@ -416,57 +395,9 @@ void desres::msys::DestroBlock::write(std::ostream& os, int level) const {
   os << indentation << '}' << lineterm;
 }
 
-size_t desres::msys::DestroBlock::footprint() const {
-  size_t foot = DestroNamedBlock::footprint() +
-    sizeof(m_subblocks) + sizeof(m_data);
-
-  // Add in the space for the sub-blocks
-  for(std::vector<Destro*>::const_iterator p = m_subblocks.begin(),
-        en = m_subblocks.end(); p != en; ++p) {
-    foot += sizeof(Destro*);
-    foot += (*p)->footprint();
-  }
-
-  // Add in the space for the key-value pairs
-  foot += m_data.size() * sizeof(m_data[0]);
-
-  return foot;
-}
-
-
-// std::string name() const;
-// void name(const std::string& name);
-// desres::msys::ZingPool& pool();
-// const desres::msys::ZingPool& pool() const;
-
-// void add_schema(char type,const std::string& attr,const std::string& doc="");
-
-// std::map<std::string,schema_t>& schemas() const;
-// std::vector<schema_t> ordered_schema() const;
-
-// std::string get_value(const std::string& attr) const;
-
-
-
-// Attribute get_attr(const std::string& attr);
-// const Attribute get_attr(const std::string& attr) const;
-
 void desres::msys::DestroBlock::raw_update(key_value_t* location,ZingPool& zpool,std::string value) {
   if (location == NULL) throw dessert("no location provided");
 
   location->value = zingify(value,zpool);
 }
 
-/*GCOV-IGNORE*/
-// void set_attr(char type,const std::string& attr,const std::string& value);
-
-
-// void clear(const std::string& attr);
-// void del(const std::string& attr);
-// void del(size_t blockno);
-// Destro& append(const Destro& source);
-// Destro& append();
-
-// Destro& new_block(const std::string& name);
-
-// DestroArray& new_array(const std::string& name,size_t num_elements=0);

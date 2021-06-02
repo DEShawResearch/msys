@@ -239,8 +239,6 @@ namespace desres { namespace msys {
     //Destro(const Destro&);
 
   public:
-    virtual void touch(ZingPool& zpool) const = 0;
-
     static void test_private_parts();
 
     /*!
@@ -522,12 +520,6 @@ namespace desres { namespace msys {
 
     //! \brief Write a destro block to a stream
     virtual void write(std::ostream& os, int level=0) const = 0;
-
-    //! \brief Check the runtime memory footprint
-    virtual size_t footprint() const = 0;
-
-    //! \brief Mark unused elements in the pool as available
-    virtual void compact();
   };
 
   class DestroNamedBlock : public Destro {
@@ -542,15 +534,8 @@ namespace desres { namespace msys {
     DestroNamedBlock(Destro* parent=NULL);
     ~DestroNamedBlock();
 
-    //virtual std::string name() const;
-    //virtual void name(const std::string& name);
-    //virtual size_t footprint() const;
-
     virtual std::string name() const;
     virtual void name(const std::string& name);
-    virtual size_t footprint() const;
-
-    virtual void touch(ZingPool& zpool) const;
   };
 
   class DestroBlock : public DestroNamedBlock {
@@ -622,9 +607,6 @@ namespace desres { namespace msys {
     virtual Destro& block(const std::string& name);
     virtual const Destro& block(const std::string& name) const;
     virtual void write(std::ostream& os, int level=0) const;
-    virtual size_t footprint() const;
-
-    virtual void touch(ZingPool& zpool) const;
   };
 
   class DestroTop : public DestroBlock {
@@ -652,8 +634,6 @@ namespace desres { namespace msys {
 
     virtual ZingPool& pool();
     virtual const ZingPool& pool() const;
-    virtual size_t footprint() const;
-
   };
 
   class Maeff : public DestroTop {
@@ -695,9 +675,6 @@ namespace desres { namespace msys {
     virtual const Destro& block(const std::string& name) const;
 
     virtual void write(std::ostream& os, int level=0) const;
-    virtual size_t footprint() const;
-
-    virtual void touch(ZingPool& zpool) const;
   };
 
   class DestroArray : public DestroNamedBlock {
@@ -749,9 +726,6 @@ namespace desres { namespace msys {
       virtual Destro& block(const std::string& name);
       virtual const Destro& block(const std::string& name) const;
       virtual void write(std::ostream& os, int level=0) const;
-      virtual size_t footprint() const;
-
-      virtual void touch(ZingPool& zpool) const;
     };
 
     struct key_value_t {
@@ -832,9 +806,6 @@ namespace desres { namespace msys {
     virtual Destro& block(const std::string& name);
     virtual const Destro& block(const std::string& name) const;
     virtual void write(std::ostream& os, int level=0) const;
-    virtual size_t footprint() const;
-
-    virtual void touch(ZingPool& zpool) const;
   };
 
 

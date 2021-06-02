@@ -461,18 +461,6 @@ bool desres::msys::Destro::contains(const std::string& attr) const {
   return has_attr(attr) || has_block(attr);
 }
 
-size_t desres::msys::Destro::footprint() const {
-  return sizeof(Destro);
-}
-
-void desres::msys::Destro::compact() {
-  ZingPool& zpool = pool();
-
-  zpool.clearbits();
-  progenitor().touch(zpool);
-  zpool.finish_compaction();
-}
-
 desres::msys::Destro& desres::msys::Destro::append(const Destro& source) {
 
   // -----------------------------------------------

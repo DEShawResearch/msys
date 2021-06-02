@@ -12,24 +12,6 @@ using desres::msys::fastjson::floatify;
 //  P R O T E C T E D
 // -----------------------------------------------
 
-void desres::msys::DestroArray::touch(ZingPool& zpool) const {
-  // Touch my name
-  DestroNamedBlock::touch(zpool);
-
-  // Touch my data
-  for(std::vector<key_value_t>::const_iterator p = m_data.begin(),
-        en = m_data.end(); p != en; ++p) {
-    const key_value_t data = *p;
-    data.key.touch(zpool);
-    data.doc.touch(zpool);
-    for(std::vector<Zing>::const_iterator p = data.values.begin(),
-          en = data.values.end(); p != en; ++p) {
-      (*p).touch(zpool);
-    }
-  }
-
-}
-
 desres::msys::DestroArray::key_value_t*
 desres::msys::DestroArray::find_schema(const std::string& attr,const desres::msys::ZingPool& pool) {
   for(std::vector<key_value_t>::iterator p = m_data.begin(),
@@ -492,22 +474,6 @@ void desres::msys::DestroArray::write(std::ostream& os, int level) const {
 
   os << indentation << '}' << lineterm;
 
-}
-
-size_t desres::msys::DestroArray::footprint() const {
-  size_t foot = DestroNamedBlock::footprint();
-
-  // Add in the size of the keys
-  foot += sizeof(m_data) + m_data.size()*sizeof(key_value_t);
-
-  foot += sizeof(m_rows);
-  for(std::deque<DestroRow>::const_iterator p=m_rows.begin(),
-        en=m_rows.end(); p != en; ++p) {
-    foot += (*p).footprint();
-
-    foot += m_data.size()*sizeof(Zing);
-  }
-  return foot;
 }
 
 // -----------------------------------------------

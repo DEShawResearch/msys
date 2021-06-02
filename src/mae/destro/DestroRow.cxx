@@ -317,19 +317,3 @@ void desres::msys::DestroArray::DestroRow::write(std::ostream& os, int level) co
   }
 }
 
-/*!
- * Rows have no deep storage since their values are held by
- * the enclosing array.
- */
-size_t desres::msys::DestroArray::DestroRow::footprint() const {
-  return Destro::footprint() + sizeof(m_row);
-}
-
-/*!
- * Row's don't directly contain any Zing data...  And in any case,
- * DestroArray doesn't call this, so nobody should every invoke
- * the function.
- */
-void desres::msys::DestroArray::DestroRow::touch(ZingPool& zpool) const { /*GCOV-IGNORE*/
-}
-

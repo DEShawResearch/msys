@@ -24,10 +24,3 @@ void desres::msys::DestroNamedBlock::name(const std::string& name) {
   m_name = zname;
 }
 
-size_t desres::msys::DestroNamedBlock::footprint() const {
-  return Destro::footprint() + sizeof(m_name);
-}
-
-void desres::msys::DestroNamedBlock::touch(ZingPool& zpool) const {
-  m_name.touch(zpool);
-}

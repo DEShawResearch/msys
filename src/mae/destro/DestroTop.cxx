@@ -31,6 +31,3 @@ const desres::msys::ZingPool& desres::msys::DestroTop::pool() const {
   return m_pool;
 }
 
-size_t desres::msys::DestroTop::footprint() const {
-  return DestroBlock::footprint() + sizeof(m_pool) + m_pool.size();
-}
