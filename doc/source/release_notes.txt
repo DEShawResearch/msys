@@ -1,3 +1,6 @@
+1.7.332 Handle DOS style newlines in sdf files.
+        Fix slow MAE write performance.
+
 1.7.331 dms-grease fix.
 
 1.7.330 Handle stks with only empty dtrs.
