@@ -99,6 +99,9 @@ SystemPtr iterator::next() {
             atom.formal_charge = formal_charge;
             if (*element) {
                 atom.atomic_number = ElementForAbbreviation(element);
+                if (atom.atomic_number == 0 && std::string("D")==element) {
+                    atom.atomic_number = 1;
+                }
             } else if (*name) {
                 /* guess atomic number from name.  Strip leading and
                  * trailing non-alphanumeric characters.  If the atom name
