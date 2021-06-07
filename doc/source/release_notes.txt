@@ -1,3 +1,6 @@
+1.7.333 MAE parser cleanup.
+        Handle D (deuterium in pdb parser.
+
 1.7.332 Handle DOS style newlines in sdf files.
         Fix slow MAE write performance.
 
