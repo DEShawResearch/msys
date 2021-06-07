@@ -1,11 +1,7 @@
 /* @COPYRIGHT@ */
 
 #include "destro/Destro.hxx"
-#include "dessert/dessert.hpp"
 
-// -----------------------------------------------
-// D E S T R O N A M E D B L O C K
-// -----------------------------------------------
 desres::msys::DestroNamedBlock::DestroNamedBlock(Destro* parent)
   : Destro(parent)
 {

@@ -1,7 +1,6 @@
 /* @COPYRIGHT@ */
 
 #include "destro/Destro.hxx"
-#include "dessert/dessert.hpp"
 
 // -----------------------------------------------
 // P R I V A T E
@@ -79,7 +78,7 @@ void desres::msys::DestroBlock::add_schema(char type,const std::string& attr,con
 
   key_value_t* location = find_schema(attr,zpool);
   if (location) {
-    if (location->type != type) throw dessert("schema exists with different type");
+    if (location->type != type) MSYS_FAIL("schema exists with different type");
     if (doc.size() > 0) location->doc = Zing(doc,zpool);
   }
   
@@ -134,10 +133,10 @@ std::string desres::msys::DestroBlock::get_value(const std::string& attr) const 
   const ZingPool& zpool = pool();
   const key_value_t* location = find_schema(attr,zpool);
   if (location == NULL) {
-    throw dessert("Attribute Error: "+attr);
+    MSYS_FAIL("Attribute Error: "+attr);
   }
   if (location->value.is_empty()) {
-    throw dessert(attr+" is empty");
+    MSYS_FAIL(attr+" is empty");
   }
   return location->value.string(zpool);
 }
@@ -146,7 +145,7 @@ char desres::msys::DestroBlock::get_type(const std::string& attr) const {
   const ZingPool& zpool = pool();
   const key_value_t* location = find_schema(attr,zpool);
   if (location == NULL) {
-    throw dessert("Attribute Error: "+attr);
+    MSYS_FAIL("Attribute Error: "+attr);
   }
   return location->type;
 }
@@ -155,7 +154,7 @@ int  desres::msys::DestroBlock::get_precision(const std::string& attr) const {
   const ZingPool& zpool = pool();
   const key_value_t* location = find_schema(attr,zpool);
   if (location == NULL) {
-    throw dessert("Attribute Error: "+attr);
+    MSYS_FAIL("Attribute Error: "+attr);
   }
   return location->precision;
 }
@@ -164,7 +163,7 @@ void desres::msys::DestroBlock::set_precision(const std::string& attr,int precis
   const ZingPool& zpool = pool();
   key_value_t* location = find_schema(attr,zpool);
   if (location == NULL) {
-    throw dessert("Attribute Error: "+attr);
+    MSYS_FAIL("Attribute Error: "+attr);
   }
   if (precision > s_max_precision) precision = s_max_precision;
   location->precision = precision;
@@ -174,7 +173,7 @@ std::string desres::msys::DestroBlock::get_doc(const std::string& attr) const {
   const ZingPool& zpool = pool();
   const key_value_t* location = find_schema(attr,zpool);
   if (location == NULL) {
-    throw dessert("Attribute Error: "+attr);
+    MSYS_FAIL("Attribute Error: "+attr);
   }
   return location->doc.string(zpool);
 }
@@ -183,7 +182,7 @@ void desres::msys::DestroBlock::set_doc(const std::string& attr, const std::stri
   ZingPool& zpool = pool();
   key_value_t* location = find_schema(attr,zpool);
   if (location == NULL) {
-    throw dessert("Attribute Error: "+attr);
+    MSYS_FAIL("Attribute Error: "+attr);
   }
   location->doc = Zing(doc,zpool);
 }
@@ -260,7 +259,7 @@ desres::msys::Destro& desres::msys::DestroBlock::new_block(const std::string& na
   ssize_t offset = offset_of_block(name);
   if (offset >= 0) {
     if (m_subblocks[offset]->is_array()) {
-      throw dessert("attempting to convert an array with new_block()");
+      MSYS_FAIL("attempting to convert an array with new_block()");
     }
     return *m_subblocks[offset];
   }
@@ -277,7 +276,7 @@ desres::msys::DestroArray& desres::msys::DestroBlock::new_array(const std::strin
       block->resize(num_elements);
       return *block;
     }
-    throw dessert("attempting to convert a block with new_array()");
+    MSYS_FAIL("attempting to convert a block with new_array()");
   }
 
   DestroArray* arr = NULL;
@@ -342,7 +341,7 @@ desres::msys::Destro& desres::msys::DestroBlock::block(const std::string& name) 
     if ((*p)->name() == name) return **p;
   }
 
-  throw dessert("Attribute error: " + name);
+  MSYS_FAIL("Attribute error: " + name);
 }
 
 const desres::msys::Destro& desres::msys::DestroBlock::block(const std::string& name) const {
@@ -352,7 +351,7 @@ const desres::msys::Destro& desres::msys::DestroBlock::block(const std::string& 
     if ((*p)->name() == name) return **p;
   }
 
-  throw dessert("Attribute error: " + name);
+  MSYS_FAIL("Attribute error: " + name);
 }
 
 void desres::msys::DestroBlock::write(std::ostream& os, int level) const {
@@ -396,7 +395,7 @@ void desres::msys::DestroBlock::write(std::ostream& os, int level) const {
 }
 
 void desres::msys::DestroBlock::raw_update(key_value_t* location,ZingPool& zpool,std::string value) {
-  if (location == NULL) throw dessert("no location provided");
+  if (location == NULL) MSYS_FAIL("no location provided");
 
   location->value = zingify(value,zpool);
 }

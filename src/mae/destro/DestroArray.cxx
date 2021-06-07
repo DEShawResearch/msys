@@ -1,8 +1,6 @@
 /* @COPYRIGHT@ */
 
 #include "destro/Destro.hxx"
-#include "dessert/dessert.hpp"
-#include <sstream>
 #include <cstdio>
 #include <msys/fastjson/print.hxx>
 
@@ -37,7 +35,7 @@ desres::msys::DestroArray::find_schema(const std::string& attr,const desres::msy
 ssize_t desres::msys::DestroArray::integer(const std::string& string) {
   size_t length = string.size();
   if (length == 0) {
-    throw dessert("string not convertable to integer");
+    MSYS_FAIL("string not convertable to integer");
   }
 
   // Optional sign
@@ -53,7 +51,7 @@ ssize_t desres::msys::DestroArray::integer(const std::string& string) {
   for(; p != en; ++p) {
     char c = *p;
     if (!isdigit(c)) {
-      throw dessert("string not convertable to integer");
+      MSYS_FAIL("string not convertable to integer");
     }
     total = total*10 + (c-'0');
   }
@@ -87,16 +85,16 @@ desres::msys::Destro& desres::msys::DestroArray::bulk_row(const std::string& off
   try {
     rowid = integer(offset);
   } catch (...) {
-    throw dessert("invalid row number " + offset);
+    MSYS_FAIL("invalid row number " + offset);
   }
 
   size_t width = m_data.size();
   if ((size_t)rowid != size()+1) {
-    throw dessert("out of order row " + offset);
+    MSYS_FAIL("out of order row " + offset);
   }
 
   if (elements.size() != width) {
-    throw dessert("invalid number of elements in bulk row");
+    MSYS_FAIL("invalid number of elements in bulk row");
   }
 
   desres::msys::Destro& row = new_block(offset);
@@ -157,7 +155,7 @@ void desres::msys::DestroArray::add_schema(char type,const std::string& attr,con
   // Perhaps we just need to update the one we have
   key_value_t* location = find_schema(attr,zpool);
   if (location) {
-    if (location->type != type) throw dessert("Invalid override of schema for " + attr);
+    if (location->type != type) MSYS_FAIL("Invalid override of schema for " + attr);
     if (doc.size() > 0) location->doc = Zing(doc,zpool);
     return;
   }
@@ -211,14 +209,14 @@ std::vector<desres::msys::Destro::schema_t> desres::msys::DestroArray::ordered_s
 }
 
 std::string desres::msys::DestroArray::get_value(const std::string&) const {
-  throw dessert("get_value not meaningful for arrays",DESSERT_LOC);
+  MSYS_FAIL("get_value not meaningful for arrays");
 }
 
 char desres::msys::DestroArray::get_type(const std::string& attr) const {
   const ZingPool& zpool = pool();
   const key_value_t* location = find_schema(attr,zpool);
   if (location == NULL) {
-    throw dessert("Attribute Error: "+attr); /*GCOV-IGNORE*/
+    MSYS_FAIL("Attribute Error: "+attr); /*GCOV-IGNORE*/
   }
   return location->type;
 }
@@ -227,7 +225,7 @@ int desres::msys::DestroArray::get_precision(const std::string& attr) const {
   const ZingPool& zpool = pool();
   const key_value_t* location = find_schema(attr,zpool);
   if (location == NULL) {
-    throw dessert("Attribute Error: "+attr);
+    MSYS_FAIL("Attribute Error: "+attr);
   }
 
   return location->precision;
@@ -240,7 +238,7 @@ void desres::msys::DestroArray::set_precision(const std::string& attr,int precis
   const ZingPool& zpool = pool();
   key_value_t* location = find_schema(attr,zpool);
   if (location == NULL) {
-    throw dessert("Attribute Error: "+attr);
+    MSYS_FAIL("Attribute Error: "+attr);
   }
   location->precision = precision;
 }
@@ -249,7 +247,7 @@ std::string desres::msys::DestroArray::get_doc(const std::string& attr) const {
   const ZingPool& zpool = pool();
   const key_value_t* location = find_schema(attr,zpool);
   if (location == NULL) {
-    throw dessert("Attribute Error: "+attr);
+    MSYS_FAIL("Attribute Error: "+attr);
   }
   return location->doc.string(zpool);
 }
@@ -260,7 +258,7 @@ void desres::msys::DestroArray::set_doc(const std::string& attr, const std::stri
   ZingPool& zpool = pool();
   key_value_t* location = find_schema(attr,zpool);
   if (location == NULL) {
-    throw dessert("Attribute Error: "+attr);
+    MSYS_FAIL("Attribute Error: "+attr);
   }
   location->doc = Zing(doc,zpool);
 }
@@ -277,7 +275,7 @@ void desres::msys::DestroArray::set_unsafe(const std::string& attr,const std::st
   ZingPool& zpool = mutable_pool();
   key_value_t* location = find_schema(attr,zpool);
   if (location == NULL) {
-    throw dessert("Attribute Error: "+attr,DESSERT_LOC);
+    MSYS_FAIL("Attribute Error: "+attr);
   }
 
   Zing zvalue(value,zpool);
@@ -299,8 +297,7 @@ void desres::msys::DestroArray::set_attr(char type,const std::string& attr,const
     add_schema(type,attr);
     location = find_schema(attr,zpool);
     if (location == NULL) {
-      std::string message("Attribute Error: ");/*GCOV-IGNORE*/
-      throw dessert(message+attr,DESSERT_LOC);/*GCOV-IGNORE*/
+      MSYS_FAIL("Attribute Error: " << attr);
     }
   }
   location->type = type;
@@ -369,7 +366,7 @@ desres::msys::Destro& desres::msys::DestroArray::new_block(const std::string& na
 }
 
 desres::msys::DestroArray& desres::msys::DestroArray::new_array(const std::string& name,size_t num_elements) {
-  throw dessert("new_array not meaningful for arrays");
+  MSYS_FAIL("new_array not meaningful for arrays");
 }
 
 desres::msys::Destro::Attribute desres::msys::DestroArray::operator[](const std::string& name) {
@@ -410,7 +407,7 @@ bool desres::msys::DestroArray::has_attr(const std::string& attr) const {
 }
 
 bool desres::msys::DestroArray::has_value(const std::string&) const {
-  throw dessert("has_value not meaningful for arrays");
+  MSYS_FAIL("has_value not meaningful for arrays");
 }
 
 desres::msys::Destro& desres::msys::DestroArray::block(size_t i) {
@@ -433,7 +430,7 @@ const desres::msys::Destro& desres::msys::DestroArray::block(const std::string& 
 
 void desres::msys::DestroArray::write(std::ostream& os, int level) const {
   std::string aname = name();
-  //if (aname == "") throw dessert("Cannot write unnamed array");
+  //if (aname == "") MSYS_FAIL("Cannot write unnamed array");
   if (aname == "") aname = "anonymous";
 
   size_t rows = size();
@@ -481,11 +478,11 @@ void desres::msys::DestroArray::write(std::ostream& os, int level) const {
 // -----------------------------------------------
 template<class T>
 static T unpack(const std::string& x) {
-  throw desres::msys::dessert("Not implemented",DESSERT_LOC);  /*GCOV-IGNORE*/
+  MSYS_FAIL("Not implemented");  /*GCOV-IGNORE*/
 }
 
 template<> long unpack<long>(const std::string& x) {
-  if (x == "<>") throw desres::msys::dessert("unpacking empty value");
+  if (x == "<>") MSYS_FAIL("unpacking empty value");
   return strtol(x.c_str(),NULL,10);
 }
 template<> bool unpack<bool>(const std::string& x) {return unpack<long>(x);}
@@ -495,7 +492,7 @@ template<> unsigned int unpack<unsigned int>(const std::string& x) {return unpac
 template<> unsigned short unpack<unsigned short>(const std::string& x) {return unpack<long>(x);}
 template<> unsigned long unpack<unsigned long>(const std::string& x) {return unpack<long>(x);}
 template<> double unpack<double>(const std::string& x) {
-  if (x == "<>") throw desres::msys::dessert("unpack empty token");
+  if (x == "<>") MSYS_FAIL("unpack empty token");
   return strtod(x.c_str(),NULL);
 }
 template<> float unpack<float>(const std::string& x) {return unpack<double>(x);}
@@ -531,7 +528,7 @@ void desres::msys::DestroArray::column(const std::string& attr, std::vector<T>& 
   values.resize(n);
   for(size_t i=0; i<n; ++i) {
     Zing z = location->values.at(i);
-    if (z.is_empty()) throw desres::msys::dessert("Cannot unpack empty value");
+    if (z.is_empty()) MSYS_FAIL("Cannot unpack empty value");
     values[i] = unpack<T>(z.string(zpool));
   }
 
@@ -578,12 +575,12 @@ template void desres::msys::DestroArray::column<double>(const std::string& attr,
 template void desres::msys::DestroArray::column<std::string>(const std::string& attr, std::vector<std::string>& values,const std::string&) const;
 
 static std::string precision_string(const bool* val,char type, int precision) {
-  if (type != 'b') throw desres::msys::dessert("cannot store a bool here",DESSERT_LOC);
+  if (type != 'b') MSYS_FAIL("cannot store a bool here");
   if (*val) return "1";
   return "0";
 }
 static std::string precision_string(const double* val,char type, int precision) {
-  if (type != 'r') throw desres::msys::dessert("cannot store a double here",DESSERT_LOC);
+  if (type != 'r') MSYS_FAIL("cannot store a double here");
   char buf[32];
   floatify(*val, buf);
   return buf;
@@ -601,7 +598,7 @@ static std::string iprecision_string(const T* val,char type, int precision) {
     return precision_string(&xval,type,precision);
   }
   default:
-    throw desres::msys::dessert("cannot store an int here",DESSERT_LOC);
+    MSYS_FAIL("cannot store an int here");
   }
 }
 static std::string precision_string(const int* val,char type, int precision) {
@@ -623,7 +620,7 @@ static std::string precision_string(const unsigned long* val,char type, int prec
   return iprecision_string(val,type,precision);
 }
 static std::string precision_string(const float* val,char type, int precision) {
-  if (type != 'r') throw desres::msys::dessert("cannot store a float here",DESSERT_LOC);
+  if (type != 'r') MSYS_FAIL("cannot store a float here");
   char buf[32];
   floatify(*val, buf);
   return buf;
@@ -633,11 +630,11 @@ template<class T>
 void desres::msys::DestroArray::set_column(const std::string& attr, const T* begin, size_t n, size_t stride) {
   ZingPool& zpool = mutable_pool();
   key_value_t* location = find_schema(attr,zpool);
-  if (!location) throw desres::msys::dessert("attibute error: "+attr);
+  if (!location) MSYS_FAIL("attibute error: "+attr);
   if (!begin) return; // Ignore NULL pointers
 
   // Must be the right size
-  if (n != size()) throw desres::msys::dessert("size mismatch in column");
+  if (n != size()) MSYS_FAIL("size mismatch in column");
 
   std::vector<Zing>& column = location->values;
   for(size_t i=0; i<n; ++i) {
@@ -661,10 +658,10 @@ template<class T>
 void desres::msys::DestroArray::set_column(const std::string& attr, const T& container) {
   ZingPool& zpool = mutable_pool();
   key_value_t* location = find_schema(attr,zpool);
-  if (!location) throw desres::msys::dessert("attibute error: "+attr);
+  if (!location) MSYS_FAIL("attibute error: "+attr);
 
   // Must be the right size
-  if (container.size() != size()) throw desres::msys::dessert("size mismatch in column");
+  if (container.size() != size()) MSYS_FAIL("size mismatch in column");
 
   std::vector<Zing>& column = location->values;
   size_t i = 0;

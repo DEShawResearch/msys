@@ -1,8 +1,6 @@
 /* @COPYRIGHT@ */
 
 #include "destro/Destro.hxx"
-#include "dessert/dessert.hpp"
-#include <sstream>
 #include <cassert>
 
 // -----------------------------------------------
@@ -32,10 +30,9 @@ predict_schema(desres::msys::Destro::Tokenizer& tokenizer) {
     desres::msys::Destro::schema_t schema;
     std::string token = tokenizer.token();
     if (token[0] != 'b' && token[0] != 'i' && token[0] != 'r' && token[0] != 's') {
-      std::stringstream str;
-      str << "Line " << tokenizer.line() << " predicted a schema, but " 
-          << token << " didn't start b_ i_ r_ or s_ ";
-      throw desres::msys::dessert(str.str(),DESSERT_LOC);
+      MSYS_FAIL(
+          "Line " << tokenizer.line() << " predicted a schema, but " 
+          << token << " didn't start b_ i_ r_ or s_ ");
     }
     schema.type = token[0];
     schema.attr = token.substr(2);
@@ -155,9 +152,7 @@ static void predict_nameless_block(std::string name,desres::msys::Destro& M, des
 static void
 check_name(const desres::msys::Destro::Tokenizer& tokenizer,const std::string& name) {
   if (name.size() > 0 && !(isalpha(name[0]) || name[0] == '_')) {
-    std::stringstream str;
-    str << "Line " << tokenizer.line() << " predicted a block name have " << name << std::endl;
-    throw desres::msys::dessert(str.str());
+    MSYS_FAIL("Line " << tokenizer.line() << " predicted a block name have " << name);
   }
 }
 
@@ -251,7 +246,7 @@ void desres::msys::Destro::set(const std::string& attr,const char* value) {
  * @param value The attribute value to copy
  */
 void desres::msys::Destro::set(const std::string& attr,const Attribute& value) { /*GCOV-IGNORE*/
-  if (value.type() == 'e') throw dessert("invalid empty rhs"); /*GCOV-IGNORE*/
+  if (value.type() == 'e') MSYS_FAIL("invalid empty rhs"); /*GCOV-IGNORE*/
   add_schema(value.type(),attr); /*GCOV-IGNORE*/
   get_attr(attr).update( value.value().c_str() ); /*GCOV-IGNORE*/
 } /*GCOV-IGNORE*/
@@ -320,7 +315,7 @@ std::string desres::msys::Destro::quotify(desres::msys::Zing z, const desres::ms
       for(;p!=en;++p) {
         // We only support space and tab
         //if (isspace(*p) && !(*p == ' ' || *p == '\t')) {
-          //throw dessert("unprintable whitespace in '" + raw + '\'');
+          //MSYS_FAIL("unprintable whitespace in '" + raw + '\'');
         //}
 
         if (*p == '"') {
@@ -393,7 +388,7 @@ desres::msys::ZingPool& desres::msys::Destro::pool() {
   Destro& top = progenitor();
 
   if (&top == this) {
-    throw dessert("pool not defined",DESSERT_LOC);
+    MSYS_FAIL("pool not defined");
   }
   return top.pool();
 }
@@ -404,14 +399,14 @@ desres::msys::ZingPool& desres::msys::Destro::mutable_pool() {
   } catch (const std::exception&) {
   }
 
-  throw dessert("item is immutable",DESSERT_LOC);
+  MSYS_FAIL("item is immutable");
 }
 
 const desres::msys::ZingPool& desres::msys::Destro::pool() const {
   const Destro& top = progenitor();
 
   if (&top == this) {
-    throw dessert("pool not defined",DESSERT_LOC); /*GCOV-IGNORE*/
+    MSYS_FAIL("pool not defined");
   }
   return top.pool();
 }
@@ -430,7 +425,7 @@ void desres::msys::Destro::add_schema_and_value(char type,const std::string& att
 
 desres::msys::Destro::Attribute desres::msys::Destro::operator[](const std::string& attr) {
   if (contains(attr)) return Attribute(this,attr);
-  throw dessert("Attribute error: "+attr);
+  MSYS_FAIL("Attribute error: "+attr);
 }
 
 const desres::msys::Destro::Attribute desres::msys::Destro::operator[](const std::string& attr) const {
@@ -541,7 +536,7 @@ desres::msys::DestroArray& desres::msys::Destro::array(size_t i) {
   Destro& ablock = block(i);
   DestroArray* arr = dynamic_cast<DestroArray*>(&ablock);
   if (!arr) {
-    throw dessert(ablock.name()+" is not an array");
+    MSYS_FAIL(ablock.name()+" is not an array");
   }
   return *arr;
 }
@@ -550,7 +545,7 @@ const desres::msys::DestroArray& desres::msys::Destro::array(size_t i) const {
   const Destro& ablock = block(i);
   const DestroArray* arr = dynamic_cast<const DestroArray*>(&ablock);
   if (!arr) {
-    throw dessert(ablock.name()+" is not an array");
+    MSYS_FAIL(ablock.name()+" is not an array");
   }
   return *arr;
 }

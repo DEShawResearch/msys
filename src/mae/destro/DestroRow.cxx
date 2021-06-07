@@ -1,8 +1,6 @@
 /* @COPYRIGHT@ */
 
 #include "destro/Destro.hxx"
-#include "dessert/dessert.hpp"
-#include <sstream>
 
 /*
   A thought to cut space... you may be able to remove the
@@ -21,7 +19,7 @@
 desres::msys::DestroArray* desres::msys::DestroArray::DestroRow::owner() {
   DestroArray* array = dynamic_cast<DestroArray*>(m_parent);
   if (array == NULL) {
-    throw dessert("invalid parent for row",DESSERT_LOC); /*GCOV-IGNORE*/
+    MSYS_FAIL("invalid parent for row");
   }
   return array;
 }
@@ -29,7 +27,7 @@ desres::msys::DestroArray* desres::msys::DestroArray::DestroRow::owner() {
 const desres::msys::DestroArray* desres::msys::DestroArray::DestroRow::owner() const {
   const DestroArray* array = dynamic_cast<const DestroArray*>(m_parent);
   if (array == NULL) {
-    throw dessert("invalid parent for row",DESSERT_LOC); /*GCOV-IGNORE*/
+    MSYS_FAIL("invalid parent for row");
   }
   return array;
 }
@@ -71,7 +69,7 @@ std::string desres::msys::DestroArray::DestroRow::name() const {
  * The row name is unsettable
  */
 void desres::msys::DestroArray::DestroRow::name(const std::string& name) {
-  throw dessert("cannot set row name");
+  MSYS_FAIL("cannot set row name");
 }
 
 /*!
@@ -114,11 +112,11 @@ std::string desres::msys::DestroArray::DestroRow::get_value(const std::string& a
   const key_value_t* location = owner()->find_schema(attr,zpool);
   if (location == NULL) {
     std::string message("Attribute Error: ");
-    throw dessert(message+attr);
+    MSYS_FAIL(message+attr);
   }
 
   if (location->values.at(m_row).is_empty()) {
-    throw dessert(attr+" is empty");
+    MSYS_FAIL(attr+" is empty");
   }
 
   return location->values.at(m_row).string(zpool);
@@ -131,7 +129,7 @@ char desres::msys::DestroArray::DestroRow::get_type(const std::string& attr) con
   const ZingPool& zpool = pool();
   const key_value_t* location = owner()->find_schema(attr,zpool);
   if (location == NULL) {
-    throw dessert("Enclosing array Attribute Error: "+attr);
+    MSYS_FAIL("Enclosing array Attribute Error: "+attr);
   }
 
   return location->type;
@@ -172,7 +170,7 @@ void desres::msys::DestroArray::DestroRow::set_unsafe(const std::string& attr,co
   ZingPool& zpool = pool();
   key_value_t* location = owner()->find_schema(attr,zpool);
   if (location == NULL) {
-    throw dessert("Attribute error: " + attr);
+    MSYS_FAIL("Attribute error: " + attr);
   }
 
   Zing zval(value,zpool);
@@ -217,14 +215,14 @@ void desres::msys::DestroArray::DestroRow::del(size_t blockno) {
  * Cannot add blocks to a row.
  */
 desres::msys::Destro& desres::msys::DestroArray::DestroRow::new_block(const std::string& name) {
-  throw dessert("new_block() not applicable in rows");
+  MSYS_FAIL("new_block() not applicable in rows");
 }
 
 /*!
  * Cannot add blocks to a row.
  */
 desres::msys::DestroArray& desres::msys::DestroArray::DestroRow::new_array(const std::string& name,size_t num_elements) {
-  throw dessert("new_array() not applicable in rows");
+  MSYS_FAIL("new_array() not applicable in rows");
 }
 
 desres::msys::Destro::Attribute desres::msys::DestroArray::DestroRow::operator[](const std::string& attr) {
@@ -239,14 +237,14 @@ const desres::msys::Destro::Attribute desres::msys::DestroArray::DestroRow::oper
  * No blocks, so no operator[int]
  */
 desres::msys::Destro& desres::msys::DestroArray::DestroRow::operator[](ssize_t) {
-  throw dessert("operator[] not applicable in rows");
+  MSYS_FAIL("operator[] not applicable in rows");
 }
 
 /*!
  * No blocks, so no operator[int]
  */
 const desres::msys::Destro& desres::msys::DestroArray::DestroRow::operator[](ssize_t) const {
-  throw dessert("operator[] not applicable in rows");
+  MSYS_FAIL("operator[] not applicable in rows");
 }
 
 /*!
@@ -278,28 +276,28 @@ bool desres::msys::DestroArray::DestroRow::has_value(const std::string& attr) co
  * Rows have no subblocks
  */
 desres::msys::Destro& desres::msys::DestroArray::DestroRow::block(size_t i) {
-  throw dessert("block() not applicable to rows");
+  MSYS_FAIL("block() not applicable to rows");
 }
 
 /*!
  * Rows have no subblocks
  */
 const desres::msys::Destro& desres::msys::DestroArray::DestroRow::block(size_t i) const {
-  throw dessert("block() not applicable to rows");
+  MSYS_FAIL("block() not applicable to rows");
 }
 
 /*!
  * Rows have no subblocks
  */
 desres::msys::Destro& desres::msys::DestroArray::DestroRow::block(const std::string& name) {
-  throw dessert("block() not applicable to rows");
+  MSYS_FAIL("block() not applicable to rows");
 }
 
 /*!
  * Rows have no subblocks
  */
 const desres::msys::Destro& desres::msys::DestroArray::DestroRow::block(const std::string& name) const {
-  throw dessert("block() not applicable to rows");
+  MSYS_FAIL("block() not applicable to rows");
 }
 
 /*!

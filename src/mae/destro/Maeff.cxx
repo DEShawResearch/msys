@@ -1,8 +1,6 @@
 /* @COPYRIGHT@ */
 
 #include "destro/Destro.hxx"
-#include "dessert/dessert.hpp"
-#include <sstream>
 
 // -----------------------------------------------
 // P R I V A T E
@@ -54,16 +52,14 @@ std::string desres::msys::Maeff::adjustname(const std::string& name) {
 desres::msys::Destro& desres::msys::Maeff::new_block(const std::string& name) {
   std::string realname = adjustname(name);
   if (realname != "f_m_ct") {
-    std::stringstream str;
-    str << "Maeff block names must be f_m_ct, m_ct, or ct, not " << name << std::endl;
-    throw dessert(str.str());
+      MSYS_FAIL("Maeff block names must be f_m_ct, m_ct, or ct, not " << name);
   }
 
   return add_block(realname);
 }
 
 void desres::msys::Maeff::add_schema(char type,const std::string& attr,const std::string& doc) {
-  throw dessert("use the meta() block to modify m_m2io_version");
+  MSYS_FAIL("use the meta() block to modify m_m2io_version");
 }
 
 

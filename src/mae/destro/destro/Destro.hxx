@@ -4,6 +4,7 @@
 #define DESTRO_DESTRO_HXX
 
 #include "Zing.hxx"
+#include <msys/types.hxx>
 
 #include <map>
 #include <deque>

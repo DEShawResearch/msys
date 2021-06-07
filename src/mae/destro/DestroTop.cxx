@@ -1,7 +1,6 @@
 /* @COPYRIGHT@ */
 
 #include "destro/Destro.hxx"
-#include "dessert/dessert.hpp"
 
 // -----------------------------------------------
 //  D E S T R O T O P

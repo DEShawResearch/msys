@@ -1,8 +1,6 @@
 /* @COPYRIGHT@ */
 
 #include "destro/Destro.hxx"
-#include "dessert/dessert.hpp"
-#include <sstream>
 #include <cstdio>
 #include <msys/fastjson/print.hxx>
 
@@ -21,20 +19,20 @@ desres::msys::Destro::Attribute::Attribute()
 desres::msys::Destro::Attribute::Attribute(Destro* block, const std::string& attr)
   : m_block(block), m_attr(attr)
 {
-  if (m_block == NULL) throw desres::msys::dessert("invalid block for attribute");
-  if (!m_block->contains(attr)) throw desres::msys::dessert("Attribute error: "+attr);
+  if (m_block == NULL) MSYS_FAIL("invalid block for attribute");
+  if (!m_block->contains(attr)) MSYS_FAIL("Attribute error: "+attr);
 }
 
 desres::msys::Destro::Attribute::~Attribute() {
 }
 
 desres::msys::Destro* desres::msys::Destro::Attribute::owner() {
-  if (!m_block) throw desres::msys::dessert("Immutable attribute cannot be updated");
+  if (!m_block) MSYS_FAIL("Immutable attribute cannot be updated");
   return m_block;
 }
 
 const desres::msys::Destro* desres::msys::Destro::Attribute::owner() const {
-  if (!m_block) throw desres::msys::dessert("Empty attribute has no value");
+  if (!m_block) MSYS_FAIL("Empty attribute has no value");
   return m_block;
 }
 
@@ -51,7 +49,7 @@ template<class T>
 void desres::msys::Destro::Attribute::assigni(T value) {
   switch(type()) {
   case 'e':
-    if (m_block == NULL) throw desres::msys::dessert("immutable");
+    if (m_block == NULL) MSYS_FAIL("immutable");
     m_block->add_schema('i',m_attr); /*GCOV-IGNORE*/
     /* fall through */
   case 'i': {
@@ -62,7 +60,7 @@ void desres::msys::Destro::Attribute::assigni(T value) {
     assign((double)value);
     break;
   default:
-    throw desres::msys::dessert(m_attr+": LHS is not an integer");
+    MSYS_FAIL(m_attr+": LHS is not an integer");
   }
 }
 
@@ -109,12 +107,12 @@ void desres::msys::Destro::Attribute::compatible_schema(char desired) {
 
   if (atype == desired) return;
   if (atype == 'e') {
-    if (m_block == NULL) throw desres::msys::dessert("immutable");/*GCOV-IGNORE*/
+    if (m_block == NULL) MSYS_FAIL("immutable");/*GCOV-IGNORE*/
     m_block->add_schema(desired,m_attr);/*GCOV-IGNORE*/
     return;/*GCOV-IGNORE*/
   }
 
-  throw desres::msys::dessert(m_attr+" is type " + atype + " and does not conform to type "+desired);
+  MSYS_FAIL(m_attr+" is type " + atype + " and does not conform to type "+desired);
 }
 
 void desres::msys::Destro::Attribute::assign(double value) {
@@ -145,18 +143,18 @@ char desres::msys::Destro::Attribute::type() const {
 }
 
 std::string desres::msys::Destro::Attribute::doc() const {
-  if (m_block == NULL) throw desres::msys::dessert("invalid block for attribute");
+  if (m_block == NULL) MSYS_FAIL("invalid block for attribute");
   return m_block->get_doc(m_attr);
 }
 
 void desres::msys::Destro::Attribute::doc(const std::string& doc) {
-  if (m_block == NULL) throw desres::msys::dessert("invalid block for attribute");
+  if (m_block == NULL) MSYS_FAIL("invalid block for attribute");
   return m_block->set_doc(m_attr,doc);
 }
 
 
 std::string desres::msys::Destro::Attribute::value() const {
-  if (m_block == NULL) throw desres::msys::dessert("invalid block for attribute");
+  if (m_block == NULL) MSYS_FAIL("invalid block for attribute");
   return m_block->get_value(m_attr);
 }
 
@@ -186,17 +184,17 @@ void desres::msys::Destro::Attribute::update(const std::string& value) {
 
 desres::msys::Destro::Attribute::operator std::string() const {
   if (!m_block) return "<>";
-  if (type() != 's') throw desres::msys::dessert(m_attr+" not a string");
+  if (type() != 's') MSYS_FAIL(m_attr+" not a string");
   return m_block->get_value(m_attr);
 }
 
 desres::msys::Destro::Attribute::operator double() const {
-  if (type() != 'r') throw desres::msys::dessert(m_attr+" not a float");
+  if (type() != 'r') MSYS_FAIL(m_attr+" not a float");
   std::string val = owner()->get_value(m_attr);
   const char* bytes = val.c_str();
   char* end_byte = NULL;
   double result = strtod(bytes,&end_byte);
-  if (end_byte && *end_byte != '\0') throw desres::msys::dessert(m_attr+" not a float");
+  if (end_byte && *end_byte != '\0') MSYS_FAIL(m_attr+" not a float");
   return result;
 }
 
@@ -205,13 +203,13 @@ desres::msys::Destro::Attribute::operator float() const {
 }
 
 desres::msys::Destro::Attribute::operator long() const {
-  if (!m_block) throw desres::msys::dessert("converting empty");
-  if (type() != 'i') throw desres::msys::dessert(m_attr+" not an integer");
+  if (!m_block) MSYS_FAIL("converting empty");
+  if (type() != 'i') MSYS_FAIL(m_attr+" not an integer");
   std::string val = owner()->get_value(m_attr);
   const char* bytes = val.c_str();
   char* end_byte = NULL;
   long result = strtol(bytes,&end_byte,10);
-  if (end_byte && *end_byte != '\0') throw desres::msys::dessert(m_attr+" not an integer");
+  if (end_byte && *end_byte != '\0') MSYS_FAIL(m_attr+" not an integer");
   return result;
 }
 
@@ -236,13 +234,13 @@ desres::msys::Destro::Attribute::operator unsigned short() const {
 }
 
 desres::msys::Destro::Attribute::operator bool() const {
-  if (!m_block) throw desres::msys::dessert("converting empty attribute");
-  if (type() != 'b') throw desres::msys::dessert(m_attr+" not a bool");
+  if (!m_block) MSYS_FAIL("converting empty attribute");
+  if (type() != 'b') MSYS_FAIL(m_attr+" not a bool");
   std::string val = owner()->get_value(m_attr);
   if (val == "0") return false;
   if (val == "1") return true;
-  if (val == "<>") throw desres::msys::dessert("converting empty value");
-  throw desres::msys::dessert(m_attr+" not a bool");
+  if (val == "<>") MSYS_FAIL("converting empty value");
+  MSYS_FAIL(m_attr+" not a bool");
 }
 
 desres::msys::Destro::Attribute
@@ -257,7 +255,7 @@ desres::msys::Destro::Attribute::operator[](char const* attr) const {
 
 desres::msys::Destro::Attribute
 desres::msys::Destro::Attribute::operator[](const std::string& attr) {
-  if (!m_block) throw desres::msys::dessert("Attribute error: " + attr);
+  if (!m_block) MSYS_FAIL("Attribute error: " + attr);
 
   // If we refer to a block, forward the request...
   if (m_block->has_block(m_attr)) {
@@ -265,12 +263,12 @@ desres::msys::Destro::Attribute::operator[](const std::string& attr) {
   }
 
   // If we don't refer to a block, we can't pull a subsequent attr
-  throw desres::msys::dessert(m_attr+" is a leaf attribute and cannot contain " + attr);
+  MSYS_FAIL(m_attr+" is a leaf attribute and cannot contain " + attr);
 }
 
 desres::msys::Destro::Attribute
 desres::msys::Destro::Attribute::operator[](const std::string& attr) const {
-  if (!m_block) throw desres::msys::dessert("Attribute error: " + attr);
+  if (!m_block) MSYS_FAIL("Attribute error: " + attr);
 
   // If we refer to a block, forward the request...
   if (m_block->has_block(m_attr)) {
@@ -278,12 +276,12 @@ desres::msys::Destro::Attribute::operator[](const std::string& attr) const {
   }
 
   // If we don't refer to a block, we can't pull a subsequent attr
-  throw desres::msys::dessert(m_attr+" is a leaf attribute and cannot contain " + attr);
+  MSYS_FAIL(m_attr+" is a leaf attribute and cannot contain " + attr);
 }
 
 desres::msys::Destro&
 desres::msys::Destro::Attribute::operator[](size_t block) {
-  if (!m_block) throw desres::msys::dessert("subblock reference error");
+  if (!m_block) MSYS_FAIL("subblock reference error");
 
   // If we refer to a block, forward the request...
   if (m_block->has_block(m_attr)) {
@@ -291,12 +289,12 @@ desres::msys::Destro::Attribute::operator[](size_t block) {
   }
 
   // If we don't refer to a block, we can't pull a subsequent attr
-  throw desres::msys::dessert(m_attr+" is a leaf attribute and does not contain subblocks");
+  MSYS_FAIL(m_attr+" is a leaf attribute and does not contain subblocks");
 }
 
 const desres::msys::Destro&
 desres::msys::Destro::Attribute::operator[](size_t block) const {
-  if (!m_block) throw desres::msys::dessert("subblock reference error");
+  if (!m_block) MSYS_FAIL("subblock reference error");
 
   // If we refer to a block, forward the request...
   if (m_block->has_block(m_attr)) {
@@ -304,7 +302,7 @@ desres::msys::Destro::Attribute::operator[](size_t block) const {
   }
 
   // If we don't refer to a block, we can't pull a subsequent attr
-  throw desres::msys::dessert(m_attr+" is a leaf attribute and does not contain subblocks");
+  MSYS_FAIL(m_attr+" is a leaf attribute and does not contain subblocks");
 }
 
 #if 0
@@ -377,7 +375,7 @@ desres::msys::Destro::Attribute::as_block() const {
 desres::msys::Destro*
 desres::msys::Destro::Attribute::operator->() {
   Destro* block = as_block();
-  if (!block) throw desres::msys::dessert("attribute " + m_attr + " is not a block");
+  if (!block) MSYS_FAIL("attribute " + m_attr + " is not a block");
   return block;
 }
 
@@ -385,7 +383,7 @@ desres::msys::Destro::Attribute::operator->() {
 const desres::msys::Destro*
 desres::msys::Destro::Attribute::operator->() const {
   const Destro* block = as_block();
-  if (!block) throw desres::msys::dessert("attribute " + m_attr + " is not a block");
+  if (!block) MSYS_FAIL("attribute " + m_attr + " is not a block");
   return block;
 }
 
@@ -400,7 +398,7 @@ desres::msys::Destro::Attribute::operator desres::msys::DestroArray&() const {
   if (!m_block) return s_empty_array;
 
   const DestroArray* array = dynamic_cast<const DestroArray*>(block);
-  if (array == NULL) throw desres::msys::dessert(m_attr+" not an array");
+  if (array == NULL) MSYS_FAIL(m_attr+" not an array");
   return *const_cast<DestroArray*>(array);
 }
 

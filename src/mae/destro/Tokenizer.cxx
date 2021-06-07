@@ -1,10 +1,8 @@
 /* @COPYRIGHT@ */
 
 #include "destro/Destro.hxx"
-#include "dessert/dessert.hpp"
 #include "destro/FILEbuf.hxx"
-#include <fstream>
-#include <sstream>
+#include <cstring>
 
 /*!
  * Returns the current character in the file
@@ -69,7 +67,7 @@ desres::msys::Destro::Tokenizer::Tokenizer(std::istream& input)
  * We require that the stream is not at EOF to start.
  */
 void desres::msys::Destro::Tokenizer::prime_the_pump() {
-  if (m_input->eof()) throw dessert("cannot parse empty destro");
+  if (m_input->eof()) MSYS_FAIL("cannot parse empty destro");
   read();
 }
 
@@ -115,7 +113,7 @@ desres::msys::Destro::Tokenizer::Tokenizer(FILE* input)
     m_tokenline(1),
     m_tokenpoint(0)
 {
-  if (!input) throw dessert("file was not open");
+  if (!input) MSYS_FAIL("file was not open");
   max_token_size = 16;
   m_token = (char *)malloc(max_token_size);
   prime_the_pump();
@@ -344,11 +342,10 @@ std::string desres::msys::Destro::Tokenizer::optional_comment() {
 const char * desres::msys::Destro::Tokenizer::predict(const char * match) {
   const char * tok = token();
   if (strcmp(match, "") && strcmp(tok, match)) {
-    std::stringstream str;
-    str << "Line " << line() << " predicted '" << match << "' have '"
+    MSYS_FAIL(
+        "Line " << line() << " predicted '" << match << "' have '"
         << (isprint(tok[0])?tok:"<unprintable>")
-        << "'" << std::endl;
-    throw dessert(str.str());
+        << "'");
   }
   next();
   return tok;
@@ -364,11 +361,10 @@ const char * desres::msys::Destro::Tokenizer::predict(const char * match) {
 const char * desres::msys::Destro::Tokenizer::predict_value() {
   const char * tok = token(true);  // Ignore single char tokens here
   if ( (tok[0] == '\0') || (strcmp(tok,":::") == 0) || (strcmp(tok,"}") == 0)) {
-    std::stringstream str;
-    str << "Line " << line() << " predicted a value token, but I have a '"
+    MSYS_FAIL(
+        "Line " << line() << " predicted a value token, but I have a '"
         << (isprint(tok[0])?tok:"<unprintable>")
-        << "'" << std::endl;
-    throw dessert(str.str());
+        << "'");
   }
   next();
   return tok;
