@@ -167,6 +167,10 @@ namespace {
                     object idobj, object otherobj, object posobj) {
 
         if (sys.atomCount()==0) return list();
+        if (sys.maxAtomId() != sys.atomCount()) {
+            PyErr_Format(PyExc_ValueError, "System has deleted atoms");
+            throw error_already_set();
+        }
 
         const Id* idptr=NULL, *otherptr=NULL;
         unsigned nids=0, nother=0;
