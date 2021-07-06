@@ -17,6 +17,7 @@ static char schemas_as_json[] = R"SCHEMA(
      [ "improper_harm", "bond",4, ["phi0","fc"]],
      [ "inplanewag_harm","bond",4,["w0","fc"]],
      [ "pair_12_6_es", "bond", 2, ["aij", "bij", "qij"]],
+     [ "pair_softcore_es", "bond", 2, ["aij", "bij", "qij", "lambda"]],
      [ "pair_exp_6_es","bond", 2, ["aij", "bij", "cij", "qij"]],
      [ "posre_harm",   "bond", 1, ["fcx", "fcy", "fcz"], ["x0", "y0", "z0"]],
      [ "posre_fbhw",   "bond", 1, ["fc", "sigma"], ["x0", "y0", "z0"]],
