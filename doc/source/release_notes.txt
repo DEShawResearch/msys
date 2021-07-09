@@ -1,3 +1,8 @@
+1.7.335 Fix sdf export containing huge floats.
+
+1.7.334 Add pair_softcore_es schema.
+        Avoid HydrogenBond issue with noncontiguous atoms
+
 1.7.333 MAE parser cleanup.
         Handle D (deuterium in pdb parser.
 
