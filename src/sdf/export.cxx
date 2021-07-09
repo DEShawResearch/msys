@@ -169,8 +169,6 @@ static std::string format_ct( SystemPtr mol ) {
             {
                 std::stringstream floatbuf;
                 floatbuf << std::setprecision(16) << v.asFloat();
-                //floatbuf.precision(13);
-                //floatbuf << v.asFloat();
                 sdf += floatbuf.str();
             }
             break;
