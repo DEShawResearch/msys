@@ -605,6 +605,16 @@ class Contacts(unittest.TestCase):
         with self.assertRaises(ValueError):
             h.findWithin(3, pos, [len(pos) + 40002])
 
+    def testHugeFloatsInCt(self):
+        mol=msys.CreateSystem()
+        mol.addAtom().atomic_number=6
+        huge = 1.234e249
+        mol.ct(0)["prop"] = huge
+        sdf = msys.FormatSDF(mol)
+        mol = next(msys.ParseSDF(sdf))
+        assert NP.isclose(huge, mol.ct(0)["prop"])
+
+
     def testSmallVoxels(self):
         pos = NP.zeros((5, 3), "f")
         pos[1] = [1000, 1000, 1000]

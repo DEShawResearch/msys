@@ -1,12 +1,11 @@
 #include "../sdf.hxx"
 #include "../elements.hxx"
 #include "../clone.hxx"
-#include "../fastjson/print.hxx"
 #include <errno.h>
 #include <math.h>
+#include <iomanip>
 
 using namespace desres::msys;
-using desres::msys::fastjson::floatify;
 
 /* Write x in %10.4f format to buffer */
 static void format_coord(char* buf, float const x) {
@@ -152,7 +151,6 @@ static std::string format_ct( SystemPtr mol ) {
     ptr = append(ptr, "M  END\n", 7);
 
     // additional data fields
-    char floatbuf[32];
     for (auto const& key : ct.keys()) {
         sdf += ">  <";
         sdf += key;
@@ -168,16 +166,13 @@ static std::string format_ct( SystemPtr mol ) {
             sdf += std::to_string(v.asInt());
             break;
         case FloatType: 
-#ifdef __APPLE__
-            if (isfinite(v.asFloat())) {
-#else
-            if (std::isfinite(v.asFloat())) {
-#endif
-                floatify(v.asFloat(), floatbuf); 
-            } else {
-                sprintf(floatbuf, "%f", v.asFloat());
+            {
+                std::stringstream floatbuf;
+                floatbuf << std::setprecision(16) << v.asFloat();
+                //floatbuf.precision(13);
+                //floatbuf << v.asFloat();
+                sdf += floatbuf.str();
             }
-            sdf += floatbuf;
             break;
         }
         sdf += "\n\n";
