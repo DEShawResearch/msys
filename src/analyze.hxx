@@ -4,6 +4,7 @@
 #include "system.hxx"
 #include <limits.h>
 #include <chrono>
+#include <unordered_map>
 
 namespace desres { namespace msys {
 
@@ -25,7 +26,13 @@ namespace desres { namespace msys {
                                         IdList const& atoms,
                                         int total_charge = INT_MAX,
                                         unsigned flags = 0,
-                                        std::chrono::milliseconds timeout=std::chrono::milliseconds(-1));
+                                        std::chrono::milliseconds timeout=std::chrono::milliseconds(-1),
+                                        std::vector<SystemPtr>* kekule = nullptr);
+
+
+    std::vector<SystemPtr> KekuleStructures(SystemPtr mol,
+                                            int total_charge = INT_MAX,
+                                            std::chrono::milliseconds timeout=std::chrono::milliseconds(-1));
 
     /* Assign bond orders to aromatic bonds, leaving formal charges
      * and bonds between nonaromatic atoms alone.

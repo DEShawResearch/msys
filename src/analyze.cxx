@@ -4,6 +4,7 @@
 #include "elements.hxx"
 #include "graph.hxx"
 #include "geom.hxx"
+#include "system.hxx"
 #include "clone.hxx"
 #include "contacts.hxx"
 #include "pfx/pfx.hxx"
@@ -50,6 +51,106 @@ namespace {
             }
         }
     };
+
+    std::vector<SystemPtr> _generate_kekule_structures(SystemPtr mol,
+                           std::map<Id, Id> const& aid_to_canId,
+                           std::unordered_map<Id, std::unordered_map<Id, std::vector<int> > > const& fc_canmol,
+                           std::map<Id, Id> const& bid_to_canId,
+                           std::unordered_map<Id, std::unordered_map<Id, std::vector<int> > > const& bo_canmol){
+
+        std::vector<Id> components;
+        std::vector<Id> resonance_counts;
+        // Count how many resonance structures each component has
+        // and make sure its consistent
+        for (auto const& kv: fc_canmol){
+            Id nres=0;
+            for (auto const& kv2: kv.second){
+                if (nres == 0){
+                    nres = kv2.second.size();
+                }
+                assert(nres == kv2.second.size());
+            }
+            for (auto const& kv2: bo_canmol.at(kv.first)){
+                assert(nres == kv2.second.size());
+            }
+            components.push_back(kv.first);
+            resonance_counts.push_back(nres);
+        }
+
+        std::unordered_map<Id, Id> canId_to_resatom;
+        std::unordered_map<Id, Id> canId_to_resbond;
+        std::unordered_map<Id, Id> aid_to_resonant;
+
+        // Create a base mol we can clone for each resonance structure
+        // NOTE: Clone does NOT preserve the order of the bonds, so we
+        // need to store the info and add them later
+        std::vector< std::tuple<Id, Id, Id, int> > newBonds;
+        SystemPtr basemol = System::create();
+        basemol->addChain();
+        basemol->addResidue(0);
+        for(Id aid : mol->atoms()){
+            atom_t const& ref_atom = mol->atom(aid);
+            Id newId = basemol->addAtom(0);
+            atom_t & new_atom = basemol->atom(newId);
+            new_atom.atomic_number = ref_atom.atomic_number;
+            new_atom.formal_charge = ref_atom.formal_charge;
+            aid_to_resonant[aid] = newId;
+            canId_to_resatom[aid_to_canId.at(aid)] = newId;
+        }
+        for(Id bid : mol->bonds()){
+            bond_t const& ref_bond = mol->bond(bid);
+            Id a0 = aid_to_resonant.at(ref_bond.i);
+            Id a1 = aid_to_resonant.at(ref_bond.j);
+            Id newId = newBonds.size();
+            canId_to_resbond[bid_to_canId.at(bid)] = newId;
+            newBonds.push_back(std::make_tuple(newId, a0, a1, ref_bond.order));
+        }
+
+        std::vector<SystemPtr> resmols;
+        std::vector<Id> selindex(components.size(), 0);
+        while(true){
+            // apply selected resonance structure to clone of the basemol and add it to the return vector
+            SystemPtr tmpmol = Clone(basemol, basemol->atoms());
+            for (auto const& bdata: newBonds){
+                Id newId = tmpmol->addBond( std::get<1>(bdata), std::get<2>(bdata) );
+                tmpmol->bond(newId).order = std::get<3>(bdata);
+                assert(newId==std::get<0>(bdata));
+            }
+
+            for (Id index=0; index < selindex.size(); ++index){
+                Id component = components[index];
+                Id ressel = selindex[index];
+
+                for (auto const& kv: fc_canmol.at(component)){
+                    Id res_aid = canId_to_resatom.at(kv.first);
+                    tmpmol->atom(res_aid).formal_charge = kv.second[ressel];
+                }
+
+                for (auto const& kv: bo_canmol.at(component)){
+                    Id res_bid = canId_to_resbond.at(kv.first);
+                    tmpmol->bond(res_bid).order = kv.second[ressel];
+                }
+            }
+            resmols.push_back(tmpmol);
+
+            // update indicies of component selector
+            Id quot = 1;
+            for (Id index=0; index<selindex.size() && quot>0; ++index){
+                Id update = quot + selindex.at(index);
+                quot = update/resonance_counts.at(index);
+                Id rem = update%resonance_counts.at(index);
+                selindex[index] = rem;
+            }
+
+            if (quot == 1){
+                // wrapped over the end. all structures generated
+                break;
+            }
+
+        }
+
+        return resmols;
+    }
 }
 
 namespace desres { namespace msys {
@@ -182,7 +283,8 @@ namespace desres { namespace msys {
                                         IdList const& atoms,
                                         int total_charge,
                                         unsigned flags,
-                                        std::chrono::milliseconds timeout) {
+                                        std::chrono::milliseconds timeout,
+                                        std::vector<SystemPtr>* kekule) {
 #ifdef MSYS_WITHOUT_LPSOLVE
         MSYS_FAIL("LPSOLVE functionality was not included.");
 #else
@@ -199,7 +301,9 @@ namespace desres { namespace msys {
             boa.setTotalCharge(total_charge);
         }
         boa.solveIntegerLinearProgram();
-        boa.assignSolutionToAtoms();
+        std::unordered_map<Id, std::unordered_map<Id, std::vector<int> > > fc_canmol;
+        std::unordered_map<Id, std::unordered_map<Id, std::vector<int> > > bo_canmol;
+        boa.assignSolutionToAtoms(fc_canmol, bo_canmol);
 
         Id qprop = BadId, oprop = BadId;
         Id can_qprop = BadId, can_oprop = BadId;
@@ -222,8 +326,23 @@ namespace desres { namespace msys {
                 mol->bondPropValue(kv.first, oprop) = canmol->bondPropValue(kv.second, can_oprop);
             }
         }
+
+        if (kekule != nullptr){
+            (*kekule) = _generate_kekule_structures(mol, aid_to_canId, fc_canmol, bid_to_canId, bo_canmol);
+            // Build kekule structures based on mol and resonance_groups (with ids converted to original ordering)
+        }
 #endif
     }
+
+    std::vector<SystemPtr> KekuleStructures(SystemPtr mol,
+                                            int total_charge,
+                                            std::chrono::milliseconds timeout){
+        unsigned flags = AssignBondOrder::ComputeResonantCharges;
+        std::vector<SystemPtr> structures;
+        AssignBondOrderAndFormalCharge(mol, mol->atoms(), total_charge, flags, timeout, &structures);
+        return structures;
+    }
+
 
 
     void GuessBondConnectivity(SystemPtr mol, bool periodic) {

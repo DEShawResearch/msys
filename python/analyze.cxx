@@ -27,6 +27,14 @@ namespace {
         AssignBondOrderAndFormalCharge(mol, ids, total_charge, flags, std::chrono::milliseconds(timeout_ms));
     }
 
+
+    std::vector<SystemPtr> kekule_1(SystemPtr mol, int timeout_ms) {
+        return KekuleStructures(mol, INT_MAX, std::chrono::milliseconds(timeout_ms));
+    }
+    std::vector<SystemPtr> kekule_2(SystemPtr mol, int total_charge, int timeout_ms) {
+        return KekuleStructures(mol, total_charge, std::chrono::milliseconds(timeout_ms));
+    }
+
     std::map<Id,IdList> find_distinct_fragments(SystemPtr mol, std::vector<std::string> const& keys) {
         MultiIdList fragments;
         mol->updateFragids(&fragments);
@@ -62,6 +70,8 @@ namespace desres { namespace msys {
         m.def("AssignBondOrderAndFormalCharge", assign_1);
         m.def("AssignBondOrderAndFormalCharge", assign_2);
         m.def("AssignBondOrderAndFormalCharge", assign_3);
+        m.def("KekuleStructures", kekule_1);
+        m.def("KekuleStructures", kekule_2);
         /* Yes, we have two interfaces for SSSR, this one and the one in
          * AnnotatedSystem.  This one lets you specify which atoms you
          * want the rings for, and doesn't force you to do any annotation, 
@@ -96,4 +106,3 @@ namespace desres { namespace msys {
             ;
     }
 }}
-

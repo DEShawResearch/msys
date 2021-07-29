@@ -8,6 +8,7 @@
 #include <memory>
 #include <unordered_map>
 #include <cassert>
+#include <numeric>
 
 #include "bond_orders.hxx"
 #include "../sssr.hxx"
@@ -120,16 +121,94 @@ namespace {
         }
         return obj / CLAMP_INCREMENT;
     }
-
-
 }
 
 namespace desres { namespace msys {
+    void SolutionMap::update(Id component, Id entry, int value){
+        auto result = entry_to_component.insert(std::make_pair(entry, component));
+        if (not result.second) {
+            // each entry can belong to only one component
+            if ( result.first->second != component){
+                // The presolved components can get moved to a component that needs to be solved.
+                // but the stored value shouldnt change. Just check and leave it in the presolved component
+                if (result.first->second == Id(-1)){
+                    std::vector<int> const& vec = solutionValues[entry];
+                    assert(vec.size()==1 && vec[0] == value);
+                    return;
+                }else{
+                    std::stringstream msg;
+                    msg << "SolutionMap: Something is wrong with entry "<< entry
+                    <<", current component is " << component << " but previous was "<<result.first->second
+                    << std::endl;
+                    throw std::runtime_error(msg.str());
+                }
+            }
+        }
+
+        std::vector<int> &vec = solutionValues[entry];
+        vec.push_back(value);
+        if (vec.size() != 1){
+            std::stringstream msg;
+            if(!resonant_solutions){
+                msg << "SolutionMap: Something is wrong with component " << component
+                << ", entry " << entry<<". It has already been assigned a value"
+                << " but resonant solutions are not being generated!"
+                << std::endl;
+                throw std::runtime_error(msg.str());
+            }else if(component==Id(-1)){
+                msg << "SolutionMap: Something is wrong with component " << component
+                << ", entry " << entry<<". It has already been assigned a value"
+                << "which shouldnt happen for presolved components"
+                << std::endl;
+                throw std::runtime_error(msg.str());
+            }
+        }
+    }
+    boost::optional<int> SolutionMap::find(Id entry){
+        boost::optional<int> answer;
+        auto result = solutionValues.find(entry);
+        if (result != solutionValues.end()){
+            answer = result->second[0];
+        }
+        return answer;
+    }
+    Id SolutionMap::size(){
+         return entry_to_component.size();
+    }
+
+    std::unordered_map<Id, solutionResult> SolutionMap::extract(){
+        std::unordered_map<Id, solutionResult> results;
+
+        for( auto const& entry: solutionValues){
+            Id entryid = entry.first;
+            auto const&  vec = entry.second;
+            solutionResult result;
+            result.nonresonant = vec[0];
+            result.resonant = std::accumulate(vec.begin(), vec.end(), 0.0)/vec.size();
+            results.emplace(entryid, std::move(result));
+        }
+        return results;
+    }
+
+    std::unordered_map<Id, std::unordered_map<Id, std::vector<int> > > SolutionMap::genenerate_and_remove_resonance_groups(){
+        std::unordered_map<Id, std::unordered_map<Id, std::vector<int> > > groups;
+        for (auto const& kv: entry_to_component){
+            groups[kv.second].emplace(kv.first, std::move(solutionValues.at(kv.first)));
+        }
+        entry_to_component.clear();
+        solutionValues.clear();
+        return groups;
+    }
+
+
     BondOrderAssigner::BondOrderAssigner(SystemPtr sys,
                                          IdList const& fragment,
-                                         bool compute_resonant_charge,
+                                         bool compute_resonant_forms,
                                          std::chrono::milliseconds timeout)
-    : _compute_resonant_charge(compute_resonant_charge)
+    : _compute_resonant_charge(compute_resonant_forms),
+      _atominfo(compute_resonant_forms),
+      _bondinfo(compute_resonant_forms),
+      _chargeinfo(compute_resonant_forms)
     {
         _needRebuild=true;
         _valid=false;
@@ -287,7 +366,7 @@ namespace desres { namespace msys {
             printf("After presolve bond order ranges for bond %u: %d %d\n",epair.first,val,epair.second.ub);
 #endif
             if(val!=epair.second.ub) continue;
-            boa->_bondinfo.insert(solutionMap::value_type(epair.first, solutionValues(val,val)));
+            boa->_bondinfo.update(-1, epair.first, val);
         }
 
         /* Fill in atominfo/chargeinfo with presolved values */
@@ -299,7 +378,7 @@ namespace desres { namespace msys {
 #endif
             if(val!=epair.second.ub) continue;
             Id aid=epair.first;
-            boa->_atominfo.insert(solutionMap::value_type(aid, solutionValues(val,val)));
+            boa->_atominfo.update(-1, aid, val);
 
             /* Check to see if atom was completly determined and compute charge if yes.
              * Formal Charges are given by:
@@ -308,17 +387,16 @@ namespace desres { namespace msys {
             int qtot=DataForElement(boa->_mol->atom(aid).atomic_number).nValence - 2*val;
             bool good=true;
             for (Id bid : boa->_mol->filteredBondsForAtom(aid, *boa->_filter)){
-                solutionMap::const_iterator iter=boa->_bondinfo.find(bid);
-                if(iter == boa->_bondinfo.end()){
+                if(boost::optional<int> found = boa->_bondinfo.find(bid)){
+                    /* 'nonresonant' is the bond electron PAIRS, so no factor of 0.5 needed */
+                    qtot -= found.get();
+                }else{
                     good=false;
                     break;
-                }else{
-                    /* 'nonresonant' is the bond electron PAIRS, so no factor of 0.5 needed */
-                    qtot-=iter->second.nonresonant;
                 }
             }
             if(good){
-                boa->_chargeinfo.insert(solutionMap::value_type(epair.first, solutionValues(qtot,qtot)));
+                boa->_chargeinfo.update(-1, epair.first, qtot);
                 boa->_presolved_charge+=qtot;
             }
         }
@@ -695,12 +773,12 @@ namespace desres { namespace msys {
     void ComponentAssigner::generate_resonance_forms_old() {
         int ncols = lpsolve::get_Norig_columns(_component_lp.get());
         unsigned nvars = ncols + 1;
-        std::vector<double> ones(nvars, 1.0);
+
+        _resonant_solutions.clear();
 
         generate_resonance_forms_core([&](
             std::vector<ilp_resonance_constraint>& newcons,
             const std::vector<int>& lastSolution,
-            std::vector<double>& sumResonantSolution,
             lpsolve::_lprec* resLP
         ) {
             ilp_resonance_constraint cons;
@@ -735,23 +813,22 @@ namespace desres { namespace msys {
                 for (auto i=0u; i < nvars; i++) {
                     cons.colno[i] = i;
                     cons.coeff[i] = 1.0;
-		}
+		        }
             }
 
             newcons.push_back(cons);
-            for (auto i = 0u; i < lastSolution.size(); i++) {
-                sumResonantSolution[i] += lastSolution[i];
-	    }
 
-            return 1;
+            _resonant_solutions.push_back(lastSolution);
+
         });
     }
 
     void ComponentAssigner::generate_resonance_forms_new() {
+        _resonant_solutions.clear();
+
         generate_resonance_forms_core([&](
             std::vector<ilp_resonance_constraint>& newcons,
             const std::vector<int>& lastSolution,
-            std::vector<double>& sumResonantSolution,
             lpsolve::_lprec* resLP
         ) {
             std::vector<std::vector<int>> permutations = generate_resonance_ilp_permutations(_component_lp.get(), lastSolution);
@@ -795,20 +872,21 @@ namespace desres { namespace msys {
                     }
                 }
                 newcons.push_back(cons);
-                for (auto i = 0u; i < solution.size(); i++) {
-                    sumResonantSolution[i] += solution[i];
-                }
             }
+
             assert(permutations.size() > 0);
-            return permutations.size();
+
+            for (std::vector<int> &solution: permutations) {
+                _resonant_solutions.push_back(std::move(solution));
+            }
+
         });
     }
 
     void ComponentAssigner::generate_resonance_forms_core(
-        std::function<int(
+        std::function<void(
             std::vector<ilp_resonance_constraint>&,
             const std::vector<int>&,
-            std::vector<double>&,
             lpsolve::_lprec*
         )>
         build_resonance_constraints_from_soln
@@ -827,9 +905,7 @@ namespace desres { namespace msys {
         // when we apply them we need to apply them to a copy of _component_lpcopy,
         // since that one was never (pre)solved
         build_acceleration_resonance_constraints(last_solution, accelcons);
-        std::vector<double> sumResonantSolution(nvars, 0);
         int numSolves = 1;
-        int numResonanceForms = 0;
 
         while (true) {
             auto resLP = unique_lp(lpsolve::copy_lp(_component_lpcopy.get()), lpsolve::delete_lp);
@@ -837,8 +913,7 @@ namespace desres { namespace msys {
             assert(lpsolve::get_Ncolumns(resLP.get()) == lpsolve::get_Norig_columns(resLP.get()));
             assert(lpsolve::get_Nrows(resLP.get()) == lpsolve::get_Norig_rows(resLP.get()));
 
-            numResonanceForms += build_resonance_constraints_from_soln(
-                newcons, last_solution, sumResonantSolution, resLP.get());
+            build_resonance_constraints_from_soln(newcons, last_solution, resLP.get());
 	        assert(lpsolve::set_add_rowmode(resLP.get(), true));
             add_ilp_resonance_constraints(resLP.get(), accelcons);
             add_ilp_resonance_constraints(resLP.get(), newcons);
@@ -888,16 +963,15 @@ namespace desres { namespace msys {
             }
         }
 #if DEBUGPRINT
+        int numResonanceForms = 0;
+
         printf("Found %d resonance forms with %d ILP solutions\n", numResonanceForms, numSolves-1);
 #endif
-        _component_resonant_solution.assign(nvars, 0);
-        for (auto i = 0u; i < nvars; i++) {
-            _component_resonant_solution[i] = sumResonantSolution[i] / numResonanceForms;
-        }
+
     }
 
     void ComponentAssigner::build_acceleration_resonance_constraints(
-        const std::vector<int> solution,
+        const std::vector<int>& solution,
         std::vector<ilp_resonance_constraint>& newcons
     ) {
         // Add constraints to enforce the correct objective value
@@ -956,78 +1030,60 @@ namespace desres { namespace msys {
         }
     }
 
-    void ComponentAssigner::extractComponentSolution(solutionMap &atominfo,
-                                                     solutionMap &bondinfo,
-                                                     solutionMap &chargeinfo){
+
+    void ComponentAssigner::update_infos_for_solution(std::vector<int> const& solution,
+                                                         SolutionMap &atominfo,
+                                                         SolutionMap &bondinfo,
+                                                         SolutionMap &chargeinfo){
+        for (ilpAtomMap::value_type const& kv : _component_atom_cols ){
+            Id aid=kv.first;
+            ilpAtom const& iatom=kv.second;
+            int value=0;
+            for(int icol=iatom.ilpCol, i=iatom.ilpLB; i<=iatom.ilpUB;++i,++icol){
+                value+=solution.at(icol)*i;
+            }
+            atominfo.update(_component_id, aid, value);
+
+            if(iatom.qCol){
+                /* Total charge takes up 2 columns... one for + charge and one for - */
+                value = solution.at(iatom.qCol+1) - solution.at(iatom.qCol);
+                chargeinfo.update(_component_id, aid, value);
+            }
+        }
+
+        for (ilpBondMap::value_type const& kv : _component_bond_cols ){
+            Id aid=kv.first;
+            ilpBond const& ibond=kv.second;
+            int value=1;
+            for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB;++i,++icol){
+                value += solution.at(icol)*(i-1);
+            }
+            bondinfo.update(_component_id, aid, value);
+        }
+    }
+
+
+    void ComponentAssigner::extractComponentSolution(SolutionMap &atominfo,
+                                                     SolutionMap &bondinfo,
+                                                     SolutionMap &chargeinfo){
 
         assert(_component_solution_valid);
-
         get_ilp_solution(_component_lp.get(), _component_solution);
+        update_infos_for_solution(_component_solution, atominfo, bondinfo, chargeinfo);
         if (_parent->compute_resonant_charge()) {
             #ifdef MSYS_WITHOUT_BLISS
                 generate_resonance_forms_old();
             #else
                 generate_resonance_forms_new();
             #endif
-        } else {
-            _component_resonant_solution.resize(_component_solution.size());
-            for (Id i=0; i<_component_solution.size(); ++i){
-                _component_resonant_solution[i]=_component_solution[i];
-            }
-        }
 
-#if DEBUGPRINT1
-        for(Id i=0; i<_component_solution.size();++i){
-            int v1=_component_solution.at(i);
-            double v2=_component_resonant_solution.at(i);
-            printf("Component Solution: %u %d %f %s\n",i,
-                   v1,v2, v1==v2 ? " " : "*");
-        }
-#endif
-
-        for (ilpAtomMap::value_type const& kv : _component_atom_cols ){
-            Id aid=kv.first;
-            ilpAtom const& iatom=kv.second;
-            int nonres=0;
-            double res=0;
-            for(int icol=iatom.ilpCol, i=iatom.ilpLB; i<=iatom.ilpUB;++i,++icol){
-                nonres+=_component_solution.at(icol)*i;
-                res+=_component_resonant_solution.at(icol)*i;
-            }
-            solutionMap::iterator iter=atominfo.lower_bound(aid);
-            if(iter==atominfo.end() || atominfo.key_comp()(aid,iter->first)){
-                atominfo.insert(iter, solutionMap::value_type(aid, solutionValues(nonres, res)));
-            }else{
-                assert(nonres==iter->second.nonresonant && res==iter->second.resonant);
-            }
-
-            if(iatom.qCol){
-                /* Total charge takes up 2 columns... one for + charge and one for - */
-                nonres=_component_solution.at(iatom.qCol+1)-_component_solution.at(iatom.qCol);
-                res=_component_resonant_solution.at(iatom.qCol+1)-_component_resonant_solution.at(iatom.qCol);
-                iter=chargeinfo.lower_bound(aid);
-                if(iter==chargeinfo.end() || chargeinfo.key_comp()(aid,iter->first)){
-                    chargeinfo.insert(iter, solutionMap::value_type(aid, solutionValues(nonres, res)));
-                }else{
-                    assert(nonres==iter->second.nonresonant && res==iter->second.resonant);
+            for (auto const& solution: _resonant_solutions){
+                // The original _component_solution is one of the
+                // resonant solutions, so we skip it
+                if (solution == _component_solution){
+                    continue;
                 }
-
-            }
-        }
-        for (ilpBondMap::value_type const& kv : _component_bond_cols ){
-            Id aid=kv.first;
-            ilpBond const& ibond=kv.second;
-            int nonres=1;
-            double res=1;
-            for(int icol=ibond.ilpCol, i=ibond.ilpLB; i<=ibond.ilpUB;++i,++icol){
-                nonres+=_component_solution.at(icol)*(i-1);
-                res+=_component_resonant_solution.at(icol)*(i-1);
-            }
-            solutionMap::iterator iter=bondinfo.lower_bound(aid);
-            if(iter==bondinfo.end() || bondinfo.key_comp()(aid,iter->first)){
-                bondinfo.insert(iter, solutionMap::value_type(aid, solutionValues(nonres, res)));
-            }else{
-                assert(nonres==iter->second.nonresonant && res==iter->second.resonant);
+                update_infos_for_solution(solution, atominfo, bondinfo, chargeinfo);
             }
         }
     }
@@ -1776,20 +1832,21 @@ namespace desres { namespace msys {
         return obj;
     }
 
-    void BondOrderAssigner::assignSolutionToAtoms(){
+    void BondOrderAssigner::assignSolutionToAtoms(std::unordered_map<Id, std::unordered_map<Id, std::vector<int> > > &fc_groups,
+                                                  std::unordered_map<Id, std::unordered_map<Id, std::vector<int> > > &bo_groups){
 
         if(!_valid){
             throw std::runtime_error("Cannot assignSolutionToAtoms with invalid integer linear program solution."
                                      " Did you call solveIntegerLinearProgram first?");
         }
 
-        solutionMap atominfo(_atominfo);
-        solutionMap bondinfo(_bondinfo);
-        solutionMap chargeinfo(_chargeinfo);
+        SolutionMap atominfo(_atominfo);
+        SolutionMap bondinfo(_bondinfo);
+        SolutionMap chargeinfo(_chargeinfo);
 
         /* Update presolved atominfo/bondinfo/chargeinfo with solved values from componentAssigners */
         for (ComponentAssignerPtr ca : _component_assigners){
-            ca->extractComponentSolution(atominfo,bondinfo,chargeinfo);
+            ca->extractComponentSolution(atominfo, bondinfo, chargeinfo);
         }
 
         /* Did we get everyone? */
@@ -1815,10 +1872,11 @@ namespace desres { namespace msys {
             oprop = _mol->addBondProp("resonant_order", FloatType);
         }
         std::vector<double> resonant_charge(_mol->maxAtomId());
-        for (solutionMap::value_type const& bpair : bondinfo){
-            Id bid=bpair.first;
-            solutionValues const& bdata=bpair.second;
 
+        std::unordered_map<Id, solutionResult> data =  bondinfo.extract();
+
+        for (auto const& entry: data){
+            Id bid = entry.first;
             bond_t & bond=_mol->bond(bid);
             Id aid1=bond.i;
             atom_t& atm1=_mol->atomFAST(aid1);
@@ -1826,9 +1884,9 @@ namespace desres { namespace msys {
             atom_t& atm2=_mol->atomFAST(aid2);
 
             /* Bond Orders */
-            int order=bdata.nonresonant;
+            int order = entry.second.nonresonant;
+            double resorder = entry.second.resonant;
             bond.order=order;
-            double resorder=bdata.resonant;
             if (compute_resonant_charge()) {
                 _mol->bondPropValue(bid, oprop) = resorder;
             }
@@ -1841,36 +1899,34 @@ namespace desres { namespace msys {
         }
 
         /* Take care of the "ValenceElectrons[i] - freeElectrons[i]" part of charge here */
-
-        for (solutionMap::value_type const& apair : atominfo){
-            Id aid=apair.first;
-            solutionValues const& adata=apair.second;
-
+        data = atominfo.extract();
+        std::unordered_map<Id, solutionResult> qdata = chargeinfo.extract();
+        for (auto const& entry: data){
+            Id aid = entry.first;
             atom_t& atm=_mol->atom(aid);
             int nValence=DataForElement(atm.atomic_number).nValence;
 
-            atm.formal_charge+= nValence - 2*adata.nonresonant;
+            atm.formal_charge+= nValence - 2*entry.second.nonresonant;
 
             double resq = resonant_charge[aid];
-            resq += nValence - 2*adata.resonant;
+            resq += nValence - 2*entry.second.resonant;
             if (compute_resonant_charge()) {
                 _mol->atomPropValue(aid, qprop) = fabs(resq) < 1e-5 ? 0 : resq;
             }
 
-            /* Assert that the model calculated charges agree with the above.
-               FIXME: just replace the above calculation of charges with whats tabulated in chargeinfo
-            */
-            int iqtarget=0;
-            double dqtarget=0.0;
-            solutionMap::const_iterator iter=chargeinfo.find(aid);
-            if(iter != chargeinfo.end()){
-                solutionValues const& qdata=iter->second;
-                iqtarget=qdata.nonresonant;
-                dqtarget=qdata.resonant;
+            int iqtarget = 0;
+            double dqtarget = 0.0;
+            auto qresult = qdata.find(aid);
+            if (qresult != qdata.end()){
+                iqtarget=qresult->second.nonresonant;
+                dqtarget=qresult->second.resonant;
             }
             if((atm.formal_charge != iqtarget) || fabs(resq - dqtarget)>1E-8 ){
                 throw std::runtime_error("SolutionToAtoms failed. atm.formal_charge != iqtarget or fabs(resq - dqtarget)>1E-8");
             }
         }
+
+        fc_groups = chargeinfo.genenerate_and_remove_resonance_groups();
+        bo_groups = bondinfo.genenerate_and_remove_resonance_groups();
     }
 }}
