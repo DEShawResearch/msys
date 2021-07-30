@@ -1,3 +1,5 @@
+1.7.336 added function for generating/returning kekule structures from the bond order assignment
+
 1.7.335 Fix sdf export containing huge floats.
 
 1.7.334 Add pair_softcore_es schema.
