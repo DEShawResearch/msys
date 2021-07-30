@@ -647,7 +647,26 @@ int main(int argc, char **argv){
         "CN1C2=C(CC(=O)N2)C(O)=C1C1=CC(O)=CN1",
         "CN1C=CC2=C1N=COCC1=C(N2)SC(=O)S1",
         "CN1C=C2OC(C#N)C3=CNC=C3C2=C1C=O",
-        "CN1C=C2OCC3=C(C2=C1)C(=O)NC(N)=C3N"
+        "CN1C=C2OCC3=C(C2=C1)C(=O)NC(N)=C3N",
+        "c1ccccc1",
+        "c1ccc2ccccc2c1",
+        "O=CC=C[O-]",
+        "[NH2+]=CC=CN",
+        "[O-]P([O-])([O-])=O",
+        "c1ccc([N+](=O)[O-])nn1",
+        "C[NH+]=C(N)N",
+        "[NH2+]=C(N)N",
+        "Cn1c[n+](C)c2cncnc21",
+        "CC(=O)C=[N+]=[N-]",
+        "P(c1ccccc1)(c1ccccc1)c1ccccc1",
+        "O=C1c2cccc3cccc(c23)C(=O)N1",
+        "Brc1ccc(-c2c3nc(c(-c4ccc(-c5ccncc5)cc4)c4ccc([nH]4)c(-c4ccc(Br)cc4)c4nc(c(-c5ccc(-c6ccncc6)cc5)c5ccc2[nH]5)C=C4)C=C3)cc1",
+        "Brc1cccc(-c2nc3ccccc3c(-c3ccccc3)c2Oc2ccc(-c3cc(-c4ccccc4)c4ccccc4n3)cc2)c1",
+        "c1[nH]c(N)c2c1C=CC(=O)C(C#N)O2",
+        "BrC1=C2CCC(N2C=CC1=O)C1=NSC(=N)N1",
+        "CC1=NN=C(Cl)C1=C[O-]",
+        "CC1=NC(=S(C)(=O)[O-])N=C1c1ccccc1",
+        "c1ccccc1Cc2ccccc2Cc3ccccc3"
     };
 
     for (const auto& s : smiles) {
