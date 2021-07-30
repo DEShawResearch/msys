@@ -1177,7 +1177,7 @@ namespace desres { namespace msys {
         return false;
     }
 
-    /* penalize atoms for having a charge */
+    /* penalize atoms for having a charge (applied to all atoms in the system) */
     void ComponentAssigner::set_atom_charge_penalties(){
 
         std::ostringstream ss;
@@ -1194,8 +1194,6 @@ namespace desres { namespace msys {
 
         for (ilpAtomMap::value_type & kv : _component_atom_cols){
             Id aid1=kv.first;
-            /* Only set charge penalties if they havent been unambiguously determined */
-            // if (parent->_chargeinfo.find(aid1) != parent->_chargeinfo.end()) continue;
 
             int anum=parent->_mol->atom(aid1).atomic_number;
             double eneg=clamp(DataForElement(anum).eneg);

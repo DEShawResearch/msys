@@ -2431,7 +2431,7 @@ def AssignBondOrderAndFormalCharge(
 
 
 def KekuleStructures(system, total_charge=None, *, timeout=60.0):
-    """Generate Kekule structures for the molecule
+    """Generate Kekule structures and conjugated groups for the molecule
 
     Arguments:
         system_or_atoms: either a System or a list of Atoms
@@ -2439,14 +2439,18 @@ def KekuleStructures(system, total_charge=None, *, timeout=60.0):
         timeout (float): maximum time allowed, in seconds.
             Note: calling this function on a chemically incomplete system,
             i.e. just protein backbone, cause msys to hit the timeout.
+        returns (List[System], List[List[Atom]))
     """
+    ptr = system._ptr
     timeout_ms = int(timeout * 1000)
     if total_charge is None:
-        structures = _msys.KekuleStructures(system._ptr, timeout_ms)
+        kekulized, conjugated = _msys.KekuleStructures(ptr, timeout_ms)
     else:
-        structures = _msys.KekuleStructures(system._ptr, int(total_charge),  timeout_ms)
+        kekulized, conjugated = _msys.KekuleStructures(ptr, int(total_charge),  timeout_ms)
 
-    return [System(ptr) for ptr in structures]
+    kekulized = [System(p) for p in kekulized]
+    conjugated = [ [Atom(ptr, i) for i in ids] for ids in conjugated]
+    return kekulized, conjugated
 
 
 class Graph(object):

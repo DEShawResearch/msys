@@ -284,7 +284,8 @@ namespace desres { namespace msys {
                                         int total_charge,
                                         unsigned flags,
                                         std::chrono::milliseconds timeout,
-                                        std::vector<SystemPtr>* kekule) {
+                                        std::vector<SystemPtr>* kekule,
+                                        std::vector<std::vector<Id> >* conjugated) {
 #ifdef MSYS_WITHOUT_LPSOLVE
         MSYS_FAIL("LPSOLVE functionality was not included.");
 #else
@@ -331,16 +332,34 @@ namespace desres { namespace msys {
             (*kekule) = _generate_kekule_structures(mol, aid_to_canId, fc_canmol, bid_to_canId, bo_canmol);
             // Build kekule structures based on mol and resonance_groups (with ids converted to original ordering)
         }
+
+        if (conjugated != nullptr){
+            conjugated->clear();
+            std::map<Id, Id> canId_to_aid;
+            for (auto const& kv: aid_to_canId){
+                canId_to_aid[kv.second] = kv.first;
+            }
+            for (auto const& kv: fc_canmol){
+                if (kv.first == Id(-1)){
+                    continue;
+                }
+                std::vector<Id> conjugated_atoms;
+                for (auto const& kv2: kv.second){
+                    conjugated_atoms.push_back(canId_to_aid.at(kv2.first));
+                }
+                conjugated->push_back(std::move(conjugated_atoms));
+            }
+        }
 #endif
     }
 
-    std::vector<SystemPtr> KekuleStructures(SystemPtr mol,
-                                            int total_charge,
-                                            std::chrono::milliseconds timeout){
+    KekuleResult KekuleStructures(SystemPtr mol,
+                                  int total_charge,
+                                  std::chrono::milliseconds timeout){
         unsigned flags = AssignBondOrder::ComputeResonantCharges;
-        std::vector<SystemPtr> structures;
-        AssignBondOrderAndFormalCharge(mol, mol->atoms(), total_charge, flags, timeout, &structures);
-        return structures;
+        KekuleResult result;
+        AssignBondOrderAndFormalCharge(mol, mol->atoms(), total_charge, flags, timeout, &result.first, &result.second);
+        return result;
     }
 
 

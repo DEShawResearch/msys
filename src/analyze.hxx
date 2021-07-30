@@ -27,12 +27,14 @@ namespace desres { namespace msys {
                                         int total_charge = INT_MAX,
                                         unsigned flags = 0,
                                         std::chrono::milliseconds timeout=std::chrono::milliseconds(-1),
-                                        std::vector<SystemPtr>* kekule = nullptr);
+                                        std::vector<SystemPtr>* kekule = nullptr,
+                                        std::vector<std::vector<Id> >* conjugated = nullptr);
 
+    typedef std::pair<std::vector<SystemPtr>, std::vector<std::vector<Id> > > KekuleResult;
 
-    std::vector<SystemPtr> KekuleStructures(SystemPtr mol,
-                                            int total_charge = INT_MAX,
-                                            std::chrono::milliseconds timeout=std::chrono::milliseconds(-1));
+    KekuleResult KekuleStructures(SystemPtr mol,
+                                  int total_charge = INT_MAX,
+                                  std::chrono::milliseconds timeout=std::chrono::milliseconds(-1));
 
     /* Assign bond orders to aromatic bonds, leaving formal charges
      * and bonds between nonaromatic atoms alone.

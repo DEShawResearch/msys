@@ -28,10 +28,10 @@ namespace {
     }
 
 
-    std::vector<SystemPtr> kekule_1(SystemPtr mol, int timeout_ms) {
+    KekuleResult kekule_1(SystemPtr mol, int timeout_ms) {
         return KekuleStructures(mol, INT_MAX, std::chrono::milliseconds(timeout_ms));
     }
-    std::vector<SystemPtr> kekule_2(SystemPtr mol, int total_charge, int timeout_ms) {
+    KekuleResult kekule_2(SystemPtr mol, int total_charge, int timeout_ms) {
         return KekuleStructures(mol, total_charge, std::chrono::milliseconds(timeout_ms));
     }
 
