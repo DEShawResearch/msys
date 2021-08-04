@@ -271,24 +271,21 @@ static void read_file( std::string const& path,
         }
         buffer.resize(statbuf.st_size-offset);
     }
-
-#ifdef WIN32
-    if (lseek(fd, offset, SEEK_SET)!=offset) {
-        DTR_FAILURE("reading " << path << ": " << strerror(errno));
+    if (lseek(fd, offset, SEEK_SET) != offset) {
+        DTR_FAILURE("seeing in " << path << " to " << offset << ": " << strerror(errno));
     }
 
-    ssize_t rc = read(fd, &buffer[0], buffer.size());
-#else
-    ssize_t rc = pread(fd, &buffer[0], buffer.size(), offset);
-#endif
-    if (rc<0) {
-        DTR_FAILURE("reading " << path << ": " << strerror(errno));
+    size_t nread = 0;
+    while (nread < buffer.size()) {
+        ssize_t rc = read(fd, &buffer[nread], buffer.size()-nread);
+        if (rc<0) {
+            DTR_FAILURE("reading " << path << ": " << strerror(errno));
+        }
+        if (rc == 0) {
+            DTR_FAILURE("unexpected short read of file " << path);
+        }
+        nread += rc;
     }
-#ifndef WIN32
-    if (size_t(rc) != buffer.size()) {
-        DTR_FAILURE("unexpected short read of file " << path);
-    }
-#endif
 }
 
 void Timekeys::init(const std::string& path, uint64_t reference_interval ) {
@@ -1738,25 +1735,19 @@ dtr::KeyMap DtrReader::frame(ssize_t iframe, molfile_timestep_t *ts, void ** buf
      * unless it's being cached as _last_fd. */
     FdCloser _(fd==_last_fd ? -1 : fd);
 
-#ifdef WIN32
-    if (lseek(fd, offset, SEEK_SET)!=offset) {
-        std::string err = strerror(errno);
-        close(fd);
-        _last_fd=0;
-        DTR_FAILURE("Error seeking " << fname << " with offset " << offset << " size " << framesize << ": " << strerror(errno));
-    }
+    ssize_t nread = 0;
+    char* ptr = (char *)buffer;
 
-    ssize_t rc = read(fd, buffer, framesize);
-    if (rc<0) {
-#else
-    if (pread(fd, buffer, framesize, offset) != framesize) {
-#endif
-        std::string err = strerror(errno);
-        close(fd);
-        _last_fd=0;
-        DTR_FAILURE("Error reading " << fname << " with offset " << offset << " size " << framesize << ": " << strerror(errno));
+    while (nread < framesize) {
+        auto rc = pread(fd, ptr+nread, framesize-nread, offset+nread);
+        if (rc <= 0) {
+            std::string err = strerror(errno);
+            close(fd);
+            _last_fd=0;
+            DTR_FAILURE("Error reading " << fname << " with offset " << offset << " size " << framesize << ": " << strerror(errno));
+        }
+        nread += rc;
     }
-
     KeyMap map = frame_from_bytes(buffer, framesize, ts);
 
     if (!bufptr) {
