@@ -770,17 +770,4 @@ namespace desres { namespace msys { namespace mae {
         while (it.next(block)) js.append(block);
     }
 
-
-    void export_mae( const Json& js, FILE * fd ) {
-        int depth=0;
-        for (int i=0; i<js.size(); i++) {
-            const Json& ct = js.elem(i);
-            if (i!=0) fprintf(fd, "f_m_ct ");
-            START_BLOCK;
-            write_meta( ct, depth, fd );
-            write_values( ct, depth, fd );
-            END_BLOCK;
-        }
-    }
-
 }}}

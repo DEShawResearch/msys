@@ -37,7 +37,6 @@ namespace desres { namespace msys { namespace mae {
     using fastjson::Json;
 
     void import_mae( std::istream& in, Json& js );
-    void export_mae( const Json& js, std::ostream& out );
 
     struct tokenizer;
 
