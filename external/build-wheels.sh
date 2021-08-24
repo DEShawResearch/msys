@@ -7,7 +7,7 @@ garden env-keep-only
 SCONS=scons/3.1.2-01c7
 BOOST=boost/1.57.0-02c7
 INCHI=inchi/1.05-01c7
-SQLITE=sqlite/3.24.0-02c7
+SQLITE=sqlite/3.32.2-02c7
 PYBIND11=pybind11/2.3.0-01c7
 
 version=$(src/version.py)
@@ -38,7 +38,6 @@ build() {
 }
 
 main() {
-    exit
     loadmodules
     for py in desres-python/3.6.6-04c7 desres-python/3.7.7-06c7 desres-python-devel/3.8.6-02c7; do
         garden load $py/bin
