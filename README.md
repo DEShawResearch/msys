@@ -49,7 +49,7 @@ At this point, the scripts in `build/bin` aren't really usable since no python b
 
 Assuming that works, you should be able to use all the scripts and programs in `build/bin`.  Try it with
 
-    ./build/bin/dms-info tests/mae/two.mae
+    ./build/bin/dms-info tests/files/two.mae
 
 You should get a summary of the structure and forcefield information contained in the file.
 
@@ -78,9 +78,9 @@ Assuming the build was successful, you can generate an InChI string in msys usin
     PYTHONPATH=build/lib/python:$PYTHONPATH python
 
     >>> import msys
-    >>> mol = msys.Load('tests/mae/ZINC01390050.mae')
+    >>> mol = msys.Load("tests/files/stereo.sdf")
     >>> print(msys.InChI(mol).string)
-    # 'InChI=1/C8H9F3NOS/c9-8(10,11)6(13)5-14-7-3-1-2-4-12-7/h1-4,6,12-13H,5H2/t6-/m1/s1'
+    InChI=1/2C2H2F2/c2*3-1-2-4/h2*1-2H/b2-1+;2-1-
 
 
 Building with Lpsolve Support
@@ -104,14 +104,13 @@ linked into msys, and bond order assignment should be enabled:
 
 To test that bond order assignment is available, run the following command:
 
-    ./build/bin/dms-select tests/mae/ZINC65409702.mae -A -o assign.sdf
+    ./build/bin/dms-select tests/files/jandor-bad.sdf -o assign.sdf -A
 
-The last few lines of `assign.sdf` should specify formal charges on three atoms:
+The last few lines of `assign.sdf` should specify formal charges on two atoms:
 
     ...
-    M  CHG  1   7   1
-    M  CHG  1  28   1
-    M  CHG  1  32   1
+    M  CHG  1  30   1
+    M  CHG  1  31  -1
     ...
 
 
