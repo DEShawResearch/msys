@@ -5,6 +5,10 @@
 #include <math.h>
 #include "pfx/rms.hxx"
 #include <unordered_set>
+#include <assert.h>
+#include <limits>
+#include <algorithm>
+
 
 namespace desres { namespace msys {
 

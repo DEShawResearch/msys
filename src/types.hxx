@@ -21,7 +21,7 @@
 } while(0)
 
 #define MSYS_FAIL(args) do { \
-    std::stringstream _msys_fail_tmp_ss_; \
+    ::std::stringstream _msys_fail_tmp_ss_; \
     _msys_fail_tmp_ss_ << args << "\nlocation: " << MSYS_LOC; \
     throw desres::msys::Failure(_msys_fail_tmp_ss_.str()); \
 } while(0)

@@ -15,6 +15,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <string.h>
+#include <limits>
 
 using namespace desres::msys;
 
