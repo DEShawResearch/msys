@@ -239,13 +239,17 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms,
     for (Provenance const& p : src->provenance()) dst->addProvenance(p);
 
     /* add/replace extra tables */
-    std::vector<String> extras = src->auxTableNames();
-    for (unsigned i=0; i<extras.size(); i++) {
-        std::string const& name = extras[i];
-        ParamTablePtr srcparams = src->auxTable(name);
-        ParamTablePtr dstparams = ParamTable::create();
-        AppendParams( dstparams, srcparams, srcparams->params() );
-        dst->addAuxTable( name, dstparams );
+    if (flags & CloneOption::StructureOnly) {
+        // skip auxtables
+    } else {
+        std::vector<String> extras = src->auxTableNames();
+        for (unsigned i=0; i<extras.size(); i++) {
+            std::string const& name = extras[i];
+            ParamTablePtr srcparams = src->auxTable(name);
+            ParamTablePtr dstparams = ParamTable::create();
+            AppendParams( dstparams, srcparams, srcparams->params() );
+            dst->addAuxTable( name, dstparams );
+        }
     }
     dst->updateFragids();
     return dst;

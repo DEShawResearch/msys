@@ -1597,16 +1597,19 @@ class Main(unittest.TestCase):
         mol.addAtom().atomic_number = 8  
         mol.addAtom().atomic_number = 0  
         mol.addAtom().atomic_number = 8  
+        mol.addAuxTable("aux", msys.CreateParamTable())
         t = mol.addTableFromSchema("stretch_harm")
         t.addTerm([mol.atom(0), mol.atom(2)], t.params.addParam())
 
         new = mol.clone(structure_only=False)
         assert new.natoms == 3
         assert new.getTable("stretch_harm").nterms == 1
+        assert new.auxtable_names == ["aux"]
 
         new = mol.clone(structure_only=True)
         assert new.natoms == 2
         assert new.getTable("stretch_harm") is None
+        assert new.auxtable_names == []
 
         mol = msys.Load("tests/files/tip5p.mae")
         new = mol.clone(structure_only=True)
