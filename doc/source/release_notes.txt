@@ -1,3 +1,7 @@
+1.7.338 System.clone(structure_only=True) drops auxtables as advertised.
+        Wheel updates.
+        Fix build on gcc 11.
+
 1.7.337 Support reading of huge dtr frames.
 
 1.7.336 added function for generating/returning kekule structures from the bond order assignment
