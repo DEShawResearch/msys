@@ -3,7 +3,7 @@
 namespace desres { namespace msys {
 
     ZingPool::ZingPool() {
-        insert("");
+        insert("<>");
     }
 
     uint32_t ZingPool::insert(const std::string& name) {
