@@ -22,6 +22,16 @@ the generic python interface, and the caching infrastructure all jumbled
 together here.  
 """
 
+class TestDsn6(unittest.TestCase):
+    def test_5y9t(self):
+        r = molfile.dsn6.read("tests/files/5y9t_2fofc.dsn6")
+        assert r.ngrids == 1
+        meta = r.grid_meta(0)
+        # FIXME: order='C' or order='F'?
+        arr = numpy.zeros(meta["dims"], order='F')
+        r.grid_data(0, arr)
+        assert numpy.isclose(arr.std(), 36.177)
+        assert sorted(meta) == ['dims', 'name', 'origin', 'xaxis', 'yaxis', 'zaxis']
 
 class TestXyz(unittest.TestCase):
     def test1(self):

@@ -293,7 +293,7 @@ extern "C" int msys_dsn6plugin_init(void) {
   memset(&plugin, 0, sizeof(molfile_plugin_t));
   plugin.abiversion = vmdplugin_ABIVERSION;
   plugin.type = MOLFILE_PLUGIN_TYPE;
-  plugin.name = "DSN6";
+  plugin.name = "dsn6";
   plugin.prettyname = "DSN6";
   plugin.author = "Eamon Caddigan";
   plugin.majorv = 0;
@@ -308,6 +308,7 @@ extern "C" int msys_dsn6plugin_init(void) {
 }
 
 extern "C" int msys_dsn6plugin_register(void *v, vmdplugin_register_cb cb) {
+    printf("dsn6 registering\n");
   (*cb)(v, (vmdplugin_t *)&plugin);
   return VMDPLUGIN_SUCCESS;
 }

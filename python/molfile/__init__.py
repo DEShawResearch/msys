@@ -81,6 +81,7 @@ extensiondict = dict()
 
 def register_plugin(plugin):
     """ put plugin in the global namespace, and add to extensiondict """
+    print("register", plugin.name, plugin)
     globals()[plugin.name] = plugin
     d = extensiondict
     for ext in plugin.filename_extensions.split(","):

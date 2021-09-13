@@ -139,8 +139,8 @@ namespace {
         return std::move(d);
     }
 
-    void reader_grid_data(Reader const& r, int n, PyObject* arr) {
-        r.read_grid(n, (float *)PyArray_DATA(arr));
+    void reader_grid_data(Reader const& r, int n, object arr) {
+        r.read_grid(n, (float *)PyArray_DATA(arr.ptr()));
     }
 
     Frame* reader_next(Reader& r) {
