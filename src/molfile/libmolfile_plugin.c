@@ -18,6 +18,8 @@ int msys_xyzplugin_init(void);
 int msys_xyzplugin_register(void *, vmdplugin_register_cb);
 int msys_vtfplugin_init(void);
 int msys_vtfplugin_register(void *, vmdplugin_register_cb);
+int msys_dsn6plugin_init(void);
+int msys_dsn6plugin_register(void *, vmdplugin_register_cb);
 
 void molfile_init_all(void) {
     msys_plugin_init();
@@ -29,6 +31,7 @@ void molfile_init_all(void) {
     msys_rstplugin_init();
     msys_xyzplugin_init();
     msys_vtfplugin_init();
+    msys_dsn6plugin_init();
 }
 
 void molfile_register_all(void* v, vmdplugin_register_cb cb) {
@@ -41,6 +44,7 @@ void molfile_register_all(void* v, vmdplugin_register_cb cb) {
     msys_rstplugin_register(v,cb);
     msys_xyzplugin_register(v,cb);
     msys_vtfplugin_register(v,cb);
+    msys_dsn6plugin_register(v,cb);
 }
 
 void molfile_fini_all(void) {

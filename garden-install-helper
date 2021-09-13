@@ -38,6 +38,7 @@ loadmodules() {
         $PYBIND11/lib \
 	$BLISS/lib \
         enscons/0.23.0-01c7/lib-python37 \
+        texlive/2019-20190410-01c7/bin \
 
     export PYTHONVER=37
     export MSYS_WITH_LPSOLVE=1
@@ -76,7 +77,7 @@ cat doc/source/release_notes.txt
 
 gendocs() {
     prefix=${PREFIX:-$PWD/build}
-    (cd doc && BINDIR=$prefix/bin garden with -m $PYTHON3/bin make clean genhelp html )
+    (cd doc && BINDIR=$prefix/bin garden with -m $PYTHON3/bin make clean genhelp html latexpdf)
     cp -r doc/build/html $PREFIX/doc/
 }
 

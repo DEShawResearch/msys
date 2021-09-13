@@ -179,6 +179,7 @@ molfile/msys.cxx
 molfile/dtrframe.cxx
 molfile/dtrplugin.cxx
 molfile/dxplugin.cxx
+molfile/dsn6plugin.cxx
 molfile/dcdplugin.c
 molfile/gromacsplugin.cxx
 molfile/rst7plugin.cxx
