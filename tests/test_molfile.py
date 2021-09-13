@@ -24,6 +24,15 @@ together here.
 
 class TestDsn6(unittest.TestCase):
     def test_5y9t(self):
+        """
+        note: dsn6 files can be fetched from the pdb with
+
+            wget edmaps.rcsb.org/maps/${pdb}_2fofc.dsn6
+            wget edmaps.rcsb.org/maps/${pdb}_fofc.dsn6
+
+        see https://www.rcsb.org/docs/programmatic-access/file-download-services
+        """
+
         r = molfile.dsn6.read("tests/files/5y9t_2fofc.dsn6")
         assert r.ngrids == 1
         meta = r.grid_meta(0)
