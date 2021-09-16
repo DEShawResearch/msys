@@ -1,3 +1,5 @@
+1.7.340 Support for electron density files in dsn6 format.
+
 1.7.339 Fix mae output broken by 1.7.333.
 
 1.7.338 System.clone(structure_only=True) drops auxtables as advertised.
