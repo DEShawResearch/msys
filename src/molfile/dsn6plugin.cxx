@@ -308,7 +308,6 @@ extern "C" int msys_dsn6plugin_init(void) {
 }
 
 extern "C" int msys_dsn6plugin_register(void *v, vmdplugin_register_cb cb) {
-    printf("dsn6 registering\n");
   (*cb)(v, (vmdplugin_t *)&plugin);
   return VMDPLUGIN_SUCCESS;
 }
