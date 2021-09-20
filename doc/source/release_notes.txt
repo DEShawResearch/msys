@@ -1,3 +1,5 @@
+1.7.342 Use UNK instead of empty resnames in mol2 files.
+
 1.7.341 Get rid of debug chatter.
 
 1.7.340 Support for electron density files in dsn6 format.

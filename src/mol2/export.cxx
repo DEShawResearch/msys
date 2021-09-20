@@ -87,9 +87,11 @@ static void export_mol2(SystemPtr omol, AnnotatedSystem& asys,
         residue_t const& res = mol->residue(local_id);
         chain_t const& chn = mol->chain(res.chain);
         Id ri = mol->atomsForResidue(local_id).at(0);
+        std::string resname = res.name;
+        if (resname.empty()) resname = "UNK";
         fprintf(fd, "%7u %4s%-4d %4u %-8s 1 %s%s\n",
                 local_id+1,                         /* residue id */
-                res.name.c_str(), res.resid,        /* residue name */
+                resname.c_str(), res.resid,         /* residue name */
                 ri+1,                               /* root atom */
                 n==1 ? "GROUP" : "RESIDUE",
                 chn.name.c_str(),
