@@ -529,16 +529,36 @@ static void predict_block(Json& js, tokenizer * tk ) {
     predict_nameless_block(js, name, tk);
 }
 
+static void strip_comments(char* buf, size_t len) {
+    for (size_t i=0; i<len; i++) {
+        if (buf[i]==' ' && buf[i+1]=='#') {
+            buf[i] = '\0';
+            break;
+        }
+    }
+}
+
 /* append keyvals to the object.  Return how many were added. */
 static int predict_schema( Json& js, tokenizer * tk ) {
     int n = js.size();
+    char buf[256];
     while (tokenizer_not_a(tk, ":::")) {
         Json attr;
-        const char * token = tokenizer_token(tk,0);
-        if (strlen(token)<3) {
-            MAE_ERROR1("schema token '%s' is too short", token);
+        const char * token = tokenizer_token(tk,1);
+        size_t len = strlen(token);
+        if (len+1 >= sizeof(buf)) {
+            MAE_ERROR1("schema token '%s' is too long", token);
         }
-        switch (*token) {
+        memcpy(buf, token, len);
+        while ((buf[len++] = tokenizer_peek(tk)) != '\n') {
+            if (len == sizeof(buf)) {
+                MAE_ERROR1("schema too long at line '%d'", tokenizer_line(tk));
+            }
+            tokenizer_read(tk);
+        }
+        buf[len-1] = '\0';
+        strip_comments(buf, len-1);
+        switch (*buf) {
             case 'b':
                 attr.to_bool(false); break;
             case 'i':
@@ -549,9 +569,9 @@ static int predict_schema( Json& js, tokenizer * tk ) {
                 attr.to_string(""); break;
             default:
                 MAE_ERROR2("Line %d predicted schema, but '%s' is invalid",
-                tokenizer_line(tk), token);
+                tokenizer_line(tk), buf);
         }
-        js.append(token+2, attr);
+        js.append(buf+2, attr);
         tokenizer_next(tk);
     }
     return js.size()-n;
