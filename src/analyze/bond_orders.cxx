@@ -772,9 +772,6 @@ namespace desres { namespace msys {
 #endif
 
     void ComponentAssigner::generate_resonance_forms_old() {
-        int ncols = lpsolve::get_Norig_columns(_component_lp.get());
-        unsigned nvars = ncols + 1;
-
         _resonant_solutions.clear();
 
         generate_resonance_forms_core([&](
@@ -782,6 +779,7 @@ namespace desres { namespace msys {
             const std::vector<int>& lastSolution,
             lpsolve::_lprec* resLP
         ) {
+            // http://yetanothermathprogrammingconsultant.blogspot.com/2011/10/integer-cuts.html
             ilp_resonance_constraint cons;
 
             for (ilpAtomMap::value_type const& kv : _component_atom_cols) {
@@ -807,12 +805,14 @@ namespace desres { namespace msys {
             cons.rowtype = ROWTYPE_LE;
 
             if (cons.colno.size() == 0) {
-                // work around bug
+                /* Corner Case: need to actually exclude the solution that has no set columns */
+                int ncols = lpsolve::get_Norig_columns(_component_lp.get());
+                unsigned nvars = ncols + 1;
                 cons.colno.resize(nvars);
                 cons.coeff.resize(nvars);
                 cons.rhs = -1;
                 for (auto i=0u; i < nvars; i++) {
-                    cons.colno[i] = i;
+                    cons.colno[i] = i+1;
                     cons.coeff[i] = 1.0;
 		        }
             }
@@ -862,13 +862,14 @@ namespace desres { namespace msys {
                     cons.coeff.assign(cons.colno.size(), 1.0);
                     cons.rhs = cons.colno.size() - 1.0;
                 } else {
+                    /* Corner Case: need to actually exclude the solution that has no set columns */
                     int ncols = lpsolve::get_Norig_columns(_component_lp.get());
                     unsigned nvars = ncols + 1;
                     cons.colno.resize(nvars);
                     cons.coeff.resize(nvars);
                     cons.rhs = -1;
                     for (auto i=0u; i < nvars; i++) {
-                        cons.colno[i] = i;
+                        cons.colno[i] = i+1;
                         cons.coeff[i] = 1.0;
                     }
                 }
