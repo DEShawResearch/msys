@@ -190,13 +190,14 @@ namespace desres { namespace msys {
         return results;
     }
 
-    std::unordered_map<Id, std::unordered_map<Id, std::vector<int> > > SolutionMap::genenerate_and_remove_resonance_groups(){
+    std::unordered_map<Id, std::unordered_map<Id, std::vector<int> > > SolutionMap::generate_and_remove_resonance_groups(){
         std::unordered_map<Id, std::unordered_map<Id, std::vector<int> > > groups;
         for (auto const& kv: entry_to_component){
             groups[kv.second].emplace(kv.first, std::move(solutionValues.at(kv.first)));
         }
         entry_to_component.clear();
         solutionValues.clear();
+
         return groups;
     }
 
@@ -1924,7 +1925,31 @@ namespace desres { namespace msys {
             }
         }
 
-        fc_groups = chargeinfo.genenerate_and_remove_resonance_groups();
-        bo_groups = bondinfo.genenerate_and_remove_resonance_groups();
+        fc_groups = chargeinfo.generate_and_remove_resonance_groups();
+        bo_groups = bondinfo.generate_and_remove_resonance_groups();
+
+        /* Clean up {fc_groups:
+            if the entry doesnt show up in bo_groups, make sure there is only one resonance and then
+            move it to the default group
+        */
+        std::vector<Id> removed;
+        for (auto const& kv: fc_groups){
+            if ( kv.first == Id(-1) || bo_groups.count(kv.first) != 0) continue;
+            /* This might create a default map if there wasnt one alread */
+            auto & default_map = fc_groups[Id(-1)];
+            for (auto const& kv2: kv.second){
+                /* Pedantic: atom shouldnt be in the default map and should have a single resonance */
+                assert(default_map.count(kv2.first) ==0 && kv2.second.size()==1);
+               /* move the single atom, single resonance to the default list */
+                default_map[kv2.first] = std::move(kv2.second);
+            }
+            removed.push_back(kv.first);
+        }
+        for (Id rgrp: removed){
+            fc_groups.erase(rgrp);
+        }
+
+
+
     }
 }}

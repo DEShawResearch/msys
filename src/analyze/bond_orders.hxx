@@ -33,7 +33,7 @@ namespace desres { namespace msys {
         boost::optional<int> find(Id entry);
         Id size();
         std::unordered_map<Id, solutionResult> extract();
-        std::unordered_map<Id, std::unordered_map<Id, std::vector<int> > > genenerate_and_remove_resonance_groups();
+        std::unordered_map<Id, std::unordered_map<Id, std::vector<int> > > generate_and_remove_resonance_groups();
 
     private:
         bool resonant_solutions;

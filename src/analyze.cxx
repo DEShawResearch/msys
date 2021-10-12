@@ -339,15 +339,19 @@ namespace desres { namespace msys {
             for (auto const& kv: aid_to_canId){
                 canId_to_aid[kv.second] = kv.first;
             }
-            for (auto const& kv: fc_canmol){
-                if (kv.first == Id(-1)){
-                    continue;
+
+            /* A conjugated group needs *at least two bonds*
+               Search bo_groups for entries with at least two bonds, and then extract the atoms for these groups
+               fc_groups is: map<ResGrpId, map<AtomId, std::vector<value> > >
+            */
+            for (auto const& kv: bo_canmol){
+                if (kv.second.size()>=2 && kv.first != Id(-1)){
+                    std::vector<Id> conjugated_atoms;
+                    for (auto const& kv2: fc_canmol.at(kv.first)){
+                        conjugated_atoms.push_back(canId_to_aid.at(kv2.first));
+                    }
+                    conjugated->push_back(std::move(conjugated_atoms));
                 }
-                std::vector<Id> conjugated_atoms;
-                for (auto const& kv2: kv.second){
-                    conjugated_atoms.push_back(canId_to_aid.at(kv2.first));
-                }
-                conjugated->push_back(std::move(conjugated_atoms));
             }
         }
 #endif
