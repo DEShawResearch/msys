@@ -747,6 +747,9 @@ namespace desres { namespace msys {
         if (status == TIMEOUT) {
             throw std::runtime_error("Unable to solve ILP. Timeout elapsed");
         }
+        if (status == INFEASIBLE) {
+            throw std::runtime_error("Unable to solve ILP. Infeasible");
+        }
         return _component_solution_valid;
     }
 
@@ -832,7 +835,9 @@ namespace desres { namespace msys {
             const std::vector<int>& lastSolution,
             lpsolve::_lprec* resLP
         ) {
-            std::vector<std::vector<int>> permutations = generate_resonance_ilp_permutations(_component_lp.get(), lastSolution);
+            // generate the permutations of the last solution. We need to pass in a version
+            // that has not been presolved.
+            std::vector<std::vector<int>> permutations = generate_resonance_ilp_permutations(resLP, lastSolution);
             for (auto const& solution: permutations) {
                 // http://yetanothermathprogrammingconsultant.blogspot.com/2011/10/integer-cuts.html
                 ilp_resonance_constraint cons;
@@ -916,6 +921,7 @@ namespace desres { namespace msys {
             assert(lpsolve::get_Nrows(resLP.get()) == lpsolve::get_Norig_rows(resLP.get()));
 
             build_resonance_constraints_from_soln(newcons, last_solution, resLP.get());
+
 	        assert(lpsolve::set_add_rowmode(resLP.get(), true));
             add_ilp_resonance_constraints(resLP.get(), accelcons);
             add_ilp_resonance_constraints(resLP.get(), newcons);
@@ -965,9 +971,7 @@ namespace desres { namespace msys {
             }
         }
 #if DEBUGPRINT
-        int numResonanceForms = 0;
-
-        printf("Found %d resonance forms with %d ILP solutions\n", numResonanceForms, numSolves-1);
+        printf("Found %d resonance forms with %d ILP solutions\n", _resonant_solutions.size(), numSolves-1);
 #endif
 
     }
@@ -1078,7 +1082,6 @@ namespace desres { namespace msys {
             #else
                 generate_resonance_forms_new();
             #endif
-
             for (auto const& solution: _resonant_solutions){
                 // The original _component_solution is one of the
                 // resonant solutions, so we skip it

@@ -165,18 +165,17 @@ std::vector<std::vector<int>> ComponentAssigner::generate_resonance_ilp_permutat
 ) {
   bliss::Graph lpGraph(0);
 
+  // See DESRESFF#746 -- this code does not work correctly if you pass in the
+  // presolved model when it has rows removed. So we pass in a copy of the
+  // original problem before the presolve. Let's just assert that and make sure.
+  assert(lpsolve::get_Ncolumns(lp) == lpsolve::get_Norig_columns(lp));
+  assert(lpsolve::get_Nrows(lp) == lpsolve::get_Norig_rows(lp));
+
   auto makeBlissColor = [&](int8_t category, int64_t color) {
     assert(category < 4);
     assert(color >= 0 && color < UINT32_MAX);
     return category + safe_shl(static_cast<uint32_t>(color), 2);
   };
-
-  std::vector<int> orig2presolved(1 + lpsolve::get_Norig_columns(lp), -1);
-  for (int i = 1; i < 1 + lpsolve::get_Ncolumns(lp); i++) {
-    auto iorig = lpsolve::get_orig_index(lp, lpsolve::get_Nrows(lp) + i);
-    assert (iorig >= 0 && iorig < 1 + lpsolve::get_Norig_columns(lp));
-    orig2presolved[iorig] = i;
-  }
 
   // Add one node per variable in the ILP and color them
   // by unique (objective coefficient and upper/lower bound)
@@ -185,20 +184,13 @@ std::vector<std::vector<int>> ComponentAssigner::generate_resonance_ilp_permutat
   // them from nodes in other categories)
   {
     std::vector<std::tuple<double, double, double, size_t>> coefVector;
-    for (int jj = 0; jj <= lpsolve::get_Norig_columns(lp); jj++) {
-      auto j = orig2presolved[jj];
-      if (j >= 0) {
-        coefVector.push_back({
-            (j > 0) ? lpsolve::get_mat(lp, 0, j) : 0,
-            (j > 0) ? lpsolve::get_lowbo(lp, j) : 0,
-            (j > 0) ? lpsolve::get_upbo(lp, j) : 0,
-            (j > 0) ? lpsolve::is_int(lp, j) : 0,
-        });
-      } else {
-        // presolved, so give it something unique
-        auto u = std::hash<int>()(jj);
-        coefVector.push_back({0, 0, 0, u});
-      }
+    for (int j = 0; j <= lpsolve::get_Ncolumns(lp); j++) {
+      coefVector.push_back({
+        (j > 0) ? lpsolve::get_mat(lp, 0, j) : 0,
+        (j > 0) ? lpsolve::get_lowbo(lp, j) : 0,
+        (j > 0) ? lpsolve::get_upbo(lp, j) : 0,
+        (j > 0) ? lpsolve::is_int(lp, j) : 0,
+      });
     }
 
     std::vector<int64_t> coefColors = labelUnique(coefVector);
@@ -251,18 +243,13 @@ std::vector<std::vector<int>> ComponentAssigner::generate_resonance_ilp_permutat
 
         // get the ids associated with the (i, j) position in the matrix.
         // there are three node ids:
-        // (a) the node associated with the variable which is just j, except
-        //     that we need to convert from post- pre-solved numbering to
-        //     original numbering.
+        // (a) the node associated with the variable which is just j.
         // (b) the node associated with the constraint. since these were
-        // inserted after the variable nodes, theyy're offset
+        //     inserted after the variable nodes, they're offset.
         // (c) a new node for the connecting matrix element
 
-        int variableNodeId = lpsolve::get_orig_index(lp, lpsolve::get_Nrows(lp) + j);
-        assert(variableNodeId >= 0 && variableNodeId < 1 + lpsolve::get_Norig_columns(lp));
+        auto variableNodeId = j;
         msys::Id constraintNodeId = lpsolve::get_Ncolumns(lp) + i;
-        // assert (lpGraph->atom(variableNodeId).atomic_number == 1);
-        // assert (lpGraph->atom(constraintNodeId).atomic_number == 2);
 
         auto linearMatrixPosition = ((i - 1) * row.size()) + j;
         assert(row[j] ==
@@ -279,7 +266,7 @@ std::vector<std::vector<int>> ComponentAssigner::generate_resonance_ilp_permutat
 
   bliss::Stats stats;
   std::pair<MultiIdList, uint32_t> generators_and_vars;
-  generators_and_vars.second = 1 + lpsolve::get_Norig_columns(lp);
+  generators_and_vars.second = 1 + lpsolve::get_Ncolumns(lp);
   lpGraph.find_automorphisms(stats, &blissRecordAutomorphismCallback,
                              &generators_and_vars);
   const auto& generators = generators_and_vars.first;
