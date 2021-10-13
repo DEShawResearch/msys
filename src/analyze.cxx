@@ -301,7 +301,10 @@ namespace desres { namespace msys {
         if (total_charge != INT_MAX) {
             boa.setTotalCharge(total_charge);
         }
-        boa.solveIntegerLinearProgram();
+        bool valid = boa.solveIntegerLinearProgram();
+        if (!valid) {
+            throw std::runtime_error("Unable to solve ILP. The system may contain an unspoorted oxidation state.");
+        }
         std::unordered_map<Id, std::unordered_map<Id, std::vector<int> > > fc_canmol;
         std::unordered_map<Id, std::unordered_map<Id, std::vector<int> > > bo_canmol;
         boa.assignSolutionToAtoms(fc_canmol, bo_canmol);
@@ -997,4 +1000,3 @@ bool desres::msys::SelectionIsClosed(SystemPtr mol, IdList const& ids, bool stru
     sort_unique(closure);
     return closure.size() == ids.size();
 }
-        

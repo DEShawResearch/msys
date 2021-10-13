@@ -747,9 +747,6 @@ namespace desres { namespace msys {
         if (status == TIMEOUT) {
             throw std::runtime_error("Unable to solve ILP. Timeout elapsed");
         }
-        if (status == INFEASIBLE) {
-            throw std::runtime_error("Unable to solve ILP. Infeasible");
-        }
         return _component_solution_valid;
     }
 
