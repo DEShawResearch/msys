@@ -140,7 +140,7 @@ namespace desres { namespace msys {
                 "name")
         .def_property_readonly("fragid", [](Atom& a) { return a.mol->atom(a.id).fragid; },
                 "fragment id")
-        .def_property_readonly("resid", [](Atom& a) { return a.mol->atom(a.id).residue; },
+        .def_property_readonly("residue_id", [](Atom& a) { return a.mol->atom(a.id).residue; },
                 "residue id")
         ;
 

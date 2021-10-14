@@ -134,7 +134,7 @@ class Atom(_msys.Atom):
 
     @property
     def residue(self):
-        return Residue(self._ptr, self.resid)
+        return Residue(self._ptr, self.residue_id)
 
     @residue.setter
     def residue(self, res):
