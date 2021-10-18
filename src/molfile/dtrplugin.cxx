@@ -1911,35 +1911,51 @@ DtrWriter::DtrWriter(std::string const& path, Type type, uint32_t natoms_,
 
 		meta_map = dtr::ParseFrame(buffer.size(), buffer.data(), &swap);
 
-		//
-		// We need to keep the memory backing the meta map keys around
-		// so make a copy.
-		//
-		etr_key_buffer = (uint32_t *) calloc(meta_map.size(), (sizeof(uint32_t) * 3));
-		if (!etr_key_buffer) {
-		    DTR_FAILURE("Failed to allocate ETR keys");
-		}
+                // If the meta frame is empty, there's nothing to read and we do _not_
+                // want to mark this as 'meta_written' because we're going
+                // to get a new keymap with the first frame writen to this ETR
+                if (meta_map.size()) {
+                    //
+                    // We need to keep the memory backing the meta map keys around
+                    // so make a copy.
+                    //
+                    etr_key_buffer = (uint32_t *) calloc(meta_map.size(), (sizeof(uint32_t) * 3));
+                    if (!etr_key_buffer) {
+                        DTR_FAILURE("Failed to allocate ETR keys");
+                    }
 
-		const unsigned elemsizes[] = {0, 4, 4, 8, 8, 4, 8, 1, 1 };
-		for (auto it = meta_map.begin(); it != meta_map.end(); ++it) {
-		    if (it->first == "FORMAT") {
-			continue;
-		    }
+                    const unsigned elemsizes[] = {0, 4, 4, 8, 8, 4, 8, 1, 1 };
+                    for (auto it = meta_map.begin(); it != meta_map.end(); ++it) {
+                        if (it->first == "FORMAT") {
+                            continue;
+                        }
 
-		    uint32_t *etr_key = &etr_key_buffer[(etr_keys * 3)];
-		    memcpy(etr_key, it->second.data,  (sizeof(uint32_t) * 3));
-		    meta_map[it->first] = Key(etr_key, 3, desres::molfile::dtr::Key::TYPE_UINT32, false);
-		    etr_keys++;
+                        uint32_t *etr_key = &etr_key_buffer[(etr_keys * 3)];
+                        memcpy(etr_key, it->second.data,  (sizeof(uint32_t) * 3));
+                        meta_map[it->first] = Key(etr_key, 3, desres::molfile::dtr::Key::TYPE_UINT32, false);
+                        etr_keys++;
 
-		    uint32_t *p = (uint32_t *) it->second.data;
-		    uint32_t type = *p;
-		    uint32_t count = *(p+2);
-		    etr_frame_size += count * elemsizes[type];
-		}
-		// Create the scratch space in whic ETR frames are serialized
-		etr_frame_buffer = malloc(etr_frame_size);
-		meta_written = true;
+                        uint32_t *p = (uint32_t *) it->second.data;
+                        uint32_t type = *p;
+                        uint32_t count = *(p+2);
+                        if (type > sizeof(elemsizes) / sizeof(elemsizes[0])) {
+                            DTR_FAILURE("Invalid ETR header!");
+                        }
+                        etr_frame_size += count * elemsizes[type];
+                    }
+                    // Create the scratch space in which ETR frames are serialized
+                    etr_frame_buffer = malloc(etr_frame_size);
+                    meta_written = true;
+                }
 	    }
+            // File is empty or does not have any keys, truncate for writing later
+            if (!meta_written) {
+                // Make sure we don't have actual data in the frameset
+                if (tk.size()) 
+                    DTR_FAILURE("No metadata found in ETR " << m_directory << " with " << std::to_string(tk.size()) << " frames");
+                meta_file = fopen(metadata_file.c_str(), "wb");
+                if (!meta_file) DTR_FAILURE("Failed opening metadata frame file: " << strerror(errno));
+            }
 	} else {
 	    meta_written = true;
 	}
