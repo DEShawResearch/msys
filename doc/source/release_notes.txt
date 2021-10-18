@@ -1,3 +1,5 @@
+1.7.344 Fix opening ETR files in APPEND mode with empty prior frameset
+
 1.7.343 Handle unescaped syntax characters in MAE schema.
 
 1.7.342 Use UNK instead of empty resnames in mol2 files.
