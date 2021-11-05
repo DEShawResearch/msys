@@ -401,17 +401,17 @@ namespace {
         return arr;
     }
 
-    array_t<double> get_vec3d(object obj) {
-        if (obj.is_none()) return obj;
+    const double* get_vec3d(object obj) {
+        if (obj.is_none()) return nullptr;
         auto arr = array_t<double>::ensure(obj);
-        if (!arr) throw error_already_set();
+        if (!arr) return nullptr;
         if (arr.size()!=3) {
             PyErr_Format(PyExc_ValueError,
                     "Expected 3 elements in vector, got %ld",
                     arr.size());
             throw error_already_set();
         }
-        return arr;
+        return arr.data();
     }
 
     HydrogenBond *init_hbond(
@@ -420,18 +420,12 @@ namespace {
             object hobj,
             object cobj,
             object caobj) {
-
-        auto darr = get_vec3d(dobj);
-        auto aarr = get_vec3d(aobj);
-        auto harr = get_vec3d(hobj);
-        auto carr = get_vec3d(cobj);
-        auto caarr = get_vec3d(caobj);
         return new HydrogenBond(
-                !darr.is_none() ? darr.data() : nullptr,
-                !aarr.is_none() ? aarr.data() : nullptr,
-                !harr.is_none() ? harr.data() : nullptr,
-                !carr.is_none() ? carr.data() : nullptr,
-                !caarr.is_none()? caarr.data() : nullptr);
+                get_vec3d(dobj),
+                get_vec3d(aobj),
+                get_vec3d(hobj),
+                get_vec3d(cobj),
+                get_vec3d(caobj));
     }
 
     pfx::Graph* sys_topology(SystemPtr mol) { return new pfx::Graph(mol); }

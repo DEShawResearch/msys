@@ -445,8 +445,8 @@ class TestHbond(unittest.TestCase):
             mol, mol.select("protein and name N"), mol.select("protein and name O")
         )
         hbonds2 = finder.find(mol.positions)
-        self.assertEqual(len(hbonds), 168)
-
+        self.assertEqual(len(hbonds2), 168)
+        assert not all(hb.energy==0 for hb in hbonds2)
 
 class Contacts(unittest.TestCase):
     def compare(self, p1, p2):
