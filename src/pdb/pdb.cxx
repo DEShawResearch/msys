@@ -353,7 +353,11 @@ void desres::msys::ExportPDB(SystemPtr mol, std::string const& path,
             space = mol->ct(0).value(PDB_SPACE_GROUP).asString();
         }
         if (mol->ct(0).has(PDB_Z_VALUE)) { 
-            z = mol->ct(0).value(PDB_Z_VALUE);
+            try {
+                z = mol->ct(0).value(PDB_Z_VALUE);
+            } catch (Failure) {
+                z = 1;
+            }
         }
     }
     fprintf(fd, "%6s%9.3f%9.3f%9.3f%7.2f%7.2f%7.2f %-11s%4d\n",
