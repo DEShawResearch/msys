@@ -1,3 +1,6 @@
+1.7.345 Fix hbond energy python bindings.
+        More robust PDB writing.
+
 1.7.344 Fix opening ETR files in APPEND mode with empty prior frameset
 
 1.7.343 Handle unescaped syntax characters in MAE schema.
