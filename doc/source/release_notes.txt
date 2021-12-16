@@ -1,3 +1,5 @@
+1.7.346 Fix handling of stk cache file with missing/invalid jobstep_id.
+
 1.7.345 Fix hbond energy python bindings.
         More robust PDB writing.
 
