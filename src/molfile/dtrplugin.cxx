@@ -516,7 +516,7 @@ uint64_t key_record_t::jiffies() const {
   return jiffies_from_ps(time());
 }
 
-metadata::metadata(const void *bufptr, ssize_t n, std::string *jobstep_id) {
+metadata::metadata(const void *bufptr, ssize_t n) {
     
     //
     // We want to put metadata objects into the stack
@@ -526,8 +526,6 @@ metadata::metadata(const void *bufptr, ssize_t n, std::string *jobstep_id) {
     // new dtr.  So, we now create a copy of everything
     // in the meta frame except for key JOBSTEP_ID tags.
     // 
-    // If jobstep_id is not NULL, then the value of the
-    // key JOBSTEP_ID is stored there.
     //
     if (n==0) return;
     bool swap;
@@ -553,11 +551,6 @@ metadata::metadata(const void *bufptr, ssize_t n, std::string *jobstep_id) {
             frame_map[kv.first] = dtr::Key(copied_data_address, kv.second.count, kv.second.type, swap);
             uint32_t v_size = kv.second.get_element_size();
             hasher.Update(kv.second.data, v_size);
-        } else {
-            if (jobstep_id) {
-                const char *ptr = (const char *)kv.second.data;
-                jobstep_id->append(ptr, kv.second.count);
-            }
         }
     }
     hash = hasher.Final().first;
@@ -573,7 +566,7 @@ void DtrReader::read_meta() {
     try {
         std::vector<char> file_buffer;
         read_file(metafile, file_buffer);
-        metap.reset(new metadata(file_buffer.data(), file_buffer.size(), &jobstep_id));
+        metap.reset(new metadata(file_buffer.data(), file_buffer.size()));
     } catch (std::exception &e) {
         DTR_FAILURE("unable to read metadata frame " << metafile << ": " << e.what());
     }
@@ -2317,7 +2310,7 @@ std::istream& operator>>(std::istream& in, std::shared_ptr < metadata > &mp) {
     if (frame_size) {
         std::vector<char> buffer(frame_size);
         in.read((char *)buffer.data(), frame_size);
-        mp.reset(new metadata(buffer.data(), frame_size, NULL));
+        mp.reset(new metadata(buffer.data(), frame_size));
     }
 
     return in;
@@ -2338,19 +2331,16 @@ std::istream& operator>>(std::istream& in, std::vector<float> &inv_mass) {
 std::ostream& DtrReader::dump(std::ostream &out) const {
     // legacy ddparams, kept for stkcache backward compatibility
     int ndir1=0, ndir2=0;
+    // legacy jobstep_id, kept for stkcache backward compatibility
+    std::string jobstep_id;
     out << dtr << ' '
         << _natoms << ' '
         << with_velocity << ' '
         << ndir1 << ' '
         << ndir2 << ' '
-        << metap->get_hash() << ' ';
+        << metap->get_hash() << ' '
+        << jobstep_id;
     
-    if (jobstep_id == "") {
-        out << "(NULL)";
-    } else {
-        out << jobstep_id;
-    }
-
     out << ' ';
 
     keys.dump(out);
@@ -2362,6 +2352,8 @@ std::istream& DtrReader::load_v8(std::istream &in) {
     uint64_t meta_hash;
     // legacy ddparams, kept for stkcache backward compatibility
     int ndir1=0, ndir2=0;
+    // legacy jobstep_id, kept for stkcache backward compatibility
+    std::string jobstep_id;
 
     in >> dtr
        >> _natoms
@@ -2370,14 +2362,6 @@ std::istream& DtrReader::load_v8(std::istream &in) {
        >> ndir2
        >> meta_hash
        >> jobstep_id;
-
-    if (jobstep_id != "UNREAD") {
-        for (auto c : jobstep_id) {
-            if (!isdigit(c)) {
-                MSYS_FAIL("non-numeric jobstep_id character found in cache");
-            }
-        }
-    }
 
     in.get(c);
     keys.load(in);
@@ -2510,7 +2494,6 @@ void StkReader::process_meta_frames() {
         //
         for (size_t i = 1; i < (framesets.size() - 1); i++) {
             framesets[i]->set_meta(framesets[0]->get_meta());
-            framesets[i]->set_jobstep_id("UNREAD");
         }
 
     } else {

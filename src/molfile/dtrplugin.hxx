@@ -221,7 +221,7 @@ namespace desres { namespace molfile {
 
   class metadata {
   public:
-      metadata(const void *bufptr, ssize_t n, std::string *jobstep_id = NULL);
+      metadata(const void *bufptr, ssize_t n);
       ~metadata() {
           if (frame_size) {
               free(frame_data);
@@ -269,7 +269,6 @@ namespace desres { namespace molfile {
     mutable int _last_fd;
     mutable std::string _last_path;
 
-    std::string jobstep_id;
     mutable void* decompressed_data = nullptr;
 
   public:
@@ -292,10 +291,6 @@ namespace desres { namespace molfile {
     
     void set_path(std::string path) {
         dtr = path;
-    }
-
-    void set_jobstep_id(std::string id) {
-        jobstep_id = id;
     }
 
     std::shared_ptr <metadata> get_meta() {
