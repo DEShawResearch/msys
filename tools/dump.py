@@ -130,6 +130,8 @@ def dump_terms(cmd, ipath, conn, out, table, without_paraminfo, reorder):
                     "ffB",
                     "typeB",
                     "typekeyB",
+                    "annotation",
+                    "qij_annotation"
                 )
             )
             params = [p for p in params if p not in exclude]
@@ -279,6 +281,9 @@ def dmsdump(
                 "memoB",
                 "commentB",
                 "overrideB",
+                "q_annotation",
+                "exch_annotation",
+                "disp_annotation"
             ):
                 if p in params:
                     params.remove(p)
