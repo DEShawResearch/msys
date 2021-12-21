@@ -471,6 +471,10 @@ void Timekeys::load(std::istream& in) {
     rawload(in, m_fullsize);
     rawload(in, m_fpf);
     rawload(in, sz);
+
+    if (sz > 1024*1024*1024) {
+        throw std::runtime_error("absurd timekeys size encountered; stk cache likely corrupt");
+    }
     if (sz) {
         keys.resize(sz);
         in.read((char *)&keys[0], keys.size()*sizeof(keys[0]));
@@ -2332,7 +2336,7 @@ std::ostream& DtrReader::dump(std::ostream &out) const {
     // legacy ddparams, kept for stkcache backward compatibility
     int ndir1=0, ndir2=0;
     // legacy jobstep_id, kept for stkcache backward compatibility
-    std::string jobstep_id;
+    std::string jobstep_id = "UNREAD";
     out << dtr << ' '
         << _natoms << ' '
         << with_velocity << ' '
@@ -2360,10 +2364,17 @@ std::istream& DtrReader::load_v8(std::istream &in) {
        >> with_velocity
        >> ndir1
        >> ndir2
-       >> meta_hash
-       >> jobstep_id;
+       >> meta_hash;
 
+    in.get(c);  // space following the meta_hash
+    assert(c==' ');
+    // handle empty jobstep_id
+    if (in.peek() != ' ') {
+        in >> jobstep_id;
+    }
     in.get(c);
+    assert(c==' ');
+
     keys.load(in);
 
     return in;
