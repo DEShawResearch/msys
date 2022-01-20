@@ -19,12 +19,14 @@ namespace {
     void assign_2(SystemPtr mol, IdList const& ids, bool compute_resonant_charges, int timeout_ms) {
         unsigned flags = 0;
         if (compute_resonant_charges) flags |= AssignBondOrder::ComputeResonantCharges;
-        AssignBondOrderAndFormalCharge(mol, ids, INT_MAX, flags, std::chrono::milliseconds(timeout_ms));
+        auto topids = ComputeTopologicalIds(mol);
+        AssignBondOrderAndFormalCharge(mol, ids, INT_MAX, flags, topids, std::chrono::milliseconds(timeout_ms));
     }
     void assign_3(SystemPtr mol, IdList const& ids, int total_charge, bool compute_resonant_charges, int timeout_ms) {
         unsigned flags = 0;
         if (compute_resonant_charges) flags |= AssignBondOrder::ComputeResonantCharges;
-        AssignBondOrderAndFormalCharge(mol, ids, total_charge, flags, std::chrono::milliseconds(timeout_ms));
+        auto topids = ComputeTopologicalIds(mol);
+        AssignBondOrderAndFormalCharge(mol, ids, total_charge, flags, topids, std::chrono::milliseconds(timeout_ms));
     }
 
 

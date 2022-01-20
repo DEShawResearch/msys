@@ -156,12 +156,12 @@ namespace {
 namespace desres { namespace msys {
 
     SystemPtr CanonicalizeMoleculeByTopids(SystemPtr mol, IdList const& atoms,
+                                           IdList const& topids,
                                            std::map<Id, Id> &aid_to_canId,
                                            std::map<Id, Id> &bid_to_canId){
         aid_to_canId.clear();
         bid_to_canId.clear();
 
-        IdList topids = ComputeTopologicalIds(mol);
         std::map<Id, IdList> topid_to_atomid;
         for(Id aid : atoms){
             topid_to_atomid[topids.at(aid)].push_back(aid);
@@ -215,6 +215,7 @@ namespace desres { namespace msys {
         MultiIdList fragments;
         mol->updateFragids(&fragments);
         IdList pmap(mol->maxAtomId(), BadId);
+        auto topids = ComputeTopologicalIds(mol);
 
         /* will compute graphs lazily */
         std::vector<GraphPtr> graphs(fragments.size());
@@ -230,7 +231,7 @@ namespace desres { namespace msys {
             IdList& frags = it->second;
             /* unique formula -> unique fragment */
             if (frags.size()==1) {
-                AssignBondOrderAndFormalCharge(mol, fragments[frags[0]], INT_MAX, flags, std::chrono::duration_cast<std::chrono::milliseconds>(deadline - std::chrono::system_clock::now()));
+                AssignBondOrderAndFormalCharge(mol, fragments[frags[0]], INT_MAX, flags, topids, std::chrono::duration_cast<std::chrono::milliseconds>(deadline - std::chrono::system_clock::now()));
                 continue;
             }
 
@@ -240,7 +241,7 @@ namespace desres { namespace msys {
             }
             std::vector<IdPair> perm;
             while (!frags.empty()) {
-                AssignBondOrderAndFormalCharge(mol, fragments[frags[0]], INT_MAX, flags, std::chrono::duration_cast<std::chrono::milliseconds>(deadline - std::chrono::system_clock::now()));
+                AssignBondOrderAndFormalCharge(mol, fragments[frags[0]], INT_MAX, flags, topids, std::chrono::duration_cast<std::chrono::milliseconds>(deadline - std::chrono::system_clock::now()));
                 IdList unmatched;
                 GraphPtr ref = graphs[frags[0]];
                 for (Id i=1; i<frags.size(); i++) {
@@ -283,6 +284,7 @@ namespace desres { namespace msys {
                                         IdList const& atoms,
                                         int total_charge,
                                         unsigned flags,
+                                        IdList const& _topids,
                                         std::chrono::milliseconds timeout,
                                         std::vector<SystemPtr>* kekule,
                                         std::vector<std::vector<Id> >* conjugated) {
@@ -294,7 +296,16 @@ namespace desres { namespace msys {
         /* get a canonicalized ordering for the molecule based on topids */
         std::map<Id, Id> aid_to_canId;
         std::map<Id, Id> bid_to_canId;
-        SystemPtr canmol = CanonicalizeMoleculeByTopids(mol, atoms, aid_to_canId, bid_to_canId);
+
+        IdList recomputed_topids;
+        const IdList* topids = nullptr;
+        if (_topids.empty()) {
+            recomputed_topids = ComputeTopologicalIds(mol);
+            topids = &recomputed_topids;
+        } else {
+            topids = &_topids;
+        }
+        SystemPtr canmol = CanonicalizeMoleculeByTopids(mol, atoms, *topids, aid_to_canId, bid_to_canId);
 
         bool compute_resonant_charge = flags & AssignBondOrder::ComputeResonantCharges;
         BondOrderAssigner boa(canmol, canmol->atoms(), compute_resonant_charge, timeout);
@@ -365,7 +376,8 @@ namespace desres { namespace msys {
                                   std::chrono::milliseconds timeout){
         unsigned flags = AssignBondOrder::ComputeResonantCharges;
         KekuleResult result;
-        AssignBondOrderAndFormalCharge(mol, mol->atoms(), total_charge, flags, timeout, &result.first, &result.second);
+        auto topids = ComputeTopologicalIds(mol);
+        AssignBondOrderAndFormalCharge(mol, mol->atoms(), total_charge, flags, topids, timeout, &result.first, &result.second);
         return result;
     }
 

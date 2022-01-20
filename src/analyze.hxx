@@ -26,6 +26,7 @@ namespace desres { namespace msys {
                                         IdList const& atoms,
                                         int total_charge = INT_MAX,
                                         unsigned flags = 0,
+                                        IdList const& topids = IdList(),
                                         std::chrono::milliseconds timeout=std::chrono::milliseconds(-1),
                                         std::vector<SystemPtr>* kekule = nullptr,
                                         std::vector<std::vector<Id> >* conjugated = nullptr);
