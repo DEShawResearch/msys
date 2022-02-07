@@ -166,6 +166,7 @@ atomsel/key.cxx
 atomsel/within.cxx
 atomsel/query.cxx
 
+cereal.cxx
 dms/dms.cxx
 dms/export_dms.cxx
 dms/import_dms.cxx

@@ -20,6 +20,7 @@ TNG=tng/1.8.2-03c7
 GBENCH=gbench/1.5.0-02c7
 PYBIND11=pybind11/2.3.0-01c7
 BLISS=bliss/0.73-02c7
+CEREAL=cereal/1.3.1-01c7
 
 loadmodules() {
     garden load \
@@ -37,6 +38,7 @@ loadmodules() {
         $GBENCH/lib \
         $PYBIND11/lib \
 	$BLISS/lib \
+        $CEREAL/lib \
         enscons/0.23.0-01c7/lib-python37 \
         texlive/2019-20190410-01c7/bin \
 

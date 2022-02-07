@@ -27,6 +27,11 @@ namespace desres { namespace msys {
         }
 
     public:
+        template<class Archive>
+        void serialize(Archive & archive) {
+            archive(s, n);
+        }
+
         SmallString() : n() {
             s[0] = 0;
         }

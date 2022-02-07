@@ -67,6 +67,14 @@ namespace desres { namespace msys {
         std::map<String, String> _unused_keep_for_binary_compatibility;
 
     public:
+        template <class Archive>
+        void serialize(Archive & archive) {
+            archive(_system, _params, _natoms, _ndead, _terms, _props, _overrides, category);
+        }
+
+        // default constructor for serialization only
+        TermTable() {}
+
         TermTable( SystemPtr system, Id natoms, 
                    ParamTablePtr ptr = ParamTablePtr() );
 

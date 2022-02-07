@@ -16,6 +16,11 @@ namespace desres { namespace msys {
         std::vector<double> data;
 
     public:
+        template<class Archive>
+        void serialize(Archive & archive) {
+            archive(data);
+        }
+
         GlobalCell() : data(9) {}
         double*       operator[](unsigned i)       { return &data.at(3*i); }
         const double* operator[](unsigned i) const { return &data.at(3*i); }
@@ -31,6 +36,11 @@ namespace desres { namespace msys {
         String vdw_funct;
         String vdw_rule;
         String es_funct;
+
+        template<class Archive>
+        void serialize(Archive & archive) {
+            archive(vdw_funct, vdw_rule, es_funct);
+        }
 
         /* Allow merge when corresponding fields are equal, or when one
          * of them is empty, in which case the non-empty value is adopted.
@@ -66,6 +76,13 @@ namespace desres { namespace msys {
     
         SmallString<30> name;
         AtomType type;
+
+        template<class Archive>
+        void serialize(Archive & archive) {
+            archive(fragid, residue, atomic_number, formal_charge, stereo_parity, aromatic);
+            archive(x,y,z,charge, vx,vx,vz,mass);
+            archive(name, type);
+        }
     
         /* Don't abuse these.  In particular, bear in mind that that an atom's
          * memory location will move around if atoms are added.  */
@@ -79,6 +96,11 @@ namespace desres { namespace msys {
         int8_t order=1;             /* formal bond order            */
         int8_t stereo=0;            /* negative when atom order is flipped */
         int8_t aromatic=0;          /* no Kekule form specified     */
+
+        template<class Archive>
+        void serialize(Archive & archive) {
+            archive(i, j, order, stereo, aromatic);
+        }
 
         bond_t() {}
         bond_t(Id ai, Id aj) { i=ai; j=aj; }
@@ -100,6 +122,10 @@ namespace desres { namespace msys {
         SmallString<6> insertion;
         ResidueType type;
     
+        template<class Archive>
+        void serialize(Archive & archive) {
+            archive(chain, resid, name, insertion, type);
+        }
         residue_t() : chain(BadId), resid(), type() {}
     };
     
@@ -107,6 +133,11 @@ namespace desres { namespace msys {
         Id      ct;
         String  name;
         String  segid;
+
+        template<class Archive>
+        void serialize(Archive & archive) {
+            archive(ct, name, segid);
+        }
     
         chain_t() : ct(BadId) {}
     };
@@ -115,6 +146,11 @@ namespace desres { namespace msys {
         ParamTablePtr _kv;
 
     public:
+        template<class Archive>
+        void serialize(Archive & archive) {
+            archive(_kv);
+        }
+
         /* constructor: maintain a single row with msys_name as the first
          * property. */
         component_t();
@@ -190,11 +226,23 @@ namespace desres { namespace msys {
          * serializing to disk. */
         std::vector<Provenance> _provenance;
 
-        /* create only as shared pointer. */
-        System();
-
     public:
+        template<class Archive>
+        void serialize(Archive & archive) {
+            archive(name, global_cell, nonbonded_info);
+            archive(_atoms, _deadatoms, _atomprops);
+            archive(_bonds, _deadbonds, _bondprops);
+            archive(_bondindex);
+            archive(_residues, _deadresidues, _residueatoms);
+            archive(_chains, _deadchains, _chainresidues);
+            archive(_cts, _deadcts, _ctchains);
+            archive(_tables);
+            archive(_auxtables);
+            archive(_provenance);
+        }
+
         static std::shared_ptr<System> create();
+        System();
         ~System();
 
         String          name;
