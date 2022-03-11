@@ -103,6 +103,8 @@ def adjust_hmasses(mol, sel, hmass, repartition):
     print(f"  * Setting mass for '{atomsel}' to {hmass} (N={len(hatoms)})")
     warn = False
     for a in hatoms + [b for h in hatoms for b in h.bonded_atoms]:
+        if a.atomic_number == 0:
+            continue
         dev = abs(a.mass / msys.MassForElement(a.atomic_number) - 1)
         if dev > 0.1:
             warn = True
