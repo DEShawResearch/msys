@@ -199,9 +199,20 @@ ValueRef TermTable::propValue(Id term, String const& name) {
 namespace {
     struct ParamComparator {
         ParamTablePtr params;
+        std::vector<bool> overridden;
         
-        explicit ParamComparator(ParamTablePtr p) : params(p) {}
+        explicit ParamComparator(ParamTablePtr p, OverrideTablePtr o) : params(p) {
+            // Treat parameters with an override as different from every other parameter
+            overridden.resize(params->paramCount());
+            for (auto pair : o->list()) {
+                overridden[pair.first] = true;
+                overridden[pair.second] = true;
+            }
+        }
         bool operator()(Id const& pi, Id const& pj) const {
+            if (overridden[pi] || overridden[pj]) {
+                return pi < pj;
+            }
             return params->compare(pi,pj)<0;
         }
     };
@@ -211,25 +222,19 @@ void TermTable::coalesce() {
     if (!_params->paramCount()) return;
     typedef std::map<Id,IdList,ParamComparator> ParamMap;
     IdList old2new(_params->paramCount(), BadId);
-    ParamComparator comp(_params);
+    ParamComparator comp(_params, _overrides);
     assert(!comp(0,0));
     ParamMap map(comp);
-    
-    /* hash all parameters, so that tables that share a param table
-     * will wind up using the same params when possible */
-    Id i,n = _params->paramCount();
-    for (i=0; i<n; i++) map[i];
 
-    n = maxTermId();
-    for (i=0; i<n; i++) {
+    for (Id i=0, n=maxTermId(); i<n; i++) {
         if (!hasTerm(i)) continue;
         Id p = param(i);
         if (bad(p)) continue;
         map[p].push_back(i);
     }
-    for (ParamMap::iterator iter=map.begin(); iter!=map.end(); ++iter) {
-        Id p = iter->first;
-        IdList& ids = iter->second;
+    for (auto& pair : map) {
+        Id p = pair.first;
+        IdList& ids = pair.second;
         for (Id i=0; i<ids.size(); i++) {
             Id t = ids[i];
             old2new.at(param(t)) = p;

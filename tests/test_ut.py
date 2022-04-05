@@ -1501,6 +1501,29 @@ class Tools(unittest.TestCase):
 
 
 class Main(unittest.TestCase):
+
+    def testCoalesceAfterOverride(self):
+        """coalesce should not change overrides"""
+        mol = msys.CreateSystem()
+        a0 = mol.addAtom()
+        a1 = mol.addAtom()
+        nb = mol.addNonbondedFromSchema("vdw_12_6")
+        p0 = nb.params.addParam(sigma=1, epsilon=1)
+        p1 = nb.params.addParam(sigma=1, epsilon=1)
+        nb.addTerm([a0], p0)
+        nb.addTerm([a1], p1)
+
+        nb.override_params.addProp("sigma", float)
+        nb.override_params.addProp("epsilon", float)
+        op = nb.override_params.addParam(sigma=2, epsilon=2)
+
+        nb.setOverride(p0, p0, op)
+        assert [t.param.id for t in nb.terms] == [0, 1]
+        nb.coalesce()
+        assert [t.param.id for t in nb.terms] == [0, 1]
+
+
+
     def testInfo(self):
         from msys.info import print_info
         mol = msys.Load("tests/files/ww.dms")
