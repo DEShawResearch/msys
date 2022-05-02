@@ -2420,6 +2420,9 @@ def AssignBondOrderAndFormalCharge(
     else:
         ptr, ids = _convert_ids(system_or_atoms)
 
+    if ptr is None or len(ids) == 0:
+        return
+
     if total_charge is None:
         _msys.AssignBondOrderAndFormalCharge(
             ptr, ids, compute_resonant_charges, timeout_ms
