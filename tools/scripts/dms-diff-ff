@@ -75,19 +75,38 @@ def getMappedTerm(term, mapping, pnames):
     return aid, params
 
 
+def extract_vtypes(mol):
+    vtype = dict()
+    for table in mol.tables:
+        if "virtual" not in table.name and 'drude' not in table.name: continue
+        for term in table.terms:
+            vtype[term.atoms[0]] = table.name
+    return vtype
+
 def map_virtuals(mol0, mol1, matches):
     # matches is a mapping from mol1 atoms to mol0 atoms
     from collections import defaultdict
+
     hostmap0=defaultdict(list)
     for a in mol0.atoms:
         if a.atomic_number != 0: continue
-        b = a.bonded_atoms
+        b = [x for x in a.bonded_atoms if x.atomic_number > 0]
+        if len(b)==0:
+            # drude attached to virtual
+            assert a.nbonds == 1
+            b = [x for x in a.bonded_atoms[0].bonded_atoms if x.atomic_number > 0]
         assert len(b)==1
         hostmap0[b[0]].append(a)
+
     hostmap1 = defaultdict(list)
     for a in mol1.atoms:
         if a.atomic_number != 0: continue
-        b = a.bonded_atoms
+        b = [x for x in a.bonded_atoms if x.atomic_number > 0]
+        if len(b)==0:
+            # drude attached to virtual
+            assert a.nbonds == 1
+            b = [x for x in a.bonded_atoms[0].bonded_atoms if x.atomic_number > 0]
+
         if len(b)!=1 or b[0] not in matches:
             raise RuntimeError("Invalid virtual site or vsite host map")
         hostmap1[matches[b[0]]].append(a)
@@ -95,12 +114,15 @@ def map_virtuals(mol0, mol1, matches):
     if hostmap0.keys() != hostmap1.keys():
         raise RuntimeError("Vsite hosts are not consistent across molecules")
 
+    vtype0 = extract_vtypes(mol0)
+    vtype1 = extract_vtypes(mol1)
     for host0, virtuals0 in hostmap0.items():
         virtuals1 = hostmap1[host0]
-        # This is potentially wrong if there are multiple types of hosted virtuals per atom.
-        # Really would need to compare and map across specific virtual types
         if len(virtuals0) != len(virtuals1):
             raise RuntimeError(f"Number of hosted virtuals is inconsistent for mapped real atom {host.id} of mol0")
+
+        virtuals0.sort(key=lambda x: vtype0[x])
+        virtuals1.sort(key=lambda x: vtype1[x])
         for v0, v1 in zip(virtuals0, virtuals1):
             matches[v1] = v0
 
