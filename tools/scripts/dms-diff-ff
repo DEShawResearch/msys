@@ -22,6 +22,7 @@ for matching terms within the matched molecules are compared.
 
 
 import os
+from collections import defaultdict
 import numpy as np
 import msys
 
@@ -44,7 +45,7 @@ def addTablesForConsistency(mol):
         charge.addTerm([a], p)
 
 
-def extractForcefieldTerms(mol, excluded_params=["memo", "type", "nbfix_identifier"]):
+def extractForcefieldTerms(mol, excluded_params=["memo", "annotation", "type", "nbfix_identifier"]):
     allterms = dict()
     for table in mol.tables:
         pnames = sorted(
@@ -58,13 +59,25 @@ def extractForcefieldTerms(mol, excluded_params=["memo", "type", "nbfix_identifi
 # Extract the atomids and parameter values for this term
 # Including mapping the atomids  to alternative ids using the provided mapping
 # We then sort the mapped atomids for consistency
-# FIXME: We may need to extend this to better handle improper torsions
-# FIXME2: Also CMAP
+# FIXME: May need a better way to handle CMAP
 def getMappedTerm(term, mapping, pnames):
     name = term.table.name
     aid = tuple([mapping[a.id] for a in term.atoms])
     if name.startswith("constraint"):
         aid = tuple([aid[0]] + sorted(aid[1:]))
+    elif name.startswith('improper'):
+        all_atoms = set(term.atoms)
+        ctr = []
+        edge = []
+        for i, a in zip(aid, term.atoms):
+            ncovered = len(set([x for x in a.bonded_atoms if x.atomic_number > 0]).intersection(all_atoms))
+            if ncovered == 3:
+                ctr.append(i)
+            else:
+                edge.append(i)
+        assert len(ctr) == 1
+        aid = tuple(ctr+sorted(edge))
+
     elif aid[-1] < aid[0]:
         aid = tuple(reversed(aid))
     p = term.param
@@ -75,12 +88,28 @@ def getMappedTerm(term, mapping, pnames):
     return aid, params
 
 
-def extract_vtypes(mol):
+def extract_vtypes(mol, expanded=False):
+
     vtype = dict()
     for table in mol.tables:
-        if "virtual" not in table.name and 'drude' not in table.name: continue
+        if "virtual" not in table.name: continue
+        pnames = sorted([k for k in table.params.props if table.params.propType(k) == float])
         for term in table.terms:
-            vtype[term.atoms[0]] = table.name
+            virt = term.atoms[0]
+            entry = [table.name, virt.nbonds]
+            if expanded:
+                entry.extend([term.param[k] for k in pnames])
+            vtype[virt] = tuple(entry)
+
+    for table in mol.tables:
+        if "drude" not in table.name: continue
+        for term in table.terms:
+            drude, host = term.atoms
+            if host in vtype:
+                vtype[drude] = (table.name,)+ vtype[host]
+            else:
+                vtype[drude] = (table.name,None)
+
     return vtype
 
 def map_virtuals(mol0, mol1, matches):
@@ -114,8 +143,8 @@ def map_virtuals(mol0, mol1, matches):
     if hostmap0.keys() != hostmap1.keys():
         raise RuntimeError("Vsite hosts are not consistent across molecules")
 
-    vtype0 = extract_vtypes(mol0)
-    vtype1 = extract_vtypes(mol1)
+    vtype0 = extract_vtypes(mol0, True)
+    vtype1 = extract_vtypes(mol1, True)
     for host0, virtuals0 in hostmap0.items():
         virtuals1 = hostmap1[host0]
         if len(virtuals0) != len(virtuals1):
@@ -244,7 +273,20 @@ def validateMolecule(mol, prefix="", verbose=True):
     nfrags = len(fragids)
     if nfrags != 1:
         raise RuntimeError("You must call validateMolecule with a single connected component")
+
+    unique = defaultdict(list)
+    for k,v in extract_vtypes(mol).items():
+        unique[v].append(k)
+    anum = 89
+    for k, v in unique.items():
+        for a in v:
+            a.atomic_number = anum
+        anum+=1
+
     topids = msys.ComputeTopologicalIds(mol)
+    for k, v in unique.items():
+        for a in v:
+            a.atomic_number = 0
 
     allterms = extractForcefieldTerms(mol)
     s = []
