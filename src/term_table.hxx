@@ -87,6 +87,9 @@ namespace desres { namespace msys {
         /* rename table */
         void rename(String const& name);
 
+        /* reserve space */
+        void reserve(size_t nterms) { _terms.reserve(nterms * (_natoms+1)); }
+
         class term_t {
         protected:
             const Id*   _ptr;

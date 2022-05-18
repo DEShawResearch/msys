@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdexcept>
+#include <mutex>
 
 #include <sys/mman.h>
 #include <sys/types.h>
@@ -19,6 +20,8 @@
 using namespace desres::msys;
 
 typedef std::set<String> KnownSet;
+
+static std::mutex dms_reader_lock;
 
 static bool is_pN(std::string const& _s) {
     const char* s = _s.c_str();
@@ -378,6 +381,7 @@ read_exclusions(Sqlite dms, System& sys, KnownSet& known) {
     if (!r) return;
 
     TermTablePtr terms = sys.addTable("exclusion", 2);
+    terms->reserve(dms.size("exclusion"));
     terms->category=EXCLUSION;
     IdList atoms(2);
 
@@ -593,7 +597,8 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only,
     SystemImporter imp(h);
 
     IdList nbtypes;
-    std::map<Id,Id> nbtypesB;
+
+    sys.atomReserve(dms.size("particle"));
     
     Reader r = dms.fetch("particle", false); /* no strict typing */
     if (!r.size()) MSYS_FAIL("Missing particle table");
@@ -691,6 +696,8 @@ static SystemPtr import_dms( Sqlite dms, bool structure_only,
         }
         nbtypes.push_back(NBTYPE>=0 ? r.get_int(NBTYPE) : BadId);
     }
+
+    sys.bondReserve(dms.size("bond"));
 
     r = dms.fetch("bond", false); /* no strict typing */
     if (r) {
@@ -834,6 +841,7 @@ SystemPtr iterator::next() {
     // read the db and import the system
     SystemPtr mol;
     try {
+        std::lock_guard<std::mutex> lock(dms_reader_lock);
         Sqlite dms = Sqlite::read_bytes(ptr, dbsize);
         mol = import_dms(dms, structure_only, without_tables);
     }
@@ -856,6 +864,7 @@ SystemPtr desres::msys::ImportDMS(const std::string& path,
                                   bool without_tables) {
     SystemPtr sys;
     try {
+        std::lock_guard<std::mutex> lock(dms_reader_lock);
         Sqlite dms = Sqlite::read(path);
         sys = import_dms(dms, structure_only, without_tables);
     }
@@ -873,6 +882,7 @@ SystemPtr desres::msys::ImportDMSFromBytes( const char* bytes, int64_t len,
                                             bool without_tables ) {
     SystemPtr sys;
     try {
+        std::lock_guard<std::mutex> lock(dms_reader_lock);
         Sqlite dms = Sqlite::read_bytes(bytes, len);
         sys = import_dms(dms, structure_only, without_tables);
     }
@@ -889,6 +899,7 @@ static void no_close(sqlite3*) {}
 SystemPtr desres::msys::sqlite::ImportDMS(sqlite3* db,
                                   bool structure_only,
                                   bool without_tables) {
+    std::lock_guard<std::mutex> lock(dms_reader_lock);
     Sqlite dms(std::shared_ptr<sqlite3>(db,no_close));
     return import_dms(dms, structure_only, without_tables);
 }
