@@ -8,6 +8,8 @@ The msys module
 .. automodule:: msys
     :members:
     :special-members:
+    :inherited-members:
+    :exclude-members: __lt__, __gt__, __eq__, __ne__, __hash__, __getitem__, __new__, __repr__, __setitem__, __contains__, __delitem__
 
 Molfile
 =======
@@ -15,6 +17,7 @@ Molfile
 
 .. automodule:: msys.molfile
     :members: Plugin, DtrReader, Frame, Atom, SeqFile, Grid
+    :inherited-members:
     :undoc-members:
 
 Reader

@@ -373,6 +373,10 @@ namespace desres { namespace msys {
         }
         iterator chainEnd() const { return iterator(maxChainId(), NULL); }
 
+        /* reserve vector sizes */
+        void atomReserve(size_t s) { _atoms.reserve(s); }
+        void bondReserve(size_t s) { _bonds.reserve(s); }
+
         /* add an element */
         Id addAtom(Id residue);
         Id addBond(Id i, Id j);

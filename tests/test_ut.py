@@ -2172,6 +2172,7 @@ class Main(unittest.TestCase):
         sys = msys.LoadDMS("tests/files/ww.dms")
         msys.AssignBondOrderAndFormalCharge(sys)
         msys.AssignBondOrderAndFormalCharge(sys.select("water"))
+        msys.AssignBondOrderAndFormalCharge([])
 
     def testAssignBondOrderTimeout(self):
         mol = msys.FromSmilesString(

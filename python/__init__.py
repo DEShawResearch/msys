@@ -84,7 +84,10 @@ class Bond(_msys.Bond):
 
 
 class Atom(_msys.Atom):
-    """ Represents an atom (or pseudoparticle) in a chemical system """
+    """ Represents an atom (or pseudoparticle) in a chemical system. 
+
+        For a list of additional atom properties available in a particular
+        system, check ``mol.atom_props``"""
 
     __slots__ = ()
 
@@ -2419,6 +2422,9 @@ def AssignBondOrderAndFormalCharge(
         ids = ptr.atoms()
     else:
         ptr, ids = _convert_ids(system_or_atoms)
+
+    if ptr is None or len(ids) == 0:
+        return
 
     if total_charge is None:
         _msys.AssignBondOrderAndFormalCharge(

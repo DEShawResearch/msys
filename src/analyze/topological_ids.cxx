@@ -270,6 +270,7 @@ namespace desres { namespace msys {
        J. Chem. Inf Comput. Sci., Vol. 29, No. 2, 1989
     */
     IdList ComputeTopologicalIds(SystemPtr mol) {
+        if (!mol) throw std::invalid_argument("Null mol");
         Id maxaid=mol->maxAtomId();
         if(maxaid==0) return IdList();
 
