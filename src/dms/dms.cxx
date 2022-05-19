@@ -281,7 +281,7 @@ Sqlite Sqlite::read(std::string const& path, bool unbuffered) {
         ptr += rc;
     }
     close(fd);
-    int rc = sqlite3_open_v2( "::dms::", &db, SQLITE_OPEN_READONLY, 
+    int rc = sqlite3_open_v2( "::dms::", &db, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, 
             vfs->zName);
     if (rc!=SQLITE_OK) {
         free(tmpbuf);
@@ -302,7 +302,7 @@ Sqlite Sqlite::read_bytes(const void* bytes, int64_t len ) {
     char* tmpbuf = (char *)malloc(len);
     if (!tmpbuf) MSYS_FAIL("Failed to allocate read buffer for DMS file of size " << len);
     memcpy(tmpbuf, bytes, len);
-    int rc = sqlite3_open_v2( "::dms::", &db, SQLITE_OPEN_READONLY, 
+    int rc = sqlite3_open_v2( "::dms::", &db, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, 
             vfs->zName);
     if (rc!=SQLITE_OK) {
         free(tmpbuf);
