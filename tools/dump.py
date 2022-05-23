@@ -317,7 +317,21 @@ def dmsdump(
         sql = (
             'select "modified_interaction", * from modified_interaction order by g0, g1'
         )
-        call_sqlite3(cmd + [sql], stdout=sys.stdout)
+        call_sqlite3(cmd + [sql], stdout=out)
+
+    # tempering_groups
+    if has_table(conn, "tempering_groups"):
+        sql = (
+            'select "tempering_groups", rowid, * from tempering_groups'
+        )
+        call_sqlite3(cmd + [sql], stdout=out)
+
+    # tempered_constraint
+    if has_table(conn, "tempered_constraint"):
+        sql = (
+            'select "tempered_constraint", rowid, * from tempered_constraint'
+        )
+        call_sqlite3(cmd + [sql], stdout=out)
 
     # exclusions
     if has_table(conn, "exclusion"):
@@ -332,7 +346,7 @@ def dmsdump(
         sql = (
             """
         select "alchemical_particle", p.p0 as p0, chargeA, chargeB, %s
-        from alchemical_particle as p 
+        from alchemical_particle as p
         join nonbonded_param as nbA on p.nbtypeA = nbA.id
         join nonbonded_param as nbB on p.nbtypeB = nbB.id
         """
