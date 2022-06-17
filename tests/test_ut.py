@@ -4208,5 +4208,52 @@ class TestSvd(unittest.TestCase):
         NP.testing.assert_almost_equal(v, V)
 
 
+class TestCompression(unittest.TestCase):
+    def testDecompressFormats(self):
+        # Try all the supported formats
+        orig_hash = msys.Load('tests/files/ww.dms').hash()
+        for ext in ['gz', 'lz4', 'zst']:
+            self.assertEqual(msys.Load('tests/files/ww.dms.' + ext).hash(), orig_hash)
+
+    def testCompressionFormats(self):
+        source = 'tests/files/ww.dms'
+        ww = msys.Load(source)
+        ww_size = os.stat(source).st_size
+        for ext in ['zst', 'gz', 'lz4']:
+            tmp = '/tmp/ww.dms.' + ext # tempfile.NamedTemporaryFile(suffix = ".dms." + ext)
+            ww.save(tmp) #.name)
+            assert float(os.stat(tmp).st_size) / ww_size < 0.75, 'Compressed size for format %s is not significantly smaller' % ext
+            ww_compressed = msys.Load(tmp) #.name)
+            self.assertEqual(ww.hash(), ww_compressed.hash())
+
+
+class TestCereal(unittest.TestCase):
+    def testCerealOut(self):
+        # Write out serialized version, and read it back
+        ww = msys.Load('tests/files/ww.dms')
+        tmp = tempfile.NamedTemporaryFile(suffix=".cer")
+        ww.save(tmp.name)
+        ww2 = msys.Load(tmp.name)
+        self.assertEqual(ww2.hash(), ww.hash())
+        cer_size = os.stat(tmp.name).st_size
+
+        # And with compression
+        for ext in ['gz', 'zst', 'lz4']:
+            tmp = tempfile.NamedTemporaryFile(suffix=".cer." + ext)
+            ww.save(tmp.name)
+            assert float(os.stat(tmp.name).st_size) / cer_size < 0.75, 'Compressed size of format %s is not significantly smaller' % ext
+            ww_compressed = msys.Load(tmp.name)
+            self.assertEqual(ww_compressed.hash(), ww.hash())
+
+    def testCerealVersion(self):
+        # Make sure the current code can read the serialized version in the repo
+        # Load in the serialized version - that checks that the format and version is still compatible
+        # Then check that loading the corresponding DMS file produces the same hash
+        # If it does not, we need to bump the version of MSYS_CEREAL_VERSION in src/cereal.cxx and
+        # produce a new CER file by doing the equivalent of msys.Load('ww.dms').save('ww.cer')
+        ww_cer = msys.Load('tests/files/ww.cer')
+        ww_dms = msys.Load('tests/files/ww.dms')
+        self.assertEqual(ww_cer.hash(), ww_dms.hash())
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
         t=-now();
         ExportCereal(m, ss, Provenance::fromArgs(argc, argv));
         t+=now();
-        printf("  export cereal %.3fs\n", t);
+        printf("  export cereal %.3fs, %zd bytes\n", t, ss.str().size());
         t=-now();
         auto m2 = ImportCereal(ss);
         t+=now();
@@ -30,10 +30,7 @@ int main(int argc, char *argv[]) {
         out.close();
 
         assert(HashSystem(m) == HashSystem(m2));
+
     }
     return 0;
 }
-
-
-
-

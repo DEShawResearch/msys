@@ -10,6 +10,7 @@
 #include "sdf.hxx"
 #endif
 #include "json.hxx"
+#include "cereal.hxx"
 
 #include <sys/stat.h>
 
@@ -73,8 +74,8 @@ namespace desres { namespace msys {
 
         std::string path(_path);
         to_lower(path);
-        const char* DMS[] = {"dms","dms.gz", 0};
-        const char* MAE[] = {"mae","mae.gz","maegz","maeff","maeff.gz","cms","cms.gz", 0};
+        const char* DMS[] = {"dms","dms.gz", "dms.lz4", "dms.zst", 0};
+        const char* MAE[] = {"mae","mae.gz","mae.lz4","mae.zst","maegz","maeff","maeff.gz","maeff.lz4","maeff.zst","cms","cms.gz","cms.lz4","cms.zst", 0};
         const char* PDB[] = {"pdb", 0};
         const char* PRM[] = {"prmtop","prm7", 0};
         const char* MOL2[]= {"mol2", 0};
@@ -84,6 +85,7 @@ namespace desres { namespace msys {
 #endif
         const char* PSF[] = {"psf", 0};
         const char* JSON[] = {"json", 0};
+        const char* CER[] = {"cer", "cer.gz", "cer.lz4", "cer.zst", 0};
 
         if (match(path, DMS)) return DmsFileFormat;
         if (match(path, MAE)) return MaeFileFormat;
@@ -96,6 +98,7 @@ namespace desres { namespace msys {
 #endif
         if (match(path, PSF)) return PsfFileFormat;
         if (match(path, JSON)) return JsonFileFormat;
+        if (match(path, CER)) return CerFileFormat;
         if (match_web(path))  return WebPdbFileFormat;
         return UnrecognizedFileFormat;
     }
@@ -149,6 +152,9 @@ namespace desres { namespace msys {
                 break;
             case JsonFileFormat:
                 m=ImportJson(path);
+                break;
+            case CerFileFormat:
+                m=ImportCereal(path);
                 break;
             default:
                 ;
@@ -246,6 +252,9 @@ namespace desres { namespace msys {
                 break;
             case PsfFileFormat:
                 ExportPSF(mol, path);
+                break;
+            case CerFileFormat:
+                ExportCereal(mol, path, prov);
                 break;
             default:
                 MSYS_FAIL("No support for saving file '" << path << "' of type "

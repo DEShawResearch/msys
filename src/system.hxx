@@ -80,7 +80,7 @@ namespace desres { namespace msys {
         template<class Archive>
         void serialize(Archive & archive) {
             archive(fragid, residue, atomic_number, formal_charge, stereo_parity, aromatic);
-            archive(x,y,z,charge, vx,vx,vz,mass);
+            archive(x,y,z,charge, vx,vy,vz,mass);
             archive(name, type);
         }
     
@@ -227,19 +227,74 @@ namespace desres { namespace msys {
         std::vector<Provenance> _provenance;
 
     public:
+        // Have to have an empty serialization func here because anything with a pointer to
+        // System (like in TermTable) will need to believe that it can serialize this class
+        // Actual serialization will happen with serialize_x() below.
         template<class Archive>
-        void serialize(Archive & archive) {
-            archive(name, global_cell, nonbonded_info);
-            archive(_atoms, _deadatoms, _atomprops);
-            archive(_bonds, _deadbonds, _bondprops);
-            archive(_bondindex);
-            archive(_residues, _deadresidues, _residueatoms);
-            archive(_chains, _deadchains, _chainresidues);
-            archive(_cts, _deadcts, _ctchains);
-            archive(_tables);
-            archive(_auxtables);
-            archive(_provenance);
+        void serialize(Archive & archive) { }
+
+        // List of fields to serialize
+        // There is probably some very clever way to do this with templates
+        //
+        //          WARNING          ACHTUNG         ADVERTENCIA       AVERTISSEMENT
+        //
+        //    When any new members are added to the System class, or to the classes contained
+        //    as members underneath, the serialization version (CEREAL_VERSION in cereal.hxx)
+        //    MUST be updated.
+        //
+        //    Any new members must have a serialize() method, and be added to the list below
+        //    to ensure that they are properly serialized
+        //
+        //    The TestCereal unit test will catch things that change the HashSysem() return
+        //    for serialized data vs. unserialized.
+        //
+#define _SER_LIST(_f)              \
+                _f(name)           \
+                _f(global_cell)    \
+                _f(nonbonded_info) \
+                _f(_atoms)         \
+                _f(_deadatoms)     \
+                _f(_atomprops)     \
+                _f(_bonds)         \
+                _f(_deadbonds)     \
+                _f(_bondprops)     \
+                _f(_bondindex)     \
+                _f(_residues)      \
+                _f(_deadresidues)  \
+                _f(_residueatoms)  \
+                _f(_chains)        \
+                _f(_deadchains)    \
+                _f(_chainresidues) \
+                _f(_cts)           \
+                _f(_deadcts)       \
+                _f(_ctchains)      \
+                _f(_tables)        \
+                _f(_auxtables)     \
+                _f(_provenance)
+
+#define _SER_ENUM(_x)   S_ ## _x,
+#define _SER_A(_x)      case S_ ## _x: a(_x); break;
+
+        enum serialized_vars {
+            _SER_LIST(_SER_ENUM)
+            S_MAX
+        };
+
+        static inline size_t serialize_max() { return S_MAX; }
+
+        // Serialize each piece. Can be done in parallel threads
+        template <class Archive>
+        void serialize_x(Archive &a, int index)
+        {
+            switch (index) {
+                _SER_LIST(_SER_A)
+                default: break;
+            }
         }
+
+#undef _SER_A
+#undef _SER_ENUM
+#undef _SER_LIST
 
         static std::shared_ptr<System> create();
         System();

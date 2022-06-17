@@ -20,7 +20,10 @@ TNG=tng/1.8.2-03c7
 GBENCH=gbench/1.5.0-02c7
 PYBIND11=pybind11/2.3.0-01c7
 BLISS=bliss/0.73-02c7
-CEREAL=cereal/1.3.1-01c7
+CEREAL=cereal/1.3.2-01c7
+PERFTOOLS=gperftools/2.7-01c7
+LZ4=lz4/1.9.1-01c7
+ZSTD=zstd/1.4.4-01c7
 
 loadmodules() {
     garden load \
@@ -39,6 +42,9 @@ loadmodules() {
         $PYBIND11/lib \
 	$BLISS/lib \
         $CEREAL/lib \
+        $PERFTOOLS/lib \
+        $LZ4/lib \
+        $ZSTD/lib \
         enscons/0.23.0-01c7/lib-python37 \
         texlive/2019-20190410-01c7/bin \
 
@@ -48,6 +54,8 @@ loadmodules() {
     export MSYS_WITH_TNG=1
     export MSYS_WITH_BENCHMARK=1
     export MSYS_WITH_BLISS=1
+    export MSYS_WITH_LZ4=1
+    export MSYS_WITH_ZSTD=1
 }
 
 genmodules() {

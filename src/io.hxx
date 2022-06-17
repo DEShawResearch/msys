@@ -17,7 +17,8 @@ namespace desres { namespace msys {
         SdfFileFormat          = 7,
         WebPdbFileFormat       = 8,
         PsfFileFormat          = 9,
-        JsonFileFormat         = 10
+        JsonFileFormat         = 10,
+        CerFileFormat          = 11
     };
 
     /* Guess file format for the given path.  Returns UnrecognizedFileFormat

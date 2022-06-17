@@ -45,7 +45,7 @@ namespace desres { namespace msys { namespace mae {
         std::streamsize bufsize;
   
         /*! \brief the stream for the file we're parsing */
-        istream * m_input;
+        std::istream * m_input;
   
         /*! \brief The current token */
         char * m_token;
@@ -87,7 +87,8 @@ static inline char tokenizer_read(tokenizer * tk) {
   if (tk->bufpos==tk->bufsize) {
       tk->m_offset += tk->bufsize;
       //printf("tokenizer_read %lu\n", sizeof(tk->buf));
-      tk->bufsize = tk->m_input->read(tk->buf, sizeof(tk->buf));
+      tk->m_input->read(tk->buf, sizeof(tk->buf));
+      tk->bufsize = tk->m_input->gcount();
       tk->bufpos = 0;
       //printf("  gcount %ld\n", tk->bufsize);
   } 
@@ -101,7 +102,7 @@ static inline char tokenizer_read(tokenizer * tk) {
  * @param input The stream to parse
  */
 
-static void tokenizer_init( tokenizer * tk, istream& input );
+static void tokenizer_init( tokenizer * tk, std::istream& input );
 
 /*!
  * The destructor cleans up any heap allocated temporaries created
@@ -153,7 +154,7 @@ enum ACTION {
   CONTINUEOTHER  /* 9 */
 };
 
-void tokenizer_init( tokenizer * tk, istream& input ) {
+void tokenizer_init( tokenizer * tk, std::istream& input ) {
     memset(tk,0,sizeof(*tk));
     tk->m_input = &input;
     tk->m_line = 1;
@@ -753,7 +754,7 @@ static void write_values( const Json& ct, int depth, FILE * fd ) {
 namespace desres { namespace msys { namespace mae {
 
     import_iterator::import_iterator(std::istream& file) 
-    : in(istream::wrap(file)), tk(), _offset() {
+    : in(maybe_compressed_istream(file)), tk(), _offset() {
         tk = new tokenizer;
         tokenizer_init(tk, *in);
     }
@@ -761,7 +762,6 @@ namespace desres { namespace msys { namespace mae {
     import_iterator::~import_iterator() {
         tokenizer_release(tk);
         delete tk;
-        delete in;
     }
 
     bool import_iterator::next(Json& block) {
