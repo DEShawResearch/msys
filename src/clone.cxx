@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <unordered_map>
+#include <unordered_set>
 
 using namespace desres::msys;
 
@@ -23,6 +24,30 @@ namespace {
             return false;
         }
     };
+
+    IdList select_modified_interaction_rows(ParamTablePtr params, SystemPtr mol) {
+        auto prop = mol->atomPropIndex("interaction_grp");
+        if (bad(prop)) return {};
+        auto g0 = params->propIndex("g0");
+        auto g1 = params->propIndex("g1");
+        if (bad(g0) || bad(g1)) {
+            MSYS_FAIL("modified_interaction table missing g0 or g1 property");
+        }
+
+        std::unordered_set<String> grps;
+        for (auto i=mol->atomBegin(), e=mol->atomEnd(); i!=e; ++i) {
+            auto& a = mol->atomFAST(*i);
+            grps.insert(mol->atomPropValue(*i, prop).asString());
+        }
+
+        IdList rows;
+        for (auto row : params->params()) {
+            if (grps.count(params->value(row, g0)) && grps.count(params->value(row, g1))) {
+                rows.push_back(row);
+            }
+        }
+        return rows;
+    }
 }
 
 SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms,
@@ -247,7 +272,13 @@ SystemPtr desres::msys::Clone( SystemPtr src, IdList const& atoms,
             std::string const& name = extras[i];
             ParamTablePtr srcparams = src->auxTable(name);
             ParamTablePtr dstparams = ParamTable::create();
-            AppendParams( dstparams, srcparams, srcparams->params() );
+            IdList rows;
+            if (name == "modified_interaction") {
+                rows = select_modified_interaction_rows(srcparams, dst);
+            } else {
+                rows = srcparams->params();
+            }
+            AppendParams(dstparams, srcparams, rows);
             dst->addAuxTable( name, dstparams );
         }
     }
