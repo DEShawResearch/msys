@@ -1,3 +1,8 @@
+1.7.353 Make clone() subselect rows of modified_interaction.
+        Fix dms-diff handling of modified_interaction, tempering_groups, and
+            tempered_constraint.
+        Speed up reading DMS files.
+
 1.7.352 Documentation improvements.
 
 1.7.351 Fix segfault in BOA when passed an empty list.
