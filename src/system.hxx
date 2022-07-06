@@ -16,6 +16,11 @@ namespace desres { namespace msys {
         std::vector<double> data;
 
     public:
+        template<class Archive>
+        void serialize(Archive & archive) {
+            archive(data);
+        }
+
         GlobalCell() : data(9) {}
         double*       operator[](unsigned i)       { return &data.at(3*i); }
         const double* operator[](unsigned i) const { return &data.at(3*i); }
@@ -31,6 +36,11 @@ namespace desres { namespace msys {
         String vdw_funct;
         String vdw_rule;
         String es_funct;
+
+        template<class Archive>
+        void serialize(Archive & archive) {
+            archive(vdw_funct, vdw_rule, es_funct);
+        }
 
         /* Allow merge when corresponding fields are equal, or when one
          * of them is empty, in which case the non-empty value is adopted.
@@ -66,6 +76,13 @@ namespace desres { namespace msys {
     
         SmallString<30> name;
         AtomType type;
+
+        template<class Archive>
+        void serialize(Archive & archive) {
+            archive(fragid, residue, atomic_number, formal_charge, stereo_parity, aromatic);
+            archive(x,y,z,charge, vx,vy,vz,mass);
+            archive(name, type);
+        }
     
         /* Don't abuse these.  In particular, bear in mind that that an atom's
          * memory location will move around if atoms are added.  */
@@ -79,6 +96,11 @@ namespace desres { namespace msys {
         int8_t order=1;             /* formal bond order            */
         int8_t stereo=0;            /* negative when atom order is flipped */
         int8_t aromatic=0;          /* no Kekule form specified     */
+
+        template<class Archive>
+        void serialize(Archive & archive) {
+            archive(i, j, order, stereo, aromatic);
+        }
 
         bond_t() {}
         bond_t(Id ai, Id aj) { i=ai; j=aj; }
@@ -100,6 +122,10 @@ namespace desres { namespace msys {
         SmallString<6> insertion;
         ResidueType type;
     
+        template<class Archive>
+        void serialize(Archive & archive) {
+            archive(chain, resid, name, insertion, type);
+        }
         residue_t() : chain(BadId), resid(), type() {}
     };
     
@@ -107,6 +133,11 @@ namespace desres { namespace msys {
         Id      ct;
         String  name;
         String  segid;
+
+        template<class Archive>
+        void serialize(Archive & archive) {
+            archive(ct, name, segid);
+        }
     
         chain_t() : ct(BadId) {}
     };
@@ -115,6 +146,11 @@ namespace desres { namespace msys {
         ParamTablePtr _kv;
 
     public:
+        template<class Archive>
+        void serialize(Archive & archive) {
+            archive(_kv);
+        }
+
         /* constructor: maintain a single row with msys_name as the first
          * property. */
         component_t();
@@ -190,11 +226,78 @@ namespace desres { namespace msys {
          * serializing to disk. */
         std::vector<Provenance> _provenance;
 
-        /* create only as shared pointer. */
-        System();
-
     public:
+        // Have to have an empty serialization func here because anything with a pointer to
+        // System (like in TermTable) will need to believe that it can serialize this class
+        // Actual serialization will happen with serialize_x() below.
+        template<class Archive>
+        void serialize(Archive & archive) { }
+
+        // List of fields to serialize
+        // There is probably some very clever way to do this with templates
+        //
+        //          WARNING          ACHTUNG         ADVERTENCIA       AVERTISSEMENT
+        //
+        //    When any new members are added to the System class, or to the classes contained
+        //    as members underneath, the serialization version (CEREAL_VERSION in cereal.hxx)
+        //    MUST be updated.
+        //
+        //    Any new members must have a serialize() method, and be added to the list below
+        //    to ensure that they are properly serialized
+        //
+        //    The TestCereal unit test will catch things that change the HashSysem() return
+        //    for serialized data vs. unserialized.
+        //
+#define _SER_LIST(_f)              \
+                _f(name)           \
+                _f(global_cell)    \
+                _f(nonbonded_info) \
+                _f(_atoms)         \
+                _f(_deadatoms)     \
+                _f(_atomprops)     \
+                _f(_bonds)         \
+                _f(_deadbonds)     \
+                _f(_bondprops)     \
+                _f(_bondindex)     \
+                _f(_residues)      \
+                _f(_deadresidues)  \
+                _f(_residueatoms)  \
+                _f(_chains)        \
+                _f(_deadchains)    \
+                _f(_chainresidues) \
+                _f(_cts)           \
+                _f(_deadcts)       \
+                _f(_ctchains)      \
+                _f(_tables)        \
+                _f(_auxtables)     \
+                _f(_provenance)
+
+#define _SER_ENUM(_x)   S_ ## _x,
+#define _SER_A(_x)      case S_ ## _x: a(_x); break;
+
+        enum serialized_vars {
+            _SER_LIST(_SER_ENUM)
+            S_MAX
+        };
+
+        static inline size_t serialize_max() { return S_MAX; }
+
+        // Serialize each piece. Can be done in parallel threads
+        template <class Archive>
+        void serialize_x(Archive &a, int index)
+        {
+            switch (index) {
+                _SER_LIST(_SER_A)
+                default: break;
+            }
+        }
+
+#undef _SER_A
+#undef _SER_ENUM
+#undef _SER_LIST
+
         static std::shared_ptr<System> create();
+        System();
         ~System();
 
         String          name;

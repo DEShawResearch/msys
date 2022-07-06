@@ -24,8 +24,37 @@ namespace desres { namespace msys {
         explicit OverrideTable( ParamTablePtr target );
 
     public:
+        template <class Archive>
+        void save(Archive & archive) const {
+            archive(_target, _params);
+            // for some reason we can't serialize _map directory
+            archive(_map.size());
+            for (auto& p : _map) {
+                IdPair first = p.first;
+                Id second = p.second;
+                archive(first.first, first.second, second);
+            }
+        }
+
+        template <class Archive>
+        void load(Archive & archive) {
+            size_t i, n;
+            IdPair first;
+            Id second;
+
+            archive(_target, _params);
+            archive(n);
+            for (i=0; i<n; i++) {
+                archive(first.first, first.second, second);
+                _map[first] = second;
+            }
+
+        }
         /* create an override table */
         static OverrideTablePtr create(ParamTablePtr target);
+
+        /* default constructor for serialization purposes */
+        OverrideTable() {}
 
         /* reset params table and clear all overrides */
         void resetParams(ParamTablePtr params);

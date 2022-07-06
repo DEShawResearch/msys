@@ -15,8 +15,9 @@ namespace desres { namespace msys {
 
         static Provenance fromArgs(int argc, char *argv[]);
 
-        template <typename Ar> void serialize(Ar& a, unsigned) {
-            a & version & timestamp & user & workdir & cmdline & executable;
+        template<class Archive>
+        void serialize(Archive & archive) {
+            archive(version, timestamp, user, workdir, cmdline, executable);
         }
     };
 

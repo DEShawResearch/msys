@@ -1,5 +1,5 @@
 #include "dms.hxx"
-#include "../istream.hxx"
+#include "../compression.hxx"
 #include <sqlite3.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,6 +12,9 @@
 #include <cerrno>
 #include <iomanip>
 #include <unistd.h>
+
+#include <boost/iostreams/device/array.hpp>
+#include <boost/iostreams/stream.hpp>
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -57,6 +60,7 @@ namespace {
 }
 
 namespace {
+
     int dms_xClose(sqlite3_file *file) {
         dms_file* dms = static_cast<dms_file*>(file);
         if (dms->contents) {
@@ -140,27 +144,30 @@ namespace {
     /* if buf looks like gzipped data, decompress it, and update *sz.  
      * Return buf, which may now point to new space. */
     char* maybe_decompress(char* buf, sqlite3_int64 *sz) {
-        if (*sz<2) return buf;
-        /* check for gzip magic number */
-        unsigned char s0 = buf[0];
-        unsigned char s1 = buf[1];
-        if (s0==0x1f && s1==0x8b) {
-            std::istringstream file;
-            //this ought to work but doesn't, at least on MacOS.
-            //file.rdbuf()->pubsetbuf(buf, *sz);
-            file.str(std::string(buf, buf+*sz));    // extra copy :(
-            std::unique_ptr<istream> in(istream::wrap(file));
-            char tmp[16384];
-            std::vector<char> contents;
-            for (;;) {
-                auto rc = in->read(tmp, sizeof(tmp));
-                if (rc<=0) break;
-                contents.insert(contents.end(), tmp, tmp+rc);
-            }
-            *sz = contents.size();
-            buf = (char *)realloc(buf, contents.size());
-            memcpy(buf, contents.data(), contents.size());
+        // This streambuf does not copy the provided string, but provides an istream interface
+        boost::iostreams::stream<boost::iostreams::array_source> ss(buf, *sz);
+        std::unique_ptr<std::istream> stream = maybe_compressed_istream(ss);
+        // is it actually compressed?
+        if (stream->rdbuf() == ss.rdbuf()) { // nope! just bail
+            return buf;
         }
+        // Have to decompress
+        // If we do this with clever C++ streams, it adds many extra copies, so copy manually
+        size_t new_size = *sz;     // decompressed data should be at least as big as compressed
+        size_t nread = 0;
+        char *xbuf = (char *)malloc(new_size);
+        while (!stream->eof() && stream->good()) {
+            if (nread == new_size) {    // need more buffer? double it
+                new_size *= 2;
+                xbuf = (char *)realloc(xbuf, new_size);
+            }
+            stream->read(xbuf + nread, new_size - nread);   // read as much as we can
+            nread += stream->gcount();
+        }
+        free(buf);     // done with compressed data
+        // Trim buffer down to exactly the size we read, and update the size
+        buf = (char *)realloc(xbuf, nread);
+        *sz = nread;
         return buf;
     }
 

@@ -42,6 +42,45 @@ namespace desres { namespace msys {
             }
 
             Property() : maxIndexId(0) {}
+    
+            template<class Archive>
+            void save(Archive & archive) const {
+                archive(name, type, vals.size());
+                switch (type) {
+                    default:
+                    case IntType:
+                        for (auto& val : vals) archive(val.i);
+                        break;
+                    case FloatType:
+                        for (auto& val : vals) archive(val.f);
+                        break;
+                    case StringType:
+                        for (auto& val : vals) archive(std::string(val.s));
+                        break;
+                };
+            }
+            template<class Archive>
+            void load(Archive & archive) {
+                size_t nvals;
+                std::string s;
+                archive(name, type, nvals);
+                vals.resize(nvals);
+                switch (type) {
+                    default:
+                    case IntType:
+                        for (size_t i=0; i<nvals; i++) archive(vals[i].i);
+                        break;
+                    case FloatType:
+                        for (size_t i=0; i<nvals; i++) archive(vals[i].f);
+                        break;
+                    case StringType:
+                        for (size_t i=0; i<nvals; i++) {
+                            archive(s);
+                            vals[i].s = strdup(s.data());
+                        }
+                        break;
+                };
+            }
         };
         
         typedef std::deque<Property> PropList;
@@ -53,10 +92,14 @@ namespace desres { namespace msys {
         /* reference count for parameters in this table */
         IdList _paramrefs;
 
-        ParamTable();
-
     public:
+        template<class Archive>
+        void serialize(Archive & archive) {
+            archive(_props, _nrows, _paramrefs);
+        }
+
         static std::shared_ptr<ParamTable> create();
+        ParamTable();
         ~ParamTable();
 
         /* increment/decrement the reference count of the given parameter */

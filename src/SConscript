@@ -11,6 +11,9 @@ opts.Add("MSYS_WITH_TNG", "include TNG support?", os.getenv('MSYS_WITH_TNG'))
 opts.Add("MSYS_WITH_BLISS", "include BLISS support?", os.getenv('MSYS_WITH_BLISS'))
 opts.Add("MSYS_WITHOUT_RAPIDJSON", "include rapidjson support?", os.getenv('MSYS_WITHOUT_RAPIDJSON'))
 opts.Add("MSYS_BOOST_SUFFIX", "suffix for boost libraries (e.g. -mt)")
+opts.Add("MSYS_WITH_TCMALLOC", "use tcmalloc allocator", os.getenv('MSYS_WITH_TCMALLOC'))
+opts.Add("MSYS_WITH_LZ4", "support lz4 compression", os.getenv('MSYS_WITH_LZ4'))
+opts.Add("MSYS_WITH_ZSTD", "support zstd compression", os.getenv('MSYS_WITH_ZSTD'))
 
 opts.Update(env)
 
@@ -22,6 +25,14 @@ if env.get('MSYS_WITH_TNG'):
     env.AppendUnique(LIBS=['tng_io'])
 if env.get('MSYS_WITH_BLISS'):
     env.AppendUnique(LIBS=['bliss'])
+if env.get('MSYS_WITH_TCMALLOC'):
+    env.AppendUnique(LIBS=['tcmalloc', 'profiler'])
+if env.get('MSYS_WITH_LZ4'):
+    env.AppendUnique(LIBS=['lz4'])
+    env.Append(CPPDEFINES=['MSYS_WITH_LZ4'])
+if env.get('MSYS_WITH_ZSTD'):
+    env.AppendUnique(LIBS=['zstd'])
+    env.Append(CPPDEFINES=['MSYS_WITH_ZSTD'])
 
 bsx=env.get('MSYS_BOOST_SUFFIX', '')
 boost_libs=[(x+bsx) for x in (
@@ -112,6 +123,13 @@ else:
     jsenv = env
 jsobjs = jsenv.AddObject(['json/import.cxx', 'json/export.cxx'])
 
+zenv = env.Clone()
+if env.get('MSYS_WITH_LZ4'):
+    zenv.Append(CPPDEFINES=['MSYS_WITH_LZ4'])
+if env.get('MSYS_WITH_ZSTD'):
+    zenv.Append(CPPDEFINES=['MSYS_WITH_ZSTD'])
+zobjs = zenv.AddObject(['compression.cxx'])
+
 def get_shlib_version():
     if env['PLATFORM'] == 'darwin' or os.getenv('BUILD_WHEEL'):
         # See https://www.sicpers.info/2013/03/how-to-version-a-mach-o-library/
@@ -147,7 +165,7 @@ fastjson/dtoa/fast-dtoa.cc
 
 libmsys_env = env.Clone()
 libmsys_env.Append(LIBS=['msys-core'])
-libmsys_env.AddLibrary('msys', lexobjs + lpobjs + sdfobjs + [inchi] + smiles_objs + dtoaobjs + jsobjs + Split('''
+libmsys_env.AddLibrary('msys', lexobjs + lpobjs + sdfobjs + [inchi] + smiles_objs + dtoaobjs + jsobjs + zobjs + Split('''
 
 smarts.cxx
 analyze/eigensystem.cxx
@@ -166,6 +184,7 @@ atomsel/key.cxx
 atomsel/within.cxx
 atomsel/query.cxx
 
+cereal.cxx
 dms/dms.cxx
 dms/export_dms.cxx
 dms/import_dms.cxx
@@ -197,7 +216,6 @@ geom.cxx
 hash.cxx
 
 io.cxx
-istream.cxx
 
 mae/ff.cxx
 mae/export_mae.cxx

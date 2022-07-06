@@ -3,8 +3,10 @@
 #include "../term_table.hxx"
 #include "../override.hxx"
 #include "../append.hxx"
+#include "../compression.hxx"
 
 #include <sstream>
+#include <fstream>
 #include <stdio.h>
 #include <string.h>
 #include <stdexcept>
@@ -658,8 +660,8 @@ void desres::msys::ExportDMS(SystemPtr h, const std::string& path,
     Tmpfile tmp;
 
     std::string _path;
-    const bool is_gz = path.rfind(".gz") == path.size()-3;
-    if (is_gz) {
+    std::string compressed_ext = compression_extension(path);
+    if (compressed_ext.size()) {
         _path = tmp.create();
     } else {
         _path = path;
@@ -671,33 +673,22 @@ void desres::msys::ExportDMS(SystemPtr h, const std::string& path,
         MSYS_FAIL("Could not create dms file at " << path << ": " << e.what());
     }
     export_dms(h, dms, provenance, flags);
-
-    if (is_gz) {
-#if defined(_WIN64) || defined(_WIN32)
-        MSYS_FAIL("gzipped dms output not supported on Windows.");
-#endif
-        std::string cmd("gzip -c ");
-        cmd += _path;
-        FILE* fp = popen(cmd.data(), "r");
-        if (!fp) MSYS_FAIL(strerror(errno));
-        FILE* ofile = fopen(path.data(), "w");
-        if (!ofile) {
-            fclose(fp);
-            MSYS_FAIL(strerror(errno));
-        }
-        char buf[4096];
-        size_t rc;
-        while ((rc = fread(buf, 1, sizeof(buf), fp)) > 0) {
-            if (fwrite(buf, 1, rc, ofile) < 1) {
-                std::string _err = strerror(errno);
-                fclose(fp);
-                fclose(ofile);
-                MSYS_FAIL(_err);
+    if (compressed_ext.size()) {
+        char buf[16384];
+        std::ifstream ifile(_path);
+        std::ofstream ofile(path);
+        auto comp = compressed_ostream(ofile, compressed_ext);
+        while (ifile.good()) {
+            ifile.read(buf, sizeof(buf));
+            if (ifile.gcount()) {
+                comp->write(buf, ifile.gcount());
+                if (!comp->good()) {
+                    MSYS_FAIL("Error writing " << path);
+                }
             }
         }
-        fclose(ofile);
-        fclose(fp);
     }
+        
 }
 
 static void no_close(sqlite3* db) {}
