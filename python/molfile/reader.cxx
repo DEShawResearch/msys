@@ -1,3 +1,4 @@
+#include <pybind11/numpy.h>
 #include "molfilemodule.hxx"
 #include <msys/molfile/findframe.hxx>
 #include <vector>
@@ -10,6 +11,8 @@ typedef ssize_t (Reader::*findfunc)(double T) const;
 namespace {
     auto py_from_long = PyLong_FromLong;
 }
+
+namespace py = pybind11;
 
 namespace {
 
@@ -89,7 +92,7 @@ namespace {
     }
 
 
-    handle reader_times(const Reader& self) {
+    object reader_times(const Reader& self) {
         Py_ssize_t n = self.nframes();
         if (n<0) {
             PyErr_Format(PyExc_ValueError, 
@@ -97,10 +100,8 @@ namespace {
             throw error_already_set();
         }
         Py_ssize_t dims[1] = { n };
-        PyObject * arr = backed_vector( 1, dims, DOUBLE, NULL, NULL );
-        if (self.read_times(0,n,(double *)array_data(arr))!=n) {
-            Py_DECREF(arr);
-            arr=NULL;
+        auto arr = py::array_t<double>(dims);
+        if (self.read_times( 0, n, arr.mutable_data()) != n) {
             PyErr_Format(PyExc_RuntimeError, "Error reading times");
             throw error_already_set();
         }

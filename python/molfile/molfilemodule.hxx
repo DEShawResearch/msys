@@ -35,9 +35,7 @@ namespace desres { namespace molfile {
     // data will be copied to the numpy array and the array takes ownership.
     // If base is non-NULL, the data is not copied, and base will be the owner
     // of the data.
-    PyObject *backed_vector( int nd, Py_ssize_t *dims, DataType type, void *data, PyObject *base );
     PyObject **object_array(int size, PyObject **returned_result);
-    void * array_data( PyObject * arr );
 
 }}
 

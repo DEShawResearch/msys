@@ -1,4 +1,5 @@
 #include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 #include "molfilemodule.hxx"
 #include "numpy/arrayobject.h"
 #include <map>
@@ -28,35 +29,6 @@ PyObject **desres::molfile::object_array(int size, PyObject **returned_result) {
     if (!result) return NULL;
     *returned_result = result;
     return reinterpret_cast<PyObject**>(PyArray_DATA(result));
-}
-
-PyObject *desres::molfile::backed_vector( 
-        int nd, Py_ssize_t *dims, DataType type, void *data, PyObject *base ) {
-    npy_intp mydims[NPY_MAXDIMS];
-    for (int i=0; i<nd; i++) mydims[i] = dims[i];
-    int mytype = type==INT ? PyArray_INT :
-        type==FLOAT ? PyArray_FLOAT :
-        type==DOUBLE ? PyArray_DOUBLE :
-        0;
-    if (!mytype) {
-        PyErr_Format(PyExc_RuntimeError, "Unsupported type '%d'", type);
-        return NULL;
-    }
-    PyObject *result;
-    if (base) { 
-        result = PyArray_SimpleNewFromData( nd, mydims, mytype, (char *)data);
-        Py_INCREF( PyArray_BASE(result) = reinterpret_cast<PyObject*>(base) );
-    } else {
-        result = PyArray_SimpleNewFromData( nd, mydims, mytype, NULL);
-        if (data) {
-            memcpy( PyArray_DATA(result), data, PyArray_NBYTES(result) );
-        }
-    }
-    return result;
-}
-
-void * desres::molfile::array_data( PyObject * arr ) {
-    return PyArray_DATA(arr);
 }
 
 namespace {
@@ -336,17 +308,15 @@ namespace {
         return changed;
     }
 
-    handle get_times(const FrameSetReader& self) {
+    object get_times(const FrameSetReader& self) {
         Py_ssize_t n = self.size();
         Py_ssize_t dims[1] = { n };
-        PyObject * arr = backed_vector( 1, dims, DOUBLE, NULL, NULL );
-        if (self.times(0,n,(double *)array_data(arr))!=n) {
-            Py_DECREF(arr);
-            arr=NULL;
+        auto arr = array_t<double>(dims);
+        if (self.times( 0, n, arr.mutable_data()) != n) {
             PyErr_Format(PyExc_RuntimeError, "Error reading times");
             throw error_already_set();
         }
-        return handle(arr);
+        return arr;
     }
     ssize_t frameset_size(const FrameSetReader& self, Py_ssize_t n) {
         return self.frameset(n)->size();
