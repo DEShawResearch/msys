@@ -278,7 +278,7 @@ namespace {
         "If keyvals is not None, it should be a dict, and raw data from\n"
         "the frame will be provided.\n";
 
-    object frame(FrameSetReader& self, Py_ssize_t index, object& bytes,
+    std::unique_ptr<Frame> frame(FrameSetReader& self, Py_ssize_t index, object& bytes,
             object keyvals) {
         /* The component method modifies index.  What a dumb API. */
         Py_ssize_t global_index = index;
@@ -287,7 +287,7 @@ namespace {
             PyErr_SetString(PyExc_IndexError, "index out of bounds");
             throw error_already_set();
         }
-        Frame *frame = new Frame(comp->natoms(), self.has_velocities(), false);
+        auto frame = std::unique_ptr<Frame>(new Frame(comp->natoms(), self.has_velocities(), false));
         dtr::KeyMap keymap;
         void* keybuf = NULL;
         void** keybufptr = keyvals.ptr() == Py_None ? NULL : &keybuf;
@@ -300,7 +300,6 @@ namespace {
             }
             catch (std::exception &e) {
                 PyEval_RestoreThread(_save);
-                delete frame;
                 PyErr_Format(PyExc_IOError, "Error reading frame: global index %ld dtr path %s local index %ld frame file %s\n%s",
                         global_index, comp->path().c_str(),
                         index, comp->framefile(index).c_str(),
@@ -313,7 +312,6 @@ namespace {
             Py_ssize_t size;
             char * data;
             if (py_as_string_size(bytes.ptr(), &data, &size)) {
-                delete frame;
                 throw error_already_set();
             }
             try {
@@ -321,14 +319,13 @@ namespace {
                 frame->setTime(jiffies_to_ps(comp->keys[index].jiffies()));
             }
             catch (std::exception &e) {
-                delete frame;
                 PyErr_Format(PyExc_RuntimeError, "Failed parsing frame data of size %ld: %s", size, e.what());
                 throw error_already_set();
             }
         }
         py_keyvals(keymap, keyvals.ptr());
 
-        return cast(frame);
+        return frame;
     }
 
     const char reload_doc[] =
