@@ -1,3 +1,7 @@
+1.7.354 Support gzip, lz4 and zstd compression
+        Support serialization of dms files into .cer format for faster saving and loading
+        Fix memory leaks in python dtr reader
+
 1.7.353 Make clone() subselect rows of modified_interaction.
         Fix dms-diff handling of modified_interaction, tempering_groups, and
             tempered_constraint.
