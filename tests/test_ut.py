@@ -615,6 +615,14 @@ class Contacts(unittest.TestCase):
         assert NP.isclose(huge, mol.ct(0)["prop"])
 
 
+    def testCtGet(self):
+        mol=msys.CreateSystem()
+        ct = mol.addCt()
+        ct["x"] = 42
+        assert ct.get("y") is None
+        assert ct.get("x") == 42
+
+
     def testSmallVoxels(self):
         pos = NP.zeros((5, 3), "f")
         pos[1] = [1000, 1000, 1000]

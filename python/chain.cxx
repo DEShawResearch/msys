@@ -233,7 +233,7 @@ namespace desres { namespace msys {
             .def("append", &Ct::append)
             .def("keys", &Ct::keys, "Available Ct properties")
             .def("get", [](Ct& ct, String const& key, object d = none()) -> object {
-                    if (ct.has(key)) return d;
+                    if (!ct.has(key)) return d;
                     return from_value_ref(ct.value(key)); },
                 "get Ct property for key, else d, which defaults to None", arg("key"), arg("d")=none())
             .def("__setitem__", [](Ct& ct, String const& key, object val) {
