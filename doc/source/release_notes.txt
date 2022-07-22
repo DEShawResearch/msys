@@ -1,3 +1,5 @@
+1.7.355 Fix for Ct.get("nonexistent-key")
+
 1.7.354 Support gzip, lz4 and zstd compression
         Support serialization of dms files into .cer format for faster saving and loading
         Fix memory leaks in python dtr reader
