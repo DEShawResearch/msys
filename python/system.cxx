@@ -278,7 +278,7 @@ namespace {
         return arr;
     }
 
-    void sys_setpos(System& sys, array_t<double> arr, object idobj) {
+    void sys_setpos(System& sys, array_t<double, pybind11::array::c_style | pybind11::array::forcecast> arr, object idobj) {
         if (arr.ndim()!=2 || arr.shape(1)!=3) {
             PyErr_Format(PyExc_ValueError, 
                     "Supplied %ld-d positions, expected 3-d", 
