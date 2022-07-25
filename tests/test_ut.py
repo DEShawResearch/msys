@@ -3544,6 +3544,20 @@ class Main(unittest.TestCase):
         self.assertEqual(list(m.positions[1]), [8, 9, 10])
         self.assertEqual(list(m._ptr.getPositions(ids)[0]), [8, 9, 10])
 
+    def testPosVelDataOrder(self):
+        m = msys.CreateSystem()
+        m.addAtom()
+        m.addAtom()
+        m.addAtom()
+
+        pos = NP.random.randn(3,3).T
+        m.setPositions(pos)
+        NP.testing.assert_array_equal(m.getPositions(), pos)
+
+        vel = NP.random.randn(3,3).T
+        m.setVelocities(vel)
+        NP.testing.assert_array_equal(m.getVelocities(), vel)
+
     def testVelocities(self):
         m = msys.CreateSystem()
         a0 = m.addAtom()
