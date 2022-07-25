@@ -9,16 +9,16 @@ NAME=msys
 
 # shared library dependencies
 SCONS=scons/3.1.2-01c7
-GCC=gcc/6.3.0-01c7
-BOOST=boost/1.67.0-02c7
+GCC=gcc/11.1.0-04c7/
+BOOST=boost/1.75.0-gcc11.1-py3.10-02c7/
 LPSOLVE=lp-solve/5.5.2.0-01c7
 INCHI=inchi/1.05-01c7
 SQLITE=sqlite/3.32.2-02c7
-SCONSUTILS=sconsutils/1.52c7
+SCONSUTILS=sconsutils/1.55c7
 RAPIDJSON=rapidjson/1.1.0-01c7
 TNG=tng/1.8.2-03c7
 GBENCH=gbench/1.5.0-02c7
-PYBIND11=pybind11/2.3.0-01c7
+PYBIND11=pybind11/2.7.1-01c7
 BLISS=bliss/0.73-02c7
 CEREAL=cereal/1.3.2-01c7
 PERFTOOLS=gperftools/2.7-01c7
@@ -40,7 +40,7 @@ loadmodules() {
         $TNG/lib \
         $GBENCH/lib \
         $PYBIND11/lib \
-	$BLISS/lib \
+        $BLISS/lib \
         $CEREAL/lib \
         $PERFTOOLS/lib \
         $LZ4/lib \
@@ -48,7 +48,7 @@ loadmodules() {
         enscons/0.23.0-01c7/lib-python37 \
         texlive/2019-20190410-01c7/bin \
 
-    export PYTHONVER=37
+    export PYTHONVER=310
     export MSYS_WITH_LPSOLVE=1
     export MSYS_WITH_INCHI=1
     export MSYS_WITH_TNG=1
@@ -59,6 +59,9 @@ loadmodules() {
 }
 
 genmodules() {
+    cat << EOF > $GARDENDIR/lib-python310
+prepend-path PYTHONPATH $PREFIX/lib/python
+EOF
     cat << EOF > $GARDENDIR/lib-python37
 prepend-path PYTHONPATH $PREFIX/lib/python
 EOF
