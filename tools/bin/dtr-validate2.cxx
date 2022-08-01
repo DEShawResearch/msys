@@ -89,8 +89,14 @@ int main(int argc, char *argv[]) {
 
     for (auto& path : paths) {
 
-        mf::DtrReader r(path, mf::DtrReader::RandomAccess);
-        r.init();
+        std::unique_ptr<mf::FrameSetReader> ptr;
+        if (mf::StkReader::recognizes(path)) {
+            ptr.reset(new mf::StkReader(path, mf::DtrReader::RandomAccess));
+        } else {
+            ptr.reset(new mf::DtrReader(path, mf::DtrReader::RandomAccess));
+        }
+        ptr->init();
+        mf::FrameSetReader& r = *ptr;
 
         if (isdir(path)) {
             int64_t total_framebytes = 0;
@@ -109,6 +115,9 @@ int main(int argc, char *argv[]) {
 
         int natoms = r.natoms();
         int nframes = r.size();
+        if (!(energy ^ (natoms>0))) {
+            MSYS_FAIL(path << "contains " << natoms << " atoms.");
+        }
         double first_frame_time = 999;
         double last_frame_time = -99;
         double last_delta_t = -99;
@@ -130,7 +139,7 @@ int main(int argc, char *argv[]) {
                 auto& f = frames[j];
                 // write invalid data into box so that we can tell if something was written
                 memset(f.unit_cell, 7, sizeof(f.unit_cell));
-                threads.emplace_back(&mf::DtrReader::frame, &r, start+j, &f, nullptr);
+                threads.emplace_back(&mf::FrameSetReader::frame, &r, start+j, &f, nullptr);
             }
             for (auto& t : threads) {
                 t.join();
