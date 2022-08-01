@@ -1,3 +1,7 @@
+1.7.356 Make setPositions and setVelocities force C-major.
+        Implement dtr-validate in C++.
+        Fix decompression of some gzip files.
+
 1.7.355 Fix for Ct.get("nonexistent-key")
 
 1.7.354 Support gzip, lz4 and zstd compression
