@@ -53,6 +53,13 @@ static bool is_framefile(const char* basename) {
     return ret;
 }
 
+static bool time_to_do(double now, double first,double interval) {
+    int64_t F = round(first);
+    int64_t I = round(interval);
+    int64_t T = round(now);
+    return ((T-F)>=0) && (I==0 || ((T-F) % I)==0);
+}
+
 int main(int argc, char *argv[]) {
     signal(SIGUSR1, SIG_IGN);
 
@@ -126,6 +133,10 @@ int main(int argc, char *argv[]) {
         }
         for (int j=0; j<parallelism && start+j < nframes; j++) {
             auto i = start + j;
+            if (progress) {
+                if (time_to_do(i, 1, nframes/50)) fprintf(stderr, ".");
+                if (time_to_do(i, 0, nframes/5)) fprintf(stderr, "%d%%", 100*i/nframes);
+            }
             auto& f = frames[j];
             auto frame_time = f.physical_time;
             if (!energy) {
@@ -151,6 +162,7 @@ int main(int argc, char *argv[]) {
             last_frame_time = frame_time;
         }
     }
+    if (progress) fprintf(stderr, "100%%\n");
 
     for (auto& f : frames) {
         delete[] f.coords;
