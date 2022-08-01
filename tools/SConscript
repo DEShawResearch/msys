@@ -2,7 +2,7 @@ Import("msysenv")
 import os
 
 env = msysenv.Clone()
-env.Prepend(CPPPATH=["../src"], LIBS=["msys", "msys-core"])
+env.Prepend(CPPPATH=["../src"], LIBS=["msys", "msys-core", "pthread"])
 
 for mod in Glob("*.py"):
     env.AddPythonModule(mod.get_path(), prefix="msys")
