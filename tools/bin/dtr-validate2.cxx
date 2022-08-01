@@ -29,6 +29,12 @@ optional arguments:
 
 )USAGE";
 
+static void print_usage_and_exit(const char* arg=nullptr) {
+    fprintf(stderr, "%s", USAGE);
+    if (arg) fprintf(stderr, "Error: Unrecognized argument '%s'\n", arg);
+    exit(1);
+}
+
 static bool isdir(std::string path) {
     struct stat stbuf[1];
     if (stat(path.data(), stbuf)) {
@@ -63,10 +69,7 @@ static bool time_to_do(double now, double first,double interval) {
 int main(int argc, char *argv[]) {
     signal(SIGUSR1, SIG_IGN);
 
-    if (argc < 2) {
-        fprintf(stderr, "%s", USAGE);
-        return 1;
-    }
+    if (argc < 2) print_usage_and_exit();
     int parallelism = 1;
     bool progress = false;
     bool energy = false;
@@ -76,12 +79,15 @@ int main(int argc, char *argv[]) {
     std::vector<std::string> paths;
 
     for (int i=1; i<argc; i++) {
-        if (argv[i][0]!= '-') paths.push_back(argv[i]);
-        if (!strcmp(argv[i], "--progress")) progress = true;
-        if (!strcmp(argv[i], "--energy")) energy = true;
-        if (!strcmp(argv[i], "--checkpoint")) checkpoint = true;
-        if (!strcmp(argv[i], "--parseable-output")) parseable_output = true;
-        if (!strcmp(argv[i], "--parallelism")) parallelism = atoi(argv[++i]);
+        if      (argv[i][0]!= '-') paths.push_back(argv[i]);
+        else if (!strcmp(argv[i], "--help")) print_usage_and_exit();
+        else if (!strcmp(argv[i], "-h")) print_usage_and_exit();
+        else if (!strcmp(argv[i], "--progress")) progress = true;
+        else if (!strcmp(argv[i], "--energy")) energy = true;
+        else if (!strcmp(argv[i], "--checkpoint")) checkpoint = true;
+        else if (!strcmp(argv[i], "--parseable-output")) parseable_output = true;
+        else if (!strcmp(argv[i], "--parallelism")) parallelism = atoi(argv[++i]);
+        else print_usage_and_exit(argv[i]);
     }
     if (parallelism < 1) {
         MSYS_FAIL("Invalid --parallelism argument parsed as " << parallelism);
