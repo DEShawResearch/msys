@@ -80,6 +80,7 @@ class gzip_istreambuf : public std::streambuf {
     z_stream strm;
     static const int CHUNK = 16384;
     char in[CHUNK], out[CHUNK];
+    bool closed;
 
 public:
     gzip_istreambuf(std::streambuf *buf, int);
@@ -279,6 +280,7 @@ gzip_istreambuf::gzip_istreambuf(std::streambuf *buf, int) : m_sbuf(buf)
     if (Z_OK!=inflateInit2(&strm, 16+MAX_WBITS)) {
         MSYS_FAIL("Failed initializing zlib stream");
     }
+    closed = 0;
 }
 
 gzip_istreambuf::~gzip_istreambuf()
@@ -290,6 +292,9 @@ int
 gzip_istreambuf::underflow()
 {
     while (true) {
+        if (closed) {    // don't process any more data after stream ends
+            return traits_type::eof();
+        }
         if (strm.avail_in == 0) {
             strm.avail_in = m_sbuf->sgetn(in, CHUNK);
             if (strm.avail_in == 0) {
@@ -302,7 +307,6 @@ gzip_istreambuf::underflow()
         int rc = inflate(&strm, Z_NO_FLUSH);
         if (rc == Z_STREAM_END) {
             close();
-            // init?
         }
         else if (rc) {
             MSYS_FAIL("Reading zlib stream failed with rc " << rc << ": " << strm.msg);
@@ -318,6 +322,7 @@ gzip_istreambuf::underflow()
 
 void gzip_istreambuf::close() {
     inflateEnd(&strm);
+    closed = 1;
 }
 
 

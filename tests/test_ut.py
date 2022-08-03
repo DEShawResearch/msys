@@ -615,6 +615,14 @@ class Contacts(unittest.TestCase):
         assert NP.isclose(huge, mol.ct(0)["prop"])
 
 
+    def testCtGet(self):
+        mol=msys.CreateSystem()
+        ct = mol.addCt()
+        ct["x"] = 42
+        assert ct.get("y") is None
+        assert ct.get("x") == 42
+
+
     def testSmallVoxels(self):
         pos = NP.zeros((5, 3), "f")
         pos[1] = [1000, 1000, 1000]
@@ -3535,6 +3543,20 @@ class Main(unittest.TestCase):
         m._ptr.setPositions([[8, 9, 10]], ids)
         self.assertEqual(list(m.positions[1]), [8, 9, 10])
         self.assertEqual(list(m._ptr.getPositions(ids)[0]), [8, 9, 10])
+
+    def testPosVelDataOrder(self):
+        m = msys.CreateSystem()
+        m.addAtom()
+        m.addAtom()
+        m.addAtom()
+
+        pos = NP.random.randn(3,3).T
+        m.setPositions(pos)
+        NP.testing.assert_array_equal(m.getPositions(), pos)
+
+        vel = NP.random.randn(3,3).T
+        m.setVelocities(vel)
+        NP.testing.assert_array_equal(m.getVelocities(), vel)
 
     def testVelocities(self):
         m = msys.CreateSystem()

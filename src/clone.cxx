@@ -36,7 +36,6 @@ namespace {
 
         std::unordered_set<String> grps;
         for (auto i=mol->atomBegin(), e=mol->atomEnd(); i!=e; ++i) {
-            auto& a = mol->atomFAST(*i);
             grps.insert(mol->atomPropValue(*i, prop).asString());
         }
 

@@ -1,3 +1,13 @@
+1.7.356 Make setPositions and setVelocities force C-major.
+        Implement dtr-validate in C++.
+        Fix decompression of some gzip files.
+
+1.7.355 Fix for Ct.get("nonexistent-key")
+
+1.7.354 Support gzip, lz4 and zstd compression
+        Support serialization of dms files into .cer format for faster saving and loading
+        Fix memory leaks in python dtr reader
+
 1.7.353 Make clone() subselect rows of modified_interaction.
         Fix dms-diff handling of modified_interaction, tempering_groups, and
             tempered_constraint.

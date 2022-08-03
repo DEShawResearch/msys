@@ -15,7 +15,7 @@ namespace {
     typedef ssize_t (*findfunc)(ssize_t N, const Oracle& times, double T);
 
     template <findfunc f> 
-    ssize_t wrap(py::array_t<double> arr, double T) {
+    ssize_t wrap(py::array_t<double, py::array::c_style | py::array::forcecast> arr, double  T) {
         auto times = arr.data();
         auto N = arr.size();
         return f(N, Oracle(times), T);
