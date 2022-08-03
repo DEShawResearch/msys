@@ -9,8 +9,8 @@ NAME=msys
 
 # shared library dependencies
 SCONS=scons/3.1.2-01c7
-GCC=gcc/11.1.0-04c7/
-BOOST=boost/1.75.0-gcc11.1-py3.10-02c7/
+GCC=gcc/11.2.0-04c7/
+BOOST=boost/1.75.0-gcc11.2-py3.10-02c7/
 LPSOLVE=lp-solve/5.5.2.0-01c7
 INCHI=inchi/1.05-01c7
 SQLITE=sqlite/3.32.2-02c7
@@ -70,6 +70,7 @@ EOF
 prepend-path DESRES_MODULE_CPPFLAGS -I$PREFIX/include
 prepend-path DESRES_MODULE_LDFLAGS  -L$PREFIX/lib:-Wl,-rpath,$PREFIX/lib
 prereq $BOOST/lib
+prereq $PYBIND11/lib
 EOF
 
     # executables
