@@ -62,9 +62,7 @@ genmodules() {
     cat << EOF > $GARDENDIR/lib-python310
 prepend-path PYTHONPATH $PREFIX/lib/python
 EOF
-    cat << EOF > $GARDENDIR/lib-python37
-prepend-path PYTHONPATH $PREFIX/lib/python
-EOF
+
     # library
     cat << EOF > $GARDENDIR/lib
 prepend-path DESRES_MODULE_CPPFLAGS -I$PREFIX/include
