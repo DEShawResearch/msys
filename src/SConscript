@@ -36,7 +36,7 @@ if env.get('MSYS_WITH_ZSTD'):
 
 bsx=env.get('MSYS_BOOST_SUFFIX', '')
 boost_libs=[(x+bsx) for x in (
-    'boost_iostreams', 'boost_filesystem', 'boost_system', 'boost_regex')]
+    'boost_iostreams', 'boost_filesystem', 'boost_system')]
 
 coreenv = env.Clone()
 coreenv.AddLibrary('msys-core', Split('''

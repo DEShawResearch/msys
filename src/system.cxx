@@ -706,3 +706,12 @@ int desres::msys::abi_version() {
     return MSYS_ABI_VERSION;
 }
 
+#if _GLIBCXX_RELEASE >= 11
+namespace std {
+
+/* This avoids the GLIBCXX_3.4.29 symbol version. */
+void __attribute__((weak)) __throw_bad_array_new_length() { MSYS_FAIL("bad array new length"); }
+
+}  // namespace std
+#endif
+

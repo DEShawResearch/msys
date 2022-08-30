@@ -3,8 +3,7 @@
 #include "../smarts.hxx"
 #include <unordered_map>
 #include <unordered_set>
-//#include <regex>
-#include <boost/regex.hpp>
+#include <regex>
 
 using namespace desres::msys;
 using namespace desres::msys::atomsel;
@@ -285,7 +284,7 @@ static std::unordered_map<std::string, char> single_letter_residue_map({
 
 static void eval_sequence(System* mol, std::vector<std::string> const& pats, Selection& s) {
 
-    std::vector<boost::regex> regs;
+    std::vector<std::regex> regs;
     for (auto const& pat : pats) {
         regs.emplace_back(pat);
     }
@@ -306,8 +305,8 @@ static void eval_sequence(System* mol, std::vector<std::string> const& pats, Sel
             }
         }
         for (auto const& reg : regs) {
-            auto match = boost::sregex_iterator(codes.begin(), codes.end(), reg);
-            auto end = boost::sregex_iterator();
+            auto match = std::sregex_iterator(codes.begin(), codes.end(), reg);
+            auto end = std::sregex_iterator();
             for (; match!=end; ++match) {
                 for (auto i=match->position(), j=match->position() + match->length(); i!=j; ++i) {
                     auto residue_id = mol->residuesForChain(chain_id).at(i);
@@ -380,7 +379,7 @@ void KeyPredicate::eval(Selection& s) {
     }
 
     auto g = lookup(name, q);
-    std::vector<boost::regex> regs;
+    std::vector<std::regex> regs;
     switch (g.type) {
     case IntType:
         {
@@ -429,10 +428,10 @@ void KeyPredicate::eval(Selection& s) {
                 // constructing std::string intermediates
                     std::string val(g.s(q,i));
                     if (std::binary_search(va->sval.begin(), va->sval.end(), std::string(val))) continue;
-                    boost::smatch match;
+                    std::smatch match;
                     bool found = false;
                     for (auto const& re : regs) {
-                        if (boost::regex_match(val, match, re)) {
+                        if (std::regex_match(val, match, re)) {
                             found = true;
                             break;
                         }

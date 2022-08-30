@@ -35,7 +35,7 @@ build() {
     rm -rf build/wheel/msys*
     BUILD_WHEEL_VERSION=$PYTHONVER DESRES_LOCATION= scons -j `nproc`
     ifile=build/wheel/dist/msys-${version}-cp${PYTHONVER}-cp${PYTHONVER}m-linux_x86_64.whl
-    auditwheel repair --plat manylinux_2_28_x86_64 -w build/wheel/dist $ifile
+    #auditwheel repair --plat manylinux_2_31_x86_64 -w build/wheel/dist $ifile
 }
 
 main() {

@@ -9,6 +9,7 @@
 #include <msys/molfile/findframe.hxx>
 #include <msys/molfile/dtrplugin.hxx>
 #include <msys/molfile/dtrframe.hxx>
+#include <msys/types.hxx>
 
 using namespace desres::molfile;
 using namespace pybind11;
@@ -487,3 +488,12 @@ PYBIND11_MODULE(_molfile, m) {
 
 }
 
+
+#if _GLIBCXX_RELEASE >= 11
+namespace std {
+
+/* This avoids the GLIBCXX_3.4.29 symbol version. */
+void __attribute__((weak)) __throw_bad_array_new_length() { MSYS_FAIL("bad array new length"); }
+
+}  // namespace std
+#endif

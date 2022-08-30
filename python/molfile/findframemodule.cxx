@@ -1,6 +1,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <msys/molfile/findframe.hxx>
+#include <msys/types.hxx>
 
 namespace py = pybind11;
 namespace ff = desres::molfile::findframe;
@@ -29,3 +30,12 @@ PYBIND11_MODULE(findframe, m) {
     m.def("at_time_gt", wrap<ff::at_time_gt<Oracle> >);
     m.def("at_time_ge", wrap<ff::at_time_ge<Oracle> >);
 }
+
+#if _GLIBCXX_RELEASE >= 11
+namespace std {
+
+/* This avoids the GLIBCXX_3.4.29 symbol version. */
+void __attribute__((weak)) __throw_bad_array_new_length() { MSYS_FAIL("bad array new length"); }
+
+}  // namespace std
+#endif
