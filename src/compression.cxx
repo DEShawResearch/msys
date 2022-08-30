@@ -2,6 +2,7 @@
 #include "types.hxx"
 #include <string.h>
 #include <zlib.h>
+#include <climits>
 
 #ifdef MSYS_WITH_ZSTD
 #include <zstd.h>

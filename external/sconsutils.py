@@ -174,13 +174,16 @@ def _AddPythonModule(env, *args, **kwds):
         mod = env.Command(py, s, Copy("$TARGET", "$SOURCE"))
         _Install(env, 'lib/python/%s' % prefix, mod)
         for ver in env['PYTHONVER']:
+            major = ver[0]
+            minor = ver[1:]
+            exe = f"python{major}.{minor}"
             cachedir = env['PYTHON%s_CACHEDIR' % ver]
             cachefile = '%s/%s/%s.%s' % (
                     os.path.dirname(py),
                     cachedir,
                     os.path.splitext(os.path.basename(py))[0],
                     env['PYTHON%s_CACHEEXT' % ver])
-            cachetgt = env.Command(cachefile, mod, 'python%s -m compileall $SOURCE' % '.'.join(ver))
+            cachetgt = env.Command(cachefile, mod, f'{exe} -m compileall $SOURCE')
             _Install(env, 'lib/python/%s/%s' % (prefix, cachedir), cachetgt)
         mods.append(mod)
         _wheel_targets['purelib'].append((mod, wheel_prefix))
@@ -231,7 +234,9 @@ def _AddWheel(env, tomlfile, pyver='36'):
 
     # obtain wheel tag using specified python version
     wmod = 'wheel' if pyver.startswith('2') else 'setuptools'
-    exe = 'python%s' % '.'.join(pyver)
+    major = pyver[0]
+    minor = pyver[1:]
+    exe = f"python{major}.{minor}"
     #tag = shell([exe, '-c', 'import %s.pep425tags as wp; tags=wp.get_supported(); best=[t for t in tags if "manylinux" not in "".join(t)][0]; print("-".join(best))' % wmod])
     tag = "cp%s-cp%sm-linux_x86_64" % (pyver, pyver)
 
@@ -300,7 +305,7 @@ def generate(env):
     opts.Add("OBJDIR", "build product location", 'build')
     opts.Add("PREFIX", "installation location")
 
-    opts.Add(ListVariable('PYTHONVER', 'python versions', os.getenv('PYTHONVER', ''), ['27', '35', '36', '37', '38', '39']))
+    opts.Add(ListVariable('PYTHONVER', 'python versions', os.getenv('PYTHONVER', ''), ['27', '37', '38', '39', '310']))
     opts.Update(env)
 
     builddir = env.Dir(env['OBJDIR']).srcnode().abspath
@@ -341,12 +346,18 @@ def generate(env):
             env.AddMethod(func, name)
 
     for ver in env['PYTHONVER']:
-        cfg = 'python%s-config' % '.'.join(ver)
-        exe = 'python%s' % '.'.join(ver)
+        major = ver[0]
+        minor = ver[1:]
+        cfg = 'python%s.%s-config' % (major, minor)
+        exe = 'python%s.%s' % (major, minor)
         incs=shell([cfg, '--includes'])
         prefix=shell([cfg, '--prefix'])
-        libs=shell([cfg, '--libs'])
-        incs += ' -I' + shell([exe, '-c', 'import numpy; print(numpy.get_include())'])
+        if ver in ('39', '310'):
+            libs=shell([cfg, '--embed', '--libs'])
+        else:
+            libs=shell([cfg, '--libs'])
+        if not os.environ.get("SCONSUTILS_WITHOUT_NUMPY"):
+            incs += ' -I' + shell([exe, '-c', 'import numpy; print(numpy.get_include())'])
         kwds = { 'PYTHON%s_PREFIX' % ver : prefix,
                  'PYTHON%s_CPPFLAGS' % ver : incs,
                  'PYTHON%s_LDFLAGS' % ver : libs,

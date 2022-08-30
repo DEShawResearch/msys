@@ -4,16 +4,14 @@ build-backend = "enscons.api"
 
 [tool.enscons]
 name="msys"
-version="1.7.337"
+version="1.7.359"
 packages=["msys"]
 install_requires=["numpy", "wheel"]
 description="Msys tools"
 #description_file="README.rst"
 license="BSD-3"
 classifiers=[
-  "Programming Language :: Python :: 3.6",
-  "Programming Language :: Python :: 3.7",
-  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.10",
 ]
 keywords=["packaging", "wheel"]
 author="DESRES"

@@ -211,7 +211,7 @@ namespace desres { namespace msys {
 
 #warning "NO cereal!"
 namespace desres { namespace msys {
-    SystemPtr ImportCereal(std::string path) {
+    SystemPtr ImportCereal(std::string const& path) {
         MSYS_FAIL("No cereal support in this build");
     }
     SystemPtr ImportCereal(std::istream& in) {

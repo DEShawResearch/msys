@@ -5,10 +5,10 @@ set -e
 garden env-keep-only
 
 SCONS=scons/3.1.2-01c7
-BOOST=boost/1.57.0-02c7
+BOOST=boost/1.75.0-gcc11.2-py3.10-02c7
 INCHI=inchi/1.05-01c7
 SQLITE=sqlite/3.32.2-02c7
-PYBIND11=pybind11/2.3.0-01c7
+PYBIND11=pybind11/2.7.1-01c7
 
 version=$(src/version.py)
 
@@ -19,8 +19,9 @@ loadmodules() {
         $INCHI/lib \
         $SQLITE/lib \
         $PYBIND11/lib \
+        gcc/11.2.0-04c7/bin \
         enscons/0.23.0-01c7/lib-python37 \
-        auditwheel/3.1.1-01c7/bin \
+        auditwheel/5.1.2-01c7/bin \
         patchelf/0.9-01c7/bin \
 
 
@@ -34,18 +35,18 @@ build() {
     rm -rf build/wheel/msys*
     BUILD_WHEEL_VERSION=$PYTHONVER DESRES_LOCATION= scons -j `nproc`
     ifile=build/wheel/dist/msys-${version}-cp${PYTHONVER}-cp${PYTHONVER}m-linux_x86_64.whl
-    auditwheel repair --plat manylinux2014_x86_64 -w build/wheel/dist $ifile
+    auditwheel repair --plat manylinux_2_28_x86_64 -w build/wheel/dist $ifile
 }
 
 main() {
     loadmodules
-    for py in desres-python/3.6.6-04c7 desres-python/3.7.7-06c7 desres-python-devel/3.8.6-02c7; do
+    for py in desres-python/3.10.6-04c7; do
         garden load $py/bin
         build
     done
     # FIXME: python3.8 drops the 'm' from the ABI tag, but enscons still generates an ABI tag of 38m.
-    for x in build/wheel/dist/*cp38m*.whl; do
-        y=${x//cp38m/cp38}
+    for x in build/wheel/dist/*cp310m*.whl; do
+        y=${x//cp310m/cp310}
         echo "rename $x -> $y"
         mv $x $y
     done
