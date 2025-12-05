@@ -9,7 +9,7 @@ the sort used in molecular simulations.  Its main features include:
 
  * C++ and Python interfaces.
 
-Msys currently supports Python 3.6+.  
+Msys currently supports Python 3.6 - 3.10.
 
 Building Msys
 -------------
@@ -18,9 +18,15 @@ To build Msys, you'll need at a minimum the following:
 
  * A recent gcc compiler supporting C++11; gcc 5.2 or later should work.
 
- * Boost libraries (https://www.boost.org) version 1.67 or later.  Earlier versions may also work, but a change in the naming convention for the boost python libraries means you'll have an easier time if you can use 1.67.  Besides the boost headers, msys uses the following boost libraries: filesystem, system, and iostreams.  In addition, you'll almost certainly want to compile the msys python bindings, which use the pybind11 library (https://pybind11.readthedocs.io/en/stable/).
+ * The zlib (https://zlib.net/) and SQLite3 (https://sqlite.org/) libraries and their development headers.
 
- * The numpy (http://www.numpy.org) headers for each python version you want to support.
+ * Boost libraries (https://www.boost.org) version 1.67 or later.  Earlier versions may also work, but a change in the naming convention for the boost python libraries means you'll have an easier time if you can use 1.67.  
+
+   * Besides the boost headers, msys uses the following boost libraries: filesystem, system, and iostreams.  
+
+ * In addition, you'll almost certainly want to compile the msys python bindings, which use the pybind11 library (https://pybind11.readthedocs.io/en/stable/).
+
+ * The numpy (http://www.numpy.org) headers for each python version you want to support.  Numpy 2.0 is not supported, so use numpy <= 1.26.4.
 
  * Scons (https://scons.org), a build tool, available through `pip install`.
 
