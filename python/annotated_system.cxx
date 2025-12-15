@@ -9,7 +9,7 @@ namespace desres { namespace msys {
 
     void export_annotated_system(module m) {
 
-        enum_<AnnotatedSystem::Flags>(m, "AnnotatedSystemFlags")
+        enum_<AnnotatedSystem::Flags>(m, "AnnotatedSystemFlags", arithmetic())
             .value("Default",           AnnotatedSystem::Default)
             .value("AllowBadCharges",   AnnotatedSystem::AllowBadCharges)
             ;
